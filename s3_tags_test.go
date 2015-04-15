@@ -5,12 +5,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/aws-sdk-go/gen/ec2"
+	"github.com/hashicorp/aws-sdk-go/gen/s3"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestDiffTags(t *testing.T) {
+func TestDiffTagsS3(t *testing.T) {
 	cases := []struct {
 		Old, New       map[string]interface{}
 		Create, Remove map[string]string
@@ -49,9 +49,9 @@ func TestDiffTags(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		c, r := diffTags(tagsFromMap(tc.Old), tagsFromMap(tc.New))
-		cm := tagsToMap(c)
-		rm := tagsToMap(r)
+		c, r := diffTagsS3(tagsFromMapS3(tc.Old), tagsFromMapS3(tc.New))
+		cm := tagsToMapS3(c)
+		rm := tagsToMapS3(r)
 		if !reflect.DeepEqual(cm, tc.Create) {
 			t.Fatalf("%d: bad create: %#v", i, cm)
 		}
@@ -62,10 +62,10 @@ func TestDiffTags(t *testing.T) {
 }
 
 // testAccCheckTags can be used to check the tags on a resource.
-func testAccCheckTags(
-	ts *[]ec2.Tag, key string, value string) resource.TestCheckFunc {
+func testAccCheckTagsS3(
+	ts *[]s3.Tag, key string, value string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		m := tagsToMap(*ts)
+		m := tagsToMapS3(*ts)
 		v, ok := m[key]
 		if value != "" && !ok {
 			return fmt.Errorf("Missing tag: %s", key)

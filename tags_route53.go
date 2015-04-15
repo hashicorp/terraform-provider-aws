@@ -4,48 +4,35 @@ import (
 	"log"
 
 	"github.com/hashicorp/aws-sdk-go/aws"
-	"github.com/hashicorp/aws-sdk-go/gen/ec2"
+	"github.com/hashicorp/aws-sdk-go/gen/route53"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-// tagsSchema returns the schema to use for tags.
-//
-func tagsSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeMap,
-		Optional: true,
-	}
-}
-
 // setTags is a helper to set the tags for a resource. It expects the
 // tags field to be named "tags"
-func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
+func setTagsR53(conn *route53.Route53, d *schema.ResourceData) error {
 	if d.HasChange("tags") {
 		oraw, nraw := d.GetChange("tags")
 		o := oraw.(map[string]interface{})
 		n := nraw.(map[string]interface{})
-		create, remove := diffTags(tagsFromMap(o), tagsFromMap(n))
+		create, remove := diffTagsR53(tagsFromMapR53(o), tagsFromMapR53(n))
 
 		// Set tags
-		if len(remove) > 0 {
-			log.Printf("[DEBUG] Removing tags: %#v", remove)
-			err := conn.DeleteTags(&ec2.DeleteTagsRequest{
-				Resources: []string{d.Id()},
-				Tags:      remove,
-			})
-			if err != nil {
-				return err
-			}
+		r := make([]string, len(remove))
+		for i, t := range remove {
+			r[i] = *t.Key
 		}
-		if len(create) > 0 {
-			log.Printf("[DEBUG] Creating tags: %#v", create)
-			err := conn.CreateTags(&ec2.CreateTagsRequest{
-				Resources: []string{d.Id()},
-				Tags:      create,
-			})
-			if err != nil {
-				return err
-			}
+		log.Printf("[DEBUG] Changing tags: \n\tadding: %#v\n\tremoving:%#v", create, remove)
+		req := &route53.ChangeTagsForResourceRequest{
+			AddTags:       create,
+			RemoveTagKeys: r,
+			ResourceID:    aws.String(d.Id()),
+			ResourceType:  aws.String("hostedzone"),
+		}
+
+		_, err := conn.ChangeTagsForResource(req)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -55,7 +42,7 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 // diffTags takes our tags locally and the ones remotely and returns
 // the set of tags that must be created, and the set of tags that must
 // be destroyed.
-func diffTags(oldTags, newTags []ec2.Tag) ([]ec2.Tag, []ec2.Tag) {
+func diffTagsR53(oldTags, newTags []route53.Tag) ([]route53.Tag, []route53.Tag) {
 	// First, we're creating everything we have
 	create := make(map[string]interface{})
 	for _, t := range newTags {
@@ -63,7 +50,7 @@ func diffTags(oldTags, newTags []ec2.Tag) ([]ec2.Tag, []ec2.Tag) {
 	}
 
 	// Build the list of what to remove
-	var remove []ec2.Tag
+	var remove []route53.Tag
 	for _, t := range oldTags {
 		old, ok := create[*t.Key]
 		if !ok || old != *t.Value {
@@ -72,14 +59,14 @@ func diffTags(oldTags, newTags []ec2.Tag) ([]ec2.Tag, []ec2.Tag) {
 		}
 	}
 
-	return tagsFromMap(create), remove
+	return tagsFromMapR53(create), remove
 }
 
 // tagsFromMap returns the tags for the given map of data.
-func tagsFromMap(m map[string]interface{}) []ec2.Tag {
-	result := make([]ec2.Tag, 0, len(m))
+func tagsFromMapR53(m map[string]interface{}) []route53.Tag {
+	result := make([]route53.Tag, 0, len(m))
 	for k, v := range m {
-		result = append(result, ec2.Tag{
+		result = append(result, route53.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v.(string)),
 		})
@@ -89,7 +76,7 @@ func tagsFromMap(m map[string]interface{}) []ec2.Tag {
 }
 
 // tagsToMap turns the list of tags into a map.
-func tagsToMap(ts []ec2.Tag) map[string]string {
+func tagsToMapR53(ts []route53.Tag) map[string]string {
 	result := make(map[string]string)
 	for _, t := range ts {
 		result[*t.Key] = *t.Value

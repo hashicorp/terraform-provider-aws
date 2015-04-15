@@ -3,35 +3,30 @@ package aws
 import (
 	"log"
 
-	"github.com/awslabs/aws-sdk-go/aws"
-	"github.com/awslabs/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go/aws"
+	"github.com/hashicorp/aws-sdk-go/gen/elb"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-// tagsSchema returns the schema to use for tags.
-//
-// func tagsSchema() *schema.Schema {
-// 	return &schema.Schema{
-// 		Type:     schema.TypeMap,
-// 		Optional: true,
-// 	}
-// }
-
 // setTags is a helper to set the tags for a resource. It expects the
 // tags field to be named "tags"
-func setTagsSDK(conn *ec2.EC2, d *schema.ResourceData) error {
+func setTagsELB(conn *elb.ELB, d *schema.ResourceData) error {
 	if d.HasChange("tags") {
 		oraw, nraw := d.GetChange("tags")
 		o := oraw.(map[string]interface{})
 		n := nraw.(map[string]interface{})
-		create, remove := diffTagsSDK(tagsFromMapSDK(o), tagsFromMapSDK(n))
+		create, remove := diffTagsELB(tagsFromMapELB(o), tagsFromMapELB(n))
 
 		// Set tags
 		if len(remove) > 0 {
 			log.Printf("[DEBUG] Removing tags: %#v", remove)
-			_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
-				Resources: []*string{aws.String(d.Id())},
-				Tags:      remove,
+			k := make([]elb.TagKeyOnly, 0, len(remove))
+			for _, t := range remove {
+				k = append(k, elb.TagKeyOnly{Key: t.Key})
+			}
+			_, err := conn.RemoveTags(&elb.RemoveTagsInput{
+				LoadBalancerNames: []string{d.Get("name").(string)},
+				Tags:              k,
 			})
 			if err != nil {
 				return err
@@ -39,9 +34,9 @@ func setTagsSDK(conn *ec2.EC2, d *schema.ResourceData) error {
 		}
 		if len(create) > 0 {
 			log.Printf("[DEBUG] Creating tags: %#v", create)
-			_, err := conn.CreateTags(&ec2.CreateTagsInput{
-				Resources: []*string{aws.String(d.Id())},
-				Tags:      create,
+			_, err := conn.AddTags(&elb.AddTagsInput{
+				LoadBalancerNames: []string{d.Get("name").(string)},
+				Tags:              create,
 			})
 			if err != nil {
 				return err
@@ -55,7 +50,7 @@ func setTagsSDK(conn *ec2.EC2, d *schema.ResourceData) error {
 // diffTags takes our tags locally and the ones remotely and returns
 // the set of tags that must be created, and the set of tags that must
 // be destroyed.
-func diffTagsSDK(oldTags, newTags []*ec2.Tag) ([]*ec2.Tag, []*ec2.Tag) {
+func diffTagsELB(oldTags, newTags []elb.Tag) ([]elb.Tag, []elb.Tag) {
 	// First, we're creating everything we have
 	create := make(map[string]interface{})
 	for _, t := range newTags {
@@ -63,7 +58,7 @@ func diffTagsSDK(oldTags, newTags []*ec2.Tag) ([]*ec2.Tag, []*ec2.Tag) {
 	}
 
 	// Build the list of what to remove
-	var remove []*ec2.Tag
+	var remove []elb.Tag
 	for _, t := range oldTags {
 		old, ok := create[*t.Key]
 		if !ok || old != *t.Value {
@@ -72,14 +67,14 @@ func diffTagsSDK(oldTags, newTags []*ec2.Tag) ([]*ec2.Tag, []*ec2.Tag) {
 		}
 	}
 
-	return tagsFromMapSDK(create), remove
+	return tagsFromMapELB(create), remove
 }
 
 // tagsFromMap returns the tags for the given map of data.
-func tagsFromMapSDK(m map[string]interface{}) []*ec2.Tag {
-	result := make([]*ec2.Tag, 0, len(m))
+func tagsFromMapELB(m map[string]interface{}) []elb.Tag {
+	result := make([]elb.Tag, 0, len(m))
 	for k, v := range m {
-		result = append(result, &ec2.Tag{
+		result = append(result, elb.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v.(string)),
 		})
@@ -89,7 +84,7 @@ func tagsFromMapSDK(m map[string]interface{}) []*ec2.Tag {
 }
 
 // tagsToMap turns the list of tags into a map.
-func tagsToMapSDK(ts []*ec2.Tag) map[string]string {
+func tagsToMapELB(ts []elb.Tag) map[string]string {
 	result := make(map[string]string)
 	for _, t := range ts {
 		result[*t.Key] = *t.Value
