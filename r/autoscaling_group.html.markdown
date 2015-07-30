@@ -1,7 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_autoscaling_group"
-sidebar_current: "docs-aws-resource-autoscale"
+sidebar_current: "docs-aws-resource-autoscaling-group"
 description: |-
   Provides an AutoScaling Group resource.
 ---
@@ -45,7 +45,8 @@ The following arguments are supported:
 * `max_size` - (Required) The maximum size of the auto scale group.
 * `min_size` - (Required) The minimum size of the auto scale group.
     (See also [Waiting for Capacity](#waiting-for-capacity) below.)
-* `availability_zones` - (Required) A list of AZs to launch resources in.
+* `availability_zones` - (Optional) A list of AZs to launch resources in.
+   Required only if you do not specify any `vpc_zone_identifier`
 * `launch_configuration` - (Required) The ID of the launch configuration to use.
 * `health_check_grace_period` - (Optional) Time after instance comes into service before checking health.
 * `health_check_type` - (Optional) "EC2" or "ELB". Controls how health checking is done.
@@ -110,7 +111,7 @@ Docs](https://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/AutoScalingG
 for more information on an ASG's lifecycle.
 
 Terraform will wait for healthy instances for up to 10 minutes. If ASG creation
-is taking more than a few minutes, it's worth investigating for scaling actvity
+is taking more than a few minutes, it's worth investigating for scaling activity
 errors, which can be caused by problems with the selected Launch Configuration.
 
 #### Waiting for ELB Capacity
