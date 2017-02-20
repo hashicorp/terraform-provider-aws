@@ -58,3 +58,11 @@ The following attributes are exported:
 
 * `id` - The policy's ID.
 * `name` - The name of the attachment.
+
+## Import
+
+IAM role policy attachments can be imported using the `name` of the role. This will import all role policy attachments associated with the role.
+
+```
+$ terraform import aws_iam_role_policy_attachment.test-attach test-role
+```
