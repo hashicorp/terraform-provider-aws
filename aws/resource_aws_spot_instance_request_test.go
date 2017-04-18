@@ -93,7 +93,7 @@ func TestAccAWSSpotInstanceRequest_vpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_SubnetAndSG(t *testing.T) {
+func TestAccAWSSpotInstanceRequest_SubnetAndSGAndPublicIpAddress(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	rInt := acctest.RandInt()
 
@@ -103,11 +103,13 @@ func TestAccAWSSpotInstanceRequest_SubnetAndSG(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSpotInstanceRequestConfig_SubnetAndSG(rInt),
+				Config: testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSpotInstanceRequestExists(
 						"aws_spot_instance_request.foo", &sir),
 					testAccCheckAWSSpotInstanceRequest_InstanceAttributes(&sir, rInt),
+					resource.TestCheckResourceAttr(
+						"aws_spot_instance_request.foo", "associate_public_ip_address", "true"),
 				),
 			},
 		},
@@ -384,7 +386,7 @@ func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
 	}`, rInt)
 }
 
-func testAccAWSSpotInstanceRequestConfig_SubnetAndSG(rInt int) string {
+func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int) string {
 	return fmt.Sprintf(`
 	resource "aws_spot_instance_request" "foo" {
 		ami                         = "ami-4fccb37f"
