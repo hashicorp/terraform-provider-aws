@@ -74,16 +74,16 @@ func testAccCheckSnapshotExists(n string, v *ec2.Snapshot) resource.TestCheckFun
 
 const testAccAwsEbsSnapshotConfig = `
 resource "aws_ebs_volume" "test" {
-	availability_zone = "us-west-2a"
-	size = 1
+  availability_zone = "us-west-2a"
+  size              = 1
 }
 
 resource "aws_ebs_snapshot" "test" {
-	volume_id = "${aws_ebs_volume.test.id}"
+  volume_id = "${aws_ebs_volume.test.id}"
 
-        tags {
-                Name = "testAccAwsEbsSnapshotConfig"
-        }
+  tags {
+    Name = "testAccAwsEbsSnapshotConfig"
+  }
 }
 `
 
