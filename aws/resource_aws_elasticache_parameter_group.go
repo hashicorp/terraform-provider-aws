@@ -171,38 +171,26 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsElasticacheParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"pending"},
-		Target:     []string{"destroyed"},
-		Refresh:    resourceAwsElasticacheParameterGroupDeleteRefreshFunc(d, meta),
-		Timeout:    3 * time.Minute,
-		MinTimeout: 1 * time.Second,
-	}
-	_, err := stateConf.WaitForState()
-	return err
-}
-
-func resourceAwsElasticacheParameterGroupDeleteRefreshFunc(
-	d *schema.ResourceData,
-	meta interface{}) resource.StateRefreshFunc {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	return func() (interface{}, string, error) {
-
+	return resource.Retry(3*time.Minute, func() *resource.RetryError {
 		deleteOpts := elasticache.DeleteCacheParameterGroupInput{
 			CacheParameterGroupName: aws.String(d.Id()),
 		}
-
-		if _, err := conn.DeleteCacheParameterGroup(&deleteOpts); err != nil {
-			elasticahceerr, ok := err.(awserr.Error)
-			if ok && elasticahceerr.Code() == "CacheParameterGroupNotFoundFault" {
+		_, err := conn.DeleteCacheParameterGroup(&deleteOpts)
+		if err != nil {
+			awsErr, ok := err.(awserr.Error)
+			if ok && awsErr.Code() == "CacheParameterGroupNotFoundFault" {
 				d.SetId("")
-				return d, "error", err
+				return nil
 			}
-			return d, "error", err
+			if ok && awsErr.Code() == "InvalidCacheParameterGroupState" {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
 		}
-		return d, "destroyed", nil
-	}
+		return nil
+	})
 }
 
 func resourceAwsElasticacheParameterHash(v interface{}) int {
