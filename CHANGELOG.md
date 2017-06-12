@@ -13,4 +13,5 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * fix aws cidr validation error [GH-15158](https://github.com/hashicorp/terraform/pull/15158)
-* elasticache: Retry deletion of param grp on InvalidCacheParameterGroupState [GH-8]
+* resource/elasticache_parameter_group: Retry deletion on InvalidCacheParameterGroupState [GH-8]
+* resource/security_group: Raise creation timeout [GH-9]
