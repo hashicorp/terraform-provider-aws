@@ -9,6 +9,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * resource/ebs_snapshot: Add support for tags [GH-3]
+* resource/aws_elasticsearch_domain: now retries on IAM role association failure [GH-12]
 
 BUG FIXES:
 
