@@ -623,9 +623,19 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if requestUpdate {
-		_, err := conn.ModifyDBCluster(req)
+		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			_, err := conn.ModifyDBCluster(req)
+			if err != nil {
+				awsErr, ok := err.(awserr.Error)
+				if ok && awsErr.Code() == rds.ErrCodeInvalidDBClusterStateFault {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
 		if err != nil {
-			return fmt.Errorf("[WARN] Error modifying RDS Cluster (%s): %s", d.Id(), err)
+			return fmt.Errorf("Failed to modify RDS Cluster (%s): %s", d.Id(), err)
 		}
 	}
 
