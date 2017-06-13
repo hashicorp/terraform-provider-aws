@@ -57,6 +57,8 @@ func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
 						"aws_dynamodb_table.basic-dynamodb-table", "stream_enabled", "true"),
 					resource.TestCheckResourceAttr(
 						"aws_dynamodb_table.basic-dynamodb-table", "stream_view_type", "KEYS_ONLY"),
+					resource.TestCheckResourceAttrSet("aws_dynamodb_table.basic-dynamodb-table", "stream_arn"),
+					resource.TestCheckResourceAttrSet("aws_dynamodb_table.basic-dynamodb-table", "stream_label"),
 				),
 			},
 		},
