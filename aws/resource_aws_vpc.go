@@ -423,7 +423,7 @@ func resourceAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	log.Printf("[INFO] Deleting VPC: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	return resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteVpc(DeleteVpcOpts)
 		if err == nil {
 			return nil
