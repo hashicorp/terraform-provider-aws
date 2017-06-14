@@ -11,6 +11,7 @@ IMPROVEMENTS:
 * resource/ebs_snapshot: Add support for tags [GH-3]
 * resource/aws_elasticsearch_domain: now retries on IAM role association failure [GH-12]
 * resource/dynamodb_table: Expose stream_label attribute [GH-20]
+* resource/opsworks: Add support for configurable timeouts in AWS OpsWorks Instances. [GH-857]
 
 BUG FIXES:
 
