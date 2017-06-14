@@ -27,7 +27,6 @@ resource "aws_db_instance" "default" {
 
 data "aws_db_snapshot" "db_snapshot" {
     most_recent = true
-    owners = ["self"]
     db_instance_identifier = "${aws_db_instance.default.identifier}"
 }
 ```
