@@ -18,3 +18,4 @@ BUG FIXES:
 * resource/elasticache_parameter_group: Retry deletion on InvalidCacheParameterGroupState [GH-8]
 * resource/security_group: Raise creation timeout [GH-9]
 * resource/rds_cluster: Retry modification on InvalidDBClusterStateFault [GH-18]
+* resource/lambda: Fix incorrect GovCloud regexes [GH-16]
