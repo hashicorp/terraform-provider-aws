@@ -402,6 +402,13 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("kms_key_id"); ok {
+			opts.KmsKeyId = aws.String(attr.(string))
+			if arnParts := strings.Split(v.(string), ":"); len(arnParts) >= 4 {
+				opts.SourceRegion = aws.String(arnParts[3])
+			}
+		}
+
 		if attr, ok := d.GetOk("monitoring_role_arn"); ok {
 			opts.MonitoringRoleArn = aws.String(attr.(string))
 		}
