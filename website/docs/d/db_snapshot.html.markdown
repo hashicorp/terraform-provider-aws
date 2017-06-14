@@ -10,6 +10,8 @@ description: |-
 
 Use this data source to get information about a DB Snapshot for use when provisioning DB instances
 
+~> **NOTE:** This data source does not apply to snapshots created on Aurora DB clusters.
+
 ## Example Usage
 
 ```
