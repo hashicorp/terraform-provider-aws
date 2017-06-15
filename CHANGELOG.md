@@ -21,3 +21,4 @@ BUG FIXES:
 * resource/security_group: Raise creation timeout [GH-9]
 * resource/rds_cluster: Retry modification on InvalidDBClusterStateFault [GH-18]
 * resource/lambda: Fix incorrect GovCloud regexes [GH-16]
+* Allow ipv6_cidr_block to be assigned to peering_connection [GH-879]
