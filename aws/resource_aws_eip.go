@@ -316,11 +316,11 @@ func dissociateEip(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	switch resourceAwsEipDomain(d) {
 	case "vpc":
-		_, err = ec2conn.dissociateAddress(&ec2.dissociateAddressInput{
+		_, err = ec2conn.DisassociateAddress(&ec2.DisassociateAddressInput{
 			AssociationId: aws.String(d.Get("association_id").(string)),
 		})
 	case "standard":
-		_, err = ec2conn.dissociateAddress(&ec2.dissociateAddressInput{
+		_, err = ec2conn.DisassociateAddress(&ec2.DisassociateAddressInput{
 			PublicIp: aws.String(d.Get("public_ip").(string)),
 		})
 	}
