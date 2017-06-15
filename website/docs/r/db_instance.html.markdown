@@ -109,7 +109,7 @@ database, and to use this value as the source database. This correlates to the
 enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html)
 what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `monitoring_interval` - (Optional) The interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
-* `kms_key_id` - (Optional) The ARN for the KMS encryption key.
+* `kms_key_id` - (Optional) The ARN for the KMS encryption key. If creating an encrypted replica, set this to the destination KMS ARN.
 * `character_set_name` - (Optional) The character set name to use for DB encoding in Oracle instances. This can't be changed.
 [Oracle Character Sets Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html)
 * `iam_database_authentication_enabled` - (Optional) Specifies whether or mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
