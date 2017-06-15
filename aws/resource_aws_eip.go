@@ -197,7 +197,7 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 	// If we are updating an EIP that is not newly created, and we are attached to
 	// an instance or interface, detach first.
 	if (d.Get("instance").(string) != "" || d.Get("association_id").(string) != "") && !d.IsNewResource() {
-		if err := dissociateEip(d, meta); err != nil {
+		if err := disassociateEip(d, meta); err != nil {
 			return err
 		}
 	}
@@ -264,7 +264,7 @@ func resourceAwsEipDelete(d *schema.ResourceData, meta interface{}) error {
 
 	// If we are attached to an instance or interface, detach first.
 	if d.Get("instance").(string) != "" || d.Get("association_id").(string) != "" {
-		if err := dissociateEip(d, meta); err != nil {
+		if err := disassociateEip(d, meta); err != nil {
 			return err
 		}
 	}
@@ -310,7 +310,7 @@ func resourceAwsEipDomain(d *schema.ResourceData) string {
 	return "standard"
 }
 
-func dissociateEip(d *schema.ResourceData, meta interface{}) error {
+func disassociateEip(d *schema.ResourceData, meta interface{}) error {
 	ec2conn := meta.(*AWSClient).ec2conn
 	log.Printf("[DEBUG] Disassociating EIP: %s", d.Id())
 	var err error
@@ -327,7 +327,7 @@ func dissociateEip(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		// First check if the association ID is not found. If this
-		// is the case, then it was already dissociated somehow,
+		// is the case, then it was already disassociated somehow,
 		// and that is okay. The most commmon reason for this is that
 		// the instance or ENI it was attached it was destroyed.
 		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidAssociationID.NotFound" {
