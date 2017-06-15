@@ -176,12 +176,12 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := d.GetOk("destination_cidr_block"); ok {
- 			createOpts.DestinationCidrBlock = aws.String(v.(string))
- 		}
+			createOpts.DestinationCidrBlock = aws.String(v.(string))
+		}
 
- 		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
- 			createOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
- 		}
+		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
+			createOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
+		}
 
 	default:
 		return fmt.Errorf("An invalid target type specified: %s", setTarget)

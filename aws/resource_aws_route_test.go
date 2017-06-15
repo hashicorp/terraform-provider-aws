@@ -107,25 +107,24 @@ func TestAccAWSRoute_ipv6ToInternetGateway(t *testing.T) {
 }
 
 func TestAccAWSRoute_ipv6ToPeeringConnection(t *testing.T) {
- 	var route ec2.Route
+	var route ec2.Route
 
- 	resource.Test(t, resource.TestCase{
- 		PreCheck: func() {
- 			testAccPreCheck(t)
- 		},
- 		Providers:    testAccProviders,
- 		CheckDestroy: testAccCheckAWSRouteDestroy,
- 		Steps: []resource.TestStep{
- 			{
- 				Config: testAccAWSRouteConfigIpv6PeeringConnection,
- 				Check: resource.ComposeTestCheckFunc(
- 					testAccCheckAWSRouteExists("aws_route.pc", &route),
- 				),
- 			},
- 		},
- 	})
- }
-
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigIpv6PeeringConnection,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists("aws_route.pc", &route),
+				),
+			},
+		},
+	})
+}
 
 func TestAccAWSRoute_changeCidr(t *testing.T) {
 	var route ec2.Route
@@ -383,7 +382,6 @@ resource "aws_route" "pc" {
 }
 
 `)
-
 
 var testAccAWSRouteConfigIpv6 = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
