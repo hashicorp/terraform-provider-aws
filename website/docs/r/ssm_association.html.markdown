@@ -3,12 +3,12 @@ layout: "aws"
 page_title: "AWS: aws_ssm_association"
 sidebar_current: "docs-aws-resource-ssm-association"
 description: |-
-  Assosciates an SSM Document to an instance.
+  Associates an SSM Document to an instance.
 ---
 
 # aws_ssm_association
 
-Assosciates an SSM Document to an instance.
+Associates an SSM Document to an instance.
 
 ## Example Usage
 
