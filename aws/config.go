@@ -32,6 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
+	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -128,6 +129,7 @@ type AWSClient struct {
 	devicefarmconn        *devicefarm.DeviceFarm
 	dmsconn               *databasemigrationservice.DatabaseMigrationService
 	dsconn                *directoryservice.DirectoryService
+	dxconn                *directconnect.DirectConnect
 	dynamodbconn          *dynamodb.DynamoDB
 	ec2conn               *ec2.EC2
 	ecrconn               *ecr.ECR
@@ -350,6 +352,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.dmsconn = databasemigrationservice.New(sess)
 	client.codepipelineconn = codepipeline.New(sess)
 	client.dsconn = directoryservice.New(sess)
+	client.dxconn = directconnect.New(sess)
 	client.dynamodbconn = dynamodb.New(awsDynamoSess)
 	client.ecrconn = ecr.New(sess)
 	client.ecsconn = ecs.New(sess)
