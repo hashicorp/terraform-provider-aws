@@ -10,7 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/sts"
 )
@@ -19,7 +21,7 @@ func TestAWSGetAccountInfo_shouldBeValid_fromEC2Role(t *testing.T) {
 	resetEnv := unsetEnv(t)
 	defer resetEnv()
 	// capture the test server's close method, to call after the test returns
-	awsTs := awsEnv(generateMetadataApiRoutes(append(securityCredentialsEndpoints, instanceIdEndpoint, iamInfoEndpoint)))
+	awsTs := awsMetadataApiMock(append(securityCredentialsEndpoints, instanceIdEndpoint, iamInfoEndpoint))
 	defer awsTs()
 
 	closeEmpty, emptySess, err := getMockedAwsApiSession("zero", []*awsMockEndpoint{})
@@ -51,7 +53,7 @@ func TestAWSGetAccountInfo_shouldBeValid_EC2RoleHasPriority(t *testing.T) {
 	resetEnv := unsetEnv(t)
 	defer resetEnv()
 	// capture the test server's close method, to call after the test returns
-	awsTs := awsEnv(generateMetadataApiRoutes(append(securityCredentialsEndpoints, instanceIdEndpoint, iamInfoEndpoint)))
+	awsTs := awsMetadataApiMock(append(securityCredentialsEndpoints, instanceIdEndpoint, iamInfoEndpoint))
 	defer awsTs()
 
 	iamEndpoints := []*awsMockEndpoint{
@@ -128,12 +130,66 @@ func TestAWSGetAccountInfo_shouldBeValid_fromIamUser(t *testing.T) {
 }
 
 func TestAWSGetAccountInfo_shouldBeValid_fromGetCallerIdentity(t *testing.T) {
-	doGetAccountInfoWithMetadataRoutes(t, nil)
+	iamEndpoints := []*awsMockEndpoint{
+		{
+			Request:  &awsMockRequest{"POST", "/", "Action=GetUser&Version=2010-05-08"},
+			Response: &awsMockResponse{403, iamResponse_GetUser_unauthorized, "text/xml"},
+		},
+	}
+	closeIam, iamSess, err := getMockedAwsApiSession("IAM", iamEndpoints)
+	defer closeIam()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	stsEndpoints := []*awsMockEndpoint{
+		{
+			Request:  &awsMockRequest{"POST", "/", "Action=GetCallerIdentity&Version=2011-06-15"},
+			Response: &awsMockResponse{200, stsResponse_GetCallerIdentity_valid, "text/xml"},
+		},
+	}
+	closeSts, stsSess, err := getMockedAwsApiSession("STS", stsEndpoints)
+	defer closeSts()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testGetAccountInfo(t, iamSess, stsSess, credentials.SharedCredsProviderName)
 }
 
 func TestAWSGetAccountInfo_shouldBeValid_EC2RoleFallsBackToCallerIdentity(t *testing.T) {
 	// This mimics the metadata service mocked by Hologram (https://github.com/AdRoll/hologram)
-	doGetAccountInfoWithMetadataRoutes(t, generateMetadataApiRoutes(securityCredentialsEndpoints))
+	resetEnv := unsetEnv(t)
+	defer resetEnv()
+
+	awsTs := awsMetadataApiMock(securityCredentialsEndpoints)
+	defer awsTs()
+
+	iamEndpoints := []*awsMockEndpoint{
+		{
+			Request:  &awsMockRequest{"POST", "/", "Action=GetUser&Version=2010-05-08"},
+			Response: &awsMockResponse{403, iamResponse_GetUser_unauthorized, "text/xml"},
+		},
+	}
+	closeIam, iamSess, err := getMockedAwsApiSession("IAM", iamEndpoints)
+	defer closeIam()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	stsEndpoints := []*awsMockEndpoint{
+		{
+			Request:  &awsMockRequest{"POST", "/", "Action=GetCallerIdentity&Version=2011-06-15"},
+			Response: &awsMockResponse{200, stsResponse_GetCallerIdentity_valid, "text/xml"},
+		},
+	}
+	closeSts, stsSess, err := getMockedAwsApiSession("STS", stsEndpoints)
+	defer closeSts()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testGetAccountInfo(t, iamSess, stsSess, ec2rolecreds.ProviderName)
 }
 
 func TestAWSGetAccountInfo_shouldBeValid_fromIamListRoles(t *testing.T) {
@@ -365,7 +421,7 @@ func TestAWSGetCredentials_shouldIAM(t *testing.T) {
 	defer resetEnv()
 
 	// capture the test server's close method, to call after the test returns
-	ts := awsEnv(generateMetadataApiRoutes(append(securityCredentialsEndpoints, instanceIdEndpoint, iamInfoEndpoint)))
+	ts := awsMetadataApiMock(append(securityCredentialsEndpoints, instanceIdEndpoint, iamInfoEndpoint))
 	defer ts()
 
 	// An empty config, no key supplied
@@ -401,7 +457,7 @@ func TestAWSGetCredentials_shouldIgnoreIAM(t *testing.T) {
 	resetEnv := unsetEnv(t)
 	defer resetEnv()
 	// capture the test server's close method, to call after the test returns
-	ts := awsEnv(generateMetadataApiRoutes(append(securityCredentialsEndpoints, instanceIdEndpoint, iamInfoEndpoint)))
+	ts := awsMetadataApiMock(append(securityCredentialsEndpoints, instanceIdEndpoint, iamInfoEndpoint))
 	defer ts()
 	simple := []struct {
 		Key, Secret, Token string
@@ -508,7 +564,7 @@ func TestAWSGetCredentials_shouldCatchEC2RoleProvider(t *testing.T) {
 	resetEnv := unsetEnv(t)
 	defer resetEnv()
 	// capture the test server's close method, to call after the test returns
-	ts := awsEnv(generateMetadataApiRoutes(append(securityCredentialsEndpoints, instanceIdEndpoint, iamInfoEndpoint)))
+	ts := awsMetadataApiMock(append(securityCredentialsEndpoints, instanceIdEndpoint, iamInfoEndpoint))
 	defer ts()
 
 	creds, err := GetCredentials(&Config{})
@@ -615,39 +671,7 @@ func TestAWSGetCredentials_shouldBeENV(t *testing.T) {
 	}
 }
 
-func doGetAccountInfoWithMetadataRoutes(t *testing.T, routes *routes) {
-	credProviderName := ""
-	if routes != nil {
-		resetEnv := unsetEnv(t)
-		defer resetEnv()
-		awsTs := awsEnv(routes)
-		defer awsTs()
-		credProviderName = ec2rolecreds.ProviderName
-	}
-
-	iamEndpoints := []*awsMockEndpoint{
-		{
-			Request:  &awsMockRequest{"POST", "/", "Action=GetUser&Version=2010-05-08"},
-			Response: &awsMockResponse{403, iamResponse_GetUser_unauthorized, "text/xml"},
-		},
-	}
-	closeIam, iamSess, err := getMockedAwsApiSession("IAM", iamEndpoints)
-	defer closeIam()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	stsEndpoints := []*awsMockEndpoint{
-		{
-			Request:  &awsMockRequest{"POST", "/", "Action=GetCallerIdentity&Version=2011-06-15"},
-			Response: &awsMockResponse{200, stsResponse_GetCallerIdentity_valid, "text/xml"},
-		},
-	}
-	closeSts, stsSess, err := getMockedAwsApiSession("STS", stsEndpoints)
-	defer closeSts()
-	if err != nil {
-		t.Fatal(err)
-	}
+func testGetAccountInfo(t *testing.T, iamSess, stsSess *session.Session, credProviderName string) {
 
 	iamConn := iam.New(iamSess)
 	stsConn := sts.New(stsSess)
@@ -749,16 +773,16 @@ func setEnv(s string, t *testing.T) func() {
 	}
 }
 
-// awsEnv establishes a httptest server to mock out the internal AWS Metadata
+// awsMetadataApiMock establishes a httptest server to mock out the internal AWS Metadata
 // service. IAM Credentials are retrieved by the EC2RoleProvider, which makes
 // API calls to this internal URL. By replacing the server with a test server,
 // we can simulate an AWS environment
-func awsEnv(rts *routes) func() {
+func awsMetadataApiMock(endpoints []*endpoint) func() {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Header().Add("Server", "MockEC2")
 		log.Printf("[DEBUG] Mocker server received request to %q", r.RequestURI)
-		for _, e := range rts.Endpoints {
+		for _, e := range endpoints {
 			if r.RequestURI == e.Uri {
 				fmt.Fprintln(w, e.Body)
 				w.WriteHeader(200)
@@ -800,18 +824,9 @@ type currentEnv struct {
 	Key, Secret, Token, Profile, CredsFilename string
 }
 
-type routes struct {
-	Endpoints []*endpoint `json:"endpoints"`
-}
 type endpoint struct {
 	Uri  string `json:"uri"`
 	Body string `json:"body"`
-}
-
-func generateMetadataApiRoutes(endpoints []*endpoint) *routes {
-	return &routes{
-		Endpoints: endpoints,
-	}
 }
 
 var instanceIdEndpoint = &endpoint{
