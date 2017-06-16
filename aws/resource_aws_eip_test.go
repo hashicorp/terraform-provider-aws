@@ -342,6 +342,9 @@ provider "aws" {
 resource "aws_instance" "foo" {
 	ami = "ami-5469ae3c"
 	instance_type = "m1.small"
+	tags {
+		Name = "testAccAWSEIPInstanceEc2Classic"
+	}
 }
 
 resource "aws_eip" "bar" {
