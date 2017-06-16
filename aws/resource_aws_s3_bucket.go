@@ -478,7 +478,7 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Error waiting for S3 Bucket creation: ", err)
 		}
-	case <-time.After(60):
+	case <-time.After(time.Duration(60) * time.Second):
 		return errors.New("S3 bucket creation timed out")
 	}
 	return resourceAwsS3BucketUpdate(d, meta)
