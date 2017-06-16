@@ -101,6 +101,13 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateApiGatewayIntegrationPassthroughBehavior,
 			},
+
+			"cache_key_parameters": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -150,6 +157,11 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 		contentHandling = aws.String(val.(string))
 	}
 
+	var cacheKeyParameters []*string
+	if v, ok := d.GetOk("cache_key_parameters"); ok {
+		cacheKeyParameters = expandStringList(v.(*schema.Set).List())
+	}
+
 	_, err := conn.PutIntegration(&apigateway.PutIntegrationInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get("resource_id").(string)),
@@ -160,8 +172,8 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 		RequestParameters:   aws.StringMap(parameters),
 		RequestTemplates:    aws.StringMap(templates),
 		Credentials:         credentials,
-		CacheNamespace:      nil,
-		CacheKeyParameters:  nil,
+		CacheNamespace:      aws.String(d.Get("resource_id").(string)),
+		CacheKeyParameters:  cacheKeyParameters,
 		PassthroughBehavior: passthroughBehavior,
 		ContentHandling:     contentHandling,
 	})
@@ -215,6 +227,8 @@ func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface
 	if integration.ContentHandling != nil {
 		d.Set("content_handling", integration.ContentHandling)
 	}
+
+	d.Set("cache_key_parameters", flattenStringList(integration.CacheKeyParameters))
 
 	return nil
 }
@@ -300,6 +314,31 @@ func resourceAwsApiGatewayIntegrationUpdate(d *schema.ResourceData, meta interfa
 					Value: aws.String(v.(string)),
 				})
 			}
+		}
+	}
+
+	if d.HasChange("cache_key_parameters") {
+		o, n := d.GetChange("cache_key_parameters")
+
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		removalList := os.Difference(ns)
+		for _, v := range removalList.List() {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String("remove"),
+				Path:  aws.String(fmt.Sprintf("/cacheKeyParameters/%s", v.(string))),
+				Value: aws.String(""),
+			})
+		}
+
+		additionList := ns.Difference(os)
+		for _, v := range additionList.List() {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String("add"),
+				Path:  aws.String(fmt.Sprintf("/cacheKeyParameters/%s", v.(string))),
+				Value: aws.String(""),
+			})
 		}
 	}
 
