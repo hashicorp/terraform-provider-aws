@@ -476,7 +476,7 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 	select {
 	case err := <-errChannel:
 		if err != nil {
-			return fmt.Errorf("Error waiting for S3 Bucket creation: ", err)
+			return fmt.Errorf("Error waiting for S3 Bucket creation: %s", err)
 		}
 	case <-time.After(time.Duration(60) * time.Second):
 		return errors.New("S3 bucket creation timed out")
