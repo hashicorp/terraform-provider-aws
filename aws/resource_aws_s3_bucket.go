@@ -3,6 +3,7 @@ package aws
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -464,6 +465,22 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 	// Assign the bucket name as the resource ID
 	d.SetId(bucket)
 
+	errChannel := make(chan error)
+	go func() {
+		err := s3conn.WaitUntilBucketExists(&s3.HeadBucketInput{
+			Bucket: aws.String(bucket),
+		})
+		errChannel <- err
+	}()
+
+	select {
+	case err := <-errChannel:
+		if err != nil {
+			return fmt.Errorf("Error waiting for S3 Bucket creation: ", err)
+		}
+	case <-time.After(60):
+		return errors.New("S3 bucket creation timed out")
+	}
 	return resourceAwsS3BucketUpdate(d, meta)
 }
 
