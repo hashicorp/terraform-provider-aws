@@ -1222,7 +1222,19 @@ func TestNormalizeJsonString(t *testing.T) {
 
 	// We expect the invalid JSON to be shown back to us again.
 	if actual != invalidJson {
-		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", expected, invalidJson)
+		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, invalidJson)
+	}
+
+	// Verify that it leaves strings alone
+	testString := "2016-07-28t04:07:02z\nsomething else"
+	expected = "2016-07-28t04:07:02z\nsomething else"
+	actual, err = normalizeJsonString(testString)
+	if err == nil {
+		t.Fatalf("Expected to throw an error while parsing JSON, but got: %s", err)
+	}
+
+	if actual != expected {
+		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, expected)
 	}
 }
 
