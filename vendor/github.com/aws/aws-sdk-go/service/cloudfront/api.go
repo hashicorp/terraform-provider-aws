@@ -3906,7 +3906,7 @@ type CreateCloudFrontOriginAccessIdentityInput struct {
 	// The current configuration information for the identity.
 	//
 	// CloudFrontOriginAccessIdentityConfig is a required field
-	CloudFrontOriginAccessIdentityConfig *OriginAccessIdentityConfig `locationName:"CloudFrontOriginAccessIdentityConfig" type:"structure" required:"true"`
+	CloudFrontOriginAccessIdentityConfig *OriginAccessIdentityConfig `locationName:"CloudFrontOriginAccessIdentityConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2017-03-25/"`
 }
 
 // String returns the string representation
@@ -3995,7 +3995,7 @@ type CreateDistributionInput struct {
 	// The distribution's configuration information.
 	//
 	// DistributionConfig is a required field
-	DistributionConfig *DistributionConfig `locationName:"DistributionConfig" type:"structure" required:"true"`
+	DistributionConfig *DistributionConfig `locationName:"DistributionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2017-03-25/"`
 }
 
 // String returns the string representation
@@ -4084,7 +4084,7 @@ type CreateDistributionWithTagsInput struct {
 	// The distribution's configuration information.
 	//
 	// DistributionConfigWithTags is a required field
-	DistributionConfigWithTags *DistributionConfigWithTags `locationName:"DistributionConfigWithTags" type:"structure" required:"true"`
+	DistributionConfigWithTags *DistributionConfigWithTags `locationName:"DistributionConfigWithTags" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2017-03-25/"`
 }
 
 // String returns the string representation
@@ -4178,7 +4178,7 @@ type CreateInvalidationInput struct {
 	// The batch information for the invalidation.
 	//
 	// InvalidationBatch is a required field
-	InvalidationBatch *InvalidationBatch `locationName:"InvalidationBatch" type:"structure" required:"true"`
+	InvalidationBatch *InvalidationBatch `locationName:"InvalidationBatch" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2017-03-25/"`
 }
 
 // String returns the string representation
@@ -4267,7 +4267,7 @@ type CreateStreamingDistributionInput struct {
 	// The streaming distribution's configuration information.
 	//
 	// StreamingDistributionConfig is a required field
-	StreamingDistributionConfig *StreamingDistributionConfig `locationName:"StreamingDistributionConfig" type:"structure" required:"true"`
+	StreamingDistributionConfig *StreamingDistributionConfig `locationName:"StreamingDistributionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2017-03-25/"`
 }
 
 // String returns the string representation
@@ -4356,7 +4356,7 @@ type CreateStreamingDistributionWithTagsInput struct {
 	// The streaming distribution's configuration information.
 	//
 	// StreamingDistributionConfigWithTags is a required field
-	StreamingDistributionConfigWithTags *StreamingDistributionConfigWithTags `locationName:"StreamingDistributionConfigWithTags" type:"structure" required:"true"`
+	StreamingDistributionConfigWithTags *StreamingDistributionConfigWithTags `locationName:"StreamingDistributionConfigWithTags" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2017-03-25/"`
 }
 
 // String returns the string representation
@@ -9575,7 +9575,7 @@ type TagResourceInput struct {
 	// A complex type that contains zero or more Tag elements.
 	//
 	// Tags is a required field
-	Tags *Tags `locationName:"Tags" type:"structure" required:"true"`
+	Tags *Tags `locationName:"Tags" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2017-03-25/"`
 }
 
 // String returns the string representation
@@ -9776,7 +9776,7 @@ type UntagResourceInput struct {
 	// A complex type that contains zero or more Tag key elements.
 	//
 	// TagKeys is a required field
-	TagKeys *TagKeys `locationName:"TagKeys" type:"structure" required:"true"`
+	TagKeys *TagKeys `locationName:"TagKeys" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2017-03-25/"`
 }
 
 // String returns the string representation
@@ -9840,7 +9840,7 @@ type UpdateCloudFrontOriginAccessIdentityInput struct {
 	// The identity's configuration information.
 	//
 	// CloudFrontOriginAccessIdentityConfig is a required field
-	CloudFrontOriginAccessIdentityConfig *OriginAccessIdentityConfig `locationName:"CloudFrontOriginAccessIdentityConfig" type:"structure" required:"true"`
+	CloudFrontOriginAccessIdentityConfig *OriginAccessIdentityConfig `locationName:"CloudFrontOriginAccessIdentityConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2017-03-25/"`
 
 	// The identity's id.
 	//
@@ -9943,7 +9943,7 @@ type UpdateDistributionInput struct {
 	// The distribution's configuration information.
 	//
 	// DistributionConfig is a required field
-	DistributionConfig *DistributionConfig `locationName:"DistributionConfig" type:"structure" required:"true"`
+	DistributionConfig *DistributionConfig `locationName:"DistributionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2017-03-25/"`
 
 	// The distribution's id.
 	//
@@ -10055,7 +10055,7 @@ type UpdateStreamingDistributionInput struct {
 	// The streaming distribution's configuration information.
 	//
 	// StreamingDistributionConfig is a required field
-	StreamingDistributionConfig *StreamingDistributionConfig `locationName:"StreamingDistributionConfig" type:"structure" required:"true"`
+	StreamingDistributionConfig *StreamingDistributionConfig `locationName:"StreamingDistributionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2017-03-25/"`
 }
 
 // String returns the string representation
