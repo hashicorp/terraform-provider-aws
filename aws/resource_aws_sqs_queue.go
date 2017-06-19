@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 var AttributeMap = map[string]string{
@@ -43,8 +44,15 @@ func resourceAwsSqsQueue() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				Computed:      true,
+				ConflictsWith: []string{"name_prefix"},
+			},
+			"name_prefix": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"delay_seconds": {
@@ -110,7 +118,15 @@ func resourceAwsSqsQueue() *schema.Resource {
 func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	sqsconn := meta.(*AWSClient).sqsconn
 
-	name := d.Get("name").(string)
+	var name string
+	if v, ok := d.GetOk("name"); ok {
+		name = v.(string)
+	} else if v, ok := d.GetOk("name_prefix"); ok {
+		name = resource.PrefixedUniqueId(v.(string))
+	} else {
+		name = resource.UniqueId()
+	}
+
 	fq := d.Get("fifo_queue").(bool)
 	cbd := d.Get("content_based_deduplication").(bool)
 
