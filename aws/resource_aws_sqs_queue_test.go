@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"regexp"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -11,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/jen20/awspolicyequivalence"
-	"regexp"
 )
 
 func TestAccAWSSQSQueue_basic(t *testing.T) {
@@ -37,6 +39,24 @@ func TestAccAWSSQSQueue_basic(t *testing.T) {
 				Config: testAccAWSSQSConfigWithDefaults(queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_namePrefix(t *testing.T) {
+	prefix := "acctest-sqs-queue"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigWithNamePrefix(prefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+					testAccCheckAWSSQSGeneratedNamePrefix("aws_sqs_queue.queue", "acctest-sqs-queue"),
 				),
 			},
 		},
@@ -299,6 +319,23 @@ func testAccCheckAWSSQSExistsWithDefaults(n string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckAWSSQSGeneratedNamePrefix(resource, prefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		r, ok := s.RootModule().Resources[resource]
+		if !ok {
+			return fmt.Errorf("Resource not found")
+		}
+		name, ok := r.Primary.Attributes["name"]
+		if !ok {
+			return fmt.Errorf("Name attr not found: %#v", r.Primary.Attributes)
+		}
+		if !strings.HasPrefix(name, prefix) {
+			return fmt.Errorf("Name: %q, does not have prefix: %q", name, prefix)
+		}
+		return nil
+	}
+}
+
 func testAccCheckAWSSQSExistsWithOverrides(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -353,6 +390,14 @@ func testAccAWSSQSConfigWithDefaults(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "queue" {
     name = "%s"
+}
+`, r)
+}
+
+func testAccAWSSQSConfigWithNamePrefix(r string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "queue" {
+    name_prefix = "%s"
 }
 `, r)
 }
