@@ -97,6 +97,29 @@ func TestAccAWSAppautoScalingPolicy_spotFleetRequest(t *testing.T) {
 	})
 }
 
+func TestAccAWSAppautoScalingPolicy_dynamoDb(t *testing.T) {
+	var policy applicationautoscaling.ScalingPolicy
+
+	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSAppautoscalingPolicyDynamoDB(randPolicyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppautoscalingPolicyExists("aws_appautoscaling_policy.dynamo_test", &policy),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "name", randPolicyName),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "service_namespace", "dynamodb"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "scalable_dimension", "dynamodb:table:WriteCapacityUnits"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAppautoscalingPolicyExists(n string, policy *applicationautoscaling.ScalingPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -414,4 +437,97 @@ resource "aws_appautoscaling_policy" "foobar_simple" {
 	depends_on = ["aws_appautoscaling_target.tgt"]
 }
 `, randClusterName, randClusterName, randClusterName, randPolicyName)
+}
+
+func testAccAWSAppautoscalingPolicyDynamoDB(
+	randPolicyName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "dynamodb_table_test" {
+  name           = "%s"
+  read_capacity  = 5
+  write_capacity = 5
+  hash_key       = "FooKey"
+  attribute {
+    name = "FooKey"
+    type = "S"
+  }
+}
+resource "aws_iam_role" "dynamodb_role" {
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "dynamodb.amazonaws.com"
+        ]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+resource "aws_iam_role_policy_attachment" "dynamodb_role_policy" {
+  role = "${aws_iam_role.dynamodb_role.name}"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDynamoDBFullAccess"
+}
+resource "aws_iam_role" "autoscale_role" {
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "application-autoscaling.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+resource "aws_iam_role_policy_attachment" "autoscale_role_policy" {
+  role = "${aws_iam_role.autoscale_role.name}"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AutoScalingFullAccess"
+}
+resource "aws_appautoscaling_target" "dynamo_test" {
+  service_namespace = "dynamodb"
+  resource_id = "${aws_dynamodb_table.dynamodb_table_test.name}"
+  scalable_dimension = "dynamodb:table:WriteCapacityUnits"
+  role_arn = "${aws_iam_role.autoscale_role.arn}"
+  min_capacity = 1
+  max_capacity = 10
+}
+resource "aws_appautoscaling_policy" "dynamo_test" {
+  name = "%s"
+  service_namespace = "dynamodb"
+  resource_id = "${aws_dynamodb_table.dynamodb_table_test.name}"
+  scalable_dimension = "dynamodb:table:WriteCapacityUnits"
+  adjustment_type = "ChangeInCapacity"
+  cooldown = 60
+  metric_aggregation_type = "Maximum"
+  step_adjustment {
+    metric_interval_lower_bound = 0
+    scaling_adjustment = 1
+  }
+  
+  customized_metric_specification = {
+    metric_name = "foo"
+    namespace = "dynamodb"
+    statistic = "Sum"
+  }
+  predefined_metric_specification = {
+    predefined_metric_type = "DynamoDBWriteCapacityUtilization"
+  }
+  
+  scale_in_cooldown = 10
+  scale_out_cooldown = 10
+  target_value = 70
+  depends_on = ["aws_appautoscaling_target.dynamo_test"]
+}
+`, randPolicyName, randPolicyName)
 }
