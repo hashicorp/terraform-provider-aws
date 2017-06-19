@@ -26,4 +26,5 @@ BUG FIXES:
 * resource/lambda: Fix incorrect GovCloud regexes [GH-16]
 * Allow ipv6_cidr_block to be assigned to peering_connection [GH-879]
 * resource/rds_db_instance: Correctly create cross-region encrypted replica [GH-865]
-* aws_eip: dissociate EIP on update [GH-878]
+* resource/eip: dissociate EIP on update [GH-878]
+* resource/iam_server_certificate: Increase deletion timeout [GH-907]
