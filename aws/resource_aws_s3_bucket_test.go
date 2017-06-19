@@ -58,15 +58,11 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_withTags(t *testing.T) {
+func TestAccAWSS3MultiBucket_withTags(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		rInt := acctest.RandInt()
 		resource.Test(t, resource.TestCase{
-			PreCheck: func() { testAccPreCheck(t) },
-			/*
-				IDRefreshName:   "aws_s3_bucket.bucket",
-				IDRefreshIgnore: []string{"force_destroy"},
-			*/
+			PreCheck:     func() { testAccPreCheck(t) },
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckAWSS3BucketDestroy,
 			Steps: []resource.TestStep{
