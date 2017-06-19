@@ -1026,6 +1026,11 @@ func validateAppautoscalingScalableDimension(v interface{}, k string) (ws []stri
 		"ecs:service:DesiredCount":                     true,
 		"ec2:spot-fleet-request:TargetCapacity":        true,
 		"elasticmapreduce:instancegroup:InstanceCount": true,
+		"appstream:fleet:DesiredCapacity":              true,
+		"dynamodb:table:ReadCapacityUnits":             true,
+		"dynamodb:table:WriteCapacityUnits":            true,
+		"dynamodb:index:ReadCapacityUnits":             true,
+		"dynamodb:index:WriteCapacityUnits":            true,
 	}
 
 	if !dimensions[value] {
@@ -1039,11 +1044,59 @@ func validateAppautoscalingServiceNamespace(v interface{}, k string) (ws []strin
 	namespaces := map[string]bool{
 		"ecs":              true,
 		"ec2":              true,
+		"appstream":        true,
+		"dynamodb":         true,
 		"elasticmapreduce": true,
 	}
 
 	if !namespaces[value] {
 		errors = append(errors, fmt.Errorf("%q must be a valid service namespace value: %q", k, value))
+	}
+	return
+}
+
+func validateAppautoscalingCustomizedMetricSpecificationStatistic(v interface{}, k string) (ws []string, errors []error) {
+	validStatistic := []string{
+		"Average",
+		"Minimum",
+		"Maximum",
+		"SampleCount",
+		"Sum",
+	}
+	statistic := v.(string)
+	for _, o := range validStatistic {
+		if statistic == o {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid statistic %q. Valid statistic are %q.",
+		k, statistic, validStatistic))
+	return
+}
+
+func validateAppautoscalingPredefinedMetricSpecification(v interface{}, k string) (ws []string, errors []error) {
+	validMetrics := []string{
+		"DynamoDBReadCapacityUtilization",
+		"DynamoDBWriteCapacityUtilization",
+	}
+	metric := v.(string)
+	for _, o := range validMetrics {
+		if metric == o {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid metric %q. Valid metric are %q.",
+		k, metric, validMetrics))
+	return
+}
+
+func validateAppautoscalingPredefinedResourceLabel(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 1023 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 1023 characters", k))
 	}
 	return
 }

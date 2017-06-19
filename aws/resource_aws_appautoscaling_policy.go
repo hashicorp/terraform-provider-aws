@@ -153,6 +153,65 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 					},
 				},
 			},
+			"customized_metric_specification": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"dimensions": &schema.Schema{
+							Type:     schema.TypeList,
+							Optional: true,
+						},
+						"metric_name": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"namespace": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"statistic": &schema.Schema{
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateAppautoscalingCustomizedMetricSpecificationStatistic,
+						},
+						"unit": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"predefined_metric_specification": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"predefined_metric_type": &schema.Schema{
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateAppautoscalingPredefinedMetricSpecification,
+						},
+						"resource_label": &schema.Schema{
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateAppautoscalingPredefinedResourceLabel,
+						},
+					},
+				},
+			},
+			"scale_in_cooldown": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"scale_out_cooldown": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"target_value": &schema.Schema{
+				Type:     schema.TypeFloat,
+				Required: true,
+			},
 		},
 	}
 }
@@ -304,6 +363,55 @@ func expandAppautoscalingStepAdjustments(configured []interface{}) ([]*applicati
 	return adjustments, nil
 }
 
+func expandAppautoscalingCustomizedMetricSpecification(configured []interface{}) (*applicationautoscaling.CustomizedMetricSpecification, error) {
+	var spec *applicationautoscaling.CustomizedMetricSpecification
+
+	for _, raw := range configured {
+		data := raw.(map[string]interface{})
+		if v, ok := data["metric_name"]; ok {
+			spec.MetricName = aws.String(v.(string))
+		}
+
+		if v, ok := data["namespace"]; ok {
+			spec.Namespace = aws.String(v.(string))
+		}
+
+		if v, ok := data["unit"]; ok {
+			spec.Unit = aws.String(v.(string))
+		}
+
+		if v, ok := data["statistic"]; ok {
+			spec.Statistic = aws.String(v.(string))
+		}
+
+		// if v, ok := data["dimensions"]; ok {
+		// 	dimensions := make([]*applicationautoscaling.MetricDimension, 0)
+		// 	for k, v := range data["dimensions"].(map[string]interface{}) {
+		// 		dimensions[k] = v.(string)
+		// 	}
+		// 	spec.Dimensions = dimensions
+		// }
+	}
+	return spec, nil
+}
+
+func expandAppautoscalingPredefinedMetricSpecification(configured []interface{}) (*applicationautoscaling.PredefinedMetricSpecification, error) {
+	var spec *applicationautoscaling.PredefinedMetricSpecification
+
+	for _, raw := range configured {
+		data := raw.(map[string]interface{})
+
+		if v, ok := data["predefined_metric_type"]; ok {
+			spec.PredefinedMetricType = aws.String(v.(string))
+		}
+
+		if v, ok := data["resource_label"]; ok {
+			spec.ResourceLabel = aws.String(v.(string))
+		}
+	}
+	return spec, nil
+}
+
 func getAwsAppautoscalingPutScalingPolicyInput(d *schema.ResourceData) (applicationautoscaling.PutScalingPolicyInput, error) {
 	var params = applicationautoscaling.PutScalingPolicyInput{
 		PolicyName: aws.String(d.Get("name").(string)),
@@ -361,6 +469,33 @@ func getAwsAppautoscalingPutScalingPolicyInput(d *schema.ResourceData) (applicat
 
 	if v, ok := d.GetOk("step_scaling_policy_configuration"); ok {
 		params.StepScalingPolicyConfiguration = expandStepScalingPolicyConfiguration(v.([]interface{}))
+	}
+
+	var customizedMetricSpecs *applicationautoscaling.CustomizedMetricSpecification
+	if v, ok := d.GetOk("customized_metric_specification"); ok {
+		specs, err := expandAppautoscalingCustomizedMetricSpecification(v.(*schema.Set).List())
+		if err != nil {
+			return params, fmt.Errorf("metric_interval_lower_bound and metric_interval_upper_bound must be strings!")
+		}
+		customizedMetricSpecs = specs
+	}
+
+	var predefinedMetricSpecs *applicationautoscaling.PredefinedMetricSpecification
+	if v, ok := d.GetOk("customized_metric_specification"); ok {
+		specs, err := expandAppautoscalingPredefinedMetricSpecification(v.(*schema.Set).List())
+		if err != nil {
+			return params, fmt.Errorf("metric_interval_lower_bound and metric_interval_upper_bound must be strings!")
+		}
+		predefinedMetricSpecs = specs
+	}
+
+	// build TargetTrackingScalingPolicyConfiguration
+	params.TargetTrackingScalingPolicyConfiguration = &applicationautoscaling.TargetTrackingScalingPolicyConfiguration{
+		CustomizedMetricSpecification: customizedMetricSpecs,
+		PredefinedMetricSpecification: predefinedMetricSpecs,
+		ScaleInCooldown:               aws.Int64(int64(d.Get("scale_in_cooldown").(int))),
+		ScaleOutCooldown:              aws.Int64(int64(d.Get("scale_out_cooldown").(int))),
+		TargetValue:                   aws.Float64(d.Get("target_value").(float64)),
 	}
 
 	return params, nil
