@@ -60,6 +60,16 @@ func TestAccAWSKinesisStream_importBasic(t *testing.T) {
 
 func TestAccAWSKinesisStream_shardCount(t *testing.T) {
 	var stream kinesis.StreamDescription
+	var updatedStream kinesis.StreamDescription
+
+	testCheckStreamNotDestroyed := func() resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			if *stream.StreamCreationTimestamp != *updatedStream.StreamCreationTimestamp {
+					return fmt.Error("Creation timestamps dont match, stream was recreated")
+			}
+			return nil
+		}
+	}
 
 	rInt := acctest.RandInt()
 
@@ -81,8 +91,9 @@ func TestAccAWSKinesisStream_shardCount(t *testing.T) {
 			{
 				Config: testAccKinesisStreamConfigUpdateShardCount(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
-					testAccCheckAWSKinesisStreamAttributes(&stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &updatedStream),
+					testAccCheckAWSKinesisStreamAttributes(&updatedStream),
+					testCheckStreamNotDestroyed(),
 					resource.TestCheckResourceAttr(
 						"aws_kinesis_stream.test_stream", "shard_count", "4"),
 				),
@@ -223,6 +234,10 @@ func testAccCheckAWSKinesisStreamAttributes(stream *kinesis.StreamDescription) r
 		return nil
 	}
 }
+
+func testAccCheckAWSKinesisStreamUpdated(s1, s2 *kinesisStreamState) resource.TestCheckFunc {
+	return func()
+	}
 
 func testAccCheckKinesisStreamDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
