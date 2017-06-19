@@ -273,7 +273,7 @@ func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Error listing Policies for IAM Role (%s) when trying to delete: %s", d.Id(), err)
 		}
-		// Loop and remove this Role from any Profiles
+		// Loop and remove the Policies from the Role
 		if len(policiesResp.AttachedPolicies) > 0 {
 			for _, i := range policiesResp.AttachedPolicies {
 				_, err := iamconn.DetachRolePolicy(&iam.DetachRolePolicyInput{
