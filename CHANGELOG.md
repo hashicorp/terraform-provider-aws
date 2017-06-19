@@ -13,6 +13,7 @@ IMPROVEMENTS:
 * resource/dynamodb_table: Expose stream_label attribute [GH-20]
 * resource/opsworks: Add support for configurable timeouts in AWS OpsWorks Instances. [GH-857]
 * Fix handling of AdRoll's hologram clients [GH-17]
+* Add support for name_prefix to aws_sqs_queue [GH-855]
 
 BUG FIXES:
 
