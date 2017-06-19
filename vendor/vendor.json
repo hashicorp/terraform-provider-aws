@@ -571,6 +571,14 @@
 			"versionExact": "v1.8.41"
 		},
 		{
+			"checksumSHA1": "oj67eX/Zr0m9J4VEvm+oSGipqcc=",
+			"path": "github.com/aws/aws-sdk-go/service/organizations",
+			"revision": "47ba3b0518c83189f3a1c95d20fc22f267e02ed3",
+			"revisionTime": "2017-06-13T17:42:44Z",
+			"version": "v1.8.41",
+			"versionExact": "v1.8.41"
+		},
+		{
 			"checksumSHA1": "gCTZVPwRzFgt+Ve9KKtp7SAgzx4=",
 			"path": "github.com/aws/aws-sdk-go/service/rds",
 			"revision": "47ba3b0518c83189f3a1c95d20fc22f267e02ed3",
