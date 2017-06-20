@@ -182,6 +182,40 @@ func TestAccAWSEIP_associated_user_private_ip(t *testing.T) {
 	})
 }
 
+// Regression test for https://github.com/hashicorp/terraform/issues/3429 (now
+// https://github.com/terraform-providers/terraform-provider-aws/issues/42)
+func TestAccAWSEIP_classic_disassociate(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSEIP_classic_disassociate("ami-408c7f28"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(
+						"aws_eip.ip.0",
+						"instance"),
+					resource.TestCheckResourceAttrSet(
+						"aws_eip.ip.1",
+						"instance"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccAWSEIP_classic_disassociate("ami-8c6ea9e4"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(
+						"aws_eip.ip.0",
+						"instance"),
+					resource.TestCheckResourceAttrSet(
+						"aws_eip.ip.1",
+						"instance"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEIPDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -308,6 +342,9 @@ provider "aws" {
 resource "aws_instance" "foo" {
 	ami = "ami-5469ae3c"
 	instance_type = "m1.small"
+	tags {
+		Name = "testAccAWSEIPInstanceEc2Classic"
+	}
 }
 
 resource "aws_eip" "bar" {
@@ -544,3 +581,70 @@ resource "aws_eip" "two" {
   associate_with_private_ip = "10.0.0.11"
 }
 `
+
+func testAccAWSEIP_classic_disassociate(ami string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-east-1"
+}
+
+variable "server_count" {
+  default = 2
+}
+
+resource "aws_eip" "ip" {
+  count    = "${var.server_count}"
+  instance = "${element(aws_instance.example.*.id, count.index)}"
+  vpc      = true
+}
+
+resource "aws_instance" "example" {
+  count = "${var.server_count}"
+
+  ami                         = "%s"
+  instance_type               = "m1.small"
+  associate_public_ip_address = true
+  subnet_id                   = "${aws_subnet.us-east-1b-public.id}"
+  availability_zone           = "${aws_subnet.us-east-1b-public.availability_zone}"
+
+  tags {
+    Name = "testAccAWSEIP_classic_disassociate"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
+	tags {
+		Name = "TestAccAWSEIP_classic_disassociate"
+	}
+}
+
+resource "aws_internet_gateway" "example" {
+  vpc_id = "${aws_vpc.example.id}"
+}
+
+resource "aws_subnet" "us-east-1b-public" {
+  vpc_id = "${aws_vpc.example.id}"
+
+  cidr_block        = "10.0.0.0/24"
+  availability_zone = "us-east-1b"
+}
+
+resource "aws_route_table" "us-east-1-public" {
+  vpc_id = "${aws_vpc.example.id}"
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.example.id}"
+  }
+}
+
+resource "aws_route_table_association" "us-east-1b-public" {
+  subnet_id      = "${aws_subnet.us-east-1b-public.id}"
+  route_table_id = "${aws_route_table.us-east-1-public.id}"
+}`, ami)
+}

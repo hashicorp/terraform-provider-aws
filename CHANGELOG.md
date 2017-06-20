@@ -10,9 +10,12 @@ IMPROVEMENTS:
 
 * resource/ebs_snapshot: Add support for tags [GH-3]
 * resource/aws_elasticsearch_domain: now retries on IAM role association failure [GH-12]
+* resource/codebuild_project: Increase timeout for creation retry (IAM) [GH-904]
 * resource/dynamodb_table: Expose stream_label attribute [GH-20]
 * resource/opsworks: Add support for configurable timeouts in AWS OpsWorks Instances. [GH-857]
 * Fix handling of AdRoll's hologram clients [GH-17]
+* resource/sqs_queue: Add support for name_prefix to aws_sqs_queue [GH-855]
+* resource/iam_role: Add support for iam_role tp force_detach_policies [GH-890]
 
 BUG FIXES:
 
@@ -23,3 +26,4 @@ BUG FIXES:
 * resource/lambda: Fix incorrect GovCloud regexes [GH-16]
 * Allow ipv6_cidr_block to be assigned to peering_connection [GH-879]
 * resource/rds_db_instance: Correctly create cross-region encrypted replica [GH-865]
+* aws_eip: dissociate EIP on update [GH-878]
