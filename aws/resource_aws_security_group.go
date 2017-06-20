@@ -316,7 +316,7 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			//If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6
 			//enabled SG
-			if ec2err, ok := err.(awserr.Error); ok && (ec2err.Code() != "InvalidPermission.NotFound" || ec2err.Code() != "InvalidParameterValue: remote-ipv6-range") {
+			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() != "InvalidPermission.NotFound" && ec2err.Code() != "InvalidParameterValue" {
 				return fmt.Errorf(
 					"Error revoking default IPv6 egress rule for Security Group (%s): %s",
 					d.Id(), err)
