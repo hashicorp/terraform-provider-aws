@@ -1,4 +1,9 @@
 ## 0.1.1 (Unreleased)
+
+BUG FIXES:
+
+* Fixing malformed ARN attribute for aws_security_group data source [GH-910]
+
 ## 0.1.0 (June 20, 2017)
 
 BACKWARDS INCOMPATIBILITIES / NOTES:
