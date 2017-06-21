@@ -1,8 +1,8 @@
-## 0.1.1 (Unreleased)
+## 0.1.1 (June 21, 2017)
 
 BUG FIXES:
 
-* Fixing malformed ARN attribute for aws_security_group data source [GH-910]
+* Fixing malformed ARN attribute for aws_security_group data source ([#910](https://github.com/terraform-providers/terraform-provider-aws/910))
 
 ## 0.1.0 (June 20, 2017)
 
