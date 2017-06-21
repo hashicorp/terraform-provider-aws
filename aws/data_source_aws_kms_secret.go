@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -92,7 +93,8 @@ func dataSourceAwsKmsSecretRead(d *schema.ResourceData, meta interface{}) error 
 
 		// Set the secret via the name
 		log.Printf("[DEBUG] aws_kms_secret - successfully decrypted secret: %s", secret["name"].(string))
-		d.UnsafeSetFieldRaw(secret["name"].(string), string(resp.Plaintext))
+		SecretPlaintext := strings.TrimSpace(string(resp.Plaintext))
+		d.UnsafeSetFieldRaw(secret["name"].(string), SecretPlaintext)
 	}
 
 	return nil
