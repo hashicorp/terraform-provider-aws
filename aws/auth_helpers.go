@@ -125,8 +125,25 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 	// Build isolated HTTP client to avoid issues with globally-shared settings
 	client := cleanhttp.DefaultClient()
 
-	// Keep the timeout low as we don't want to wait in non-EC2 environments
+	// Keep the default timeout (100ms) low as we don't want to wait in non-EC2 environments
 	client.Timeout = 100 * time.Millisecond
+
+	const userTimeoutEnvVar = "AWS_METADATA_TIMEOUT"
+	userTimeout := os.Getenv(userTimeoutEnvVar)
+	if userTimeout != "" {
+		newTimeout, err := time.ParseDuration(userTimeout)
+		if err == nil {
+			if newTimeout.Nanoseconds() > 0 {
+				client.Timeout = newTimeout
+			} else {
+				log.Printf("[WARN] Non-positive value of %s (%s) is meaningless, ignoring", userTimeoutEnvVar, newTimeout.String())
+			}
+		} else {
+			log.Printf("[WARN] Error converting %s to time.Duration: %s", userTimeoutEnvVar, err)
+		}
+	}
+
+	log.Printf("[INFO] Setting AWS metadata API timeout to %s", client.Timeout.String())
 	cfg := &aws.Config{
 		HTTPClient: client,
 	}
