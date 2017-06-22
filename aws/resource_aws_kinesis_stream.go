@@ -249,8 +249,8 @@ func updateKinesisShardCount(conn *kinesis.Kinesis, d *schema.ResourceData) erro
 	sn := d.Get("name").(string)
 
 	oraw, nraw := d.GetChange("shard_count")
-	o := oraw.(int64)
-	n := nraw.(int64)
+	o := oraw.(int)
+	n := nraw.(int)
 
 	if n == o {
 		log.Printf("[DEBUG] Kinesis Stream (%q) Shard Count Not Changed", sn)
@@ -260,7 +260,7 @@ func updateKinesisShardCount(conn *kinesis.Kinesis, d *schema.ResourceData) erro
 	log.Printf("[DEBUG] Change %s Stream ShardCount to %d", sn, n)
 	_, err := conn.UpdateShardCount(&kinesis.UpdateShardCountInput{
 		StreamName:       aws.String(sn),
-		TargetShardCount: aws.Int64(n),
+		TargetShardCount: aws.Int64(int64(n)),
 		ScalingType:      aws.String("UNIFORM_SCALING"),
 	})
 	if err != nil {
