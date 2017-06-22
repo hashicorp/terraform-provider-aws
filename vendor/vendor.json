@@ -830,22 +830,6 @@
 			"revisionTime": "2015-06-09T07:04:31Z"
 		},
 		{
-			"checksumSHA1": "KmSEvCJPmFviMYTfvRdK/ENnWX0=",
-			"path": "github.com/hashicorp/terraform/builtin/providers/template",
-			"revision": "8d560482c34e865458fd884cb0790b4f73f09ad1",
-			"revisionTime": "2017-06-08T00:14:54Z",
-			"version": "v0.9.8",
-			"versionExact": "v0.9.8"
-		},
-		{
-			"checksumSHA1": "FngzpheYS14XxPed3SrvOofM7e8=",
-			"path": "github.com/hashicorp/terraform/builtin/providers/tls",
-			"revision": "8d560482c34e865458fd884cb0790b4f73f09ad1",
-			"revisionTime": "2017-06-08T00:14:54Z",
-			"version": "v0.9.8",
-			"versionExact": "v0.9.8"
-		},
-		{
 			"checksumSHA1": "BcxYPk5ME2ZyrHS1yK7gK9mzS1A=",
 			"path": "github.com/hashicorp/terraform/config",
 			"revision": "8d560482c34e865458fd884cb0790b4f73f09ad1",

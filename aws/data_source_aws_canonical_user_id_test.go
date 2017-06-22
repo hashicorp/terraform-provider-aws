@@ -1,5 +1,3 @@
-// make testacc TEST=./builtin/providers/aws/ TESTARGS='-run=TestAccDataSourceAwsCanonicalUserId_'
-
 package aws
 
 import (
