@@ -1,4 +1,3 @@
-// make testacc TEST=./builtin/providers/aws/ TESTARGS='-run=TestAccAWSS3BucketObject_'
 package aws
 
 import (

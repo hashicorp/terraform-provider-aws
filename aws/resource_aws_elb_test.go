@@ -1460,8 +1460,6 @@ resource "aws_security_group" "bar" {
 }
 `
 
-// This IAM Server config is lifted from
-// builtin/providers/aws/resource_aws_iam_server_certificate_test.go
 func testAccELBIAMServerCertConfig(certName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test_cert" {
