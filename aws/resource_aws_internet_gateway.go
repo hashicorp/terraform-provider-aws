@@ -29,6 +29,10 @@ func resourceAwsInternetGateway() *schema.Resource {
 				Optional: true,
 			},
 			"tags": tagsSchema(),
+			"timeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -49,7 +53,12 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 	d.SetId(*ig.InternetGatewayId)
 	log.Printf("[INFO] InternetGateway ID: %s", d.Id())
 
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	default_timeout := 5
+	if timeout, ok := d.GetOk("timeout"); ok {
+		default_timeout = timeout.(int)
+	}
+
+	err = resource.Retry(time.Duration(default_timeout)*time.Minute, func() *resource.RetryError {
 		igRaw, _, err := IGStateRefreshFunc(conn, d.Id())()
 		if igRaw != nil {
 			return nil
@@ -134,7 +143,12 @@ func resourceAwsInternetGatewayDelete(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[INFO] Deleting Internet Gateway: %s", d.Id())
 
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
+	default_timeout := 10
+	if timeout, ok := d.GetOk("timeout"); ok {
+		default_timeout = timeout.(int)
+	}
+
+	return resource.Retry(time.Duration(default_timeout)*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteInternetGateway(&ec2.DeleteInternetGatewayInput{
 			InternetGatewayId: aws.String(d.Id()),
 		})
@@ -173,7 +187,12 @@ func resourceAwsInternetGatewayAttach(d *schema.ResourceData, meta interface{}) 
 		d.Id(),
 		d.Get("vpc_id").(string))
 
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	default_timeout := 10
+	if timeout, ok := d.GetOk("timeout"); ok {
+		default_timeout = timeout.(int)
+	}
+
+	err := resource.Retry(time.Duration(default_timeout)*time.Minute, func() *resource.RetryError {
 		_, err := conn.AttachInternetGateway(&ec2.AttachInternetGatewayInput{
 			InternetGatewayId: aws.String(d.Id()),
 			VpcId:             aws.String(d.Get("vpc_id").(string)),
