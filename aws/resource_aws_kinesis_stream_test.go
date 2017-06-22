@@ -226,7 +226,7 @@ func testAccCheckAWSKinesisStreamAttributes(stream *kinesis.StreamDescription) r
 			if *stream.StreamARN != rs.Primary.Attributes["arn"] {
 				return fmt.Errorf("Bad Stream ARN\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["arn"], *stream.StreamARN)
 			}
-			shard_count := strconv.Itoa(len(stream.Shards))
+			shard_count := strconv.Itoa(len(flattenShards(openShards(stream.Shards))))
 			if shard_count != rs.Primary.Attributes["shard_count"] {
 				return fmt.Errorf("Bad Stream Shard Count\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["shard_count"], shard_count)
 			}
