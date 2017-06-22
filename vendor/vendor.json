@@ -1144,6 +1144,14 @@
 			"revisionTime": "2016-09-27T10:08:44Z"
 		},
 		{
+			"checksumSHA1": "EUR26b2t3XDPxiEMwDBtn8Ajp8A=",
+			"path": "github.com/terraform-providers/terraform-provider-template/template",
+			"revision": "38db8c17785b8a21666fe6c784682186f0c172ed",
+			"revisionTime": "2017-06-21T15:27:00Z",
+			"version": "v0.1.1",
+			"versionExact": "v0.1.1"
+		},
+		{
 			"checksumSHA1": "vE43s37+4CJ2CDU6TlOUOYE0K9c=",
 			"path": "golang.org/x/crypto/bcrypt",
 			"revision": "9477e0b78b9ac3d0b03822fd95422e2fe07627cd",
