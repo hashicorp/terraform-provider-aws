@@ -191,8 +191,6 @@ func policyAttributesToMap(attributes *[]*elb.PolicyAttributeDescription) map[st
 }
 
 // Sets the SSL Negotiation policy with attributes.
-// The IAM Server Cert config is lifted from
-// builtin/providers/aws/resource_aws_iam_server_certificate_test.go
 func testAccSslNegotiationPolicyConfig(certName string, lbName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test_cert" {

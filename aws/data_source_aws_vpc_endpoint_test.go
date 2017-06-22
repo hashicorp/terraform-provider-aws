@@ -1,4 +1,3 @@
-// make testacc TEST=./builtin/providers/aws/ TESTARGS='-run=TestAccDataSourceAwsVpcEndpoint_'
 package aws
 
 import (
