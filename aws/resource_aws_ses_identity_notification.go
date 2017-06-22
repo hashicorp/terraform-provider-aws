@@ -2,10 +2,8 @@ package aws
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -43,9 +41,9 @@ func resourceAwsSesNotificationSet(d *schema.ResourceData, meta interface{}) err
 	identity := d.Get("identity").(string)
 
 	setOpts := &ses.SetIdentityNotificationTopicInput{
-		Identity:         identity,
-		NotificationType: notification,
-		SnsTopic:         topic,
+		Identity:         aws.String(identity),
+		NotificationType: aws.String(notification),
+		SnsTopic:         aws.String(topic),
 	}
 
 	_, err := conn.SetIdentityNotificationTopicRequest(setOpts).Send()
@@ -63,7 +61,7 @@ func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) er
 	identity := d.Get("identity").(*schema.Set)
 
 	getOpts := &ses.GetIdentityNotificationAttributesInput{
-		Identities: []string{identity},
+		Identities: []*string{ aws.String(identity) },
 	}
 
 	response, err := conn.GetIdentityNotificationAttributes(getOpts)
@@ -72,18 +70,18 @@ func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error reading SES Identity Notification: %s", err)
 	}
 
-	identityAttributes = response.NotificationAttributes[identity]
+	notificationAttributes := response.NotificationAttributes[identity]
 	switch notification {
 	case "Bounce":
-		if err := d.set("topic", identityAttributes.BounceTopic); err != nil {
+		if err := d.Set("topic", notificationAttributes.BounceTopic); err != nil {
 			return err
 		}
 	case "Complain":
-		if err := d.set("topic", identityAttributes.ComplaintTopic); err != nil {
+		if err := d.Set("topic", notificationAttributes.ComplaintTopic); err != nil {
 			return err
 		}
 	case "Delivery":
-		if err := d.set("topic", identityAttributes.DeliveryTopic); err != nil {
+		if err := d.Set("topic", notificationAttributes.DeliveryTopic); err != nil {
 			return err
 		}
 	}
