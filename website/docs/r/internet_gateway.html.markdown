@@ -28,7 +28,7 @@ The following arguments are supported:
 
 * `vpc_id` - (Required) The VPC ID to create in.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
-* `timeout` - (Optional) Retry timeout in minutes. If set it will override default retry timeouts for the resource.
+* `timeout` - (Optional) Overrides the resource default retry timeout in minutes.
 
 -> **Note:** It's recommended to denote that the AWS Instance or Elastic IP depends on the Internet Gateway. For example:
 
