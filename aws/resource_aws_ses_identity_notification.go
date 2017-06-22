@@ -61,7 +61,7 @@ func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) er
 	identity := d.Get("identity").(*schema.Set)
 
 	getOpts := &ses.GetIdentityNotificationAttributesInput{
-		Identities: []*string{ aws.String(identity) },
+		Identities: []*string{aws.String(identity)},
 	}
 
 	response, err := conn.GetIdentityNotificationAttributes(getOpts)
