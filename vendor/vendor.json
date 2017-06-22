@@ -1152,6 +1152,14 @@
 			"versionExact": "v0.1.1"
 		},
 		{
+			"checksumSHA1": "519bsJW8eD/VZN/d1AfLYziNT3w=",
+			"path": "github.com/terraform-providers/terraform-provider-tls/tls",
+			"revision": "ce653893fc49a0459f8f8e7f59295d5c81d5f1ef",
+			"revisionTime": "2017-06-21T10:02:45Z",
+			"version": "v0.1.0",
+			"versionExact": "v0.1.0"
+		},
+		{
 			"checksumSHA1": "vE43s37+4CJ2CDU6TlOUOYE0K9c=",
 			"path": "golang.org/x/crypto/bcrypt",
 			"revision": "9477e0b78b9ac3d0b03822fd95422e2fe07627cd",
