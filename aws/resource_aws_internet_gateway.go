@@ -23,6 +23,12 @@ func resourceAwsInternetGateway() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"vpc_id": &schema.Schema{
 				Type:     schema.TypeString,
@@ -53,12 +59,7 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 	d.SetId(*ig.InternetGatewayId)
 	log.Printf("[INFO] InternetGateway ID: %s", d.Id())
 
-	default_timeout := 5
-	if timeout, ok := d.GetOk("timeout"); ok {
-		default_timeout = timeout.(int)
-	}
-
-	err = resource.Retry(time.Duration(default_timeout)*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		igRaw, _, err := IGStateRefreshFunc(conn, d.Id())()
 		if igRaw != nil {
 			return nil
@@ -143,12 +144,7 @@ func resourceAwsInternetGatewayDelete(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[INFO] Deleting Internet Gateway: %s", d.Id())
 
-	default_timeout := 10
-	if timeout, ok := d.GetOk("timeout"); ok {
-		default_timeout = timeout.(int)
-	}
-
-	return resource.Retry(time.Duration(default_timeout)*time.Minute, func() *resource.RetryError {
+	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteInternetGateway(&ec2.DeleteInternetGatewayInput{
 			InternetGatewayId: aws.String(d.Id()),
 		})
@@ -187,12 +183,7 @@ func resourceAwsInternetGatewayAttach(d *schema.ResourceData, meta interface{}) 
 		d.Id(),
 		d.Get("vpc_id").(string))
 
-	default_timeout := 10
-	if timeout, ok := d.GetOk("timeout"); ok {
-		default_timeout = timeout.(int)
-	}
-
-	err := resource.Retry(time.Duration(default_timeout)*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.AttachInternetGateway(&ec2.AttachInternetGatewayInput{
 			InternetGatewayId: aws.String(d.Id()),
 			VpcId:             aws.String(d.Get("vpc_id").(string)),
