@@ -60,9 +60,10 @@ provider "aws" {
 
 You can provide your credentials via the `AWS_ACCESS_KEY_ID` and
 `AWS_SECRET_ACCESS_KEY`, environment variables, representing your AWS
-Access Key and AWS Secret Key, respectively.  The `AWS_DEFAULT_REGION`
-and `AWS_SESSION_TOKEN` environment variables are also used, if
-applicable:
+Access Key and AWS Secret Key, respectively.  Note that the `AWS_ACCESS_KEY`
+and `AWS_SECRET_KEY` environment variables are also still respected. The
+`AWS_DEFAULT_REGION` and `AWS_SESSION_TOKEN` environment variables are
+also used, if applicable:
 
 ```hcl
 provider "aws" {}
