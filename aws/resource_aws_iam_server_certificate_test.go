@@ -37,16 +37,18 @@ func TestAccAWSIAMServerCertificate_basic(t *testing.T) {
 func TestAccAWSIAMServerCertificate_name_prefix(t *testing.T) {
 	var cert iam.ServerCertificate
 	var certBody string
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMServerCertConfig_random,
+				Config: testAccIAMServerCertConfig_random(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &cert),
+					getCertBody(&certBody),
 					testAccCheckAWSServerCertAttributes(&cert, &certBody),
 				),
 			},
@@ -259,11 +261,11 @@ func testAccIAMServerCertConfig_random(rInt int) string {
 %s 
 
 resource "aws_iam_server_certificate" "test_cert" {
-  name_prefix = "terraform-test-cert-%d"
+  name_prefix = "terraform-test-cert"
   certificate_body = "${tls_self_signed_cert.example.cert_pem}"
   private_key      = "${tls_private_key.example.private_key_pem}"
 }
-`, testAccTLSServerCert, rInt)
+`, testAccTLSServerCert)
 }
 
 // iam-ssl-unix-line-endings
