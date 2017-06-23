@@ -56,6 +56,7 @@ The following arguments are supported:
 * `type` - (Required) The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - (Required) The value of the parameter.
 * `key_id` - (Optional) The KMS key id or arn for encrypting a SecureString.
+
 ## Attributes Reference
 
 The following attributes are exported:
