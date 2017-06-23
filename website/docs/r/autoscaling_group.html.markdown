@@ -53,7 +53,7 @@ EOF
   }
 
 timeouts {
-    delete = "5m"
+    delete = "15m"
 }
 
   tag {
