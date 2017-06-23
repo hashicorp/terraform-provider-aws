@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"strings"
 	"testing"
 
@@ -96,12 +97,21 @@ func TestAccAWSIAMServerCertificate_file(t *testing.T) {
 	var cert iam.ServerCertificate
 
 	rInt := acctest.RandInt()
-	var certBody string
-	dat, err := ioutil.ReadFile("test-fixtures/iam-ssl-unix-line-endings.pem")
-	certBody = string(dat)
+	unix, err := ioutil.ReadFile("test-fixtures/iam-ssl-unix-line-endings.pem")
+	certBodyUnix := string(unix)
 	if err != nil {
 		t.Fatalf("error loading test file: %s", err)
 	}
+	win, err := ioutil.ReadFile("test-fixtures/iam-ssl-windows-line-endings.pem")
+	if err != nil {
+		t.Fatalf("error loading test file: %s", err)
+	}
+	certBodyWin := string(win)
+	if err != nil {
+		t.Fatalf("error loading test file: %s", err)
+	}
+
+	log.Printf("\n@@@ cert win: %s\n", certBodyWin)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -112,14 +122,14 @@ func TestAccAWSIAMServerCertificate_file(t *testing.T) {
 				Config: testAccIAMServerCertConfig_file(rInt, "iam-ssl-unix-line-endings"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &cert),
-					testAccCheckAWSServerCertAttributes(&cert, &certBody),
+					testAccCheckAWSServerCertAttributes(&cert, &certBodyUnix),
 				),
 			},
 			{
 				Config: testAccIAMServerCertConfig_file(rInt, "iam-ssl-windows-line-endings"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &cert),
-					testAccCheckAWSServerCertAttributes(&cert, &certBody),
+					testAccCheckAWSServerCertAttributes(&cert, &certBodyWin),
 				),
 			},
 		},
