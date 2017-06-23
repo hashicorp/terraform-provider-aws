@@ -28,7 +28,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
