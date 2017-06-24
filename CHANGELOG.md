@@ -1,4 +1,9 @@
 ## 0.1.2 (Unreleased)
+
+BUG FIXES:
+
+* resource/waf: Only set FieldToMatch.Data if not empty [GH-953]
+
 ## 0.1.1 (June 21, 2017)
 
 BUG FIXES:
