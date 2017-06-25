@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * resource/waf: Only set FieldToMatch.Data if not empty [GH-953]
+* resource/aws_s3_bucket: Allow use of `days = 0` with lifecycle transition [GH-957]
 
 ## 0.1.1 (June 21, 2017)
 
