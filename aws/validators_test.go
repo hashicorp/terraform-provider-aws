@@ -495,6 +495,60 @@ func TestValidateS3BucketLifecycleTimestamp(t *testing.T) {
 	}
 }
 
+func TestValidateS3BucketLifecycleExpirationDays(t *testing.T) {
+	validDays := []int{
+		1,
+		31,
+		1024,
+	}
+
+	for _, v := range validDays {
+		_, errors := validateS3BucketLifecycleExpirationDays(v, "days")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be valid days: %q", v, errors)
+		}
+	}
+
+	invalidDays := []int{
+		-1,
+		0,
+	}
+
+	for _, v := range invalidDays {
+		_, errors := validateS3BucketLifecycleExpirationDays(v, "date")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be invalid days", v)
+		}
+	}
+}
+
+func TestValidateS3BucketLifecycleTransitionDays(t *testing.T) {
+	validDays := []int{
+		0,
+		1,
+		31,
+		1024,
+	}
+
+	for _, v := range validDays {
+		_, errors := validateS3BucketLifecycleTransitionDays(v, "days")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be valid days: %q", v, errors)
+		}
+	}
+
+	invalidDays := []int{
+		-1,
+	}
+
+	for _, v := range invalidDays {
+		_, errors := validateS3BucketLifecycleTransitionDays(v, "date")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be invalid days", v)
+		}
+	}
+}
+
 func TestValidateS3BucketLifecycleStorageClass(t *testing.T) {
 	validStorageClass := []string{
 		"STANDARD_IA",
