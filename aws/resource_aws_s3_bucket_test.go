@@ -594,6 +594,12 @@ func TestAccAWSS3Bucket_Lifecycle(t *testing.T) {
 						"aws_s3_bucket.bucket", "lifecycle_rule.1.expiration.2855832418.days", "0"),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "lifecycle_rule.1.expiration.2855832418.expired_object_delete_marker", "false"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.2.id", "id3"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.2.prefix", "path3/"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.2.transition.460947558.days", "0"),
 				),
 			},
 			{
@@ -624,6 +630,14 @@ func TestAccAWSS3Bucket_Lifecycle(t *testing.T) {
 						"aws_s3_bucket.bucket", "lifecycle_rule.1.enabled", "false"),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "lifecycle_rule.1.noncurrent_version_expiration.80908210.days", "365"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.2.id", "id3"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.2.prefix", "path3/"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.2.noncurrent_version_transition.3732708140.days", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.2.noncurrent_version_transition.3732708140.storage_class", "GLACIER"),
 				),
 			},
 			{
@@ -1430,6 +1444,16 @@ resource "aws_s3_bucket" "bucket" {
 			date = "2016-01-12"
 		}
 	}
+	lifecycle_rule {
+		id = "id3"
+		prefix = "path3/"
+		enabled = true
+
+		transition {
+			days = 0
+			storage_class = "GLACIER"
+		}
+	}
 }
 `, randInt)
 }
@@ -1466,6 +1490,16 @@ resource "aws_s3_bucket" "bucket" {
 
 		noncurrent_version_expiration {
 			days = 365
+		}
+	}
+	lifecycle_rule {
+		id = "id3"
+		prefix = "path3/"
+		enabled = true
+
+		noncurrent_version_transition {
+			days = 0
+			storage_class = "GLACIER"
 		}
 	}
 }
