@@ -93,24 +93,19 @@ func TestAccAWSIAMServerCertificate_disappears(t *testing.T) {
 }
 
 func TestAccAWSIAMServerCertificate_file(t *testing.T) {
-	var cert iam.ServerCertificate
+	var _cert iam.ServerCertificate
 
 	rInt := acctest.RandInt()
 	unix, err := ioutil.ReadFile("test-fixtures/iam-ssl-unix-line-endings.pem")
-	certBodyUnix := string(unix)
 	if err != nil {
 		t.Fatalf("error loading test file: %s", err)
 	}
-	win, err := ioutil.ReadFile("test-fixtures/iam-ssl-windows-line-endings.pem")
+	certBodyUnix := string(unix)
+	win, err := ioutil.ReadFile("test-fixtures/iam-ssl-windows-line-endings.pem.winfile")
 	if err != nil {
 		t.Fatalf("error loading test file: %s", err)
 	}
 	certBodyWin := string(win)
-	if err != nil {
-		t.Fatalf("error loading test file: %s", err)
-	}
-
-	// log.Printf("\n@@@ cert win: %s\n", certBodyWin)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -118,17 +113,15 @@ func TestAccAWSIAMServerCertificate_file(t *testing.T) {
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMServerCertConfig_file(rInt, "iam-ssl-unix-line-endings"),
+				Config: testAccIAMServerCertConfig_file(rInt, certBodyUnix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &cert),
-					testAccCheckAWSServerCertAttributes(&cert, &certBodyUnix),
+					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &_cert),
 				),
 			},
 			{
-				Config: testAccIAMServerCertConfig_file(rInt, "iam-ssl-windows-line-endings"),
+				Config: testAccIAMServerCertConfig_file(rInt, certBodyWin),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &cert),
-					testAccCheckAWSServerCertAttributes(&cert, &certBodyWin),
+					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &_cert),
 				),
 			},
 		},
@@ -181,7 +174,7 @@ func testAccCheckAWSServerCertAttributes(cert *iam.ServerCertificate, certBody *
 		}
 
 		if *cert.CertificateBody != strings.TrimSpace(*certBody) {
-			return fmt.Errorf("Bad Server Cert body\n\t expected: %s\n\tgot: %s\n", certBody, *cert.CertificateBody)
+			return fmt.Errorf("Bad Server Cert body\n\t expected: %s\n\tgot: %s\n", *certBody, *cert.CertificateBody)
 		}
 		return nil
 	}
@@ -287,7 +280,9 @@ func testAccIAMServerCertConfig_file(rInt int, fName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test_cert" {
   name = "terraform-test-cert-%d"
-  certificate_body = "${file("test-fixtures/%s.pem")}"
+  certificate_body = <<EOF
+%s
+EOF
 
 	private_key =  <<EOF
 -----BEGIN RSA PRIVATE KEY-----
