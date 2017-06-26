@@ -89,7 +89,18 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
 				),
 			},
+		},
+	})
+}
 
+func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
+	var conf apigateway.Integration
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
+		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayIntegrationConfigCacheKeyParameters,
 				Check: resource.ComposeTestCheckFunc(
@@ -106,6 +117,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.path.param", "method.request.path.param"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "cache_key_parameters.#", "1"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "cache_key_parameters.550492954", "method.request.path.param"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "cache_namespace", "foobar"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.application/json", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
@@ -345,6 +357,7 @@ resource "aws_api_gateway_integration" "test" {
   }
 
   cache_key_parameters = ["method.request.path.param"]
+  cache_namespace = "foobar"
 
   type = "HTTP"
   uri = "https://www.google.de"

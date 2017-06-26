@@ -108,6 +108,11 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 				Set:      schema.HashString,
 				Optional: true,
 			},
+
+			"cache_namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -162,6 +167,15 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 		cacheKeyParameters = expandStringList(v.(*schema.Set).List())
 	}
 
+	var cacheNamespace *string
+	if cacheKeyParameters != nil {
+		// Use resource_id unless user provides a custom name
+		cacheNamespace = aws.String(d.Get("resource_id").(string))
+	}
+	if v, ok := d.GetOk("cache_namespace"); ok {
+		cacheNamespace = aws.String(v.(string))
+	}
+
 	_, err := conn.PutIntegration(&apigateway.PutIntegrationInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get("resource_id").(string)),
@@ -172,7 +186,7 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 		RequestParameters:   aws.StringMap(parameters),
 		RequestTemplates:    aws.StringMap(templates),
 		Credentials:         credentials,
-		CacheNamespace:      aws.String(d.Get("resource_id").(string)),
+		CacheNamespace:      cacheNamespace,
 		CacheKeyParameters:  cacheKeyParameters,
 		PassthroughBehavior: passthroughBehavior,
 		ContentHandling:     contentHandling,
@@ -229,6 +243,10 @@ func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface
 	}
 
 	d.Set("cache_key_parameters", flattenStringList(integration.CacheKeyParameters))
+
+	if integration.CacheNamespace != nil {
+		d.Set("cache_namespace", integration.CacheNamespace)
+	}
 
 	return nil
 }
@@ -340,6 +358,14 @@ func resourceAwsApiGatewayIntegrationUpdate(d *schema.ResourceData, meta interfa
 				Value: aws.String(""),
 			})
 		}
+	}
+
+	if d.HasChange("cache_namespace") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/cacheNamespace"),
+			Value: aws.String(d.Get("cache_namespace").(string)),
+		})
 	}
 
 	params := &apigateway.UpdateIntegrationInput{
