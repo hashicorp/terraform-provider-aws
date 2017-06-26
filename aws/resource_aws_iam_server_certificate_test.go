@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"strings"
 	"testing"
 
@@ -111,7 +110,7 @@ func TestAccAWSIAMServerCertificate_file(t *testing.T) {
 		t.Fatalf("error loading test file: %s", err)
 	}
 
-	log.Printf("\n@@@ cert win: %s\n", certBodyWin)
+	// log.Printf("\n@@@ cert win: %s\n", certBodyWin)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
