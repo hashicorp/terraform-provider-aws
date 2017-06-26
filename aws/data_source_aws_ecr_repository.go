@@ -14,20 +14,20 @@ func dataSourceAwsEcrRepository() *schema.Resource {
 		Read: dataSourceAwsEcrRepositoryRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"registry_id": &schema.Schema{
+			"registry_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"repository_url": &schema.Schema{
+			"repository_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,7 +39,7 @@ func dataSourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*AWSClient).ecrconn
 
 	repositoryName := d.Get("name").(string)
-	log.Printf("[DEBUG] Reading repository %s", repositoryName)
+	log.Printf("[DEBUG] Reading ECR repository %s", repositoryName)
 	out, err := conn.DescribeRepositories(&ecr.DescribeRepositoriesInput{
 		RepositoryNames: []*string{aws.String(repositoryName)},
 	})
@@ -53,7 +53,7 @@ func dataSourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) er
 
 	repository := out.Repositories[0]
 
-	log.Printf("[DEBUG] Received repository %s", out)
+	log.Printf("[DEBUG] Received ECR repository %s", out)
 
 	d.SetId(*repository.RepositoryName)
 	d.Set("arn", repository.RepositoryArn)
