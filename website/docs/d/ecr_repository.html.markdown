@@ -22,7 +22,7 @@ data "aws_ecr_repository" "service" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the ECR Repository
+* `name` - (Required) The name of the ECR Repository.
 
 ## Attributes Reference
 
@@ -30,4 +30,4 @@ The following attributes are exported:
 
 * `arn` - Full ARN of the repository.
 * `registry_id` - The registry ID where the repository was created.
-* `repository_url` - The URL of the repository (in the form `aws_account_id.dkr.ecr.region.amazonaws.com/repositoryName`
+* `repository_url` - The URL of the repository (in the form `aws_account_id.dkr.ecr.region.amazonaws.com/repositoryName`).
