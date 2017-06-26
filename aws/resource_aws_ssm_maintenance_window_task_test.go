@@ -13,6 +13,8 @@ import (
 )
 
 func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
+	var task ssm.MaintenanceWindowTask
+
 	name := acctest.RandString(10)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,14 +24,49 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 			{
 				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTaskExists("aws_ssm_maintenance_window_task.target"),
+					testAccCheckAWSSSMMaintenanceWindowTaskExists("aws_ssm_maintenance_window_task.target", &task),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSSSMMaintenanceWindowTaskExists(n string) resource.TestCheckFunc {
+func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
+	var before, after ssm.MaintenanceWindowTask
+	name := acctest.RandString(10)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowTaskExists("aws_ssm_maintenance_window_task.target", &before),
+				),
+			},
+			{
+				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdated(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowTaskExists("aws_ssm_maintenance_window_task.target", &after),
+					testAccCheckAwsSsmWindowsTaskRecreated(t, &before, &after),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckAwsSsmWindowsTaskRecreated(t *testing.T,
+	before, after *ssm.MaintenanceWindowTask) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before.WindowTaskId == after.WindowTaskId {
+			t.Fatalf("Expected change of Windows Task IDs, but both were %v", before.WindowTaskId)
+		}
+		return nil
+	}
+}
+
+func testAccCheckAWSSSMMaintenanceWindowTaskExists(n string, task *ssm.MaintenanceWindowTask) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -51,6 +88,7 @@ func testAccCheckAWSSSMMaintenanceWindowTaskExists(n string) resource.TestCheckF
 
 		for _, i := range resp.Tasks {
 			if *i.WindowTaskId == rs.Primary.ID {
+				*task = *i
 				return nil
 			}
 		}
@@ -113,6 +151,78 @@ resource "aws_ssm_maintenance_window_task" "target" {
   task_parameters {
     name = "commands"
     values = ["pwd"]
+  }
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-4fccb37f"
+
+  instance_type = "m1.small"
+}
+
+resource "aws_iam_role" "ssm_role" {
+  name = "ssm-role-%s"
+
+  assume_role_policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "sts:AssumeRole",
+            "Principal": {
+                "Service": "events.amazonaws.com"
+            },
+            "Effect": "Allow",
+            "Sid": ""
+        }
+    ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "bar" {
+  name = "ssm_role_policy_%s"
+  role = "${aws_iam_role.ssm_role.name}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "ssm:*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+
+`, rName, rName, rName)
+}
+
+func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_maintenance_window" "foo" {
+  name = "maintenance-window-%s"
+  schedule = "cron(0 16 ? * TUE *)"
+  duration = 3
+  cutoff = 1
+}
+
+resource "aws_ssm_maintenance_window_task" "target" {
+  window_id = "${aws_ssm_maintenance_window.foo.id}"
+  task_type = "RUN_COMMAND"
+  task_arn = "AWS-RunShellScript"
+  priority = 1
+  service_role_arn = "${aws_iam_role.ssm_role.arn}"
+  max_concurrency = "2"
+  max_errors = "1"
+  targets {
+    key = "InstanceIds"
+    values = ["${aws_instance.foo.id}"]
+  }
+  task_parameters {
+    name = "commands"
+    values = ["date"]
   }
 }
 
