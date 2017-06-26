@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsSecurityGroupAttachment(t *testing.T) {
+func TestAccAwsNetworkInterfaceSGAttachment(t *testing.T) {
 	cases := []struct {
 		Name     string
 		External bool
@@ -29,11 +29,11 @@ func TestAccAwsSecurityGroupAttachment(t *testing.T) {
 				Providers: testAccProviders,
 				Steps: []resource.TestStep{
 					resource.TestStep{
-						Config: testAccAwsSecurityGroupAttachmentConfig(tc.External, true),
+						Config: testAccAwsNetworkInterfaceSGAttachment(tc.External, true),
 						Check:  checkSecurityGroupAttachment(tc.External, true),
 					},
 					resource.TestStep{
-						Config: testAccAwsSecurityGroupAttachmentConfig(tc.External, false),
+						Config: testAccAwsNetworkInterfaceSGAttachment(tc.External, false),
 						Check:  checkSecurityGroupAttachment(tc.External, false),
 					},
 				},
@@ -42,7 +42,7 @@ func TestAccAwsSecurityGroupAttachment(t *testing.T) {
 	}
 }
 
-func testAccAwsSecurityGroupAttachmentConfig(external bool, attach bool) string {
+func testAccAwsNetworkInterfaceSGAttachment(external bool, attach bool) string {
 	baseConfig := `
 data "aws_ami" "ami" {
   most_recent = true
@@ -76,7 +76,7 @@ resource "aws_security_group" "sg" {
 
 `
 	optionalConfig := `
-resource "aws_security_group_attachment" "sg_attachment" {
+resource "aws_network_interface_sg_attachment" "sg_attachment" {
   security_group_id    = "${aws_security_group.sg.id}"
   network_interface_id = "${%saws_instance.%sinstance.%snetwork_interface_id}"
 }

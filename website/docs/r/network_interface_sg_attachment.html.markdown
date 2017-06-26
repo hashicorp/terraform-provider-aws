@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_security_group_rule"
-sidebar_current: "docs-aws-resource-security-group-rule"
+page_title: "AWS: aws_network_interface_sg_attachment"
+sidebar_current: "docs-aws-resource-network-interface-sg-attachment"
 description: |-
   Associates a security group with a network interface.
 ---
 
-# aws\_security\_group\_attachment
+# aws\_network\_interface\_sg\_attachment
 
 This resource attaches a security group to an Elastic Network Interface (ENI).
 It can be used to attach a security group to any existing ENI, be it a
@@ -15,7 +15,7 @@ secondary ENI or one attached as the primary interface on an instance.
 ~> **NOTE on instances, interfaces, and security groups:** Terraform currently
 provides the capability to assign security groups via the [`aws_instance`][1]
 and the [`aws_network_interface`][2] resources. Using this resource in
-conjunction with security groups provided in-line in these resources will cause
+conjunction with security groups provided in-line in those resources will cause
 conflicts, and will lead to spurious diffs and undefined behavior - please use
 one or the other.
 
@@ -26,8 +26,8 @@ one or the other.
 
 The following provides a very basic example of setting up an instance (provided
 by `instance`) in the default security group, creating a security group
-(provided by `sg`) and then attaching the security group to `instance`'s
-primary network interface via the `aws_security_group_attachment` resource,
+(provided by `sg`) and then attaching the security group to the instance's
+primary network interface via the `aws_network_interface_sg_attachment` resource,
 named `sg_attachment`:
 
 ```hcl
@@ -57,7 +57,7 @@ resource "aws_security_group" "sg" {
   }
 }
 
-resource "aws_security_group_attachment" "sg_attachment" {
+resource "aws_network_interface_sg_attachment" "sg_attachment" {
   security_group_id    = "${aws_security_group.sg.id}"
   network_interface_id = "${aws_instance.instance.primary_network_interface_id}"
 }
@@ -78,7 +78,7 @@ resource "aws_security_group" "sg" {
   }
 }
 
-resource "aws_security_group_attachment" "sg_attachment" {
+resource "aws_network_interface_sg_attachment" "sg_attachment" {
   security_group_id    = "${aws_security_group.sg.id}"
   network_interface_id = "${data.aws_instance.instance.network_interface_id}"
 }

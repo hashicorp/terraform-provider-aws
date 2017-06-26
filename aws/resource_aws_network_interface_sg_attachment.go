@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsSecurityGroupAttachment() *schema.Resource {
+func resourceAwsNetworkInterfaceSGAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityGroupAttachmentCreate,
-		Read:   resourceAwsSecurityGroupAttachmentRead,
-		Delete: resourceAwsSecurityGroupAttachmentDelete,
+		Create: resourceAwsNetworkInterfaceSGAttachmentCreate,
+		Read:   resourceAwsNetworkInterfaceSGAttachmentRead,
+		Delete: resourceAwsNetworkInterfaceSGAttachmentDelete,
 		Schema: map[string]*schema.Schema{
 			"security_group_id": {
 				Type:     schema.TypeString,
@@ -30,12 +30,12 @@ func resourceAwsSecurityGroupAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsSecurityGroupAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsNetworkInterfaceSGAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	if err := attachSecurityGroupToInterface(d, meta); err != nil {
 		return err
 	}
 
-	return resourceAwsSecurityGroupAttachmentRead(d, meta)
+	return resourceAwsNetworkInterfaceSGAttachmentRead(d, meta)
 }
 
 func attachSecurityGroupToInterface(d *schema.ResourceData, meta interface{}) error {
@@ -97,7 +97,7 @@ func sgExistsInENI(sgID string, iface *ec2.NetworkInterface) bool {
 	return false
 }
 
-func resourceAwsSecurityGroupAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	return refreshSecurityGroupWithInterface(d, meta)
 }
 
@@ -124,7 +124,7 @@ func refreshSecurityGroupWithInterface(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsSecurityGroupAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsNetworkInterfaceSGAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	if err := detachSecurityGroupFromInterface(d, meta); err != nil {
 		return err
 	}
