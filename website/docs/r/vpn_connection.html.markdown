@@ -59,10 +59,14 @@ The following attributes are exported:
 * `tunnel1_cgw_inside_address` - The RFC 6890 link-local address of the first VPN tunnel (Customer Gateway Side).
 * `tunnel1_vgw_inside_address` - The RFC 6890 link-local address of the first VPN tunnel (VPN Gateway Side).
 * `tunnel1_preshared_key` - The preshared key of the first VPN tunnel.
+* `tunnel1_bgp_asn` - The bgp asn number of the first VPN tunnel.
+* `tunnel1_bgp_holdtime` - The bgp holdtime of the first VPN tunnel.
 * `tunnel2_address` - The public IP address of the second VPN tunnel.
 * `tunnel2_cgw_inside_address` - The RFC 6890 link-local address of the second VPN tunnel (Customer Gateway Side).
 * `tunnel2_vgw_inside_address` - The RFC 6890 link-local address of the second VPN tunnel (VPN Gateway Side).
 * `tunnel2_preshared_key` - The preshared key of the second VPN tunnel.
+* `tunnel2_bgp_asn` - The bgp asn number of the second VPN tunnel.
+* `tunnel2_bgp_holdtime` - The bgp holdtime of the second VPN tunnel.
 * `type` - The type of VPN connection.
 * `vpn_gateway_id` - The ID of the virtual private gateway to which the connection is attached.
 
