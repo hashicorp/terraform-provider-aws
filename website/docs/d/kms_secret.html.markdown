@@ -22,13 +22,17 @@ Please take care to secure your secret data outside of resource definitions.
 First, let's encrypt a password with KMS using the [AWS CLI
 tools](http://docs.aws.amazon.com/cli/latest/reference/kms/encrypt.html).  This
 requires you to have your AWS CLI setup correctly, and you would replace the
-key-id with your own.
+key-id with your own. If you have a newline character at the end of your file,
+secrets will be decrypted with this newline character intact.
+For most use-cases this is undesirable and leads to incorrect passwords or
+invalid values, as well as possible changes in the plan. 
+Alternatively you can use `--plaintext 'password'` instead of reading from a file.
 
 ```
-$ echo 'master-password' > plaintext-password
+$ echo -n 'master-password' > plaintext-password
 $ aws kms encrypt \
 > --key-id ab123456-c012-4567-890a-deadbeef123 \
-> --plaintext fileb://plaintext-example \
+> --plaintext fileb://plaintext-password \
 > --encryption-context foo=bar \
 > --output text --query CiphertextBlob
 AQECAHgaPa0J8WadplGCqqVAr4HNvDaFSQ+NaiwIBhmm6qDSFwAAAGIwYAYJKoZIhvcNAQcGoFMwUQIBADBMBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDI+LoLdvYv8l41OhAAIBEIAfx49FFJCLeYrkfMfAw6XlnxP23MmDBdqP8dPp28OoAQ==
