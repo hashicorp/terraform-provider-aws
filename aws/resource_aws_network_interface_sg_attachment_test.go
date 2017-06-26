@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -17,12 +18,12 @@ func TestAccAwsNetworkInterfaceSGAttachment(t *testing.T) {
 		{
 			Name: "instance primary interface",
 			CheckPrimaryInterfaceAttr: false,
-			Config: testAccAwsNetworkInterfaceSGAttachmentViaInstance,
+			Config: testAccAwsNetworkInterfaceSGAttachmentConfigViaInstance,
 		},
 		{
 			Name: "externally supplied instance through data source",
 			CheckPrimaryInterfaceAttr: true,
-			Config: testAccAwsNetworkInterfaceSGAttachmentViaDataSource,
+			Config: testAccAwsNetworkInterfaceSGAttachmentConfigViaDataSource,
 		},
 	}
 	for _, tc := range cases {
@@ -45,7 +46,32 @@ func TestAccAwsNetworkInterfaceSGAttachment(t *testing.T) {
 	}
 }
 
-func testAccAwsNetworkInterfaceSGAttachmentViaInstance(attachmentEnabled bool) string {
+func checkSecurityGroupAttachment(checkPrimaryInterfaceAttr bool, expected bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		var ifAttr string
+		if checkPrimaryInterfaceAttr {
+			ifAttr = "network_interface_id"
+		} else {
+			ifAttr = "primary_network_interface_id"
+		}
+		interfaceID := s.Modules[0].Resources["aws_instance.instance"].Primary.Attributes[ifAttr]
+		sgID := s.Modules[0].Resources["aws_security_group.sg"].Primary.ID
+
+		iface, err := fetchNetworkInterface(conn, interfaceID)
+		if err != nil {
+			return err
+		}
+		actual := sgExistsInENI(sgID, iface)
+		if expected != actual {
+			return fmt.Errorf("expected existence of security group in ENI to be %t, got %t", expected, actual)
+		}
+		return nil
+	}
+}
+
+func testAccAwsNetworkInterfaceSGAttachmentConfigViaInstance(attachmentEnabled bool) string {
 	return fmt.Sprintf(`
 variable "sg_attachment_enabled" {
   type    = "string"
@@ -86,7 +112,7 @@ resource "aws_network_interface_sg_attachment" "sg_attachment" {
 `, attachmentEnabled)
 }
 
-func testAccAwsNetworkInterfaceSGAttachmentViaDataSource(attachmentEnabled bool) string {
+func testAccAwsNetworkInterfaceSGAttachmentConfigViaDataSource(attachmentEnabled bool) string {
 	return fmt.Sprintf(`
 variable "sg_attachment_enabled" {
   type    = "string"
@@ -131,27 +157,82 @@ resource "aws_network_interface_sg_attachment" "sg_attachment" {
 `, attachmentEnabled)
 }
 
-func checkSecurityGroupAttachment(checkPrimaryInterfaceAttr bool, expected bool) resource.TestCheckFunc {
+func TestAccAwsNetworkInterfaceSGAttachmentRaceCheck(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAwsNetworkInterfaceSGAttachmentRaceCheckConfig("step1"),
+				Check:  checkSecurityGroupAttachmentRace("step1"),
+			},
+			resource.TestStep{
+				Config: testAccAwsNetworkInterfaceSGAttachmentRaceCheckConfig("step2"),
+				Check:  checkSecurityGroupAttachmentRace("step2"),
+			},
+		},
+	})
+}
+
+// sgRaceCheckCount specifies the amount of security groups to create in the
+// race check. This should be the maximum amount of security groups that can be
+// attached to an interface at once, minus the default (we don't remove it in
+// the config).
+const sgRaceCheckCount = 4
+
+func checkSecurityGroupAttachmentRace(step string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
-		var ifAttr string
-		if checkPrimaryInterfaceAttr {
-			ifAttr = "network_interface_id"
-		} else {
-			ifAttr = "primary_network_interface_id"
-		}
-		interfaceID := s.Modules[0].Resources["aws_instance.instance"].Primary.Attributes[ifAttr]
-		sgID := s.Modules[0].Resources["aws_security_group.sg"].Primary.ID
-
-		iface, err := fetchNetworkInterface(conn, interfaceID)
-		if err != nil {
-			return err
-		}
-		actual := sgExistsInENI(sgID, iface)
-		if expected != actual {
-			return fmt.Errorf("expected existence of security group in ENI to be %t, got %t", expected, actual)
+		interfaceID := s.Modules[0].Resources["aws_network_interface.interface"].Primary.ID
+		for i := 0; i < sgRaceCheckCount; i++ {
+			sgID := s.Modules[0].Resources["aws_security_group.sg_"+step+"."+strconv.Itoa(i)].Primary.ID
+			iface, err := fetchNetworkInterface(conn, interfaceID)
+			if err != nil {
+				return err
+			}
+			if !sgExistsInENI(sgID, iface) {
+				return fmt.Errorf("security group ID %s was not attached to ENI ID %s", sgID, interfaceID)
+			}
 		}
 		return nil
 	}
+}
+
+func testAccAwsNetworkInterfaceSGAttachmentRaceCheckConfig(step string) string {
+	return fmt.Sprintf(`
+variable "security_group_count" {
+  type    = "string"
+  default = "%d"
+}
+
+data "aws_availability_zones" "available" {}
+
+data "aws_subnet" "subnet" {
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  default_for_az    = "true"
+}
+
+resource "aws_network_interface" "interface" {
+  subnet_id = "${data.aws_subnet.subnet.id}"
+
+  tags = {
+    "type" = "terraform-test-network-interface"
+  }
+}
+
+resource "aws_security_group" "sg_%s" {
+  count = "${var.security_group_count}"
+
+  tags = {
+    "type" = "terraform-test-security-group"
+  }
+}
+
+resource "aws_network_interface_sg_attachment" "sg_attachment_%s" {
+  count                = "${var.security_group_count}"
+  security_group_id    = "${aws_security_group.sg_%s.*.id[count.index]}"
+  network_interface_id = "${aws_network_interface.interface.id}"
+}
+`, sgRaceCheckCount, step, step, step)
 }

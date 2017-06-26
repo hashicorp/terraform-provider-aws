@@ -31,6 +31,10 @@ func resourceAwsNetworkInterfaceSGAttachment() *schema.Resource {
 }
 
 func resourceAwsNetworkInterfaceSGAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+	mk := "network_interface_sg_attachment_" + d.Get("network_interface_id").(string)
+	awsMutexKV.Lock(mk)
+	defer awsMutexKV.Unlock(mk)
+
 	if err := attachSecurityGroupToInterface(d, meta); err != nil {
 		return err
 	}
@@ -125,6 +129,10 @@ func refreshSecurityGroupWithInterface(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsNetworkInterfaceSGAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+	mk := "network_interface_sg_attachment_" + d.Get("network_interface_id").(string)
+	awsMutexKV.Lock(mk)
+	defer awsMutexKV.Unlock(mk)
+
 	if err := detachSecurityGroupFromInterface(d, meta); err != nil {
 		return err
 	}
