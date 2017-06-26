@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -96,16 +95,8 @@ func TestAccAWSIAMServerCertificate_file(t *testing.T) {
 	var _cert iam.ServerCertificate
 
 	rInt := acctest.RandInt()
-	unix, err := ioutil.ReadFile("test-fixtures/iam-ssl-unix-line-endings.pem")
-	if err != nil {
-		t.Fatalf("error loading test file: %s", err)
-	}
-	certBodyUnix := string(unix)
-	win, err := ioutil.ReadFile("test-fixtures/iam-ssl-windows-line-endings.pem.winfile")
-	if err != nil {
-		t.Fatalf("error loading test file: %s", err)
-	}
-	certBodyWin := string(win)
+	unixFile := "test-fixtures/iam-ssl-unix-line-endings.pem"
+	winFile := "test-fixtures/iam-ssl-windows-line-endings.pem.winfile"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -113,13 +104,13 @@ func TestAccAWSIAMServerCertificate_file(t *testing.T) {
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMServerCertConfig_file(rInt, certBodyUnix),
+				Config: testAccIAMServerCertConfig_file(rInt, unixFile),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &_cert),
 				),
 			},
 			{
-				Config: testAccIAMServerCertConfig_file(rInt, certBodyWin),
+				Config: testAccIAMServerCertConfig_file(rInt, winFile),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &_cert),
 				),
@@ -280,9 +271,7 @@ func testAccIAMServerCertConfig_file(rInt int, fName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test_cert" {
   name = "terraform-test-cert-%d"
-  certificate_body = <<EOF
-%s
-EOF
+	certificate_body = "${file("%s")}"
 
 	private_key =  <<EOF
 -----BEGIN RSA PRIVATE KEY-----
