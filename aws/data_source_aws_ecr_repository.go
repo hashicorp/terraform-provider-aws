@@ -45,6 +45,7 @@ func dataSourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) er
 	})
 	if err != nil {
 		if ecrerr, ok := err.(awserr.Error); ok && ecrerr.Code() == "RepositoryNotFoundException" {
+			log.Printf("[WARN] ECR Repository %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
