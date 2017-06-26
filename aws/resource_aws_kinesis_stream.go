@@ -32,7 +32,6 @@ func resourceAwsKinesisStream() *schema.Resource {
 			"shard_count": {
 				Type:     schema.TypeInt,
 				Required: true,
-				ForceNew: true,
 			},
 
 			"retention_period": {
@@ -123,6 +122,9 @@ func resourceAwsKinesisStreamUpdate(d *schema.ResourceData, meta interface{}) er
 	d.SetPartial("tags")
 	d.Partial(false)
 
+	if err := updateKinesisShardCount(conn, d); err != nil {
+		return err
+	}
 	if err := setKinesisRetentionPeriod(conn, d); err != nil {
 		return err
 	}
@@ -234,6 +236,35 @@ func setKinesisRetentionPeriod(conn *kinesis.Kinesis, d *schema.ResourceData) er
 		if err != nil {
 			return err
 		}
+	}
+
+	if err := waitForKinesisToBeActive(conn, sn); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func updateKinesisShardCount(conn *kinesis.Kinesis, d *schema.ResourceData) error {
+	sn := d.Get("name").(string)
+
+	oraw, nraw := d.GetChange("shard_count")
+	o := oraw.(int)
+	n := nraw.(int)
+
+	if n == o {
+		log.Printf("[DEBUG] Kinesis Stream (%q) Shard Count Not Changed", sn)
+		return nil
+	}
+
+	log.Printf("[DEBUG] Change %s Stream ShardCount to %d", sn, n)
+	_, err := conn.UpdateShardCount(&kinesis.UpdateShardCountInput{
+		StreamName:       aws.String(sn),
+		TargetShardCount: aws.Int64(int64(n)),
+		ScalingType:      aws.String("UNIFORM_SCALING"),
+	})
+	if err != nil {
+		return err
 	}
 
 	if err := waitForKinesisToBeActive(conn, sn); err != nil {
