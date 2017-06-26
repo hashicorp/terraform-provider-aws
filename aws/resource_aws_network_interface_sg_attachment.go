@@ -23,7 +23,7 @@ func resourceAwsNetworkInterfaceSGAttachment() *schema.Resource {
 			},
 			"network_interface_id": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 		},
