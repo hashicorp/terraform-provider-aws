@@ -76,7 +76,7 @@ which take the following arguments:
   ```hcl
   filter {
     name = "tag:Name"
-    value = ...
+    values = ...
   }
   ```
 
