@@ -7,6 +7,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * resource/aws_vpn_connection: Add BGP related information on aws_vpn_connection [GH-973]
+* resource/cloudwatch_event_target: Add ecs_target [GH-977]
 
 BUG FIXES:
 
