@@ -23,9 +23,9 @@ resource "aws_ecr_repository" "foo" {
   name = "bar"
 }
 
-resource "aws_ecr_repository_policy_statement" "foostatement" {
+resource "aws_ecr_repository_policy_statement" "read-from-server" {
   repository = "${aws_ecr_repository.foo.name}"
-  sid = "new policy"
+  sid = "reader"
 
   statement = <<EOF
 {
@@ -35,17 +35,26 @@ resource "aws_ecr_repository_policy_statement" "foostatement" {
         "ecr:GetDownloadUrlForLayer",
         "ecr:BatchGetImage",
         "ecr:BatchCheckLayerAvailability",
+        "ecr:DescribeRepositories",
+        "ecr:ListImages"
+    ]
+}
+EOF
+}
+
+resource "aws_ecr_repository_policy_statement" "write-from-deployer" {
+  repository = "${aws_ecr_repository.foo.name}"
+  sid = "writer"
+
+  statement = <<EOF
+{
+    "Effect": "Allow",
+    "Principal": "*",
+    "Action": [
         "ecr:PutImage",
         "ecr:InitiateLayerUpload",
         "ecr:UploadLayerPart",
-        "ecr:CompleteLayerUpload",
-        "ecr:DescribeRepositories",
-        "ecr:GetRepositoryPolicy",
-        "ecr:ListImages",
-        "ecr:DeleteRepository",
-        "ecr:BatchDeleteImage",
-        "ecr:SetRepositoryPolicy",
-        "ecr:DeleteRepositoryPolicy"
+        "ecr:CompleteLayerUpload"
     ]
 }
 EOF
