@@ -6,8 +6,9 @@ FEATURES:
 
 IMPROVEMENTS:
 
-* resource/aws_vpn_connection: Add BGP related information on aws_vpn_connection [GH-973]
+* resource/api_gateway_integration: Add support for specifying cache key parameters [GH-893]
 * resource/cloudwatch_event_target: Add ecs_target [GH-977]
+* resource/vpn_connection: Add BGP related information on aws_vpn_connection [GH-973]
 
 BUG FIXES:
 
