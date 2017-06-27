@@ -367,7 +367,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Default:      30,
-										ValidateFunc: validation.IntBetween(4, 60),
+										ValidateFunc: validation.IntBetween(4, 160),
 									},
 									"origin_protocol_policy": {
 										Type:     schema.TypeString,
