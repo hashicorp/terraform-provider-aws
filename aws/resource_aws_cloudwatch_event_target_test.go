@@ -108,6 +108,25 @@ func TestAccAWSCloudWatchEventTarget_ssmDocument(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchEventTarget_ecs(t *testing.T) {
+	var target events.Target
+	rName := acctest.RandomWithPrefix("tf_ecs_target")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventTargetConfigEcs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.test", &target),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCloudWatchEventTargetExists(n string, rule *events.Target) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -352,4 +371,86 @@ resource "aws_iam_role_policy" "test_policy" {
 }
 EOF
 }`, rName, rName, rName, rName)
+}
+
+func testAccAWSCloudWatchEventTargetConfigEcs(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "schedule" {
+  name        = "%s"
+  description = "schedule_ecs_test"
+
+	schedule_expression = "rate(5 minutes)"
+}
+
+resource "aws_cloudwatch_event_target" "test" {
+	arn = "${aws_ecs_cluster.test.id}"
+  rule = "${aws_cloudwatch_event_rule.schedule.id}"
+  role_arn = "${aws_iam_role.test_role.arn}"
+
+  ecs_target {
+    task_count = 1
+    task_definition_arn = "${aws_ecs_task_definition.task.arn}"
+  }
+}
+
+resource "aws_iam_role" "test_role" {
+  name = "%s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "events.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test_policy" {
+  name = "%s"
+  role = "${aws_iam_role.test_role.id}"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ecs:RunTask"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "task" {
+  family                = "%s"
+  container_definitions = <<EOF
+[
+  {
+    "name": "first",
+    "image": "service-first",
+    "cpu": 10,
+    "memory": 512,
+    "essential": true
+  }
+]
+EOF
+}`, rName, rName, rName, rName, rName)
 }
