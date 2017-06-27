@@ -244,6 +244,12 @@ func TestAWSVpnConnection_xmlconfig(t *testing.T) {
 	if tunnelInfo.Tunnel1PreSharedKey != "FIRST_KEY" {
 		t.Fatalf("First key from tunnel XML was incorrect.")
 	}
+	if tunnelInfo.Tunnel1BGPASN != "FIRST_BGP_ASN" {
+		t.Fatalf("First bgp asn from tunnel XML was incorrect.")
+	}
+	if tunnelInfo.Tunnel1BGPHoldTime != 31 {
+		t.Fatalf("First bgp holdtime from tunnel XML was incorrect.")
+	}
 	if tunnelInfo.Tunnel2Address != "SECOND_ADDRESS" {
 		t.Fatalf("Second address from tunnel XML was incorrect.")
 	}
@@ -257,6 +263,12 @@ func TestAWSVpnConnection_xmlconfig(t *testing.T) {
 	}
 	if tunnelInfo.Tunnel2PreSharedKey != "SECOND_KEY" {
 		t.Fatalf("Second key from tunnel XML was incorrect.")
+	}
+	if tunnelInfo.Tunnel2BGPASN != "SECOND_BGP_ASN" {
+		t.Fatalf("Second bgp asn from tunnel XML was incorrect.")
+	}
+	if tunnelInfo.Tunnel2BGPHoldTime != 32 {
+		t.Fatalf("Second bgp holdtime from tunnel XML was incorrect.")
 	}
 }
 
@@ -336,6 +348,10 @@ const testAccAwsVpnTunnelInfoXML = `
         <network_mask>255.255.255.252</network_mask>
         <network_cidr>30</network_cidr>
       </tunnel_inside_address>
+      <bgp>
+        <asn>SECOND_BGP_ASN</asn>
+        <hold_time>32</hold_time>
+      </bgp>
     </vpn_gateway>
     <ike>
       <pre_shared_key>SECOND_KEY</pre_shared_key>
@@ -361,6 +377,10 @@ const testAccAwsVpnTunnelInfoXML = `
         <network_mask>255.255.255.252</network_mask>
         <network_cidr>30</network_cidr>
       </tunnel_inside_address>
+      <bgp>
+        <asn>FIRST_BGP_ASN</asn>
+        <hold_time>31</hold_time>
+      </bgp>
     </vpn_gateway>
     <ike>
       <pre_shared_key>FIRST_KEY</pre_shared_key>
