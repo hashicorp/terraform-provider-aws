@@ -7,6 +7,7 @@ FEATURES:
 BUG FIXES:
 
 * resource/waf: Only set FieldToMatch.Data if not empty [GH-953]
+* resource/aws_elastic_beanstalk_application_version: Scope labels to application [GH-956]
 * resource/aws_s3_bucket: Allow use of `days = 0` with lifecycle transition [GH-957]
 * resource/aws_ssm_maintenance_window_task: Make task_parameters updateable on aws_ssm_maintenance_window_task resource [GH-965]
 * resource/aws_kinesis_stream: don't force stream destroy on shard_count update [GH-894]
