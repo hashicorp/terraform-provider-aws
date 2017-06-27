@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Data Source**: `aws_ecr_repository` [GH-944]
 
+IMPROVEMENTS:
+
+* resource/aws_vpn_connection: Add BGP related information on aws_vpn_connection [GH-973]
+
 BUG FIXES:
 
 * resource/waf: Only set FieldToMatch.Data if not empty [GH-953]
