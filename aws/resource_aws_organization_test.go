@@ -51,7 +51,6 @@ func testAccCheckAWSOrganizationDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckAWSOrganizationExists(n string, a *organizations.Organization) resource.TestCheckFunc {

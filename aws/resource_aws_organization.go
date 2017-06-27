@@ -100,5 +100,4 @@ func resourceAwsOrganizationDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	return nil
-
 }

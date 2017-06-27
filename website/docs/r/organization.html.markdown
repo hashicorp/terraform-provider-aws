@@ -22,7 +22,7 @@ resource "aws_organization" "org" {
 
 The following arguments are supported:
 
-* `feature_set` - (Optional) Specify "ALL" (default) or "CONSOLIDATED_BILLING.
+* `feature_set` - (Optional) Specify "ALL" (default) or "CONSOLIDATED_BILLING".
 
 ## Import
 
