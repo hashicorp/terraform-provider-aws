@@ -112,6 +112,7 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 			"cache_namespace": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}
