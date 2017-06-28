@@ -74,3 +74,14 @@ The following attributes are exported:
 
 * `id` - A unique identifier of the stack.
 * `outputs` - A map of outputs from the stack.
+
+
+<a id="timeouts"></a>
+## Timeouts
+
+`aws_cloudformation_stack` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `30 minutes`) Used for Creating Stacks
+- `update` - (Default `30 minutes`) Used for Stack modifications
+- `delete` - (Default `30 minutes`) Used for destroying stacks.
