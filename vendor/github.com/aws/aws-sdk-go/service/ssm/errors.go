@@ -116,6 +116,24 @@ const (
 	// You cannot specify an instance ID in more than one association.
 	ErrCodeDuplicateInstanceId = "DuplicateInstanceId"
 
+	// ErrCodeHierarchyLevelLimitExceededException for service response error code
+	// "HierarchyLevelLimitExceededException".
+	//
+	// A hierarchy can have a maximum of five levels. For example:
+	//
+	// /Finance/Prod/IAD/OS/WinServ2016/license15
+	//
+	// For more information, see Develop a Parameter Hierarchy (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working-path.html).
+	ErrCodeHierarchyLevelLimitExceededException = "HierarchyLevelLimitExceededException"
+
+	// ErrCodeHierarchyTypeMismatchException for service response error code
+	// "HierarchyTypeMismatchException".
+	//
+	// Parameter Store does not support changing a parameter type in a hierarchy.
+	// For example, you can't change a parameter from a String type to a SecureString
+	// type. You must create a new, unique parameter.
+	ErrCodeHierarchyTypeMismatchException = "HierarchyTypeMismatchException"
+
 	// ErrCodeIdempotentParameterMismatch for service response error code
 	// "IdempotentParameterMismatch".
 	//
@@ -142,6 +160,12 @@ const (
 	// The activation ID is not valid. Verify the you entered the correct ActivationId
 	// or ActivationCode and try again.
 	ErrCodeInvalidActivationId = "InvalidActivationId"
+
+	// ErrCodeInvalidAllowedPatternException for service response error code
+	// "InvalidAllowedPatternException".
+	//
+	// The request does not meet the regular expression requirement.
+	ErrCodeInvalidAllowedPatternException = "InvalidAllowedPatternException"
 
 	// ErrCodeInvalidAutomationExecutionParametersException for service response error code
 	// "InvalidAutomationExecutionParametersException".
@@ -198,6 +222,13 @@ const (
 	//
 	// The specified key is not valid.
 	ErrCodeInvalidFilterKey = "InvalidFilterKey"
+
+	// ErrCodeInvalidFilterOption for service response error code
+	// "InvalidFilterOption".
+	//
+	// The specified filter option is not valid. Valid options are Equals and BeginsWith.
+	// For Path filter, valid options are Recursive and OneLevel.
+	ErrCodeInvalidFilterOption = "InvalidFilterOption"
 
 	// ErrCodeInvalidFilterValue for service response error code
 	// "InvalidFilterValue".
@@ -384,6 +415,12 @@ const (
 	//
 	// The parameter could not be found. Verify the name and try again.
 	ErrCodeParameterNotFound = "ParameterNotFound"
+
+	// ErrCodeParameterPatternMismatchException for service response error code
+	// "ParameterPatternMismatchException".
+	//
+	// The parameter name is not valid.
+	ErrCodeParameterPatternMismatchException = "ParameterPatternMismatchException"
 
 	// ErrCodeResourceInUseException for service response error code
 	// "ResourceInUseException".
