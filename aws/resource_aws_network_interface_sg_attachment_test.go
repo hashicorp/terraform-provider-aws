@@ -157,12 +157,8 @@ func TestAccAwsNetworkInterfaceSGAttachmentRaceCheck(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAwsNetworkInterfaceSGAttachmentRaceCheckConfig("step1"),
-				Check:  checkSecurityGroupAttachmentRace("step1"),
-			},
-			resource.TestStep{
-				Config: testAccAwsNetworkInterfaceSGAttachmentRaceCheckConfig("step2"),
-				Check:  checkSecurityGroupAttachmentRace("step2"),
+				Config: testAccAwsNetworkInterfaceSGAttachmentRaceCheckConfig(),
+				Check:  checkSecurityGroupAttachmentRace(),
 			},
 		},
 	})
@@ -174,13 +170,13 @@ func TestAccAwsNetworkInterfaceSGAttachmentRaceCheck(t *testing.T) {
 // the config).
 const sgRaceCheckCount = 4
 
-func checkSecurityGroupAttachmentRace(step string) resource.TestCheckFunc {
+func checkSecurityGroupAttachmentRace() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 		interfaceID := s.Modules[0].Resources["aws_network_interface.interface"].Primary.ID
 		for i := 0; i < sgRaceCheckCount; i++ {
-			sgID := s.Modules[0].Resources["aws_security_group.sg_"+step+"."+strconv.Itoa(i)].Primary.ID
+			sgID := s.Modules[0].Resources["aws_security_group.sg."+strconv.Itoa(i)].Primary.ID
 			iface, err := fetchNetworkInterface(conn, interfaceID)
 			if err != nil {
 				return err
@@ -193,7 +189,7 @@ func checkSecurityGroupAttachmentRace(step string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAwsNetworkInterfaceSGAttachmentRaceCheckConfig(step string) string {
+func testAccAwsNetworkInterfaceSGAttachmentRaceCheckConfig() string {
 	return fmt.Sprintf(`
 variable "security_group_count" {
   type    = "string"
@@ -215,7 +211,7 @@ resource "aws_network_interface" "interface" {
   }
 }
 
-resource "aws_security_group" "sg_%s" {
+resource "aws_security_group" "sg" {
   count = "${var.security_group_count}"
 
   tags = {
@@ -223,10 +219,10 @@ resource "aws_security_group" "sg_%s" {
   }
 }
 
-resource "aws_network_interface_sg_attachment" "sg_attachment_%s" {
+resource "aws_network_interface_sg_attachment" "sg_attachment" {
   count                = "${var.security_group_count}"
-  security_group_id    = "${aws_security_group.sg_%s.*.id[count.index]}"
+  security_group_id    = "${aws_security_group.sg.*.id[count.index]}"
   network_interface_id = "${aws_network_interface.interface.id}"
 }
-`, sgRaceCheckCount, step, step, step)
+`, sgRaceCheckCount)
 }
