@@ -17,6 +17,7 @@ BUG FIXES:
 * resource/aws_s3_bucket: Allow use of `days = 0` with lifecycle transition [GH-957]
 * resource/aws_ssm_maintenance_window_task: Make task_parameters updateable on aws_ssm_maintenance_window_task resource [GH-965]
 * resource/aws_kinesis_stream: don't force stream destroy on shard_count update [GH-894]
+* resource/aws_cloudfront_distribution: Remove validation from custom_origin params [GH-987]
 
 ## 0.1.1 (June 21, 2017)
 
