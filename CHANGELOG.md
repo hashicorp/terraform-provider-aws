@@ -18,6 +18,7 @@ BUG FIXES:
 * resource/aws_ssm_maintenance_window_task: Make task_parameters updateable on aws_ssm_maintenance_window_task resource [GH-965]
 * resource/aws_kinesis_stream: don't force stream destroy on shard_count update [GH-894]
 * resource/aws_cloudfront_distribution: Remove validation from custom_origin params [GH-987]
+* resource_aws_route53_record: Allow import of Route 53 records with underscores in the name ([#14717](https://github.com/hashicorp/terraform/pull/14717))
 
 ## 0.1.1 (June 21, 2017)
 
