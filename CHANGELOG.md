@@ -21,6 +21,7 @@ BUG FIXES:
 * resource_aws_route53_record: Allow import of Route 53 records with underscores in the name ([#14717](https://github.com/hashicorp/terraform/pull/14717))
 * d/aws_db_snapshot: Id was being set incorrectly [GH-992]
 * resource/aws_spot_fleet_request: Raise the create timeout to be 10m [GH-993]
+* d/aws_ecs_cluster: Add ARN as an exported param for aws_ecs_cluster [GH-991]
 
 ## 0.1.1 (June 21, 2017)
 
