@@ -11,19 +11,19 @@ import (
 
 func TestAccAwsNetworkInterfaceSGAttachment(t *testing.T) {
 	cases := []struct {
-		Name                      string
-		CheckPrimaryInterfaceAttr bool
-		Config                    func(bool) string
+		Name         string
+		ResourceAttr string
+		Config       func(bool) string
 	}{
 		{
-			Name: "instance primary interface",
-			CheckPrimaryInterfaceAttr: false,
-			Config: testAccAwsNetworkInterfaceSGAttachmentConfigViaInstance,
+			Name:         "instance primary interface",
+			ResourceAttr: "primary_network_interface_id",
+			Config:       testAccAwsNetworkInterfaceSGAttachmentConfigViaInstance,
 		},
 		{
-			Name: "externally supplied instance through data source",
-			CheckPrimaryInterfaceAttr: true,
-			Config: testAccAwsNetworkInterfaceSGAttachmentConfigViaDataSource,
+			Name:         "externally supplied instance through data source",
+			ResourceAttr: "network_interface_id",
+			Config:       testAccAwsNetworkInterfaceSGAttachmentConfigViaDataSource,
 		},
 	}
 	for _, tc := range cases {
@@ -34,11 +34,11 @@ func TestAccAwsNetworkInterfaceSGAttachment(t *testing.T) {
 				Steps: []resource.TestStep{
 					resource.TestStep{
 						Config: tc.Config(true),
-						Check:  checkSecurityGroupAttachment(tc.CheckPrimaryInterfaceAttr, true),
+						Check:  checkSecurityGroupAttached(tc.ResourceAttr, true),
 					},
 					resource.TestStep{
 						Config: tc.Config(false),
-						Check:  checkSecurityGroupAttachment(tc.CheckPrimaryInterfaceAttr, false),
+						Check:  checkSecurityGroupAttached(tc.ResourceAttr, false),
 					},
 				},
 			})
@@ -46,17 +46,11 @@ func TestAccAwsNetworkInterfaceSGAttachment(t *testing.T) {
 	}
 }
 
-func checkSecurityGroupAttachment(checkPrimaryInterfaceAttr bool, expected bool) resource.TestCheckFunc {
+func checkSecurityGroupAttached(attr string, expected bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
-		var ifAttr string
-		if checkPrimaryInterfaceAttr {
-			ifAttr = "network_interface_id"
-		} else {
-			ifAttr = "primary_network_interface_id"
-		}
-		interfaceID := s.Modules[0].Resources["aws_instance.instance"].Primary.Attributes[ifAttr]
+		interfaceID := s.Modules[0].Resources["aws_instance.instance"].Primary.Attributes[attr]
 		sgID := s.Modules[0].Resources["aws_security_group.sg"].Primary.ID
 
 		iface, err := fetchNetworkInterface(conn, interfaceID)
