@@ -40,9 +40,9 @@ func TestAccAWSSSMParameter_update(t *testing.T) {
 				Config: testAccAWSSSMParameterBasicConfig(name, "bar"),
 			},
 			{
-				Config: testAccAWSSSMParameterBasicConfig(name, "baz"),
+				Config: testAccAWSSSMParameterBasicConfigOverwrite(name, "baz1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterHasValue("aws_ssm_parameter.foo", "baz"),
+					testAccCheckAWSSSMParameterHasValue("aws_ssm_parameter.foo", "baz1"),
 					testAccCheckAWSSSMParameterType("aws_ssm_parameter.foo", "String"),
 				),
 			},
@@ -179,6 +179,17 @@ resource "aws_ssm_parameter" "foo" {
   name  = "test_parameter-%s"
   type  = "String"
   value = "%s"
+}
+`, rName, value)
+}
+
+func testAccAWSSSMParameterBasicConfigOverwrite(rName string, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "foo" {
+  name  = "test_parameter-%s"
+  type  = "String"
+  value = "%s"
+  overwrite = true
 }
 `, rName, value)
 }
