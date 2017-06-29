@@ -31,50 +31,34 @@ func resourceAwsNetworkInterfaceSGAttachment() *schema.Resource {
 }
 
 func resourceAwsNetworkInterfaceSGAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+	// Get a lock to prevent races on other SG attachments/detatchments on this
+	// interface ID. This lock is released when the function exits, regardless of
+	// success or failure.
+	//
+	// The lock here - in the create function - deliberately covers the
+	// post-creation read as well, which is normally not covered as Read is
+	// otherwise only performed on refresh. Locking on it here prevents
+	// inconsistencies that could be caused by other attachments that will be
+	// operating on the interface, ensuring that Create gets a full lay of the
+	// land before moving on.
 	mk := "network_interface_sg_attachment_" + d.Get("network_interface_id").(string)
 	awsMutexKV.Lock(mk)
 	defer awsMutexKV.Unlock(mk)
 
-	if err := attachSecurityGroupToInterface(d, meta); err != nil {
-		return err
-	}
-
-	return resourceAwsNetworkInterfaceSGAttachmentRead(d, meta)
-}
-
-func attachSecurityGroupToInterface(d *schema.ResourceData, meta interface{}) error {
 	sgID := d.Get("security_group_id").(string)
 	interfaceID := d.Get("network_interface_id").(string)
 
-	log.Printf("[INFO] Attaching security group %s to network interface ID %s", sgID, interfaceID)
-
 	conn := meta.(*AWSClient).ec2conn
 
-	dniParams := &ec2.DescribeNetworkInterfacesInput{
-		NetworkInterfaceIds: aws.StringSlice([]string{interfaceID}),
-	}
-
-	dniResp, err := conn.DescribeNetworkInterfaces(dniParams)
+	// Fetch the network interface we will be working with.
+	iface, err := fetchNetworkInterface(conn, interfaceID)
 	if err != nil {
 		return err
 	}
 
-	return addSGToENI(conn, sgID, dniResp.NetworkInterfaces[0])
-}
+	// Add the security group to the network interface.
+	log.Printf("[DEBUG] Attaching security group %s to network interface ID %s", sgID, interfaceID)
 
-func fetchNetworkInterface(conn *ec2.EC2, ifaceID string) (*ec2.NetworkInterface, error) {
-	dniParams := &ec2.DescribeNetworkInterfacesInput{
-		NetworkInterfaceIds: aws.StringSlice([]string{ifaceID}),
-	}
-
-	dniResp, err := conn.DescribeNetworkInterfaces(dniParams)
-	if err != nil {
-		return nil, err
-	}
-	return dniResp.NetworkInterfaces[0], nil
-}
-
-func addSGToENI(conn *ec2.EC2, sgID string, iface *ec2.NetworkInterface) error {
 	if sgExistsInENI(sgID, iface) {
 		return fmt.Errorf("security group %s already attached to interface ID %s", sgID, *iface.NetworkInterfaceId)
 	}
@@ -88,28 +72,21 @@ func addSGToENI(conn *ec2.EC2, sgID string, iface *ec2.NetworkInterface) error {
 		Groups:             aws.StringSlice(groupIDs),
 	}
 
-	_, err := conn.ModifyNetworkInterfaceAttribute(params)
-	return err
-}
-
-func sgExistsInENI(sgID string, iface *ec2.NetworkInterface) bool {
-	for _, v := range iface.Groups {
-		if *v.GroupId == sgID {
-			return true
-		}
+	_, err = conn.ModifyNetworkInterfaceAttribute(params)
+	if err != nil {
+		return err
 	}
-	return false
+
+	log.Printf("[DEBUG] Successful attachment of security group %s to network interface ID %s", sgID, interfaceID)
+
+	return resourceAwsNetworkInterfaceSGAttachmentRead(d, meta)
 }
 
 func resourceAwsNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	return refreshSecurityGroupWithInterface(d, meta)
-}
-
-func refreshSecurityGroupWithInterface(d *schema.ResourceData, meta interface{}) error {
 	sgID := d.Get("security_group_id").(string)
 	interfaceID := d.Get("network_interface_id").(string)
 
-	log.Printf("[INFO] Checking association of security group %s to network interface ID %s", sgID, interfaceID)
+	log.Printf("[DEBUG] Checking association of security group %s to network interface ID %s", sgID, interfaceID)
 
 	conn := meta.(*AWSClient).ec2conn
 
@@ -129,23 +106,17 @@ func refreshSecurityGroupWithInterface(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsNetworkInterfaceSGAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+	// Get a lock to prevent races on other SG attachments/detatchments on this
+	// interface ID. This lock is released when the function exits, regardless of
+	// success or failure.
 	mk := "network_interface_sg_attachment_" + d.Get("network_interface_id").(string)
 	awsMutexKV.Lock(mk)
 	defer awsMutexKV.Unlock(mk)
 
-	if err := detachSecurityGroupFromInterface(d, meta); err != nil {
-		return err
-	}
-
-	d.SetId("")
-	return nil
-}
-
-func detachSecurityGroupFromInterface(d *schema.ResourceData, meta interface{}) error {
 	sgID := d.Get("security_group_id").(string)
 	interfaceID := d.Get("network_interface_id").(string)
 
-	log.Printf("[INFO] Removing security group %s from instance ID %s", sgID, interfaceID)
+	log.Printf("[DEBUG] Removing security group %s from interface ID %s", sgID, interfaceID)
 
 	conn := meta.(*AWSClient).ec2conn
 
@@ -154,7 +125,27 @@ func detachSecurityGroupFromInterface(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	return delSGFromENI(conn, sgID, iface)
+	if err := delSGFromENI(conn, sgID, iface); err != nil {
+		return err
+	}
+
+	d.SetId("")
+	return nil
+}
+
+// fetchNetworkInterface is a utility function used by Read and Delete to fetch
+// the full ENI details for a specific interface ID.
+func fetchNetworkInterface(conn *ec2.EC2, ifaceID string) (*ec2.NetworkInterface, error) {
+	log.Printf("[DEBUG] Fetching information for interface ID %s", ifaceID)
+	dniParams := &ec2.DescribeNetworkInterfacesInput{
+		NetworkInterfaceIds: aws.StringSlice([]string{ifaceID}),
+	}
+
+	dniResp, err := conn.DescribeNetworkInterfaces(dniParams)
+	if err != nil {
+		return nil, err
+	}
+	return dniResp.NetworkInterfaces[0], nil
 }
 
 func delSGFromENI(conn *ec2.EC2, sgID string, iface *ec2.NetworkInterface) error {
@@ -178,4 +169,15 @@ func delSGFromENI(conn *ec2.EC2, sgID string, iface *ec2.NetworkInterface) error
 
 	_, err := conn.ModifyNetworkInterfaceAttribute(params)
 	return err
+}
+
+// sgExistsInENI  is a utility function that can be used to quickly check to
+// see if a security group exists in an *ec2.NetworkInterface.
+func sgExistsInENI(sgID string, iface *ec2.NetworkInterface) bool {
+	for _, v := range iface.Groups {
+		if *v.GroupId == sgID {
+			return true
+		}
+	}
+	return false
 }
