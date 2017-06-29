@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New resource**: `aws_network_interface_sg_attachment` [GH-860]
 * **New Data Source**: `aws_ecr_repository` [GH-944]
 
 IMPROVEMENTS:
