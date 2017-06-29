@@ -14,6 +14,7 @@ IMPROVEMENTS:
 * resource/aws_cloudformation_stack: Add timeout support [GH-994]
 * resource/aws_ssm_parameter: Add support for ssm parameter overwrite [GH-1006]
 * resource/aws_codebuild_project: Add support for environment privileged_mode [GH1009]
+* resource/aws_dms_endpoint: Add support for dynamodb as an endpoint target [GH-1002]
 
 BUG FIXES:
 
