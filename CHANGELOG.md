@@ -13,6 +13,7 @@ IMPROVEMENTS:
 * resource/vpn_connection: Add BGP related information on aws_vpn_connection [GH-973]
 * resource/aws_cloudformation_stack: Add timeout support [GH-994]
 * resource/aws_ssm_parameter: Add support for ssm parameter overwrite [GH-1006]
+* resource/aws_codebuild_project: Add support for environment privileged_mode [GH1009]
 
 BUG FIXES:
 
