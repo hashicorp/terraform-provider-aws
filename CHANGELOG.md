@@ -6,6 +6,7 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* Added ability to change the deadline for the EC2 metadata API endpoint [GH-950]
 * resource/api_gateway_integration: Add support for specifying cache key parameters [GH-893]
 * resource/cloudwatch_event_target: Add ecs_target [GH-977]
 * resource/vpn_connection: Add BGP related information on aws_vpn_connection [GH-973]
