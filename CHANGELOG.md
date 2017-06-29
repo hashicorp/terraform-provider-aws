@@ -12,6 +12,7 @@ IMPROVEMENTS:
 * resource/cloudwatch_event_target: Add ecs_target [GH-977]
 * resource/vpn_connection: Add BGP related information on aws_vpn_connection [GH-973]
 * resource/aws_cloudformation_stack: Add timeout support [GH-994]
+* resource/aws_ssm_parameter: Add support for ssm parameter overwrite [GH-1006]
 
 BUG FIXES:
 
