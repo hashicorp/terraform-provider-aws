@@ -53,15 +53,15 @@ The following arguments are supported:
     - Must not contain two consecutive hyphens
 
 * `endpoint_type` - (Required) The type of endpoint. Can be one of `source | target`.
-* `engine_name` - (Required) The type of engine for the endpoint. Can be one of `mysql | oracle | postgres | mariadb | aurora | redshift | sybase | sqlserver`.
+* `engine_name` - (Required) The type of engine for the endpoint. Can be one of `mysql | oracle | postgres | mariadb | aurora | redshift | sybase | sqlserver | dynamodb`.
 * `extra_connection_attributes` - (Optional) Additional attributes associated with the connection. For available attributes see [Using Extra Connection Attributes with AWS Database Migration Service](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Introduction.ConnectionAttributes.html).
 * `kms_key_arn` - (Optional) The Amazon Resource Name (ARN) for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
-* `password` - (Required) The password to be used to login to the endpoint database.
-* `port` - (Required) The port used by the endpoint database.
-* `server_name` - (Required) The host name of the server.
+* `password` - (Optional) The password to be used to login to the endpoint database.
+* `port` - (Optional) The port used by the endpoint database.
+* `server_name` - (Optional) The host name of the server.
 * `ssl_mode` - (Optional, Default: none) The SSL mode to use for the connection. Can be one of `none | require | verify-ca | verify-full`
 * `tags` - (Optional) A mapping of tags to assign to the resource.
-* `username` - (Required) The user name to be used to login to the endpoint database.
+* `username` - (Optional) The user name to be used to login to the endpoint database.
 
 ## Attributes Reference
 

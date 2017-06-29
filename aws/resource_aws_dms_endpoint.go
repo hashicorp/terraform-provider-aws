@@ -3,10 +3,12 @@ package aws
 import (
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -159,7 +161,20 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 
 	log.Println("[DEBUG] DMS create endpoint:", request)
 
-	_, err := conn.CreateEndpoint(request)
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		if _, err := conn.CreateEndpoint(request); err != nil {
+			if awserr, ok := err.(awserr.Error); ok {
+				switch awserr.Code() {
+				case "AccessDeniedFault":
+					return resource.RetryableError(awserr)
+				}
+			}
+			// Didn't recognize the error, so shouldn't retry.
+			return resource.NonRetryableError(err)
+		}
+		// Successful delete
+		return nil
+	})
 	if err != nil {
 		return err
 	}

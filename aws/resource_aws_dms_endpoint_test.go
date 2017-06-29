@@ -76,8 +76,6 @@ func TestAccAwsDmsEndpointDynamoDb(t *testing.T) {
 				Config: dmsEndpointDynamoDbConfigUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
-					resource.TestCheckResourceAttr(resourceName, "server_name", "tftestupdate"),
 				),
 			},
 		},
@@ -182,7 +180,6 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	endpoint_id = "tf-test-dms-endpoint-%[1]s"
 	endpoint_type = "target"
 	engine_name = "dynamodb"
-	server_name = "tftest"
 	service_access_role = "${aws_iam_role.iam_role.arn}"
 	ssl_mode = "none"
 	tags {
@@ -190,6 +187,8 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 		Update = "to-update"
 		Remove = "to-remove"
 	}
+
+	depends_on = ["aws_iam_role_policy.dms_dynamodb_access"]
 }
 resource "aws_iam_role" "iam_role" {
   name = "tf-test-iam-dynamodb-role-%[1]s"
@@ -244,7 +243,6 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	endpoint_id = "tf-test-dms-endpoint-%[1]s"
 	endpoint_type = "target"
 	engine_name = "dynamodb"
-	server_name = "tftestupdate"
 	service_access_role = "${aws_iam_role.iam_role.arn}"
 	ssl_mode = "none"
 	tags {
