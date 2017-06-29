@@ -26,6 +26,7 @@ BUG FIXES:
 * resource/aws_spot_fleet_request: Raise the create timeout to be 10m [GH-993]
 * d/aws_ecs_cluster: Add ARN as an exported param for aws_ecs_cluster [GH-991]
 * resource/aws_ebs_volume: Not setting the state for ebs_volume correctly [GH-999]
+* resource/aws_network_acl: Make action in ingress / egress case insensitive [GH-1000]
 
 ## 0.1.1 (June 21, 2017)
 
