@@ -22,7 +22,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 		Delete: resourceAwsCodeBuildProjectDelete,
 
 		Schema: map[string]*schema.Schema{
-			"artifacts": &schema.Schema{
+			"artifacts": {
 				Type:     schema.TypeSet,
 				Required: true,
 				MaxItems: 1,
@@ -69,7 +69,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"environment": &schema.Schema{
+			"environment": {
 				Type:     schema.TypeSet,
 				Required: true,
 				MaxItems: 1,
@@ -80,7 +80,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validateAwsCodeBuildEnvironmentComputeType,
 						},
-						"environment_variable": &schema.Schema{
+						"environment_variable": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
@@ -106,6 +106,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validateAwsCodeBuildEnvironmentType,
 						},
+						"privileged_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 				Set: resourceAwsCodeBuildProjectEnvironmentHash,
@@ -121,11 +126,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"source": &schema.Schema{
+			"source": {
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"auth": &schema.Schema{
+						"auth": {
 							Type: schema.TypeSet,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -271,9 +276,12 @@ func expandProjectArtifacts(d *schema.ResourceData) codebuild.ProjectArtifacts {
 
 func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironment {
 	configs := d.Get("environment").(*schema.Set).List()
-	projectEnv := &codebuild.ProjectEnvironment{}
 
 	envConfig := configs[0].(map[string]interface{})
+
+	projectEnv := &codebuild.ProjectEnvironment{
+		PrivilegedMode: aws.Bool(envConfig["privileged_mode"].(bool)),
+	}
 
 	if v := envConfig["compute_type"]; v != nil {
 		projectEnv.ComputeType = aws.String(v.(string))
@@ -504,6 +512,7 @@ func flattenAwsCodebuildProjectEnvironment(environment *codebuild.ProjectEnviron
 	envConfig["type"] = *environment.Type
 	envConfig["compute_type"] = *environment.ComputeType
 	envConfig["image"] = *environment.Image
+	envConfig["privileged_mode"] = *environment.PrivilegedMode
 
 	if environment.EnvironmentVariables != nil {
 		envConfig["environment_variable"] = environmentVariablesToMap(environment.EnvironmentVariables)
@@ -564,10 +573,12 @@ func resourceAwsCodeBuildProjectEnvironmentHash(v interface{}) int {
 	environmentType := m["type"].(string)
 	computeType := m["compute_type"].(string)
 	image := m["image"].(string)
+	privilegedMode := m["privileged_mode"].(bool)
 	environmentVariables := m["environment_variable"].([]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", environmentType))
 	buf.WriteString(fmt.Sprintf("%s-", computeType))
 	buf.WriteString(fmt.Sprintf("%s-", image))
+	buf.WriteString(fmt.Sprintf("%t-", privilegedMode))
 	for _, e := range environmentVariables {
 		if e != nil { // Old statefiles might have nil values in them
 			ev := e.(map[string]interface{})

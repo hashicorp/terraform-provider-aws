@@ -128,6 +128,7 @@ The following arguments are supported:
 * `compute_type` - (Required) Information about the compute resources the build project will use. Available values for this parameter are: `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM` or `BUILD_GENERAL1_LARGE`
 * `image` - (Required) The ID of the Docker image to use for this build project
 * `type` - (Required) The type of build environment to use for related builds. The only valid value is `LINUX_CONTAINER`.
+* `privileged_mode` - (Optional) If set to true, enables running the Docker daemon inside a Docker container. Defaults to `false`.
 * `environment_variable` - (Optional) A set of environment variables to make available to builds for this build project.
 
 `environment_variable` supports the following:
