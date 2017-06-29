@@ -31,16 +31,6 @@ func resourceAwsNetworkInterfaceSGAttachment() *schema.Resource {
 }
 
 func resourceAwsNetworkInterfaceSGAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	// Get a lock to prevent races on other SG attachments/detatchments on this
-	// interface ID. This lock is released when the function exits, regardless of
-	// success or failure.
-	//
-	// The lock here - in the create function - deliberately covers the
-	// post-creation read as well, which is normally not covered as Read is
-	// otherwise only performed on refresh. Locking on it here prevents
-	// inconsistencies that could be caused by other attachments that will be
-	// operating on the interface, ensuring that Create gets a full lay of the
-	// land before moving on.
 	mk := "network_interface_sg_attachment_" + d.Get("network_interface_id").(string)
 	awsMutexKV.Lock(mk)
 	defer awsMutexKV.Unlock(mk)
@@ -98,7 +88,7 @@ func resourceAwsNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta in
 	if sgExistsInENI(sgID, iface) {
 		d.SetId(fmt.Sprintf("%s_%s", sgID, interfaceID))
 	} else {
-		// The assocation does not exist when it should, taint this resource.
+		// The association does not exist when it should, taint this resource.
 		log.Printf("[WARN] Security group %s not associated with network interface ID %s, tainting", sgID, interfaceID)
 		d.SetId("")
 	}
@@ -106,9 +96,6 @@ func resourceAwsNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta in
 }
 
 func resourceAwsNetworkInterfaceSGAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	// Get a lock to prevent races on other SG attachments/detatchments on this
-	// interface ID. This lock is released when the function exits, regardless of
-	// success or failure.
 	mk := "network_interface_sg_attachment_" + d.Get("network_interface_id").(string)
 	awsMutexKV.Lock(mk)
 	defer awsMutexKV.Unlock(mk)
