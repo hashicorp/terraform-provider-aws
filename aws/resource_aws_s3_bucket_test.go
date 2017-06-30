@@ -600,6 +600,14 @@ func TestAccAWSS3Bucket_Lifecycle(t *testing.T) {
 						"aws_s3_bucket.bucket", "lifecycle_rule.2.prefix", "path3/"),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "lifecycle_rule.2.transition.460947558.days", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.3.id", "id4"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.3.prefix", "path4/"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.3.tags.tagKey", "tagValue"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.3.tags.terraform", "hashicorp"),
 				),
 			},
 			{
@@ -1452,6 +1460,20 @@ resource "aws_s3_bucket" "bucket" {
 		transition {
 			days = 0
 			storage_class = "GLACIER"
+		}
+	}
+	lifecycle_rule {
+		id = "id4"
+		prefix = "path4/"
+		enabled = true
+
+		tags {
+			"tagKey" = "tagValue"
+			"terraform" = "hashicorp"
+		}
+
+		expiration {
+			date = "2016-01-12"
 		}
 	}
 }
