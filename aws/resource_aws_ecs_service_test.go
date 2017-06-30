@@ -108,6 +108,23 @@ func TestAccAWSEcsServiceWithARN(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsServiceWithUnnormalizedPlacementStrategy(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithInterchangeablePlacementStrategy(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsServiceWithFamilyAndRevision(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-test")
 	resource.Test(t, resource.TestCase{
@@ -427,6 +444,40 @@ resource "aws_ecs_service" "mongo" {
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 2
+}
+`, rInt, rInt)
+}
+
+func testAccAWSEcsServiceWithInterchangeablePlacementStrategy(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "default" {
+	name = "terraformecstest%d"
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "mongodb"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "mongo" {
+  name = "mongodb-%d"
+  cluster = "${aws_ecs_cluster.default.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count = 1
+  placement_strategy {
+  	  field = "host"
+	  type = "spread"
+  }
 }
 `, rInt, rInt)
 }
