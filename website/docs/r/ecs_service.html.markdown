@@ -80,6 +80,8 @@ Load balancers support the following:
  For the `binpack` type, valid values are `memory` and `cpu`. For the `random` type, this attribute is not
  needed. For more information, see [Placement Strategy](http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_PlacementStrategy.html).
 
+-> **Note:** for `spread`, `host` and `instanceId` will be normalized, by AWS, to be `instanceId`. This means the statefile will show `instanceId` but your config will differ if you use `host`.
+
 ## placement_constraints
 
 `placement_constraints` support the following:
