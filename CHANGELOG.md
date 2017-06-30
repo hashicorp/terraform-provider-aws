@@ -16,6 +16,7 @@ IMPROVEMENTS:
 * resource/aws_codebuild_project: Add support for environment privileged_mode [GH1009]
 * resource/aws_dms_endpoint: Add support for dynamodb as an endpoint target [GH-1002]
 * resource/aws_s3_bucket: Support lifecycle tags filter [GH-899]
+* resource/aws_s3_bucket_object: Allow to set WebsiteRedirect on S3 object [GH-1020]
 
 BUG FIXES:
 
