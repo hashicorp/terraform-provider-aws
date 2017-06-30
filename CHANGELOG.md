@@ -1,37 +1,37 @@
-## 0.1.2 (Unreleased)
+## 0.1.2 (June 30, 2017)
 
 FEATURES:
 
-* **New Resource**: `aws_network_interface_sg_attachment` [GH-860]
-* **New Data Source**: `aws_ecr_repository` [GH-944]
+* **New Resource**: `aws_network_interface_sg_attachment` ([#860](https://github.com/terraform-providers/terraform-provider-aws/issues/860))
+* **New Data Source**: `aws_ecr_repository` ([#944](https://github.com/terraform-providers/terraform-provider-aws/issues/944))
 
 IMPROVEMENTS:
 
-* Added ability to change the deadline for the EC2 metadata API endpoint [GH-950]
-* resource/aws_api_gateway_integration: Add support for specifying cache key parameters [GH-893]
-* resource/aws_cloudwatch_event_target: Add ecs_target [GH-977]
-* resource/aws_vpn_connection: Add BGP related information on aws_vpn_connection [GH-973]
-* resource/aws_cloudformation_stack: Add timeout support [GH-994]
-* resource/aws_ssm_parameter: Add support for ssm parameter overwrite [GH-1006]
+* Added ability to change the deadline for the EC2 metadata API endpoint ([#950](https://github.com/terraform-providers/terraform-provider-aws/issues/950))
+* resource/aws_api_gateway_integration: Add support for specifying cache key parameters ([#893](https://github.com/terraform-providers/terraform-provider-aws/issues/893))
+* resource/aws_cloudwatch_event_target: Add ecs_target ([#977](https://github.com/terraform-providers/terraform-provider-aws/issues/977))
+* resource/aws_vpn_connection: Add BGP related information on aws_vpn_connection ([#973](https://github.com/terraform-providers/terraform-provider-aws/issues/973))
+* resource/aws_cloudformation_stack: Add timeout support ([#994](https://github.com/terraform-providers/terraform-provider-aws/issues/994))
+* resource/aws_ssm_parameter: Add support for ssm parameter overwrite ([#1006](https://github.com/terraform-providers/terraform-provider-aws/issues/1006))
 * resource/aws_codebuild_project: Add support for environment privileged_mode [GH1009]
-* resource/aws_dms_endpoint: Add support for dynamodb as an endpoint target [GH-1002]
-* resource/aws_s3_bucket: Support lifecycle tags filter [GH-899]
-* resource/aws_s3_bucket_object: Allow to set WebsiteRedirect on S3 object [GH-1020]
+* resource/aws_dms_endpoint: Add support for dynamodb as an endpoint target ([#1002](https://github.com/terraform-providers/terraform-provider-aws/issues/1002))
+* resource/aws_s3_bucket: Support lifecycle tags filter ([#899](https://github.com/terraform-providers/terraform-provider-aws/issues/899))
+* resource/aws_s3_bucket_object: Allow to set WebsiteRedirect on S3 object ([#1020](https://github.com/terraform-providers/terraform-provider-aws/issues/1020))
 
 BUG FIXES:
 
-* resource/aws_waf: Only set FieldToMatch.Data if not empty [GH-953]
-* resource/aws_elastic_beanstalk_application_version: Scope labels to application [GH-956]
-* resource/aws_s3_bucket: Allow use of `days = 0` with lifecycle transition [GH-957]
-* resource/aws_ssm_maintenance_window_task: Make task_parameters updateable on aws_ssm_maintenance_window_task resource [GH-965]
-* resource/aws_kinesis_stream: don't force stream destroy on shard_count update [GH-894]
-* resource/aws_cloudfront_distribution: Remove validation from custom_origin params [GH-987]
+* resource/aws_waf: Only set FieldToMatch.Data if not empty ([#953](https://github.com/terraform-providers/terraform-provider-aws/issues/953))
+* resource/aws_elastic_beanstalk_application_version: Scope labels to application ([#956](https://github.com/terraform-providers/terraform-provider-aws/issues/956))
+* resource/aws_s3_bucket: Allow use of `days = 0` with lifecycle transition ([#957](https://github.com/terraform-providers/terraform-provider-aws/issues/957))
+* resource/aws_ssm_maintenance_window_task: Make task_parameters updateable on aws_ssm_maintenance_window_task resource ([#965](https://github.com/terraform-providers/terraform-provider-aws/issues/965))
+* resource/aws_kinesis_stream: don't force stream destroy on shard_count update ([#894](https://github.com/terraform-providers/terraform-provider-aws/issues/894))
+* resource/aws_cloudfront_distribution: Remove validation from custom_origin params ([#987](https://github.com/terraform-providers/terraform-provider-aws/issues/987))
 * resource_aws_route53_record: Allow import of Route 53 records with underscores in the name ([#14717](https://github.com/hashicorp/terraform/pull/14717))
-* d/aws_db_snapshot: Id was being set incorrectly [GH-992]
-* resource/aws_spot_fleet_request: Raise the create timeout to be 10m [GH-993]
-* d/aws_ecs_cluster: Add ARN as an exported param for aws_ecs_cluster [GH-991]
-* resource/aws_ebs_volume: Not setting the state for ebs_volume correctly [GH-999]
-* resource/aws_network_acl: Make action in ingress / egress case insensitive [GH-1000]
+* d/aws_db_snapshot: Id was being set incorrectly ([#992](https://github.com/terraform-providers/terraform-provider-aws/issues/992))
+* resource/aws_spot_fleet_request: Raise the create timeout to be 10m ([#993](https://github.com/terraform-providers/terraform-provider-aws/issues/993))
+* d/aws_ecs_cluster: Add ARN as an exported param for aws_ecs_cluster ([#991](https://github.com/terraform-providers/terraform-provider-aws/issues/991))
+* resource/aws_ebs_volume: Not setting the state for ebs_volume correctly ([#999](https://github.com/terraform-providers/terraform-provider-aws/issues/999))
+* resource/aws_network_acl: Make action in ingress / egress case insensitive ([#1000](https://github.com/terraform-providers/terraform-provider-aws/issues/1000))
 
 ## 0.1.1 (June 21, 2017)
 
