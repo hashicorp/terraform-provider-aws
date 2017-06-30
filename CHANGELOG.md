@@ -2,23 +2,24 @@
 
 FEATURES:
 
-* **New resource**: `aws_network_interface_sg_attachment` [GH-860]
+* **New Resource**: `aws_network_interface_sg_attachment` [GH-860]
 * **New Data Source**: `aws_ecr_repository` [GH-944]
 
 IMPROVEMENTS:
 
 * Added ability to change the deadline for the EC2 metadata API endpoint [GH-950]
-* resource/api_gateway_integration: Add support for specifying cache key parameters [GH-893]
-* resource/cloudwatch_event_target: Add ecs_target [GH-977]
-* resource/vpn_connection: Add BGP related information on aws_vpn_connection [GH-973]
+* resource/aws_api_gateway_integration: Add support for specifying cache key parameters [GH-893]
+* resource/aws_cloudwatch_event_target: Add ecs_target [GH-977]
+* resource/aws_vpn_connection: Add BGP related information on aws_vpn_connection [GH-973]
 * resource/aws_cloudformation_stack: Add timeout support [GH-994]
 * resource/aws_ssm_parameter: Add support for ssm parameter overwrite [GH-1006]
 * resource/aws_codebuild_project: Add support for environment privileged_mode [GH1009]
 * resource/aws_dms_endpoint: Add support for dynamodb as an endpoint target [GH-1002]
+* resource/aws_s3_bucket: Support lifecycle tags filter [GH-899]
 
 BUG FIXES:
 
-* resource/waf: Only set FieldToMatch.Data if not empty [GH-953]
+* resource/aws_waf: Only set FieldToMatch.Data if not empty [GH-953]
 * resource/aws_elastic_beanstalk_application_version: Scope labels to application [GH-956]
 * resource/aws_s3_bucket: Allow use of `days = 0` with lifecycle transition [GH-957]
 * resource/aws_ssm_maintenance_window_task: Make task_parameters updateable on aws_ssm_maintenance_window_task resource [GH-965]
