@@ -1,5 +1,9 @@
 ## 0.1.3 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_iam_instance_profile` [GH-1024]
+
 BUG FIXES:
 
 * resource/ecs_service: Fixes normalization issues in placement_strategy [GH-1025]
