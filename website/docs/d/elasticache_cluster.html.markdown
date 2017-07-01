@@ -16,6 +16,7 @@ Use this data source to get information about an Elasticache Cluster
 data "aws_elasticache_cluster" "my_cluster" {
   cluster_id = "my-cluster-id"
 }
+```
 
 ## Argument Reference
 
