@@ -57,7 +57,6 @@ func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "health_check.0.healthy_threshold", "3"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "health_check.0.matcher", "200-299"),
-
 				),
 			},
 		},
