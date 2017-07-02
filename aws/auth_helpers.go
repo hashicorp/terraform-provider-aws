@@ -134,7 +134,7 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 	// The ECS credential provider is higher priority than EC2RoleProvider
 	if uri := os.Getenv(ecsCredentialsRelativeUri); len(uri) > 0 {
 		u := fmt.Sprintf("http://169.254.170.2%s", uri)
-		if uriOverride := os.Getenv(ecsCredentialsAbsoluteUriOverride); len(ecsCredentialsAbsoluteUriOverride) > 0 { // for unit tests
+		if uriOverride := os.Getenv(ecsCredentialsAbsoluteUriOverride); len(uriOverride) > 0 { // for unit tests
 			u = uriOverride
 		}
 		containerCredsProvider := endpointcreds.NewProviderClient(*defaults.Config(), defaults.Handlers(), u)
