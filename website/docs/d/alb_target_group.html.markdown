@@ -44,5 +44,5 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-See the [ALB Listener Resource](/docs/providers/aws/r/alb_target_group.html) for details
+See the [ALB Target Group Resource](/docs/providers/aws/r/alb_target_group.html) for details
 on the returned attributes - they are identical.
