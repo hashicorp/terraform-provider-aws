@@ -12,7 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	awsCredentials "github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
+	"github.com/aws/aws-sdk-go/aws/credentials/endpointcreds"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
+	"github.com/aws/aws-sdk-go/aws/defaults"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -104,11 +106,18 @@ func parseAccountInfoFromArn(arn string) (string, string, error) {
 	return parts[1], parts[4], nil
 }
 
+const (
+	ecsCredentialsRelativeUri         = "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"
+	ecsCredentialsAbsoluteUriOverride = "AWS_CONTAINER_CREDENTIALS_ABSOLUTE_URI_OVERRIDE" // for unit tests
+	userTimeoutEnvVar                 = "AWS_METADATA_TIMEOUT"
+	awsMetadataUrl                    = "AWS_METADATA_URL"
+)
+
 // This function is responsible for reading credentials from the
 // environment in the case that they're not explicitly specified
 // in the Terraform configuration.
 func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
-	// build a chain provider, lazy-evaulated by aws-sdk
+	// build a chain provider, lazy-evaluated by aws-sdk
 	providers := []awsCredentials.Provider{
 		&awsCredentials.StaticProvider{Value: awsCredentials.Value{
 			AccessKeyID:     c.AccessKey,
@@ -122,15 +131,28 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 		},
 	}
 
+	// The ECS credential provider is higher priority than EC2RoleProvider
+	if uri := os.Getenv(ecsCredentialsRelativeUri); len(uri) > 0 {
+		u := fmt.Sprintf("http://169.254.170.2%s", uri)
+		if uriOverride := os.Getenv(ecsCredentialsAbsoluteUriOverride); len(ecsCredentialsAbsoluteUriOverride) > 0 { // for unit tests
+			u = uriOverride
+		}
+		containerCredsProvider := endpointcreds.NewProviderClient(*defaults.Config(), defaults.Handlers(), u)
+		providers = append(providers, containerCredsProvider)
+
+		log.Print("[INFO] " + ecsCredentialsRelativeUri + " env var detected" +
+			", ECS credentials provider (CredentialsEndpointProvider) added to the auth chain")
+	} else {
+		log.Print("[INFO] " + ecsCredentialsRelativeUri + " env var not present, skipping ECS credentials provider")
+	}
+
 	// Build isolated HTTP client to avoid issues with globally-shared settings
 	client := cleanhttp.DefaultClient()
 
 	// Keep the default timeout (100ms) low as we don't want to wait in non-EC2 environments
 	client.Timeout = 100 * time.Millisecond
 
-	const userTimeoutEnvVar = "AWS_METADATA_TIMEOUT"
-	userTimeout := os.Getenv(userTimeoutEnvVar)
-	if userTimeout != "" {
+	if userTimeout := os.Getenv(userTimeoutEnvVar); len(userTimeout) > 0 {
 		newTimeout, err := time.ParseDuration(userTimeout)
 		if err == nil {
 			if newTimeout.Nanoseconds() > 0 {
@@ -237,7 +259,7 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 }
 
 func setOptionalEndpoint(cfg *aws.Config) string {
-	endpoint := os.Getenv("AWS_METADATA_URL")
+	endpoint := os.Getenv(awsMetadataUrl)
 	if endpoint != "" {
 		log.Printf("[INFO] Setting custom metadata endpoint: %q", endpoint)
 		cfg.Endpoint = aws.String(endpoint)
