@@ -7,6 +7,7 @@ FEATURES:
 BUG FIXES:
 
 * resource/ecs_service: Fixes normalization issues in placement_strategy [GH-1025]
+* resource/aws_opsworks_permission: Fix for failure to change Sudo or SSH permissions for current user.
 
 ## 0.1.2 (June 30, 2017)
 

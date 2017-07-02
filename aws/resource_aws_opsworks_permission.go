@@ -125,10 +125,17 @@ func resourceAwsOpsworksPermissionRead(d *schema.ResourceData, meta interface{})
 func resourceAwsOpsworksSetPermission(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).opsworksconn
 
+	/* Level must be supplied as 'nil' if we are not changing it */
+	level_string := d.Get("level").(string)
+	level_aws := aws.String(level_string)
+	if level_string == "" {
+		level_aws = nil
+	}
+
 	req := &opsworks.SetPermissionInput{
 		AllowSudo:  aws.Bool(d.Get("allow_sudo").(bool)),
 		AllowSsh:   aws.Bool(d.Get("allow_ssh").(bool)),
-		Level:      aws.String(d.Get("level").(string)),
+		Level:      level_aws,
 		IamUserArn: aws.String(d.Get("user_arn").(string)),
 		StackId:    aws.String(d.Get("stack_id").(string)),
 	}
