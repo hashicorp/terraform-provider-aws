@@ -212,12 +212,15 @@ func testAccCheckAWSKmsKeyExists(name string, key *kms.KeyMetadata) resource.Tes
 
 		conn := testAccProvider.Meta().(*AWSClient).kmsconn
 
-		out, err := conn.DescribeKey(&kms.DescribeKeyInput{
-			KeyId: aws.String(rs.Primary.ID),
+		o, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
+			return conn.DescribeKey(&kms.DescribeKeyInput{
+				KeyId: aws.String(rs.Primary.ID),
+			})
 		})
 		if err != nil {
 			return err
 		}
+		out := o.(*kms.DescribeKeyOutput)
 
 		*key = *out.KeyMetadata
 
