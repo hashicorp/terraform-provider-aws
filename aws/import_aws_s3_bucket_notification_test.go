@@ -20,10 +20,9 @@ func TestAccAWSS3BucketNotification_importBasic(t *testing.T) {
 			},
 
 			resource.TestStep{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bucket"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -38,10 +37,9 @@ func TestAccAWSS3BucketNotification_importBasic(t *testing.T) {
 			},
 
 			resource.TestStep{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bucket"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -56,10 +54,9 @@ func TestAccAWSS3BucketNotification_importBasic(t *testing.T) {
 			},
 
 			resource.TestStep{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bucket"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
