@@ -10,7 +10,8 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
-* resource/ecs_service: Fixes normalization issues in placement_strategy [GH-1025]
+* resource/aws_ecs_service: Fixes normalization issues in placement_strategy [GH-1025]
+* resource/aws_opsworks_permission: Fix 'set permissions' failing to set ssh access [GH-1038]
 
 ## 0.1.2 (June 30, 2017)
 
