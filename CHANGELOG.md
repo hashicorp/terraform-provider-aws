@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Data Source:** `aws_iam_instance_profile` [GH-1024]
 
+IMPROVEMENTS:
+
+* resource/aws_sqs_queue: Add support for Server-Side Encryption [GH-962]
+
 BUG FIXES:
 
 * resource/ecs_service: Fixes normalization issues in placement_strategy [GH-1025]
