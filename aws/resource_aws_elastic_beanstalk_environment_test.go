@@ -946,7 +946,7 @@ resource "aws_elastic_beanstalk_application" "default" {
 
 resource "aws_elastic_beanstalk_application_version" "default" {
   application = "${aws_elastic_beanstalk_application.default.name}"
-  name = "tf-test-version-label"
+  name = "tf-test-version-label-%d"
   bucket = "${aws_s3_bucket.default.id}"
   key = "${aws_s3_bucket_object.default.id}"
 }
@@ -957,7 +957,7 @@ resource "aws_elastic_beanstalk_environment" "default" {
   version_label = "${aws_elastic_beanstalk_application_version.default.name}"
   solution_stack_name = "64bit Amazon Linux running Python"
 }
-`, randInt, randInt, randInt)
+`, randInt, randInt, randInt, randInt)
 }
 
 func testAccBeanstalkEnvApplicationVersionConfigUpdate(randInt int) string {
@@ -979,7 +979,7 @@ resource "aws_elastic_beanstalk_application" "default" {
 
 resource "aws_elastic_beanstalk_application_version" "default" {
   application = "${aws_elastic_beanstalk_application.default.name}"
-  name = "tf-test-version-label-v2"
+  name = "tf-test-version-label-%d-v2"
   bucket = "${aws_s3_bucket.default.id}"
   key = "${aws_s3_bucket_object.default.id}"
 }
@@ -990,5 +990,5 @@ resource "aws_elastic_beanstalk_environment" "default" {
   version_label = "${aws_elastic_beanstalk_application_version.default.name}"
   solution_stack_name = "64bit Amazon Linux running Python"
 }
-`, randInt, randInt, randInt)
+`, randInt, randInt, randInt, randInt)
 }

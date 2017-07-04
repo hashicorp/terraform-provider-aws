@@ -516,6 +516,24 @@ func validateS3BucketLifecycleTimestamp(v interface{}, k string) (ws []string, e
 	return
 }
 
+func validateS3BucketLifecycleExpirationDays(v interface{}, k string) (ws []string, errors []error) {
+	if v.(int) <= 0 {
+		errors = append(errors, fmt.Errorf(
+			"%q must be greater than 0", k))
+	}
+
+	return
+}
+
+func validateS3BucketLifecycleTransitionDays(v interface{}, k string) (ws []string, errors []error) {
+	if v.(int) < 0 {
+		errors = append(errors, fmt.Errorf(
+			"%q must be greater than 0", k))
+	}
+
+	return
+}
+
 func validateS3BucketLifecycleStorageClass(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if value != s3.TransitionStorageClassStandardIa && value != s3.TransitionStorageClassGlacier {

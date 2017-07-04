@@ -218,8 +218,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 						},
 						"prefix": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
+						"tags": tagsSchema(),
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
@@ -240,8 +241,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 										ValidateFunc: validateS3BucketLifecycleTimestamp,
 									},
 									"days": {
-										Type:     schema.TypeInt,
-										Optional: true,
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validateS3BucketLifecycleExpirationDays,
 									},
 									"expired_object_delete_marker": {
 										Type:     schema.TypeBool,
@@ -257,8 +259,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"days": {
-										Type:     schema.TypeInt,
-										Optional: true,
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validateS3BucketLifecycleExpirationDays,
 									},
 								},
 							},
@@ -275,8 +278,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 										ValidateFunc: validateS3BucketLifecycleTimestamp,
 									},
 									"days": {
-										Type:     schema.TypeInt,
-										Optional: true,
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validateS3BucketLifecycleTransitionDays,
 									},
 									"storage_class": {
 										Type:         schema.TypeString,
@@ -293,8 +297,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"days": {
-										Type:     schema.TypeInt,
-										Optional: true,
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validateS3BucketLifecycleTransitionDays,
 									},
 									"storage_class": {
 										Type:         schema.TypeString,
@@ -778,9 +783,21 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			if lifecycleRule.ID != nil && *lifecycleRule.ID != "" {
 				rule["id"] = *lifecycleRule.ID
 			}
-			// Prefix
-			if lifecycleRule.Prefix != nil && *lifecycleRule.Prefix != "" {
-				rule["prefix"] = *lifecycleRule.Prefix
+			filter := lifecycleRule.Filter
+			if filter.And != nil {
+				// Prefix
+				if filter.And.Prefix != nil && *filter.And.Prefix != "" {
+					rule["prefix"] = *filter.And.Prefix
+				}
+				// Tag
+				if len(filter.And.Tags) > 0 {
+					rule["tags"] = tagsToMapS3(filter.And.Tags)
+				}
+			} else {
+				// Prefix
+				if filter.Prefix != nil && *filter.Prefix != "" {
+					rule["prefix"] = *filter.Prefix
+				}
 			}
 			// Enabled
 			if lifecycleRule.Status != nil {
@@ -1510,9 +1527,20 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 	for i, lifecycleRule := range lifecycleRules {
 		r := lifecycleRule.(map[string]interface{})
 
-		rule := &s3.LifecycleRule{
-			Prefix: aws.String(r["prefix"].(string)),
+		rule := &s3.LifecycleRule{}
+
+		// Filter
+		tags := r["tags"].(map[string]interface{})
+		filter := &s3.LifecycleRuleFilter{}
+		if len(tags) > 0 {
+			lifecycleRuleAndOp := &s3.LifecycleRuleAndOperator{}
+			lifecycleRuleAndOp.SetPrefix(r["prefix"].(string))
+			lifecycleRuleAndOp.SetTags(tagsFromMapS3(tags))
+			filter.SetAnd(lifecycleRuleAndOp)
+		} else {
+			filter.SetPrefix(r["prefix"].(string))
 		}
+		rule.SetFilter(filter)
 
 		// ID
 		if val, ok := r["id"].(string); ok && val != "" {
@@ -1580,7 +1608,7 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 						return fmt.Errorf("Error Parsing AWS S3 Bucket Lifecycle Expiration Date: %s", err.Error())
 					}
 					i.Date = aws.Time(t)
-				} else if val, ok := transition["days"].(int); ok && val > 0 {
+				} else if val, ok := transition["days"].(int); ok && val >= 0 {
 					i.Days = aws.Int64(int64(val))
 				}
 				if val, ok := transition["storage_class"].(string); ok && val != "" {
@@ -1597,7 +1625,7 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 			for _, transition := range nc_transitions {
 				transition := transition.(map[string]interface{})
 				i := &s3.NoncurrentVersionTransition{}
-				if val, ok := transition["days"].(int); ok && val > 0 {
+				if val, ok := transition["days"].(int); ok && val >= 0 {
 					i.NoncurrentDays = aws.Int64(int64(val))
 				}
 				if val, ok := transition["storage_class"].(string); ok && val != "" {

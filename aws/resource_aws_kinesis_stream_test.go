@@ -60,6 +60,16 @@ func TestAccAWSKinesisStream_importBasic(t *testing.T) {
 
 func TestAccAWSKinesisStream_shardCount(t *testing.T) {
 	var stream kinesis.StreamDescription
+	var updatedStream kinesis.StreamDescription
+
+	testCheckStreamNotDestroyed := func() resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			if *stream.StreamCreationTimestamp != *updatedStream.StreamCreationTimestamp {
+				return fmt.Errorf("Creation timestamps dont match, stream was recreated")
+			}
+			return nil
+		}
+	}
 
 	rInt := acctest.RandInt()
 
@@ -81,8 +91,9 @@ func TestAccAWSKinesisStream_shardCount(t *testing.T) {
 			{
 				Config: testAccKinesisStreamConfigUpdateShardCount(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
-					testAccCheckAWSKinesisStreamAttributes(&stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &updatedStream),
+					testAccCheckAWSKinesisStreamAttributes(&updatedStream),
+					testCheckStreamNotDestroyed(),
 					resource.TestCheckResourceAttr(
 						"aws_kinesis_stream.test_stream", "shard_count", "4"),
 				),
@@ -215,7 +226,7 @@ func testAccCheckAWSKinesisStreamAttributes(stream *kinesis.StreamDescription) r
 			if *stream.StreamARN != rs.Primary.Attributes["arn"] {
 				return fmt.Errorf("Bad Stream ARN\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["arn"], *stream.StreamARN)
 			}
-			shard_count := strconv.Itoa(len(stream.Shards))
+			shard_count := strconv.Itoa(len(flattenShards(openShards(stream.Shards))))
 			if shard_count != rs.Primary.Attributes["shard_count"] {
 				return fmt.Errorf("Bad Stream Shard Count\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["shard_count"], shard_count)
 			}
