@@ -62,10 +62,10 @@ func testAccCheckAWSAPIGatewayRequestValidatorName(conf *apigateway.UpdateReques
 func testAccCheckAWSAPIGatewayRequestValidatorValidateRequestBody(conf *apigateway.UpdateRequestValidatorOutput, expectedValue bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.ValidateRequestBody == nil {
-			return fmt.Errorf("Empty ValidateRequestBody, expected: %q", expectedValue)
+			return fmt.Errorf("Empty ValidateRequestBody, expected: %t", expectedValue)
 		}
 		if *conf.ValidateRequestBody != expectedValue {
-			return fmt.Errorf("ValidateRequestBody didn't match. Expected: %q, Given: %q", expectedValue, *conf.ValidateRequestBody)
+			return fmt.Errorf("ValidateRequestBody didn't match. Expected: %t, Given: %t", expectedValue, *conf.ValidateRequestBody)
 		}
 		return nil
 	}
@@ -74,10 +74,10 @@ func testAccCheckAWSAPIGatewayRequestValidatorValidateRequestBody(conf *apigatew
 func testAccCheckAWSAPIGatewayRequestValidatorValidateRequestParameters(conf *apigateway.UpdateRequestValidatorOutput, expectedValue bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.ValidateRequestParameters == nil {
-			return fmt.Errorf("Empty ValidateRequestParameters, expected: %q", expectedValue)
+			return fmt.Errorf("Empty ValidateRequestParameters, expected: %t", expectedValue)
 		}
 		if *conf.ValidateRequestParameters != expectedValue {
-			return fmt.Errorf("ValidateRequestParameters didn't match. Expected: %q, Given: %q", expectedValue, *conf.ValidateRequestParameters)
+			return fmt.Errorf("ValidateRequestParameters didn't match. Expected: %t, Given: %t", expectedValue, *conf.ValidateRequestParameters)
 		}
 		return nil
 	}
