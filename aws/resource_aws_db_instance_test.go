@@ -966,7 +966,7 @@ func testAccSnapshotInstanceConfig_iopsUpdate(rName string, iops int) string {
 resource "aws_db_instance" "bar" {
   identifier           = "mydb-rds-%s"
   engine               = "mysql"
-  engine_version       = "5.6.23"
+  engine_version       = "5.6.35"
   instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
@@ -987,7 +987,7 @@ func testAccSnapshotInstanceConfig_mysqlPort(rName string) string {
 resource "aws_db_instance" "bar" {
   identifier           = "mydb-rds-%s"
   engine               = "mysql"
-  engine_version       = "5.6.23"
+  engine_version       = "5.6.35"
   instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
@@ -1006,7 +1006,7 @@ func testAccSnapshotInstanceConfig_updateMysqlPort(rName string) string {
 resource "aws_db_instance" "bar" {
   identifier           = "mydb-rds-%s"
   engine               = "mysql"
-  engine_version       = "5.6.23"
+  engine_version       = "5.6.35"
   instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
@@ -1058,7 +1058,7 @@ resource "aws_db_subnet_group" "foo" {
 resource "aws_db_instance" "bar" {
   identifier           = "mydb-rds-%s"
   engine               = "mysql"
-  engine_version       = "5.6.23"
+  engine_version       = "5.6.35"
   instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
@@ -1145,7 +1145,7 @@ resource "aws_db_subnet_group" "bar" {
 resource "aws_db_instance" "bar" {
   identifier           = "mydb-rds-%s"
   engine               = "mysql"
-  engine_version       = "5.6.23"
+  engine_version       = "5.6.35"
   instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
