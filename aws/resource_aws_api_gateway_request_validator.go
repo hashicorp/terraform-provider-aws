@@ -5,10 +5,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"log"
-	"time"
+	"strings"
 )
 
 func resourceAwsApiGatewayRequestValidator() *schema.Resource {
@@ -139,24 +138,17 @@ func resourceAwsApiGatewayRequestValidatorDelete(d *schema.ResourceData, meta in
 	conn := meta.(*AWSClient).apigateway
 	log.Printf("[DEBUG] Deleting Request Validator %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteRequestValidator(&apigateway.DeleteRequestValidatorInput{
-			RequestValidatorId: aws.String(d.Id()),
-			RestApiId:          aws.String(d.Get("rest_api_id").(string)),
-		})
-		if err == nil {
-			return nil
-		}
-
-		awsErr, ok := err.(awserr.Error)
-		if awsErr.Code() == apigateway.ErrCodeNotFoundException {
-			return nil
-		}
-
-		if !ok {
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteRequestValidator(&apigateway.DeleteRequestValidatorInput{
+		RequestValidatorId: aws.String(d.Id()),
+		RestApiId:          aws.String(d.Get("rest_api_id").(string)),
 	})
+	if err != nil {
+		// XXX: Figure out a way to delete the method that depends on the request validator first
+		// otherwise the validator will be dangling until the API is deleted
+		if !strings.Contains(err.Error(), apigateway.ErrCodeConflictException) {
+			return fmt.Errorf("Deleting Request Validator failed: %s", err)
+		}
+	}
+
+	return nil
 }
