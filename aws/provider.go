@@ -162,6 +162,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_acm_certificate":          dataSourceAwsAcmCertificate(),
 			"aws_alb":                      dataSourceAwsAlb(),
 			"aws_alb_listener":             dataSourceAwsAlbListener(),
+			"aws_alb_target_group":         dataSourceAwsAlbTargetGroup(),
 			"aws_ami":                      dataSourceAwsAmi(),
 			"aws_ami_ids":                  dataSourceAwsAmiIds(),
 			"aws_autoscaling_groups":       dataSourceAwsAutoscalingGroups(),
