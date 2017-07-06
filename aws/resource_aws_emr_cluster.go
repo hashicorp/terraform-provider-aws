@@ -36,7 +36,8 @@ func resourceAwsEMRCluster() *schema.Resource {
 			},
 			"master_instance_type": {
 				Type:     schema.TypeString,
-				Required: true,
+				Required: false,
+				Optional: true,
 				ForceNew: true,
 			},
 			"core_instance_type": {
@@ -48,7 +49,6 @@ func resourceAwsEMRCluster() *schema.Resource {
 			"core_instance_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  1,
 			},
 			"cluster_state": {
 				Type:     schema.TypeString,
@@ -123,6 +123,66 @@ func resourceAwsEMRCluster() *schema.Resource {
 					},
 				},
 			},
+			"instance_group": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bid_price": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ebs_config": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"iops": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"size": {
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+									"type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateAwsEmrEbsVolumeType,
+									},
+									"volumes_per_instance": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Default:  1,
+									},
+								},
+							},
+						},
+						"instance_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
+						},
+						"instance_role": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateAwsEmrInstanceGroupRole,
+						},
+						"instance_type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 			"bootstrap_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -180,13 +240,6 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*AWSClient).emrconn
 
 	log.Printf("[DEBUG] Creating EMR cluster")
-	masterInstanceType := d.Get("master_instance_type").(string)
-	coreInstanceType := masterInstanceType
-	if v, ok := d.GetOk("core_instance_type"); ok {
-		coreInstanceType = v.(string)
-	}
-	coreInstanceCount := d.Get("core_instance_count").(int)
-
 	applications := d.Get("applications").(*schema.Set).List()
 
 	keepJobFlowAliveWhenNoSteps := true
@@ -199,12 +252,19 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		terminationProtection = v.(bool)
 	}
 	instanceConfig := &emr.JobFlowInstancesConfig{
-		MasterInstanceType: aws.String(masterInstanceType),
-		SlaveInstanceType:  aws.String(coreInstanceType),
-		InstanceCount:      aws.Int64(int64(coreInstanceCount)),
-
 		KeepJobFlowAliveWhenNoSteps: aws.Bool(keepJobFlowAliveWhenNoSteps),
 		TerminationProtected:        aws.Bool(terminationProtection),
+	}
+
+	if v, ok := d.GetOk("master_instance_type"); ok {
+		instanceConfig.MasterInstanceType = aws.String(v.(string))
+		instanceConfig.SlaveInstanceType = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("core_instance_type"); ok {
+		instanceConfig.SlaveInstanceType = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("core_instance_count"); ok {
+		instanceConfig.InstanceCount = aws.Int64(int64(v.(int)))
 	}
 
 	var instanceProfile string
@@ -252,6 +312,10 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		if v, ok := attributes["service_access_security_group"]; ok {
 			instanceConfig.ServiceAccessSecurityGroup = aws.String(v.(string))
 		}
+	}
+	if v, ok := d.GetOk("instance_group"); ok {
+		instanceGroupConfigs := v.(*schema.Set).List()
+		instanceConfig.InstanceGroups = expandInstanceGroupConfigs(instanceGroupConfigs)
 	}
 
 	emrApps := expandApplications(applications)
@@ -748,6 +812,52 @@ func expandBootstrapActions(bootstrapActions []interface{}) []*emr.BootstrapActi
 	}
 
 	return actionsOut
+}
+
+func expandInstanceGroupConfigs(instanceGroupConfigs []interface{}) []*emr.InstanceGroupConfig {
+	configsOut := []*emr.InstanceGroupConfig{}
+
+	for _, raw := range instanceGroupConfigs {
+		configAttributes := raw.(map[string]interface{})
+		configInstanceRole := configAttributes["instance_role"].(string)
+		configInstanceCount := configAttributes["instance_count"].(int)
+		configInstanceType := configAttributes["instance_type"].(string)
+		configName := configAttributes["name"].(string)
+		config := &emr.InstanceGroupConfig{
+			Name:          aws.String(configName),
+			InstanceRole:  aws.String(configInstanceRole),
+			InstanceType:  aws.String(configInstanceType),
+			InstanceCount: aws.Int64(int64(configInstanceCount)),
+		}
+
+		if rawEbsConfigs, ok := configAttributes["ebs_config"]; ok {
+			//ebsConfig := readEmrEBSConfig(raw.(schema.ResourceData))
+			ebsConfig := &emr.EbsConfiguration{}
+
+			ebsBlockDeviceConfigs := make([]*emr.EbsBlockDeviceConfig, 0)
+			for _, rawEbsConfig := range rawEbsConfigs.(*schema.Set).List() {
+				rawEbsConfig := rawEbsConfig.(map[string]interface{})
+				ebsBlockDeviceConfig := &emr.EbsBlockDeviceConfig{
+					VolumesPerInstance: aws.Int64(int64(rawEbsConfig["volumes_per_instance"].(int))),
+					VolumeSpecification: &emr.VolumeSpecification{
+						SizeInGB:   aws.Int64(int64(rawEbsConfig["size"].(int))),
+						VolumeType: aws.String(rawEbsConfig["type"].(string)),
+					},
+				}
+				if v, ok := rawEbsConfig["iops"].(int); ok && v != 0 {
+					ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int64(int64(v))
+				}
+				ebsBlockDeviceConfigs = append(ebsBlockDeviceConfigs, ebsBlockDeviceConfig)
+			}
+			ebsConfig.EbsBlockDeviceConfigs = ebsBlockDeviceConfigs
+
+			config.EbsConfiguration = ebsConfig
+		}
+
+		configsOut = append(configsOut, config)
+	}
+
+	return configsOut
 }
 
 func expandConfigures(input string) []*emr.Configuration {
