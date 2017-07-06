@@ -847,6 +847,105 @@ func (c *SSM) CreatePatchBaselineWithContext(ctx aws.Context, input *CreatePatch
 	return out, req.Send()
 }
 
+const opCreateResourceDataSync = "CreateResourceDataSync"
+
+// CreateResourceDataSyncRequest generates a "aws/request.Request" representing the
+// client's request for the CreateResourceDataSync operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See CreateResourceDataSync for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateResourceDataSync method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateResourceDataSyncRequest method.
+//    req, resp := client.CreateResourceDataSyncRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateResourceDataSync
+func (c *SSM) CreateResourceDataSyncRequest(input *CreateResourceDataSyncInput) (req *request.Request, output *CreateResourceDataSyncOutput) {
+	op := &request.Operation{
+		Name:       opCreateResourceDataSync,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateResourceDataSyncInput{}
+	}
+
+	output = &CreateResourceDataSyncOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateResourceDataSync API operation for Amazon Simple Systems Manager (SSM).
+//
+// Creates a resource data sync configuration to a single bucket in Amazon S3.
+// This is an asynchronous operation that returns immediately. After a successful
+// initial sync is completed, the system continuously syncs data to the Amazon
+// S3 bucket. To check the status of the sync, use the ListResourceDataSync
+// (API_ListResourceDataSync.html) operation.
+//
+// By default, data is not encrypted in Amazon S3. We strongly recommend that
+// you enable encryption in Amazon S3 to ensure secure data storage. We also
+// recommend that you secure access to the Amazon S3 bucket by creating a restrictive
+// bucket policy. To view an example of a restrictive Amazon S3 bucket policy
+// for Resource Data Sync, see Creating a Resource Data Sync (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-datasync-create.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation CreateResourceDataSync for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeResourceDataSyncCountExceededException "ResourceDataSyncCountExceededException"
+//   You have exceeded the allowed maximum sync configurations.
+//
+//   * ErrCodeResourceDataSyncAlreadyExistsException "ResourceDataSyncAlreadyExistsException"
+//   A sync configuration with the same name already exists.
+//
+//   * ErrCodeResourceDataSyncInvalidConfigurationException "ResourceDataSyncInvalidConfigurationException"
+//   The specified sync configuration is invalid.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateResourceDataSync
+func (c *SSM) CreateResourceDataSync(input *CreateResourceDataSyncInput) (*CreateResourceDataSyncOutput, error) {
+	req, out := c.CreateResourceDataSyncRequest(input)
+	return out, req.Send()
+}
+
+// CreateResourceDataSyncWithContext is the same as CreateResourceDataSync with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateResourceDataSync for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) CreateResourceDataSyncWithContext(ctx aws.Context, input *CreateResourceDataSyncInput, opts ...request.Option) (*CreateResourceDataSyncOutput, error) {
+	req, out := c.CreateResourceDataSyncRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteActivation = "DeleteActivation"
 
 // DeleteActivationRequest generates a "aws/request.Request" representing the
@@ -1465,6 +1564,92 @@ func (c *SSM) DeletePatchBaseline(input *DeletePatchBaselineInput) (*DeletePatch
 // for more information on using Contexts.
 func (c *SSM) DeletePatchBaselineWithContext(ctx aws.Context, input *DeletePatchBaselineInput, opts ...request.Option) (*DeletePatchBaselineOutput, error) {
 	req, out := c.DeletePatchBaselineRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteResourceDataSync = "DeleteResourceDataSync"
+
+// DeleteResourceDataSyncRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteResourceDataSync operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DeleteResourceDataSync for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteResourceDataSync method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteResourceDataSyncRequest method.
+//    req, resp := client.DeleteResourceDataSyncRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteResourceDataSync
+func (c *SSM) DeleteResourceDataSyncRequest(input *DeleteResourceDataSyncInput) (req *request.Request, output *DeleteResourceDataSyncOutput) {
+	op := &request.Operation{
+		Name:       opDeleteResourceDataSync,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteResourceDataSyncInput{}
+	}
+
+	output = &DeleteResourceDataSyncOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteResourceDataSync API operation for Amazon Simple Systems Manager (SSM).
+//
+// Deletes a Resource Data Sync configuration. After the configuration is deleted,
+// changes to inventory data on managed instances are no longer synced with
+// the target Amazon S3 bucket. Deleting a sync configuration does not delete
+// data in the target Amazon S3 bucket.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation DeleteResourceDataSync for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeResourceDataSyncNotFoundException "ResourceDataSyncNotFoundException"
+//   The specified sync name was not found.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteResourceDataSync
+func (c *SSM) DeleteResourceDataSync(input *DeleteResourceDataSyncInput) (*DeleteResourceDataSyncOutput, error) {
+	req, out := c.DeleteResourceDataSyncRequest(input)
+	return out, req.Send()
+}
+
+// DeleteResourceDataSyncWithContext is the same as DeleteResourceDataSync with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteResourceDataSync for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DeleteResourceDataSyncWithContext(ctx aws.Context, input *DeleteResourceDataSyncInput, opts ...request.Option) (*DeleteResourceDataSyncOutput, error) {
+	req, out := c.DeleteResourceDataSyncRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5255,8 +5440,8 @@ func (c *SSM) GetParametersByPathRequest(input *GetParametersByPathInput) (req *
 
 // GetParametersByPath API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieve parameters in a specific hierarchy. For more information, see Using
-// Parameter Hierarchies (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working-path.html).
+// Retrieve parameters in a specific hierarchy. For more information, see Working
+// with Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6320,6 +6505,98 @@ func (c *SSM) ListInventoryEntriesWithContext(ctx aws.Context, input *ListInvent
 	return out, req.Send()
 }
 
+const opListResourceDataSync = "ListResourceDataSync"
+
+// ListResourceDataSyncRequest generates a "aws/request.Request" representing the
+// client's request for the ListResourceDataSync operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See ListResourceDataSync for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListResourceDataSync method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListResourceDataSyncRequest method.
+//    req, resp := client.ListResourceDataSyncRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceDataSync
+func (c *SSM) ListResourceDataSyncRequest(input *ListResourceDataSyncInput) (req *request.Request, output *ListResourceDataSyncOutput) {
+	op := &request.Operation{
+		Name:       opListResourceDataSync,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListResourceDataSyncInput{}
+	}
+
+	output = &ListResourceDataSyncOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListResourceDataSync API operation for Amazon Simple Systems Manager (SSM).
+//
+// Lists your resource data sync configurations. Includes information about
+// the last time a sync attempted to start, the last sync status, and the last
+// time a sync successfully completed.
+//
+// The number of sync configurations might be too large to return using a single
+// call to ListResourceDataSync. You can limit the number of sync configurations
+// returned by using the MaxResults parameter. To determine whether there are
+// more sync configurations to list, check the value of NextToken in the output.
+// If there are more sync configurations to list, you can request them by specifying
+// the NextToken returned in the call to the parameter of a subsequent call.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation ListResourceDataSync for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeInvalidNextToken "InvalidNextToken"
+//   The specified token is not valid.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceDataSync
+func (c *SSM) ListResourceDataSync(input *ListResourceDataSyncInput) (*ListResourceDataSyncOutput, error) {
+	req, out := c.ListResourceDataSyncRequest(input)
+	return out, req.Send()
+}
+
+// ListResourceDataSyncWithContext is the same as ListResourceDataSync with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListResourceDataSync for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) ListResourceDataSyncWithContext(ctx aws.Context, input *ListResourceDataSyncInput, opts ...request.Option) (*ListResourceDataSyncOutput, error) {
+	req, out := c.ListResourceDataSyncRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListTagsForResource = "ListTagsForResource"
 
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
@@ -6704,7 +6981,7 @@ func (c *SSM) PutParameterRequest(input *PutParameterInput) (req *request.Reques
 //
 //   /Finance/Prod/IAD/OS/WinServ2016/license15
 //
-//   For more information, see Develop a Parameter Hierarchy (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working-path.html).
+//   For more information, see Working with Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working.html).
 //
 //   * ErrCodeHierarchyTypeMismatchException "HierarchyTypeMismatchException"
 //   Parameter Store does not support changing a parameter type in a hierarchy.
@@ -10643,6 +10920,82 @@ func (s *CreatePatchBaselineOutput) SetBaselineId(v string) *CreatePatchBaseline
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateResourceDataSyncRequest
+type CreateResourceDataSyncInput struct {
+	_ struct{} `type:"structure"`
+
+	// Amazon S3 configuration details for the sync.
+	//
+	// S3Destination is a required field
+	S3Destination *ResourceDataSyncS3Destination `type:"structure" required:"true"`
+
+	// A name for the configuration.
+	//
+	// SyncName is a required field
+	SyncName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateResourceDataSyncInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateResourceDataSyncInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateResourceDataSyncInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateResourceDataSyncInput"}
+	if s.S3Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3Destination"))
+	}
+	if s.SyncName == nil {
+		invalidParams.Add(request.NewErrParamRequired("SyncName"))
+	}
+	if s.SyncName != nil && len(*s.SyncName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SyncName", 1))
+	}
+	if s.S3Destination != nil {
+		if err := s.S3Destination.Validate(); err != nil {
+			invalidParams.AddNested("S3Destination", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetS3Destination sets the S3Destination field's value.
+func (s *CreateResourceDataSyncInput) SetS3Destination(v *ResourceDataSyncS3Destination) *CreateResourceDataSyncInput {
+	s.S3Destination = v
+	return s
+}
+
+// SetSyncName sets the SyncName field's value.
+func (s *CreateResourceDataSyncInput) SetSyncName(v string) *CreateResourceDataSyncInput {
+	s.SyncName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateResourceDataSyncResult
+type CreateResourceDataSyncOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateResourceDataSyncOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateResourceDataSyncOutput) GoString() string {
+	return s.String()
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteActivationRequest
 type DeleteActivationInput struct {
 	_ struct{} `type:"structure"`
@@ -11071,6 +11424,63 @@ func (s DeletePatchBaselineOutput) GoString() string {
 func (s *DeletePatchBaselineOutput) SetBaselineId(v string) *DeletePatchBaselineOutput {
 	s.BaselineId = &v
 	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteResourceDataSyncRequest
+type DeleteResourceDataSyncInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the configuration to delete.
+	//
+	// SyncName is a required field
+	SyncName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteResourceDataSyncInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteResourceDataSyncInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteResourceDataSyncInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteResourceDataSyncInput"}
+	if s.SyncName == nil {
+		invalidParams.Add(request.NewErrParamRequired("SyncName"))
+	}
+	if s.SyncName != nil && len(*s.SyncName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SyncName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSyncName sets the SyncName field's value.
+func (s *DeleteResourceDataSyncInput) SetSyncName(v string) *DeleteResourceDataSyncInput {
+	s.SyncName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteResourceDataSyncResult
+type DeleteResourceDataSyncOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteResourceDataSyncOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteResourceDataSyncOutput) GoString() string {
+	return s.String()
 }
 
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterManagedInstanceRequest
@@ -18221,6 +18631,88 @@ func (s *ListInventoryEntriesOutput) SetTypeName(v string) *ListInventoryEntries
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceDataSyncRequest
+type ListResourceDataSyncInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of items to return for this call. The call also returns
+	// a token that you can specify in a subsequent call to get the next set of
+	// results.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A token to start the list. Use this token to get the next set of results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListResourceDataSyncInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListResourceDataSyncInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListResourceDataSyncInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListResourceDataSyncInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListResourceDataSyncInput) SetMaxResults(v int64) *ListResourceDataSyncInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListResourceDataSyncInput) SetNextToken(v string) *ListResourceDataSyncInput {
+	s.NextToken = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceDataSyncResult
+type ListResourceDataSyncOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of items to return. Use this token to get the
+	// next set of results.
+	NextToken *string `type:"string"`
+
+	// A list of your current Resource Data Sync configurations and their statuses.
+	ResourceDataSyncItems []*ResourceDataSyncItem `type:"list"`
+}
+
+// String returns the string representation
+func (s ListResourceDataSyncOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListResourceDataSyncOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListResourceDataSyncOutput) SetNextToken(v string) *ListResourceDataSyncOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResourceDataSyncItems sets the ResourceDataSyncItems field's value.
+func (s *ListResourceDataSyncOutput) SetResourceDataSyncItems(v []*ResourceDataSyncItem) *ListResourceDataSyncOutput {
+	s.ResourceDataSyncItems = v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListTagsForResourceRequest
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
@@ -20852,6 +21344,163 @@ func (s RemoveTagsFromResourceOutput) GoString() string {
 	return s.String()
 }
 
+// Information about a Resource Data Sync configuration, including its current
+// status and last successful sync.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResourceDataSyncItem
+type ResourceDataSyncItem struct {
+	_ struct{} `type:"structure"`
+
+	// The status reported by the last sync.
+	LastStatus *string `type:"string" enum:"LastResourceDataSyncStatus"`
+
+	// The last time the sync operations returned a status of SUCCESSFUL (UTC).
+	LastSuccessfulSyncTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The last time the configuration attempted to sync (UTC).
+	LastSyncTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// Configuration information for the target Amazon S3 bucket.
+	S3Destination *ResourceDataSyncS3Destination `type:"structure"`
+
+	// The date and time the configuration was created (UTC).
+	SyncCreatedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The name of the Resource Data Sync.
+	SyncName *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceDataSyncItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceDataSyncItem) GoString() string {
+	return s.String()
+}
+
+// SetLastStatus sets the LastStatus field's value.
+func (s *ResourceDataSyncItem) SetLastStatus(v string) *ResourceDataSyncItem {
+	s.LastStatus = &v
+	return s
+}
+
+// SetLastSuccessfulSyncTime sets the LastSuccessfulSyncTime field's value.
+func (s *ResourceDataSyncItem) SetLastSuccessfulSyncTime(v time.Time) *ResourceDataSyncItem {
+	s.LastSuccessfulSyncTime = &v
+	return s
+}
+
+// SetLastSyncTime sets the LastSyncTime field's value.
+func (s *ResourceDataSyncItem) SetLastSyncTime(v time.Time) *ResourceDataSyncItem {
+	s.LastSyncTime = &v
+	return s
+}
+
+// SetS3Destination sets the S3Destination field's value.
+func (s *ResourceDataSyncItem) SetS3Destination(v *ResourceDataSyncS3Destination) *ResourceDataSyncItem {
+	s.S3Destination = v
+	return s
+}
+
+// SetSyncCreatedTime sets the SyncCreatedTime field's value.
+func (s *ResourceDataSyncItem) SetSyncCreatedTime(v time.Time) *ResourceDataSyncItem {
+	s.SyncCreatedTime = &v
+	return s
+}
+
+// SetSyncName sets the SyncName field's value.
+func (s *ResourceDataSyncItem) SetSyncName(v string) *ResourceDataSyncItem {
+	s.SyncName = &v
+	return s
+}
+
+// Information about the target Amazon S3 bucket for the Resource Data Sync.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResourceDataSyncS3Destination
+type ResourceDataSyncS3Destination struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Amazon S3 bucket where the aggregated data is stored.
+	//
+	// BucketName is a required field
+	BucketName *string `min:"1" type:"string" required:"true"`
+
+	// An Amazon S3 prefix for the bucket.
+	Prefix *string `min:"1" type:"string"`
+
+	// The AWS Region with the Amazon S3 bucket targeted by the Resource Data Sync.
+	//
+	// Region is a required field
+	Region *string `min:"1" type:"string" required:"true"`
+
+	// A supported sync format. The following format is currently supported: JsonSerDe
+	//
+	// SyncFormat is a required field
+	SyncFormat *string `type:"string" required:"true" enum:"ResourceDataSyncS3Format"`
+}
+
+// String returns the string representation
+func (s ResourceDataSyncS3Destination) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceDataSyncS3Destination) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceDataSyncS3Destination) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceDataSyncS3Destination"}
+	if s.BucketName == nil {
+		invalidParams.Add(request.NewErrParamRequired("BucketName"))
+	}
+	if s.BucketName != nil && len(*s.BucketName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BucketName", 1))
+	}
+	if s.Prefix != nil && len(*s.Prefix) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Prefix", 1))
+	}
+	if s.Region == nil {
+		invalidParams.Add(request.NewErrParamRequired("Region"))
+	}
+	if s.Region != nil && len(*s.Region) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Region", 1))
+	}
+	if s.SyncFormat == nil {
+		invalidParams.Add(request.NewErrParamRequired("SyncFormat"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBucketName sets the BucketName field's value.
+func (s *ResourceDataSyncS3Destination) SetBucketName(v string) *ResourceDataSyncS3Destination {
+	s.BucketName = &v
+	return s
+}
+
+// SetPrefix sets the Prefix field's value.
+func (s *ResourceDataSyncS3Destination) SetPrefix(v string) *ResourceDataSyncS3Destination {
+	s.Prefix = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *ResourceDataSyncS3Destination) SetRegion(v string) *ResourceDataSyncS3Destination {
+	s.Region = &v
+	return s
+}
+
+// SetSyncFormat sets the SyncFormat field's value.
+func (s *ResourceDataSyncS3Destination) SetSyncFormat(v string) *ResourceDataSyncS3Destination {
+	s.SyncFormat = &v
+	return s
+}
+
 // The inventory item result attribute.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResultAttribute
 type ResultAttribute struct {
@@ -22751,6 +23400,17 @@ const (
 )
 
 const (
+	// LastResourceDataSyncStatusSuccessful is a LastResourceDataSyncStatus enum value
+	LastResourceDataSyncStatusSuccessful = "Successful"
+
+	// LastResourceDataSyncStatusFailed is a LastResourceDataSyncStatus enum value
+	LastResourceDataSyncStatusFailed = "Failed"
+
+	// LastResourceDataSyncStatusInProgress is a LastResourceDataSyncStatus enum value
+	LastResourceDataSyncStatusInProgress = "InProgress"
+)
+
+const (
 	// MaintenanceWindowExecutionStatusPending is a MaintenanceWindowExecutionStatus enum value
 	MaintenanceWindowExecutionStatusPending = "PENDING"
 
@@ -22906,6 +23566,11 @@ const (
 
 	// PlatformTypeLinux is a PlatformType enum value
 	PlatformTypeLinux = "Linux"
+)
+
+const (
+	// ResourceDataSyncS3FormatJsonSerDe is a ResourceDataSyncS3Format enum value
+	ResourceDataSyncS3FormatJsonSerDe = "JsonSerDe"
 )
 
 const (
