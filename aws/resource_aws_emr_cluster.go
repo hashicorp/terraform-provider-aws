@@ -132,6 +132,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 						"bid_price": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Required: false,
 						},
 						"ebs_config": {
 							Type:     schema.TypeSet,
@@ -830,8 +831,16 @@ func expandInstanceGroupConfigs(instanceGroupConfigs []interface{}) []*emr.Insta
 			InstanceCount: aws.Int64(int64(configInstanceCount)),
 		}
 
+		if bidPrice, ok := configAttributes["bid_price"]; ok {
+			if bidPrice != "" {
+				config.BidPrice = aws.String(bidPrice.(string))
+				config.Market = aws.String("SPOT")
+			} else {
+				config.Market = aws.String("ON_DEMAND")
+			}
+		}
+
 		if rawEbsConfigs, ok := configAttributes["ebs_config"]; ok {
-			//ebsConfig := readEmrEBSConfig(raw.(schema.ResourceData))
 			ebsConfig := &emr.EbsConfiguration{}
 
 			ebsBlockDeviceConfigs := make([]*emr.EbsBlockDeviceConfig, 0)
