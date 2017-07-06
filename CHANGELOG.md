@@ -14,6 +14,7 @@ BUG FIXES:
 * resource/aws_opsworks_permission: Fix 'set permissions' failing to set ssh access [GH-1038]
 * resource/aws_s3_bucket_notification: Fix missing `bucket` field after import [GH-978]
 * resource/aws_sfn_state_machine: Handle another NotFound exception type [GH-1062]
+* resource/aws_ssm_parameter: ForceNew on ssm_parameter rename [GH-1022]
 
 ## 0.1.2 (June 30, 2017)
 
