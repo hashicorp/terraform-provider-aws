@@ -116,7 +116,7 @@ func TestAccAWSSpotInstanceRequest_SubnetAndSGAndPublicIpAddress(t *testing.T) {
 	})
 }
 
-func TestAccCheckAWSSpotInstanceRequest_NetworkInterfaceAttributes(t *testing.T) {
+func TestAccAWSSpotInstanceRequest_NetworkInterfaceAttributes(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	rInt := acctest.RandInt()
 
