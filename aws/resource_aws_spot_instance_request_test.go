@@ -116,6 +116,30 @@ func TestAccAWSSpotInstanceRequest_SubnetAndSGAndPublicIpAddress(t *testing.T) {
 	})
 }
 
+func TestAccCheckAWSSpotInstanceRequest_NetworkInterfaceAttributes(t *testing.T) {
+	var sir ec2.SpotInstanceRequest
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSpotInstanceRequestExists(
+						"aws_spot_instance_request.foo", &sir),
+					testAccCheckAWSSpotInstanceRequest_InstanceAttributes(&sir, rInt),
+					testAccCheckAWSSpotInstanceRequest_NetworkInterfaceAttributes(&sir),
+					resource.TestCheckResourceAttr(
+						"aws_spot_instance_request.foo", "associate_public_ip_address", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testCheckKeyPair(keyName string, sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
 	return func(*terraform.State) error {
 		if sir.LaunchSpecification.KeyName == nil {
@@ -284,6 +308,18 @@ func testAccCheckAWSSpotInstanceRequest_InstanceAttributes(
 	}
 }
 
+func testAccCheckAWSSpotInstanceRequest_NetworkInterfaceAttributes(
+	sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		if sir.LaunchSpecification.NetworkInterfaces == nil || len(sir.LaunchSpecification.NetworkInterfaces) != 1 {
+			return fmt.Errorf("Error with Spot Instance Network Interface count")
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSSpotInstanceRequestAttributesVPC(
 	sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -395,7 +431,7 @@ func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int)
 		wait_for_fulfillment        = true
 		subnet_id                   = "${aws_subnet.tf_test_subnet.id}"
 		vpc_security_group_ids      = ["${aws_security_group.tf_test_sg_ssh.id}"]
-		associate_public_ip_address = true
+	  associate_public_ip_address = true
 	}
 
 	resource "aws_vpc" "default" {
