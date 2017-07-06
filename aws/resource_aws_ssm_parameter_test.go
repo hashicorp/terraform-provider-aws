@@ -50,6 +50,27 @@ func TestAccAWSSSMParameter_update(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMParameter_changeNameForcesNew(t *testing.T) {
+	before := acctest.RandString(10)
+	after := acctest.RandString(10)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterBasicConfig(before, "bar"),
+			},
+			{
+				Config: testAccAWSSSMParameterBasicConfig(after, "bar"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterDestroyed(before),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMParameter_secure(t *testing.T) {
 	name := acctest.RandString(10)
 	resource.Test(t, resource.TestCase{
@@ -141,6 +162,29 @@ func testAccCheckAWSSSMParameterType(n string, v string) resource.TestCheckFunc 
 
 		if *parameterValue != v {
 			return fmt.Errorf("Expected AWS SSM Parameter to have type %s but had %s", v, *parameterValue)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSSSMParameterDestroyed(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ssmconn
+
+		paramInput := &ssm.GetParametersInput{
+			Names: []*string{
+				aws.String(name),
+			},
+		}
+
+		resp, err := conn.GetParameters(paramInput)
+		if err != nil {
+			return err
+		}
+
+		if len(resp.Parameters) > 0 {
+			return fmt.Errorf("Expected AWS SSM Parameter to be gone, but was still found")
 		}
 
 		return nil
