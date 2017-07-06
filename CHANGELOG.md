@@ -18,6 +18,7 @@ BUG FIXES:
 * resource/aws_ssm_parameter: ForceNew on ssm_parameter rename [GH-1022]
 * r/aws_instance: Update SourceDestCheck modification on new resources [GH-1065]
 * resource/spot_instance_request: fixed and issue with network interfaces configuration [GH-1070]
+* resource/rds_cluster: Modify RDS Cluster after restoring from snapshot, if required [GH-926]
 
 ## 0.1.2 (June 30, 2017)
 
