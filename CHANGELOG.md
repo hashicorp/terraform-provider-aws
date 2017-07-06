@@ -17,6 +17,7 @@ BUG FIXES:
 * resource/aws_sfn_state_machine: Handle another NotFound exception type [GH-1062]
 * resource/aws_ssm_parameter: ForceNew on ssm_parameter rename [GH-1022]
 * r/aws_instance: Update SourceDestCheck modification on new resources [GH-1065]
+* resource/spot_instance_request: fixed and issue with network interfaces configuration [GH-1070]
 
 ## 0.1.2 (June 30, 2017)
 
