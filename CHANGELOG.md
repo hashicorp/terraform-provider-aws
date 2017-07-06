@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_iam_instance_profile` [GH-1024]
+* **New Data Source:** `aws_alb_target_group` [GH-1037]
 
 IMPROVEMENTS:
 
