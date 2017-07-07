@@ -8,6 +8,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * resource/aws_sqs_queue: Add support for Server-Side Encryption [GH-962]
+* resource/aws_vpc: Add support for classiclink_dns_support [GH-1079]
 
 BUG FIXES:
 
