@@ -94,6 +94,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
+				StateFunc: hashSum,
 			},
 			"port": {
 				Type:     schema.TypeInt,
