@@ -58,6 +58,12 @@ func resourceAwsVpc() *schema.Resource {
 				Computed: true,
 			},
 
+			"enable_classiclink_dns_support": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+
 			"assign_generated_ipv6_cidr_block": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -235,6 +241,30 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_classiclink", classiclink_enabled)
 	}
 
+	DescribeClassiclinkDnsOpts := &ec2.DescribeVpcClassicLinkDnsSupportInput{
+		VpcIds: []*string{&vpcid},
+	}
+
+	respClassiclinkDnsSupport, err := conn.DescribeVpcClassicLinkDnsSupport(DescribeClassiclinkDnsOpts)
+	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "UnsupportedOperation" {
+			log.Printf("[WARN] VPC Classic Link DNS Support is not supported in this region")
+		} else {
+			return err
+		}
+	} else {
+		classiclinkdns_enabled := false
+		for _, v := range respClassiclinkDnsSupport.Vpcs {
+			if *v.VpcId == vpcid {
+				if v.ClassicLinkDnsSupported != nil {
+					classiclinkdns_enabled = *v.ClassicLinkDnsSupported
+				}
+				break
+			}
+		}
+		d.Set("enable_classiclink_dns_support", classiclinkdns_enabled)
+	}
+
 	// Get the main routing table for this VPC
 	// Really Ugly need to make this better - rmenn
 	filter1 := &ec2.Filter{
@@ -317,7 +347,6 @@ func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("enable_classiclink") {
 		val := d.Get("enable_classiclink").(bool)
-
 		if val {
 			modifyOpts := &ec2.EnableVpcClassicLinkInput{
 				VpcId: &vpcid,
@@ -341,6 +370,33 @@ func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		d.SetPartial("enable_classiclink")
+	}
+
+	if d.HasChange("enable_classiclink_dns_support") {
+		val := d.Get("enable_classiclink_dns_support").(bool)
+		if val {
+			modifyOpts := &ec2.EnableVpcClassicLinkDnsSupportInput{
+				VpcId: &vpcid,
+			}
+			log.Printf(
+				"[INFO] Modifying enable_classiclink_dns_support vpc attribute for %s: %#v",
+				d.Id(), modifyOpts)
+			if _, err := conn.EnableVpcClassicLinkDnsSupport(modifyOpts); err != nil {
+				return err
+			}
+		} else {
+			modifyOpts := &ec2.DisableVpcClassicLinkDnsSupportInput{
+				VpcId: &vpcid,
+			}
+			log.Printf(
+				"[INFO] Modifying enable_classiclink_dns_support vpc attribute for %s: %#v",
+				d.Id(), modifyOpts)
+			if _, err := conn.DisableVpcClassicLinkDnsSupport(modifyOpts); err != nil {
+				return err
+			}
+		}
+
+		d.SetPartial("enable_classiclink_dns_support")
 	}
 
 	if d.HasChange("assign_generated_ipv6_cidr_block") && !d.IsNewResource() {
