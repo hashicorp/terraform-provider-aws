@@ -298,6 +298,23 @@ func TestAccAWSVpc_classiclinkOptionSet(t *testing.T) {
 	})
 }
 
+func TestAccAWSVpc_classiclinkDnsSupportOptionSet(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcConfig_ClassiclinkDnsSupportOption,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"aws_vpc.bar", "enable_classiclink_dns_support", "true"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVpcConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
@@ -381,5 +398,14 @@ resource "aws_vpc" "bar" {
 	cidr_block = "172.2.0.0/16"
 
 	enable_classiclink = true
+}
+`
+
+const testAccVpcConfig_ClassiclinkDnsSupportOption = `
+resource "aws_vpc" "bar" {
+	cidr_block = "172.2.0.0/16"
+
+	enable_classiclink = true
+	enable_classiclink_dns_support = true
 }
 `
