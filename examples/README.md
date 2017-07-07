@@ -1,16 +1,17 @@
-# Terraform Examples
+# AWS Provider Examples
 
-This folder contains a set of Terraform examples. These examples each
-have their own README you can read for more details on what the example
-does.
+This directory contains a set of examples of using various AWS services with
+Terraform. The examples each have their own README containing more details
+on what the example does.
 
-To run any example, just run `terraform apply` within that directory
-if you have Terraform checked out. Or, you can run it directly from git:
+To run any example, clone the repository and run `terraform apply` within
+the example's own directory.
+
+For example:
 
 ```
-$ terraform init github.com/hashicorp/terraform/examples/aws-two-tier
-...
-
+$ git clone https://github.com/terraform-providers/terraform-provider-aws
+$ cd terraform-provider-aws/examples/aws-two-tier
 $ terraform apply
 ...
 ```
