@@ -13,18 +13,19 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* resource/aws_ami: Retry on InvalidAMIID.NotFound #1035
 * resource/aws_ecs_service: Fixes normalization issues in placement_strategy [GH-1025]
 * resource/aws_opsworks_permission: Fix 'set permissions' failing to set ssh access [GH-1038]
 * resource/aws_s3_bucket_notification: Fix missing `bucket` field after import [GH-978]
 * resource/aws_sfn_state_machine: Handle another NotFound exception type [GH-1062]
 * resource/aws_ssm_parameter: ForceNew on ssm_parameter rename [GH-1022]
 * resource/aws_instance: Update SourceDestCheck modification on new resources [GH-1065]
-* resource/spot_instance_request: fixed and issue with network interfaces configuration [GH-1070]
-* resource/rds_cluster: Modify RDS Cluster after restoring from snapshot, if required [GH-926]
-* resource/kms_alias: Retry lookups after creation [GH-1040]
-* resource/internet_gateway: Retry deletion properly on `DependencyViolation` [GH-1021]
+* resource/aws_spot_instance_request: fixed and issue with network interfaces configuration [GH-1070]
+* resource/aws_rds_cluster: Modify RDS Cluster after restoring from snapshot, if required [GH-926]
+* resource/aws_kms_alias: Retry lookups after creation [GH-1040]
+* resource/aws_internet_gateway: Retry deletion properly on `DependencyViolation` [GH-1021]
 * resource/aws_elb: Cleanup ENIs after deleting ELB [GH-1036]
-* resource/kms_key: Retry lookups after creation [GH-1039]
+* resource/aws_kms_key: Retry lookups after creation [GH-1039]
 
 ## 0.1.2 (June 30, 2017)
 
