@@ -198,6 +198,11 @@ resource "aws_vpc" "foo" {
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
+	 timeouts {
+	    create = "10m"
+	    delete = "20m"
+	    update = "5m"
+	  }
 }
 `
 
@@ -218,6 +223,11 @@ resource "aws_vpc" "bar" {
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.bar.id}"
+	timeouts {
+	    create = "10m"
+	    delete = "20m"
+	    update = "5m"
+  	}
 }
 `
 

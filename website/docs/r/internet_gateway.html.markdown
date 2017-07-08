@@ -47,6 +47,15 @@ The following attributes are exported:
 
 * `id` - The ID of the Internet Gateway.
 
+<a id="timeouts"></a>
+## Timeouts
+
+`aws_internet_gateway` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `5 minutes`)
+- `update` - (Default `2 minutes`)
+- `delete` - (Default `10 minutes`)
 
 ## Import
 
