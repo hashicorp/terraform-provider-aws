@@ -13,7 +13,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
-* resource/aws_ami: Retry on InvalidAMIID.NotFound #1035
+* resource/aws_ami: Retry on `InvalidAMIID.NotFound` [GH-1035]
 * resource/aws_ecs_service: Fixes normalization issues in placement_strategy [GH-1025]
 * resource/aws_opsworks_permission: Fix 'set permissions' failing to set ssh access [GH-1038]
 * resource/aws_s3_bucket_notification: Fix missing `bucket` field after import [GH-978]
