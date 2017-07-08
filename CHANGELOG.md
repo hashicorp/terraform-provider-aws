@@ -23,6 +23,7 @@ BUG FIXES:
 * resource/rds_cluster: Modify RDS Cluster after restoring from snapshot, if required [GH-926]
 * resource/kms_alias: Retry lookups after creation [GH-1040]
 * resource/internet_gateway: Retry deletion properly on `DependencyViolation` [GH-1021]
+* resource/aws_elb: Cleanup ENIs after deleting ELB [GH-1036]
 
 ## 0.1.2 (June 30, 2017)
 
