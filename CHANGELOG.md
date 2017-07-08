@@ -18,9 +18,10 @@ BUG FIXES:
 * resource/aws_s3_bucket_notification: Fix missing `bucket` field after import [GH-978]
 * resource/aws_sfn_state_machine: Handle another NotFound exception type [GH-1062]
 * resource/aws_ssm_parameter: ForceNew on ssm_parameter rename [GH-1022]
-* r/aws_instance: Update SourceDestCheck modification on new resources [GH-1065]
+* resource/aws_instance: Update SourceDestCheck modification on new resources [GH-1065]
 * resource/spot_instance_request: fixed and issue with network interfaces configuration [GH-1070]
 * resource/rds_cluster: Modify RDS Cluster after restoring from snapshot, if required [GH-926]
+* resource/kms_alias: Retry lookups after creation [GH-1040]
 
 ## 0.1.2 (June 30, 2017)
 
