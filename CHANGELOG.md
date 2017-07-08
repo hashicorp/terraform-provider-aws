@@ -22,6 +22,7 @@ BUG FIXES:
 * resource/spot_instance_request: fixed and issue with network interfaces configuration [GH-1070]
 * resource/rds_cluster: Modify RDS Cluster after restoring from snapshot, if required [GH-926]
 * resource/kms_alias: Retry lookups after creation [GH-1040]
+* resource/internet_gateway: Retry deletion properly on `DependencyViolation` [GH-1021]
 
 ## 0.1.2 (June 30, 2017)
 
