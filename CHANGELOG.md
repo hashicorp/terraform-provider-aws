@@ -24,6 +24,7 @@ BUG FIXES:
 * resource/kms_alias: Retry lookups after creation [GH-1040]
 * resource/internet_gateway: Retry deletion properly on `DependencyViolation` [GH-1021]
 * resource/aws_elb: Cleanup ENIs after deleting ELB [GH-1036]
+* resource/kms_key: Retry lookups after creation [GH-1039]
 
 ## 0.1.2 (June 30, 2017)
 
