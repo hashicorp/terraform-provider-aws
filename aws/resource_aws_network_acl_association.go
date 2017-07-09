@@ -86,7 +86,6 @@ func resourceAwsNetworkAclAssociationRead(d *schema.ResourceData, meta interface
 	_, err_association := findNetworkAclAssociation(subnetId, conn)
 	if err_association != nil {
 		return fmt.Errorf("Failed to read acl %s with subnet %s: %s", d.Id(), subnetId, err_association)
-		d.SetId("")
 	}
 
 	return nil
