@@ -121,7 +121,7 @@ The following arguments are supported:
 IAM Server Certificates can be imported using the `name`, e.g.
 
 ```
-$ terraform import aws_iam_server_certificate.sertificate example.com-certificate-until-2018
+$ terraform import aws_iam_server_certificate.certificate example.com-certificate-until-2018
 ```
 
 [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html
