@@ -902,7 +902,8 @@ func (c *SSM) CreateResourceDataSyncRequest(input *CreateResourceDataSyncInput) 
 // you enable encryption in Amazon S3 to ensure secure data storage. We also
 // recommend that you secure access to the Amazon S3 bucket by creating a restrictive
 // bucket policy. To view an example of a restrictive Amazon S3 bucket policy
-// for Resource Data Sync, see Creating a Resource Data Sync (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-datasync-create.html).
+// for Resource Data Sync, see Configuring Resource Data Sync for Inventory
+// (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-configuring.html#sysman-inventory-datasync).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2733,7 +2734,8 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEff
 // DescribeEffectivePatchesForPatchBaseline API operation for Amazon Simple Systems Manager (SSM).
 //
 // Retrieves the current effective patches (the patch and the approval state)
-// for the specified patch baseline.
+// for the specified patch baseline. Note that this API applies only to Windows
+// patch baselines.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2750,6 +2752,11 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEff
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
 //   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
 //   doesn't exist.
+//
+//   * ErrCodeUnsupportedOperatingSystem "UnsupportedOperatingSystem"
+//   The operating systems you specified is not supported, or the operation is
+//   not supported for the operating system. Valid operating systems include:
+//   Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -4438,7 +4445,9 @@ func (c *SSM) GetDefaultPatchBaselineRequest(input *GetDefaultPatchBaselineInput
 
 // GetDefaultPatchBaseline API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves the default patch baseline.
+// Retrieves the default patch baseline. Note that Systems Manager supports
+// creating multiple default patch baselines. For example, you can create a
+// default patch baseline for each operating system.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4519,8 +4528,7 @@ func (c *SSM) GetDeployablePatchSnapshotForInstanceRequest(input *GetDeployableP
 // GetDeployablePatchSnapshotForInstance API operation for Amazon Simple Systems Manager (SSM).
 //
 // Retrieves the current snapshot for the patch baseline the instance uses.
-// This API is primarily used by the AWS-ApplyPatchBaseline Systems Manager
-// document.
+// This API is primarily used by the AWS-RunPatchBaseline Systems Manager document.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4532,6 +4540,11 @@ func (c *SSM) GetDeployablePatchSnapshotForInstanceRequest(input *GetDeployableP
 // Returned Error Codes:
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
+//
+//   * ErrCodeUnsupportedOperatingSystem "UnsupportedOperatingSystem"
+//   The operating systems you specified is not supported, or the operation is
+//   not supported for the operating system. Valid operating systems include:
+//   Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDeployablePatchSnapshotForInstance
 func (c *SSM) GetDeployablePatchSnapshotForInstance(input *GetDeployablePatchSnapshotForInstanceInput) (*GetDeployablePatchSnapshotForInstanceOutput, error) {
@@ -10794,6 +10807,12 @@ type CreatePatchBaselineInput struct {
 	// A list of explicitly approved patches for the baseline.
 	ApprovedPatches []*string `type:"list"`
 
+	// Defines the compliance level for approved patches. This means that if an
+	// approved patch is reported as missing, this is the severity of the compliance
+	// violation. Valid compliance severity levels include the following: CRITICAL,
+	// HIGH, MEDIUM, LOW, INFORMATIONAL, UNSPECIFIED. The default value is UNSPECIFIED.
+	ApprovedPatchesComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
+
 	// User-provided idempotency token.
 	ClientToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
@@ -10807,6 +10826,11 @@ type CreatePatchBaselineInput struct {
 	//
 	// Name is a required field
 	Name *string `min:"3" type:"string" required:"true"`
+
+	// Defines the operating system the patch baseline applies to. Supported operating
+	// systems include WINDOWS, AMAZON_LINUX, UBUNTU and REDHAT_ENTERPRISE_LINUX.
+	// The Default value is WINDOWS.
+	OperatingSystem *string `type:"string" enum:"OperatingSystem"`
 
 	// A list of explicitly rejected patches for the baseline.
 	RejectedPatches []*string `type:"list"`
@@ -10866,6 +10890,12 @@ func (s *CreatePatchBaselineInput) SetApprovedPatches(v []*string) *CreatePatchB
 	return s
 }
 
+// SetApprovedPatchesComplianceLevel sets the ApprovedPatchesComplianceLevel field's value.
+func (s *CreatePatchBaselineInput) SetApprovedPatchesComplianceLevel(v string) *CreatePatchBaselineInput {
+	s.ApprovedPatchesComplianceLevel = &v
+	return s
+}
+
 // SetClientToken sets the ClientToken field's value.
 func (s *CreatePatchBaselineInput) SetClientToken(v string) *CreatePatchBaselineInput {
 	s.ClientToken = &v
@@ -10887,6 +10917,12 @@ func (s *CreatePatchBaselineInput) SetGlobalFilters(v *PatchFilterGroup) *Create
 // SetName sets the Name field's value.
 func (s *CreatePatchBaselineInput) SetName(v string) *CreatePatchBaselineInput {
 	s.Name = &v
+	return s
+}
+
+// SetOperatingSystem sets the OperatingSystem field's value.
+func (s *CreatePatchBaselineInput) SetOperatingSystem(v string) *CreatePatchBaselineInput {
+	s.OperatingSystem = &v
 	return s
 }
 
@@ -14199,6 +14235,9 @@ func (s *DescribePatchGroupStateOutput) SetInstancesWithNotApplicablePatches(v i
 type DescribePatchGroupsInput struct {
 	_ struct{} `type:"structure"`
 
+	// One or more filters. Use a filter to return a more specific list of results.
+	Filters []*PatchOrchestratorFilter `type:"list"`
+
 	// The maximum number of patch groups to return (per page).
 	MaxResults *int64 `min:"1" type:"integer"`
 
@@ -14223,11 +14262,27 @@ func (s *DescribePatchGroupsInput) Validate() error {
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
 	}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribePatchGroupsInput) SetFilters(v []*PatchOrchestratorFilter) *DescribePatchGroupsInput {
+	s.Filters = v
+	return s
 }
 
 // SetMaxResults sets the MaxResults field's value.
@@ -15195,6 +15250,9 @@ func (s *GetCommandInvocationOutput) SetStatusDetails(v string) *GetCommandInvoc
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDefaultPatchBaselineRequest
 type GetDefaultPatchBaselineInput struct {
 	_ struct{} `type:"structure"`
+
+	// Returns the default patch baseline for the specified operating system.
+	OperatingSystem *string `type:"string" enum:"OperatingSystem"`
 }
 
 // String returns the string representation
@@ -15207,12 +15265,21 @@ func (s GetDefaultPatchBaselineInput) GoString() string {
 	return s.String()
 }
 
+// SetOperatingSystem sets the OperatingSystem field's value.
+func (s *GetDefaultPatchBaselineInput) SetOperatingSystem(v string) *GetDefaultPatchBaselineInput {
+	s.OperatingSystem = &v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDefaultPatchBaselineResult
 type GetDefaultPatchBaselineOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The ID of the default patch baseline.
 	BaselineId *string `min:"20" type:"string"`
+
+	// The operating system for the returned patch baseline.
+	OperatingSystem *string `type:"string" enum:"OperatingSystem"`
 }
 
 // String returns the string representation
@@ -15228,6 +15295,12 @@ func (s GetDefaultPatchBaselineOutput) GoString() string {
 // SetBaselineId sets the BaselineId field's value.
 func (s *GetDefaultPatchBaselineOutput) SetBaselineId(v string) *GetDefaultPatchBaselineOutput {
 	s.BaselineId = &v
+	return s
+}
+
+// SetOperatingSystem sets the OperatingSystem field's value.
+func (s *GetDefaultPatchBaselineOutput) SetOperatingSystem(v string) *GetDefaultPatchBaselineOutput {
+	s.OperatingSystem = &v
 	return s
 }
 
@@ -15295,6 +15368,10 @@ type GetDeployablePatchSnapshotForInstanceOutput struct {
 	// The ID of the instance.
 	InstanceId *string `type:"string"`
 
+	// Returns the specific operating system (for example Windows Server 2012 or
+	// Amazon Linux 2015.09) on the instance for the specified patch snapshot.
+	Product *string `type:"string"`
+
 	// A pre-signed Amazon S3 URL that can be used to download the patch snapshot.
 	SnapshotDownloadUrl *string `type:"string"`
 
@@ -15315,6 +15392,12 @@ func (s GetDeployablePatchSnapshotForInstanceOutput) GoString() string {
 // SetInstanceId sets the InstanceId field's value.
 func (s *GetDeployablePatchSnapshotForInstanceOutput) SetInstanceId(v string) *GetDeployablePatchSnapshotForInstanceOutput {
 	s.InstanceId = &v
+	return s
+}
+
+// SetProduct sets the Product field's value.
+func (s *GetDeployablePatchSnapshotForInstanceOutput) SetProduct(v string) *GetDeployablePatchSnapshotForInstanceOutput {
+	s.Product = &v
 	return s
 }
 
@@ -16515,6 +16598,10 @@ func (s *GetParametersOutput) SetParameters(v []*Parameter) *GetParametersOutput
 type GetPatchBaselineForPatchGroupInput struct {
 	_ struct{} `type:"structure"`
 
+	// Returns he operating system rule specified for patch groups using the patch
+	// baseline.
+	OperatingSystem *string `type:"string" enum:"OperatingSystem"`
+
 	// The name of the patch group whose patch baseline should be retrieved.
 	//
 	// PatchGroup is a required field
@@ -16547,6 +16634,12 @@ func (s *GetPatchBaselineForPatchGroupInput) Validate() error {
 	return nil
 }
 
+// SetOperatingSystem sets the OperatingSystem field's value.
+func (s *GetPatchBaselineForPatchGroupInput) SetOperatingSystem(v string) *GetPatchBaselineForPatchGroupInput {
+	s.OperatingSystem = &v
+	return s
+}
+
 // SetPatchGroup sets the PatchGroup field's value.
 func (s *GetPatchBaselineForPatchGroupInput) SetPatchGroup(v string) *GetPatchBaselineForPatchGroupInput {
 	s.PatchGroup = &v
@@ -16559,6 +16652,9 @@ type GetPatchBaselineForPatchGroupOutput struct {
 
 	// The ID of the patch baseline that should be used for the patch group.
 	BaselineId *string `min:"20" type:"string"`
+
+	// The operating system rule specified for patch groups using the patch baseline.
+	OperatingSystem *string `type:"string" enum:"OperatingSystem"`
 
 	// The name of the patch group.
 	PatchGroup *string `min:"1" type:"string"`
@@ -16577,6 +16673,12 @@ func (s GetPatchBaselineForPatchGroupOutput) GoString() string {
 // SetBaselineId sets the BaselineId field's value.
 func (s *GetPatchBaselineForPatchGroupOutput) SetBaselineId(v string) *GetPatchBaselineForPatchGroupOutput {
 	s.BaselineId = &v
+	return s
+}
+
+// SetOperatingSystem sets the OperatingSystem field's value.
+func (s *GetPatchBaselineForPatchGroupOutput) SetOperatingSystem(v string) *GetPatchBaselineForPatchGroupOutput {
+	s.OperatingSystem = &v
 	return s
 }
 
@@ -16638,6 +16740,10 @@ type GetPatchBaselineOutput struct {
 	// A list of explicitly approved patches for the baseline.
 	ApprovedPatches []*string `type:"list"`
 
+	// Returns the specified compliance severity level for approved patches in the
+	// patch baseline.
+	ApprovedPatchesComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
+
 	// The ID of the retrieved patch baseline.
 	BaselineId *string `min:"20" type:"string"`
 
@@ -16655,6 +16761,9 @@ type GetPatchBaselineOutput struct {
 
 	// The name of the patch baseline.
 	Name *string `min:"3" type:"string"`
+
+	// Returns the operating system specified for the patch baseline.
+	OperatingSystem *string `type:"string" enum:"OperatingSystem"`
 
 	// Patch groups included in the patch baseline.
 	PatchGroups []*string `type:"list"`
@@ -16682,6 +16791,12 @@ func (s *GetPatchBaselineOutput) SetApprovalRules(v *PatchRuleGroup) *GetPatchBa
 // SetApprovedPatches sets the ApprovedPatches field's value.
 func (s *GetPatchBaselineOutput) SetApprovedPatches(v []*string) *GetPatchBaselineOutput {
 	s.ApprovedPatches = v
+	return s
+}
+
+// SetApprovedPatchesComplianceLevel sets the ApprovedPatchesComplianceLevel field's value.
+func (s *GetPatchBaselineOutput) SetApprovedPatchesComplianceLevel(v string) *GetPatchBaselineOutput {
+	s.ApprovedPatchesComplianceLevel = &v
 	return s
 }
 
@@ -16718,6 +16833,12 @@ func (s *GetPatchBaselineOutput) SetModifiedDate(v time.Time) *GetPatchBaselineO
 // SetName sets the Name field's value.
 func (s *GetPatchBaselineOutput) SetName(v string) *GetPatchBaselineOutput {
 	s.Name = &v
+	return s
+}
+
+// SetOperatingSystem sets the OperatingSystem field's value.
+func (s *GetPatchBaselineOutput) SetOperatingSystem(v string) *GetPatchBaselineOutput {
+	s.OperatingSystem = &v
 	return s
 }
 
@@ -19954,7 +20075,7 @@ type Patch struct {
 
 	// The ID of the patch (this is different than the Microsoft Knowledge Base
 	// ID).
-	Id *string `type:"string"`
+	Id *string `min:"1" type:"string"`
 
 	// The Microsoft Knowledge Base ID of the patch.
 	KbNumber *string `type:"string"`
@@ -20086,8 +20207,15 @@ type PatchBaselineIdentity struct {
 	// The name of the patch baseline.
 	BaselineName *string `min:"3" type:"string"`
 
-	// Whether this is the default baseline.
+	// Whether this is the default baseline. Note that Systems Manager supports
+	// creating multiple default patch baselines. For example, you can create a
+	// default patch baseline for each operating system.
 	DefaultBaseline *bool `type:"boolean"`
+
+	// Defines the operating system the patch baseline applies to. Supported operating
+	// systems include WINDOWS, AMAZON_LINUX, UBUNTU and REDHAT_ENTERPRISE_LINUX.
+	// The Default value is WINDOWS.
+	OperatingSystem *string `type:"string" enum:"OperatingSystem"`
 }
 
 // String returns the string representation
@@ -20124,6 +20252,12 @@ func (s *PatchBaselineIdentity) SetDefaultBaseline(v bool) *PatchBaselineIdentit
 	return s
 }
 
+// SetOperatingSystem sets the OperatingSystem field's value.
+func (s *PatchBaselineIdentity) SetOperatingSystem(v string) *PatchBaselineIdentity {
+	s.OperatingSystem = &v
+	return s
+}
+
 // Information about the state of a patch on a particular instance as it relates
 // to the patch baseline used to patch the instance.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PatchComplianceData
@@ -20135,12 +20269,13 @@ type PatchComplianceData struct {
 	// Classification is a required field
 	Classification *string `type:"string" required:"true"`
 
-	// The date/time the patch was installed on the instance.
+	// The date/time the patch was installed on the instance. Note that not all
+	// operating systems provide this level of information.
 	//
 	// InstalledTime is a required field
 	InstalledTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
 
-	// The Microsoft Knowledge Base ID of the patch.
+	// The operating system-specific ID of the patch.
 	//
 	// KBId is a required field
 	KBId *string `type:"string" required:"true"`
@@ -20408,6 +20543,11 @@ type PatchRule struct {
 	// ApproveAfterDays is a required field
 	ApproveAfterDays *int64 `type:"integer" required:"true"`
 
+	// A compliance severity level for all approved patches in a patch baseline.
+	// Valid compliance severity levels include the following: Unspecified, Critical,
+	// High, Medium, Low, and Informational.
+	ComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
+
 	// The patch filter group that defines the criteria for the rule.
 	//
 	// PatchFilterGroup is a required field
@@ -20448,6 +20588,12 @@ func (s *PatchRule) Validate() error {
 // SetApproveAfterDays sets the ApproveAfterDays field's value.
 func (s *PatchRule) SetApproveAfterDays(v int64) *PatchRule {
 	s.ApproveAfterDays = &v
+	return s
+}
+
+// SetComplianceLevel sets the ComplianceLevel field's value.
+func (s *PatchRule) SetComplianceLevel(v string) *PatchRule {
+	s.ComplianceLevel = &v
 	return s
 }
 
@@ -20515,6 +20661,9 @@ type PatchStatus struct {
 	// The date the patch was approved (or will be approved if the status is PENDING_APPROVAL).
 	ApprovalDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
+	// The compliance severity level for a patch.
+	ComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
+
 	// The approval status of a patch (APPROVED, PENDING_APPROVAL, EXPLICIT_APPROVED,
 	// EXPLICIT_REJECTED).
 	DeploymentStatus *string `type:"string" enum:"PatchDeploymentStatus"`
@@ -20533,6 +20682,12 @@ func (s PatchStatus) GoString() string {
 // SetApprovalDate sets the ApprovalDate field's value.
 func (s *PatchStatus) SetApprovalDate(v time.Time) *PatchStatus {
 	s.ApprovalDate = &v
+	return s
+}
+
+// SetComplianceLevel sets the ComplianceLevel field's value.
+func (s *PatchStatus) SetComplianceLevel(v string) *PatchStatus {
+	s.ComplianceLevel = &v
 	return s
 }
 
@@ -22915,6 +23070,9 @@ type UpdatePatchBaselineInput struct {
 	// A list of explicitly approved patches for the baseline.
 	ApprovedPatches []*string `type:"list"`
 
+	// Assigns a new compliance severity level to an existing patch baseline.
+	ApprovedPatchesComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
+
 	// The ID of the patch baseline to update.
 	//
 	// BaselineId is a required field
@@ -22987,6 +23145,12 @@ func (s *UpdatePatchBaselineInput) SetApprovedPatches(v []*string) *UpdatePatchB
 	return s
 }
 
+// SetApprovedPatchesComplianceLevel sets the ApprovedPatchesComplianceLevel field's value.
+func (s *UpdatePatchBaselineInput) SetApprovedPatchesComplianceLevel(v string) *UpdatePatchBaselineInput {
+	s.ApprovedPatchesComplianceLevel = &v
+	return s
+}
+
 // SetBaselineId sets the BaselineId field's value.
 func (s *UpdatePatchBaselineInput) SetBaselineId(v string) *UpdatePatchBaselineInput {
 	s.BaselineId = &v
@@ -23027,6 +23191,10 @@ type UpdatePatchBaselineOutput struct {
 	// A list of explicitly approved patches for the baseline.
 	ApprovedPatches []*string `type:"list"`
 
+	// The compliance severity level assigned to the patch baseline after the update
+	// completed.
+	ApprovedPatchesComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
+
 	// The ID of the deleted patch baseline.
 	BaselineId *string `min:"20" type:"string"`
 
@@ -23044,6 +23212,9 @@ type UpdatePatchBaselineOutput struct {
 
 	// The name of the patch baseline.
 	Name *string `min:"3" type:"string"`
+
+	// The operating system rule used by the updated patch baseline.
+	OperatingSystem *string `type:"string" enum:"OperatingSystem"`
 
 	// A list of explicitly rejected patches for the baseline.
 	RejectedPatches []*string `type:"list"`
@@ -23068,6 +23239,12 @@ func (s *UpdatePatchBaselineOutput) SetApprovalRules(v *PatchRuleGroup) *UpdateP
 // SetApprovedPatches sets the ApprovedPatches field's value.
 func (s *UpdatePatchBaselineOutput) SetApprovedPatches(v []*string) *UpdatePatchBaselineOutput {
 	s.ApprovedPatches = v
+	return s
+}
+
+// SetApprovedPatchesComplianceLevel sets the ApprovedPatchesComplianceLevel field's value.
+func (s *UpdatePatchBaselineOutput) SetApprovedPatchesComplianceLevel(v string) *UpdatePatchBaselineOutput {
+	s.ApprovedPatchesComplianceLevel = &v
 	return s
 }
 
@@ -23104,6 +23281,12 @@ func (s *UpdatePatchBaselineOutput) SetModifiedDate(v time.Time) *UpdatePatchBas
 // SetName sets the Name field's value.
 func (s *UpdatePatchBaselineOutput) SetName(v string) *UpdatePatchBaselineOutput {
 	s.Name = &v
+	return s
+}
+
+// SetOperatingSystem sets the OperatingSystem field's value.
+func (s *UpdatePatchBaselineOutput) SetOperatingSystem(v string) *UpdatePatchBaselineOutput {
+	s.OperatingSystem = &v
 	return s
 }
 
@@ -23475,6 +23658,20 @@ const (
 )
 
 const (
+	// OperatingSystemWindows is a OperatingSystem enum value
+	OperatingSystemWindows = "WINDOWS"
+
+	// OperatingSystemAmazonLinux is a OperatingSystem enum value
+	OperatingSystemAmazonLinux = "AMAZON_LINUX"
+
+	// OperatingSystemUbuntu is a OperatingSystem enum value
+	OperatingSystemUbuntu = "UBUNTU"
+
+	// OperatingSystemRedhatEnterpriseLinux is a OperatingSystem enum value
+	OperatingSystemRedhatEnterpriseLinux = "REDHAT_ENTERPRISE_LINUX"
+)
+
+const (
 	// ParameterTypeString is a ParameterType enum value
 	ParameterTypeString = "String"
 
@@ -23514,6 +23711,26 @@ const (
 )
 
 const (
+	// PatchComplianceLevelCritical is a PatchComplianceLevel enum value
+	PatchComplianceLevelCritical = "CRITICAL"
+
+	// PatchComplianceLevelHigh is a PatchComplianceLevel enum value
+	PatchComplianceLevelHigh = "HIGH"
+
+	// PatchComplianceLevelMedium is a PatchComplianceLevel enum value
+	PatchComplianceLevelMedium = "MEDIUM"
+
+	// PatchComplianceLevelLow is a PatchComplianceLevel enum value
+	PatchComplianceLevelLow = "LOW"
+
+	// PatchComplianceLevelInformational is a PatchComplianceLevel enum value
+	PatchComplianceLevelInformational = "INFORMATIONAL"
+
+	// PatchComplianceLevelUnspecified is a PatchComplianceLevel enum value
+	PatchComplianceLevelUnspecified = "UNSPECIFIED"
+)
+
+const (
 	// PatchDeploymentStatusApproved is a PatchDeploymentStatus enum value
 	PatchDeploymentStatusApproved = "APPROVED"
 
@@ -23539,6 +23756,15 @@ const (
 
 	// PatchFilterKeyPatchId is a PatchFilterKey enum value
 	PatchFilterKeyPatchId = "PATCH_ID"
+
+	// PatchFilterKeySection is a PatchFilterKey enum value
+	PatchFilterKeySection = "SECTION"
+
+	// PatchFilterKeyPriority is a PatchFilterKey enum value
+	PatchFilterKeyPriority = "PRIORITY"
+
+	// PatchFilterKeySeverity is a PatchFilterKey enum value
+	PatchFilterKeySeverity = "SEVERITY"
 )
 
 const (
