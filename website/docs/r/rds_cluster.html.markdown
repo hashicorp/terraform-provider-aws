@@ -83,7 +83,12 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `db_subnet_group_name` - (Optional) A DB subnet group to associate with this DB instance. **NOTE:** This must match the `db_subnet_group_name` specified on every [`aws_rds_cluster_instance`](/docs/providers/aws/r/rds_cluster_instance.html) in the cluster.
 * `db_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `storage_encrypted` needs to be set to true.
+* `iam_role` - (Optional) An `iam_role` block to associate to the cluster. As specified below.
 * `iam_database_authentication_enabled` - (Optional) Specifies whether or mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
+
+`iam_role` supports the following:
+
+* `role_arn` - (Required) The Arn of the IAM Role to associate with the RDS Cluster.
 
 ## Attributes Reference
 
