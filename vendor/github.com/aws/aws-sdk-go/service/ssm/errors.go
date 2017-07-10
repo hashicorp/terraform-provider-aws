@@ -494,6 +494,14 @@ const (
 	// for each type.
 	ErrCodeUnsupportedInventorySchemaVersionException = "UnsupportedInventorySchemaVersionException"
 
+	// ErrCodeUnsupportedOperatingSystem for service response error code
+	// "UnsupportedOperatingSystem".
+	//
+	// The operating systems you specified is not supported, or the operation is
+	// not supported for the operating system. Valid operating systems include:
+	// Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
+	ErrCodeUnsupportedOperatingSystem = "UnsupportedOperatingSystem"
+
 	// ErrCodeUnsupportedParameterType for service response error code
 	// "UnsupportedParameterType".
 	//
