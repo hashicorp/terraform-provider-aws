@@ -21,19 +21,19 @@ func resourceAwsOrganization() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"master_account_arn": &schema.Schema{
+			"master_account_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"master_account_email": &schema.Schema{
+			"master_account_email": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"master_account_id": &schema.Schema{
+			"master_account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,27 +41,25 @@ func resourceAwsOrganization() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "ALL",
-				ValidateFunc: validation.StringInSlice([]string{"ALL", "CONSOLIDATED_BILLING"}, true),
+				ValidateFunc: validation.StringInSlice([]string{organizations.OrganizationFeatureSetAll, organizations.OrganizationFeatureSetConsolidatedBilling}, true),
 			},
 		},
 	}
 }
 
 func resourceAwsOrganizationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).orgsconn
+	conn := meta.(*AWSClient).organizationsconn
 
-	// Create the organization
 	createOpts := &organizations.CreateOrganizationInput{
 		FeatureSet: aws.String(d.Get("feature_set").(string)),
 	}
-	log.Printf("[DEBUG] Organization create config: %#v", createOpts)
+	log.Printf("[DEBUG] Creating Organization: %#v", createOpts)
 
 	resp, err := conn.CreateOrganization(createOpts)
 	if err != nil {
 		return fmt.Errorf("Error creating organization: %s", err)
 	}
 
-	// Get the ID and store it
 	org := resp.Organization
 	d.SetId(*org.Id)
 	log.Printf("[INFO] Organization ID: %s", d.Id())
@@ -70,10 +68,13 @@ func resourceAwsOrganizationCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsOrganizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).orgsconn
+	conn := meta.(*AWSClient).organizationsconn
+
+	log.Printf("[INFO] Reading Organization: %s", d.Id())
 	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})
 	if err != nil {
 		if orgerr, ok := err.(awserr.Error); ok && orgerr.Code() == "AWSOrganizationsNotInUseException" {
+			log.Printf("[WARN] Organization does not exist, removing from state: %s", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -93,11 +94,16 @@ func resourceAwsOrganizationUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsOrganizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).orgsconn
+	conn := meta.(*AWSClient).organizationsconn
+
+	log.Printf("[INFO] Deleting Organization: %s", d.Id())
+
 	_, err := conn.DeleteOrganization(&organizations.DeleteOrganizationInput{})
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting Organization: %s", err)
 	}
+
+	d.SetId("")
 
 	return nil
 }

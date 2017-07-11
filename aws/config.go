@@ -166,7 +166,7 @@ type AWSClient struct {
 	lambdaconn            *lambda.Lambda
 	lightsailconn         *lightsail.Lightsail
 	opsworksconn          *opsworks.OpsWorks
-	orgsconn              *organizations.Organizations
+	organizationsconn     *organizations.Organizations
 	glacierconn           *glacier.Glacier
 	codebuildconn         *codebuild.CodeBuild
 	codedeployconn        *codedeploy.CodeDeploy
@@ -371,7 +371,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.lambdaconn = lambda.New(sess)
 	client.lightsailconn = lightsail.New(sess)
 	client.opsworksconn = opsworks.New(sess)
-	client.orgsconn = organizations.New(sess)
+	client.organizationsconn = organizations.New(sess)
 	client.r53conn = route53.New(r53Sess)
 	client.rdsconn = rds.New(awsRdsSess)
 	client.redshiftconn = redshift.New(sess)
