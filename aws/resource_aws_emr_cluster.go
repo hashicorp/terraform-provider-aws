@@ -431,6 +431,9 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		if coreGroup != nil {
 			d.Set("core_instance_type", coreGroup.InstanceType)
 		}
+		if err := d.Set("instance_group", flattenInstanceGroups(instanceGroups)); err != nil {
+			log.Printf("[ERR] Error setting EMR instance groups: %s", err)
+		}
 	}
 
 	d.Set("name", cluster.Name)
@@ -672,6 +675,41 @@ func flattenEc2Attributes(ia *emr.Ec2InstanceAttributes) []map[string]interface{
 	}
 
 	result = append(result, attrs)
+
+	return result
+}
+
+func flattenInstanceGroups(igs []*emr.InstanceGroup) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+
+	for _, ig := range igs {
+		attrs := make(map[string]interface{})
+		if ig.BidPrice != nil {
+			attrs["bid_price"] = *ig.BidPrice
+		} else {
+			attrs["bid_price"] = ""
+		}
+		ebsConfig := make([]map[string]interface{}, 0)
+		for _, ebs := range ig.EbsBlockDevices {
+			ebsAttrs := make(map[string]interface{})
+			if ebs.VolumeSpecification.Iops != nil {
+				ebsAttrs["iops"] = *ebs.VolumeSpecification.Iops
+			} else {
+				ebsAttrs["iops"] = ""
+			}
+			ebsAttrs["size"] = *ebs.VolumeSpecification.SizeInGB
+			ebsAttrs["type"] = *ebs.VolumeSpecification.VolumeType
+			ebsAttrs["volumes_per_instance"] = 1
+
+			ebsConfig = append(ebsConfig, ebsAttrs)
+		}
+		attrs["ebs_config"] = ebsConfig
+		attrs["instance_count"] = *ig.RequestedInstanceCount
+		attrs["instance_role"] = *ig.InstanceGroupType
+		attrs["instance_type"] = *ig.InstanceType
+		attrs["name"] = *ig.Name
+		result = append(result, attrs)
+	}
 
 	return result
 }
