@@ -12,6 +12,7 @@ IMPROVEMENTS:
 * resource/aws_vpc: Add support for classiclink_dns_support [GH-1079]
 * resource/aws_lambda_function: Add support for lambda_function vpc_config update [GH-1080]
 * resource/aws_lambda_function: Add support for lambda_function dead_letter_config update [GH-1080]
+* resource/aws_route53_health_check: add support for health_check regions [GH-1116]
 
 BUG FIXES:
 
