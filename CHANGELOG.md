@@ -30,6 +30,7 @@ BUG FIXES:
 * resource/aws_elb: Cleanup ENIs after deleting ELB [GH-1036]
 * resource/aws_kms_key: Retry lookups after creation [GH-1039]
 * resource/aws_dms_replication_instance: Add modifying as a pending creation state [GH-1114]
+* resource/aws_redshift_cluster: Trigger ForceNew aws_redshift_cluster on encrypted change [GH-1120]
 
 ## 0.1.2 (June 30, 2017)
 
