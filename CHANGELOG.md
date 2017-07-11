@@ -10,6 +10,8 @@ IMPROVEMENTS:
 
 * resource/aws_sqs_queue: Add support for Server-Side Encryption [GH-962]
 * resource/aws_vpc: Add support for classiclink_dns_support [GH-1079]
+* resource/aws_lambda_function: Add support for lambda_function vpc_config update [GH-1080]
+* resource/aws_lambda_function: Add support for lambda_function dead_letter_config update [GH-1080]
 
 BUG FIXES:
 
