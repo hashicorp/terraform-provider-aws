@@ -571,12 +571,12 @@
 			"versionExact": "v1.8.41"
 		},
 		{
-			"checksumSHA1": "oj67eX/Zr0m9J4VEvm+oSGipqcc=",
+			"checksumSHA1": "6T1CMxJtRWzOw3rArSKnzlq4eZg=",
 			"path": "github.com/aws/aws-sdk-go/service/organizations",
-			"revision": "47ba3b0518c83189f3a1c95d20fc22f267e02ed3",
-			"revisionTime": "2017-06-13T17:42:44Z",
-			"version": "v1.8.41",
-			"versionExact": "v1.8.41"
+			"revision": "b1a7b51924b90a6ecdbaeb17e96418740ff07a1e",
+			"revisionTime": "2017-07-06T22:38:36Z",
+			"version": "=v1.10.8",
+			"versionExact": "v1.10.8"
 		},
 		{
 			"checksumSHA1": "gCTZVPwRzFgt+Ve9KKtp7SAgzx4=",
