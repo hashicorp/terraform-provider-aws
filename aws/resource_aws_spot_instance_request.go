@@ -56,6 +56,11 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			}
+			s["launch_group"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			}
 			s["spot_bid_status"] = &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
@@ -115,6 +120,10 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 
 	if v, ok := d.GetOk("block_duration_minutes"); ok {
 		spotOpts.BlockDurationMinutes = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("launch_group"); ok {
+		spotOpts.LaunchGroup = aws.String(v.(string))
 	}
 
 	// Make the spot instance request
@@ -217,6 +226,7 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 	}
 
 	d.Set("spot_request_state", request.State)
+	d.Set("launch_group", request.LaunchGroup)
 	d.Set("block_duration_minutes", request.BlockDurationMinutes)
 	d.Set("tags", tagsToMap(request.Tags))
 
