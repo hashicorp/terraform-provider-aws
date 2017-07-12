@@ -360,7 +360,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		return err
 	}
 
-    d.SetPartial("tags")
+	d.SetPartial("tags")
 
 	input := elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
