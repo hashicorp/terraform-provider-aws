@@ -13,6 +13,7 @@ IMPROVEMENTS:
 * resource/aws_lambda_function: Add support for lambda_function vpc_config update [GH-1080]
 * resource/aws_lambda_function: Add support for lambda_function dead_letter_config update [GH-1080]
 * resource/aws_route53_health_check: add support for health_check regions [GH-1116]
+* resource/aws_spot_instance_request: add support for request launch group [GH-1097]
 
 BUG FIXES:
 
