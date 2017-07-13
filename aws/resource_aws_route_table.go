@@ -353,7 +353,8 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 				opts.NatGatewayId = aws.String(s)
 			}
 
-			// #69 - just do it! AND don't complain on subsequent runs that it needs to _change_ :/
+			// https://github.com/terraform-providers/terraform-provider-aws/issues/69
+			// just do it! AND don't complain on subsequent runs that it needs to _change_ :/
 			if "" != *opts.InstanceId && "" != *opts.NetworkInterfaceId {
 				opts.InstanceId = aws.String("")
 			}
