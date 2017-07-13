@@ -29,6 +29,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
@@ -124,6 +125,7 @@ type AWSClient struct {
 	cloudwatchlogsconn    *cloudwatchlogs.CloudWatchLogs
 	cloudwatcheventsconn  *cloudwatchevents.CloudWatchEvents
 	cognitoconn           *cognitoidentity.CognitoIdentity
+	cognitoidpconn        *cognitoidentityprovider.CognitoIdentityProvider
 	configconn            *configservice.ConfigService
 	devicefarmconn        *devicefarm.DeviceFarm
 	dmsconn               *databasemigrationservice.DatabaseMigrationService
@@ -347,6 +349,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.codedeployconn = codedeploy.New(sess)
 	client.configconn = configservice.New(sess)
 	client.cognitoconn = cognitoidentity.New(sess)
+	client.cognitoidpconn = cognitoidentityprovider.New(sess)
 	client.dmsconn = databasemigrationservice.New(sess)
 	client.codepipelineconn = codepipeline.New(sess)
 	client.dsconn = directoryservice.New(sess)
