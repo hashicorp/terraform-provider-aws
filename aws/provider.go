@@ -188,6 +188,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_elb_hosted_zone_id":               dataSourceAwsElbHostedZoneId(),
 			"aws_elb_service_account":              dataSourceAwsElbServiceAccount(),
 			"aws_iam_account_alias":                dataSourceAwsIamAccountAlias(),
+			"aws_iam_group":                        dataSourceAwsIAMGroup(),
 			"aws_iam_instance_profile":             dataSourceAwsIAMInstanceProfile(),
 			"aws_iam_policy_document":              dataSourceAwsIamPolicyDocument(),
 			"aws_iam_role":                         dataSourceAwsIAMRole(),
