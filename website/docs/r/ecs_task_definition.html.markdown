@@ -78,7 +78,7 @@ definition document. For a detailed description of what parameters are available
 official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide).
 * `task_role_arn` - (Optional) The ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
 * `network_mode` - (Optional) The Docker networking mode to use for the containers in the task. The valid values are `none`, `bridge`, and `host`.
-* `volume` - (Optional) A volume block. See below for details about what arguments are supported.
+* `volume` - (Optional) Can be specified multiple times for each volume. Each volume block supports fields documented below.
 * `placement_constraints` - (Optional) rules that are taken into consideration during task placement. Maximum number of
 `placement_constraints` is `10`. Defined below.
 
