@@ -205,15 +205,15 @@ You can configure the type of deployment, either standard or blue/green, you wan
 _Only one `deployment_style` block is allowed_.
 
 ### Load Balancer Info
-You can configure the **Elastic Load Balancer** to use in a blue/green deployment. `load_balancer_info` supports the following:
+You can configure the **Elastic Load Balancer** to use in a deployment. `load_balancer_info` supports the following:
 
-* `elb_info_list` - (Optional) The load balancers to use in a blue/green deployment.
+* `elb_info_list` - (Optional) The load balancers to use in a deployment.
 
 _Only one `load_balancer_info` block is allowed_.
 
 `elb_info_list` is a list of `elb_info`. `elb_info` supports the following:
 
-* `name` - (Optional) The name of the load balancer that will be used to route traffic from original instances to replacement instances in a blue/green deployment.
+* `name` - (Optional) The name of the load balancer that will be used to route traffic from original instances to replacement instances in a blue/green deployment. For in-place deployments, the name of the load balancer that instances are deregistered from so they are not serving traffic during a deployment, and then re-registered with after the deployment completes.
 
 _Only one `elb_info` block is supported at this time._
 

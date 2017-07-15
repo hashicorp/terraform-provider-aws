@@ -829,6 +829,54 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_delete(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeDeployDeploymentGroup_in_place_deployment_with_traffic_control_create(t *testing.T) {
+	var group codedeploy.DeploymentGroupInfo
+
+	rName := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: test_config_deployment_style_default(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.#", "1"),
+					resource.TestCheckResourceAttrSet(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_option"),
+					resource.TestCheckResourceAttrSet(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.#", "0"),
+				),
+			},
+
+			resource.TestStep{
+				Config: test_config_in_place_deployment_with_traffic_control_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_option", "WITH_TRAFFIC_CONTROL"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type", "IN_PLACE"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.0.elb_info.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.0.elb_info.2441772102.name", "foo-elb"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_create(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 
@@ -2454,6 +2502,29 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
+}`, baseCodeDeployConfig(rName), rName)
+}
+
+func test_config_in_place_deployment_with_traffic_control_create(rName string) string {
+	return fmt.Sprintf(`
+
+  %s
+
+resource "aws_codedeploy_deployment_group" "foo_group" {
+  app_name = "${aws_codedeploy_app.foo_app.name}"
+  deployment_group_name = "foo-group-%s"
+  service_role_arn = "${aws_iam_role.foo_role.arn}"
+
+  deployment_style {
+    deployment_option = "WITH_TRAFFIC_CONTROL"
+    deployment_type = "IN_PLACE"
+  }
+
+  load_balancer_info {
+    elb_info {
+      name = "foo-elb"
+    }
+  }
 }`, baseCodeDeployConfig(rName), rName)
 }
 
