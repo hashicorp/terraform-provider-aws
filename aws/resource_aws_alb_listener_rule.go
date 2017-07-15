@@ -57,7 +57,7 @@ func resourceAwsAlbListenerRule() *schema.Resource {
 				},
 			},
 			"condition": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -97,7 +97,7 @@ func resourceAwsAlbListenerRuleCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	conditions := d.Get("condition").([]interface{})
+	conditions := d.Get("condition").(*schema.Set).List()
 	params.Conditions = make([]*elbv2.RuleCondition, len(conditions))
 	for i, condition := range conditions {
 		conditionMap := condition.(map[string]interface{})
@@ -226,7 +226,7 @@ func resourceAwsAlbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if d.HasChange("condition") {
-		conditions := d.Get("condition").([]interface{})
+		conditions := d.Get("condition").(*schema.Set).List()
 		params.Conditions = make([]*elbv2.RuleCondition, len(conditions))
 		for i, condition := range conditions {
 			conditionMap := condition.(map[string]interface{})
