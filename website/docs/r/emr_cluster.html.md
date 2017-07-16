@@ -95,10 +95,12 @@ Attributes for the Amazon EC2 instances running the job flow
 Cannot specify the `cc1.4xlarge` instance type for nodes of a job flow launched in a Amazon VPC
 * `additional_master_security_groups` - (Optional) List of additional Amazon EC2 security group IDs for the master node
 * `additional_slave_security_groups` - (Optional) List of additional Amazon EC2 security group IDs for the slave nodes
-* `emr_managed_master_security_group` - (Optional) Identifier of the Amazon EC2 security group for the master node
-* `emr_managed_slave_security_group` - (Optional) Identifier of the Amazon EC2 security group for the slave nodes
+* `emr_managed_master_security_group` - (Optional) Identifier of the Amazon EC2 EMR-Managed security group for the master node
+* `emr_managed_slave_security_group` - (Optional) Identifier of the Amazon EC2 EMR-Managed security group for the slave nodes
 * `service_access_security_group` - (Optional) Identifier of the Amazon EC2 service-access security group - required when the cluster runs on a private subnet
 * `instance_profile` - (Required) Instance Profile for EC2 instances of the cluster assume this role
+
+~> **NOTE on EMR-Managed security groups:** These security groups will have any missing inbound or outbound access rules added and maintained by AWS, to ensure proper communication between instances in a cluster. Maintenance of the security group rules by AWS may lead Terraform to fail because of a race condition between Terraform and AWS in managing the rules. To avoid this, make the `emr_cluster` dependent on all the required security group rules. See [Amazon EMR-Managed Security Groups](http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-man-sec-groups.html) for more information about the EMR-managed security group rules.
 
 
 ## bootstrap\_action
