@@ -45,9 +45,7 @@ func testAccCheckCloudWatchDashboardExists(n string, dashboard *cloudwatch.GetDa
 		if err != nil {
 			return err
 		}
-		if len(*resp.DashboardName) == 0 {
-			return fmt.Errorf("Dashboard not found")
-		}
+
 		*dashboard = *resp
 
 		return nil
@@ -66,12 +64,10 @@ func testAccCheckAWSCloudWatchDashboardDestroy(s *terraform.State) error {
 			DashboardName: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := conn.GetDashboard(&params)
-		if err == nil {
-			if len(*resp.DashboardArn) != 0 &&
-				*resp.DashboardName == rs.Primary.ID {
-				return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
-			}
+		if _, err := conn.GetDashboard(&params); err == nil {
+			return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
+		} else if !isResourceNotFoundErr(err) {
+			return err
 		}
 	}
 
@@ -91,7 +87,7 @@ resource "aws_cloudwatch_dashboard" "foobar" {
       "width": 6,
       "height": 6,
       "properties": {
-        "markdown": "Hi there from CloudFormation"
+        "markdown": "Hi there from Terraform: CloudWatch"
       }
     }]
   }
