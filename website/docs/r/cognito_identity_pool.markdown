@@ -12,7 +12,9 @@ Provides an AWS Cognito Identity Pool.
 
 ## Example Usage
 
-```
+### Using existing providers
+
+```hcl
 resource "aws_iam_saml_provider" "default" {
   name                   = "my-saml-provider"
   saml_metadata_document = "${file("saml-metadata.xml")}"
@@ -42,6 +44,30 @@ resource "aws_cognito_identity_pool" "main" {
   saml_provider_arns           = ["${aws_iam_saml_provider.default.arn}"]
   openid_connect_provider_arns = ["arn:aws:iam::123456789012:oidc-provider/foo.example.com"]
 }
+```
+
+### Using aws_cognito_user_pool as a provider
+
+```hcl
+resource "aws_cognito_user_pool" "pool" {
+	name = "pool"
+}
+
+resource "aws_cognito_user_pool_client" "client" {
+	name = "client"
+	user_pool = "${aws_cognito_user_pool.pool.id}"
+}
+
+resource "aws_cognito_identity_pool" "main" {
+	identity_pool_name = "main"
+	allow_unauthenticated_identities = false
+
+	cognito_identity_providers {
+		client_id = "${aws_cognito_user_pool_client.client.id}"
+		provider_name = "cognito-idp.us-east-1.amazonaws.com/${aws_cognito_user_pool.id}"
+	}
+}
+
 ```
 
 ## Argument Reference
