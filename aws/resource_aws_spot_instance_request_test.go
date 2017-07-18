@@ -38,6 +38,34 @@ func TestAccAWSSpotInstanceRequest_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotInstanceRequest_withLaunchGroup(t *testing.T) {
+	var sir ec2.SpotInstanceRequest
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotInstanceRequestConfig_withLaunchGroup(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSpotInstanceRequestExists(
+						"aws_spot_instance_request.foo", &sir),
+					testAccCheckAWSSpotInstanceRequestAttributes(&sir),
+					testCheckKeyPair(fmt.Sprintf("tmp-key-%d", rInt), &sir),
+					resource.TestCheckResourceAttr(
+						"aws_spot_instance_request.foo", "spot_bid_status", "fulfilled"),
+					resource.TestCheckResourceAttr(
+						"aws_spot_instance_request.foo", "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(
+						"aws_spot_instance_request.foo", "launch_group", "terraform-test-group"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSpotInstanceRequest_withBlockDuration(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	rInt := acctest.RandInt()
@@ -93,7 +121,7 @@ func TestAccAWSSpotInstanceRequest_vpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_SubnetAndSG(t *testing.T) {
+func TestAccAWSSpotInstanceRequest_SubnetAndSGAndPublicIpAddress(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	rInt := acctest.RandInt()
 
@@ -103,11 +131,37 @@ func TestAccAWSSpotInstanceRequest_SubnetAndSG(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSpotInstanceRequestConfig_SubnetAndSG(rInt),
+				Config: testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSpotInstanceRequestExists(
 						"aws_spot_instance_request.foo", &sir),
 					testAccCheckAWSSpotInstanceRequest_InstanceAttributes(&sir, rInt),
+					resource.TestCheckResourceAttr(
+						"aws_spot_instance_request.foo", "associate_public_ip_address", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotInstanceRequest_NetworkInterfaceAttributes(t *testing.T) {
+	var sir ec2.SpotInstanceRequest
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSpotInstanceRequestExists(
+						"aws_spot_instance_request.foo", &sir),
+					testAccCheckAWSSpotInstanceRequest_InstanceAttributes(&sir, rInt),
+					testAccCheckAWSSpotInstanceRequest_NetworkInterfaceAttributes(&sir),
+					resource.TestCheckResourceAttr(
+						"aws_spot_instance_request.foo", "associate_public_ip_address", "true"),
 				),
 			},
 		},
@@ -282,6 +336,18 @@ func testAccCheckAWSSpotInstanceRequest_InstanceAttributes(
 	}
 }
 
+func testAccCheckAWSSpotInstanceRequest_NetworkInterfaceAttributes(
+	sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		if sir.LaunchSpecification.NetworkInterfaces == nil || len(sir.LaunchSpecification.NetworkInterfaces) != 1 {
+			return fmt.Errorf("Error with Spot Instance Network Interface count")
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSSpotInstanceRequestAttributesVPC(
 	sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -311,6 +377,34 @@ func testAccAWSSpotInstanceRequestConfig(rInt int) string {
 		// we wait for fulfillment because we want to inspect the launched instance
 		// and verify termination behavior
 		wait_for_fulfillment = true
+
+		tags {
+			Name = "terraform-test"
+		}
+	}`, rInt)
+}
+
+func testAccAWSSpotInstanceRequestConfig_withLaunchGroup(rInt int) string {
+	return fmt.Sprintf(`
+	resource "aws_key_pair" "debugging" {
+		key_name = "tmp-key-%d"
+		public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
+	}
+
+	resource "aws_spot_instance_request" "foo" {
+		ami = "ami-4fccb37f"
+		instance_type = "m1.small"
+		key_name = "${aws_key_pair.debugging.key_name}"
+
+		// base price is $0.044 hourly, so bidding above that should theoretically
+		// always fulfill
+		spot_price = "0.05"
+
+		// we wait for fulfillment because we want to inspect the launched instance
+		// and verify termination behavior
+		wait_for_fulfillment = true
+
+		launch_group = "terraform-test-group"
 
 		tags {
 			Name = "terraform-test"
@@ -384,7 +478,7 @@ func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
 	}`, rInt)
 }
 
-func testAccAWSSpotInstanceRequestConfig_SubnetAndSG(rInt int) string {
+func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int) string {
 	return fmt.Sprintf(`
 	resource "aws_spot_instance_request" "foo" {
 		ami                         = "ami-4fccb37f"
@@ -393,7 +487,7 @@ func testAccAWSSpotInstanceRequestConfig_SubnetAndSG(rInt int) string {
 		wait_for_fulfillment        = true
 		subnet_id                   = "${aws_subnet.tf_test_subnet.id}"
 		vpc_security_group_ids      = ["${aws_security_group.tf_test_sg_ssh.id}"]
-		associate_public_ip_address = true
+	  associate_public_ip_address = true
 	}
 
 	resource "aws_vpc" "default" {

@@ -3,16 +3,39 @@
 FEATURES:
 
 * **New Data Source:** `aws_iam_instance_profile` [GH-1024]
+* **New Data Source:** `aws_alb_target_group` [GH-1037]
+* **New Data Source:** `aws_iam_group` [GH-1140]
+* **New Resource:** `aws_api_gateway_request_validator` [GH-1064]
 
 IMPROVEMENTS:
 
 * resource/aws_sqs_queue: Add support for Server-Side Encryption [GH-962]
+* resource/aws_vpc: Add support for classiclink_dns_support [GH-1079]
+* resource/aws_lambda_function: Add support for lambda_function vpc_config update [GH-1080]
+* resource/aws_lambda_function: Add support for lambda_function dead_letter_config update [GH-1080]
+* resource/aws_route53_health_check: add support for health_check regions [GH-1116]
+* resource/aws_spot_instance_request: add support for request launch group [GH-1097]
+* resource/rds_cluster_instance: Export the RDI Resource ID for the instance [GH-1142]
 
 BUG FIXES:
 
+* resource/aws_ami: Retry on `InvalidAMIID.NotFound` [GH-1035]
 * resource/aws_ecs_service: Fixes normalization issues in placement_strategy [GH-1025]
 * resource/aws_opsworks_permission: Fix 'set permissions' failing to set ssh access [GH-1038]
 * resource/aws_s3_bucket_notification: Fix missing `bucket` field after import [GH-978]
+* resource/aws_sfn_state_machine: Handle another NotFound exception type [GH-1062]
+* resource/aws_ssm_parameter: ForceNew on ssm_parameter rename [GH-1022]
+* resource/aws_instance: Update SourceDestCheck modification on new resources [GH-1065]
+* resource/aws_spot_instance_request: fixed and issue with network interfaces configuration [GH-1070]
+* resource/aws_rds_cluster: Modify RDS Cluster after restoring from snapshot, if required [GH-926]
+* resource/aws_kms_alias: Retry lookups after creation [GH-1040]
+* resource/aws_internet_gateway: Retry deletion properly on `DependencyViolation` [GH-1021]
+* resource/aws_elb: Cleanup ENIs after deleting ELB [GH-1036]
+* resource/aws_kms_key: Retry lookups after creation [GH-1039]
+* resource/aws_dms_replication_instance: Add modifying as a pending creation state [GH-1114]
+* resource/aws_redshift_cluster: Trigger ForceNew aws_redshift_cluster on encrypted change [GH-1120]
+* resource/default_network_acl: Add support for ipv6_cidr_block [GH-1113]
+* data/aws_db_instance: Fix the output of subnet_group_name [GH-1141]
 
 ## 0.1.2 (June 30, 2017)
 

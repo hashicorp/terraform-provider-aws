@@ -109,6 +109,11 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"dbi_resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -284,6 +289,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set("identifier", db.DBInstanceIdentifier)
+	d.Set("dbi_resource_id", db.DbiResourceId)
 	d.Set("storage_encrypted", db.StorageEncrypted)
 	d.Set("kms_key_id", db.KmsKeyId)
 	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)

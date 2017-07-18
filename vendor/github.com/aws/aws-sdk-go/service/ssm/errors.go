@@ -123,7 +123,7 @@ const (
 	//
 	// /Finance/Prod/IAD/OS/WinServ2016/license15
 	//
-	// For more information, see Develop a Parameter Hierarchy (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working-path.html).
+	// For more information, see Working with Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working.html).
 	ErrCodeHierarchyLevelLimitExceededException = "HierarchyLevelLimitExceededException"
 
 	// ErrCodeHierarchyTypeMismatchException for service response error code
@@ -422,6 +422,30 @@ const (
 	// The parameter name is not valid.
 	ErrCodeParameterPatternMismatchException = "ParameterPatternMismatchException"
 
+	// ErrCodeResourceDataSyncAlreadyExistsException for service response error code
+	// "ResourceDataSyncAlreadyExistsException".
+	//
+	// A sync configuration with the same name already exists.
+	ErrCodeResourceDataSyncAlreadyExistsException = "ResourceDataSyncAlreadyExistsException"
+
+	// ErrCodeResourceDataSyncCountExceededException for service response error code
+	// "ResourceDataSyncCountExceededException".
+	//
+	// You have exceeded the allowed maximum sync configurations.
+	ErrCodeResourceDataSyncCountExceededException = "ResourceDataSyncCountExceededException"
+
+	// ErrCodeResourceDataSyncInvalidConfigurationException for service response error code
+	// "ResourceDataSyncInvalidConfigurationException".
+	//
+	// The specified sync configuration is invalid.
+	ErrCodeResourceDataSyncInvalidConfigurationException = "ResourceDataSyncInvalidConfigurationException"
+
+	// ErrCodeResourceDataSyncNotFoundException for service response error code
+	// "ResourceDataSyncNotFoundException".
+	//
+	// The specified sync name was not found.
+	ErrCodeResourceDataSyncNotFoundException = "ResourceDataSyncNotFoundException"
+
 	// ErrCodeResourceInUseException for service response error code
 	// "ResourceInUseException".
 	//
@@ -469,6 +493,14 @@ const (
 	// service. Check output of GetInventorySchema to see the available schema version
 	// for each type.
 	ErrCodeUnsupportedInventorySchemaVersionException = "UnsupportedInventorySchemaVersionException"
+
+	// ErrCodeUnsupportedOperatingSystem for service response error code
+	// "UnsupportedOperatingSystem".
+	//
+	// The operating systems you specified is not supported, or the operation is
+	// not supported for the operating system. Valid operating systems include:
+	// Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
+	ErrCodeUnsupportedOperatingSystem = "UnsupportedOperatingSystem"
 
 	// ErrCodeUnsupportedParameterType for service response error code
 	// "UnsupportedParameterType".
