@@ -21,6 +21,7 @@ BUG FIXES:
 
 * resource/aws_ami: Retry on `InvalidAMIID.NotFound` [GH-1035]
 * resource/aws_ecs_service: Fixes normalization issues in placement_strategy [GH-1025]
+* resource/aws_eip: Retry reading EIPs on creation [GH-1053]
 * resource/aws_opsworks_permission: Fix 'set permissions' failing to set ssh access [GH-1038]
 * resource/aws_s3_bucket_notification: Fix missing `bucket` field after import [GH-978]
 * resource/aws_sfn_state_machine: Handle another NotFound exception type [GH-1062]
@@ -34,8 +35,8 @@ BUG FIXES:
 * resource/aws_kms_key: Retry lookups after creation [GH-1039]
 * resource/aws_dms_replication_instance: Add modifying as a pending creation state [GH-1114]
 * resource/aws_redshift_cluster: Trigger ForceNew aws_redshift_cluster on encrypted change [GH-1120]
-* resource/default_network_acl: Add support for ipv6_cidr_block [GH-1113]
-* data/aws_db_instance: Fix the output of subnet_group_name [GH-1141]
+* resource/aws_default_network_acl: Add support for ipv6_cidr_block [GH-1113]
+* data-source/aws_db_instance: Fix the output of subnet_group_name [GH-1141]
 
 ## 0.1.2 (June 30, 2017)
 
