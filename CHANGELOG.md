@@ -36,6 +36,7 @@ BUG FIXES:
 * resource/aws_dms_replication_instance: Add modifying as a pending creation state [GH-1114]
 * resource/aws_redshift_cluster: Trigger ForceNew aws_redshift_cluster on encrypted change [GH-1120]
 * resource/aws_default_network_acl: Add support for ipv6_cidr_block [GH-1113]
+* resource/aws_vpc: Ignore ClassicLink DNS support in unsupported regions [GH-1176]
 * data-source/aws_db_instance: Fix the output of subnet_group_name [GH-1141]
 
 ## 0.1.2 (June 30, 2017)
