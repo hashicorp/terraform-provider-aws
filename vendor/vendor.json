@@ -307,12 +307,12 @@
 			"versionExact": "v1.10.4"
 		},
 		{
-			"checksumSHA1": "dqRrfGewSrIfajRNmsx1ugEYSuw=",
+			"checksumSHA1": "ifO/mJ8Qk8Qi09qwH9LLymqVfwo=",
 			"path": "github.com/aws/aws-sdk-go/service/cloudwatch",
-			"revision": "50762c1efc55dd2a05eac85fc170b0f65aeec28f",
-			"revisionTime": "2017-06-27T22:35:24Z",
-			"version": "v1.10.4",
-			"versionExact": "v1.10.4"
+			"revision": "a5f553bccbe022ff6ac8079509d9d91da1992e2e",
+			"revisionTime": "2017-07-05T17:19:55Z",
+			"version": "v1.10.7",
+			"versionExact": "v1.10.7"
 		},
 		{
 			"checksumSHA1": "uQXi6iOpIf22Hz1VP4qLb3jfAqw=",
