@@ -196,32 +196,32 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Attributes
 	attribute := "enableDnsSupport"
-	DescribeAttrOpts := &ec2.DescribeVpcAttributeInput{
+	describeAttrOpts := &ec2.DescribeVpcAttributeInput{
 		Attribute: aws.String(attribute),
 		VpcId:     aws.String(vpcid),
 	}
-	resp, err := conn.DescribeVpcAttribute(DescribeAttrOpts)
+	resp, err := conn.DescribeVpcAttribute(describeAttrOpts)
 	if err != nil {
 		return err
 	}
 	d.Set("enable_dns_support", *resp.EnableDnsSupport.Value)
 	attribute = "enableDnsHostnames"
-	DescribeAttrOpts = &ec2.DescribeVpcAttributeInput{
+	describeAttrOpts = &ec2.DescribeVpcAttributeInput{
 		Attribute: &attribute,
 		VpcId:     &vpcid,
 	}
-	resp, err = conn.DescribeVpcAttribute(DescribeAttrOpts)
+	resp, err = conn.DescribeVpcAttribute(describeAttrOpts)
 	if err != nil {
 		return err
 	}
 	d.Set("enable_dns_hostnames", *resp.EnableDnsHostnames.Value)
 
-	DescribeClassiclinkOpts := &ec2.DescribeVpcClassicLinkInput{
+	describeClassiclinkOpts := &ec2.DescribeVpcClassicLinkInput{
 		VpcIds: []*string{&vpcid},
 	}
 
 	// Classic Link is only available in regions that support EC2 Classic
-	respClassiclink, err := conn.DescribeVpcClassicLink(DescribeClassiclinkOpts)
+	respClassiclink, err := conn.DescribeVpcClassicLink(describeClassiclinkOpts)
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "UnsupportedOperation" {
 			log.Printf("[WARN] VPC Classic Link is not supported in this region")
@@ -241,11 +241,11 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_classiclink", classiclink_enabled)
 	}
 
-	DescribeClassiclinkDnsOpts := &ec2.DescribeVpcClassicLinkDnsSupportInput{
+	describeClassiclinkDnsOpts := &ec2.DescribeVpcClassicLinkDnsSupportInput{
 		VpcIds: []*string{&vpcid},
 	}
 
-	respClassiclinkDnsSupport, err := conn.DescribeVpcClassicLinkDnsSupport(DescribeClassiclinkDnsOpts)
+	respClassiclinkDnsSupport, err := conn.DescribeVpcClassicLinkDnsSupport(describeClassiclinkDnsOpts)
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "UnsupportedOperation" {
 			log.Printf("[WARN] VPC Classic Link DNS Support is not supported in this region")
@@ -275,10 +275,10 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		Name:   aws.String("vpc-id"),
 		Values: []*string{aws.String(d.Id())},
 	}
-	DescribeRouteOpts := &ec2.DescribeRouteTablesInput{
+	describeRouteOpts := &ec2.DescribeRouteTablesInput{
 		Filters: []*ec2.Filter{filter1, filter2},
 	}
-	routeResp, err := conn.DescribeRouteTables(DescribeRouteOpts)
+	routeResp, err := conn.DescribeRouteTables(describeRouteOpts)
 	if err != nil {
 		return err
 	}
@@ -474,13 +474,13 @@ func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	vpcID := d.Id()
-	DeleteVpcOpts := &ec2.DeleteVpcInput{
+	deleteVpcOpts := &ec2.DeleteVpcInput{
 		VpcId: &vpcID,
 	}
 	log.Printf("[INFO] Deleting VPC: %s", d.Id())
 
 	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteVpc(DeleteVpcOpts)
+		_, err := conn.DeleteVpc(deleteVpcOpts)
 		if err == nil {
 			return nil
 		}
@@ -505,10 +505,10 @@ func resourceAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
 // a VPC.
 func VPCStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		DescribeVpcOpts := &ec2.DescribeVpcsInput{
+		describeVpcOpts := &ec2.DescribeVpcsInput{
 			VpcIds: []*string{aws.String(id)},
 		}
-		resp, err := conn.DescribeVpcs(DescribeVpcOpts)
+		resp, err := conn.DescribeVpcs(describeVpcOpts)
 		if err != nil {
 			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVpcID.NotFound" {
 				resp = nil
@@ -573,10 +573,10 @@ func resourceAwsVpcSetDefaultNetworkAcl(conn *ec2.EC2, d *schema.ResourceData) e
 		Name:   aws.String("vpc-id"),
 		Values: []*string{aws.String(d.Id())},
 	}
-	DescribeNetworkACLOpts := &ec2.DescribeNetworkAclsInput{
+	describeNetworkACLOpts := &ec2.DescribeNetworkAclsInput{
 		Filters: []*ec2.Filter{filter1, filter2},
 	}
-	networkAclResp, err := conn.DescribeNetworkAcls(DescribeNetworkACLOpts)
+	networkAclResp, err := conn.DescribeNetworkAcls(describeNetworkACLOpts)
 
 	if err != nil {
 		return err
@@ -597,10 +597,10 @@ func resourceAwsVpcSetDefaultSecurityGroup(conn *ec2.EC2, d *schema.ResourceData
 		Name:   aws.String("vpc-id"),
 		Values: []*string{aws.String(d.Id())},
 	}
-	DescribeSgOpts := &ec2.DescribeSecurityGroupsInput{
+	describeSgOpts := &ec2.DescribeSecurityGroupsInput{
 		Filters: []*ec2.Filter{filter1, filter2},
 	}
-	securityGroupResp, err := conn.DescribeSecurityGroups(DescribeSgOpts)
+	securityGroupResp, err := conn.DescribeSecurityGroups(describeSgOpts)
 
 	if err != nil {
 		return err
