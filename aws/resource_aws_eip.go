@@ -132,14 +132,37 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		"[DEBUG] EIP describe configuration: %s (domain: %s)",
 		req, domain)
 
-	describeAddresses, err := ec2conn.DescribeAddresses(req)
-	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && (ec2err.Code() == "InvalidAllocationID.NotFound" || ec2err.Code() == "InvalidAddress.NotFound") {
-			d.SetId("")
-			return nil
-		}
+	var err error
+	var describeAddresses *ec2.DescribeAddressesOutput
 
-		return fmt.Errorf("Error retrieving EIP: %s", err)
+	if d.IsNewResource() {
+		err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+			describeAddresses, err = ec2conn.DescribeAddresses(req)
+			if err != nil {
+				awsErr, ok := err.(awserr.Error)
+				if ok && (awsErr.Code() == "InvalidAllocationID.NotFound" ||
+					awsErr.Code() == "InvalidAddress.NotFound") {
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("Error retrieving EIP: %s", err)
+		}
+	} else {
+		describeAddresses, err = ec2conn.DescribeAddresses(req)
+		if err != nil {
+			awsErr, ok := err.(awserr.Error)
+			if ok && (awsErr.Code() == "InvalidAllocationID.NotFound" ||
+				awsErr.Code() == "InvalidAddress.NotFound") {
+				log.Printf("[WARN] EIP not found, removing from state: %s", req)
+				return nil
+			}
+			return err
+		}
 	}
 
 	// Verify AWS returned our EIP
