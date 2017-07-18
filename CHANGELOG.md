@@ -6,6 +6,7 @@ FEATURES:
 * **New Data Source:** `aws_alb_target_group` [GH-1037]
 * **New Data Source:** `aws_iam_group` [GH-1140]
 * **New Resource:** `aws_api_gateway_request_validator` [GH-1064]
+* **New Resource:** `aws_api_gateway_gateway_response` [GH-1168]
 
 IMPROVEMENTS:
 
