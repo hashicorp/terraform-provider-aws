@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -124,10 +125,10 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 			},
 
 			"associate_public_ip_address": {
-				Type:     schema.TypeBool,
+				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  false,
+				Default:  "",
 			},
 
 			"spot_price": {
@@ -311,8 +312,12 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 		createLaunchConfigurationOpts.PlacementTenancy = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("associate_public_ip_address"); ok {
-		createLaunchConfigurationOpts.AssociatePublicIpAddress = aws.Bool(v.(bool))
+	if v, ok := d.GetOk("associate_public_ip_address"); v != nil && v.(string) != "" && ok {
+		vbool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return err
+		}
+		createLaunchConfigurationOpts.AssociatePublicIpAddress = aws.Bool(vbool)
 	}
 
 	if v, ok := d.GetOk("key_name"); ok {
