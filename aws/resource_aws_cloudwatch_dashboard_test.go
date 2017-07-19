@@ -69,15 +69,13 @@ func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
 }
 
 func testAccAWSCloudWatchDashboardConfig(name, body string) string {
-	cfg := fmt.Sprintf(
+	return fmt.Sprintf(
 		`resource "aws_cloudwatch_dashboard" "foodash" {
 					name = "%s",
 					body = <<EOF
 %s
 EOF
 }`, name, body)
-	fmt.Println(cfg)
-	return cfg
 }
 
 func testAccCheckAWSCloudWatchDashboardExists(n string, dashboard *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
