@@ -49,6 +49,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -174,6 +175,7 @@ type AWSClient struct {
 	ssmconn               *ssm.SSM
 	wafconn               *waf.WAF
 	wafregionalconn       *wafregional.WAFRegional
+	iotconn               *iot.IoT
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -364,6 +366,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.firehoseconn = firehose.New(sess)
 	client.inspectorconn = inspector.New(sess)
 	client.glacierconn = glacier.New(sess)
+	client.iotconn = iot.New(sess)
 	client.kinesisconn = kinesis.New(awsKinesisSess)
 	client.kmsconn = kms.New(awsKmsSess)
 	client.lambdaconn = lambda.New(sess)
