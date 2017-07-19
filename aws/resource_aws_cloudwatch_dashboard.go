@@ -76,7 +76,7 @@ func resourceAwsCloudWatchDashboardRead(d *schema.ResourceData, meta interface{}
 		DashboardName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading dashboard %s", getDashboardInput.DashboardName)
+	log.Printf("[DEBUG] Reading dashboard %s", *getDashboardInput.DashboardName)
 
 	dashboardOutput, err := conn.GetDashboard(&getDashboardInput)
 	if err != nil {
@@ -91,7 +91,7 @@ func resourceAwsCloudWatchDashboardRead(d *schema.ResourceData, meta interface{}
 	d.Set("body", dashboardOutput.DashboardBody)
 	d.Set("arn", dashboardOutput.DashboardArn)
 
-	log.Printf("[INFO] Retrieved dashboard %s", getDashboardInput.DashboardName)
+	log.Printf("[INFO] Retrieved dashboard %s", *getDashboardInput.DashboardName)
 
 	return nil
 }
