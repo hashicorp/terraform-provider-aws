@@ -1,13 +1,15 @@
 package aws
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/hashicorp/terraform/helper/schema"
 	"log"
+	"reflect"
 	"regexp"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 )
 
 func resourceAwsCloudWatchDashboard() *schema.Resource {
@@ -19,16 +21,17 @@ func resourceAwsCloudWatchDashboard() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateAwsCloudWatchDashboardName,
 			},
 			"body": &schema.Schema{
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     false,
-				ValidateFunc: validateJsonString,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         false,
+				ValidateFunc:     validateJsonString,
+				DiffSuppressFunc: suppressSameJson,
 			},
 			"arn": &schema.Schema{
 				Type:     schema.TypeString,
@@ -36,6 +39,10 @@ func resourceAwsCloudWatchDashboard() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceAwsCloudWatchDashboardCreate(d *schema.ResourceData, meta interface{}) error {
+	return resourceAwsCloudWatchDashboardUpdate(d, meta)
 }
 
 func resourceAwsCloudWatchDashboardUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -55,6 +62,8 @@ func resourceAwsCloudWatchDashboardUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Failed to create dashboard: %s '%s'", dashboardName, err)
 	}
 
+	d.SetId(dashboardName)
+
 	log.Println("[INFO] Cloudwatch dashboard created")
 
 	return resourceAwsCloudWatchDashboardRead(d, meta)
@@ -66,9 +75,6 @@ func resourceAwsCloudWatchDashboardRead(d *schema.ResourceData, meta interface{}
 	getDashboardInput := cloudwatch.GetDashboardInput{
 		DashboardName: aws.String(d.Id()),
 	}
-
-	//fmt.Printf("In read %s\n", *getDashboardInput.DashboardName)
-	//fmt.Printf("In read %s\n", d.Get("name"))
 
 	log.Println("[DEBUG] Reading dashboard %s", getDashboardInput.DashboardName)
 
@@ -93,7 +99,6 @@ func resourceAwsCloudWatchDashboardRead(d *schema.ResourceData, meta interface{}
 func resourceAwsCloudWatchDashboardDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatchconn
 
-
 	dashboardName := d.Get("name").(string)
 	deleteDashboardInput := cloudwatch.DeleteDashboardsInput{
 		DashboardNames: []*string{&dashboardName},
@@ -113,30 +118,6 @@ func resourceAwsCloudWatchDashboardDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsCloudWatchDashboardCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchconn
-
-	dashboardName := d.Get("name").(string)
-
-	putDashboardInput := cloudwatch.PutDashboardInput{
-		DashboardName: aws.String(dashboardName),
-		DashboardBody: aws.String(d.Get("body").(string)),
-	}
-
-	log.Printf("[DEBUG] Creating Cloudwatch Dashboard: %s", dashboardName)
-
-	_, err := conn.PutDashboard(&putDashboardInput)
-	if err != nil {
-		return fmt.Errorf("Failed to create dashboard: %s '%s'", dashboardName, err)
-	}
-
-	d.SetId(dashboardName)
-
-	log.Println("[INFO] Cloudwatch dashboard created")
-
-	return resourceAwsCloudWatchDashboardRead(d, meta)
-}
-
 func validateAwsCloudWatchDashboardName(v interface{}, k string) (ws []string, errors []error) {
 	name := v.(string)
 
@@ -154,4 +135,22 @@ func validateAwsCloudWatchDashboardName(v interface{}, k string) (ws []string, e
 	}
 
 	return
+}
+
+func suppressSameJson(k, old, new string, d *schema.ResourceData) bool {
+	var obj1 interface{}
+	var obj2 interface{}
+
+	err := json.Unmarshal([]byte(old), &obj1)
+	if err != nil {
+		return false
+	}
+
+	err = json.Unmarshal([]byte(new), &obj2)
+	if err != nil {
+		return false
+	}
+
+	return reflect.DeepEqual(obj1, obj2)
+
 }
