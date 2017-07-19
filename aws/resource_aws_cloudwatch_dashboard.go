@@ -64,7 +64,7 @@ func resourceAwsCloudWatchDashboardUpdate(d *schema.ResourceData, meta interface
 
 	d.SetId(dashboardName)
 
-	log.Println("[INFO] Cloudwatch dashboard created")
+	log.Printf("[INFO] Cloudwatch dashboard created: %s", dashboardName)
 
 	return resourceAwsCloudWatchDashboardRead(d, meta)
 }
@@ -76,7 +76,7 @@ func resourceAwsCloudWatchDashboardRead(d *schema.ResourceData, meta interface{}
 		DashboardName: aws.String(d.Id()),
 	}
 
-	log.Println("[DEBUG] Reading dashboard %s", getDashboardInput.DashboardName)
+	log.Printf("[DEBUG] Reading dashboard %s", getDashboardInput.DashboardName)
 
 	dashboardOutput, err := conn.GetDashboard(&getDashboardInput)
 	if err != nil {
@@ -91,7 +91,7 @@ func resourceAwsCloudWatchDashboardRead(d *schema.ResourceData, meta interface{}
 	d.Set("body", dashboardOutput.DashboardBody)
 	d.Set("arn", dashboardOutput.DashboardArn)
 
-	log.Println("[DEBUG] Retrieved dashboard %s", getDashboardInput.DashboardName)
+	log.Printf("[INFO] Retrieved dashboard %s", getDashboardInput.DashboardName)
 
 	return nil
 }
@@ -104,7 +104,7 @@ func resourceAwsCloudWatchDashboardDelete(d *schema.ResourceData, meta interface
 		DashboardNames: []*string{&dashboardName},
 	}
 
-	log.Println("[DEBUG] Deleting dashboard %s", dashboardName)
+	log.Printf("[DEBUG] Deleting dashboard %s", dashboardName)
 
 	_, err := conn.DeleteDashboards(&deleteDashboardInput)
 	if err != nil {
@@ -114,6 +114,8 @@ func resourceAwsCloudWatchDashboardDelete(d *schema.ResourceData, meta interface
 		}
 		return fmt.Errorf("Error deleting dashboard %s: %s", dashboardName, err)
 	}
+
+	log.Printf("[INFO] Deleted dashboard: %s", dashboardName)
 
 	return nil
 }
