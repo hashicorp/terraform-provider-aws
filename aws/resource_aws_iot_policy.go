@@ -67,7 +67,7 @@ func resourceAwsIotPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", out.PolicyArn)
-	d.Set("defaultVersionId", out.DefaultVersionId)
+	d.Set("default_version_id", out.DefaultVersionId)
 
 	return nil
 }

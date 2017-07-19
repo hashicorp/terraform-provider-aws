@@ -4,22 +4,30 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"regexp"
 )
 
 func TestAccAWSIoTPolicy_basic(t *testing.T) {
+	rName := acctest.RandomWithPrefix("PubSubToAnyTopic-")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTPolicyDestroy_basic,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSIoTPolicy_basic,
+				Config: testAccAWSIoTPolicyConfigInitialState(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTPolicyExists_basic("aws_iot_policy.pubsub"),
+					resource.TestCheckResourceAttr("aws_iot_policy.pubsub", "name", rName),
+					resource.TestCheckResourceAttrSet("aws_iot_policy.pubsub", "arn"),
+					resource.TestCheckResourceAttrSet("aws_iot_policy.pubsub", "default_version_id"),
+					resource.TestCheckResourceAttrSet("aws_iot_policy.pubsub", "policy"),
 				),
 			},
 		},
@@ -27,13 +35,15 @@ func TestAccAWSIoTPolicy_basic(t *testing.T) {
 }
 
 func TestAccAWSIoTPolicy_invalidJson(t *testing.T) {
+	rName := acctest.RandomWithPrefix("PubSubToAnyTopic-")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTPolicyDestroy_basic,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSIoTPolicyInvalidJsonConfig,
+				Config:      testAccAWSIoTPolicyInvalidJsonConfig(rName),
 				ExpectError: regexp.MustCompile("MalformedPolicyException.*"),
 			},
 		},
@@ -48,37 +58,35 @@ func testAccCheckAWSIoTPolicyDestroy_basic(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.ListPolicies(&iot.ListPoliciesInput{})
-
-		if err != nil {
-			return err
+		// Try to find the Policy
+		GetPolicyOpts := &iot.GetPolicyInput{
+			PolicyName: aws.String(rs.Primary.Attributes["name"]),
 		}
 
-		for _, t := range out.Policies {
-			if *t.PolicyName == rs.Primary.ID {
-				return fmt.Errorf("IoT policy still exists:\n%s", t)
+		resp, err := conn.GetPolicy(GetPolicyOpts)
+
+		if err == nil {
+			if resp.PolicyName != nil {
+				return fmt.Errorf("IoT Policy still exists")
 			}
 		}
 
+		// Verify the error is what we want
+		if err != nil {
+			iotErr, ok := err.(awserr.Error)
+			if !ok || iotErr.Code() != "ResourceNotFoundException" {
+				return err
+			}
+		}
 	}
 
 	return nil
 }
 
-func testAccCheckAWSIoTPolicyExists_basic(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		return nil
-	}
-}
-
-var testAccAWSIoTPolicy_basic = `
+func testAccAWSIoTPolicyConfigInitialState(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_iot_policy" "pubsub" {
-  name = "PubSubToAnyTopic"
+  name = "%s"
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -90,11 +98,13 @@ resource "aws_iot_policy" "pubsub" {
 }
 EOF
 }
-`
+`, rName)
+}
 
-var testAccAWSIoTPolicyInvalidJsonConfig = `
+func testAccAWSIoTPolicyInvalidJsonConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_iot_policy" "pubsub" {
-  name = "PubSubToAnyTopic"
+  name = "%s"
   policy = <<EOF
 	{
 	  "Version": "2012-10-17",
@@ -106,4 +116,5 @@ resource "aws_iot_policy" "pubsub" {
 	}
 EOF
 }
-`
+`, rName)
+}
