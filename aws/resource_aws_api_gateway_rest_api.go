@@ -37,6 +37,11 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
+			"body": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"root_resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -75,6 +80,17 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	d.SetId(*gateway.Id)
+
+	if body, ok := d.GetOk("body"); ok {
+		_, err := conn.PutRestApi(&apigateway.PutRestApiInput{
+			RestApiId: gateway.Id,
+			Mode:      aws.String("overwrite"),
+			Body:      []byte(body.(string)),
+		})
+		if err != nil {
+			return fmt.Errorf("Error putting API Gateway specification: %s", err)
+		}
+	}
 
 	if err = resourceAwsApiGatewayRestApiRefreshResources(d, meta); err != nil {
 		return err
@@ -154,6 +170,19 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigateway
 	log.Printf("[DEBUG] Updating API Gateway %s", d.Id())
+
+	if d.HasChange("body") {
+		if body, ok := d.GetOk("body"); ok {
+			_, err := conn.PutRestApi(&apigateway.PutRestApiInput{
+				RestApiId: aws.String(d.Id()),
+				Mode:      aws.String("overwrite"),
+				Body:      []byte(body.(string)),
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
 
 	_, err := conn.UpdateRestApi(&apigateway.UpdateRestApiInput{
 		RestApiId:       aws.String(d.Id()),
