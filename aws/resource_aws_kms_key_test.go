@@ -36,29 +36,6 @@ func TestAccAWSKmsKey_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsKey_basic_with_external_origin(t *testing.T) {
-	var keyBefore, keyAfter kms.KeyMetadata
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSKmsKey_with_external_origin,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsKeyExists("aws_kms_key.foo", &keyBefore),
-				),
-			},
-			{
-				Config: testAccAWSKmsKey_with_external_origin_removedPolicy,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsKeyExists("aws_kms_key.foo", &keyAfter),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSKmsKey_disappears(t *testing.T) {
 	var key kms.KeyMetadata
 
@@ -69,29 +46,6 @@ func TestAccAWSKmsKey_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKmsKey,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsKeyExists("aws_kms_key.foo", &key),
-				),
-			},
-			{
-				Config:             testAccAWSKmsKey_other_region,
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSKmsKey_with_external_origin_disappears(t *testing.T) {
-	var key kms.KeyMetadata
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSKmsKey_with_external_origin,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists("aws_kms_key.foo", &key),
 				),
@@ -309,13 +263,6 @@ resource "aws_kms_key" "foo" {
 POLICY
 }`, kmsTimestamp)
 
-var testAccAWSKmsKey_with_external_origin = fmt.Sprintf(`
- resource "aws_kms_key" "foo" {
-     description = "Terraform acc test %s"
-     origin = "EXTERNAL"
-     is_enabled = "false"
- }`, kmsTimestamp)
-
 var testAccAWSKmsKey_other_region = fmt.Sprintf(`
 provider "aws" { 
 	region = "us-east-1"
@@ -347,13 +294,6 @@ resource "aws_kms_key" "foo" {
     description = "Terraform acc test %s"
     deletion_window_in_days = 7
 }`, kmsTimestamp)
-
-var testAccAWSKmsKey_with_external_origin_removedPolicy = fmt.Sprintf(`
- resource "aws_kms_key" "foo" {
-     description = "Terraform acc test %s"
-     origin = "EXTERNAL"
-     is_enabled = "false"
- }`, kmsTimestamp)
 
 var testAccAWSKmsKey_enabledRotation = fmt.Sprintf(`
 resource "aws_kms_key" "bar" {

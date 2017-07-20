@@ -29,11 +29,9 @@ The following arguments are supported:
 * `policy` - (Optional) A valid policy JSON document.
 * `deletion_window_in_days` - (Optional) Duration in days after which the key is deleted
 	after destruction of the resource, must be between 7 and 30 days. Defaults to 30 days.
-* `origin` - (Optional) Specifies origin of the key. Must be 'AWS_KMS' or 'EXTERNAL'.
-    Defaults to AWS_KMS.
 * `is_enabled` - (Optional) Specifies whether the key is enabled. Defaults to true.
 * `enable_key_rotation` - (Optional) Specifies whether [key rotation](http://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html)
-	is enabled. Defaults to false. If keyState is equal to PendingImport, `enable_key_rotation` is always false.
+	is enabled. Defaults to false.
 * `tags` - (Optional) A mapping of tags to assign to the object.
 
 ## Attributes Reference
