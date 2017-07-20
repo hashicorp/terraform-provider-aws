@@ -22,6 +22,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * resource/aws_ami: Retry on `InvalidAMIID.NotFound` [GH-1035]
+* resource/aws_autoscaling_group: Fix handling of empty `vpc_zone_identifier` (EC2 classic & default VPC) [GH-1191]
 * resource/aws_ecs_service: Fixes normalization issues in placement_strategy [GH-1025]
 * resource/aws_eip: Retry reading EIPs on creation [GH-1053]
 * resource/aws_opsworks_permission: Fix 'set permissions' failing to set ssh access [GH-1038]
