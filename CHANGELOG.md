@@ -25,6 +25,7 @@ BUG FIXES:
 * resource/aws_autoscaling_group: Fix handling of empty `vpc_zone_identifier` (EC2 classic & default VPC) [GH-1191]
 * resource/aws_ecs_service: Fixes normalization issues in placement_strategy [GH-1025]
 * resource/aws_eip: Retry reading EIPs on creation [GH-1053]
+* resource/aws_elastic_beanstalk_environment: Avoid spurious diffs of JSON-based `setting`s [GH-901]
 * resource/aws_opsworks_permission: Fix 'set permissions' failing to set ssh access [GH-1038]
 * resource/aws_s3_bucket_notification: Fix missing `bucket` field after import [GH-978]
 * resource/aws_sfn_state_machine: Handle another NotFound exception type [GH-1062]
