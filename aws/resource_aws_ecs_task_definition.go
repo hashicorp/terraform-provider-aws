@@ -2,8 +2,6 @@ package aws
 
 import (
 	"bytes"
-	"crypto/sha1"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"strings"
@@ -38,13 +36,9 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 			},
 
 			"container_definitions": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(v interface{}) string {
-					hash := sha1.Sum([]byte(v.(string)))
-					return hex.EncodeToString(hash[:])
-				},
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateAwsEcsTaskDefinitionContainerDefinitions,
 			},
 
