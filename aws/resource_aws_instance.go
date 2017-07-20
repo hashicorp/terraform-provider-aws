@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -46,7 +47,7 @@ func resourceAwsInstance() *schema.Resource {
 			},
 
 			"associate_public_ip_address": {
-				Type:     schema.TypeBool,
+				Type:     schema.TypeString,
 				ForceNew: true,
 				Computed: true,
 				Optional: true,
@@ -152,7 +153,7 @@ func resourceAwsInstance() *schema.Resource {
 			},
 
 			"network_interface": {
-				ConflictsWith: []string{"associate_public_ip_address", "subnet_id", "private_ip", "vpc_security_group_ids", "security_groups", "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
+				ConflictsWith: []string{"subnet_id", "private_ip", "vpc_security_group_ids", "security_groups", "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,
@@ -1209,10 +1210,10 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterfaces interface{}) []*ec2.InstanceNetworkInterfaceSpecification {
 	networkInterfaces := []*ec2.InstanceNetworkInterfaceSpecification{}
 	// Get necessary items
-	associatePublicIPAddress := d.Get("associate_public_ip_address").(bool)
+
 	subnet, hasSubnet := d.GetOk("subnet_id")
 
-	if hasSubnet && associatePublicIPAddress {
+	if hasSubnet {
 		// If we have a non-default VPC / Subnet specified, we can flag
 		// AssociatePublicIpAddress to get a Public IP assigned. By default these are not provided.
 		// You cannot specify both SubnetId and the NetworkInterface.0.* parameters though, otherwise
@@ -1221,10 +1222,16 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 		// to avoid: Network interfaces and an instance-level security groups may not be specified on
 		// the same request
 		ni := &ec2.InstanceNetworkInterfaceSpecification{
-			AssociatePublicIpAddress: aws.Bool(associatePublicIPAddress),
-			DeviceIndex:              aws.Int64(int64(0)),
-			SubnetId:                 aws.String(subnet.(string)),
-			Groups:                   groups,
+			DeviceIndex: aws.Int64(int64(0)),
+			SubnetId:    aws.String(subnet.(string)),
+			Groups:      groups,
+		}
+
+		if v, ok := d.GetOk("associate_public_ip_address"); v != nil && v.(string) != "" && ok {
+			vbool, err := strconv.ParseBool(v.(string))
+			if err != nil {
+				ni.AssociatePublicIpAddress = aws.Bool(vbool)
+			}
 		}
 
 		if v, ok := d.GetOk("private_ip"); ok {
@@ -1257,6 +1264,8 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 		networkInterfaces = append(networkInterfaces, ni)
 	} else {
 		// If we have manually specified network interfaces, build and attach those here.
+		// it is here in this case where an error occurs if you try to define AssociatePublicIpAddress
+		// with a network interface object that exists.
 		vL := nInterfaces.(*schema.Set).List()
 		for _, v := range vL {
 			ini := v.(map[string]interface{})
@@ -1495,8 +1504,7 @@ type awsInstanceOpts struct {
 	UserData64                        *string
 }
 
-func buildAwsInstanceOpts(
-	d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
+func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
 	conn := meta.(*AWSClient).ec2conn
 
 	opts := &awsInstanceOpts{
@@ -1542,8 +1550,6 @@ func buildAwsInstanceOpts(
 		opts.Placement.Tenancy = aws.String(v)
 	}
 
-	associatePublicIPAddress := d.Get("associate_public_ip_address").(bool)
-
 	var groups []*string
 	if v := d.Get("security_groups"); v != nil {
 		// Security group names.
@@ -1562,11 +1568,12 @@ func buildAwsInstanceOpts(
 	networkInterfaces, interfacesOk := d.GetOk("network_interface")
 
 	// If setting subnet and public address, OR manual network interfaces, populate those now.
-	if hasSubnet && associatePublicIPAddress || interfacesOk {
+	if hasSubnet || interfacesOk {
 		// Otherwise we're attaching (a) network interface(s)
 		opts.NetworkInterfaces = buildNetworkInterfaceOpts(d, groups, networkInterfaces)
 	} else {
 		// If simply specifying a subnetID, privateIP, Security Groups, or VPC Security Groups, build these now
+
 		if subnetID != "" {
 			opts.SubnetID = aws.String(subnetID)
 		}
@@ -1603,6 +1610,7 @@ func buildAwsInstanceOpts(
 				opts.SecurityGroupIDs = append(opts.SecurityGroupIDs, aws.String(v.(string)))
 			}
 		}
+
 	}
 
 	if v, ok := d.GetOk("key_name"); ok {
