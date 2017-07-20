@@ -139,11 +139,10 @@ func resourceAwsInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			// TODO: Deprecate me v0.10.0
 			"network_interface_id": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Please use `primary_network_interface_id` instead",
+				Type:     schema.TypeString,
+				Computed: true,
+				Removed:  "Use `primary_network_interface_id` instead",
 			},
 
 			"primary_network_interface_id": {
@@ -646,7 +645,6 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("subnet_id", primaryNetworkInterface.SubnetId)
 		}
 		if primaryNetworkInterface.NetworkInterfaceId != nil {
-			d.Set("network_interface_id", primaryNetworkInterface.NetworkInterfaceId) // TODO: Deprecate me v0.10.0
 			d.Set("primary_network_interface_id", primaryNetworkInterface.NetworkInterfaceId)
 		}
 		if primaryNetworkInterface.Ipv6Addresses != nil {
@@ -664,7 +662,6 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	} else {
 		d.Set("subnet_id", instance.SubnetId)
-		d.Set("network_interface_id", "") // TODO: Deprecate me v0.10.0
 		d.Set("primary_network_interface_id", "")
 	}
 
