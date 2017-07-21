@@ -38,6 +38,7 @@ func resourceAwsCloudWatchDashboard() *schema.Resource {
 					json, _ := normalizeJsonString(v)
 					return json
 				},
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
 			"dashboard_name": {
 				Type:     schema.TypeString,
@@ -131,5 +132,5 @@ func getAwsCloudWatchPutDashboardInput(d *schema.ResourceData) cloudwatch.PutDas
 
 func isResourceNotFoundErr(err error) bool {
 	awsErr, ok := err.(awserr.Error)
-	return ok && awsErr.Code() == "ResourceNotFoundException"
+	return ok && awsErr.Code() == "ResourceNotFound"
 }
