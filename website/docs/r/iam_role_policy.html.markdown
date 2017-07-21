@@ -75,8 +75,8 @@ assign a random, unique name.
 
 ## Import
 
-IAM Role Policies can be imported using the `name`, e.g.
+IAM Role Policies can be imported using the `role_name:role_policy_name`, e.g.
 
 ```
-$ terraform import aws_iam_role_policy.mypolicy mypolicy_name
+$ terraform import aws_iam_role_policy.mypolicy role_of_mypolicy_name:mypolicy_name
 ```
