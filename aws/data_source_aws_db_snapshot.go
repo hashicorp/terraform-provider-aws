@@ -135,7 +135,7 @@ func dataSourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error
 	snapshotIdentifier, snapshotIdentifierOk := d.GetOk("db_snapshot_identifier")
 
 	if !instanceIdentifierOk && !snapshotIdentifierOk {
-		return fmt.Errorf("One of db_snapshot_indentifier or db_instance_identifier must be assigned")
+		return fmt.Errorf("One of db_snapshot_identifier or db_instance_identifier must be assigned")
 	}
 
 	params := &rds.DescribeDBSnapshotsInput{
