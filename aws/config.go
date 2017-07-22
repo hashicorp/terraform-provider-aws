@@ -248,7 +248,7 @@ func (c *Config) Client() (interface{}, error) {
 	}
 
 	if logging.IsDebugOrHigher() {
-		awsConfig.LogLevel = aws.LogLevel(aws.LogDebugWithHTTPBody)
+		awsConfig.LogLevel = aws.LogLevel(aws.LogDebugWithHTTPBody | aws.LogDebugWithRequestRetries | aws.LogDebugWithRequestErrors)
 		awsConfig.Logger = awsLogger{}
 	}
 
