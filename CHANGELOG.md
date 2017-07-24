@@ -8,6 +8,7 @@ FEATURES:
 * **New Resource:** `aws_api_gateway_request_validator` [GH-1064]
 * **New Resource:** `aws_api_gateway_gateway_response` [GH-1168]
 * **New Resource:** `aws_iot_policy` [GH-986]
+* **New Resource:** `aws_iot_certificate` [GH-1225]
 
 IMPROVEMENTS:
 
