@@ -5,16 +5,15 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsCloudWatchDashboard() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchDashboardCreate,
+		Create: resourceAwsCloudWatchDashboardPut,
 		Read:   resourceAwsCloudWatchDashboardRead,
-		Update: resourceAwsCloudWatchDashboardUpdate,
+		Update: resourceAwsCloudWatchDashboardPut,
 		Delete: resourceAwsCloudWatchDashboardDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -48,22 +47,6 @@ func resourceAwsCloudWatchDashboard() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchDashboardCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchconn
-	params := getAwsCloudWatchPutDashboardInput(d)
-
-	log.Printf("[DEBUG] Creating CloudWatch Dashboard: %#v", params)
-
-	_, err := conn.PutDashboard(&params)
-	if err != nil {
-		return fmt.Errorf("Creating dashboard failed: %s", err)
-	}
-	d.SetId(d.Get("dashboard_name").(string))
-	log.Println("[INFO] CloudWatch Dashboard created")
-
-	return resourceAwsCloudWatchDashboardRead(d, meta)
-}
-
 func resourceAwsCloudWatchDashboardRead(d *schema.ResourceData, meta interface{}) error {
 	dashboardName := d.Get("dashboard_name").(string)
 	log.Printf("[DEBUG] Reading CloudWatch Dashboard: %s", dashboardName)
@@ -75,7 +58,7 @@ func resourceAwsCloudWatchDashboardRead(d *schema.ResourceData, meta interface{}
 
 	resp, err := conn.GetDashboard(&params)
 	if err != nil {
-		if isResourceNotFoundErr(err) {
+		if isCloudWatchDashboardNotFoundErr(err) {
 			log.Printf("[WARN] CloudWatch Dashboard %q not found, removing", dashboardName)
 			d.SetId("")
 			return nil
@@ -83,22 +66,24 @@ func resourceAwsCloudWatchDashboardRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Reading dashboard failed: %s", err)
 	}
 
+	d.Set("dashboard_arn", resp.DashboardArn)
 	d.Set("dashboard_name", resp.DashboardName)
 	d.Set("dashboard_body", resp.DashboardBody)
 	return nil
 }
 
-func resourceAwsCloudWatchDashboardUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsCloudWatchDashboardPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatchconn
 	params := getAwsCloudWatchPutDashboardInput(d)
 
-	log.Printf("[DEBUG] Updating CloudWatch Dashboard: %#v", params)
+	log.Printf("[DEBUG] Putting CloudWatch Dashboard: %#v", params)
 
 	_, err := conn.PutDashboard(&params)
 	if err != nil {
-		return fmt.Errorf("Updating dashboard failed: %s", err)
+		return fmt.Errorf("Putting dashboard failed: %s", err)
 	}
-	log.Println("[INFO] CloudWatch Dashboard updated")
+	d.SetId(d.Get("dashboard_name").(string))
+	log.Println("[INFO] CloudWatch Dashboard put finished")
 
 	return resourceAwsCloudWatchDashboardRead(d, meta)
 }
@@ -111,7 +96,7 @@ func resourceAwsCloudWatchDashboardDelete(d *schema.ResourceData, meta interface
 	}
 
 	if _, err := conn.DeleteDashboards(&params); err != nil {
-		if isResourceNotFoundErr(err) {
+		if isCloudWatchDashboardNotFoundErr(err) {
 			log.Printf("[WARN] CloudWatch Dashboard %s is already gone", d.Id())
 			return nil
 		}
@@ -130,7 +115,9 @@ func getAwsCloudWatchPutDashboardInput(d *schema.ResourceData) cloudwatch.PutDas
 	}
 }
 
-func isResourceNotFoundErr(err error) bool {
-	awsErr, ok := err.(awserr.Error)
-	return ok && awsErr.Code() == "ResourceNotFound"
+func isCloudWatchDashboardNotFoundErr(err error) bool {
+	return isAWSErr(
+		err,
+		"ResourceNotFound",
+		"does not exist")
 }

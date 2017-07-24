@@ -96,9 +96,11 @@ func testAccCheckAWSCloudWatchDashboardDestroy(s *terraform.State) error {
 			DashboardName: aws.String(rs.Primary.ID),
 		}
 
-		if _, err := conn.GetDashboard(&params); err == nil {
+		_, err := conn.GetDashboard(&params)
+		if err == nil {
 			return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
-		} else if !isResourceNotFoundErr(err) {
+		}
+		if !isCloudWatchDashboardNotFoundErr(err) {
 			return err
 		}
 	}
