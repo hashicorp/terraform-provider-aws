@@ -22,6 +22,10 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 		Delete: resourceAwsSpotFleetRequestDelete,
 		Update: resourceAwsSpotFleetRequestUpdate,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsSpotFleetRequestMigrateState,
 
@@ -35,6 +39,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
+				Default:  false,
+			},
+			"wait_for_fulfillment": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: false,
 				Default:  false,
 			},
 			// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-SpotFleetLaunchSpecification
@@ -623,6 +633,24 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
+	if d.Get("wait_for_fulfillment").(bool) {
+		log.Println("[INFO] Waiting for Spot Fleet Request to be fulfilled")
+		spotStateConf := &resource.StateChangeConf{
+			Pending:    []string{"pending_fulfillment"},
+			Target:     []string{"fulfilled"},
+			Refresh:    resourceAwsSpotFleetRequestFulfillmentRefreshFunc(d, meta),
+			Timeout:    10 * time.Minute,
+			Delay:      10 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+
+		_, err = spotStateConf.WaitForState()
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return resourceAwsSpotFleetRequestRead(d, meta)
 }
 
@@ -650,6 +678,33 @@ func resourceAwsSpotFleetRequestStateRefreshFunc(d *schema.ResourceData, meta in
 		spotFleetRequest := resp.SpotFleetRequestConfigs[0]
 
 		return spotFleetRequest, *spotFleetRequest.SpotFleetRequestState, nil
+	}
+}
+
+func resourceAwsSpotFleetRequestFulfillmentRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		conn := meta.(*AWSClient).ec2conn
+		req := &ec2.DescribeSpotFleetRequestsInput{
+			SpotFleetRequestIds: []*string{aws.String(d.Id())},
+		}
+		resp, err := conn.DescribeSpotFleetRequests(req)
+
+		if err != nil {
+			log.Printf("Error on retrieving Spot Fleet Request when waiting: %s", err)
+			return nil, "", nil
+		}
+
+		if resp == nil {
+			return nil, "", nil
+		}
+
+		if len(resp.SpotFleetRequestConfigs) == 0 {
+			return nil, "", nil
+		}
+
+		spotFleetRequest := resp.SpotFleetRequestConfigs[0]
+
+		return spotFleetRequest, *spotFleetRequest.ActivityStatus, nil
 	}
 }
 
