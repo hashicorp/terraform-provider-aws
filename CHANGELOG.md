@@ -45,6 +45,7 @@ BUG FIXES:
 * resource/aws_default_network_acl: Add support for ipv6_cidr_block [GH-1113]
 * resource/aws_autoscaling_group: Suppress diffs when an empty set is specified for `availability_zones` [GH-1190]
 * resource/aws_vpc: Ignore ClassicLink DNS support in unsupported regions [GH-1176]
+* resource/elastic_beanstalk_configuration_template: Handle missing platform [GH-1222]
 * data-source/aws_db_instance: Fix the output of subnet_group_name [GH-1141]
 * data-source/aws_iam_server_certificate: Fix restriction on length of `name_prefix` [GH-1217]
 
