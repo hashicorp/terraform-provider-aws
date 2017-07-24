@@ -29,7 +29,6 @@ func TestAccAWSIoTCertificate_basic(t *testing.T) {
 	})
 }
 
-
 func testAccCheckAWSIoTCertificateDestroy_basic(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).iotconn
 
@@ -63,7 +62,6 @@ func testAccCheckAWSIoTCertificateDestroy_basic(s *terraform.State) error {
 
 	return nil
 }
-
 
 var testAccAWSIoTCertificate_basic = `
 resource "aws_iot_certificate" "foo_cert" {
