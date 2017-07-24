@@ -22,6 +22,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * resource/aws_ami: Retry on `InvalidAMIID.NotFound` [GH-1035]
+* resource/aws_iam_server_certificate: Fix restriction on length of `name_prefix` [GH-1217]
 * resource/aws_autoscaling_group: Fix handling of empty `vpc_zone_identifier` (EC2 classic & default VPC) [GH-1191]
 * resource/aws_ecs_service: Fixes normalization issues in placement_strategy [GH-1025]
 * resource/aws_eip: Retry reading EIPs on creation [GH-1053]
@@ -43,6 +44,7 @@ BUG FIXES:
 * resource/aws_autoscaling_group: Suppress diffs when an empty set is specified for `availability_zones` [GH-1190]
 * resource/aws_vpc: Ignore ClassicLink DNS support in unsupported regions [GH-1176]
 * data-source/aws_db_instance: Fix the output of subnet_group_name [GH-1141]
+* data-source/aws_iam_server_certificate: Fix restriction on length of `name_prefix` [GH-1217]
 
 ## 0.1.2 (June 30, 2017)
 
