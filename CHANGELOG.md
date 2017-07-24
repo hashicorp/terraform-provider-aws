@@ -24,6 +24,7 @@ BUG FIXES:
 * resource/aws_ami: Retry on `InvalidAMIID.NotFound` [GH-1035]
 * resource/aws_iam_server_certificate: Fix restriction on length of `name_prefix` [GH-1217]
 * resource/aws_autoscaling_group: Fix handling of empty `vpc_zone_identifier` (EC2 classic & default VPC) [GH-1191]
+* resource/aws_ecr_repository_policy: Add retry logic to work around IAM eventual consistency [GH-1165]
 * resource/aws_ecs_service: Fixes normalization issues in placement_strategy [GH-1025]
 * resource/aws_eip: Retry reading EIPs on creation [GH-1053]
 * resource/aws_elastic_beanstalk_environment: Avoid spurious diffs of JSON-based `setting`s [GH-901]
