@@ -316,7 +316,7 @@ func TestAccAWSAutoScalingGroup_VpcUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "availability_zones.2487133097", "us-west-2a"),
 					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "vpc_zone_identifier.#", "1"),
+						"aws_autoscaling_group.bar", "vpc_zone_identifier.#", "0"),
 				),
 			},
 
