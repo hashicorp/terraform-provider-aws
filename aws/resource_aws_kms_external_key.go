@@ -202,7 +202,7 @@ func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
-	if d.HasChange("is_enabled") && d.Get("is_enabled").(bool) && d.Get("key_state") != "PendingImport"  {
+	if d.HasChange("is_enabled") && d.Get("is_enabled").(bool) && d.Get("key_state") != "PendingImport" {
 		// Enable before any attributes will be modified
 		if err := updateKmsExternalKeyStatus(conn, d.Id(), d.Get("is_enabled").(bool)); err != nil {
 			return err
@@ -220,7 +220,7 @@ func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if d.HasChange("is_enabled") && !d.Get("is_enabled").(bool) && d.Get("key_state") != "PendingImport"  {
+	if d.HasChange("is_enabled") && !d.Get("is_enabled").(bool) && d.Get("key_state") != "PendingImport" {
 		// Only disable when all attributes are modified
 		// because we cannot modify disabled keys
 		if err := updateKmsExternalKeyStatus(conn, d.Id(), d.Get("is_enabled").(bool)); err != nil {

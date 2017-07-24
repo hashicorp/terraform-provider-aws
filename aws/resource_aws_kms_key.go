@@ -179,7 +179,6 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("policy", policy)
 
-
 	krs, err := conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
 		KeyId: metadata.KeyId,
 	})
@@ -187,7 +186,6 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	d.Set("enable_key_rotation", krs.KeyRotationEnabled)
-
 
 	tagList, err := conn.ListResourceTags(&kms.ListResourceTagsInput{
 		KeyId: metadata.KeyId,
