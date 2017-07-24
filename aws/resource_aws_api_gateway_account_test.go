@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -13,8 +14,12 @@ import (
 func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 	var conf apigateway.Account
 
-	expectedRoleArn_first := regexp.MustCompile("[0-9]+")
-	expectedRoleArn_second := regexp.MustCompile("[0-9]+")
+	rInt := acctest.RandInt()
+	firstName := fmt.Sprintf("tf_acc_api_gateway_cloudwatch_%d", rInt)
+	secondName := fmt.Sprintf("tf_acc_api_gateway_cloudwatch_modified_%d", rInt)
+
+	expectedRoleArn_first := regexp.MustCompile(":role/" + firstName + "$")
+	expectedRoleArn_second := regexp.MustCompile(":role/" + secondName + "$")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,7 +27,7 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayAccountDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSAPIGatewayAccountConfig_updated,
+				Config: testAccAWSAPIGatewayAccountConfig_updated(firstName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAccountExists("aws_api_gateway_account.test", &conf),
 					testAccCheckAWSAPIGatewayAccountCloudwatchRoleArn(&conf, expectedRoleArn_first),
@@ -30,7 +35,7 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccAWSAPIGatewayAccountConfig_updated2,
+				Config: testAccAWSAPIGatewayAccountConfig_updated2(secondName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAccountExists("aws_api_gateway_account.test", &conf),
 					testAccCheckAWSAPIGatewayAccountCloudwatchRoleArn(&conf, expectedRoleArn_second),
@@ -105,13 +110,14 @@ resource "aws_api_gateway_account" "test" {
 }
 `
 
-const testAccAWSAPIGatewayAccountConfig_updated = `
+func testAccAWSAPIGatewayAccountConfig_updated(randName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_account" "test" {
   cloudwatch_role_arn = "${aws_iam_role.cloudwatch.arn}"
 }
 
 resource "aws_iam_role" "cloudwatch" {
-    name = "api_gateway_cloudwatch_global"
+    name = "%s"
     assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -153,14 +159,17 @@ resource "aws_iam_role_policy" "cloudwatch" {
 }
 EOF
 }
-`
-const testAccAWSAPIGatewayAccountConfig_updated2 = `
+`, randName)
+}
+
+func testAccAWSAPIGatewayAccountConfig_updated2(randName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_account" "test" {
   cloudwatch_role_arn = "${aws_iam_role.second.arn}"
 }
 
 resource "aws_iam_role" "second" {
-    name = "api_gateway_cloudwatch_global_modified"
+    name = "%s"
     assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -202,4 +211,5 @@ resource "aws_iam_role_policy" "cloudwatch" {
 }
 EOF
 }
-`
+`, randName)
+}
