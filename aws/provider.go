@@ -359,6 +359,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_kinesis_stream":                           resourceAwsKinesisStream(),
 			"aws_kms_alias":                                resourceAwsKmsAlias(),
 			"aws_kms_key":                                  resourceAwsKmsKey(),
+			"aws_kms_external_key":                         resourceAwsKmsExternalKey(),
 			"aws_lambda_function":                          resourceAwsLambdaFunction(),
 			"aws_lambda_event_source_mapping":              resourceAwsLambdaEventSourceMapping(),
 			"aws_lambda_alias":                             resourceAwsLambdaAlias(),
