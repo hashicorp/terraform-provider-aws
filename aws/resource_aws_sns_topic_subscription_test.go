@@ -436,7 +436,7 @@ EOF
 resource "aws_api_gateway_authorizer" "test" {
   name                             = "tf-acc-test-api-gw-authorizer-%d"
   rest_api_id                      = "${aws_api_gateway_rest_api.test.id}"
-  authorizer_uri                   = "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/${aws_lambda_function.authorizer.arn}/invocations"
+  authorizer_uri                   = "${aws_lambda_function.authorizer.invoke_arn}"
   authorizer_result_ttl_in_seconds = "0"
   authorizer_credentials           = "${aws_iam_role.invocation_role.arn}"
 }
