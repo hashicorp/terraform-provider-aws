@@ -151,18 +151,29 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 		}
 
 		if len(parameters) > 0 {
-			modifyOpts := elasticache.ModifyCacheParameterGroupInput{
-				CacheParameterGroupName: aws.String(d.Get("name").(string)),
-				ParameterNameValues:     parameters,
-			}
+			// We can only modify 20 parameters at a time, so walk them until
+			// we've got them all.
+			maxParams := 20
+			for parameters != nil {
+				paramsToModify := make([]*elasticache.ParameterNameValue, 0)
+				if len(parameters) <= maxParams {
+					paramsToModify, parameters = parameters[:], nil
+				} else {
+					paramsToModify, parameters = parameters[:maxParams], parameters[maxParams:]
+				}
+				modifyOpts := elasticache.ModifyCacheParameterGroupInput{
+					CacheParameterGroupName: aws.String(d.Get("name").(string)),
+					ParameterNameValues:     paramsToModify,
+				}
 
-			log.Printf("[DEBUG] Modify Cache Parameter Group: %#v", modifyOpts)
-			_, err = conn.ModifyCacheParameterGroup(&modifyOpts)
-			if err != nil {
-				return fmt.Errorf("Error modifying Cache Parameter Group: %s", err)
+				log.Printf("[DEBUG] Modify Cache Parameter Group: %#v", modifyOpts)
+				_, err = conn.ModifyCacheParameterGroup(&modifyOpts)
+				if err != nil {
+					return fmt.Errorf("Error modifying Cache Parameter Group: %s", err)
+				}
 			}
+			d.SetPartial("parameter")
 		}
-		d.SetPartial("parameter")
 	}
 
 	d.Partial(false)
