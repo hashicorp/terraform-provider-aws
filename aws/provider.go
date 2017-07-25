@@ -683,18 +683,7 @@ func assumeRoleSchema() *schema.Schema {
 				},
 			},
 		},
-		Set: assumeRoleToHash,
 	}
-}
-
-func assumeRoleToHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["role_arn"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["session_name"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["external_id"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["policy"].(string)))
-	return hashcode.String(buf.String())
 }
 
 func endpointsSchema() *schema.Schema {
