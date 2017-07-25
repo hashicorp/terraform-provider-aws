@@ -969,6 +969,10 @@ func validateAppautoscalingScalableDimension(v interface{}, k string) (ws []stri
 		"ecs:service:DesiredCount":                     true,
 		"ec2:spot-fleet-request:TargetCapacity":        true,
 		"elasticmapreduce:instancegroup:InstanceCount": true,
+		"dynamodb:table:ReadCapacityUnits":             true,
+		"dynamodb:table:WriteCapacityUnits":            true,
+		"dynamodb:index:ReadCapacityUnits":             true,
+		"dynamodb:index:WriteCapacityUnits":            true,
 	}
 
 	if !dimensions[value] {
@@ -982,7 +986,6 @@ func validateAppautoscalingServiceNamespace(v interface{}, k string) (ws []strin
 	namespaces := map[string]bool{
 		"ecs":              true,
 		"ec2":              true,
-		"appstream":        true,
 		"dynamodb":         true,
 		"elasticmapreduce": true,
 	}

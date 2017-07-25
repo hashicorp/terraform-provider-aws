@@ -400,16 +400,13 @@ resource "aws_appautoscaling_policy" "dynamo_test" {
   }
   
   customized_metric_specification = {
-    dimensions = []
     metric_name = "foo"
     namespace = "dynamodb"
     statistic = "Sum"
-    unit = 1
   }
 
   predefined_metric_specification = {
-    PredefinedMetricType = "DynamoDBWriteCapacityUtilization"
-    ResourceLabel = "..."
+    predefined_metric_type = "DynamoDBWriteCapacityUtilization"
   }
   
   scale_in_cooldown = 10
