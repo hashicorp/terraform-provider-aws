@@ -1,56 +1,56 @@
-## 0.1.3 (Unreleased)
+## 0.1.3 (July 25, 2017)
 
 FEATURES:
 
-* **New Data Source:** `aws_iam_instance_profile` [GH-1024]
-* **New Data Source:** `aws_alb_target_group` [GH-1037]
-* **New Data Source:** `aws_iam_group` [GH-1140]
-* **New Resource:** `aws_api_gateway_request_validator` [GH-1064]
-* **New Resource:** `aws_api_gateway_gateway_response` [GH-1168]
-* **New Resource:** `aws_iot_policy` [GH-986]
-* **New Resource:** `aws_iot_certificate` [GH-1225]
+* **New Data Source:** `aws_iam_instance_profile` ([#1024](https://github.com/terraform-providers/terraform-provider-aws/issues/1024))
+* **New Data Source:** `aws_alb_target_group` ([#1037](https://github.com/terraform-providers/terraform-provider-aws/issues/1037))
+* **New Data Source:** `aws_iam_group` ([#1140](https://github.com/terraform-providers/terraform-provider-aws/issues/1140))
+* **New Resource:** `aws_api_gateway_request_validator` ([#1064](https://github.com/terraform-providers/terraform-provider-aws/issues/1064))
+* **New Resource:** `aws_api_gateway_gateway_response` ([#1168](https://github.com/terraform-providers/terraform-provider-aws/issues/1168))
+* **New Resource:** `aws_iot_policy` ([#986](https://github.com/terraform-providers/terraform-provider-aws/issues/986))
+* **New Resource:** `aws_iot_certificate` ([#1225](https://github.com/terraform-providers/terraform-provider-aws/issues/1225))
 
 IMPROVEMENTS:
 
-* resource/aws_sqs_queue: Add support for Server-Side Encryption [GH-962]
-* resource/aws_vpc: Add support for classiclink_dns_support [GH-1079]
-* resource/aws_lambda_function: Add support for lambda_function vpc_config update [GH-1080]
-* resource/aws_lambda_function: Add support for lambda_function dead_letter_config update [GH-1080]
-* resource/aws_route53_health_check: add support for health_check regions [GH-1116]
-* resource/aws_spot_instance_request: add support for request launch group [GH-1097]
-* resource/aws_rds_cluster_instance: Export the RDI Resource ID for the instance [GH-1142]
-* resource/aws_sns_topic_subscription: Support password-protected HTTPS endpoints [GH-861]
+* resource/aws_sqs_queue: Add support for Server-Side Encryption ([#962](https://github.com/terraform-providers/terraform-provider-aws/issues/962))
+* resource/aws_vpc: Add support for classiclink_dns_support ([#1079](https://github.com/terraform-providers/terraform-provider-aws/issues/1079))
+* resource/aws_lambda_function: Add support for lambda_function vpc_config update ([#1080](https://github.com/terraform-providers/terraform-provider-aws/issues/1080))
+* resource/aws_lambda_function: Add support for lambda_function dead_letter_config update ([#1080](https://github.com/terraform-providers/terraform-provider-aws/issues/1080))
+* resource/aws_route53_health_check: add support for health_check regions ([#1116](https://github.com/terraform-providers/terraform-provider-aws/issues/1116))
+* resource/aws_spot_instance_request: add support for request launch group ([#1097](https://github.com/terraform-providers/terraform-provider-aws/issues/1097))
+* resource/aws_rds_cluster_instance: Export the RDI Resource ID for the instance ([#1142](https://github.com/terraform-providers/terraform-provider-aws/issues/1142))
+* resource/aws_sns_topic_subscription: Support password-protected HTTPS endpoints ([#861](https://github.com/terraform-providers/terraform-provider-aws/issues/861))
 
 BUG FIXES:
 
-* provider: Remove assumeRoleHash [GH-1227]
-* resource/aws_ami: Retry on `InvalidAMIID.NotFound` [GH-1035]
-* resource/aws_iam_server_certificate: Fix restriction on length of `name_prefix` [GH-1217]
-* resource/aws_autoscaling_group: Fix handling of empty `vpc_zone_identifier` (EC2 classic & default VPC) [GH-1191]
-* resource/aws_ecr_repository_policy: Add retry logic to work around IAM eventual consistency [GH-1165]
-* resource/aws_ecs_service: Fixes normalization issues in placement_strategy [GH-1025]
-* resource/aws_eip: Retry reading EIPs on creation [GH-1053]
-* resource/aws_elastic_beanstalk_environment: Avoid spurious diffs of JSON-based `setting`s [GH-901]
-* resource/aws_opsworks_permission: Fix 'set permissions' failing to set ssh access [GH-1038]
-* resource/aws_s3_bucket_notification: Fix missing `bucket` field after import [GH-978]
-* resource/aws_sfn_state_machine: Handle another NotFound exception type [GH-1062]
-* resource/aws_ssm_parameter: ForceNew on ssm_parameter rename [GH-1022]
-* resource/aws_instance: Update SourceDestCheck modification on new resources [GH-1065]
-* resource/aws_spot_instance_request: fixed and issue with network interfaces configuration [GH-1070]
-* resource/aws_rds_cluster: Modify RDS Cluster after restoring from snapshot, if required [GH-926]
-* resource/aws_kms_alias: Retry lookups after creation [GH-1040]
-* resource/aws_internet_gateway: Retry deletion properly on `DependencyViolation` [GH-1021]
-* resource/aws_elb: Cleanup ENIs after deleting ELB [GH-1036]
-* resource/aws_kms_key: Retry lookups after creation [GH-1039]
-* resource/aws_dms_replication_instance: Add modifying as a pending creation state [GH-1114]
-* resource/aws_redshift_cluster: Trigger ForceNew aws_redshift_cluster on encrypted change [GH-1120]
-* resource/aws_default_network_acl: Add support for ipv6_cidr_block [GH-1113]
-* resource/aws_autoscaling_group: Suppress diffs when an empty set is specified for `availability_zones` [GH-1190]
-* resource/aws_vpc: Ignore ClassicLink DNS support in unsupported regions [GH-1176]
-* resource/elastic_beanstalk_configuration_template: Handle missing platform [GH-1222]
-* r/elasticache_parameter_group: support more than 20 parameters [GH-1221]
-* data-source/aws_db_instance: Fix the output of subnet_group_name [GH-1141]
-* data-source/aws_iam_server_certificate: Fix restriction on length of `name_prefix` [GH-1217]
+* provider: Remove assumeRoleHash ([#1227](https://github.com/terraform-providers/terraform-provider-aws/issues/1227))
+* resource/aws_ami: Retry on `InvalidAMIID.NotFound` ([#1035](https://github.com/terraform-providers/terraform-provider-aws/issues/1035))
+* resource/aws_iam_server_certificate: Fix restriction on length of `name_prefix` ([#1217](https://github.com/terraform-providers/terraform-provider-aws/issues/1217))
+* resource/aws_autoscaling_group: Fix handling of empty `vpc_zone_identifier` (EC2 classic & default VPC) ([#1191](https://github.com/terraform-providers/terraform-provider-aws/issues/1191))
+* resource/aws_ecr_repository_policy: Add retry logic to work around IAM eventual consistency ([#1165](https://github.com/terraform-providers/terraform-provider-aws/issues/1165))
+* resource/aws_ecs_service: Fixes normalization issues in placement_strategy ([#1025](https://github.com/terraform-providers/terraform-provider-aws/issues/1025))
+* resource/aws_eip: Retry reading EIPs on creation ([#1053](https://github.com/terraform-providers/terraform-provider-aws/issues/1053))
+* resource/aws_elastic_beanstalk_environment: Avoid spurious diffs of JSON-based `setting`s ([#901](https://github.com/terraform-providers/terraform-provider-aws/issues/901))
+* resource/aws_opsworks_permission: Fix 'set permissions' failing to set ssh access ([#1038](https://github.com/terraform-providers/terraform-provider-aws/issues/1038))
+* resource/aws_s3_bucket_notification: Fix missing `bucket` field after import ([#978](https://github.com/terraform-providers/terraform-provider-aws/issues/978))
+* resource/aws_sfn_state_machine: Handle another NotFound exception type ([#1062](https://github.com/terraform-providers/terraform-provider-aws/issues/1062))
+* resource/aws_ssm_parameter: ForceNew on ssm_parameter rename ([#1022](https://github.com/terraform-providers/terraform-provider-aws/issues/1022))
+* resource/aws_instance: Update SourceDestCheck modification on new resources ([#1065](https://github.com/terraform-providers/terraform-provider-aws/issues/1065))
+* resource/aws_spot_instance_request: fixed and issue with network interfaces configuration ([#1070](https://github.com/terraform-providers/terraform-provider-aws/issues/1070))
+* resource/aws_rds_cluster: Modify RDS Cluster after restoring from snapshot, if required ([#926](https://github.com/terraform-providers/terraform-provider-aws/issues/926))
+* resource/aws_kms_alias: Retry lookups after creation ([#1040](https://github.com/terraform-providers/terraform-provider-aws/issues/1040))
+* resource/aws_internet_gateway: Retry deletion properly on `DependencyViolation` ([#1021](https://github.com/terraform-providers/terraform-provider-aws/issues/1021))
+* resource/aws_elb: Cleanup ENIs after deleting ELB ([#1036](https://github.com/terraform-providers/terraform-provider-aws/issues/1036))
+* resource/aws_kms_key: Retry lookups after creation ([#1039](https://github.com/terraform-providers/terraform-provider-aws/issues/1039))
+* resource/aws_dms_replication_instance: Add modifying as a pending creation state ([#1114](https://github.com/terraform-providers/terraform-provider-aws/issues/1114))
+* resource/aws_redshift_cluster: Trigger ForceNew aws_redshift_cluster on encrypted change ([#1120](https://github.com/terraform-providers/terraform-provider-aws/issues/1120))
+* resource/aws_default_network_acl: Add support for ipv6_cidr_block ([#1113](https://github.com/terraform-providers/terraform-provider-aws/issues/1113))
+* resource/aws_autoscaling_group: Suppress diffs when an empty set is specified for `availability_zones` ([#1190](https://github.com/terraform-providers/terraform-provider-aws/issues/1190))
+* resource/aws_vpc: Ignore ClassicLink DNS support in unsupported regions ([#1176](https://github.com/terraform-providers/terraform-provider-aws/issues/1176))
+* resource/elastic_beanstalk_configuration_template: Handle missing platform ([#1222](https://github.com/terraform-providers/terraform-provider-aws/issues/1222))
+* r/elasticache_parameter_group: support more than 20 parameters ([#1221](https://github.com/terraform-providers/terraform-provider-aws/issues/1221))
+* data-source/aws_db_instance: Fix the output of subnet_group_name ([#1141](https://github.com/terraform-providers/terraform-provider-aws/issues/1141))
+* data-source/aws_iam_server_certificate: Fix restriction on length of `name_prefix` ([#1217](https://github.com/terraform-providers/terraform-provider-aws/issues/1217))
 
 ## 0.1.2 (June 30, 2017)
 
