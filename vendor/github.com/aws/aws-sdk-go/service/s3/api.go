@@ -6103,6 +6103,13 @@ func (s *AbortMultipartUploadInput) SetBucket(v string) *AbortMultipartUploadInp
 	return s
 }
 
+func (s *AbortMultipartUploadInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetKey sets the Key field's value.
 func (s *AbortMultipartUploadInput) SetKey(v string) *AbortMultipartUploadInput {
 	s.Key = &v
@@ -6510,6 +6517,13 @@ func (s *AnalyticsS3BucketDestination) Validate() error {
 func (s *AnalyticsS3BucketDestination) SetBucket(v string) *AnalyticsS3BucketDestination {
 	s.Bucket = &v
 	return s
+}
+
+func (s *AnalyticsS3BucketDestination) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetBucketAccountId sets the BucketAccountId field's value.
@@ -6920,6 +6934,13 @@ func (s *CompleteMultipartUploadInput) SetBucket(v string) *CompleteMultipartUpl
 	return s
 }
 
+func (s *CompleteMultipartUploadInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetKey sets the Key field's value.
 func (s *CompleteMultipartUploadInput) SetKey(v string) *CompleteMultipartUploadInput {
 	s.Key = &v
@@ -6991,6 +7012,13 @@ func (s CompleteMultipartUploadOutput) GoString() string {
 func (s *CompleteMultipartUploadOutput) SetBucket(v string) *CompleteMultipartUploadOutput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *CompleteMultipartUploadOutput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetETag sets the ETag field's value.
@@ -7318,6 +7346,13 @@ func (s *CopyObjectInput) SetBucket(v string) *CopyObjectInput {
 	return s
 }
 
+func (s *CopyObjectInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetCacheControl sets the CacheControl field's value.
 func (s *CopyObjectInput) SetCacheControl(v string) *CopyObjectInput {
 	s.CacheControl = &v
@@ -7390,6 +7425,13 @@ func (s *CopyObjectInput) SetCopySourceSSECustomerKey(v string) *CopyObjectInput
 	return s
 }
 
+func (s *CopyObjectInput) getCopySourceSSECustomerKey() (v string) {
+	if s.CopySourceSSECustomerKey == nil {
+		return v
+	}
+	return *s.CopySourceSSECustomerKey
+}
+
 // SetCopySourceSSECustomerKeyMD5 sets the CopySourceSSECustomerKeyMD5 field's value.
 func (s *CopyObjectInput) SetCopySourceSSECustomerKeyMD5(v string) *CopyObjectInput {
 	s.CopySourceSSECustomerKeyMD5 = &v
@@ -7460,6 +7502,13 @@ func (s *CopyObjectInput) SetSSECustomerAlgorithm(v string) *CopyObjectInput {
 func (s *CopyObjectInput) SetSSECustomerKey(v string) *CopyObjectInput {
 	s.SSECustomerKey = &v
 	return s
+}
+
+func (s *CopyObjectInput) getSSECustomerKey() (v string) {
+	if s.SSECustomerKey == nil {
+		return v
+	}
+	return *s.SSECustomerKey
 }
 
 // SetSSECustomerKeyMD5 sets the SSECustomerKeyMD5 field's value.
@@ -7758,6 +7807,13 @@ func (s *CreateBucketInput) SetBucket(v string) *CreateBucketInput {
 	return s
 }
 
+func (s *CreateBucketInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetCreateBucketConfiguration sets the CreateBucketConfiguration field's value.
 func (s *CreateBucketInput) SetCreateBucketConfiguration(v *CreateBucketConfiguration) *CreateBucketInput {
 	s.CreateBucketConfiguration = v
@@ -7949,6 +8005,13 @@ func (s *CreateMultipartUploadInput) SetBucket(v string) *CreateMultipartUploadI
 	return s
 }
 
+func (s *CreateMultipartUploadInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetCacheControl sets the CacheControl field's value.
 func (s *CreateMultipartUploadInput) SetCacheControl(v string) *CreateMultipartUploadInput {
 	s.CacheControl = &v
@@ -8037,6 +8100,13 @@ func (s *CreateMultipartUploadInput) SetSSECustomerAlgorithm(v string) *CreateMu
 func (s *CreateMultipartUploadInput) SetSSECustomerKey(v string) *CreateMultipartUploadInput {
 	s.SSECustomerKey = &v
 	return s
+}
+
+func (s *CreateMultipartUploadInput) getSSECustomerKey() (v string) {
+	if s.SSECustomerKey == nil {
+		return v
+	}
+	return *s.SSECustomerKey
 }
 
 // SetSSECustomerKeyMD5 sets the SSECustomerKeyMD5 field's value.
@@ -8144,6 +8214,13 @@ func (s *CreateMultipartUploadOutput) SetAbortRuleId(v string) *CreateMultipartU
 func (s *CreateMultipartUploadOutput) SetBucket(v string) *CreateMultipartUploadOutput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *CreateMultipartUploadOutput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetKey sets the Key field's value.
@@ -8292,6 +8369,13 @@ func (s *DeleteBucketAnalyticsConfigurationInput) SetBucket(v string) *DeleteBuc
 	return s
 }
 
+func (s *DeleteBucketAnalyticsConfigurationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetId sets the Id field's value.
 func (s *DeleteBucketAnalyticsConfigurationInput) SetId(v string) *DeleteBucketAnalyticsConfigurationInput {
 	s.Id = &v
@@ -8350,6 +8434,13 @@ func (s *DeleteBucketCorsInput) SetBucket(v string) *DeleteBucketCorsInput {
 	return s
 }
 
+func (s *DeleteBucketCorsInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/DeleteBucketCorsOutput
 type DeleteBucketCorsOutput struct {
 	_ struct{} `type:"structure"`
@@ -8402,6 +8493,13 @@ func (s *DeleteBucketInput) SetBucket(v string) *DeleteBucketInput {
 	return s
 }
 
+func (s *DeleteBucketInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/DeleteBucketInventoryConfigurationRequest
 type DeleteBucketInventoryConfigurationInput struct {
 	_ struct{} `type:"structure"`
@@ -8447,6 +8545,13 @@ func (s *DeleteBucketInventoryConfigurationInput) Validate() error {
 func (s *DeleteBucketInventoryConfigurationInput) SetBucket(v string) *DeleteBucketInventoryConfigurationInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *DeleteBucketInventoryConfigurationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetId sets the Id field's value.
@@ -8505,6 +8610,13 @@ func (s *DeleteBucketLifecycleInput) Validate() error {
 func (s *DeleteBucketLifecycleInput) SetBucket(v string) *DeleteBucketLifecycleInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *DeleteBucketLifecycleInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/DeleteBucketLifecycleOutput
@@ -8567,6 +8679,13 @@ func (s *DeleteBucketMetricsConfigurationInput) Validate() error {
 func (s *DeleteBucketMetricsConfigurationInput) SetBucket(v string) *DeleteBucketMetricsConfigurationInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *DeleteBucketMetricsConfigurationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetId sets the Id field's value.
@@ -8642,6 +8761,13 @@ func (s *DeleteBucketPolicyInput) SetBucket(v string) *DeleteBucketPolicyInput {
 	return s
 }
 
+func (s *DeleteBucketPolicyInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/DeleteBucketPolicyOutput
 type DeleteBucketPolicyOutput struct {
 	_ struct{} `type:"structure"`
@@ -8692,6 +8818,13 @@ func (s *DeleteBucketReplicationInput) Validate() error {
 func (s *DeleteBucketReplicationInput) SetBucket(v string) *DeleteBucketReplicationInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *DeleteBucketReplicationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/DeleteBucketReplicationOutput
@@ -8746,6 +8879,13 @@ func (s *DeleteBucketTaggingInput) SetBucket(v string) *DeleteBucketTaggingInput
 	return s
 }
 
+func (s *DeleteBucketTaggingInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/DeleteBucketTaggingOutput
 type DeleteBucketTaggingOutput struct {
 	_ struct{} `type:"structure"`
@@ -8796,6 +8936,13 @@ func (s *DeleteBucketWebsiteInput) Validate() error {
 func (s *DeleteBucketWebsiteInput) SetBucket(v string) *DeleteBucketWebsiteInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *DeleteBucketWebsiteInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/DeleteBucketWebsiteOutput
@@ -8932,6 +9079,13 @@ func (s *DeleteObjectInput) SetBucket(v string) *DeleteObjectInput {
 	return s
 }
 
+func (s *DeleteObjectInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetKey sets the Key field's value.
 func (s *DeleteObjectInput) SetKey(v string) *DeleteObjectInput {
 	s.Key = &v
@@ -9050,6 +9204,13 @@ func (s *DeleteObjectTaggingInput) SetBucket(v string) *DeleteObjectTaggingInput
 	return s
 }
 
+func (s *DeleteObjectTaggingInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetKey sets the Key field's value.
 func (s *DeleteObjectTaggingInput) SetKey(v string) *DeleteObjectTaggingInput {
 	s.Key = &v
@@ -9142,6 +9303,13 @@ func (s *DeleteObjectsInput) Validate() error {
 func (s *DeleteObjectsInput) SetBucket(v string) *DeleteObjectsInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *DeleteObjectsInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetDelete sets the Delete field's value.
@@ -9291,6 +9459,13 @@ func (s *Destination) Validate() error {
 func (s *Destination) SetBucket(v string) *Destination {
 	s.Bucket = &v
 	return s
+}
+
+func (s *Destination) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetStorageClass sets the StorageClass field's value.
@@ -9463,6 +9638,13 @@ func (s *GetBucketAccelerateConfigurationInput) SetBucket(v string) *GetBucketAc
 	return s
 }
 
+func (s *GetBucketAccelerateConfigurationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/GetBucketAccelerateConfigurationOutput
 type GetBucketAccelerateConfigurationOutput struct {
 	_ struct{} `type:"structure"`
@@ -9522,6 +9704,13 @@ func (s *GetBucketAclInput) Validate() error {
 func (s *GetBucketAclInput) SetBucket(v string) *GetBucketAclInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *GetBucketAclInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/GetBucketAclOutput
@@ -9603,6 +9792,13 @@ func (s *GetBucketAnalyticsConfigurationInput) SetBucket(v string) *GetBucketAna
 	return s
 }
 
+func (s *GetBucketAnalyticsConfigurationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetId sets the Id field's value.
 func (s *GetBucketAnalyticsConfigurationInput) SetId(v string) *GetBucketAnalyticsConfigurationInput {
 	s.Id = &v
@@ -9668,6 +9864,13 @@ func (s *GetBucketCorsInput) Validate() error {
 func (s *GetBucketCorsInput) SetBucket(v string) *GetBucketCorsInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *GetBucketCorsInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/GetBucketCorsOutput
@@ -9740,6 +9943,13 @@ func (s *GetBucketInventoryConfigurationInput) SetBucket(v string) *GetBucketInv
 	return s
 }
 
+func (s *GetBucketInventoryConfigurationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetId sets the Id field's value.
 func (s *GetBucketInventoryConfigurationInput) SetId(v string) *GetBucketInventoryConfigurationInput {
 	s.Id = &v
@@ -9807,6 +10017,13 @@ func (s *GetBucketLifecycleConfigurationInput) SetBucket(v string) *GetBucketLif
 	return s
 }
 
+func (s *GetBucketLifecycleConfigurationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/GetBucketLifecycleConfigurationOutput
 type GetBucketLifecycleConfigurationOutput struct {
 	_ struct{} `type:"structure"`
@@ -9865,6 +10082,13 @@ func (s *GetBucketLifecycleInput) Validate() error {
 func (s *GetBucketLifecycleInput) SetBucket(v string) *GetBucketLifecycleInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *GetBucketLifecycleInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/GetBucketLifecycleOutput
@@ -9927,6 +10151,13 @@ func (s *GetBucketLocationInput) SetBucket(v string) *GetBucketLocationInput {
 	return s
 }
 
+func (s *GetBucketLocationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/GetBucketLocationOutput
 type GetBucketLocationOutput struct {
 	_ struct{} `type:"structure"`
@@ -9985,6 +10216,13 @@ func (s *GetBucketLoggingInput) Validate() error {
 func (s *GetBucketLoggingInput) SetBucket(v string) *GetBucketLoggingInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *GetBucketLoggingInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/GetBucketLoggingOutput
@@ -10057,6 +10295,13 @@ func (s *GetBucketMetricsConfigurationInput) SetBucket(v string) *GetBucketMetri
 	return s
 }
 
+func (s *GetBucketMetricsConfigurationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetId sets the Id field's value.
 func (s *GetBucketMetricsConfigurationInput) SetId(v string) *GetBucketMetricsConfigurationInput {
 	s.Id = &v
@@ -10126,6 +10371,13 @@ func (s *GetBucketNotificationConfigurationRequest) SetBucket(v string) *GetBuck
 	return s
 }
 
+func (s *GetBucketNotificationConfigurationRequest) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/GetBucketPolicyRequest
 type GetBucketPolicyInput struct {
 	_ struct{} `type:"structure"`
@@ -10161,6 +10413,13 @@ func (s *GetBucketPolicyInput) Validate() error {
 func (s *GetBucketPolicyInput) SetBucket(v string) *GetBucketPolicyInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *GetBucketPolicyInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/GetBucketPolicyOutput
@@ -10222,6 +10481,13 @@ func (s *GetBucketReplicationInput) Validate() error {
 func (s *GetBucketReplicationInput) SetBucket(v string) *GetBucketReplicationInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *GetBucketReplicationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/GetBucketReplicationOutput
@@ -10286,6 +10552,13 @@ func (s *GetBucketRequestPaymentInput) SetBucket(v string) *GetBucketRequestPaym
 	return s
 }
 
+func (s *GetBucketRequestPaymentInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/GetBucketRequestPaymentOutput
 type GetBucketRequestPaymentOutput struct {
 	_ struct{} `type:"structure"`
@@ -10347,6 +10620,13 @@ func (s *GetBucketTaggingInput) SetBucket(v string) *GetBucketTaggingInput {
 	return s
 }
 
+func (s *GetBucketTaggingInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/GetBucketTaggingOutput
 type GetBucketTaggingOutput struct {
 	_ struct{} `type:"structure"`
@@ -10406,6 +10686,13 @@ func (s *GetBucketVersioningInput) Validate() error {
 func (s *GetBucketVersioningInput) SetBucket(v string) *GetBucketVersioningInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *GetBucketVersioningInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/GetBucketVersioningOutput
@@ -10478,6 +10765,13 @@ func (s *GetBucketWebsiteInput) Validate() error {
 func (s *GetBucketWebsiteInput) SetBucket(v string) *GetBucketWebsiteInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *GetBucketWebsiteInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/GetBucketWebsiteOutput
@@ -10580,6 +10874,13 @@ func (s *GetObjectAclInput) Validate() error {
 func (s *GetObjectAclInput) SetBucket(v string) *GetObjectAclInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *GetObjectAclInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetKey sets the Key field's value.
@@ -10755,6 +11056,13 @@ func (s *GetObjectInput) SetBucket(v string) *GetObjectInput {
 	return s
 }
 
+func (s *GetObjectInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetIfMatch sets the IfMatch field's value.
 func (s *GetObjectInput) SetIfMatch(v string) *GetObjectInput {
 	s.IfMatch = &v
@@ -10849,6 +11157,13 @@ func (s *GetObjectInput) SetSSECustomerAlgorithm(v string) *GetObjectInput {
 func (s *GetObjectInput) SetSSECustomerKey(v string) *GetObjectInput {
 	s.SSECustomerKey = &v
 	return s
+}
+
+func (s *GetObjectInput) getSSECustomerKey() (v string) {
+	if s.SSECustomerKey == nil {
+		return v
+	}
+	return *s.SSECustomerKey
 }
 
 // SetSSECustomerKeyMD5 sets the SSECustomerKeyMD5 field's value.
@@ -11195,6 +11510,13 @@ func (s *GetObjectTaggingInput) SetBucket(v string) *GetObjectTaggingInput {
 	return s
 }
 
+func (s *GetObjectTaggingInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetKey sets the Key field's value.
 func (s *GetObjectTaggingInput) SetKey(v string) *GetObjectTaggingInput {
 	s.Key = &v
@@ -11289,6 +11611,13 @@ func (s *GetObjectTorrentInput) Validate() error {
 func (s *GetObjectTorrentInput) SetBucket(v string) *GetObjectTorrentInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *GetObjectTorrentInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetKey sets the Key field's value.
@@ -11534,6 +11863,13 @@ func (s *HeadBucketInput) SetBucket(v string) *HeadBucketInput {
 	return s
 }
 
+func (s *HeadBucketInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/HeadBucketOutput
 type HeadBucketOutput struct {
 	_ struct{} `type:"structure"`
@@ -11645,6 +11981,13 @@ func (s *HeadObjectInput) SetBucket(v string) *HeadObjectInput {
 	return s
 }
 
+func (s *HeadObjectInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetIfMatch sets the IfMatch field's value.
 func (s *HeadObjectInput) SetIfMatch(v string) *HeadObjectInput {
 	s.IfMatch = &v
@@ -11703,6 +12046,13 @@ func (s *HeadObjectInput) SetSSECustomerAlgorithm(v string) *HeadObjectInput {
 func (s *HeadObjectInput) SetSSECustomerKey(v string) *HeadObjectInput {
 	s.SSECustomerKey = &v
 	return s
+}
+
+func (s *HeadObjectInput) getSSECustomerKey() (v string) {
+	if s.SSECustomerKey == nil {
+		return v
+	}
+	return *s.SSECustomerKey
 }
 
 // SetSSECustomerKeyMD5 sets the SSECustomerKeyMD5 field's value.
@@ -12323,6 +12673,13 @@ func (s *InventoryS3BucketDestination) SetBucket(v string) *InventoryS3BucketDes
 	return s
 }
 
+func (s *InventoryS3BucketDestination) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetFormat sets the Format field's value.
 func (s *InventoryS3BucketDestination) SetFormat(v string) *InventoryS3BucketDestination {
 	s.Format = &v
@@ -12853,6 +13210,13 @@ func (s *ListBucketAnalyticsConfigurationsInput) SetBucket(v string) *ListBucket
 	return s
 }
 
+func (s *ListBucketAnalyticsConfigurationsInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetContinuationToken sets the ContinuationToken field's value.
 func (s *ListBucketAnalyticsConfigurationsInput) SetContinuationToken(v string) *ListBucketAnalyticsConfigurationsInput {
 	s.ContinuationToken = &v
@@ -12959,6 +13323,13 @@ func (s *ListBucketInventoryConfigurationsInput) SetBucket(v string) *ListBucket
 	return s
 }
 
+func (s *ListBucketInventoryConfigurationsInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetContinuationToken sets the ContinuationToken field's value.
 func (s *ListBucketInventoryConfigurationsInput) SetContinuationToken(v string) *ListBucketInventoryConfigurationsInput {
 	s.ContinuationToken = &v
@@ -13063,6 +13434,13 @@ func (s *ListBucketMetricsConfigurationsInput) Validate() error {
 func (s *ListBucketMetricsConfigurationsInput) SetBucket(v string) *ListBucketMetricsConfigurationsInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *ListBucketMetricsConfigurationsInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetContinuationToken sets the ContinuationToken field's value.
@@ -13240,6 +13618,13 @@ func (s *ListMultipartUploadsInput) SetBucket(v string) *ListMultipartUploadsInp
 	return s
 }
 
+func (s *ListMultipartUploadsInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetDelimiter sets the Delimiter field's value.
 func (s *ListMultipartUploadsInput) SetDelimiter(v string) *ListMultipartUploadsInput {
 	s.Delimiter = &v
@@ -13335,6 +13720,13 @@ func (s ListMultipartUploadsOutput) GoString() string {
 func (s *ListMultipartUploadsOutput) SetBucket(v string) *ListMultipartUploadsOutput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *ListMultipartUploadsOutput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetCommonPrefixes sets the CommonPrefixes field's value.
@@ -13462,6 +13854,13 @@ func (s *ListObjectVersionsInput) Validate() error {
 func (s *ListObjectVersionsInput) SetBucket(v string) *ListObjectVersionsInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *ListObjectVersionsInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetDelimiter sets the Delimiter field's value.
@@ -13691,6 +14090,13 @@ func (s *ListObjectsInput) SetBucket(v string) *ListObjectsInput {
 	return s
 }
 
+func (s *ListObjectsInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetDelimiter sets the Delimiter field's value.
 func (s *ListObjectsInput) SetDelimiter(v string) *ListObjectsInput {
 	s.Delimiter = &v
@@ -13901,6 +14307,13 @@ func (s *ListObjectsV2Input) Validate() error {
 func (s *ListObjectsV2Input) SetBucket(v string) *ListObjectsV2Input {
 	s.Bucket = &v
 	return s
+}
+
+func (s *ListObjectsV2Input) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetContinuationToken sets the ContinuationToken field's value.
@@ -14152,6 +14565,13 @@ func (s *ListPartsInput) SetBucket(v string) *ListPartsInput {
 	return s
 }
 
+func (s *ListPartsInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetKey sets the Key field's value.
 func (s *ListPartsInput) SetKey(v string) *ListPartsInput {
 	s.Key = &v
@@ -14257,6 +14677,13 @@ func (s *ListPartsOutput) SetAbortRuleId(v string) *ListPartsOutput {
 func (s *ListPartsOutput) SetBucket(v string) *ListPartsOutput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *ListPartsOutput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetInitiator sets the Initiator field's value.
@@ -15188,6 +15615,13 @@ func (s *PutBucketAccelerateConfigurationInput) SetBucket(v string) *PutBucketAc
 	return s
 }
 
+func (s *PutBucketAccelerateConfigurationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/PutBucketAccelerateConfigurationOutput
 type PutBucketAccelerateConfigurationOutput struct {
 	_ struct{} `type:"structure"`
@@ -15276,6 +15710,13 @@ func (s *PutBucketAclInput) SetAccessControlPolicy(v *AccessControlPolicy) *PutB
 func (s *PutBucketAclInput) SetBucket(v string) *PutBucketAclInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *PutBucketAclInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetGrantFullControl sets the GrantFullControl field's value.
@@ -15389,6 +15830,13 @@ func (s *PutBucketAnalyticsConfigurationInput) SetBucket(v string) *PutBucketAna
 	return s
 }
 
+func (s *PutBucketAnalyticsConfigurationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetId sets the Id field's value.
 func (s *PutBucketAnalyticsConfigurationInput) SetId(v string) *PutBucketAnalyticsConfigurationInput {
 	s.Id = &v
@@ -15456,6 +15904,13 @@ func (s *PutBucketCorsInput) Validate() error {
 func (s *PutBucketCorsInput) SetBucket(v string) *PutBucketCorsInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *PutBucketCorsInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetCORSConfiguration sets the CORSConfiguration field's value.
@@ -15539,6 +15994,13 @@ func (s *PutBucketInventoryConfigurationInput) SetBucket(v string) *PutBucketInv
 	return s
 }
 
+func (s *PutBucketInventoryConfigurationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetId sets the Id field's value.
 func (s *PutBucketInventoryConfigurationInput) SetId(v string) *PutBucketInventoryConfigurationInput {
 	s.Id = &v
@@ -15610,6 +16072,13 @@ func (s *PutBucketLifecycleConfigurationInput) SetBucket(v string) *PutBucketLif
 	return s
 }
 
+func (s *PutBucketLifecycleConfigurationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetLifecycleConfiguration sets the LifecycleConfiguration field's value.
 func (s *PutBucketLifecycleConfigurationInput) SetLifecycleConfiguration(v *BucketLifecycleConfiguration) *PutBucketLifecycleConfigurationInput {
 	s.LifecycleConfiguration = v
@@ -15673,6 +16142,13 @@ func (s *PutBucketLifecycleInput) Validate() error {
 func (s *PutBucketLifecycleInput) SetBucket(v string) *PutBucketLifecycleInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *PutBucketLifecycleInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetLifecycleConfiguration sets the LifecycleConfiguration field's value.
@@ -15742,6 +16218,13 @@ func (s *PutBucketLoggingInput) Validate() error {
 func (s *PutBucketLoggingInput) SetBucket(v string) *PutBucketLoggingInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *PutBucketLoggingInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetBucketLoggingStatus sets the BucketLoggingStatus field's value.
@@ -15825,6 +16308,13 @@ func (s *PutBucketMetricsConfigurationInput) SetBucket(v string) *PutBucketMetri
 	return s
 }
 
+func (s *PutBucketMetricsConfigurationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetId sets the Id field's value.
 func (s *PutBucketMetricsConfigurationInput) SetId(v string) *PutBucketMetricsConfigurationInput {
 	s.Id = &v
@@ -15903,6 +16393,13 @@ func (s *PutBucketNotificationConfigurationInput) SetBucket(v string) *PutBucket
 	return s
 }
 
+func (s *PutBucketNotificationConfigurationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetNotificationConfiguration sets the NotificationConfiguration field's value.
 func (s *PutBucketNotificationConfigurationInput) SetNotificationConfiguration(v *NotificationConfiguration) *PutBucketNotificationConfigurationInput {
 	s.NotificationConfiguration = v
@@ -15965,6 +16462,13 @@ func (s *PutBucketNotificationInput) Validate() error {
 func (s *PutBucketNotificationInput) SetBucket(v string) *PutBucketNotificationInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *PutBucketNotificationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetNotificationConfiguration sets the NotificationConfiguration field's value.
@@ -16031,6 +16535,13 @@ func (s *PutBucketPolicyInput) Validate() error {
 func (s *PutBucketPolicyInput) SetBucket(v string) *PutBucketPolicyInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *PutBucketPolicyInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetPolicy sets the Policy field's value.
@@ -16105,6 +16616,13 @@ func (s *PutBucketReplicationInput) SetBucket(v string) *PutBucketReplicationInp
 	return s
 }
 
+func (s *PutBucketReplicationInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetReplicationConfiguration sets the ReplicationConfiguration field's value.
 func (s *PutBucketReplicationInput) SetReplicationConfiguration(v *ReplicationConfiguration) *PutBucketReplicationInput {
 	s.ReplicationConfiguration = v
@@ -16172,6 +16690,13 @@ func (s *PutBucketRequestPaymentInput) Validate() error {
 func (s *PutBucketRequestPaymentInput) SetBucket(v string) *PutBucketRequestPaymentInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *PutBucketRequestPaymentInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetRequestPaymentConfiguration sets the RequestPaymentConfiguration field's value.
@@ -16243,6 +16768,13 @@ func (s *PutBucketTaggingInput) SetBucket(v string) *PutBucketTaggingInput {
 	return s
 }
 
+func (s *PutBucketTaggingInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetTagging sets the Tagging field's value.
 func (s *PutBucketTaggingInput) SetTagging(v *Tagging) *PutBucketTaggingInput {
 	s.Tagging = v
@@ -16309,6 +16841,13 @@ func (s *PutBucketVersioningInput) Validate() error {
 func (s *PutBucketVersioningInput) SetBucket(v string) *PutBucketVersioningInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *PutBucketVersioningInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetMFA sets the MFA field's value.
@@ -16384,6 +16923,13 @@ func (s *PutBucketWebsiteInput) Validate() error {
 func (s *PutBucketWebsiteInput) SetBucket(v string) *PutBucketWebsiteInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *PutBucketWebsiteInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetWebsiteConfiguration sets the WebsiteConfiguration field's value.
@@ -16498,6 +17044,13 @@ func (s *PutObjectAclInput) SetAccessControlPolicy(v *AccessControlPolicy) *PutO
 func (s *PutObjectAclInput) SetBucket(v string) *PutObjectAclInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *PutObjectAclInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetGrantFullControl sets the GrantFullControl field's value.
@@ -16722,6 +17275,13 @@ func (s *PutObjectInput) SetBucket(v string) *PutObjectInput {
 	return s
 }
 
+func (s *PutObjectInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetCacheControl sets the CacheControl field's value.
 func (s *PutObjectInput) SetCacheControl(v string) *PutObjectInput {
 	s.CacheControl = &v
@@ -16816,6 +17376,13 @@ func (s *PutObjectInput) SetSSECustomerAlgorithm(v string) *PutObjectInput {
 func (s *PutObjectInput) SetSSECustomerKey(v string) *PutObjectInput {
 	s.SSECustomerKey = &v
 	return s
+}
+
+func (s *PutObjectInput) getSSECustomerKey() (v string) {
+	if s.SSECustomerKey == nil {
+		return v
+	}
+	return *s.SSECustomerKey
 }
 
 // SetSSECustomerKeyMD5 sets the SSECustomerKeyMD5 field's value.
@@ -17006,6 +17573,13 @@ func (s *PutObjectTaggingInput) Validate() error {
 func (s *PutObjectTaggingInput) SetBucket(v string) *PutObjectTaggingInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *PutObjectTaggingInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetKey sets the Key field's value.
@@ -17537,6 +18111,13 @@ func (s *RestoreObjectInput) Validate() error {
 func (s *RestoreObjectInput) SetBucket(v string) *RestoreObjectInput {
 	s.Bucket = &v
 	return s
+}
+
+func (s *RestoreObjectInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
 }
 
 // SetKey sets the Key field's value.
@@ -18354,6 +18935,13 @@ func (s *UploadPartCopyInput) SetBucket(v string) *UploadPartCopyInput {
 	return s
 }
 
+func (s *UploadPartCopyInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetCopySource sets the CopySource field's value.
 func (s *UploadPartCopyInput) SetCopySource(v string) *UploadPartCopyInput {
 	s.CopySource = &v
@@ -18402,6 +18990,13 @@ func (s *UploadPartCopyInput) SetCopySourceSSECustomerKey(v string) *UploadPartC
 	return s
 }
 
+func (s *UploadPartCopyInput) getCopySourceSSECustomerKey() (v string) {
+	if s.CopySourceSSECustomerKey == nil {
+		return v
+	}
+	return *s.CopySourceSSECustomerKey
+}
+
 // SetCopySourceSSECustomerKeyMD5 sets the CopySourceSSECustomerKeyMD5 field's value.
 func (s *UploadPartCopyInput) SetCopySourceSSECustomerKeyMD5(v string) *UploadPartCopyInput {
 	s.CopySourceSSECustomerKeyMD5 = &v
@@ -18436,6 +19031,13 @@ func (s *UploadPartCopyInput) SetSSECustomerAlgorithm(v string) *UploadPartCopyI
 func (s *UploadPartCopyInput) SetSSECustomerKey(v string) *UploadPartCopyInput {
 	s.SSECustomerKey = &v
 	return s
+}
+
+func (s *UploadPartCopyInput) getSSECustomerKey() (v string) {
+	if s.SSECustomerKey == nil {
+		return v
+	}
+	return *s.SSECustomerKey
 }
 
 // SetSSECustomerKeyMD5 sets the SSECustomerKeyMD5 field's value.
@@ -18637,6 +19239,13 @@ func (s *UploadPartInput) SetBucket(v string) *UploadPartInput {
 	return s
 }
 
+func (s *UploadPartInput) getBucket() (v string) {
+	if s.Bucket == nil {
+		return v
+	}
+	return *s.Bucket
+}
+
 // SetContentLength sets the ContentLength field's value.
 func (s *UploadPartInput) SetContentLength(v int64) *UploadPartInput {
 	s.ContentLength = &v
@@ -18671,6 +19280,13 @@ func (s *UploadPartInput) SetSSECustomerAlgorithm(v string) *UploadPartInput {
 func (s *UploadPartInput) SetSSECustomerKey(v string) *UploadPartInput {
 	s.SSECustomerKey = &v
 	return s
+}
+
+func (s *UploadPartInput) getSSECustomerKey() (v string) {
+	if s.SSECustomerKey == nil {
+		return v
+	}
+	return *s.SSECustomerKey
 }
 
 // SetSSECustomerKeyMD5 sets the SSECustomerKeyMD5 field's value.
