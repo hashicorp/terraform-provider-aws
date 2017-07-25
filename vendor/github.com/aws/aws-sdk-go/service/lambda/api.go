@@ -1870,9 +1870,9 @@ func (c *Lambda) ListFunctionsRequest(input *ListFunctionsInput) (req *request.R
 //
 // This operation requires permission for the lambda:ListFunctions action.
 //
-// If you are using versioning feature, the response returns list of $LATEST
-// versions of your functions. For information about the versioning feature,
-// see AWS Lambda Function Versioning and Aliases (http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html).
+// If you are using the versioning feature, you can list all of your functions
+// or only $LATEST versions. For information about the versioning feature, see
+// AWS Lambda Function Versioning and Aliases (http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1886,6 +1886,13 @@ func (c *Lambda) ListFunctionsRequest(input *ListFunctionsInput) (req *request.R
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid. For example, if you provided
+//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
+//   API, that AWS Lambda is unable to assume you will get this exception. You
+//   will also get this exception if you have selected a deprecated runtime, such
+//   as Node v0.10.42.
 //
 func (c *Lambda) ListFunctions(input *ListFunctionsInput) (*ListFunctionsOutput, error) {
 	req, out := c.ListFunctionsRequest(input)
@@ -4292,6 +4299,9 @@ type FunctionConfiguration struct {
 	// Formats (https://www.w3.org/TR/NOTE-datetime).
 	LastModified *string `type:"string"`
 
+	// Returns the ARN (Amazon Resource Name) of the master function.
+	MasterArn *string `type:"string"`
+
 	// The memory size, in MB, you configured for the function. Must be a multiple
 	// of 64 MB.
 	MemorySize *int64 `min:"128" type:"integer"`
@@ -4385,6 +4395,12 @@ func (s *FunctionConfiguration) SetKMSKeyArn(v string) *FunctionConfiguration {
 // SetLastModified sets the LastModified field's value.
 func (s *FunctionConfiguration) SetLastModified(v string) *FunctionConfiguration {
 	s.LastModified = &v
+	return s
+}
+
+// SetMasterArn sets the MasterArn field's value.
+func (s *FunctionConfiguration) SetMasterArn(v string) *FunctionConfiguration {
+	s.MasterArn = &v
 	return s
 }
 
@@ -5333,9 +5349,30 @@ func (s *ListEventSourceMappingsOutput) SetNextMarker(v string) *ListEventSource
 type ListFunctionsInput struct {
 	_ struct{} `type:"structure"`
 
+	// Optional string. If not specified, only the unqualified functions ARNs (Amazon
+	// Resource Names) will be returned.
+	//
+	// Valid value:
+	//
+	// ALL _ Will return all versions, including $LATEST which will have fully qualified
+	// ARNs (Amazon Resource Names).
+	FunctionVersion *string `location:"querystring" locationName:"FunctionVersion" type:"string" enum:"FunctionVersion"`
+
 	// Optional string. An opaque pagination token returned from a previous ListFunctions
 	// operation. If present, indicates where to continue the listing.
 	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
+
+	// Optional string. If not specified, will return only regular function versions
+	// (i.e., non-replicated versions).
+	//
+	// Valid values are:
+	//
+	// The region from which the functions are replicated. For example, if you specify
+	// us-east-1, only functions replicated from that region will be returned.
+	//
+	// ALL _ Will return all functions from any region. If specified, you also must
+	// specify a valid FunctionVersion parameter.
+	MasterRegion *string `location:"querystring" locationName:"MasterRegion" type:"string"`
 
 	// Optional integer. Specifies the maximum number of AWS Lambda functions to
 	// return in response. This parameter value must be greater than 0.
@@ -5365,9 +5402,21 @@ func (s *ListFunctionsInput) Validate() error {
 	return nil
 }
 
+// SetFunctionVersion sets the FunctionVersion field's value.
+func (s *ListFunctionsInput) SetFunctionVersion(v string) *ListFunctionsInput {
+	s.FunctionVersion = &v
+	return s
+}
+
 // SetMarker sets the Marker field's value.
 func (s *ListFunctionsInput) SetMarker(v string) *ListFunctionsInput {
 	s.Marker = &v
+	return s
+}
+
+// SetMasterRegion sets the MasterRegion field's value.
+func (s *ListFunctionsInput) SetMasterRegion(v string) *ListFunctionsInput {
+	s.MasterRegion = &v
 	return s
 }
 
@@ -6263,15 +6312,15 @@ type UpdateFunctionConfigurationInput struct {
 	// Python runtime v2.7, set the value to "python2.7". To use the Node.js runtime
 	// v6.10, set the value to "nodejs6.10". To use the Node.js runtime v4.3, set
 	// the value to "nodejs4.3". To use the Python runtime v3.6, set the value to
-	// "python3.6". To use the Python runtime v2.7, set the value to "python2.7".
+	// "python3.6".
 	//
 	// Node v0.10.42 is currently marked as deprecated. You must migrate existing
 	// functions to the newer Node.js runtime versions available on AWS Lambda (nodejs4.3
 	// or nodejs6.10) as soon as possible. You can request a one-time extension
 	// until June 30, 2017 by going to the Lambda console and following the instructions
-	// provided. Failure to do so will result in an invalid parameter value error
-	// being returned. Note that you will have to follow this procedure for each
-	// region that contains functions written in the Node v0.10.42 runtime.
+	// provided. Failure to do so will result in an invalid parameter error being
+	// returned. Note that you will have to follow this procedure for each region
+	// that contains functions written in the Node v0.10.42 runtime.
 	Runtime *string `type:"string" enum:"Runtime"`
 
 	// The function execution time at which AWS Lambda should terminate the function.
@@ -6480,6 +6529,11 @@ const (
 
 	// EventSourcePositionAtTimestamp is a EventSourcePosition enum value
 	EventSourcePositionAtTimestamp = "AT_TIMESTAMP"
+)
+
+const (
+	// FunctionVersionAll is a FunctionVersion enum value
+	FunctionVersionAll = "ALL"
 )
 
 const (

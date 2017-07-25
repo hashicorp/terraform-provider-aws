@@ -25094,6 +25094,7 @@ func (s *CreateNetworkInterfaceOutput) SetNetworkInterface(v *NetworkInterface) 
 	return s
 }
 
+// Contains the parameters for CreateNetworkInterfacePermission.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateNetworkInterfacePermissionRequest
 type CreateNetworkInterfacePermissionInput struct {
 	_ struct{} `type:"structure"`
@@ -25177,6 +25178,7 @@ func (s *CreateNetworkInterfacePermissionInput) SetPermission(v string) *CreateN
 	return s
 }
 
+// Contains the output of CreateNetworkInterfacePermission.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateNetworkInterfacePermissionResult
 type CreateNetworkInterfacePermissionOutput struct {
 	_ struct{} `type:"structure"`
@@ -27665,6 +27667,7 @@ func (s DeleteNetworkInterfaceOutput) GoString() string {
 	return s.String()
 }
 
+// Contains the parameters for DeleteNetworkInterfacePermission.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DeleteNetworkInterfacePermissionRequest
 type DeleteNetworkInterfacePermissionInput struct {
 	_ struct{} `type:"structure"`
@@ -27726,6 +27729,7 @@ func (s *DeleteNetworkInterfacePermissionInput) SetNetworkInterfacePermissionId(
 	return s
 }
 
+// Contains the output for DeleteNetworkInterfacePermission.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DeleteNetworkInterfacePermissionResult
 type DeleteNetworkInterfacePermissionOutput struct {
 	_ struct{} `type:"structure"`
@@ -32411,6 +32415,7 @@ func (s *DescribeNetworkInterfaceAttributeOutput) SetSourceDestCheck(v *Attribut
 	return s
 }
 
+// Contains the parameters for DescribeNetworkInterfacePermissions.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeNetworkInterfacePermissionsRequest
 type DescribeNetworkInterfacePermissionsInput struct {
 	_ struct{} `type:"structure"`
@@ -32477,6 +32482,7 @@ func (s *DescribeNetworkInterfacePermissionsInput) SetNextToken(v string) *Descr
 	return s
 }
 
+// Contains the output for DescribeNetworkInterfacePermissions.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeNetworkInterfacePermissionsResult
 type DescribeNetworkInterfacePermissionsOutput struct {
 	_ struct{} `type:"structure"`
@@ -54039,6 +54045,9 @@ type SpotFleetLaunchSpecification struct {
 	// subnets, separate them using commas; for example, "subnet-a61dafcf, subnet-65ea5f08".
 	SubnetId *string `locationName:"subnetId" type:"string"`
 
+	// The tags to apply during creation.
+	TagSpecifications []*SpotFleetTagSpecification `locationName:"tagSpecificationSet" locationNameList:"item" type:"list"`
+
 	// The user data to make available to the instances. If you are using an AWS
 	// SDK or command line tool, Base64-encoding is performed for you, and you can
 	// load the text from a file. Otherwise, you must provide Base64-encoded text.
@@ -54171,6 +54180,12 @@ func (s *SpotFleetLaunchSpecification) SetSpotPrice(v string) *SpotFleetLaunchSp
 // SetSubnetId sets the SubnetId field's value.
 func (s *SpotFleetLaunchSpecification) SetSubnetId(v string) *SpotFleetLaunchSpecification {
 	s.SubnetId = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *SpotFleetLaunchSpecification) SetTagSpecifications(v []*SpotFleetTagSpecification) *SpotFleetLaunchSpecification {
+	s.TagSpecifications = v
 	return s
 }
 
@@ -54480,6 +54495,41 @@ func (s *SpotFleetRequestConfigData) SetValidFrom(v time.Time) *SpotFleetRequest
 // SetValidUntil sets the ValidUntil field's value.
 func (s *SpotFleetRequestConfigData) SetValidUntil(v time.Time) *SpotFleetRequestConfigData {
 	s.ValidUntil = &v
+	return s
+}
+
+// The tags for a Spot fleet resource.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/SpotFleetTagSpecification
+type SpotFleetTagSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// The type of resource. Currently, the only resource type that is supported
+	// is instance.
+	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
+
+	// The tags.
+	Tags []*Tag `locationName:"tag" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s SpotFleetTagSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SpotFleetTagSpecification) GoString() string {
+	return s.String()
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *SpotFleetTagSpecification) SetResourceType(v string) *SpotFleetTagSpecification {
+	s.ResourceType = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *SpotFleetTagSpecification) SetTags(v []*Tag) *SpotFleetTagSpecification {
+	s.Tags = v
 	return s
 }
 
@@ -58503,6 +58553,15 @@ const (
 
 	// InstanceTypeG28xlarge is a InstanceType enum value
 	InstanceTypeG28xlarge = "g2.8xlarge"
+
+	// InstanceTypeG34xlarge is a InstanceType enum value
+	InstanceTypeG34xlarge = "g3.4xlarge"
+
+	// InstanceTypeG38xlarge is a InstanceType enum value
+	InstanceTypeG38xlarge = "g3.8xlarge"
+
+	// InstanceTypeG316xlarge is a InstanceType enum value
+	InstanceTypeG316xlarge = "g3.16xlarge"
 
 	// InstanceTypeCg14xlarge is a InstanceType enum value
 	InstanceTypeCg14xlarge = "cg1.4xlarge"
