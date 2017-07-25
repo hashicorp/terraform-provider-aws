@@ -7,18 +7,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSEcrRepository_basic(t *testing.T) {
+	randString := acctest.RandString(10)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrRepository,
+				Config: testAccAWSEcrRepository(randString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRepositoryExists("aws_ecr_repository.default"),
 				),
@@ -69,8 +72,10 @@ func testAccCheckAWSEcrRepositoryExists(name string) resource.TestCheckFunc {
 	}
 }
 
-var testAccAWSEcrRepository = `
+func testAccAWSEcrRepository(randString string) string {
+	return fmt.Sprintf(`
 resource "aws_ecr_repository" "default" {
-	name = "foo-repository-terraform"
+	name = "tf-acc-test-ecr-%s"
 }
-`
+`, randString)
+}
