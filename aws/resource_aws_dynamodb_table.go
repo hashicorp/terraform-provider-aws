@@ -177,6 +177,12 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 						},
 					},
 				},
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
+					return hashcode.String(buf.String())
+				},
 			},
 			"stream_enabled": {
 				Type:     schema.TypeBool,
