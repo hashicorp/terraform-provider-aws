@@ -23,6 +23,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* provider: Remove assumeRoleHash [GH-1227]
 * resource/aws_ami: Retry on `InvalidAMIID.NotFound` [GH-1035]
 * resource/aws_iam_server_certificate: Fix restriction on length of `name_prefix` [GH-1217]
 * resource/aws_autoscaling_group: Fix handling of empty `vpc_zone_identifier` (EC2 classic & default VPC) [GH-1191]
