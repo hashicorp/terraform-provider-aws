@@ -614,8 +614,8 @@ func (ctx *signingCtx) buildCanonicalHeaders(r rule, header http.Header) {
 				strings.Join(ctx.SignedHeaderVals[k], ",")
 		}
 	}
-
-	ctx.canonicalHeaders = strings.Join(stripExcessSpaces(headerValues), "\n")
+	stripExcessSpaces(headerValues)
+	ctx.canonicalHeaders = strings.Join(headerValues, "\n")
 }
 
 func (ctx *signingCtx) buildCanonicalString() {
@@ -721,9 +721,10 @@ const doubleSpaces = "  "
 
 var doubleSpaceBytes = []byte(doubleSpaces)
 
-func stripExcessSpaces(headerVals []string) []string {
-	vals := make([]string, len(headerVals))
-	for i, str := range headerVals {
+// stripExcessSpaces will rewrite the passed in slice's string values to not
+// contain muliple side-by-side spaces.
+func stripExcessSpaces(vals []string) {
+	for i, str := range vals {
 		// Trim leading and trailing spaces
 		trimmed := strings.TrimSpace(str)
 
@@ -735,27 +736,28 @@ func stripExcessSpaces(headerVals []string) []string {
 
 		buf := []byte(trimmed)
 		for idx > -1 {
-			stripToIdx := -1
-			for j := idx + 1; j < len(buf); j++ {
+			idx++ // Start on the second space
+
+			stripped := false
+			for j := idx; j < len(buf); j++ {
 				if buf[j] != ' ' {
-					buf = append(buf[:idx+1], buf[j:]...)
-					stripToIdx = j - idx - 1
+					buf = append(buf[:idx], buf[j:]...)
+					stripped = true
 					break
 				}
 			}
+			if !stripped {
+				break
+			}
 
-			if stripToIdx >= 0 {
-				// Find next double space
-				idx = bytes.Index(buf[stripToIdx:], doubleSpaceBytes)
-				if idx >= 0 {
-					idx += stripToIdx
-				}
-			} else {
-				idx = -1
+			// Find next double space
+			origIdx := idx
+			idx = bytes.Index(buf[idx:], doubleSpaceBytes)
+			if idx > 0 {
+				idx += origIdx
 			}
 		}
 
 		vals[i] = string(buf)
 	}
-	return vals
 }
