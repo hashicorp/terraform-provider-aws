@@ -40,8 +40,9 @@ func resourceAwsCloudWatchDashboard() *schema.Resource {
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
 			"dashboard_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateCloudWatchDashboardName,
 			},
 		},
 	}
@@ -74,7 +75,10 @@ func resourceAwsCloudWatchDashboardRead(d *schema.ResourceData, meta interface{}
 
 func resourceAwsCloudWatchDashboardPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatchconn
-	params := getAwsCloudWatchPutDashboardInput(d)
+	params := cloudwatch.PutDashboardInput{
+		DashboardBody: aws.String(d.Get("dashboard_body").(string)),
+		DashboardName: aws.String(d.Get("dashboard_name").(string)),
+	}
 
 	log.Printf("[DEBUG] Putting CloudWatch Dashboard: %#v", params)
 
@@ -89,7 +93,7 @@ func resourceAwsCloudWatchDashboardPut(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsCloudWatchDashboardDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Println("[INFO] Deleting CloudWatch Dashboard")
+	log.Printf("[INFO] Deleting CloudWatch Dashboard %s", d.Id())
 	conn := meta.(*AWSClient).cloudwatchconn
 	params := cloudwatch.DeleteDashboardsInput{
 		DashboardNames: []*string{aws.String(d.Id())},
@@ -98,21 +102,15 @@ func resourceAwsCloudWatchDashboardDelete(d *schema.ResourceData, meta interface
 	if _, err := conn.DeleteDashboards(&params); err != nil {
 		if isCloudWatchDashboardNotFoundErr(err) {
 			log.Printf("[WARN] CloudWatch Dashboard %s is already gone", d.Id())
+			d.SetId("")
 			return nil
 		}
 		return fmt.Errorf("Error deleting CloudWatch Dashboard: %s", err)
 	}
-	log.Println("[INFO] CloudWatch Dashboard deleted")
+	log.Printf("[INFO] CloudWatch Dashboard %s deleted", d.Id())
 
 	d.SetId("")
 	return nil
-}
-
-func getAwsCloudWatchPutDashboardInput(d *schema.ResourceData) cloudwatch.PutDashboardInput {
-	return cloudwatch.PutDashboardInput{
-		DashboardBody: aws.String(d.Get("dashboard_body").(string)),
-		DashboardName: aws.String(d.Get("dashboard_name").(string)),
-	}
 }
 
 func isCloudWatchDashboardNotFoundErr(err error) bool {
