@@ -155,7 +155,7 @@ The following arguments are supported:
 * `trigger_configuration` - (Optional) A Trigger Configuration block (documented below).
 * `auto_rollback_configuration` - (Optional) The automatic rollback configuration associated with the deployment group (documented below).
 * `alarm_configuration` - (Optional) Information about alarms associated with the deployment group (documented below).
-* `deployment_style` - (Optional) Information about the type of deployment, either standard or blue/green, you want to run and whether to route deployment traffic behind a load balancer (documented below).
+* `deployment_style` - (Optional) Information about the type of deployment, either in-place or blue/green, you want to run and whether to route deployment traffic behind a load balancer (documented below).
 * `load_balancer_info` - (Optional) Information about the load balancer to use in a blue/green deployment (documented below).
 * `blue_green_deployment_config` - (Optional) Information about blue/green deployment options for a deployment group (documented below).
 
@@ -193,14 +193,11 @@ You can configure a deployment to stop when a **CloudWatch** alarm detects that 
 _Only one `alarm_configuration` block is allowed_.
 
 ### Deployment Style
-You can configure the type of deployment, either standard or blue/green, you want to run and whether to route deployment traffic behind a load balancer. `deployment_style` supports the following:
+You can configure the type of deployment, either in-place` or blue/green, you want to run and whether to route deployment traffic behind a load balancer. `deployment_style` supports the following:
 
 * `deployment_option` - (Optional) Indicates whether to route deployment traffic behind a load balancer. Valid Values are `WITH_TRAFFIC_CONTROL` or `WITHOUT_TRAFFIC_CONTROL`.
 
-* `deployment_type` - (Optional) Indicates whether to run a standard deployment or a blue/green deployment. Valid Values are `IN_PLACE` or `BLUE_GREEN`.
-
-  * `IN_PLACE` deployment type is not supported with the `WITH_TRAFFIC_CONTROL` deployment option.
-  * `BLUE_GREEN` deployment type is not supported with the `WITHOUT_TRAFFIC_CONTROL` deployment option.
+* `deployment_type` - (Optional) Indicates whether to run an in-place deployment or a blue/green deployment. Valid Values are `IN_PLACE` or `BLUE_GREEN`.
 
 _Only one `deployment_style` block is allowed_.
 
