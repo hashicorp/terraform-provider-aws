@@ -144,6 +144,36 @@ func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_update(t *testing.T) {
+	var input elasticsearch.ElasticsearchDomainStatus
+
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_ClusterUpdate(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
+					testAccCheckESNumberOfInstances(ri, input.ElasticsearchClusterConfig),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckESNumberOfInstances(numberOfInstances int, cfg *elasticsearch.ElasticsearchClusterConfig) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *cfg.InstanceCount != int64(numberOfInstances) {
+			return fmt.Errorf("Number of instances differ: %d - %d", *cfg.InstanceCount, numberOfInstances)
+		}
+		return nil
+	}
+}
+
 func testAccLoadESTags(conf *elasticsearch.ElasticsearchDomainStatus, td *elasticsearch.ListTagsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).esconn
@@ -219,6 +249,38 @@ resource "aws_elasticsearch_domain" "example" {
   ebs_options {
     ebs_enabled = true
     volume_size = 10
+  }
+}
+`, randInt)
+}
+
+func testAccESDomainConfig_ClusterUpdate(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test"
+
+  advanced_options {
+    "indices.fielddata.cache.size" = 80
+  }
+
+  ebs_options {
+    ebs_enabled = true
+		volume_size = 10
+		
+  }
+
+  cluster_config {
+    instance_count = %d
+    zone_awareness_enabled = true
+    instance_type = "r3.large.elasticsearch"
+  }
+
+  snapshot_options {
+    automated_snapshot_start_hour = 23
+  }
+
+  tags {
+    bar = "complex"
   }
 }
 `, randInt)
