@@ -14,48 +14,35 @@ For more details, see the [Amazon Kinesis Firehose Documentation][1].
 
 ## Example Usage
 
-### S3 Destination
-
-```hcl
-resource "aws_s3_bucket" "bucket" {
-  bucket = "tf-test-bucket"
-  acl    = "private"
-}
-
-resource "aws_iam_role" "firehose_role" {
-  name = "firehose_test_role"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "firehose.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
-  name        = "terraform-kinesis-firehose-test-stream"
-  destination = "s3"
-
-  s3_configuration {
-    role_arn   = "${aws_iam_role.firehose_role.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
-  }
-}
-```
-
 ### Extended S3 Destination
 
 ```hcl
+resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
+  name        = "terraform-kinesis-firehose-extended-s3-test-stream"
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = "${aws_iam_role.firehose_role.arn}"
+    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    processing_configuration = [
+      {
+        enabled = "true"
+        processors = [
+          {
+            type = "Lambda"
+            parameters = [
+              {
+                parameter_name = "LambdaArn"
+                parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket"
   acl    = "private"
@@ -107,30 +94,43 @@ resource "aws_lambda_function" "lambda_processor" {
   handler = "exports.handler"
   runtime = "nodejs4.3"
 }
+```
 
-resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
-  name        = "terraform-kinesis-firehose-extended-s3-test-stream"
-  destination = "extended_s3"
+### S3 Destination
 
-  extended_s3_configuration {
+```hcl
+resource "aws_s3_bucket" "bucket" {
+  bucket = "tf-test-bucket"
+  acl    = "private"
+}
+
+resource "aws_iam_role" "firehose_role" {
+  name = "firehose_test_role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "firehose.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  name        = "terraform-kinesis-firehose-test-stream"
+  destination = "s3"
+
+  s3_configuration {
     role_arn   = "${aws_iam_role.firehose_role.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    processing_configuration = [
-      {
-        enabled = "true"
-        processors = [
-          {
-            type = "Lambda"
-            parameters = [
-              {
-                parameter_name = "LambdaArn"
-                parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
-              }
-            ]
-          }
-        ]
-      }
-    ]
   }
 }
 ```
@@ -207,8 +207,8 @@ The following arguments are supported:
 
 * `name` - (Required) A name to identify the stream. This is unique to the
 AWS account and region the Stream is created in.
-* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3`, `extended_s3`, `redshift`, and `elasticsearch`.
-* `s3_configuration` - (Required, unless `destination` is `extended_s3`) Configuration options for the s3 destination (or the intermediate bucket if the destination
+* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, and `elasticsearch`.
+* `s3_configuration` - (Optional, Deprecated, see/use `extended_s3_configuration` unless `destination` is `redshift`) Configuration options for the s3 destination (or the intermediate bucket if the destination
 is redshift). More details are given below.
 * `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. More details are given below.
 * `redshift_configuration` - (Optional) Configuration options if redshift is the destination.

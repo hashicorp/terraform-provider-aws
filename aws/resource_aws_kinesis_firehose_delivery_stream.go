@@ -41,6 +41,74 @@ func cloudWatchLoggingOptionsSchema() *schema.Schema {
 	}
 }
 
+func processingConfigurationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"processors": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"parameters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"parameter_name": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+												value := v.(string)
+												if value != "LambdaArn" && value != "NumberOfRetries" {
+													errors = append(errors, fmt.Errorf(
+														"%q must be one of 'LambdaArn', 'NumberOfRetries'", k))
+												}
+												return
+											},
+										},
+										"parameter_value": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+												value := v.(string)
+												if len(value) < 1 || len(value) > 512 {
+													errors = append(errors, fmt.Errorf(
+														"%q must be at least one character long and at most 512 characters long", k))
+												}
+												return
+											},
+										},
+									},
+								},
+							},
+							"type": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+									value := v.(string)
+									if value != "Lambda" {
+										errors = append(errors, fmt.Errorf(
+											"%q must be 'Lambda'", k))
+									}
+									return
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsKinesisFirehoseDeliveryStreamCreate,
@@ -134,9 +202,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 			},
 
 			"extended_s3_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				ConflictsWith: []string{"s3_configuration"},
+				MaxItems:      1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bucket_arn": {
@@ -180,71 +249,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 
 						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 
-						"processing_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"processors": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"parameters": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"parameter_name": {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-																	value := v.(string)
-																	if value != "LambdaArn" && value != "NumberOfRetries" {
-																		errors = append(errors, fmt.Errorf(
-																			"%q must be one of 'LambdaArn', 'NumberOfRetries'", k))
-																	}
-																	return
-																},
-															},
-															"parameter_value": {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-																	value := v.(string)
-																	if len(value) < 1 || len(value) > 512 {
-																		errors = append(errors, fmt.Errorf(
-																			"%q must be at least one character long and at most 512 characters long", k))
-																	}
-																	return
-																},
-															},
-														},
-													},
-												},
-												"type": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-														value := v.(string)
-														if value != "Lambda" {
-															errors = append(errors, fmt.Errorf(
-																"%q must be 'Lambda'", k))
-														}
-														return
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
+						"processing_configuration": processingConfigurationSchema(),
 					},
 				},
 			},
