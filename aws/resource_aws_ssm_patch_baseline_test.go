@@ -48,6 +48,31 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMPatchBaselineWithOperatingSystem(t *testing.T) {
+	name := acctest.RandString(10)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMPatchBaselineConfigWithOperatingSystem(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMPatchBaselineExists("aws_ssm_patch_baseline.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approval_rule.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approval_rule.0.approve_after_days", "7"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approval_rule.0.patch_filter.#", "2"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "operating_system", "AMAZON_LINUX"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSSMPatchBaselineExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -131,6 +156,31 @@ func testAccAWSSSMPatchBaselineBasicConfigUpdated(rName string) string {
 resource "aws_ssm_patch_baseline" "foo" {
   name  = "updated-patch-baseline-%s"
   approved_patches = ["KB123456","KB456789"]
+}
+
+`, rName)
+}
+
+func testAccAWSSSMPatchBaselineConfigWithOperatingSystem(rName string) string {
+	return fmt.Sprintf(`
+
+resource "aws_ssm_patch_baseline" "foo" {
+  name  = "patch-baseline-%s"
+  operating_system = "AMAZON_LINUX"
+  description = "Baseline containing all updates approved for production systems"
+  approval_rule {
+  	approve_after_days = 7
+
+  	patch_filter {
+		key = "PRODUCT"
+		values = ["AmazonLinux2016.03","AmazonLinux2016.09","AmazonLinux2017.03","AmazonLinux2017.09"]
+  	}
+
+  	patch_filter {
+		key = "SEVERITY"
+		values = ["Critical","Important"]
+  	}
+  }
 }
 
 `, rName)
