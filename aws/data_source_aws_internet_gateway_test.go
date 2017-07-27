@@ -16,9 +16,9 @@ func TestAccDataSourceAwsInternetGateway_typical(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsInternetGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsInternetGatwayCheck("data.aws_internet_gateway.by_id"),
-					testAccDataSourceAwsInternetGatwayCheck("data.aws_internet_gateway.by_filter"),
-					testAccDataSourceAwsInternetGatwayCheck("data.aws_internet_gateway.by_tags"),
+					testAccDataSourceAwsInternetGatewayCheck("data.aws_internet_gateway.by_id"),
+					testAccDataSourceAwsInternetGatewayCheck("data.aws_internet_gateway.by_filter"),
+					testAccDataSourceAwsInternetGatewayCheck("data.aws_internet_gateway.by_tags"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -26,7 +26,7 @@ func TestAccDataSourceAwsInternetGateway_typical(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsInternetGatwayCheck(name string) resource.TestCheckFunc {
+func testAccDataSourceAwsInternetGatewayCheck(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 
