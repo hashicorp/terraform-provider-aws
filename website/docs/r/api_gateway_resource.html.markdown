@@ -35,9 +35,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The resource's identifier.
-* `parent_id` - The parent resource's identifier.
 * `path` - The complete path for this API resource, including all parent paths.
-* `path_parth` - The last path segment for this resource.
