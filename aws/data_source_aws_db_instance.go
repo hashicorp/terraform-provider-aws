@@ -193,6 +193,11 @@ func dataSourceAwsDbInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -277,6 +282,7 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("storage_type", dbInstance.StorageType)
 	d.Set("timezone", dbInstance.Timezone)
 	d.Set("replicate_source_db", dbInstance.ReadReplicaSourceDBInstanceIdentifier)
+	d.Set("ca_cert_identifier", dbInstance.CACertificateIdentifier)
 
 	var vpcSecurityGroups []string
 	for _, v := range dbInstance.VpcSecurityGroups {
