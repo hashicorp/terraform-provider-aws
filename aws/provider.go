@@ -182,6 +182,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ecs_container_definition": dataSourceAwsEcsContainerDefinition(),
 			"aws_ecs_task_definition":      dataSourceAwsEcsTaskDefinition(),
 			"aws_efs_file_system":          dataSourceAwsEfsFileSystem(),
+			"aws_efs_mount_target":         dataSourceAwsEfsMountTarget(),
 			"aws_eip":                      dataSourceAwsEip(),
 			"aws_elastic_beanstalk_solution_stack": dataSourceAwsElasticBeanstalkSolutionStack(),
 			"aws_elasticache_cluster":              dataSourceAwsElastiCacheCluster(),
