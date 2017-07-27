@@ -145,6 +145,7 @@ The following attributes are exported:
 * `username` - The master username for the database
 * `storage_encrypted` - Specifies whether the DB instance is encrypted
 * `hosted_zone_id` - The canonical hosted zone ID of the DB instance (to be used in a Route 53 Alias record)
+* `ca_cert_identifier` - Specifies the identifier of the CA certificate for the DB instance.
 
 On Oracle instances the following is exported additionally:
 
