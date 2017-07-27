@@ -1,6 +1,6 @@
 ## 0.1.4 (Unreleased)
 
-BUG FIXS:
+BUG FIXES:
 
 * Set AWS Config Configuration recorder & Delivery channel names as ForceNew ([#1247](https://github.com/terraform-providers/terraform-provider-aws/pull/1247))
 
