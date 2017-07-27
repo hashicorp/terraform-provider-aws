@@ -7984,6 +7984,82 @@ func (c *EC2) DescribeEgressOnlyInternetGatewaysWithContext(ctx aws.Context, inp
 	return out, req.Send()
 }
 
+const opDescribeElasticGpus = "DescribeElasticGpus"
+
+// DescribeElasticGpusRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeElasticGpus operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DescribeElasticGpus for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeElasticGpus method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeElasticGpusRequest method.
+//    req, resp := client.DescribeElasticGpusRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeElasticGpus
+func (c *EC2) DescribeElasticGpusRequest(input *DescribeElasticGpusInput) (req *request.Request, output *DescribeElasticGpusOutput) {
+	op := &request.Operation{
+		Name:       opDescribeElasticGpus,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeElasticGpusInput{}
+	}
+
+	output = &DescribeElasticGpusOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeElasticGpus API operation for Amazon Elastic Compute Cloud.
+//
+// Describes the Elastic GPUs associated with your instances. For more information
+// about Elastic GPUs, see Amazon EC2 Elastic GPUs (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-gpus.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DescribeElasticGpus for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeElasticGpus
+func (c *EC2) DescribeElasticGpus(input *DescribeElasticGpusInput) (*DescribeElasticGpusOutput, error) {
+	req, out := c.DescribeElasticGpusRequest(input)
+	return out, req.Send()
+}
+
+// DescribeElasticGpusWithContext is the same as DescribeElasticGpus with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeElasticGpus for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeElasticGpusWithContext(ctx aws.Context, input *DescribeElasticGpusInput, opts ...request.Option) (*DescribeElasticGpusOutput, error) {
+	req, out := c.DescribeElasticGpusRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeExportTasks = "DescribeExportTasks"
 
 // DescribeExportTasksRequest generates a "aws/request.Request" representing the
@@ -29669,6 +29745,126 @@ func (s *DescribeEgressOnlyInternetGatewaysOutput) SetNextToken(v string) *Descr
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeElasticGpusRequest
+type DescribeElasticGpusInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// One or more Elastic GPU IDs.
+	ElasticGpuIds []*string `locationName:"ElasticGpuId" locationNameList:"item" type:"list"`
+
+	// One or more filters.
+	//
+	//    * availability-zone - The Availability Zone in which the Elastic GPU resides.
+	//
+	//    * elastic-gpu-health - The status of the Elastic GPU (OK | IMPAIRED).
+	//
+	//    * elastic-gpu-state - The state of the Elastic GPU (ATTACHED).
+	//
+	//    * elastic-gpu-type - The type of Elastic GPU; for example, eg1.medium.
+	//
+	//    * instance-id - The ID of the instance to which the Elastic GPU is associated.
+	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
+
+	// The maximum number of results to return in a single call. To retrieve the
+	// remaining results, make another call with the returned NextToken value. This
+	// value can be between 5 and 1000.
+	MaxResults *int64 `type:"integer"`
+
+	// The token to request the next page of results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeElasticGpusInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeElasticGpusInput) GoString() string {
+	return s.String()
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DescribeElasticGpusInput) SetDryRun(v bool) *DescribeElasticGpusInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetElasticGpuIds sets the ElasticGpuIds field's value.
+func (s *DescribeElasticGpusInput) SetElasticGpuIds(v []*string) *DescribeElasticGpusInput {
+	s.ElasticGpuIds = v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeElasticGpusInput) SetFilters(v []*Filter) *DescribeElasticGpusInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeElasticGpusInput) SetMaxResults(v int64) *DescribeElasticGpusInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeElasticGpusInput) SetNextToken(v string) *DescribeElasticGpusInput {
+	s.NextToken = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeElasticGpusResult
+type DescribeElasticGpusOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the Elastic GPUs.
+	ElasticGpuSet []*ElasticGpus `locationName:"elasticGpuSet" type:"list"`
+
+	// The total number of items to return. If the total number of items available
+	// is more than the value specified in max-items then a Next-Token will be provided
+	// in the output that you can use to resume pagination.
+	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeElasticGpusOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeElasticGpusOutput) GoString() string {
+	return s.String()
+}
+
+// SetElasticGpuSet sets the ElasticGpuSet field's value.
+func (s *DescribeElasticGpusOutput) SetElasticGpuSet(v []*ElasticGpus) *DescribeElasticGpusOutput {
+	s.ElasticGpuSet = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeElasticGpusOutput) SetMaxResults(v int64) *DescribeElasticGpusOutput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeElasticGpusOutput) SetNextToken(v string) *DescribeElasticGpusOutput {
+	s.NextToken = &v
+	return s
+}
+
 // Contains the parameters for DescribeExportTasks.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeExportTasksRequest
 type DescribeExportTasksInput struct {
@@ -38481,6 +38677,193 @@ func (s *EgressOnlyInternetGateway) SetEgressOnlyInternetGatewayId(v string) *Eg
 	return s
 }
 
+// Describes the association between an instance and an Elastic GPU.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ElasticGpuAssociation
+type ElasticGpuAssociation struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the association.
+	ElasticGpuAssociationId *string `locationName:"elasticGpuAssociationId" type:"string"`
+
+	// The state of the association between the instance and the Elastic GPU.
+	ElasticGpuAssociationState *string `locationName:"elasticGpuAssociationState" type:"string"`
+
+	// The time the Elastic GPU was associated with the instance.
+	ElasticGpuAssociationTime *string `locationName:"elasticGpuAssociationTime" type:"string"`
+
+	// The ID of the Elastic GPU.
+	ElasticGpuId *string `locationName:"elasticGpuId" type:"string"`
+}
+
+// String returns the string representation
+func (s ElasticGpuAssociation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ElasticGpuAssociation) GoString() string {
+	return s.String()
+}
+
+// SetElasticGpuAssociationId sets the ElasticGpuAssociationId field's value.
+func (s *ElasticGpuAssociation) SetElasticGpuAssociationId(v string) *ElasticGpuAssociation {
+	s.ElasticGpuAssociationId = &v
+	return s
+}
+
+// SetElasticGpuAssociationState sets the ElasticGpuAssociationState field's value.
+func (s *ElasticGpuAssociation) SetElasticGpuAssociationState(v string) *ElasticGpuAssociation {
+	s.ElasticGpuAssociationState = &v
+	return s
+}
+
+// SetElasticGpuAssociationTime sets the ElasticGpuAssociationTime field's value.
+func (s *ElasticGpuAssociation) SetElasticGpuAssociationTime(v string) *ElasticGpuAssociation {
+	s.ElasticGpuAssociationTime = &v
+	return s
+}
+
+// SetElasticGpuId sets the ElasticGpuId field's value.
+func (s *ElasticGpuAssociation) SetElasticGpuId(v string) *ElasticGpuAssociation {
+	s.ElasticGpuId = &v
+	return s
+}
+
+// Describes the status of an Elastic GPU.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ElasticGpuHealth
+type ElasticGpuHealth struct {
+	_ struct{} `type:"structure"`
+
+	// The health status.
+	Status *string `locationName:"status" type:"string" enum:"ElasticGpuStatus"`
+}
+
+// String returns the string representation
+func (s ElasticGpuHealth) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ElasticGpuHealth) GoString() string {
+	return s.String()
+}
+
+// SetStatus sets the Status field's value.
+func (s *ElasticGpuHealth) SetStatus(v string) *ElasticGpuHealth {
+	s.Status = &v
+	return s
+}
+
+// A specification for an Elastic GPU.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ElasticGpuSpecification
+type ElasticGpuSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// The type of Elastic GPU.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ElasticGpuSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ElasticGpuSpecification) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ElasticGpuSpecification) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ElasticGpuSpecification"}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetType sets the Type field's value.
+func (s *ElasticGpuSpecification) SetType(v string) *ElasticGpuSpecification {
+	s.Type = &v
+	return s
+}
+
+// Describes an Elastic GPU.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ElasticGpus
+type ElasticGpus struct {
+	_ struct{} `type:"structure"`
+
+	// The Availability Zone in the which the Elastic GPU resides.
+	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
+
+	// The status of the Elastic GPU.
+	ElasticGpuHealth *ElasticGpuHealth `locationName:"elasticGpuHealth" type:"structure"`
+
+	// The ID of the Elastic GPU.
+	ElasticGpuId *string `locationName:"elasticGpuId" type:"string"`
+
+	// The state of the Elastic GPU.
+	ElasticGpuState *string `locationName:"elasticGpuState" type:"string" enum:"ElasticGpuState"`
+
+	// The type of Elastic GPU.
+	ElasticGpuType *string `locationName:"elasticGpuType" type:"string"`
+
+	// The ID of the instance to which the Elastic GPU is attached.
+	InstanceId *string `locationName:"instanceId" type:"string"`
+}
+
+// String returns the string representation
+func (s ElasticGpus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ElasticGpus) GoString() string {
+	return s.String()
+}
+
+// SetAvailabilityZone sets the AvailabilityZone field's value.
+func (s *ElasticGpus) SetAvailabilityZone(v string) *ElasticGpus {
+	s.AvailabilityZone = &v
+	return s
+}
+
+// SetElasticGpuHealth sets the ElasticGpuHealth field's value.
+func (s *ElasticGpus) SetElasticGpuHealth(v *ElasticGpuHealth) *ElasticGpus {
+	s.ElasticGpuHealth = v
+	return s
+}
+
+// SetElasticGpuId sets the ElasticGpuId field's value.
+func (s *ElasticGpus) SetElasticGpuId(v string) *ElasticGpus {
+	s.ElasticGpuId = &v
+	return s
+}
+
+// SetElasticGpuState sets the ElasticGpuState field's value.
+func (s *ElasticGpus) SetElasticGpuState(v string) *ElasticGpus {
+	s.ElasticGpuState = &v
+	return s
+}
+
+// SetElasticGpuType sets the ElasticGpuType field's value.
+func (s *ElasticGpus) SetElasticGpuType(v string) *ElasticGpus {
+	s.ElasticGpuType = &v
+	return s
+}
+
+// SetInstanceId sets the InstanceId field's value.
+func (s *ElasticGpus) SetInstanceId(v string) *ElasticGpus {
+	s.InstanceId = &v
+	return s
+}
+
 // Contains the parameters for EnableVgwRoutePropagation.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/EnableVgwRoutePropagationRequest
 type EnableVgwRoutePropagationInput struct {
@@ -42122,6 +42505,9 @@ type Instance struct {
 	// Optimized instance.
 	EbsOptimized *bool `locationName:"ebsOptimized" type:"boolean"`
 
+	// The Elastic GPU associated with the instance.
+	ElasticGpuAssociations []*ElasticGpuAssociation `locationName:"elasticGpuAssociationSet" locationNameList:"item" type:"list"`
+
 	// Specifies whether enhanced networking with ENA is enabled.
 	EnaSupport *bool `locationName:"enaSupport" type:"boolean"`
 
@@ -42276,6 +42662,12 @@ func (s *Instance) SetClientToken(v string) *Instance {
 // SetEbsOptimized sets the EbsOptimized field's value.
 func (s *Instance) SetEbsOptimized(v bool) *Instance {
 	s.EbsOptimized = &v
+	return s
+}
+
+// SetElasticGpuAssociations sets the ElasticGpuAssociations field's value.
+func (s *Instance) SetElasticGpuAssociations(v []*ElasticGpuAssociation) *Instance {
+	s.ElasticGpuAssociations = v
 	return s
 }
 
@@ -51707,6 +52099,9 @@ type RunInstancesInput struct {
 	// Default: false
 	EbsOptimized *bool `locationName:"ebsOptimized" type:"boolean"`
 
+	// An Elastic GPU to associate with the instance.
+	ElasticGpuSpecification []*ElasticGpuSpecification `locationNameList:"item" type:"list"`
+
 	// The IAM instance profile.
 	IamInstanceProfile *IamInstanceProfileSpecification `locationName:"iamInstanceProfile" type:"structure"`
 
@@ -51854,6 +52249,16 @@ func (s *RunInstancesInput) Validate() error {
 	if s.MinCount == nil {
 		invalidParams.Add(request.NewErrParamRequired("MinCount"))
 	}
+	if s.ElasticGpuSpecification != nil {
+		for i, v := range s.ElasticGpuSpecification {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ElasticGpuSpecification", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.Monitoring != nil {
 		if err := s.Monitoring.Validate(); err != nil {
 			invalidParams.AddNested("Monitoring", err.(request.ErrInvalidParams))
@@ -51909,6 +52314,12 @@ func (s *RunInstancesInput) SetDryRun(v bool) *RunInstancesInput {
 // SetEbsOptimized sets the EbsOptimized field's value.
 func (s *RunInstancesInput) SetEbsOptimized(v bool) *RunInstancesInput {
 	s.EbsOptimized = &v
+	return s
+}
+
+// SetElasticGpuSpecification sets the ElasticGpuSpecification field's value.
+func (s *RunInstancesInput) SetElasticGpuSpecification(v []*ElasticGpuSpecification) *RunInstancesInput {
+	s.ElasticGpuSpecification = v
 	return s
 }
 
@@ -58084,6 +58495,19 @@ const (
 
 	// DomainTypeStandard is a DomainType enum value
 	DomainTypeStandard = "standard"
+)
+
+const (
+	// ElasticGpuStateAttached is a ElasticGpuState enum value
+	ElasticGpuStateAttached = "ATTACHED"
+)
+
+const (
+	// ElasticGpuStatusOk is a ElasticGpuStatus enum value
+	ElasticGpuStatusOk = "OK"
+
+	// ElasticGpuStatusImpaired is a ElasticGpuStatus enum value
+	ElasticGpuStatusImpaired = "IMPAIRED"
 )
 
 const (
