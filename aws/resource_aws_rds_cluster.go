@@ -222,6 +222,13 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Optional: true,
 			},
 
+			"iam_roles": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+
 			"iam_database_authentication_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -490,6 +497,15 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("[WARN] Error waiting for RDS Cluster state to be \"available\": %s", err)
 	}
 
+	if v, ok := d.GetOk("iam_roles"); ok {
+		for _, role := range v.(*schema.Set).List() {
+			err := setIamRoleToRdsCluster(d.Id(), role.(string), conn)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return resourceAwsRDSClusterRead(d, meta)
 }
 
@@ -570,6 +586,15 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("[DEBUG] Error saving RDS Cluster Members to state for RDS Cluster (%s): %s", d.Id(), err)
 	}
 
+	var roles []string
+	for _, r := range dbc.AssociatedRoles {
+		roles = append(roles, *r.RoleArn)
+	}
+
+	if err := d.Set("iam_roles", roles); err != nil {
+		return fmt.Errorf("[DEBUG] Error saving IAM Roles to state for RDS Cluster (%s): %s", d.Id(), err)
+	}
+
 	// Fetch and save tags
 	arn, err := buildRDSClusterARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
 	if err != nil {
@@ -646,6 +671,35 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		})
 		if err != nil {
 			return fmt.Errorf("Failed to modify RDS Cluster (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("iam_roles") {
+		oraw, nraw := d.GetChange("iam_roles")
+		if oraw == nil {
+			oraw = new(schema.Set)
+		}
+		if nraw == nil {
+			nraw = new(schema.Set)
+		}
+
+		os := oraw.(*schema.Set)
+		ns := nraw.(*schema.Set)
+		removeRoles := os.Difference(ns)
+		enableRoles := ns.Difference(os)
+
+		for _, role := range enableRoles.List() {
+			err := setIamRoleToRdsCluster(d.Id(), role.(string), conn)
+			if err != nil {
+				return err
+			}
+		}
+
+		for _, role := range removeRoles.List() {
+			err := removeIamRoleFromRdsCluster(d.Id(), role.(string), conn)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -757,4 +811,30 @@ func buildRDSClusterARN(identifier, partition, accountid, region string) (string
 	arn := fmt.Sprintf("arn:%s:rds:%s:%s:cluster:%s", partition, region, accountid, identifier)
 	return arn, nil
 
+}
+
+func setIamRoleToRdsCluster(clusterIdentifier string, roleArn string, conn *rds.RDS) error {
+	params := &rds.AddRoleToDBClusterInput{
+		DBClusterIdentifier: aws.String(clusterIdentifier),
+		RoleArn:             aws.String(roleArn),
+	}
+	_, err := conn.AddRoleToDBCluster(params)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func removeIamRoleFromRdsCluster(clusterIdentifier string, roleArn string, conn *rds.RDS) error {
+	params := &rds.RemoveRoleFromDBClusterInput{
+		DBClusterIdentifier: aws.String(clusterIdentifier),
+		RoleArn:             aws.String(roleArn),
+	}
+	_, err := conn.RemoveRoleFromDBCluster(params)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
