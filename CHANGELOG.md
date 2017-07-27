@@ -4,6 +4,7 @@ BUG FIXES:
 
 * Set AWS Config Configuration recorder & Delivery channel names as ForceNew ([#1247](https://github.com/terraform-providers/terraform-provider-aws/pull/1247))
 * `kinesis:` add retries for Kinesis throttling exceptions [GH-1085]
+* `kinesis_firehose`: adding support for `ExtendedS3DestinationConfiguration` [GH-1015]
 
 ## 0.1.3 (July 25, 2017)
 
