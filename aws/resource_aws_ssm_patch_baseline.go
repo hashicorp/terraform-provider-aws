@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSsmPatchBaseline() *schema.Resource {
@@ -96,6 +97,22 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+
+			"operating_system": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "WINDOWS",
+				ValidateFunc: validation.StringInSlice([]string{"WINDOWS", "AMAZON_LINUX", "UBUNTU", "REDHAT_ENTERPRISE_LINUX"}, false),
+			},
+
+			"approved_patches_compliance_level": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "UNSPECIFIED",
+				ValidateFunc: validation.StringInSlice([]string{"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFORMATIONAL", "UNSPECIFIED"}, false),
+			},
 		},
 	}
 }
@@ -105,6 +122,8 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 
 	params := &ssm.CreatePatchBaselineInput{
 		Name: aws.String(d.Get("name").(string)),
+		ApprovedPatchesComplianceLevel: aws.String(d.Get("approved_patches_compliance_level").(string)),
+		OperatingSystem:                aws.String(d.Get("operating_system").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -150,6 +169,8 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("name", resp.Name)
 	d.Set("description", resp.Description)
+	d.Set("operating_system", resp.OperatingSystem)
+	d.Set("approved_patches_compliance_level", resp.ApprovedPatchesComplianceLevel)
 	d.Set("approved_patches", flattenStringList(resp.ApprovedPatches))
 	d.Set("rejected_patches", flattenStringList(resp.RejectedPatches))
 
