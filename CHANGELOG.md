@@ -1,5 +1,9 @@
 ## 0.1.4 (Unreleased)
 
+IMPROVEMENTS:
+
+* resource/spot_fleet_request: Add support for  `wait_for_fulfillment` [GH-1241]
+
 BUG FIXES:
 
 * Set AWS Config Configuration recorder & Delivery channel names as ForceNew ([#1247](https://github.com/terraform-providers/terraform-provider-aws/pull/1247))
