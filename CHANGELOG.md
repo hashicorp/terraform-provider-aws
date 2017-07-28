@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_cloudwatch_dashboard` [GH-1172]
+* **New Data Source:** `aws_internet_gateway` [GH-1196]
 
 IMPROVEMENTS:
 
