@@ -3,6 +3,7 @@
 IMPROVEMENTS:
 
 * resource/spot_fleet_request: Add support for  `wait_for_fulfillment` [GH-1241]
+* r/aws_autoscaling_schedule: Allow empty value [GH-1268]
 
 BUG FIXES:
 
