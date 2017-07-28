@@ -1364,9 +1364,10 @@ resource "aws_spot_fleet_request" "foo" {
     target_capacity = 1
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
+    wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-d06a90b0"
+        ami = "ami-516b9131"
 
 	ebs_block_device {
             device_name = "/dev/xvda"
