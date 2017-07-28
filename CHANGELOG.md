@@ -7,6 +7,7 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* AWS SDK to log extra debug details on request errors [GH-1210]
 * resource/aws_spot_fleet_request: Add support for  `wait_for_fulfillment` [GH-1241]
 * resource/aws_autoscaling_schedule: Allow empty value [GH-1268]
 * resource/aws_ssm_association: Add support for OutputLocation and Schedule Expression [GH-1253]
