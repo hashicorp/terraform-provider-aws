@@ -95,6 +95,9 @@ across different markets and instance types.
     [reference documentation](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetLaunchSpecification.html). Any normal [`aws_instance`](instance.html) parameter that corresponds to those inputs may be used.
 
 * `spot_price` - (Required) The bid price per unit hour.
+* `wait_for_fulfillment` - (Optional; Default: false) If set, Terraform will
+  wait for the Spot Request to be fulfilled, and will throw an error if the
+  timeout of 10m is reached.
 * `target_capacity` - The number of units to request. You can choose to set the
   target capacity in terms of instances or a performance characteristic that is
 important to your application workload, such as vCPUs, memory, or I/O.
@@ -109,6 +112,12 @@ lowestPrice.
 * `valid_until` - The end date and time of the request, in UTC ISO8601 format
   (for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance
 requests are placed or enabled to fulfill the request. Defaults to 24 hours.
+
+### Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+
+* `create` - (Defaults to 10 mins) Used when requesting the spot instance (only valid if `wait_for_fulfillment = true`)
 
 ## Attributes Reference
 
