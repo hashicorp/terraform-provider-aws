@@ -65,7 +65,7 @@ func TestValidateCloudWatchDashboardName(t *testing.T) {
 		"special@character",
 		"slash/in-the-middle",
 		"dot.in-the-middle",
-		strings.Repeat("W", 255), // > 255
+		strings.Repeat("W", 256), // > 255
 	}
 	for _, v := range invalidNames {
 		_, errors := validateCloudWatchDashboardName(v, "name")
