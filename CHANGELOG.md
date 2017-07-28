@@ -1,5 +1,9 @@
 ## 0.1.4 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_cloudwatch_dashboard` ([#1172](https://github.com/terraform-providers/terraform-provider-aws/pull/1172))
+
 IMPROVEMENTS:
 
 * resource/spot_fleet_request: Add support for  `wait_for_fulfillment` [GH-1241]
