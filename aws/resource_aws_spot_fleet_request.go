@@ -350,7 +350,7 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 		opts.UserData = aws.String(base64Encode([]byte(v.(string))))
 	}
 
-	if v, ok := d["key_name"]; ok {
+	if v, ok := d["key_name"]; ok && v != "" {
 		opts.KeyName = aws.String(v.(string))
 	}
 
