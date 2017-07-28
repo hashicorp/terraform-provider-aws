@@ -71,6 +71,13 @@ The following arguments are supported:
 * `instance_id` - (Optional) The instance id to apply an SSM document to.
 * `parameters` - (Optional) Additional parameters to pass to the SSM document.
 * `targets` - (Optional) The targets (either instances or tags). Instances are specified using Key=instanceids,Values=instanceid1,instanceid2. Tags are specified using Key=tag name,Values=tag value. Only 1 target is currently supported by AWS.
+* `schedule_expression` - (Optional) A cron expression when the association will be applied to the target(s).
+* `output_location` - (Optional) An output location block. OutputLocation documented below.
+
+Output Location (`output_location`) is an S3 bucket where you want to store the results of this association:
+
+* `s3_bucket_name` - (Required) The S3 bucket name.
+* `s3_key_prefix` - (Optional) The S3 bucket prefix. Results stored in the root if not configured.
 
 ## Attributes Reference
 
