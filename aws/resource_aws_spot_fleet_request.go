@@ -638,8 +638,8 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotStateConf := &resource.StateChangeConf{
 			Pending:    []string{"pending_fulfillment"},
 			Target:     []string{"fulfilled"},
-			Refresh:    resourceAwsSpotFleetRequestFulfillmentRefreshFunc(d, meta),
-			Timeout:    10 * time.Minute,
+			Refresh:    resourceAwsSpotFleetRequestFulfillmentRefreshFunc(d.Id(), meta.(*AWSClient).ec2conn),
+			Timeout:    d.Timeout(schema.TimeoutCreate),
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
 		}
@@ -681,11 +681,10 @@ func resourceAwsSpotFleetRequestStateRefreshFunc(d *schema.ResourceData, meta in
 	}
 }
 
-func resourceAwsSpotFleetRequestFulfillmentRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
+func resourceAwsSpotFleetRequestFulfillmentRefreshFunc(id string, conn *ec2.EC2) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).ec2conn
 		req := &ec2.DescribeSpotFleetRequestsInput{
-			SpotFleetRequestIds: []*string{aws.String(d.Id())},
+			SpotFleetRequestIds: []*string{aws.String(id)},
 		}
 		resp, err := conn.DescribeSpotFleetRequests(req)
 
