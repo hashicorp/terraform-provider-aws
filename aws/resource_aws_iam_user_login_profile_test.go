@@ -110,6 +110,14 @@ func TestAccAWSUserLoginProfile_customPassword(t *testing.T) {
 				Config: testAccAWSUserLoginProfileConfigCustomPassword(username, "/", "MyP@ssw0rd@#$!@#$^&*()_+-=[]{}|'%"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
+					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "password", "MyP@ssw0rd@#$!@#$^&*()_+-=[]{}|'%"),
+				),
+			},
+			{
+				Config: testAccAWSUserLoginProfileConfigCustomPassword(username, "/", "MyNewP@ssw0rd"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
+					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "password", "MyNewP@ssw0rd"),
 				),
 			},
 		},
