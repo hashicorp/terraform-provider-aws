@@ -2,18 +2,19 @@
 
 FEATURES:
 
-* **New Resource:** `aws_cloudwatch_dashboard` ([#1172](https://github.com/terraform-providers/terraform-provider-aws/pull/1172))
+* **New Resource:** `aws_cloudwatch_dashboard` [GH-1172]
 
 IMPROVEMENTS:
 
-* resource/spot_fleet_request: Add support for  `wait_for_fulfillment` [GH-1241]
-* r/aws_autoscaling_schedule: Allow empty value [GH-1268]
+* resource/aws_spot_fleet_request: Add support for  `wait_for_fulfillment` [GH-1241]
+* resource/aws_autoscaling_schedule: Allow empty value [GH-1268]
 
 BUG FIXES:
 
-* Set AWS Config Configuration recorder & Delivery channel names as ForceNew ([#1247](https://github.com/terraform-providers/terraform-provider-aws/pull/1247))
-* `kinesis:` add retries for Kinesis throttling exceptions [GH-1085]
-* `kinesis_firehose`: adding support for `ExtendedS3DestinationConfiguration` [GH-1015]
+* resource/aws_config: Set AWS Config Configuration recorder & Delivery channel names as ForceNew [GH-1247]
+* resource/aws_kinesis: add retries for Kinesis throttling exceptions [GH-1085]
+* resource/aws_kinesis_firehose: adding support for `ExtendedS3DestinationConfiguration` [GH-1015]
+* resource/aws_spot_fleet_request: Ignore empty `key_name` [GH-1203]
 
 ## 0.1.3 (July 25, 2017)
 
