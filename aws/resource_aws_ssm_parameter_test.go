@@ -231,6 +231,7 @@ func testAccAWSSSMParameterBasicConfigOverwrite(rName string, value string) stri
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "foo" {
   name  = "test_parameter-%s"
+  description  = "description for parameter %s"
   type  = "String"
   value = "%s"
   overwrite = true
@@ -242,6 +243,7 @@ func testAccAWSSSMParameterSecureConfig(rName string, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "secret_foo" {
   name  = "test_secure_parameter-%s"
+  description  = "description for parameter %s"
   type  = "SecureString"
   value = "%s"
 }
@@ -252,6 +254,7 @@ func testAccAWSSSMParameterSecureConfigWithKey(rName string, value string) strin
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "secret_foo" {
   name  = "test_secure_parameter-%s"
+  description  = "description for parameter %s"
   type  = "SecureString"
   value = "%s"
 	key_id = "${aws_kms_key.test_key.id}"
