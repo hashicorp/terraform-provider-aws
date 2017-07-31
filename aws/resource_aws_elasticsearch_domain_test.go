@@ -147,28 +147,41 @@ func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 func TestAccAWSElasticSearchDomain_update(t *testing.T) {
 	var input elasticsearch.ElasticsearchDomainStatus
 
-	ri := acctest.RandInt()
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig_ClusterUpdate(ri),
+				Config: testAccESDomainConfig_ClusterBeforeUpdate(1, 23),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
-					testAccCheckESNumberOfInstances(ri, input.ElasticsearchClusterConfig),
 				),
+				{
+					Config: testAccESDomainConfig_ClusterAfterUpdate(2, 24),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
+						testAccCheckESNumberOfInstances(2, input.ElasticsearchClusterConfig),
+						testAccCheckESSnapshotHour(24, input.SnapshotOptions),
+					),
+				},
 			},
-		},
-	})
+		}})
 }
 
-func testAccCheckESNumberOfInstances(numberOfInstances int, cfg *elasticsearch.ElasticsearchClusterConfig) resource.TestCheckFunc {
+func testAccCheckESSnapshotHour(snapshotHour int, conf *elasticsearch.SnapshotOptions) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *cfg.InstanceCount != int64(numberOfInstances) {
-			return fmt.Errorf("Number of instances differ: %d - %d", *cfg.InstanceCount, numberOfInstances)
+		if *conf.AutomatedSnapshotStartHour != int64(snapshotHour) {
+			return fmt.Errorf("Snapshots start hour differ: %d - %d", *conf.AutomatedSnapshotStartHour, snapshotHour)
+		}
+		return nil
+	}
+}
+
+func testAccCheckESNumberOfInstances(numberOfInstances int, conf *elasticsearch.ElasticsearchClusterConfig) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *conf.InstanceCount != int64(numberOfInstances) {
+			return fmt.Errorf("Number of instances differ: %d - %d", *conf.InstanceCount, numberOfInstances)
 		}
 		return nil
 	}
@@ -254,7 +267,7 @@ resource "aws_elasticsearch_domain" "example" {
 `, randInt)
 }
 
-func testAccESDomainConfig_ClusterUpdate(randInt int) string {
+func testAccESDomainConfig_ClusterUpdate(instanceInt int, snapshotInt int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test"
@@ -272,18 +285,14 @@ resource "aws_elasticsearch_domain" "example" {
   cluster_config {
     instance_count = %d
     zone_awareness_enabled = true
-    instance_type = "r3.large.elasticsearch"
+    instance_type = "t2.micro.elasticsearch"
   }
 
   snapshot_options {
-    automated_snapshot_start_hour = 23
-  }
-
-  tags {
-    bar = "complex"
+    automated_snapshot_start_hour = %d
   }
 }
-`, randInt)
+`, instanceInt, snapshotInt)
 }
 
 func testAccESDomainConfig_TagUpdate(randInt int) string {
