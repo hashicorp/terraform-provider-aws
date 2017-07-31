@@ -16,6 +16,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* resource/aws_instance: Guard check for aws_instance UserData to prevent panic [GH-1288]
 * resource/aws_config: Set AWS Config Configuration recorder & Delivery channel names as ForceNew [GH-1247]
 * resource/aws_kinesis: add retries for Kinesis throttling exceptions [GH-1085]
 * resource/aws_kinesis_firehose: adding support for `ExtendedS3DestinationConfiguration` [GH-1015]
