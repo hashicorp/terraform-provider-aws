@@ -23,6 +23,7 @@ BUG FIXES:
 * resource/aws_kinesis_firehose: adding support for `ExtendedS3DestinationConfiguration` [GH-1015]
 * resource/aws_spot_fleet_request: Ignore empty `key_name` [GH-1203]
 * resource/emr_instance_group: fix crash when changing `instance_group.count` [GH-1287]
+* resource/aws_elasticsearch_domain: Fix updating config when update doesn't involve EBS [GH-1131]
 
 ## 0.1.3 (July 25, 2017)
 
