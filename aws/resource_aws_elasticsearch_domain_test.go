@@ -157,14 +157,16 @@ func TestAccAWSElasticSearchDomain_update(t *testing.T) {
 				Config: testAccESDomainConfig_ClusterUpdate(ri, 2, 22),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
+					testAccCheckESNumberOfInstances(2, &input),
+					testAccCheckESSnapshotHour(22, &input),
 				),
 			},
 			{
 				Config: testAccESDomainConfig_ClusterUpdate(ri, 4, 23),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
-					testAccCheckESNumberOfInstances(2, &input),
-					testAccCheckESSnapshotHour(24, &input),
+					testAccCheckESNumberOfInstances(4, &input),
+					testAccCheckESSnapshotHour(23, &input),
 				),
 			},
 		}})
@@ -174,7 +176,7 @@ func testAccCheckESSnapshotHour(snapshotHour int, status *elasticsearch.Elastics
 	return func(s *terraform.State) error {
 		conf := status.SnapshotOptions
 		if *conf.AutomatedSnapshotStartHour != int64(snapshotHour) {
-			return fmt.Errorf("Snapshots start hour differ: %d - %d", *conf.AutomatedSnapshotStartHour, snapshotHour)
+			return fmt.Errorf("Snapshots start hour differ. Given: %d, Expected: %d", *conf.AutomatedSnapshotStartHour, snapshotHour)
 		}
 		return nil
 	}
@@ -184,7 +186,7 @@ func testAccCheckESNumberOfInstances(numberOfInstances int, status *elasticsearc
 	return func(s *terraform.State) error {
 		conf := status.ElasticsearchClusterConfig
 		if *conf.InstanceCount != int64(numberOfInstances) {
-			return fmt.Errorf("Number of instances differ: %d - %d", *conf.InstanceCount, numberOfInstances)
+			return fmt.Errorf("Number of instances differ. Given: %d, Expected: %d", *conf.InstanceCount, numberOfInstances)
 		}
 		return nil
 	}
