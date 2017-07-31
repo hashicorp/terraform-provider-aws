@@ -84,9 +84,9 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 	ngw := resp.NatGateways[0]
 
-	d.SetId(aws.StringValue(ngw.natGatewayId))
+	d.SetId(aws.StringValue(ngw.NatGatewayId))
 	d.Set("state", ngw.State)
-	d.Set("subnet_id", ngw.subnetId)
+	d.Set("subnet_id", ngw.SubnetId)
 
 	return nil
 }
