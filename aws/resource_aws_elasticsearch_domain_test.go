@@ -146,6 +146,7 @@ func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 
 func TestAccAWSElasticSearchDomain_update(t *testing.T) {
 	var input elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -153,18 +154,18 @@ func TestAccAWSElasticSearchDomain_update(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig_ClusterUpdate(1, 23),
+				Config: testAccESDomainConfig_ClusterUpdate(ri, 1, 23),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
 				),
-				{
-					Config: testAccESDomainConfig_ClusterUpdate(2, 24),
-					Check: resource.ComposeTestCheckFunc(
-						testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
-						testAccCheckESNumberOfInstances(2, input.ElasticsearchClusterConfig),
-						testAccCheckESSnapshotHour(24, input.SnapshotOptions),
-					),
-				},
+			},
+			{
+				Config: testAccESDomainConfig_ClusterUpdate(ri, 2, 24),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
+					testAccCheckESNumberOfInstances(2, input.ElasticsearchClusterConfig),
+					testAccCheckESSnapshotHour(24, input.SnapshotOptions),
+				),
 			},
 		}})
 }
@@ -267,10 +268,10 @@ resource "aws_elasticsearch_domain" "example" {
 `, randInt)
 }
 
-func testAccESDomainConfig_ClusterUpdate(instanceInt int, snapshotInt int) string {
+func testAccESDomainConfig_ClusterUpdate(randInt, instanceInt, snapshotInt int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
-  domain_name = "tf-test"
+  domain_name = "tf-test-%d"
 
   advanced_options {
     "indices.fielddata.cache.size" = 80
@@ -292,7 +293,7 @@ resource "aws_elasticsearch_domain" "example" {
     automated_snapshot_start_hour = %d
   }
 }
-`, instanceInt, snapshotInt)
+`, randInt, instanceInt, snapshotInt)
 }
 
 func testAccESDomainConfig_TagUpdate(randInt int) string {
