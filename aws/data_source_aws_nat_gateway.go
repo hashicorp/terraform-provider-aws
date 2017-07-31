@@ -89,7 +89,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("subnet_id", ngw.SubnetId)
 	d.Set("vpc_id", ngw.VpcId)
 
-	for _, address := range ngw.NatGatewayAddress {
+	for _, address := range ngw.NatGatewayAddresses {
 		if *address.AllocationId != nil {
 			d.Set("allocated_eip_id", address.AllocationId)
 			d.Set("allocated_eni_id", address.NetworkInterfaceId)
