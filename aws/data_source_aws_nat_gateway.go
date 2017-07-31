@@ -24,7 +24,7 @@ func dataSourceAwsNatGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"attached_vpc_id": {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -54,10 +54,10 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	req.Filters = buildEC2AttributeFilterList(
 		map[string]string{
 			"state":             d.Get("state").(string),
-			"availability-zone": d.Get("subnet_id").(string),
+			"subnet-id": d.Get("subnet_id").(string),
 		},
 	)
-	if id, ok := d.GetOk("attached_vpc_id"); ok {
+	if id, ok := d.GetOk("vpc_id"); ok {
 		req.Filters = append(req.Filters, buildEC2AttributeFilterList(
 			map[string]string{
 				"attachment.state":  "attached",
@@ -96,7 +96,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 	for _, attachment := range vgw.VpcAttachments {
 		if *attachment.State == "attached" {
-			d.Set("attached_vpc_id", attachment.VpcId)
+			d.Set("vpc_id", attachment.VpcId)
 			break
 		}
 	}
