@@ -60,8 +60,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	if id, ok := d.GetOk("vpc_id"); ok {
 		req.Filters = append(req.Filters, buildEC2AttributeFilterList(
 			map[string]string{
-				"attachment.state":  "attached",
-				"attachment.vpc-id": id.(string),
+				"vpc-id": id.(string),
 			},
 		)...)
 	}
