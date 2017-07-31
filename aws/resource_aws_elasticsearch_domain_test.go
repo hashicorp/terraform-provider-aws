@@ -153,12 +153,12 @@ func TestAccAWSElasticSearchDomain_update(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig_ClusterBeforeUpdate(1, 23),
+				Config: testAccESDomainConfig_ClusterUpdate(1, 23),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
 				),
 				{
-					Config: testAccESDomainConfig_ClusterAfterUpdate(2, 24),
+					Config: testAccESDomainConfig_ClusterUpdate(2, 24),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
 						testAccCheckESNumberOfInstances(2, input.ElasticsearchClusterConfig),
