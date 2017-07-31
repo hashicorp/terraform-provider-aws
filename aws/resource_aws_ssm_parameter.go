@@ -47,7 +47,9 @@ func resourceAwsSsmParameter() *schema.Resource {
 			"overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				// The default should be set to true, terraform lifecycle should take care of not overriding the value if it is manually set by the user.
+				// Otherwise, it is causing a breaking change because the first version did not allow overwrite parameter and overwrite was allowed.
+				Default: true,
 			},
 			"allowed_pattern": {
 				Type:     schema.TypeString,
@@ -71,7 +73,9 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 		return errwrap.Wrapf("[ERROR] Error getting SSM parameter: {{err}}", err)
 	} else {
 		if len(resp.InvalidParameters) > 0 {
-			return fmt.Errorf("[ERROR] SSM Parameter %s is invalid", d.Id())
+			log.Print("[INFO] The resource no longer exists, marking it for recreation:", d.Id())
+			d.MarkNewResource()
+			return nil
 		}
 		param := resp.Parameters[0]
 		d.Set("name", param.Name)

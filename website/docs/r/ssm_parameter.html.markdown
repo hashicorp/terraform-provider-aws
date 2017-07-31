@@ -62,7 +62,7 @@ The following arguments are supported:
 * `value` - (Required) The value of the parameter.
 * `description` - (Optional) The description of the parameter.
 * `key_id` - (Optional) The KMS key id or arn for encrypting a SecureString.
-* `overwrite` - (Optional) Overwrite an existing parameter. If not specified, will default to `false`.
+* `overwrite` - (Optional) Overwrite an existing parameter. If not specified, will default to `true`.
 * `allowed_pattern` - (Optional) A regular expression used to validate the parameter value.
 * `tags` - (Optional) A mapping of tags to assign to the object.
 
