@@ -53,7 +53,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 	req.Filters = buildEC2AttributeFilterList(
 		map[string]string{
-			"state":             d.Get("state").(string),
+			"state":     d.Get("state").(string),
 			"subnet-id": d.Get("subnet_id").(string),
 		},
 	)
@@ -92,7 +92,6 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("state", ngw.State)
 	d.Set("subnet_id", ngw.AvailabilityZone)
 	d.Set("tags", tagsToMap(ngw.Tags))
-
 
 	return nil
 }

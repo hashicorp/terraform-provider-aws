@@ -34,7 +34,6 @@ func TestAccDataSourceAwsNatGateway(t *testing.T) {
 	})
 }
 
-
 func testAccDataSourceAwsNatGatewayConfig(rInt int) string {
 	return fmt.Sprintf(`
 provider "aws" {
