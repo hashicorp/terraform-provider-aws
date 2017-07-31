@@ -51,28 +51,28 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 		req.NatGatewayIds = aws.StringSlice([]string{id.(string)})
 	}
 
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filter = buildEC2AttributeFilterList(
 		map[string]string{
 			"state":     d.Get("state").(string),
 			"subnet-id": d.Get("subnet_id").(string),
 		},
 	)
 	if id, ok := d.GetOk("vpc_id"); ok {
-		req.Filters = append(req.Filters, buildEC2AttributeFilterList(
+		req.Filter = append(req.Filter, buildEC2AttributeFilterList(
 			map[string]string{
 				"vpc-id": id.(string),
 			},
 		)...)
 	}
-	req.Filters = append(req.Filters, buildEC2TagFilterList(
+	req.Filter = append(req.Filter, buildEC2TagFilterList(
 		tagsFromMap(d.Get("tags").(map[string]interface{})),
 	)...)
-	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+	req.Filter = append(req.Filter, buildEC2CustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
-	if len(req.Filters) == 0 {
+	if len(req.Filter) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
-		req.Filters = nil
+		req.Filter = nil
 	}
 
 	resp, err := conn.DescribeNatGateways(req)
