@@ -93,12 +93,6 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("subnet_id", ngw.AvailabilityZone)
 	d.Set("tags", tagsToMap(ngw.Tags))
 
-	for _, attachment := range ngw.VpcAttachments {
-		if *attachment.State == "attached" {
-			d.Set("vpc_id", attachment.VpcId)
-			break
-		}
-	}
 
 	return nil
 }
