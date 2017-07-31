@@ -35,7 +35,6 @@ func dataSourceAwsNatGateway() *schema.Resource {
 				Computed: true,
 			},
 			"filter": ec2CustomFiltersSchema(),
-			"tags":   tagsSchemaComputed(),
 		},
 	}
 }
@@ -64,9 +63,6 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 			},
 		)...)
 	}
-	req.Filter = append(req.Filter, buildEC2TagFilterList(
-		tagsFromMap(d.Get("tags").(map[string]interface{})),
-	)...)
 	req.Filter = append(req.Filter, buildEC2CustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
@@ -88,10 +84,9 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 	ngw := resp.NatGateways[0]
 
-	d.SetId(aws.StringValue(ngw.NatGatewayId))
+	d.SetId(aws.StringValue(ngw.natGatewayId))
 	d.Set("state", ngw.State)
-	d.Set("subnet_id", ngw.AvailabilityZone)
-	d.Set("tags", tagsToMap(ngw.Tags))
+	d.Set("subnet_id", ngw.subnetId)
 
 	return nil
 }
