@@ -13,6 +13,7 @@ IMPROVEMENTS:
 * resource/aws_autoscaling_schedule: Allow empty value [GH-1268]
 * resource/aws_ssm_association: Add support for OutputLocation and Schedule Expression [GH-1253]
 * resource/aws_ssm_patch_baseline: Update support for Operating System [GH-1260]
+* resource/aws_db_instance: Expose db_instance ca_cert_identifier [GH-1256]
 
 BUG FIXES:
 
