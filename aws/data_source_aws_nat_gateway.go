@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSourceAwsVpnGateway() *schema.Resource {
+func dataSourceAwsNatGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpnGatewayRead,
+		Read: dataSourceAwsNatGatewayRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -40,15 +40,15 @@ func dataSourceAwsVpnGateway() *schema.Resource {
 	}
 }
 
-func dataSourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	log.Printf("[DEBUG] Reading VPN Gateways.")
 
-	req := &ec2.DescribeVpnGatewaysInput{}
+	req := &ec2.DescribeNatGatewaysInput{}
 
 	if id, ok := d.GetOk("id"); ok {
-		req.VpnGatewayIds = aws.StringSlice([]string{id.(string)})
+		req.NatGatewayIds = aws.StringSlice([]string{id.(string)})
 	}
 
 	req.Filters = buildEC2AttributeFilterList(
@@ -76,20 +76,20 @@ func dataSourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error
 		req.Filters = nil
 	}
 
-	resp, err := conn.DescribeVpnGateways(req)
+	resp, err := conn.DescribeNatGateways(req)
 	if err != nil {
 		return err
 	}
-	if resp == nil || len(resp.VpnGateways) == 0 {
+	if resp == nil || len(resp.NatGateways) == 0 {
 		return fmt.Errorf("no matching VPN gateway found: %#v", req)
 	}
-	if len(resp.VpnGateways) > 1 {
+	if len(resp.NatGateways) > 1 {
 		return fmt.Errorf("multiple VPN gateways matched; use additional constraints to reduce matches to a single VPN gateway")
 	}
 
-	vgw := resp.VpnGateways[0]
+	vgw := resp.NatGateways[0]
 
-	d.SetId(aws.StringValue(vgw.VpnGatewayId))
+	d.SetId(aws.StringValue(vgw.NatGatewayId))
 	d.Set("state", vgw.State)
 	d.Set("availability_zone", vgw.AvailabilityZone)
 	d.Set("tags", tagsToMap(vgw.Tags))
