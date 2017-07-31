@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccDataSourceAwsVpnGateway_unattached(t *testing.T) {
+func TestAccDataSourceAwsNatGateway_unattached(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -17,7 +17,7 @@ func TestAccDataSourceAwsVpnGateway_unattached(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccDataSourceAwsVpnGatewayUnattachedConfig(rInt),
+				Config: testAccDataSourceAwsNatGatewayUnattachedConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(
 						"data.aws_vpn_gateway.test_by_id", "id",
@@ -34,7 +34,7 @@ func TestAccDataSourceAwsVpnGateway_unattached(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpnGateway_attached(t *testing.T) {
+func TestAccDataSourceAwsNatGateway_attached(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -42,7 +42,7 @@ func TestAccDataSourceAwsVpnGateway_attached(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccDataSourceAwsVpnGatewayAttachedConfig(rInt),
+				Config: testAccDataSourceAwsNatGatewayAttachedConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(
 						"data.aws_vpn_gateway.test_by_attached_vpc_id", "id",
@@ -57,7 +57,7 @@ func TestAccDataSourceAwsVpnGateway_attached(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsVpnGatewayUnattachedConfig(rInt int) string {
+func testAccDataSourceAwsNatGatewayUnattachedConfig(rInt int) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-west-2"
@@ -81,7 +81,7 @@ data "aws_vpn_gateway" "test_by_tags" {
 `, rInt, rInt+1, rInt-1)
 }
 
-func testAccDataSourceAwsVpnGatewayAttachedConfig(rInt int) string {
+func testAccDataSourceAwsNatGatewayAttachedConfig(rInt int) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-west-2"
