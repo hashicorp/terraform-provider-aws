@@ -80,20 +80,20 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 	if resp == nil || len(resp.NatGateways) == 0 {
-		return fmt.Errorf("no matching VPN gateway found: %#v", req)
+		return fmt.Errorf("no matching NAT gateway found: %#v", req)
 	}
 	if len(resp.NatGateways) > 1 {
-		return fmt.Errorf("multiple VPN gateways matched; use additional constraints to reduce matches to a single VPN gateway")
+		return fmt.Errorf("multiple NAT gateways matched; use additional constraints to reduce matches to a single NAT gateway")
 	}
 
-	vgw := resp.NatGateways[0]
+	ngw := resp.NatGateways[0]
 
-	d.SetId(aws.StringValue(vgw.NatGatewayId))
-	d.Set("state", vgw.State)
-	d.Set("subnet_id", vgw.AvailabilityZone)
-	d.Set("tags", tagsToMap(vgw.Tags))
+	d.SetId(aws.StringValue(ngw.NatGatewayId))
+	d.Set("state", ngw.State)
+	d.Set("subnet_id", ngw.AvailabilityZone)
+	d.Set("tags", tagsToMap(ngw.Tags))
 
-	for _, attachment := range vgw.VpcAttachments {
+	for _, attachment := range ngw.VpcAttachments {
 		if *attachment.State == "attached" {
 			d.Set("vpc_id", attachment.VpcId)
 			break
