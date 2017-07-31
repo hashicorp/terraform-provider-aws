@@ -718,7 +718,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		if attr.UserData.Value != nil {
+		if attr.UserData != nil && attr.UserData.Value != nil {
 			d.Set("user_data", userDataHashSum(*attr.UserData.Value))
 		}
 	}
