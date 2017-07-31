@@ -21,6 +21,7 @@ BUG FIXES:
 * resource/aws_kinesis: add retries for Kinesis throttling exceptions [GH-1085]
 * resource/aws_kinesis_firehose: adding support for `ExtendedS3DestinationConfiguration` [GH-1015]
 * resource/aws_spot_fleet_request: Ignore empty `key_name` [GH-1203]
+* resource/emr_instance_group: fix crash when changing `instance_group.count` [GH-1287]
 
 ## 0.1.3 (July 25, 2017)
 
