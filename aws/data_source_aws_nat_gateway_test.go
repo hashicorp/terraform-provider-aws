@@ -87,5 +87,5 @@ data "aws_nat_gateway" "test_by_subnet_id" {
 
 # TODO - EIP allocation search?
 
-`, rInt, rInt, rInt, rInt)
+`, rInt, rInt, rInt, rInt, rInt)
 }
