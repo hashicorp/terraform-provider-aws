@@ -9,7 +9,8 @@ import (
 )
 
 func TestAccDataSourceAwsNatGateway(t *testing.T) {
-	rInt := acctest.RandInt()
+	// This is used as a portion of CIDR network addresses.
+	rInt := acctest.RandIntRange(4, 254)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -39,7 +40,29 @@ provider "aws" {
   region = "us-west-2"
 }
 
+resource "aws_vpc" "test" {
+  cidr_block = "172.%d.0.0/16"
+  tags {
+    Name = "terraform-testacc-nat-gateway-data-source"
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "172.%d.123.0/24"
+  availability_zone = "us-west-2a"
+
+  tags {
+    Name = "terraform-testacc-nat-gateway-data-source-%d"
+  }
+}
+
+# EIPs are not taggable
+resource "aws_eip" "test" {}
+
 resource "aws_nat_gateway" "test" {
+  subnet_id     = "${aws_subnet.test.id}"
+  allocation_id = "${aws_eip.test.id}"
     tags {
 		Name = "terraform-testacc-nat-gateway-data-source-%d"
 		ABC  = "testacc-%d"
