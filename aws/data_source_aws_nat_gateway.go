@@ -50,19 +50,30 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 		req.NatGatewayIds = aws.StringSlice([]string{id.(string)})
 	}
 
-	req.Filter = buildEC2AttributeFilterList(
-		map[string]string{
-			"state":     d.Get("state").(string),
-			"subnet-id": d.Get("subnet_id").(string),
-		},
-	)
-	if id, ok := d.GetOk("vpc_id"); ok {
+	if vpc_id, ok := d.GetOk("vpc_id"); ok {
 		req.Filter = append(req.Filter, buildEC2AttributeFilterList(
 			map[string]string{
 				"vpc-id": id.(string),
 			},
 		)...)
 	}
+
+        if state, ok := d.GetOk("state"); ok {
+                req.Filter = append(req.Filter, buildEC2AttributeFilterList(
+                        map[string]string{
+                                "state": vpc_id.(string),
+                        },
+                )...)
+        }
+
+        if subnet_id, ok := d.GetOk("subnet_id"); ok {
+                req.Filter = append(req.Filter, buildEC2AttributeFilterList(
+                        map[string]string{
+                                "subnet-id": subnet_id.(string),
+                        },
+                )...)
+        }
+
 	req.Filter = append(req.Filter, buildEC2CustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
