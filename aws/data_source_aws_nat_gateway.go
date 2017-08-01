@@ -58,21 +58,21 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 		)...)
 	}
 
-        if state, ok := d.GetOk("state"); ok {
-                req.Filter = append(req.Filter, buildEC2AttributeFilterList(
-                        map[string]string{
-                                "state": vpc_id.(string),
-                        },
-                )...)
-        }
+	if state, ok := d.GetOk("state"); ok {
+		req.Filter = append(req.Filter, buildEC2AttributeFilterList(
+			map[string]string{
+				"state": vpc_id.(string),
+			},
+		)...)
+	}
 
-        if subnet_id, ok := d.GetOk("subnet_id"); ok {
-                req.Filter = append(req.Filter, buildEC2AttributeFilterList(
-                        map[string]string{
-                                "subnet-id": subnet_id.(string),
-                        },
-                )...)
-        }
+	if subnet_id, ok := d.GetOk("subnet_id"); ok {
+		req.Filter = append(req.Filter, buildEC2AttributeFilterList(
+			map[string]string{
+				"subnet-id": subnet_id.(string),
+			},
+		)...)
+	}
 
 	req.Filter = append(req.Filter, buildEC2CustomFilterList(
 		d.Get("filter").(*schema.Set),
