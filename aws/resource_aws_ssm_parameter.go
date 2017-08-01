@@ -74,7 +74,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	} else {
 		if len(resp.InvalidParameters) > 0 {
 			log.Print("[INFO] The resource no longer exists, marking it for recreation:", d.Id())
-			d.MarkNewResource()
+			d.SetId("")
 			return nil
 		}
 		param := resp.Parameters[0]
@@ -122,7 +122,6 @@ func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return err
 	}
-
 	d.SetId("")
 
 	return nil
