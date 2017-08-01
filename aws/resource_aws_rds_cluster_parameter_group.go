@@ -215,18 +215,29 @@ func resourceAwsRDSClusterParameterGroupUpdate(d *schema.ResourceData, meta inte
 		}
 
 		if len(parameters) > 0 {
-			modifyOpts := rds.ModifyDBClusterParameterGroupInput{
-				DBClusterParameterGroupName: aws.String(d.Get("name").(string)),
-				Parameters:                  parameters,
-			}
+			// We can only modify 20 parameters at a time, so walk them until
+			// we've got them all.
+			maxParams := 20
+			for parameters != nil {
+				paramsToModify := make([]*rds.Parameter, 0)
+				if len(parameters) <= maxParams {
+					paramsToModify, parameters = parameters[:], nil
+				} else {
+					paramsToModify, parameters = parameters[:maxParams], parameters[maxParams:]
+				}
+				modifyOpts := rds.ModifyDBClusterParameterGroupInput{
+					DBClusterParameterGroupName: aws.String(d.Get("name").(string)),
+					Parameters:                  paramsToModify,
+				}
 
-			log.Printf("[DEBUG] Modify DB Cluster Parameter Group: %s", modifyOpts)
-			_, err = rdsconn.ModifyDBClusterParameterGroup(&modifyOpts)
-			if err != nil {
-				return fmt.Errorf("Error modifying DB Cluster Parameter Group: %s", err)
+				log.Printf("[DEBUG] Modify DB Cluster Parameter Group: %s", modifyOpts)
+				_, err = rdsconn.ModifyDBClusterParameterGroup(&modifyOpts)
+				if err != nil {
+					return fmt.Errorf("Error modifying DB Cluster Parameter Group: %s", err)
+				}
 			}
+			d.SetPartial("parameter")
 		}
-		d.SetPartial("parameter")
 	}
 
 	if arn, err := buildRDSCPGARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region); err == nil {
