@@ -53,7 +53,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	if vpc_id, ok := d.GetOk("vpc_id"); ok {
 		req.Filter = append(req.Filter, buildEC2AttributeFilterList(
 			map[string]string{
-				"vpc-id": id.(string),
+				"vpc-id": vpc_id.(string),
 			},
 		)...)
 	}
@@ -61,7 +61,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	if state, ok := d.GetOk("state"); ok {
 		req.Filter = append(req.Filter, buildEC2AttributeFilterList(
 			map[string]string{
-				"state": vpc_id.(string),
+				"state": state.(string),
 			},
 		)...)
 	}
