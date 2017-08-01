@@ -85,7 +85,5 @@ data "aws_nat_gateway" "test_by_subnet_id" {
   subnet_id = "${aws_nat_gateway.test.subnet_id}"
 }
 
-# TODO - EIP allocation search?
-
 `, rInt, rInt, rInt, rInt, rInt)
 }
