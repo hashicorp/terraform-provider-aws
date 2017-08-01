@@ -21,12 +21,11 @@ func TestAccDataSourceAwsNatGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(
 						"data.aws_nat_gateway.test_by_id", "id",
-						"aws_nat_gateway", "id"),
+						"aws_nat_gateway.test", "id"),
 					resource.TestCheckResourceAttrPair(
-						"data.aws_nat_gateway.test_by_tags", "id",
-						"aws_nat_gateway", "id"),
+						"data.aws_nat_gateway.test_by_subnet_id", "subnet_id",
+						"aws_nat_gateway.test", "subnet_id"),
 					resource.TestCheckResourceAttrSet("data.aws_nat_gateway.test_by_id", "state"),
-					resource.TestCheckResourceAttr("data.aws_nat_gateway.test_by_tags", "tags.%", "3"),
 					resource.TestCheckNoResourceAttr("data.aws_nat_gateway.test_by_id", "attached_vpc_id"),
 				),
 			},
@@ -43,7 +42,7 @@ provider "aws" {
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
   tags {
-    Name = "terraform-testacc-nat-gateway-data-source"
+    Name = "terraform-testacc-nat-gateway-data-source-%d"
   }
 }
 
@@ -58,24 +57,35 @@ resource "aws_subnet" "test" {
 }
 
 # EIPs are not taggable
-resource "aws_eip" "test" {}
+resource "aws_eip" "test" {
+  vpc = true
+}
 
+# IGWs are required for an NGW to spin up; manual dependency
+resource "aws_internet_gateway" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  tags {
+    Name = "terraform-testacc-nat-gateway-data-source-%d"
+  }
+}
+
+# NGWs are not taggable, either
 resource "aws_nat_gateway" "test" {
   subnet_id     = "${aws_subnet.test.id}"
   allocation_id = "${aws_eip.test.id}"
-    tags {
-		Name = "terraform-testacc-nat-gateway-data-source-%d"
-		ABC  = "testacc-%d"
-		XYZ  = "testacc-%d"
-    }
+
+  depends_on = ["aws_internet_gateway.test"]
 }
 
 data "aws_nat_gateway" "test_by_id" {
-	id = "${aws_nat_gateway.test.id}"
+  id = "${aws_nat_gateway.test.id}"
 }
 
-data "aws_nat_gateway" "test_by_tags" {
-	tags = "${aws_nat_gateway.test.tags}"
+data "aws_nat_gateway" "test_by_subnet_id" {
+  subnet_id = "${aws_nat_gateway.test.subnet_id}"
 }
-`, rInt, rInt+1, rInt-1)
+
+# TODO - EIP allocation search?
+
+`, rInt, rInt, rInt, rInt)
 }
