@@ -201,6 +201,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_kms_alias":                        dataSourceAwsKmsAlias(),
 			"aws_kms_ciphertext":                   dataSourceAwsKmsCiphetext(),
 			"aws_kms_secret":                       dataSourceAwsKmsSecret(),
+			"aws_nat_gateway":                      dataSourceAwsNatGateway(),
 			"aws_partition":                        dataSourceAwsPartition(),
 			"aws_prefix_list":                      dataSourceAwsPrefixList(),
 			"aws_redshift_service_account":         dataSourceAwsRedshiftServiceAccount(),
