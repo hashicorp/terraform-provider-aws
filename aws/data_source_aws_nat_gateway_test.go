@@ -42,17 +42,17 @@ provider "aws" {
 resource "aws_nat_gateway" "test" {
     tags {
 		Name = "terraform-testacc-nat-gateway-data-source-%d"
-      	ABC  = "testacc-%d"
+		ABC  = "testacc-%d"
 		XYZ  = "testacc-%d"
     }
 }
 
 data "aws_nat_gateway" "test_by_id" {
-	id = "${aws_nat_gateway.id}"
+	id = "${aws_nat_gateway.test.id}"
 }
 
 data "aws_nat_gateway" "test_by_tags" {
-	tags = "${aws_nat_gateway.tags}"
+	tags = "${aws_nat_gateway.test.tags}"
 }
 `, rInt, rInt+1, rInt-1)
 }
