@@ -42,7 +42,7 @@ func dataSourceAwsNatGateway() *schema.Resource {
 func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	log.Printf("[DEBUG] Reading VPN Gateways.")
+	log.Printf("[DEBUG] Reading NAT Gateways.")
 
 	req := &ec2.DescribeNatGatewaysInput{}
 
