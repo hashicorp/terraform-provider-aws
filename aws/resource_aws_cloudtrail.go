@@ -3,9 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -116,7 +118,21 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 		input.SnsTopicName = aws.String(v.(string))
 	}
 
-	t, err := conn.CreateTrail(&input)
+	var t *cloudtrail.CreateTrailOutput
+	err := resource.Retry(15*time.Second, func() *resource.RetryError {
+		var err error
+		t, err = conn.CreateTrail(&input)
+		if err != nil {
+			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "Access denied.") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -250,7 +266,21 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[DEBUG] Updating CloudTrail: %s", input)
-	t, err := conn.UpdateTrail(&input)
+	var t *cloudtrail.UpdateTrailOutput
+	err := resource.Retry(15*time.Second, func() *resource.RetryError {
+		var err error
+		t, err = conn.UpdateTrail(&input)
+		if err != nil {
+			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "Access denied.") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
