@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const rdsClusterParameterGroupMaxParamsBulkEdit = 20
+
 func resourceAwsRDSClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsRDSClusterParameterGroupCreate,
@@ -217,16 +219,16 @@ func resourceAwsRDSClusterParameterGroupUpdate(d *schema.ResourceData, meta inte
 		if len(parameters) > 0 {
 			// We can only modify 20 parameters at a time, so walk them until
 			// we've got them all.
-			maxParams := 20
 			for parameters != nil {
 				paramsToModify := make([]*rds.Parameter, 0)
-				if len(parameters) <= maxParams {
+				if len(parameters) <= rdsClusterParameterGroupMaxParamsBulkEdit {
 					paramsToModify, parameters = parameters[:], nil
 				} else {
-					paramsToModify, parameters = parameters[:maxParams], parameters[maxParams:]
+					paramsToModify, parameters = parameters[:rdsClusterParameterGroupMaxParamsBulkEdit], parameters[rdsClusterParameterGroupMaxParamsBulkEdit:]
 				}
+				parameterGroupName := d.Get("name").(string)
 				modifyOpts := rds.ModifyDBClusterParameterGroupInput{
-					DBClusterParameterGroupName: aws.String(d.Get("name").(string)),
+					DBClusterParameterGroupName: aws.String(parameterGroupName),
 					Parameters:                  paramsToModify,
 				}
 
