@@ -27,6 +27,7 @@ BUG FIXES:
 * resource/aws_emr_instance_group: fix crash when changing `instance_group.count` [GH-1287]
 * resource/aws_elasticsearch_domain: Fix updating config when update doesn't involve EBS [GH-1131]
 * resource/aws_s3_bucket: Avoid crashing when no lifecycle rule is defined [GH-1316]
+* resource/elastic_transcoder_preset: Fix provider validation [GH-1338]
 
 ## 0.1.3 (July 25, 2017)
 
