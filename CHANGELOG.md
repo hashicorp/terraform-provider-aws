@@ -15,6 +15,7 @@ IMPROVEMENTS:
 * resource/aws_ssm_patch_baseline: Update support for Operating System [GH-1260]
 * resource/aws_db_instance: Expose db_instance ca_cert_identifier [GH-1256]
 * resource/aws_rds_cluster: Add support for iam_roles to rds_cluster [GH-1258]
+* resource/aws_rds_cluster_parameter_group: Support > 20 parameters [GH-1298]
 
 BUG FIXES:
 
