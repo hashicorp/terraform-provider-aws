@@ -19,7 +19,7 @@ resource "aws_network_acl" "main" {
 
   egress {
     protocol   = "tcp"
-    rule_no    = 2
+    rule_no    = 200
     action     = "allow"
     cidr_block = "10.3.0.0/18"
     from_port  = 443
@@ -28,7 +28,7 @@ resource "aws_network_acl" "main" {
 
   ingress {
     protocol   = "tcp"
-    rule_no    = 1
+    rule_no    = 100
     action     = "allow"
     cidr_block = "10.3.0.0/18"
     from_port  = 80
