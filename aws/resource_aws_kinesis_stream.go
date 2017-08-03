@@ -106,14 +106,19 @@ func resourceAwsKinesisStreamCreate(d *schema.ResourceData, meta interface{}) er
 		StreamName: aws.String(sn),
 	}
 
-	_, err := conn.CreateStream(createOpts)
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			return fmt.Errorf("[WARN] Error creating Kinesis Stream: \"%s\", code: \"%s\"", awsErr.Message(), awsErr.Code())
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.CreateStream(createOpts)
+		if isAWSErr(err, "LimitExceededException", "simultaneously be in CREATING or DELETING") {
+			return resource.RetryableError(err)
 		}
-		return err
+		return resource.NonRetryableError(err)
+	})
+
+	if err != nil {
+		return fmt.Errorf("Unable to create stream: %s", err)
 	}
 
+	// No error, wait for ACTIVE state
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"CREATING"},
 		Target:     []string{"ACTIVE"},
