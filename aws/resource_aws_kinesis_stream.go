@@ -244,7 +244,7 @@ func setKinesisRetentionPeriod(conn *kinesis.Kinesis, d *schema.ResourceData) er
 		}
 	}
 
-	if err := waitForKinesisToBeActive(conn, d, sn); err != nil {
+	if err := waitForKinesisToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
 		return err
 	}
 
@@ -273,7 +273,7 @@ func updateKinesisShardCount(conn *kinesis.Kinesis, d *schema.ResourceData) erro
 		return err
 	}
 
-	if err := waitForKinesisToBeActive(conn, d, sn); err != nil {
+	if err := waitForKinesisToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
 		return err
 	}
 
@@ -308,7 +308,7 @@ func updateKinesisShardLevelMetrics(conn *kinesis.Kinesis, d *schema.ResourceDat
 		if err != nil {
 			return fmt.Errorf("Failure to disable shard level metrics for stream %s: %s", sn, err)
 		}
-		if err := waitForKinesisToBeActive(conn, d, sn); err != nil {
+		if err := waitForKinesisToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
 			return err
 		}
 	}
@@ -327,7 +327,7 @@ func updateKinesisShardLevelMetrics(conn *kinesis.Kinesis, d *schema.ResourceDat
 		if err != nil {
 			return fmt.Errorf("Failure to enable shard level metrics for stream %s: %s", sn, err)
 		}
-		if err := waitForKinesisToBeActive(conn, d, sn); err != nil {
+		if err := waitForKinesisToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
 			return err
 		}
 	}
@@ -381,12 +381,12 @@ func streamStateRefreshFunc(conn *kinesis.Kinesis, sn string) resource.StateRefr
 	}
 }
 
-func waitForKinesisToBeActive(conn *kinesis.Kinesis, d *schema.ResourceData, sn string) error {
+func waitForKinesisToBeActive(conn *kinesis.Kinesis, timeout time.Duration, sn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"UPDATING"},
 		Target:     []string{"ACTIVE"},
 		Refresh:    streamStateRefreshFunc(conn, sn),
-		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
