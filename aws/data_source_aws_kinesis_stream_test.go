@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
@@ -26,7 +27,7 @@ func TestAccAWSKinesisStreamDataSource(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Error calling UpdateShardCount: %s", err)
 		}
-		if err := waitForKinesisToBeActive(conn, sn); err != nil {
+		if err := waitForKinesisToBeActive(conn, 5*time.Minute, sn); err != nil {
 			t.Fatal(err)
 		}
 	}
