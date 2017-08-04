@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -33,6 +34,32 @@ func TestAccAWSEIPAssociation_basic(t *testing.T) {
 						"aws_eip.bar.2", &a),
 					testAccCheckAWSEIPAssociationExists(
 						"aws_eip_association.to_eni", &a),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEIPAssociation_ec2Classic(t *testing.T) {
+	var a ec2.Address
+
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPAssociationConfig_ec2Classic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists("aws_eip.test", &a),
+					testAccCheckAWSEIPAssociationExists("aws_eip_association.test", &a),
+					resource.TestCheckResourceAttrSet("aws_eip_association.test", "public_ip"),
+					resource.TestCheckResourceAttr("aws_eip_association.test", "allocation_id", ""),
+					testAccCheckAWSEIPAssociationHasIpBasedId("aws_eip_association.test", &a),
 				),
 			},
 		},
@@ -87,25 +114,42 @@ func testAccCheckAWSEIPAssociationExists(name string, res *ec2.Address) resource
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		platforms := testAccProvider.Meta().(*AWSClient).supportedplatforms
 
-		request := &ec2.DescribeAddressesInput{
-			Filters: []*ec2.Filter{
-				&ec2.Filter{
-					Name:   aws.String("association-id"),
-					Values: []*string{res.AssociationId},
-				},
-			},
+		request, err := describeAddressesById(rs.Primary.ID, platforms)
+		if err != nil {
+			return err
 		}
+
 		describe, err := conn.DescribeAddresses(request)
 		if err != nil {
 			return err
 		}
 
 		if len(describe.Addresses) != 1 ||
-			*describe.Addresses[0].AssociationId != *res.AssociationId {
+			(!hasEc2Classic(platforms) && *describe.Addresses[0].AssociationId != *res.AssociationId) {
 			return fmt.Errorf("EIP Association not found")
 		}
 
+		return nil
+	}
+}
+
+func testAccCheckAWSEIPAssociationHasIpBasedId(name string, res *ec2.Address) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EIP Association ID is set")
+		}
+
+		if rs.Primary.ID != rs.Primary.Attributes["public_ip"] {
+			return fmt.Errorf("Expected EIP Association ID to be equal to Public IP (%q), given: %q",
+				rs.Primary.Attributes["public_ip"], rs.Primary.ID)
+		}
 		return nil
 	}
 }
@@ -177,7 +221,7 @@ resource "aws_eip_association" "by_allocation_id" {
 resource "aws_eip_association" "by_public_ip" {
 	public_ip = "${aws_eip.bar.1.public_ip}"
 	instance_id = "${aws_instance.foo.1.id}"
-  depends_on = ["aws_instance.foo"]
+	depends_on = ["aws_instance.foo"]
 }
 resource "aws_eip_association" "to_eni" {
 	allocation_id = "${aws_eip.bar.2.id}"
@@ -186,7 +230,7 @@ resource "aws_eip_association" "to_eni" {
 resource "aws_network_interface" "baz" {
 	subnet_id = "${aws_subnet.sub.id}"
 	private_ips = ["192.168.0.50"]
-  depends_on = ["aws_instance.foo"]
+	depends_on = ["aws_instance.foo"]
 	attachment {
 		instance = "${aws_instance.foo.0.id}"
 		device_index = 1
@@ -222,3 +266,40 @@ resource "aws_eip_association" "by_allocation_id" {
 	allocation_id = "${aws_eip.bar.id}"
 	instance_id = "${aws_instance.foo.id}"
 }`
+
+const testAccAWSEIPAssociationConfig_ec2Classic = `
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_eip" "test" {}
+
+data "aws_availability_zones" "available" {}
+
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/ebs/ubuntu-trusty-14.04-i386-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["paravirtual"]
+  }
+
+  owners = ["099720109477"] # Canonical
+}
+
+resource "aws_instance" "test" {
+  ami = "${data.aws_ami.ubuntu.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  instance_type = "t1.micro"
+}
+
+resource "aws_eip_association" "test" {
+  public_ip = "${aws_eip.test.public_ip}"
+  instance_id = "${aws_instance.test.id}"
+}
+`
