@@ -402,6 +402,15 @@ func (c *Config) Client() (interface{}, error) {
 	return &client, nil
 }
 
+func hasEc2Classic(platforms []string) bool {
+	for _, p := range platforms {
+		if p == "EC2" {
+			return true
+		}
+	}
+	return false
+}
+
 // ValidateRegion returns an error if the configured region is not a
 // valid aws region and nil otherwise.
 func (c *Config) ValidateRegion() error {
