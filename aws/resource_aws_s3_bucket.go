@@ -800,6 +800,10 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 						rule["prefix"] = *filter.Prefix
 					}
 				}
+			} else {
+				if lifecycleRule.Prefix != nil {
+					rule["prefix"] = *lifecycleRule.Prefix
+				}
 			}
 
 			// Enabled
