@@ -19,17 +19,25 @@ func resourceAwsIamUserLoginProfile() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsIamUserLoginProfileCreate,
 		Read:   schema.Noop,
-		Update: schema.Noop,
+		Update: resourceAwsIamUserLoginProfileUpdate,
 		Delete: schema.RemoveFromState,
 
 		Schema: map[string]*schema.Schema{
 			"user": {
 				Type:     schema.TypeString,
+				ForceNew: true,
 				Required: true,
 			},
 			"pgp_key": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"password"},
+			},
+			"password": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"pgp_key", "password_length"},
 			},
 			"password_reset_required": {
 				Type:     schema.TypeBool,
@@ -37,12 +45,12 @@ func resourceAwsIamUserLoginProfile() *schema.Resource {
 				Default:  true,
 			},
 			"password_length": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      20,
-				ValidateFunc: validateAwsIamLoginProfilePasswordLength,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Default:       20,
+				ValidateFunc:  validateAwsIamLoginProfilePasswordLength,
+				ConflictsWith: []string{"password"},
 			},
-
 			"key_fingerprint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -100,6 +108,12 @@ func generatePassword(length int) string {
 func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
 
+	var (
+		initialPassword string
+		fingerprint     string
+		encrypted       string
+	)
+
 	encryptionKey, err := encryption.RetrieveGPGKey(d.Get("pgp_key").(string))
 	if err != nil {
 		return err
@@ -107,7 +121,7 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 
 	username := d.Get("user").(string)
 	passwordResetRequired := d.Get("password_reset_required").(bool)
-	passwordLength := d.Get("password_length").(int)
+	password, hasPassword := d.GetOk("password")
 
 	_, err = iamconn.GetLoginProfile(&iam.GetLoginProfileInput{
 		UserName: aws.String(username),
@@ -118,16 +132,26 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 			// resource creation diffs) - we will never modify it, but obviously cannot
 			// set the password.
 			d.SetId(username)
-			d.Set("key_fingerprint", "")
-			d.Set("encrypted_password", "")
+			if hasPassword {
+				d.Set("password", "")
+			} else {
+				d.Set("key_fingerprint", "")
+				d.Set("encrypted_password", "")
+			}
 			return nil
 		}
 	}
 
-	initialPassword := generatePassword(passwordLength)
-	fingerprint, encrypted, err := encryption.EncryptValue(encryptionKey, initialPassword, "Password")
-	if err != nil {
-		return err
+	if hasPassword {
+		p := []byte(password.(string))
+		initialPassword = string(p)
+	} else {
+		passwordLength := d.Get("password_length").(int)
+		initialPassword = generatePassword(passwordLength)
+		fingerprint, encrypted, err = encryption.EncryptValue(encryptionKey, initialPassword, "Password")
+		if err != nil {
+			return err
+		}
 	}
 
 	request := &iam.CreateLoginProfileInput{
@@ -144,15 +168,106 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 			// resource creation diffs) - we will never modify it, but obviously cannot
 			// set the password.
 			d.SetId(username)
-			d.Set("key_fingerprint", "")
-			d.Set("encrypted_password", "")
+			if hasPassword {
+				d.Set("password", "")
+			} else {
+				d.Set("key_fingerprint", "")
+				d.Set("encrypted_password", "")
+			}
 			return nil
 		}
 		return errwrap.Wrapf(fmt.Sprintf("Error creating IAM User Login Profile for %q: {{err}}", username), err)
 	}
 
 	d.SetId(*createResp.LoginProfile.UserName)
-	d.Set("key_fingerprint", fingerprint)
-	d.Set("encrypted_password", encrypted)
+
+	if hasPassword {
+		d.Set("password", password)
+	} else {
+		d.Set("key_fingerprint", fingerprint)
+		d.Set("encrypted_password", encrypted)
+	}
+
+	return nil
+}
+
+func resourceAwsIamUserLoginProfileUpdate(d *schema.ResourceData, meta interface{}) error {
+	iamconn := meta.(*AWSClient).iamconn
+
+	var (
+		initialPassword string
+		fingerprint     string
+		encrypted       string
+	)
+
+	encryptionKey, err := encryption.RetrieveGPGKey(d.Get("pgp_key").(string))
+	if err != nil {
+		return err
+	}
+
+	username := d.Get("user").(string)
+	passwordResetRequired := d.Get("password_reset_required").(bool)
+	password, hasPassword := d.GetOk("password")
+
+	if hasPassword {
+		p := []byte(password.(string))
+		initialPassword = string(p)
+	} else {
+		passwordLength := d.Get("password_length").(int)
+		initialPassword = generatePassword(passwordLength)
+		fingerprint, encrypted, err = encryption.EncryptValue(encryptionKey, initialPassword, "Password")
+		if err != nil {
+			return err
+		}
+	}
+
+	request := &iam.UpdateLoginProfileInput{
+		UserName:              aws.String(username),
+		Password:              aws.String(initialPassword),
+		PasswordResetRequired: aws.Bool(passwordResetRequired),
+	}
+
+	log.Println("[DEBUG] Update IAM User Login Profile request:", request)
+	_, err = iamconn.UpdateLoginProfile(request)
+	if err != nil {
+		awsErr, ok := err.(awserr.Error)
+
+		if !ok {
+			return errwrap.Wrapf(fmt.Sprintf("Error updating IAM User Login Profile for %q: {{err}}", d.Id()), err)
+		}
+
+		if awsErr.Code() == "EntityAlreadyExists" {
+			// If there is already a login profile, bring it under management (to prevent
+			// resource creation diffs) - we will never modify it, but obviously cannot
+			// set the password.
+			d.SetId(username)
+			if hasPassword {
+				d.Set("password", "")
+			} else {
+				d.Set("key_fingerprint", "")
+				d.Set("encrypted_password", "")
+			}
+			return nil
+		} else if awsErr.Code() == "NoSuchEntity" {
+			// User may have been deleted
+			log.Printf("[WARN] API Gateway Gateway Response (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			if hasPassword {
+				d.Set("password", "")
+			} else {
+				d.Set("key_fingerprint", "")
+				d.Set("encrypted_password", "")
+			}
+			return nil
+		}
+	}
+
+	if hasPassword {
+		d.Set("password", password)
+	} else {
+		d.Set("key_fingerprint", fingerprint)
+		d.Set("encrypted_password", encrypted)
+	}
+
 	return nil
 }
