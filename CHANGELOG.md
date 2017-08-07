@@ -24,6 +24,7 @@ BUG FIXES:
 * resource/aws_cloudtrail: Retry if IAM role isn't propagated yet [GH-1312]
 * resource/aws_cloudtrail: Fix CloudWatch role ARN/group updates [GH-1357]
 * resource/aws_eip_association: Avoid crash in EC2 Classic [GH-1344]
+* resource/aws_elasticache_parameter_group: Allow removing parameters [GH-1309]
 * resource/aws_kinesis: add retries for Kinesis throttling exceptions [GH-1085]
 * resource/aws_kinesis_firehose: adding support for `ExtendedS3DestinationConfiguration` [GH-1015]
 * resource/aws_spot_fleet_request: Ignore empty `key_name` [GH-1203]
