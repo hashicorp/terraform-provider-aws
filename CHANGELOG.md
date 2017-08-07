@@ -16,6 +16,7 @@ IMPROVEMENTS:
 * resource/aws_db_instance: Expose db_instance ca_cert_identifier [GH-1256]
 * resource/aws_rds_cluster: Add support for iam_roles to rds_cluster [GH-1258]
 * resource/aws_rds_cluster_parameter_group: Support > 20 parameters [GH-1298]
+* data-source/aws_iam_role: Normalize the IAM role data source [GH-1330]
 
 BUG FIXES:
 
