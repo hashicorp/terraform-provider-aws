@@ -104,9 +104,10 @@ func resourceAwsInstance() *schema.Resource {
 			},
 
 			"user_data": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"user_data_base64"},
 				StateFunc: func(v interface{}) string {
 					switch v.(type) {
 					case string:
@@ -114,6 +115,22 @@ func resourceAwsInstance() *schema.Resource {
 					default:
 						return ""
 					}
+				},
+			},
+
+			"user_data_base64": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"user_data"},
+				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
+					s := v.(string)
+					if !isBase64Encoded([]byte(s)) {
+						errs = append(errs, fmt.Errorf(
+							"%s: must be base64-encoded", name,
+						))
+					}
+					return
 				},
 			},
 
@@ -719,7 +736,16 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		if attr.UserData != nil && attr.UserData.Value != nil {
-			d.Set("user_data", userDataHashSum(*attr.UserData.Value))
+			// Since user_data and user_data_base64 conflict with each other,
+			// we'll only set one or the other here to avoid a perma-diff.
+			// Since user_data_base64 was added later, we'll prefer to set
+			// user_data.
+			_, b64 := d.GetOk("user_data_base64")
+			if b64 {
+				d.Set("user_data_base64", attr.UserData.Value)
+			} else {
+				d.Set("user_data", userDataHashSum(*attr.UserData.Value))
+			}
 		}
 	}
 
@@ -1518,9 +1544,14 @@ func buildAwsInstanceOpts(
 		Name: aws.String(d.Get("iam_instance_profile").(string)),
 	}
 
-	user_data := d.Get("user_data").(string)
+	userData := d.Get("user_data").(string)
+	userDataBase64 := d.Get("user_data_base64").(string)
 
-	opts.UserData64 = aws.String(base64Encode([]byte(user_data)))
+	if userData != "" {
+		opts.UserData64 = aws.String(base64Encode([]byte(userData)))
+	} else if userDataBase64 != "" {
+		opts.UserData64 = aws.String(userDataBase64)
+	}
 
 	// check for non-default Subnet, and cast it to a String
 	subnet, hasSubnet := d.GetOk("subnet_id")

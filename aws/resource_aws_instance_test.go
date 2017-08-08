@@ -107,6 +107,36 @@ func TestAccAWSInstance_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_userDataBase64(t *testing.T) {
+	var v ec2.Instance
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+
+		// We ignore security groups because even with EC2 classic
+		// we'll import as VPC security groups, which is fine. We verify
+		// VPC security group import in other tests
+		IDRefreshName:   "aws_instance.foo",
+		IDRefreshIgnore: []string{"security_groups", "vpc_security_group_ids"},
+
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithUserDataBase64,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"aws_instance.foo", &v),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo",
+						"user_data_base64",
+						"aGVsbG8gd29ybGQ="),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 	var v ec2.Instance
 
@@ -1257,6 +1287,30 @@ resource "aws_instance" "foo" {
 	instance_type = "m1.small"
 	security_groups = ["${aws_security_group.tf_test_foo.name}"]
 	user_data = "foo:-with-character's"
+}
+`
+
+const testAccInstanceConfigWithUserDataBase64 = `
+resource "aws_security_group" "tf_test_foo" {
+	name = "tf_test_foo"
+	description = "foo"
+
+	ingress {
+		protocol = "icmp"
+		from_port = -1
+		to_port = -1
+		cidr_blocks = ["0.0.0.0/0"]
+	}
+}
+
+resource "aws_instance" "foo" {
+	# us-west-2
+	ami = "ami-4fccb37f"
+	availability_zone = "us-west-2a"
+
+	instance_type = "m1.small"
+	security_groups = ["${aws_security_group.tf_test_foo.name}"]
+	user_data_base64 = "${base64encode("hello world")}"
 }
 `
 
