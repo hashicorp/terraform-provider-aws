@@ -317,7 +317,7 @@ func TestAccAWSInstance_rootInstanceStore(t *testing.T) {
 	})
 }
 
-func TestAcctABSInstance_noAMIEphemeralDevices(t *testing.T) {
+func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 	var v ec2.Instance
 
 	testCheck := func() resource.TestCheckFunc {
