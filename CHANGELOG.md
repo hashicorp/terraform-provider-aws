@@ -4,6 +4,10 @@ IMPROVEMENTS:
 
 * resource/aws_instance: New `user_data_base64` attribute that allows non-UTF8 data (such as gzip) to be assigned to user-data without corruption [GH-850]
 
+BUG FIXES:
+
+* r/aws_instance: Fix associate_public_ip_address [GH-1340]
+
 ## 0.1.4 (August 08, 2017)
 
 FEATURES:
