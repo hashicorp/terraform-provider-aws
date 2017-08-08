@@ -6,7 +6,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
-* r/aws_instance: Fix associate_public_ip_address [GH-1340]
+* resource/aws_instance: Fix associate_public_ip_address [GH-1340]
 
 ## 0.1.4 (August 08, 2017)
 
