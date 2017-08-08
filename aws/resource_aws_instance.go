@@ -1235,10 +1235,9 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterfaces interface{}) []*ec2.InstanceNetworkInterfaceSpecification {
 	networkInterfaces := []*ec2.InstanceNetworkInterfaceSpecification{}
 	// Get necessary items
-	associatePublicIPAddress := d.Get("associate_public_ip_address").(bool)
 	subnet, hasSubnet := d.GetOk("subnet_id")
 
-	if hasSubnet && associatePublicIPAddress {
+	if hasSubnet {
 		// If we have a non-default VPC / Subnet specified, we can flag
 		// AssociatePublicIpAddress to get a Public IP assigned. By default these are not provided.
 		// You cannot specify both SubnetId and the NetworkInterface.0.* parameters though, otherwise
@@ -1247,10 +1246,13 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 		// to avoid: Network interfaces and an instance-level security groups may not be specified on
 		// the same request
 		ni := &ec2.InstanceNetworkInterfaceSpecification{
-			AssociatePublicIpAddress: aws.Bool(associatePublicIPAddress),
-			DeviceIndex:              aws.Int64(int64(0)),
-			SubnetId:                 aws.String(subnet.(string)),
-			Groups:                   groups,
+			DeviceIndex: aws.Int64(int64(0)),
+			SubnetId:    aws.String(subnet.(string)),
+			Groups:      groups,
+		}
+
+		if v, ok := d.GetOkExists("associate_public_ip_address"); ok {
+			ni.AssociatePublicIpAddress = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("private_ip"); ok {
@@ -1573,8 +1575,6 @@ func buildAwsInstanceOpts(
 		opts.Placement.Tenancy = aws.String(v)
 	}
 
-	associatePublicIPAddress := d.Get("associate_public_ip_address").(bool)
-
 	var groups []*string
 	if v := d.Get("security_groups"); v != nil {
 		// Security group names.
@@ -1593,7 +1593,7 @@ func buildAwsInstanceOpts(
 	networkInterfaces, interfacesOk := d.GetOk("network_interface")
 
 	// If setting subnet and public address, OR manual network interfaces, populate those now.
-	if hasSubnet && associatePublicIPAddress || interfacesOk {
+	if hasSubnet || interfacesOk {
 		// Otherwise we're attaching (a) network interface(s)
 		opts.NetworkInterfaces = buildNetworkInterfaceOpts(d, groups, networkInterfaces)
 	} else {
