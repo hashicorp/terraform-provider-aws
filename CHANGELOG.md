@@ -1,40 +1,40 @@
-## 0.1.4 (Unreleased)
+## 0.1.4 (August 08, 2017)
 
 FEATURES:
 
-* **New Resource:** `aws_cloudwatch_dashboard` [GH-1172]
-* **New Data Source:** `aws_internet_gateway` [GH-1196]
-* **New Data Source:** `aws_efs_mount_target` [GH-1255]
+* **New Resource:** `aws_cloudwatch_dashboard` ([#1172](https://github.com/terraform-providers/terraform-provider-aws/issues/1172))
+* **New Data Source:** `aws_internet_gateway` ([#1196](https://github.com/terraform-providers/terraform-provider-aws/issues/1196))
+* **New Data Source:** `aws_efs_mount_target` ([#1255](https://github.com/terraform-providers/terraform-provider-aws/issues/1255))
 
 IMPROVEMENTS:
 
-* AWS SDK to log extra debug details on request errors [GH-1210]
-* resource/aws_spot_fleet_request: Add support for  `wait_for_fulfillment` [GH-1241]
-* resource/aws_autoscaling_schedule: Allow empty value [GH-1268]
-* resource/aws_ssm_association: Add support for OutputLocation and Schedule Expression [GH-1253]
-* resource/aws_ssm_patch_baseline: Update support for Operating System [GH-1260]
-* resource/aws_db_instance: Expose db_instance ca_cert_identifier [GH-1256]
-* resource/aws_rds_cluster: Add support for iam_roles to rds_cluster [GH-1258]
-* resource/aws_rds_cluster_parameter_group: Support > 20 parameters [GH-1298]
-* data-source/aws_iam_role: Normalize the IAM role data source [GH-1330]
-* resource/aws_kinesis_stream: Increase Timeouts, add Timeout Support [GH-1345]
+* AWS SDK to log extra debug details on request errors ([#1210](https://github.com/terraform-providers/terraform-provider-aws/issues/1210))
+* resource/aws_spot_fleet_request: Add support for  `wait_for_fulfillment` ([#1241](https://github.com/terraform-providers/terraform-provider-aws/issues/1241))
+* resource/aws_autoscaling_schedule: Allow empty value ([#1268](https://github.com/terraform-providers/terraform-provider-aws/issues/1268))
+* resource/aws_ssm_association: Add support for OutputLocation and Schedule Expression ([#1253](https://github.com/terraform-providers/terraform-provider-aws/issues/1253))
+* resource/aws_ssm_patch_baseline: Update support for Operating System ([#1260](https://github.com/terraform-providers/terraform-provider-aws/issues/1260))
+* resource/aws_db_instance: Expose db_instance ca_cert_identifier ([#1256](https://github.com/terraform-providers/terraform-provider-aws/issues/1256))
+* resource/aws_rds_cluster: Add support for iam_roles to rds_cluster ([#1258](https://github.com/terraform-providers/terraform-provider-aws/issues/1258))
+* resource/aws_rds_cluster_parameter_group: Support > 20 parameters ([#1298](https://github.com/terraform-providers/terraform-provider-aws/issues/1298))
+* data-source/aws_iam_role: Normalize the IAM role data source ([#1330](https://github.com/terraform-providers/terraform-provider-aws/issues/1330))
+* resource/aws_kinesis_stream: Increase Timeouts, add Timeout Support ([#1345](https://github.com/terraform-providers/terraform-provider-aws/issues/1345))
 
 BUG FIXES:
 
-* resource/aws_instance: Guard check for aws_instance UserData to prevent panic [GH-1288]
-* resource/aws_config: Set AWS Config Configuration recorder & Delivery channel names as ForceNew [GH-1247]
-* resource/aws_cloudtrail: Retry if IAM role isn't propagated yet [GH-1312]
-* resource/aws_cloudtrail: Fix CloudWatch role ARN/group updates [GH-1357]
-* resource/aws_eip_association: Avoid crash in EC2 Classic [GH-1344]
-* resource/aws_elasticache_parameter_group: Allow removing parameters [GH-1309]
-* resource/aws_kinesis: add retries for Kinesis throttling exceptions [GH-1085]
-* resource/aws_kinesis_firehose: adding support for `ExtendedS3DestinationConfiguration` [GH-1015]
-* resource/aws_spot_fleet_request: Ignore empty `key_name` [GH-1203]
-* resource/aws_emr_instance_group: fix crash when changing `instance_group.count` [GH-1287]
-* resource/aws_elasticsearch_domain: Fix updating config when update doesn't involve EBS [GH-1131]
-* resource/aws_s3_bucket: Avoid crashing when no lifecycle rule is defined [GH-1316]
-* resource/elastic_transcoder_preset: Fix provider validation [GH-1338]
-* resource/aws_s3_bucket: Avoid crashing when `filter` is not set [GH-1350]
+* resource/aws_instance: Guard check for aws_instance UserData to prevent panic ([#1288](https://github.com/terraform-providers/terraform-provider-aws/issues/1288))
+* resource/aws_config: Set AWS Config Configuration recorder & Delivery channel names as ForceNew ([#1247](https://github.com/terraform-providers/terraform-provider-aws/issues/1247))
+* resource/aws_cloudtrail: Retry if IAM role isn't propagated yet ([#1312](https://github.com/terraform-providers/terraform-provider-aws/issues/1312))
+* resource/aws_cloudtrail: Fix CloudWatch role ARN/group updates ([#1357](https://github.com/terraform-providers/terraform-provider-aws/issues/1357))
+* resource/aws_eip_association: Avoid crash in EC2 Classic ([#1344](https://github.com/terraform-providers/terraform-provider-aws/issues/1344))
+* resource/aws_elasticache_parameter_group: Allow removing parameters ([#1309](https://github.com/terraform-providers/terraform-provider-aws/issues/1309))
+* resource/aws_kinesis: add retries for Kinesis throttling exceptions ([#1085](https://github.com/terraform-providers/terraform-provider-aws/issues/1085))
+* resource/aws_kinesis_firehose: adding support for `ExtendedS3DestinationConfiguration` ([#1015](https://github.com/terraform-providers/terraform-provider-aws/issues/1015))
+* resource/aws_spot_fleet_request: Ignore empty `key_name` ([#1203](https://github.com/terraform-providers/terraform-provider-aws/issues/1203))
+* resource/aws_emr_instance_group: fix crash when changing `instance_group.count` ([#1287](https://github.com/terraform-providers/terraform-provider-aws/issues/1287))
+* resource/aws_elasticsearch_domain: Fix updating config when update doesn't involve EBS ([#1131](https://github.com/terraform-providers/terraform-provider-aws/issues/1131))
+* resource/aws_s3_bucket: Avoid crashing when no lifecycle rule is defined ([#1316](https://github.com/terraform-providers/terraform-provider-aws/issues/1316))
+* resource/elastic_transcoder_preset: Fix provider validation ([#1338](https://github.com/terraform-providers/terraform-provider-aws/issues/1338))
+* resource/aws_s3_bucket: Avoid crashing when `filter` is not set ([#1350](https://github.com/terraform-providers/terraform-provider-aws/issues/1350))
 
 ## 0.1.3 (July 25, 2017)
 
