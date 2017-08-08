@@ -1847,10 +1847,6 @@
 			"revisionTime": "2017-06-01T21:16:37Z"
 		},
 		{
-			"path": "github.com/masterzen/winrm/winrm",
-			"revision": "1ca0ba637a877ee12b69abc73c6161fccb77b70a"
-		},
-		{
 			"checksumSHA1": "bx+egnFe0OB0BZBcgZcaqsvcmS4=",
 			"path": "github.com/masterzen/xmlpath",
 			"revision": "13f4951698adc0fa9c1dda3e275d489a24201161",
