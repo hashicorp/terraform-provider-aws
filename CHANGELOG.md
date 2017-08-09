@@ -3,6 +3,7 @@
 IMPROVEMENTS:
 
 * resource/aws_instance: New `user_data_base64` attribute that allows non-UTF8 data (such as gzip) to be assigned to user-data without corruption [GH-850]
+* data-source/aws_vpc: Expose enable_dns_* in aws_vpc data_source [GH-1373]
 
 BUG FIXES:
 
