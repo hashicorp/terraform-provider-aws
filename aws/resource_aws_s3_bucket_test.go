@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"reflect"
 	"regexp"
 	"strconv"
 	"testing"
+	"text/template"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -59,19 +59,17 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 }
 
 func TestAccAWSS3MultiBucket_withTags(t *testing.T) {
-	for i := 0; i < 10; i++ {
-		rInt := acctest.RandInt()
-		resource.Test(t, resource.TestCase{
-			PreCheck:     func() { testAccPreCheck(t) },
-			Providers:    testAccProviders,
-			CheckDestroy: testAccCheckAWSS3BucketDestroy,
-			Steps: []resource.TestStep{
-				{
-					Config: testAccAWSS3MultiBucketConfigWithTags(rInt),
-				},
+	rInt := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3MultiBucketConfigWithTags(rInt),
 			},
-		})
-	}
+		},
+	})
 }
 
 func TestAccAWSS3Bucket_namePrefix(t *testing.T) {
