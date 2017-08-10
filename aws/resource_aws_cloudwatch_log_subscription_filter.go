@@ -165,7 +165,7 @@ func resourceAwsCloudwatchLogSubscriptionFilterDelete(d *schema.ResourceData, me
 	_, err := conn.DeleteSubscriptionFilter(params)
 	if err != nil {
 		return fmt.Errorf(
-			"Error deleting Subscription Filter from log group: %s with name filter name %s", log_group_name, name)
+			"Error deleting Subscription Filter from log group: %s with name filter name %s: %+v", log_group_name, name, err)
 	}
 	d.SetId("")
 	return nil
