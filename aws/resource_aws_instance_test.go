@@ -1096,6 +1096,35 @@ func TestAccAWSInstance_changeInstanceType(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_changeRootBlockDeviceVolumeSize(t *testing.T) {
+	var before ec2.Instance
+	var after ec2.Instance
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceGP2IopsDevice,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists("aws_instance.foo", &before),
+				),
+			},
+			{
+				Config: testAccInstanceGP2IopsDeviceVolumeSizeUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists("aws_instance.foo", &after),
+					testAccCheckInstanceNotRecreated(
+						t, &before, &after),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "root_block_device.0.volume_size", "20"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_primaryNetworkInterface(t *testing.T) {
 	var instance ec2.Instance
 	var ini ec2.NetworkInterface
@@ -1761,6 +1790,23 @@ resource "aws_instance" "foo" {
 		volume_size = 11
         # configured explicitly
 		iops        = 10
+	}
+}
+`
+
+const testAccInstanceGP2IopsDeviceVolumeSizeUpdate = `
+resource "aws_instance" "foo" {
+	# us-west-2
+	ami = "ami-55a7ea65"
+
+	# In order to attach an encrypted volume to an instance you need to have an
+	# m3.medium or larger. See "Supported Instance Types" in:
+	# http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html
+	instance_type = "m3.medium"
+
+	root_block_device {
+		volume_type = "gp2"
+		volume_size = 12
 	}
 }
 `
