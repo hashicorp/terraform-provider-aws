@@ -472,7 +472,6 @@ func resourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
 						},
 
 						"volume_type": {
@@ -1260,6 +1259,58 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("root_block_device") {
+		if rbd, ok := d.GetOk("root_block_device"); ok {
+			rbdL := rbd.([]interface{})
+			if len(rbdL) > 1 {
+				return fmt.Errorf("Cannot specify more than one root_block_device.")
+			}
+			for _, r := range rbdL {
+				bd := r.(map[string]interface{})
+				if volumeSize, ok := bd["volume_size"].(int); ok && volumeSize != 0 {
+					volumeIds, err := getAwsInstanceVolumeIds(conn, d)
+					if err != nil {
+						return fmt.Errorf("Error retrieving volumes: %s", err)
+					}
+
+					volResp, err := conn.DescribeVolumes(&ec2.DescribeVolumesInput{
+						VolumeIds: volumeIds,
+					})
+					if err != nil {
+						return err
+					}
+
+					if len(volResp.Volumes) < 1 {
+						return fmt.Errorf("Cannot fetch volume info")
+					}
+					if int64(volumeSize) != *volResp.Volumes[0].Size {
+						_, err = conn.ModifyVolume(&ec2.ModifyVolumeInput{
+							Size:     aws.Int64(int64(volumeSize)),
+							VolumeId: volumeIds[0],
+						})
+						if err != nil {
+							return err
+						}
+
+						stateConf := &resource.StateChangeConf{
+							Pending:    []string{"modifying", "optimizing"},
+							Target:     []string{"completed"},
+							Refresh:    VolumeStateRefreshFunc(conn, *volumeIds[0], "failed"),
+							Timeout:    d.Timeout(schema.TimeoutUpdate),
+							Delay:      30 * time.Second,
+							MinTimeout: 30 * time.Second,
+						}
+
+						_, err = stateConf.WaitForState()
+						if err != nil {
+							return fmt.Errorf("Error waiting for volume (%s) to be modified: %s", *volumeIds[0], err)
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// TODO(mitchellh): wait for the attributes we modified to
 	// persist the change...
 
@@ -1309,6 +1360,35 @@ func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []str
 				return i, state, fmt.Errorf("Failed to reach target state. Reason: %s",
 					stringifyStateReason(i.StateReason))
 			}
+		}
+
+		return i, state, nil
+	}
+}
+
+// VolumeStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
+// an EC2 root device volume.
+func VolumeStateRefreshFunc(conn *ec2.EC2, volumeID, failState string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeVolumesModifications(&ec2.DescribeVolumesModificationsInput{
+			VolumeIds: []*string{aws.String(volumeID)},
+		})
+		if err != nil {
+			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVolumeID.NotFound" {
+				resp = nil
+			} else {
+				log.Printf("Error on VolumeStateRefresh: %s", err)
+				return nil, "", err
+			}
+		}
+		if resp == nil {
+			return nil, "", nil
+		}
+
+		i := resp.VolumesModifications[0]
+		state := *i.ModificationState
+		if state == failState {
+			return i, state, fmt.Errorf("Failed to reach target state. Reason: %s", *i.StatusMessage)
 		}
 
 		return i, state, nil
