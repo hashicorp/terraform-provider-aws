@@ -25,6 +25,10 @@ resource "aws_directory_service_directory" "bar" {
     vpc_id     = "${aws_vpc.main.id}"
     subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
   }
+
+  tags {
+    Project = "foo"
+  }
 }
 
 resource "aws_vpc" "main" {
@@ -58,6 +62,7 @@ The following arguments are supported:
 * `short_name` - (Optional) The short name of the directory, such as `CORP`.
 * `enable_sso` - (Optional) Whether to enable single-sign on for the directory. Requires `alias`. Defaults to `false`.
 * `type` (Optional) - The directory type (`SimpleAD` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 **vpc\_settings** supports the following:
 
