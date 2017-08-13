@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: efs_file_system"
-sidebar_current: "docs-aws-datasource-efs-file-system"
+page_title: "AWS: efs_mount_target"
+sidebar_current: "docs-aws-datasource-efs-mount-target"
 description: |-
   Provides an Elastic File System Mount Target (EFS) data source.
 ---
 
-# aws_efs_file_system
+# aws_efs_mount_target
 
 Provides information about an Elastic File System Mount Target (EFS).
 
