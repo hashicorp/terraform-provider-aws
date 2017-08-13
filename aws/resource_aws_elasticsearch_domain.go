@@ -245,6 +245,19 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(*out.DomainStatus.ARN)
 
+	// Whilst the domain is being created, we can initialise the tags.
+	// This should mean that if the creation fails (eg because your token expired
+	// whilst the operation is being performed), we still get the required tags on
+	// the resources.
+	tags := tagsFromMapElasticsearchService(d.Get("tags").(map[string]interface{}))
+
+	if err := setTagsElasticsearchService(conn, d, *out.DomainStatus.ARN); err != nil {
+		return err
+	}
+
+	d.Set("tags", tagsToMapElasticsearchService(tags))
+	d.SetPartial("tags")
+
 	log.Printf("[DEBUG] Waiting for ElasticSearch domain %q to be created", d.Id())
 	err = resource.Retry(60*time.Minute, func() *resource.RetryError {
 		out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
@@ -264,15 +277,6 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	if err != nil {
 		return err
 	}
-
-	tags := tagsFromMapElasticsearchService(d.Get("tags").(map[string]interface{}))
-
-	if err := setTagsElasticsearchService(conn, d, *out.DomainStatus.ARN); err != nil {
-		return err
-	}
-
-	d.Set("tags", tagsToMapElasticsearchService(tags))
-	d.SetPartial("tags")
 	d.Partial(false)
 
 	log.Printf("[DEBUG] ElasticSearch domain %q created", d.Id())
