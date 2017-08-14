@@ -47,7 +47,7 @@ func dataSourceAwsIAMRole() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"create_date": {
 				Type:     schema.TypeString,
