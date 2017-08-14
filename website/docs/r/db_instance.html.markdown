@@ -88,8 +88,6 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The RDS instance ID.
-* `resource_id` - The RDS Resource ID of this instance.
 * `address` - The address of the RDS instance.
 * `arn` - The ARN of the RDS instance.
 * `allocated_storage` - The amount of allocated storage.
@@ -101,11 +99,13 @@ The following attributes are exported:
 * `engine` - The database engine.
 * `engine_version` - The database engine version.
 * `hosted_zone_id` - The canonical hosted zone ID of the DB instance (to be used in a Route 53 Alias record).
+* `id` - The RDS instance ID.
 * `instance_class`- The RDS instance class.
 * `maintenance_window` - The instance maintenance window.
 * `multi_az` - If the RDS instance is multi AZ enabled.
 * `name` - The database name.
 * `port` - The database port.
+* `resource_id` - The RDS Resource ID of this instance.
 * `status` - The RDS instance status.
 * `storage_encrypted` - Specifies whether the DB instance is encrypted.
 * `username` - The master username for the database.
