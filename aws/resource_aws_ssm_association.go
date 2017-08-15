@@ -27,6 +27,11 @@ func resourceAwsSsmAssociation() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
+			"document_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -96,6 +101,10 @@ func resourceAwsSsmAssociationCreate(d *schema.ResourceData, meta interface{}) e
 		assosciationInput.InstanceId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("document_version"); ok {
+		assosciationInput.DocumentVersion = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("schedule_expression"); ok {
 		assosciationInput.ScheduleExpression = aws.String(v.(string))
 	}
@@ -151,6 +160,7 @@ func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("parameters", association.Parameters)
 	d.Set("association_id", association.AssociationId)
 	d.Set("schedule_expression", association.ScheduleExpression)
+	d.Set("document_version", association.DocumentVersion)
 
 	if err := d.Set("targets", flattenAwsSsmTargets(association.Targets)); err != nil {
 		return fmt.Errorf("[DEBUG] Error setting targets error: %#v", err)
@@ -174,6 +184,10 @@ func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("schedule_expression") {
 		associationInput.ScheduleExpression = aws.String(d.Get("schedule_expression").(string))
+	}
+
+	if d.HasChange("document_version") {
+		associationInput.DocumentVersion = aws.String(d.Get("document_version").(string))
 	}
 
 	if d.HasChange("output_location") {

@@ -73,6 +73,7 @@ The following arguments are supported:
 * `targets` - (Optional) The targets (either instances or tags). Instances are specified using Key=instanceids,Values=instanceid1,instanceid2. Tags are specified using Key=tag name,Values=tag value. Only 1 target is currently supported by AWS.
 * `schedule_expression` - (Optional) A cron expression when the association will be applied to the target(s).
 * `output_location` - (Optional) An output location block. OutputLocation documented below.
+* `document_version` - (Optional) The document version you want to associate with the target(s). Can be a specific version or the default version.
 
 Output Location (`output_location`) is an S3 bucket where you want to store the results of this association:
 
