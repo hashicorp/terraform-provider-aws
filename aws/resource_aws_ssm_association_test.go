@@ -46,6 +46,23 @@ func TestAccAWSSSMAssociation_withTargets(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMAssociation_withParameters(t *testing.T) {
+	name := acctest.RandString(10)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMAssociationBasicConfigWithParameters(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMAssociation_withDocumentVersion(t *testing.T) {
 	name := acctest.RandString(10)
 	resource.Test(t, resource.TestCase{
@@ -186,6 +203,49 @@ func testAccCheckAWSSSMAssociationDestroy(s *terraform.State) error {
 	}
 
 	return fmt.Errorf("Default error in SSM Association Test")
+}
+
+func testAccAWSSSMAssociationBasicConfigWithParameters(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "foo_document" {
+  name = "test_document_association-%s",
+  document_type = "Command"
+  content = <<-DOC
+  {
+    "schemaVersion": "1.2",
+    "description": "Check ip configuration of a Linux instance.",
+    "parameters": {
+	  "Directory": {
+		"description":"(Optional) The path to the working directory on your instance.",
+		"default":"",
+		"type": "String",
+		"maxChars": 4096
+	  }
+	},
+    "runtimeConfig": {
+      "aws:runShellScript": {
+        "properties": [
+          {
+            "id": "0.aws:runShellScript",
+            "runCommand": ["ifconfig"]
+          }
+        ]
+      }
+    }
+  }
+  DOC
+}
+
+resource "aws_ssm_association" "foo" {
+  name = "${aws_ssm_document.foo_document.name}",
+  parameters {
+  	Directory = "myWorkSpace"
+  }
+  targets {
+    key = "tag:Name"
+    values = ["acceptanceTest"]
+  }
+}`, rName)
 }
 
 func testAccAWSSSMAssociationBasicConfigWithTargets(rName string) string {
