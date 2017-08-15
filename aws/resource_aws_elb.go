@@ -984,7 +984,7 @@ func isValidProtocol(s string) bool {
 
 // ELB automatically creates ENI(s) on creation
 // but the cleanup is asynchronous and may take time
-// which then blocks IGW or VPC on deletion
+// which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
 func cleanupELBNetworkInterfaces(conn *ec2.EC2, name string) error {
 	out, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
