@@ -46,7 +46,6 @@ func resourceAwsSsmAssociation() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"s3_bucket_name": {
@@ -169,15 +168,19 @@ func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] SSM association update: %s", d.Id())
 
-	assosciationInput := &ssm.UpdateAssociationInput{
+	associationInput := &ssm.UpdateAssociationInput{
 		AssociationId: aws.String(d.Get("association_id").(string)),
 	}
 
 	if d.HasChange("schedule_expression") {
-		assosciationInput.ScheduleExpression = aws.String(d.Get("schedule_expression").(string))
+		associationInput.ScheduleExpression = aws.String(d.Get("schedule_expression").(string))
 	}
 
-	_, err := ssmconn.UpdateAssociation(assosciationInput)
+	if d.HasChange("output_location") {
+		associationInput.OutputLocation = expandSSMAssociationOutputLocation(d.Get("output_location").([]interface{}))
+	}
+
+	_, err := ssmconn.UpdateAssociation(associationInput)
 	if err != nil {
 		return errwrap.Wrapf("[ERROR] Error updating SSM association: {{err}}", err)
 	}
