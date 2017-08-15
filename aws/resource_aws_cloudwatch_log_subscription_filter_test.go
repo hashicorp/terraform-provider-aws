@@ -37,6 +37,40 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudwatchLogSubscriptionFilter_subscriptionFilterDisappears(t *testing.T) {
+	var filter cloudwatchlogs.SubscriptionFilter
+	rstring := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudwatchLogSubscriptionFilterConfig(rstring),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCloudwatchLogSubscriptionFilterExists("aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter", &filter, rstring),
+					testAccCheckCloudwatchLogSubscriptionFilterDisappears(rstring),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckCloudwatchLogSubscriptionFilterDisappears(rName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+		params := &cloudwatchlogs.DeleteLogGroupInput{
+			LogGroupName: aws.String(fmt.Sprintf("example_lambda_name_%s", rName)),
+		}
+		if _, err := conn.DeleteLogGroup(params); err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
 func testAccCheckCloudwatchLogSubscriptionFilterDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
 
@@ -95,10 +129,16 @@ func testAccCheckAwsCloudwatchLogSubscriptionFilterExists(n string, filter *clou
 			return fmt.Errorf("SubscriptionFilter not found")
 		}
 
+		var found bool
 		for _, i := range resp.SubscriptionFilters {
 			if *i.FilterName == fmt.Sprintf("test_lambdafunction_logfilter_%s", rName) {
 				*filter = *i
+				found = true
 			}
+		}
+
+		if !found {
+			return fmt.Errorf("SubscriptionFilter not found")
 		}
 
 		return nil
