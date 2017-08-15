@@ -57,6 +57,16 @@ func TestAccAWSSSMAssociation_withParameters(t *testing.T) {
 				Config: testAccAWSSSMAssociationBasicConfigWithParameters(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "parameters.Directory", "myWorkSpace"),
+				),
+			},
+			{
+				Config: testAccAWSSSMAssociationBasicConfigWithParametersUpdated(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "parameters.Directory", "myWorkSpaceUpdated"),
 				),
 			},
 		},
@@ -240,6 +250,49 @@ resource "aws_ssm_association" "foo" {
   name = "${aws_ssm_document.foo_document.name}",
   parameters {
   	Directory = "myWorkSpace"
+  }
+  targets {
+    key = "tag:Name"
+    values = ["acceptanceTest"]
+  }
+}`, rName)
+}
+
+func testAccAWSSSMAssociationBasicConfigWithParametersUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "foo_document" {
+  name = "test_document_association-%s",
+  document_type = "Command"
+  content = <<-DOC
+  {
+    "schemaVersion": "1.2",
+    "description": "Check ip configuration of a Linux instance.",
+    "parameters": {
+	  "Directory": {
+		"description":"(Optional) The path to the working directory on your instance.",
+		"default":"",
+		"type": "String",
+		"maxChars": 4096
+	  }
+	},
+    "runtimeConfig": {
+      "aws:runShellScript": {
+        "properties": [
+          {
+            "id": "0.aws:runShellScript",
+            "runCommand": ["ifconfig"]
+          }
+        ]
+      }
+    }
+  }
+  DOC
+}
+
+resource "aws_ssm_association" "foo" {
+  name = "${aws_ssm_document.foo_document.name}",
+  parameters {
+  	Directory = "myWorkSpaceUpdated"
   }
   targets {
     key = "tag:Name"

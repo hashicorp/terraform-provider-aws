@@ -40,7 +40,6 @@ func resourceAwsSsmAssociation() *schema.Resource {
 			"parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
 			"schedule_expression": {
@@ -188,6 +187,10 @@ func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("document_version") {
 		associationInput.DocumentVersion = aws.String(d.Get("document_version").(string))
+	}
+
+	if d.HasChange("parameters") {
+		associationInput.Parameters = expandSSMDocumentParameters(d.Get("parameters").(map[string]interface{}))
 	}
 
 	if d.HasChange("output_location") {
