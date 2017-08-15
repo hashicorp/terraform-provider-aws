@@ -62,6 +62,13 @@ const (
 	// execution ID.
 	ErrCodeAutomationExecutionNotFoundException = "AutomationExecutionNotFoundException"
 
+	// ErrCodeComplianceTypeCountLimitExceededException for service response error code
+	// "ComplianceTypeCountLimitExceededException".
+	//
+	// You specified too many custom compliance types. You can specify a maximum
+	// of 10 different types.
+	ErrCodeComplianceTypeCountLimitExceededException = "ComplianceTypeCountLimitExceededException"
+
 	// ErrCodeCustomSchemaCountLimitExceededException for service response error code
 	// "CustomSchemaCountLimitExceededException".
 	//
@@ -115,6 +122,13 @@ const (
 	//
 	// You cannot specify an instance ID in more than one association.
 	ErrCodeDuplicateInstanceId = "DuplicateInstanceId"
+
+	// ErrCodeFeatureNotAvailableException for service response error code
+	// "FeatureNotAvailableException".
+	//
+	// You attempted to register a LAMBDA or STEP_FUNCTION task in a region where
+	// there corresponding service is not available.
+	ErrCodeFeatureNotAvailableException = "FeatureNotAvailableException"
 
 	// ErrCodeHierarchyLevelLimitExceededException for service response error code
 	// "HierarchyLevelLimitExceededException".
@@ -174,6 +188,12 @@ const (
 	// incorrect. For example, they may not match the set of parameters permitted
 	// for the specified Automation document.
 	ErrCodeInvalidAutomationExecutionParametersException = "InvalidAutomationExecutionParametersException"
+
+	// ErrCodeInvalidAutomationSignalException for service response error code
+	// "InvalidAutomationSignalException".
+	//
+	// The signal is not valid for the current Automation execution.
+	ErrCodeInvalidAutomationSignalException = "InvalidAutomationSignalException"
 
 	// ErrCodeInvalidCommandId for service response error code
 	// "InvalidCommandId".
@@ -259,6 +279,13 @@ const (
 	//
 	// The specified filter value is not valid.
 	ErrCodeInvalidInstanceInformationFilterValue = "InvalidInstanceInformationFilterValue"
+
+	// ErrCodeInvalidInventoryItemContextException for service response error code
+	// "InvalidInventoryItemContextException".
+	//
+	// You specified invalid keys or values in the Context attribute for InventoryItem.
+	// Verify the keys and values, and try again.
+	ErrCodeInvalidInventoryItemContextException = "InvalidInventoryItemContextException"
 
 	// ErrCodeInvalidItemContentException for service response error code
 	// "InvalidItemContentException".
@@ -466,6 +493,19 @@ const (
 	// The updated status is the same as the current status.
 	ErrCodeStatusUnchanged = "StatusUnchanged"
 
+	// ErrCodeSubTypeCountLimitExceededException for service response error code
+	// "SubTypeCountLimitExceededException".
+	//
+	// The sub-type count exceeded the limit for the inventory type.
+	ErrCodeSubTypeCountLimitExceededException = "SubTypeCountLimitExceededException"
+
+	// ErrCodeTargetInUseException for service response error code
+	// "TargetInUseException".
+	//
+	// You specified the Safe option for the DeregisterTargetFromMaintenanceWindow
+	// operation, but the target is still referenced in a task.
+	ErrCodeTargetInUseException = "TargetInUseException"
+
 	// ErrCodeTooManyTagsError for service response error code
 	// "TooManyTagsError".
 	//
@@ -485,6 +525,14 @@ const (
 	//
 	// The size of inventory data has exceeded the total size limit for the resource.
 	ErrCodeTotalSizeLimitExceededException = "TotalSizeLimitExceededException"
+
+	// ErrCodeUnsupportedInventoryItemContextException for service response error code
+	// "UnsupportedInventoryItemContextException".
+	//
+	// The Context attribute you specified for the InventoryItem is not allowed
+	// for this inventory type. You can only use the Context attribute with inventory
+	// types like AWS:ComplianceItem.
+	ErrCodeUnsupportedInventoryItemContextException = "UnsupportedInventoryItemContextException"
 
 	// ErrCodeUnsupportedInventorySchemaVersionException for service response error code
 	// "UnsupportedInventorySchemaVersionException".
