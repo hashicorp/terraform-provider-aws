@@ -14,6 +14,7 @@ func resourceAwsSsmAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSsmAssociationCreate,
 		Read:   resourceAwsSsmAssociationRead,
+		Update: resourceAwsSsmAssocationUpdate,
 		Delete: resourceAwsSsmAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -40,7 +41,6 @@ func resourceAwsSsmAssociation() *schema.Resource {
 			"schedule_expression": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"output_location": {
 				Type:     schema.TypeList,
@@ -162,6 +162,27 @@ func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	return nil
+}
+
+func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) error {
+	ssmconn := meta.(*AWSClient).ssmconn
+
+	log.Printf("[DEBUG] SSM association update: %s", d.Id())
+
+	assosciationInput := &ssm.UpdateAssociationInput{
+		AssociationId: aws.String(d.Get("association_id").(string)),
+	}
+
+	if d.HasChange("schedule_expression") {
+		assosciationInput.ScheduleExpression = aws.String(d.Get("schedule_expression").(string))
+	}
+
+	_, err := ssmconn.UpdateAssociation(assosciationInput)
+	if err != nil {
+		return errwrap.Wrapf("[ERROR] Error updating SSM association: {{err}}", err)
+	}
+
+	return resourceAwsSsmAssociationRead(d, meta)
 }
 
 func resourceAwsSsmAssociationDelete(d *schema.ResourceData, meta interface{}) error {
