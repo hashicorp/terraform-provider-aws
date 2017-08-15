@@ -20,13 +20,13 @@ connection into management.
 
 ```hcl
 provider "aws" {
-  // Requester's credentials.
+  # Requester's credentials.
 }
 
 provider "aws" {
   alias = "peer"
 
-  // Accepter's credentials.
+  # Accepter's credentials.
 }
 
 resource "aws_vpc" "main" {
@@ -42,7 +42,7 @@ data "aws_caller_identity" "peer" {
   provider = "aws.peer"
 }
 
-// Requester's side of the connection.
+# Requester's side of the connection.
 resource "aws_vpc_peering_connection" "peer" {
   vpc_id        = "${aws_vpc.main.id}"
   peer_vpc_id   = "${aws_vpc.peer.id}"
@@ -54,7 +54,7 @@ resource "aws_vpc_peering_connection" "peer" {
   }
 }
 
-// Accepter's side of the connection.
+# Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
   provider                  = "aws.peer"
   vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"

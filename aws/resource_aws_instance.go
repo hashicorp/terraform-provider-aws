@@ -104,9 +104,10 @@ func resourceAwsInstance() *schema.Resource {
 			},
 
 			"user_data": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"user_data_base64"},
 				StateFunc: func(v interface{}) string {
 					switch v.(type) {
 					case string:
@@ -114,6 +115,22 @@ func resourceAwsInstance() *schema.Resource {
 					default:
 						return ""
 					}
+				},
+			},
+
+			"user_data_base64": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"user_data"},
+				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
+					s := v.(string)
+					if !isBase64Encoded([]byte(s)) {
+						errs = append(errs, fmt.Errorf(
+							"%s: must be base64-encoded", name,
+						))
+					}
+					return
 				},
 			},
 
@@ -719,7 +736,16 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		if attr.UserData != nil && attr.UserData.Value != nil {
-			d.Set("user_data", userDataHashSum(*attr.UserData.Value))
+			// Since user_data and user_data_base64 conflict with each other,
+			// we'll only set one or the other here to avoid a perma-diff.
+			// Since user_data_base64 was added later, we'll prefer to set
+			// user_data.
+			_, b64 := d.GetOk("user_data_base64")
+			if b64 {
+				d.Set("user_data_base64", attr.UserData.Value)
+			} else {
+				d.Set("user_data", userDataHashSum(*attr.UserData.Value))
+			}
 		}
 	}
 
@@ -1209,10 +1235,9 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterfaces interface{}) []*ec2.InstanceNetworkInterfaceSpecification {
 	networkInterfaces := []*ec2.InstanceNetworkInterfaceSpecification{}
 	// Get necessary items
-	associatePublicIPAddress := d.Get("associate_public_ip_address").(bool)
 	subnet, hasSubnet := d.GetOk("subnet_id")
 
-	if hasSubnet && associatePublicIPAddress {
+	if hasSubnet {
 		// If we have a non-default VPC / Subnet specified, we can flag
 		// AssociatePublicIpAddress to get a Public IP assigned. By default these are not provided.
 		// You cannot specify both SubnetId and the NetworkInterface.0.* parameters though, otherwise
@@ -1221,10 +1246,13 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 		// to avoid: Network interfaces and an instance-level security groups may not be specified on
 		// the same request
 		ni := &ec2.InstanceNetworkInterfaceSpecification{
-			AssociatePublicIpAddress: aws.Bool(associatePublicIPAddress),
-			DeviceIndex:              aws.Int64(int64(0)),
-			SubnetId:                 aws.String(subnet.(string)),
-			Groups:                   groups,
+			DeviceIndex: aws.Int64(int64(0)),
+			SubnetId:    aws.String(subnet.(string)),
+			Groups:      groups,
+		}
+
+		if v, ok := d.GetOkExists("associate_public_ip_address"); ok {
+			ni.AssociatePublicIpAddress = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("private_ip"); ok {
@@ -1518,9 +1546,14 @@ func buildAwsInstanceOpts(
 		Name: aws.String(d.Get("iam_instance_profile").(string)),
 	}
 
-	user_data := d.Get("user_data").(string)
+	userData := d.Get("user_data").(string)
+	userDataBase64 := d.Get("user_data_base64").(string)
 
-	opts.UserData64 = aws.String(base64Encode([]byte(user_data)))
+	if userData != "" {
+		opts.UserData64 = aws.String(base64Encode([]byte(userData)))
+	} else if userDataBase64 != "" {
+		opts.UserData64 = aws.String(userDataBase64)
+	}
 
 	// check for non-default Subnet, and cast it to a String
 	subnet, hasSubnet := d.GetOk("subnet_id")
@@ -1542,8 +1575,6 @@ func buildAwsInstanceOpts(
 		opts.Placement.Tenancy = aws.String(v)
 	}
 
-	associatePublicIPAddress := d.Get("associate_public_ip_address").(bool)
-
 	var groups []*string
 	if v := d.Get("security_groups"); v != nil {
 		// Security group names.
@@ -1562,7 +1593,7 @@ func buildAwsInstanceOpts(
 	networkInterfaces, interfacesOk := d.GetOk("network_interface")
 
 	// If setting subnet and public address, OR manual network interfaces, populate those now.
-	if hasSubnet && associatePublicIPAddress || interfacesOk {
+	if hasSubnet || interfacesOk {
 		// Otherwise we're attaching (a) network interface(s)
 		opts.NetworkInterfaces = buildNetworkInterfaceOpts(d, groups, networkInterfaces)
 	} else {

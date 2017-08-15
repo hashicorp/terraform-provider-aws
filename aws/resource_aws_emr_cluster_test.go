@@ -146,6 +146,27 @@ func TestAccAWSEMRCluster_visibleToAllUsers(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRCluster_s3Logging(t *testing.T) {
+	var cluster emr.Cluster
+	r := acctest.RandInt()
+	bucketName := fmt.Sprintf("s3n://tf-acc-test-%d/", r)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfigS3Logging(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "log_uri", bucketName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEMRCluster_tags(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
@@ -2165,4 +2186,84 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
 `, r, r, r, r, r, r, r, r, r, r)
+}
+
+func testAccAWSEmrClusterConfigS3Logging(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = "tf-acc-test-%d"
+  force_destroy = true
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/24"
+}
+
+resource "aws_subnet" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  cidr_block = "10.0.0.0/24"
+}
+
+resource "aws_internet_gateway" "main" {
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.main.id}"
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  subnet_id = "${aws_subnet.test.id}"
+  route_table_id = "${aws_route_table.test.id}"
+}
+
+resource "aws_security_group" "test" {
+  name = "tf-acc-test-%d"
+  description = "tf acceptance test"
+  vpc_id = "${aws_vpc.test.id}"
+
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    cidr_blocks     = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_emr_cluster" "tf-test-cluster" {
+  name          = "tf-acc-test-%d"
+  release_label = "emr-4.6.0"
+  applications  = ["Spark"]
+
+  termination_protection = false
+  keep_job_flow_alive_when_no_steps = true
+
+  master_instance_type = "m1.medium"
+  core_instance_type   = "m1.medium"
+  core_instance_count  = 1
+
+  log_uri = "s3://${aws_s3_bucket.test.bucket}/"
+
+  ec2_attributes {
+    instance_profile = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:instance-profile/EMR_EC2_DefaultRole"
+    emr_managed_master_security_group = "${aws_security_group.test.id}"
+    emr_managed_slave_security_group = "${aws_security_group.test.id}"
+    subnet_id = "${aws_subnet.test.id}"
+  }
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif"
+    args = ["instance.isMaster=true", "echo running on master node"]
+  }
+
+  service_role = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/EMR_DefaultRole"
+}
+
+data "aws_caller_identity" "current" {}
+`, rInt, rInt, rInt)
 }
