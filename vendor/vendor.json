@@ -293,6 +293,14 @@
 			"versionExact": "v1.10.25"
 		},
 		{
+			"checksumSHA1": "/C4QDOmEP7t8vawBcB7a2ygaXuI=",
+			"path": "github.com/aws/aws-sdk-go/service/athena",
+			"revision": "77c204059e353965728c1898f9755d4970294da0",
+			"revisionTime": "2017-08-14T16:38:10Z",
+			"version": "v1.10.25",
+			"versionExact": "v1.10.25"
+		},
+		{
 			"checksumSHA1": "Tl/cvRil/SnTPh7HymTSgOp38/U=",
 			"path": "github.com/aws/aws-sdk-go/service/autoscaling",
 			"revision": "77c204059e353965728c1898f9755d4970294da0",
