@@ -97,7 +97,8 @@ func resourceAwsRDSCluster() *schema.Resource {
 
 			"engine": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
+				Default:  "aurora",
 			},
 
 			"storage_encrypted": {
@@ -274,7 +275,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		opts := rds.RestoreDBClusterFromSnapshotInput{
 			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
 			SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
-			Engine:              aws.String("aurora"),
+			Engine:              aws.String(d.Get("engine").(string)),
 			Tags:                tags,
 		}
 
@@ -352,7 +353,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 	} else if _, ok := d.GetOk("replication_source_identifier"); ok {
 		createOpts := &rds.CreateDBClusterInput{
 			DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
-			Engine:                      aws.String("aurora"),
+			Engine:                      aws.String(d.Get("engine").(string)),
 			StorageEncrypted:            aws.Bool(d.Get("storage_encrypted").(bool)),
 			ReplicationSourceIdentifier: aws.String(d.Get("replication_source_identifier").(string)),
 			Tags: tags,
@@ -414,7 +415,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		createOpts := &rds.CreateDBClusterInput{
 			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
-			Engine:              aws.String("aurora"),
+			Engine:              aws.String(d.Get("engine").(string)),
 			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
 			StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
