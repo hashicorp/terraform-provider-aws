@@ -15,19 +15,18 @@ const opCreateDeliveryStream = "CreateDeliveryStream"
 
 // CreateDeliveryStreamRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDeliveryStream operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See CreateDeliveryStream for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the CreateDeliveryStream method directly
-// instead.
+// See CreateDeliveryStream for more information on using the CreateDeliveryStream
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the CreateDeliveryStreamRequest method.
 //    req, resp := client.CreateDeliveryStreamRequest(params)
@@ -145,19 +144,18 @@ const opDeleteDeliveryStream = "DeleteDeliveryStream"
 
 // DeleteDeliveryStreamRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDeliveryStream operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See DeleteDeliveryStream for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the DeleteDeliveryStream method directly
-// instead.
+// See DeleteDeliveryStream for more information on using the DeleteDeliveryStream
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the DeleteDeliveryStreamRequest method.
 //    req, resp := client.DeleteDeliveryStreamRequest(params)
@@ -239,19 +237,18 @@ const opDescribeDeliveryStream = "DescribeDeliveryStream"
 
 // DescribeDeliveryStreamRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDeliveryStream operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See DescribeDeliveryStream for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the DescribeDeliveryStream method directly
-// instead.
+// See DescribeDeliveryStream for more information on using the DescribeDeliveryStream
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the DescribeDeliveryStreamRequest method.
 //    req, resp := client.DescribeDeliveryStreamRequest(params)
@@ -322,19 +319,18 @@ const opListDeliveryStreams = "ListDeliveryStreams"
 
 // ListDeliveryStreamsRequest generates a "aws/request.Request" representing the
 // client's request for the ListDeliveryStreams operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See ListDeliveryStreams for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the ListDeliveryStreams method directly
-// instead.
+// See ListDeliveryStreams for more information on using the ListDeliveryStreams
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the ListDeliveryStreamsRequest method.
 //    req, resp := client.ListDeliveryStreamsRequest(params)
@@ -405,19 +401,18 @@ const opPutRecord = "PutRecord"
 
 // PutRecordRequest generates a "aws/request.Request" representing the
 // client's request for the PutRecord operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See PutRecord for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the PutRecord method directly
-// instead.
+// See PutRecord for more information on using the PutRecord
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the PutRecordRequest method.
 //    req, resp := client.PutRecordRequest(params)
@@ -526,19 +521,18 @@ const opPutRecordBatch = "PutRecordBatch"
 
 // PutRecordBatchRequest generates a "aws/request.Request" representing the
 // client's request for the PutRecordBatch operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See PutRecordBatch for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the PutRecordBatch method directly
-// instead.
+// See PutRecordBatch for more information on using the PutRecordBatch
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the PutRecordBatchRequest method.
 //    req, resp := client.PutRecordBatchRequest(params)
@@ -671,19 +665,18 @@ const opUpdateDestination = "UpdateDestination"
 
 // UpdateDestinationRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateDestination operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See UpdateDestination for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the UpdateDestination method directly
-// instead.
+// See UpdateDestination for more information on using the UpdateDestination
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the UpdateDestinationRequest method.
 //    req, resp := client.UpdateDestinationRequest(params)
