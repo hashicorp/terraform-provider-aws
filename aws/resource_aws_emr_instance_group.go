@@ -59,6 +59,7 @@ func resourceAwsEMRInstanceGroup() *schema.Resource {
 				Type: schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				ValidateFunc: validateAwsEmrBidPrice,
 			},
 			"ebs_config": {
 				Type:     schema.TypeSet,
