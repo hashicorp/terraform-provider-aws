@@ -12,20 +12,37 @@ Attaches a policy to an S3 bucket resource.
 
 ## Example Usage
 
-### Using versioning
+### Creating a custom policy and adding to the bucket
 
 ```hcl
 resource "aws_s3_bucket" "b" {
-  # Arguments
+  bucket = "my_tf_test_bucket"
 }
 
-data "aws_iam_policy_document" "b" {
-  # Policy statements
+variable "my_bucket_policy" {
+  default = <<EOF
+{
+  "Version": "2012-10-17",
+  "Id": "MYBUCKETPOLICY",
+  "Statement": [
+    {
+      "Sid": "IPAllow",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:*",
+      "Resource": "arn:aws:s3:::my_tf_test_bucket/*",
+      "Condition": {
+         "IpAddress": {"aws:SourceIp": "8.8.8.8/32"}
+      } 
+    } 
+  ]
+}
+EOF
 }
 
 resource "aws_s3_bucket_policy" "b" {
   bucket = "${aws_s3_bucket.b.id}"
-  policy = "${data.aws_iam_policy_document.b.json}"
+  policy = "${var.my_bucket_policy}"
 }
 ```
 
