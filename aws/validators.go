@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -1426,13 +1427,44 @@ func validateCognitoIdentityProvidersProviderName(v interface{}, k string) (ws [
 	}
 
 	if len(value) > 128 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 caracters", k))
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 characters", k))
 	}
 
 	if !regexp.MustCompile("^[\\w._:/-]+$").MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric caracters, dots, underscores, colons, slashes and hyphens", k))
 	}
 
+	return
+}
+
+func validateCognitoUserPoolEmailVerificationMessage(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 6 {
+		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
+	}
+
+	if len(value) > 2000 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 2000 characters", k))
+	}
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolMfaConfiguration(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+
+	valid := map[string]bool{
+		cognitoidentityprovider.UserPoolMfaTypeOff:      true,
+		cognitoidentityprovider.UserPoolMfaTypeOn:       true,
+		cognitoidentityprovider.UserPoolMfaTypeOptional: true,
+	}
+	if !valid[value] {
+		es = append(es, fmt.Errorf(
+			"%q must be equal to OFF, ON, or OPTIONAL", k))
+	}
 	return
 }
 

@@ -1,12 +1,12 @@
 package aws
 
 import (
-	"fmt"
-	"strings"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -30,32 +30,16 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"email_verification_message": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(string)
-					if !strings.Contains(value, "{####}") {
-						es = append(es, fmt.Errorf(
-							"%q does not contain {####}", k))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateCognitoUserPoolEmailVerificationMessage,
 			},
 
 			"mfa_configuration": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "OFF",
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(string)
-
-					valid := map[string]bool{"OFF": true, "ON": true, "OPTIONAL": true}
-					if !valid[value] {
-						es = append(es, fmt.Errorf(
-							"%q must be equal to OFF, ON, or OPTIONAL", k))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      cognitoidentityprovider.UserPoolMfaTypeOff,
+				ValidateFunc: validateCognitoUserPoolMfaConfiguration,
 			},
 		},
 	}
@@ -80,15 +64,17 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		params.MfaConfiguration = aws.String(v.(string))
 	}
 
+	log.Printf("[DEBUG] Creating Cognito User Pool: %s", params)
+
 	resp, err := conn.CreateUserPool(params)
 
 	if err != nil {
-		return fmt.Errorf("Error creating Cognito User Pool: %s", err)
+		return errwrap.Wrapf("Error creating Cognito User Pool: {{err}}", err)
 	}
 
 	d.SetId(*resp.UserPool.Id)
 
-	return nil
+	return resourceAwsCognitoUserPoolRead(d, meta)
 }
 
 func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) error {
@@ -98,10 +84,13 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		UserPoolId: aws.String(d.Id()),
 	}
 
+	log.Printf("[DEBUG] Reading Cognito User Pool: %s", params)
+
 	resp, err := conn.DescribeUserPool(params)
 
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+			log.Printf("[WARN] Cognito User Pool %s is already gone", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -142,9 +131,11 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		params.MfaConfiguration = aws.String(d.Get("mfa_configuration").(string))
 	}
 
+	log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
+
 	_, err := conn.UpdateUserPool(params)
 	if err != nil {
-		return fmt.Errorf("Error updating Cognito User pool: %s", err)
+		return errwrap.Wrapf("Error updating Cognito User pool: {{err}}", err)
 	}
 
 	return nil
@@ -157,10 +148,12 @@ func resourceAwsCognitoUserPoolDelete(d *schema.ResourceData, meta interface{}) 
 		UserPoolId: aws.String(d.Id()),
 	}
 
+	log.Printf("[DEBUG] Deleting Cognito User Pool: %s", params)
+
 	_, err := conn.DeleteUserPool(params)
 
 	if err != nil {
-		return fmt.Errorf("Error deleting user pool: %s", err)
+		return errwrap.Wrapf("Error deleting user pool: {{err}}", err)
 	}
 
 	return nil

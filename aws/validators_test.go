@@ -2321,6 +2321,36 @@ func TestValidateCognitoIdentityProvidersProviderName(t *testing.T) {
 	}
 }
 
+func TestValidateCognitoUserPoolEmailVerificationMessage(t *testing.T) {
+	validValues := []string{
+		"{####}",
+		"Foo {####}",
+		"{####} Bar",
+		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
+		"{####}" + strings.Repeat("W", 1994), // = 2000
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoUserPoolEmailVerificationMessage(s, "provider_name")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool email verification message: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"Foo",
+		"{###}",
+		"{####}" + strings.Repeat("W", 1995), // > 2000
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoUserPoolEmailVerificationMessage(s, "provider_name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool email verification message: %v", s, errors)
+		}
+	}
+}
+
 func TestValidateWafMetricName(t *testing.T) {
 	validNames := []string{
 		"testrule",
