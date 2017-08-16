@@ -12,6 +12,8 @@ Attaches a policy to an S3 bucket resource.
 
 ## Example Usage
 
+### Basic Usage
+
 ```hcl
 resource "aws_s3_bucket" "b" {
   bucket = "my_tf_test_bucket"
