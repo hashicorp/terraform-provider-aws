@@ -12,15 +12,14 @@ Attaches a policy to an S3 bucket resource.
 
 ## Example Usage
 
-### Creating a custom policy and adding to the bucket
-
 ```hcl
 resource "aws_s3_bucket" "b" {
   bucket = "my_tf_test_bucket"
 }
 
-variable "my_bucket_policy" {
-  default = <<EOF
+resource "aws_s3_bucket_policy" "b" {
+  bucket = "${aws_s3_bucket.b.id}"
+  policy =<<POLICY
 {
   "Version": "2012-10-17",
   "Id": "MYBUCKETPOLICY",
@@ -37,12 +36,7 @@ variable "my_bucket_policy" {
     } 
   ]
 }
-EOF
-}
-
-resource "aws_s3_bucket_policy" "b" {
-  bucket = "${aws_s3_bucket.b.id}"
-  policy = "${var.my_bucket_policy}"
+POLICY
 }
 ```
 
