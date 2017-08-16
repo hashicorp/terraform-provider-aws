@@ -1453,6 +1453,22 @@ func validateCognitoUserPoolEmailVerificationMessage(v interface{}, k string) (w
 	return
 }
 
+func validateCognitoUserPoolEmailVerificationSubject(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 6 {
+		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
+	}
+
+	if len(value) > 140 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 140 characters", k))
+	}
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q can be composed of any kind of letter, symbols, numeric character, punctuation and whitespaces", k))
+	}
+	return
+}
+
 func validateCognitoUserPoolMfaConfiguration(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 
@@ -1465,6 +1481,73 @@ func validateCognitoUserPoolMfaConfiguration(v interface{}, k string) (ws []stri
 		es = append(es, fmt.Errorf(
 			"%q must be equal to OFF, ON, or OPTIONAL", k))
 	}
+	return
+}
+
+func validateCognitoUserPoolSmsAuthenticationMessage(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 6 {
+		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
+	}
+
+	if len(value) > 140 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 140 characters", k))
+	}
+
+	if !regexp.MustCompile(`.*\{####\}.*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolSmsVerificationMessage(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 6 {
+		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
+	}
+
+	if len(value) > 140 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 140 characters", k))
+	}
+
+	if !regexp.MustCompile(`.*\{####\}.*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolAliasAttribute(v interface{}, k string) (ws []string, es []error) {
+	validValues := []string{
+		cognitoidentityprovider.AliasAttributeTypeEmail,
+		cognitoidentityprovider.AliasAttributeTypePhoneNumber,
+		cognitoidentityprovider.AliasAttributeTypePreferredUsername,
+	}
+	period := v.(string)
+	for _, f := range validValues {
+		if period == f {
+			return
+		}
+	}
+	es = append(es, fmt.Errorf(
+		"%q contains an invalid alias attribute %q. Valid alias attributes are %q.",
+		k, period, validValues))
+	return
+}
+
+func validateCognitoUserPoolAutoVerifiedAttribute(v interface{}, k string) (ws []string, es []error) {
+	validValues := []string{
+		cognitoidentityprovider.VerifiedAttributeTypePhoneNumber,
+		cognitoidentityprovider.VerifiedAttributeTypeEmail,
+	}
+	period := v.(string)
+	for _, f := range validValues {
+		if period == f {
+			return
+		}
+	}
+	es = append(es, fmt.Errorf(
+		"%q contains an invalid verified attribute %q. Valid verified attributes are %q.",
+		k, period, validValues))
 	return
 }
 

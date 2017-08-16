@@ -24,9 +24,29 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"email_verification_subject": {
-				Type:     schema.TypeString,
+			"alias_attributes": {
+				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateCognitoUserPoolAliasAttribute,
+				},
+			},
+
+			"auto_verified_attributes": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateCognitoUserPoolAutoVerifiedAttribute,
+				},
+			},
+
+			"email_verification_subject": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateCognitoUserPoolEmailVerificationSubject,
 			},
 
 			"email_verification_message": {
@@ -35,12 +55,26 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				ValidateFunc: validateCognitoUserPoolEmailVerificationMessage,
 			},
 
+			"sms_authentication_message": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateCognitoUserPoolSmsAuthenticationMessage,
+			},
+
+			"sms_verification_message": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateCognitoUserPoolSmsVerificationMessage,
+			},
+
 			"mfa_configuration": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      cognitoidentityprovider.UserPoolMfaTypeOff,
 				ValidateFunc: validateCognitoUserPoolMfaConfiguration,
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -50,6 +84,14 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 
 	params := &cognitoidentityprovider.CreateUserPoolInput{
 		PoolName: aws.String(d.Get("name").(string)),
+	}
+
+	if v, ok := d.GetOk("alias_attributes"); ok {
+		params.AliasAttributes = expandStringList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("auto_verified_attributes"); ok {
+		params.AutoVerifiedAttributes = expandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("email_verification_subject"); ok {
@@ -64,6 +106,17 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		params.MfaConfiguration = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("sms_authentication_message"); ok {
+		params.SmsAuthenticationMessage = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("sms_verification_message"); ok {
+		params.SmsVerificationMessage = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		params.UserPoolTags = tagsFromMapGeneric(v.(map[string]interface{}))
+	}
 	log.Printf("[DEBUG] Creating Cognito User Pool: %s", params)
 
 	resp, err := conn.CreateUserPool(params)
@@ -97,17 +150,29 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
+	if resp.UserPool.AliasAttributes != nil {
+		d.Set("alias_attributes", flattenStringList(resp.UserPool.AliasAttributes))
+	}
+	if resp.UserPool.AutoVerifiedAttributes != nil {
+		d.Set("auto_verified_attributes", flattenStringList(resp.UserPool.AutoVerifiedAttributes))
+	}
 	if resp.UserPool.EmailVerificationSubject != nil {
 		d.Set("email_verification_subject", *resp.UserPool.EmailVerificationSubject)
 	}
-
 	if resp.UserPool.EmailVerificationMessage != nil {
 		d.Set("email_verification_message", *resp.UserPool.EmailVerificationMessage)
 	}
-
 	if resp.UserPool.MfaConfiguration != nil {
 		d.Set("mfa_configuration", *resp.UserPool.MfaConfiguration)
 	}
+	if resp.UserPool.SmsVerificationMessage != nil {
+		d.Set("sms_verification_message", *resp.UserPool.SmsVerificationMessage)
+	}
+	if resp.UserPool.SmsAuthenticationMessage != nil {
+		d.Set("sms_authentication_message", *resp.UserPool.SmsAuthenticationMessage)
+	}
+
+	d.Set("tags", tagsToMapGeneric(resp.UserPool.UserPoolTags))
 
 	return nil
 }
@@ -117,6 +182,12 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 	params := &cognitoidentityprovider.UpdateUserPoolInput{
 		UserPoolId: aws.String(d.Id()),
+	}
+
+	// TODO - Handle update of AliasAttributes
+
+	if d.HasChange("auto_verified_attributes") {
+		params.AutoVerifiedAttributes = expandStringList(d.Get("auto_verified_attributes").([]interface{}))
 	}
 
 	if d.HasChange("email_verification_subject") {
@@ -131,6 +202,18 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		params.MfaConfiguration = aws.String(d.Get("mfa_configuration").(string))
 	}
 
+	if d.HasChange("sms_authentication_message") {
+		params.SmsAuthenticationMessage = aws.String(d.Get("sms_authentication_message").(string))
+	}
+
+	if d.HasChange("sms_verification_message") {
+		params.SmsVerificationMessage = aws.String(d.Get("sms_verification_message").(string))
+	}
+
+	if d.HasChange("tags") {
+		params.UserPoolTags = tagsFromMapGeneric(d.Get("tags").(map[string]interface{}))
+	}
+
 	log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
 
 	_, err := conn.UpdateUserPool(params)
@@ -138,7 +221,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		return errwrap.Wrapf("Error updating Cognito User pool: {{err}}", err)
 	}
 
-	return nil
+	return resourceAwsCognitoUserPoolRead(d, meta)
 }
 
 func resourceAwsCognitoUserPoolDelete(d *schema.ResourceData, meta interface{}) error {
