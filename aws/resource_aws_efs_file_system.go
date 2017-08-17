@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -91,15 +92,19 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 		createOpts.PerformanceMode = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("encrypted"); ok {
-		createOpts.Encrypted = aws.Bool(v.(bool))
+	encrypted, hasEncrypted := d.GetOk("encrypted")
+	kmsKeyId, hasKmsKeyId := d.GetOk("kms_key_id")
+
+	if hasEncrypted {
+		createOpts.Encrypted = aws.Bool(encrypted.(bool))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
-		createOpts.KmsKeyId = aws.String(v.(string))
-		if !aws.BoolValue(createOpts.Encrypted) {
-			return fmt.Errorf("[ERROR] encrypted must be set to true when kms_key_id is specified")
-		}
+	if hasKmsKeyId {
+		createOpts.KmsKeyId = aws.String(kmsKeyId.(string))
+	}
+
+	if encrypted == false && hasKmsKeyId {
+		return errors.New("encrypted must be set to true when kms_key_id is specified")
 	}
 
 	log.Printf("[DEBUG] EFS file system create options: %#v", *createOpts)
