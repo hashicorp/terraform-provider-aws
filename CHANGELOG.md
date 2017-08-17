@@ -7,6 +7,7 @@ IMPROVEMENTS:
 * resource/aws_rds_cluster: Allow setting of rds cluster engine [GH-1415]
 * resource/aws_ssm_association: now supports update for `parameters`, `schedule_expression`,`output_location` [GH-1421]
 * resource/aws_ssm_patch_baseline: now supports update for multiple attributes [GH-1421]
+* resource/aws_cloudformation_stack: Add support for Import [GH-1432]
 
 BUG FIXES:
 
