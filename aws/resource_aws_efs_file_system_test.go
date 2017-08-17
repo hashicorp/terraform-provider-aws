@@ -383,24 +383,7 @@ resource "aws_efs_file_system" "foo-with-performance-mode" {
 func testAccAWSEFSFileSystemConfigWithKmsKey(rInt int) string {
 	return fmt.Sprintf(`
 	resource "aws_kms_key" "foo" {
-	  description = "Terraform acc test %d"
-	  policy = <<POLICY
-	{
-	  "Version": "2012-10-17",
-	  "Id": "kms-tf-1",
-	  "Statement": [
-	    {
-	      "Sid": "Enable IAM User Permissions",
-	      "Effect": "Allow",
-	      "Principal": {
-	        "AWS": "*"
-	      },
-	      "Action": "kms:*",
-	      "Resource": "*"
-	    }
-	  ]
-	}
-	POLICY
+		description = "Terraform acc test %d"
 	}
 
 	resource "aws_efs_file_system" "foo-with-kms" {
