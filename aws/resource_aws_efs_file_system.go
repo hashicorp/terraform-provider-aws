@@ -97,6 +97,9 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		createOpts.KmsKeyId = aws.String(v.(string))
+		if !aws.BoolValue(createOpts.Encrypted) {
+			return fmt.Errorf("[ERROR] encrypted must be set to true when kms_key_id is specified")
+		}
 	}
 
 	log.Printf("[DEBUG] EFS file system create options: %#v", *createOpts)
