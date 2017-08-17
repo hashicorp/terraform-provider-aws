@@ -81,8 +81,8 @@ func resourceAwsVolumeAttachmentCreate(d *schema.ResourceData, meta interface{})
 		// a spot request and whilst the request has been fulfilled the
 		// instance is not running yet
 		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"pending"},
-			Target:     []string{"running"},
+			Pending:    []string{"pending", "stopping"},
+			Target:     []string{"running", "stopped"},
 			Refresh:    InstanceStateRefreshFunc(conn, iID, "terminated"),
 			Timeout:    10 * time.Minute,
 			Delay:      10 * time.Second,
