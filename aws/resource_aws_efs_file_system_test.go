@@ -187,6 +187,11 @@ func TestAccAWSEFSFileSystem_KmsKey(t *testing.T) {
 						"kms_key_id",
 						keyRegex,
 					),
+					resource.TestCheckResourceAttr(
+						"aws_efs_file_system.foo-with-kms",
+						"encrypted",
+						"true",
+					),
 				),
 			},
 		},
