@@ -9,6 +9,7 @@ IMPROVEMENTS:
 * resource/aws_ssm_patch_baseline: now supports update for multiple attributes [GH-1421]
 * resource/aws_cloudformation_stack: Add support for Import [GH-1432]
 * resource/aws_rds_cluster_instance: Expose availability_zone attribute [GH-1439]
+* resource/aws_efs_file_system: Add support for encryption [GH-1420]
 
 BUG FIXES:
 
