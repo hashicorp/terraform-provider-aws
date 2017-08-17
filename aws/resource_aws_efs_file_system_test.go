@@ -405,7 +405,7 @@ func testAccAWSEFSFileSystemConfigWithKmsKey(rInt int) string {
 
 	resource "aws_efs_file_system" "foo-with-kms" {
 		encrypted = true
-	  kms_key_id = "${aws_kms_key.foo.arn}"
+		kms_key_id = "${aws_kms_key.foo.arn}"
 	}
 	`, rInt)
 }
