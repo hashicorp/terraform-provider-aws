@@ -705,7 +705,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := readSecurityGroups(d, instance); err != nil {
+	if err := readSecurityGroups(d, instance, conn); err != nil {
 		return err
 	}
 
@@ -1455,8 +1455,22 @@ func readVolumeTags(conn *ec2.EC2, d *schema.ResourceData) error {
 // we use IDs if we're in a VPC. However, if we previously had an
 // all-name list of security groups, we use names. Or, if we had any
 // IDs, we use IDs.
-func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance) error {
-	useID := instance.SubnetId != nil && *instance.SubnetId != ""
+func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {
+	hasSubnet := instance.SubnetId != nil && *instance.SubnetId != ""
+	useID := hasSubnet
+
+	// We have no resource data (security_groups) during import
+	// so knowing which VPC is the instance part is useful
+	out, err := conn.DescribeVpcs(&ec2.DescribeVpcsInput{
+		VpcIds: []*string{instance.VpcId},
+	})
+	if err != nil {
+		log.Printf("[WARN] Unable to describe VPC %q: %s", *instance.VpcId, err)
+	} else {
+		isInDefaultVpc := *out.Vpcs[0].IsDefault
+		useID = !isInDefaultVpc
+	}
+
 	if v := d.Get("security_groups"); v != nil {
 		match := useID
 		sgs := v.(*schema.Set).List()
