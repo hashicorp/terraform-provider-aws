@@ -19,19 +19,23 @@ func TestAccAWSInstance_basic(t *testing.T) {
 	var v ec2.Instance
 	var vol *ec2.Volume
 
-	testCheck := func(*terraform.State) error {
-		if *v.Placement.AvailabilityZone != "us-west-2a" {
-			return fmt.Errorf("bad availability zone: %#v", *v.Placement.AvailabilityZone)
-		}
+	rInt := acctest.RandInt()
 
-		if len(v.SecurityGroups) == 0 {
-			return fmt.Errorf("no security groups: %#v", v.SecurityGroups)
-		}
-		if *v.SecurityGroups[0].GroupName != "tf_test_foo" {
-			return fmt.Errorf("no security groups: %#v", v.SecurityGroups)
-		}
+	testCheck := func(rInt int) func(*terraform.State) error {
+		return func(*terraform.State) error {
+			if *v.Placement.AvailabilityZone != "us-west-2a" {
+				return fmt.Errorf("bad availability zone: %#v", *v.Placement.AvailabilityZone)
+			}
 
-		return nil
+			if len(v.SecurityGroups) == 0 {
+				return fmt.Errorf("no security groups: %#v", v.SecurityGroups)
+			}
+			if *v.SecurityGroups[0].GroupName != fmt.Sprintf("tf_test_%d", rInt) {
+				return fmt.Errorf("no security groups: %#v", v.SecurityGroups)
+			}
+
+			return nil
+		}
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -49,7 +53,7 @@ func TestAccAWSInstance_basic(t *testing.T) {
 			// Create a volume to cover #1249
 			{
 				// Need a resource in this config so the provisioner will be available
-				Config: testAccInstanceConfig_pre,
+				Config: testAccInstanceConfig_pre(rInt),
 				Check: func(*terraform.State) error {
 					conn := testAccProvider.Meta().(*AWSClient).ec2conn
 					var err error
@@ -62,11 +66,11 @@ func TestAccAWSInstance_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccInstanceConfig,
+				Config: testAccInstanceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"aws_instance.foo", &v),
-					testCheck,
+					testCheck(rInt),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo",
 						"user_data",
@@ -80,11 +84,11 @@ func TestAccAWSInstance_basic(t *testing.T) {
 			// that the user data hash stuff is working without generating
 			// an incorrect diff.
 			{
-				Config: testAccInstanceConfig,
+				Config: testAccInstanceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"aws_instance.foo", &v),
-					testCheck,
+					testCheck(rInt),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo",
 						"user_data",
@@ -96,7 +100,7 @@ func TestAccAWSInstance_basic(t *testing.T) {
 
 			// Clean up volume created above
 			{
-				Config: testAccInstanceConfig,
+				Config: testAccInstanceConfig(rInt),
 				Check: func(*terraform.State) error {
 					conn := testAccProvider.Meta().(*AWSClient).ec2conn
 					_, err := conn.DeleteVolume(&ec2.DeleteVolumeInput{VolumeId: vol.VolumeId})
@@ -109,6 +113,8 @@ func TestAccAWSInstance_basic(t *testing.T) {
 
 func TestAccAWSInstance_userDataBase64(t *testing.T) {
 	var v ec2.Instance
+
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
@@ -123,7 +129,7 @@ func TestAccAWSInstance_userDataBase64(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigWithUserDataBase64,
+				Config: testAccInstanceConfigWithUserDataBase64(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"aws_instance.foo", &v),
@@ -626,6 +632,8 @@ func TestAccAWSInstance_multipleRegions(t *testing.T) {
 func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 	var v ec2.Instance
 
+	rInt := acctest.RandInt()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_instance.foo_instance",
@@ -634,7 +642,7 @@ func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceNetworkInstanceSecurityGroups,
+				Config: testAccInstanceNetworkInstanceSecurityGroups(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"aws_instance.foo_instance", &v),
@@ -647,6 +655,8 @@ func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
 	var v ec2.Instance
 
+	rInt := acctest.RandInt()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_instance.foo_instance",
@@ -654,7 +664,7 @@ func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceNetworkInstanceVPCSecurityGroupIDs,
+				Config: testAccInstanceNetworkInstanceVPCSecurityGroupIDs(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"aws_instance.foo_instance", &v),
@@ -1390,9 +1400,10 @@ func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 	}
 }
 
-const testAccInstanceConfig_pre = `
+func testAccInstanceConfig_pre(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_security_group" "tf_test_foo" {
-	name = "tf_test_foo"
+	name = "tf_test_%d"
 	description = "foo"
 
 	ingress {
@@ -1402,11 +1413,13 @@ resource "aws_security_group" "tf_test_foo" {
 		cidr_blocks = ["0.0.0.0/0"]
 	}
 }
-`
+`, rInt)
+}
 
-const testAccInstanceConfig = `
+func testAccInstanceConfig(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_security_group" "tf_test_foo" {
-	name = "tf_test_foo"
+	name = "tf_test_%d"
 	description = "foo"
 
 	ingress {
@@ -1426,11 +1439,13 @@ resource "aws_instance" "foo" {
 	security_groups = ["${aws_security_group.tf_test_foo.name}"]
 	user_data = "foo:-with-character's"
 }
-`
+`, rInt)
+}
 
-const testAccInstanceConfigWithUserDataBase64 = `
+func testAccInstanceConfigWithUserDataBase64(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_security_group" "tf_test_foo" {
-	name = "tf_test_foo"
+	name = "tf_test_%d"
 	description = "foo"
 
 	ingress {
@@ -1450,7 +1465,8 @@ resource "aws_instance" "foo" {
 	security_groups = ["${aws_security_group.tf_test_foo.name}"]
 	user_data_base64 = "${base64encode("hello world")}"
 }
-`
+`, rInt)
+}
 
 const testAccInstanceConfigWithSmallInstanceType = `
 resource "aws_instance" "foo" {
@@ -2028,7 +2044,8 @@ resource "aws_instance" "foo" {
 }
 `
 
-const testAccInstanceNetworkInstanceSecurityGroups = `
+func testAccInstanceNetworkInstanceSecurityGroups(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.foo.id}"
 }
@@ -2041,7 +2058,7 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_security_group" "tf_test_foo" {
-  name = "tf_test_foo"
+  name = "tf_test_%d"
   description = "foo"
   vpc_id="${aws_vpc.foo.id}"
 
@@ -2072,9 +2089,11 @@ resource "aws_eip" "foo_eip" {
   vpc = true
 	depends_on = ["aws_internet_gateway.gw"]
 }
-`
+`, rInt)
+}
 
-const testAccInstanceNetworkInstanceVPCSecurityGroupIDs = `
+func testAccInstanceNetworkInstanceVPCSecurityGroupIDs(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.foo.id}"
 }
@@ -2087,7 +2106,7 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_security_group" "tf_test_foo" {
-  name = "tf_test_foo"
+  name = "tf_test_%d"
   description = "foo"
   vpc_id="${aws_vpc.foo.id}"
 
@@ -2117,7 +2136,8 @@ resource "aws_eip" "foo_eip" {
   vpc = true
 	depends_on = ["aws_internet_gateway.gw"]
 }
-`
+`, rInt)
+}
 
 func testAccInstanceConfigKeyPair(keyPairName string) string {
 	return fmt.Sprintf(`
