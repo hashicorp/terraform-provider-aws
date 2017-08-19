@@ -115,11 +115,11 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 			SecretAccessKey: c.SecretKey,
 			SessionToken:    c.Token,
 		}},
-		&awsCredentials.EnvProvider{},
 		&awsCredentials.SharedCredentialsProvider{
 			Filename: c.CredsFilename,
 			Profile:  c.Profile,
 		},
+		&awsCredentials.EnvProvider{},
 	}
 
 	// Build isolated HTTP client to avoid issues with globally-shared settings
