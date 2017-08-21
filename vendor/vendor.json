@@ -309,6 +309,14 @@
 			"versionExact": "v1.10.25"
 		},
 		{
+			"checksumSHA1": "oPNv+5p2pAZlqSv8SmxbNt2gxYI=",
+			"path": "github.com/aws/aws-sdk-go/service/batch",
+			"revision": "77c204059e353965728c1898f9755d4970294da0",
+			"revisionTime": "2017-08-14T16:38:10Z",
+			"version": "v1.10.25",
+			"versionExact": "v1.10.25"
+		},
+		{
 			"checksumSHA1": "bhafhKK+lQbYk/Z3O+PdrQ5zDY4=",
 			"path": "github.com/aws/aws-sdk-go/service/cloudformation",
 			"revision": "77c204059e353965728c1898f9755d4970294da0",
