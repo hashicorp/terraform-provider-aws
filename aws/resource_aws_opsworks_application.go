@@ -448,10 +448,12 @@ func resourceAwsOpsworksSetApplicationSource(d *schema.ResourceData, v *opsworks
 			m["revision"] = *v.Revision
 		}
 
-		// v.Password and v.SshKey will, on read, contain the placeholder string
+		// v.Password will, on read, contain the placeholder string
 		// "*****FILTERED*****", so we ignore it on read and let persist
 		// the value already in the state.
 		m["password"] = d.Get("app_source.0.password").(string)
+		// ssh_key can not be read via api, so we ignore it on read and let persist
+		// the value already in the state.
 		m["ssh_key"] = d.Get("app_source.0.ssh_key").(string)
 
 		nv = append(nv, m)
