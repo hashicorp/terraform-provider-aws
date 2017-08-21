@@ -4,12 +4,20 @@ IMPROVEMENTS:
 
 * resource/aws_instance: New `user_data_base64` attribute that allows non-UTF8 data (such as gzip) to be assigned to user-data without corruption [GH-850]
 * data-source/aws_vpc: Expose enable_dns_* in aws_vpc data_source [GH-1373]
+* resource/aws_rds_cluster: Allow setting of rds cluster engine [GH-1415]
+* resource/aws_ssm_association: now supports update for `parameters`, `schedule_expression`,`output_location` [GH-1421]
+* resource/aws_ssm_patch_baseline: now supports update for multiple attributes [GH-1421]
+* resource/aws_cloudformation_stack: Add support for Import [GH-1432]
+* resource/aws_rds_cluster_instance: Expose availability_zone attribute [GH-1439]
+* resource/aws_efs_file_system: Add support for encryption [GH-1420]
 
 BUG FIXES:
 
 * resource/aws_instance: Fix `associate_public_ip_address` [GH-1340]
+* resource/aws_instance: Fix import in EC2 Classic [GH-1453]
 * resource/aws_emr_cluster: Avoid spurious diff of `log_uri` [GH-1374]
 * resource/aws_cloudwatch_log_subscription_filter: Add support for ResourceNotFound [GH-1414]
+* resource/aws_alb: Cleanup ENIs after deleting ALB [GH-1427]
 
 ## 0.1.4 (August 08, 2017)
 

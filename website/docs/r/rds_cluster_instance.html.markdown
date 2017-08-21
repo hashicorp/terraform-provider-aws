@@ -89,7 +89,7 @@ The following attributes are exported:
 * `writer` – Boolean indicating if this instance is writable. `False` indicates
 this instance is a read replica
 * `allocated_storage` - The amount of allocated storage
-* `availability_zones` - The availability zone of the instance
+* `availability_zone` - The availability zone of the instance
 * `endpoint` - The DNS address for this instance. May not be writable
 * `engine` - The database engine
 * `engine_version` - The database engine version

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -165,6 +166,41 @@ func TestAccAWSEFSFileSystem_pagedTags(t *testing.T) {
 					//	"generalPurpose",
 					//),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEFSFileSystem_kmsKey(t *testing.T) {
+	rInt := acctest.RandInt()
+	keyRegex := regexp.MustCompile("^arn:aws:([a-zA-Z0-9\\-])+:([a-z]{2}-[a-z]+-\\d{1})?:(\\d{12})?:(.*)$")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemConfigWithKmsKey(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_efs_file_system.foo-with-kms", "kms_key_id", keyRegex),
+					resource.TestCheckResourceAttr("aws_efs_file_system.foo-with-kms", "encrypted", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEFSFileSystem_kmsConfigurationWithoutEncryption(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSEFSFileSystemConfigWithKmsKeyNoEncryption(rInt),
+				ExpectError: regexp.MustCompile(`encrypted must be set to true when kms_key_id is specified`),
 			},
 		},
 	})
@@ -351,3 +387,29 @@ resource "aws_efs_file_system" "foo-with-performance-mode" {
 	performance_mode = "maxIO"
 }
 `
+
+func testAccAWSEFSFileSystemConfigWithKmsKey(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "foo" {
+  description = "Terraform acc test %d"
+}
+
+resource "aws_efs_file_system" "foo-with-kms" {
+  encrypted = true
+  kms_key_id = "${aws_kms_key.foo.arn}"
+}
+`, rInt)
+}
+
+func testAccAWSEFSFileSystemConfigWithKmsKeyNoEncryption(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "foo" {
+  description = "Terraform acc test %d"
+}
+
+resource "aws_efs_file_system" "foo-with-kms" {
+  encrypted = false
+  kms_key_id = "${aws_kms_key.foo.arn}"
+}
+`, rInt)
+}
