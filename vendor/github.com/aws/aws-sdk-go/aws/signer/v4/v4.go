@@ -502,6 +502,8 @@ func (ctx *signingCtx) build(disableHeaderHoisting bool) {
 	ctx.buildTime()             // no depends
 	ctx.buildCredentialString() // no depends
 
+	ctx.buildBodyDigest()
+
 	unsignedHeaders := ctx.Request.Header
 	if ctx.isPresign {
 		if !disableHeaderHoisting {
@@ -513,7 +515,6 @@ func (ctx *signingCtx) build(disableHeaderHoisting bool) {
 		}
 	}
 
-	ctx.buildBodyDigest()
 	ctx.buildCanonicalHeaders(ignoredHeaders, unsignedHeaders)
 	ctx.buildCanonicalString() // depends on canon headers / signed headers
 	ctx.buildStringToSign()    // depends on canon string

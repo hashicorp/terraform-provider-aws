@@ -30293,7 +30293,7 @@ type DescribeHostReservationsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Details about the reservation's configuration.
-	HostReservationSet []*HostReservation `locationName:"hostReservationSet" type:"list"`
+	HostReservationSet []*HostReservation `locationName:"hostReservationSet" locationNameList:"item" type:"list"`
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
