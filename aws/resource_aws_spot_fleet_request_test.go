@@ -34,7 +34,7 @@ func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_spot_fleet_request.foo", "launch_specification.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_specification.2633484960.associate_public_ip_address", "true"),
+						"aws_spot_fleet_request.foo", "launch_specification.24370212.associate_public_ip_address", "true"),
 				),
 			},
 		},
@@ -127,9 +127,9 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_spot_fleet_request.foo", "launch_specification.#", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_specification.335709043.availability_zone", "us-west-2a"),
+						"aws_spot_fleet_request.foo", "launch_specification.1991689378.availability_zone", "us-west-2a"),
 					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_specification.1671188867.availability_zone", "us-west-2b"),
+						"aws_spot_fleet_request.foo", "launch_specification.19404370.availability_zone", "us-west-2b"),
 				),
 			},
 		},
@@ -181,9 +181,9 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_spot_fleet_request.foo", "launch_specification.#", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_specification.335709043.instance_type", "m1.small"),
+						"aws_spot_fleet_request.foo", "launch_specification.1991689378.instance_type", "m1.small"),
 					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_specification.335709043.availability_zone", "us-west-2a"),
+						"aws_spot_fleet_request.foo", "launch_specification.1991689378.availability_zone", "us-west-2a"),
 					resource.TestCheckResourceAttr(
 						"aws_spot_fleet_request.foo", "launch_specification.590403189.instance_type", "m3.large"),
 					resource.TestCheckResourceAttr(
@@ -237,7 +237,7 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_spot_fleet_request.foo", "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "spot_price", "0.005"),
+						"aws_spot_fleet_request.foo", "spot_price", "0.035"),
 					resource.TestCheckResourceAttr(
 						"aws_spot_fleet_request.foo", "launch_specification.#", "2"),
 					resource.TestCheckResourceAttr(
@@ -245,9 +245,9 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_spot_fleet_request.foo", "launch_specification.4143232216.instance_type", "m3.large"),
 					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_specification.335709043.spot_price", ""), //there will not be a value here since it's not overriding
+						"aws_spot_fleet_request.foo", "launch_specification.1991689378.spot_price", ""), //there will not be a value here since it's not overriding
 					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_specification.335709043.instance_type", "m1.small"),
+						"aws_spot_fleet_request.foo", "launch_specification.1991689378.instance_type", "m1.small"),
 				),
 			},
 		},
@@ -500,33 +500,10 @@ resource "aws_key_pair" "debugging" {
 	public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
 
-resource "aws_iam_policy" "test-policy" {
-  name = "test-policy-%d"
-  path = "/"
-  description = "Spot Fleet Request ACCTest Policy"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": [
-       "ec2:DescribeImages",
-       "ec2:DescribeSubnets",
-       "ec2:RequestSpotInstances",
-       "ec2:TerminateInstances",
-       "ec2:DescribeInstanceStatus",
-       "iam:PassRole"
-        ],
-    "Resource": ["*"]
-  }]
-}
-EOF
-}
-
 resource "aws_iam_policy_attachment" "test-attach" {
     name = "test-attachment-%d"
     roles = ["${aws_iam_role.test-role.name}"]
-    policy_arn = "${aws_iam_policy.test-policy.arn}"
+    policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
 }
 
 resource "aws_iam_role" "test-role" {
@@ -553,17 +530,19 @@ EOF
 
 resource "aws_spot_fleet_request" "foo" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.027"
     target_capacity = 2
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
+    wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-d06a90b0"
+        ami = "ami-516b9131"
         key_name = "${aws_key_pair.debugging.key_name}"
         associate_public_ip_address = true
     }
-}`, rName, rInt, rInt, rName)
+	depends_on = ["aws_iam_policy_attachment.test-attach"]
+}`, rName, rInt, rName)
 }
 
 func testAccAWSSpotFleetRequestConfig(rName string, rInt int) string {
@@ -630,9 +609,10 @@ resource "aws_spot_fleet_request" "foo" {
     target_capacity = 2
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
+    wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-d06a90b0"
+        ami = "ami-516b9131"
         key_name = "${aws_key_pair.debugging.key_name}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -704,9 +684,10 @@ resource "aws_spot_fleet_request" "foo" {
     target_capacity = 2
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
+    wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-d06a90b0"
+        ami = "ami-516b9131"
         key_name = "${aws_key_pair.debugging.key_name}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -778,17 +759,18 @@ resource "aws_spot_fleet_request" "foo" {
     target_capacity = 2
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
+    wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-d06a90b0"
+        ami = "ami-516b9131"
         key_name = "${aws_key_pair.debugging.key_name}"
-	availability_zone = "us-west-2a"
+        availability_zone = "us-west-2a"
     }
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-d06a90b0"
+        ami = "ami-516b9131"
         key_name = "${aws_key_pair.debugging.key_name}"
-	availability_zone = "us-west-2b"
+        availability_zone = "us-west-2b"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -871,21 +853,22 @@ resource "aws_subnet" "bar" {
 
 resource "aws_spot_fleet_request" "foo" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.025"
     target_capacity = 4
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
+    wait_for_fulfillment = true
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d0f506b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-	subnet_id = "${aws_subnet.foo.id}"
+        subnet_id = "${aws_subnet.foo.id}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d0f506b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-	subnet_id = "${aws_subnet.bar.id}"
+        subnet_id = "${aws_subnet.bar.id}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -952,13 +935,14 @@ EOF
 
 resource "aws_spot_fleet_request" "foo" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.025"
     target_capacity = 2
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
+    wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-d06a90b0"
+        ami = "ami-516b9131"
         key_name = "${aws_key_pair.debugging.key_name}"
         availability_zone = "us-west-2a"
     }
@@ -1043,21 +1027,22 @@ resource "aws_subnet" "foo" {
 
 resource "aws_spot_fleet_request" "foo" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.035"
     target_capacity = 4
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
+	wait_for_fulfillment = true
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d0f506b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-	subnet_id = "${aws_subnet.foo.id}"
+        subnet_id = "${aws_subnet.foo.id}"
     }
     launch_specification {
         instance_type = "r3.large"
         ami = "ami-d0f506b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-	subnet_id = "${aws_subnet.foo.id}"
+        subnet_id = "${aws_subnet.foo.id}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -1124,13 +1109,14 @@ EOF
 
 resource "aws_spot_fleet_request" "foo" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.035"
     target_capacity = 2
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
+    wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-d06a90b0"
+        ami = "ami-516b9131"
         key_name = "${aws_key_pair.debugging.key_name}"
         availability_zone = "us-west-2a"
     }
@@ -1211,6 +1197,7 @@ resource "aws_spot_fleet_request" "foo" {
     valid_until = "2019-11-04T20:44:20Z"
     allocation_strategy = "diversified"
     terminate_instances_with_expiration = true
+    wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-d06a90b0"
@@ -1298,6 +1285,7 @@ resource "aws_spot_fleet_request" "foo" {
     target_capacity = 10
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
+    wait_for_fulfillment = true
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
@@ -1376,9 +1364,10 @@ resource "aws_spot_fleet_request" "foo" {
     target_capacity = 1
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
+    wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-d06a90b0"
+        ami = "ami-516b9131"
 
 	ebs_block_device {
             device_name = "/dev/xvda"

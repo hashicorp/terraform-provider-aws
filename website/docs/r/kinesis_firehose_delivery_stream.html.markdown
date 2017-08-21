@@ -14,6 +14,88 @@ For more details, see the [Amazon Kinesis Firehose Documentation][1].
 
 ## Example Usage
 
+### Extended S3 Destination
+
+```hcl
+resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
+  name        = "terraform-kinesis-firehose-extended-s3-test-stream"
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = "${aws_iam_role.firehose_role.arn}"
+    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    processing_configuration = [
+      {
+        enabled = "true"
+        processors = [
+          {
+            type = "Lambda"
+            parameters = [
+              {
+                parameter_name = "LambdaArn"
+                parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = "tf-test-bucket"
+  acl    = "private"
+}
+
+resource "aws_iam_role" "firehose_role" {
+  name = "firehose_test_role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "firehose.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "lambda_iam" {
+  name = "lambda_iam"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lambda_function" "lambda_processor" {
+  filename = "lambda.zip"
+  function_name = "firehose_lambda_processor"
+  role = "${aws_iam_role.lambda_iam.arn}"
+  handler = "exports.handler"
+  runtime = "nodejs4.3"
+}
+```
+
 ### S3 Destination
 
 ```hcl
@@ -125,9 +207,10 @@ The following arguments are supported:
 
 * `name` - (Required) A name to identify the stream. This is unique to the
 AWS account and region the Stream is created in.
-* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3`, `redshift`, and `elasticsearch`.
-* `s3_configuration` - (Required) Configuration options for the s3 destination (or the intermediate bucket if the destination
+* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, and `elasticsearch`.
+* `s3_configuration` - (Optional, Deprecated, see/use `extended_s3_configuration` unless `destination` is `redshift`) Configuration options for the s3 destination (or the intermediate bucket if the destination
 is redshift). More details are given below.
+* `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. More details are given below.
 * `redshift_configuration` - (Optional) Configuration options if redshift is the destination.
 Using `redshift_configuration` requires the user to also specify a
 `s3_configuration` block. More details are given below.
@@ -144,6 +227,10 @@ The `s3_configuration` object supports the following:
 * `kms_key_arn` - (Optional) Specifies the KMS key ARN the stream will use to encrypt data. If not set, no encryption will
 be used.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
+
+The `extended_s3_configuration` object supports the same fields from `s3_configuration` as well as the following:
+
+* `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 
 The `redshift_configuration` object supports the following:
 
@@ -175,6 +262,21 @@ The `cloudwatch_logging_options` object supports the following:
 * `enabled` - (Optional) Enables or disables the logging. Defaults to `false`.
 * `log_group_name` - (Optional) The CloudWatch group name for logging. This value is required if `enabled` is true.
 * `log_stream_name` - (Optional) The CloudWatch log stream name for logging. This value is required if `enabled` is true.
+
+The `processing_configuration` object supports the following:
+
+* `enabled` - (Optional) Enables or disables data processing.
+* `processors` - (Optional) Array of data processors. More details are given below
+
+The `processors` array objects support the following:
+
+* `type` - (Required) The type of processor. Valid Values: `Lambda`
+* `parameters` - (Optional) Array of processor parameters. More details are given below
+
+The `parameters` array objects support the following:
+
+* `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`
+* `parameter_value` - (Required) Parameter value. Must be between 1 and 512 length (inclusive). When providing a Lambda ARN, you should specify the resource version as well.
 
 ## Attributes Reference
 

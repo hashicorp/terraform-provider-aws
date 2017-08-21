@@ -89,7 +89,7 @@ The following attributes are exported:
 * `writer` – Boolean indicating if this instance is writable. `False` indicates
 this instance is a read replica
 * `allocated_storage` - The amount of allocated storage
-* `availability_zones` - The availability zone of the instance
+* `availability_zone` - The availability zone of the instance
 * `endpoint` - The DNS address for this instance. May not be writable
 * `engine` - The database engine
 * `engine_version` - The database engine version
@@ -98,6 +98,7 @@ this instance is a read replica
 * `status` - The RDS instance status
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted.
 * `kms_key_id` - The ARN for the KMS encryption key if one is set to the cluster.
+* `dbi_resource_id` - The region-unique, immutable identifier for the DB instance.
 
 [2]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Aurora.html
 [3]: /docs/providers/aws/r/rds_cluster.html

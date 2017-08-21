@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -109,13 +111,30 @@ func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		opts := &ec2.DescribeImagesInput{
-			ImageIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeImages(opts)
+
+		var resp *ec2.DescribeImagesOutput
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			opts := &ec2.DescribeImagesInput{
+				ImageIds: []*string{aws.String(rs.Primary.ID)},
+			}
+			var err error
+			resp, err = conn.DescribeImages(opts)
+			if err != nil {
+				// This can be just eventual consistency
+				awsErr, ok := err.(awserr.Error)
+				if ok && awsErr.Code() == "InvalidAMIID.NotFound" {
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
 		if err != nil {
-			return err
+			return fmt.Errorf("Unable to find AMI after retries: %s", err)
 		}
+
 		if len(resp.Images) == 0 {
 			return fmt.Errorf("AMI not found")
 		}

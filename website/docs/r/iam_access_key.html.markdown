@@ -6,7 +6,7 @@ description: |-
   Provides an IAM access key. This is a set of credentials that allow API requests to be made as an IAM user.
 ---
 
-# aws\_iam\_access\_key
+# aws_iam_access_key
 
 Provides an IAM access key. This is a set of credentials that allow API requests to be made as an IAM user.
 
@@ -54,7 +54,7 @@ The following arguments are supported:
 
 * `user` - (Required) The IAM user to associate with this access key.
 * `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a
-  keybase username in the form `keybase:username`.
+  keybase username in the form `keybase:some_person_that_exists`.
 
 ## Attributes Reference
 

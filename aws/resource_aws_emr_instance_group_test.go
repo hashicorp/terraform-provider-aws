@@ -29,6 +29,27 @@ func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 	})
 }
 
+// Confirm we can scale down the instance count. Regression test for https://github.com/terraform-providers/terraform-provider-aws/issues/1264
+func TestAccAWSEMRInstanceGroup_zero_count(t *testing.T) {
+	var ig emr.InstanceGroup
+	rInt := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrInstanceGroupConfig(rInt),
+				Check:  testAccCheckAWSEmrInstanceGroupExists("aws_emr_instance_group.task", &ig),
+			},
+			{
+				Config: testAccAWSEmrInstanceGroupConfig_zero_count(rInt),
+				Check:  testAccCheckAWSEmrInstanceGroupExists("aws_emr_instance_group.task", &ig),
+			},
+		},
+	})
+}
+
 func TestAccAWSEMRInstanceGroup_ebsBasic(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := acctest.RandInt()
@@ -93,7 +114,8 @@ func testAccCheckAWSEmrInstanceGroupExists(n string, v *emr.InstanceGroup) resou
 			return fmt.Errorf("No task group id set")
 		}
 		meta := testAccProvider.Meta()
-		g, err := fetchEMRInstanceGroup(meta, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
+		conn := meta.(*AWSClient).emrconn
+		g, err := fetchEMRInstanceGroup(conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("EMR error: %v", err)
 		}
@@ -176,6 +198,10 @@ resource "aws_security_group" "allow_all" {
 resource "aws_vpc" "main" {
   cidr_block           = "168.31.0.0/16"
   enable_dns_hostnames = true
+
+	tags {
+		Name = "tf_acc_emr_tests"
+	}
 }
 
 resource "aws_subnet" "main" {
@@ -375,7 +401,17 @@ func testAccAWSEmrInstanceGroupConfig(r int) string {
 	resource "aws_emr_instance_group" "task" {
     cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
     instance_count = 1
-    instance_type  = "m3.xlarge"
+    instance_type  = "m1.small"
+  }
+	`, r, r, r, r, r, r)
+}
+
+func testAccAWSEmrInstanceGroupConfig_zero_count(r int) string {
+	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
+	resource "aws_emr_instance_group" "task" {
+    cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
+    instance_count = 0
+    instance_type  = "m1.small"
   }
 	`, r, r, r, r, r, r)
 }

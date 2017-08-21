@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
+	var before, after ssm.PatchBaselineIdentity
 	name := acctest.RandString(10)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,19 +22,23 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 			{
 				Config: testAccAWSSSMPatchBaselineBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists("aws_ssm_patch_baseline.foo"),
+					testAccCheckAWSSSMPatchBaselineExists("aws_ssm_patch_baseline.foo", &before),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "approved_patches.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "approved_patches.2062620480", "KB123456"),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "name", fmt.Sprintf("patch-baseline-%s", name)),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approved_patches_compliance_level", "CRITICAL"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "description", "Baseline containing all updates approved for production systems"),
 				),
 			},
 			{
 				Config: testAccAWSSSMPatchBaselineBasicConfigUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists("aws_ssm_patch_baseline.foo"),
+					testAccCheckAWSSSMPatchBaselineExists("aws_ssm_patch_baseline.foo", &after),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "approved_patches.#", "2"),
 					resource.TestCheckResourceAttr(
@@ -42,13 +47,74 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 						"aws_ssm_patch_baseline.foo", "approved_patches.2291496788", "KB456789"),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "name", fmt.Sprintf("updated-patch-baseline-%s", name)),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approved_patches_compliance_level", "HIGH"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "description", "Baseline containing all updates approved for production systems - August 2017"),
+					func(*terraform.State) error {
+						if *before.BaselineId != *after.BaselineId {
+							t.Fatal("Baseline IDs changed unexpectedly")
+						}
+						return nil
+					},
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSSSMPatchBaselineExists(n string) resource.TestCheckFunc {
+func TestAccAWSSSMPatchBaselineWithOperatingSystem(t *testing.T) {
+	var before, after ssm.PatchBaselineIdentity
+	name := acctest.RandString(10)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMPatchBaselineConfigWithOperatingSystem(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMPatchBaselineExists("aws_ssm_patch_baseline.foo", &before),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approval_rule.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approval_rule.0.approve_after_days", "7"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approval_rule.0.patch_filter.#", "2"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "operating_system", "AMAZON_LINUX"),
+				),
+			},
+			{
+				Config: testAccAWSSSMPatchBaselineConfigWithOperatingSystemUpdated(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMPatchBaselineExists("aws_ssm_patch_baseline.foo", &after),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approval_rule.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approval_rule.0.approve_after_days", "7"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approval_rule.0.patch_filter.#", "2"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "operating_system", "WINDOWS"),
+					testAccCheckAwsSsmPatchBaselineRecreated(t, &before, &after),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckAwsSsmPatchBaselineRecreated(t *testing.T,
+	before, after *ssm.PatchBaselineIdentity) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *before.BaselineId == *after.BaselineId {
+			t.Fatalf("Expected change of SSM Patch Baseline IDs, but both were %v", *before.BaselineId)
+		}
+		return nil
+	}
+}
+
+func testAccCheckAWSSSMPatchBaselineExists(n string, patch *ssm.PatchBaselineIdentity) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -72,6 +138,7 @@ func testAccCheckAWSSSMPatchBaselineExists(n string) resource.TestCheckFunc {
 
 		for _, i := range resp.BaselineIdentities {
 			if *i.BaselineId == rs.Primary.ID {
+				*patch = *i
 				return nil
 			}
 		}
@@ -119,7 +186,9 @@ func testAccAWSSSMPatchBaselineBasicConfig(rName string) string {
 
 resource "aws_ssm_patch_baseline" "foo" {
   name  = "patch-baseline-%s"
+  description = "Baseline containing all updates approved for production systems"
   approved_patches = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
 }
 
 `, rName)
@@ -130,7 +199,59 @@ func testAccAWSSSMPatchBaselineBasicConfigUpdated(rName string) string {
 
 resource "aws_ssm_patch_baseline" "foo" {
   name  = "updated-patch-baseline-%s"
+  description = "Baseline containing all updates approved for production systems - August 2017"
   approved_patches = ["KB123456","KB456789"]
+  approved_patches_compliance_level = "HIGH"
+}
+
+`, rName)
+}
+
+func testAccAWSSSMPatchBaselineConfigWithOperatingSystem(rName string) string {
+	return fmt.Sprintf(`
+
+resource "aws_ssm_patch_baseline" "foo" {
+  name  = "patch-baseline-%s"
+  operating_system = "AMAZON_LINUX"
+  description = "Baseline containing all updates approved for production systems"
+  approval_rule {
+  	approve_after_days = 7
+
+  	patch_filter {
+		key = "PRODUCT"
+		values = ["AmazonLinux2016.03","AmazonLinux2016.09","AmazonLinux2017.03","AmazonLinux2017.09"]
+  	}
+
+  	patch_filter {
+		key = "SEVERITY"
+		values = ["Critical","Important"]
+  	}
+  }
+}
+
+`, rName)
+}
+
+func testAccAWSSSMPatchBaselineConfigWithOperatingSystemUpdated(rName string) string {
+	return fmt.Sprintf(`
+
+resource "aws_ssm_patch_baseline" "foo" {
+  name  = "patch-baseline-%s"
+  operating_system = "WINDOWS"
+  description = "Baseline containing all updates approved for production systems"
+  approval_rule {
+  	approve_after_days = 7
+
+  	patch_filter {
+		key = "PRODUCT"
+		values = ["WindowsServer2012R2"]
+  	}
+
+  	patch_filter {
+		key = "MSRC_SEVERITY"
+		values = ["Critical","Important"]
+  	}
+  }
 }
 
 `, rName)

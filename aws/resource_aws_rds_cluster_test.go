@@ -146,6 +146,41 @@ func TestAccAWSRDSCluster_updateTags(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSCluster_updateIamRoles(t *testing.T) {
+	var v rds.DBCluster
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfigIncludingIamRoles(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists("aws_rds_cluster.default", &v),
+				),
+			},
+			{
+				Config: testAccAWSClusterConfigAddIamRoles(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists("aws_rds_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster.default", "iam_roles.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSClusterConfigRemoveIamRoles(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists("aws_rds_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster.default", "iam_roles.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRDSCluster_kmsKey(t *testing.T) {
 	var v rds.DBCluster
 	keyRegex := regexp.MustCompile("^arn:aws:kms:")
@@ -590,4 +625,225 @@ resource "aws_rds_cluster" "default" {
   iam_database_authentication_enabled = true
   skip_final_snapshot = true
 }`, n)
+}
+
+func testAccAWSClusterConfigIncludingIamRoles(n int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "rds_sample_role" {
+  name = "rds_sample_role_%d"
+  path = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+resource "aws_iam_role_policy" "rds_policy" {
+	name = "rds_sample_role_policy_%d"
+	role = "${aws_iam_role.rds_sample_role.name}"
+	policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+resource "aws_iam_role" "another_rds_sample_role" {
+  name = "another_rds_sample_role_%d"
+  path = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+resource "aws_iam_role_policy" "another_rds_policy" {
+	name = "another_rds_sample_role_policy_%d"
+	role = "${aws_iam_role.another_rds_sample_role.name}"
+	policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+resource "aws_rds_cluster" "default" {
+  cluster_identifier = "tf-aurora-cluster-%d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  database_name = "mydb"
+  master_username = "foo"
+  master_password = "mustbeeightcharaters"
+  db_cluster_parameter_group_name = "default.aurora5.6"
+  skip_final_snapshot = true
+  tags {
+    Environment = "production"
+  }
+  depends_on = ["aws_iam_role.another_rds_sample_role", "aws_iam_role.rds_sample_role"]
+
+}`, n, n, n, n, n)
+}
+
+func testAccAWSClusterConfigAddIamRoles(n int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "rds_sample_role" {
+  name = "rds_sample_role_%d"
+  path = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+resource "aws_iam_role_policy" "rds_policy" {
+	name = "rds_sample_role_policy_%d"
+	role = "${aws_iam_role.rds_sample_role.name}"
+	policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+resource "aws_iam_role" "another_rds_sample_role" {
+  name = "another_rds_sample_role_%d"
+  path = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+resource "aws_iam_role_policy" "another_rds_policy" {
+	name = "another_rds_sample_role_policy_%d"
+	role = "${aws_iam_role.another_rds_sample_role.name}"
+	policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+resource "aws_rds_cluster" "default" {
+  cluster_identifier = "tf-aurora-cluster-%d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  database_name = "mydb"
+  master_username = "foo"
+  master_password = "mustbeeightcharaters"
+  db_cluster_parameter_group_name = "default.aurora5.6"
+  skip_final_snapshot = true
+  iam_roles = ["${aws_iam_role.rds_sample_role.arn}","${aws_iam_role.another_rds_sample_role.arn}"]
+  tags {
+    Environment = "production"
+  }
+  depends_on = ["aws_iam_role.another_rds_sample_role", "aws_iam_role.rds_sample_role"]
+
+}`, n, n, n, n, n)
+}
+
+func testAccAWSClusterConfigRemoveIamRoles(n int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "another_rds_sample_role" {
+  name = "another_rds_sample_role_%d"
+  path = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+resource "aws_iam_role_policy" "another_rds_policy" {
+	name = "another_rds_sample_role_policy_%d"
+	role = "${aws_iam_role.another_rds_sample_role.name}"
+	policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+resource "aws_rds_cluster" "default" {
+  cluster_identifier = "tf-aurora-cluster-%d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  database_name = "mydb"
+  master_username = "foo"
+  master_password = "mustbeeightcharaters"
+  db_cluster_parameter_group_name = "default.aurora5.6"
+  skip_final_snapshot = true
+  iam_roles = ["${aws_iam_role.another_rds_sample_role.arn}"]
+  tags {
+    Environment = "production"
+  }
+
+  depends_on = ["aws_iam_role.another_rds_sample_role"]
+}`, n, n, n)
 }

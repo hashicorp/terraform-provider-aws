@@ -20,7 +20,7 @@ func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSTopicSubscriptionConfig(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
@@ -39,8 +39,27 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSTopicSubscriptionConfig_autoConfirmingEndpoint(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
+					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) {
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig_autoConfirmingSecuredEndpoint(ri, "john", "doe"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
 					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription"),
@@ -102,6 +121,21 @@ func testAccCheckAWSSNSTopicSubscriptionExists(n string) resource.TestCheckFunc 
 		}
 
 		return nil
+	}
+}
+
+func TestObfuscateEndpointPassword(t *testing.T) {
+	checks := map[string]string{
+		"https://example.com/myroute":                   "https://example.com/myroute",
+		"https://username@example.com/myroute":          "https://username@example.com/myroute",
+		"https://username:password@example.com/myroute": "https://username:****@example.com/myroute",
+	}
+	for endpoint, expected := range checks {
+		out := obfuscateEndpoint(endpoint)
+
+		if expected != out {
+			t.Fatalf("Expected %v, got %v", expected, out)
+		}
 	}
 }
 
@@ -244,4 +278,205 @@ resource "aws_sns_topic_subscription" "test_subscription" {
   endpoint_auto_confirms = true
 }
 `, i, i, i, i, i)
+}
+
+func testAccAWSSNSTopicSubscriptionConfig_autoConfirmingSecuredEndpoint(i int, username, password string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test_topic" {
+  name = "tf-acc-test-sns-%d"
+}
+
+resource "aws_api_gateway_rest_api" "test" {
+  name        = "tf-acc-test-sns-%d"
+  description = "Terraform Acceptance test for SNS subscription"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
+  resource_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = "${aws_api_gateway_authorizer.test.id}"
+}
+
+resource "aws_api_gateway_method_response" "test" {
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  resource_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  http_method = "${aws_api_gateway_method.test.http_method}"
+  status_code = "200"
+
+  response_parameters {
+    "method.response.header.Access-Control-Allow-Origin" = true
+  }
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id             = "${aws_api_gateway_rest_api.test.id}"
+  resource_id             = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  http_method             = "${aws_api_gateway_method.test.http_method}"
+  integration_http_method = "POST"
+  type                    = "AWS"
+  uri                     = "${aws_lambda_function.lambda.invoke_arn}"
+}
+
+resource "aws_api_gateway_integration_response" "test" {
+  depends_on  = ["aws_api_gateway_integration.test"]
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  resource_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  http_method = "${aws_api_gateway_method.test.http_method}"
+  status_code = "${aws_api_gateway_method_response.test.status_code}"
+
+  response_parameters {
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+  }
+}
+
+resource "aws_iam_role" "iam_for_lambda" {
+  name = "tf-acc-test-sns-%d"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "policy" {
+  name = "tf-acc-test-sns-%d"
+  role = "${aws_iam_role.iam_for_lambda.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "logs:*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lambda_permission" "apigw_lambda" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.lambda.arn}"
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_deployment.test.execution_arn}/*"
+}
+
+resource "aws_lambda_function" "lambda" {
+  filename         = "test-fixtures/lambda_confirm_sns.zip"
+  function_name    = "tf-acc-test-sns-%d"
+  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  handler          = "main.confirm_subscription"
+  source_code_hash = "${base64sha256(file("test-fixtures/lambda_confirm_sns.zip"))}"
+  runtime          = "python3.6"
+}
+
+resource "aws_api_gateway_deployment" "test" {
+  depends_on  = ["aws_api_gateway_integration_response.test"]
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  stage_name  = "acctest"
+}
+
+resource "aws_iam_role" "invocation_role" {
+  name = "tf-acc-test-authorizer-%d"
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "apigateway.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "invocation_policy" {
+  name = "tf-acc-test-authorizer-%d"
+  role = "${aws_iam_role.invocation_role.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "lambda:InvokeFunction",
+      "Effect": "Allow",
+      "Resource": "${aws_lambda_function.authorizer.arn}"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_api_gateway_authorizer" "test" {
+  name                             = "tf-acc-test-api-gw-authorizer-%d"
+  rest_api_id                      = "${aws_api_gateway_rest_api.test.id}"
+  authorizer_uri                   = "${aws_lambda_function.authorizer.invoke_arn}"
+  authorizer_result_ttl_in_seconds = "0"
+  authorizer_credentials           = "${aws_iam_role.invocation_role.arn}"
+}
+
+resource "aws_lambda_function" "authorizer" {
+  filename         = "test-fixtures/lambda_basic_authorizer.zip"
+  source_code_hash = "${base64sha256(file("test-fixtures/lambda_basic_authorizer.zip"))}"
+  function_name    = "tf-acc-test-authorizer-%d"
+  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  handler          = "main.authenticate"
+  runtime          = "nodejs6.10"
+
+  environment {
+    variables {
+        AUTH_USER="%s"
+        AUTH_PASS="%s"
+    }
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "test" {
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  status_code = "401"
+  response_type = "UNAUTHORIZED"
+
+  response_templates = {
+    "application/json" = "{'message':$context.error.messageString}"
+  }
+
+  response_parameters = {
+    "gatewayresponse.header.WWW-Authenticate" = "'Basic'"
+  }
+}
+
+resource "aws_sns_topic_subscription" "test_subscription" {
+  depends_on             = ["aws_lambda_permission.apigw_lambda"]
+  topic_arn              = "${aws_sns_topic.test_topic.arn}"
+  protocol               = "https"
+  endpoint               = "${replace(aws_api_gateway_deployment.test.invoke_url, "https://", "https://%s:%s@")}"
+  endpoint_auto_confirms = true
+}
+`, i, i, i, i, i, i, i, i, i, username, password, username, password)
 }
