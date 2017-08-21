@@ -10,6 +10,7 @@ IMPROVEMENTS:
 * resource/aws_cloudformation_stack: Add support for Import [GH-1432]
 * resource/aws_rds_cluster_instance: Expose availability_zone attribute [GH-1439]
 * resource/aws_efs_file_system: Add support for encryption [GH-1420]
+* resource/aws_db_parameter_group: Allow underscores in names [GH-1460]
 
 BUG FIXES:
 
