@@ -58,6 +58,13 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// EMR uses a proprietary filesystem called EMRFS
+					// and both s3n & s3 protocols are mapped to that FS
+					// so they're equvivalent in this context (confirmed by AWS support)
+					old = strings.Replace(old, "s3n://", "s3://", -1)
+					return old == new
+				},
 			},
 			"master_public_dns": {
 				Type:     schema.TypeString,
@@ -425,7 +432,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("cluster_state", cluster.Status.State)
 	}
 
-	instanceGroups, err := fetchAllEMRInstanceGroups(meta, d.Id())
+	instanceGroups, err := fetchAllEMRInstanceGroups(emrconn, d.Id())
 	if err == nil {
 		coreGroup := findGroup(instanceGroups, "CORE")
 		if coreGroup != nil {
@@ -482,7 +489,7 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("core_instance_count") {
 		d.SetPartial("core_instance_count")
 		log.Printf("[DEBUG] Modify EMR cluster")
-		groups, err := fetchAllEMRInstanceGroups(meta, d.Id())
+		groups, err := fetchAllEMRInstanceGroups(conn, d.Id())
 		if err != nil {
 			log.Printf("[DEBUG] Error finding all instance groups: %s", err)
 			return err

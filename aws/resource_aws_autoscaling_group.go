@@ -113,11 +113,12 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 			},
 
 			"availability_zones": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:             schema.TypeSet,
+				Optional:         true,
+				Computed:         true,
+				Elem:             &schema.Schema{Type: schema.TypeString},
+				Set:              schema.HashString,
+				DiffSuppressFunc: suppressAutoscalingGroupAvailabilityZoneDiffs,
 			},
 
 			"placement_group": {
@@ -525,7 +526,12 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 		d.Set("tag", autoscalingTagDescriptionsToSlice(g.Tags))
 	}
 
-	d.Set("vpc_zone_identifier", strings.Split(*g.VPCZoneIdentifier, ","))
+	if len(*g.VPCZoneIdentifier) > 0 {
+		d.Set("vpc_zone_identifier", strings.Split(*g.VPCZoneIdentifier, ","))
+	} else {
+		d.Set("vpc_zone_identifier", []string{})
+	}
+
 	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
 
 	// If no termination polices are explicitly configured and the upstream state

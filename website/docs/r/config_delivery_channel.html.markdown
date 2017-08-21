@@ -79,7 +79,7 @@ POLICY
 
 The following arguments are supported:
 
-* `name` - (Optional) The name of the delivery channel. Defaults to `default`.
+* `name` - (Optional) The name of the delivery channel. Defaults to `default`. Changing it recreates the resource.
 * `s3_bucket_name` - (Required) The name of the S3 bucket used to store the configuration history.
 * `s3_key_prefix` - (Optional) The prefix for the specified S3 bucket.
 * `sns_topic_arn` - (Optional) The ARN of the SNS topic that AWS Config delivers notifications to.

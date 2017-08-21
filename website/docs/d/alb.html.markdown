@@ -29,7 +29,7 @@ variable "alb_name" {
 
 data "aws_alb" "test" {
   arn  = "${var.alb_arn}"
-  name = "${var.alb_arn}"
+  name = "${var.alb_name}"
 }
 ```
 
