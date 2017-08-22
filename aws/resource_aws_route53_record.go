@@ -21,7 +21,7 @@ import (
 
 var r53NoRecordsFound = errors.New("No matching Hosted Zone found")
 var r53NoHostedZoneFound = errors.New("No matching records found")
-var r53ValidRecordTypes = regexp.MustCompile("^(A|AAAA|CNAME|MX|NAPTR|NS|PTR|SOA|SPF|SRV|TXT)$")
+var r53ValidRecordTypes = regexp.MustCompile("^(A|AAAA|CAA|CNAME|MX|NAPTR|NS|PTR|SOA|SPF|SRV|TXT)$")
 
 func resourceAwsRoute53Record() *schema.Resource {
 	return &schema.Resource{
