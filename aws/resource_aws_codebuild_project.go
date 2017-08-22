@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -728,14 +729,21 @@ func validateAwsCodeBuildEnvironmentType(v interface{}, k string) (ws []string, 
 func validateAwsCodeBuildSourceType(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	types := map[string]bool{
-		"CODECOMMIT":   true,
-		"CODEPIPELINE": true,
-		"GITHUB":       true,
-		"S3":           true,
+		codebuild.SourceTypeBitbucket:    true,
+		codebuild.SourceTypeCodecommit:   true,
+		codebuild.SourceTypeCodepipeline: true,
+		codebuild.SourceTypeGithub:       true,
+		codebuild.SourceTypeS3:           true,
+	}
+	s := make([]string, 0, len(types))
+
+	for key, _ := range types {
+		s = append(s, key)
 	}
 
 	if !types[value] {
-		errors = append(errors, fmt.Errorf("CodeBuild: Source Type can only be CODECOMMIT / CODEPIPELINE / GITHUB / S3"))
+		strings.Join(s, ", ")
+		errors = append(errors, fmt.Errorf("CodeBuild: Source Type can only be one of: %s", strings.Join(s, ", ")))
 	}
 	return
 }
