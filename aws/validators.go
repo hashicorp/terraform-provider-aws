@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -978,16 +979,94 @@ func validateAwsEmrEbsVolumeType(v interface{}, k string) (ws []string, errors [
 
 func validateAwsEmrInstanceGroupRole(v interface{}, k string) (ws []string, errors []error) {
 	validRoles := map[string]struct{}{
-		"MASTER": {},
-		"CORE":   {},
-		"TASK":   {},
+		emr.InstanceRoleTypeMaster: {},
+		emr.InstanceRoleTypeCore:   {},
+		emr.InstanceRoleTypeTask:   {},
 	}
 
 	value := v.(string)
 
 	if _, ok := validRoles[value]; !ok {
 		errors = append(errors, fmt.Errorf(
-			"%q must be one of ['MASTER', 'CORE', 'TASK']", k))
+			"%q must be one of [%q, %q, %q]", k, emr.InstanceRoleTypeMaster, emr.InstanceRoleTypeCore, emr.InstanceRoleTypeTask))
+	}
+	return
+}
+
+func validateAwsEmrSpotProvisioningTimeOutAction(v interface{}, k string) (ws []string, errors []error) {
+	validTypes := map[string]struct{}{
+		emr.SpotProvisioningTimeoutActionSwitchToOnDemand: {},
+		emr.SpotProvisioningTimeoutActionTerminateCluster: {},
+	}
+
+	value := v.(string)
+
+	if _, ok := validTypes[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of [%q, %q]", k, emr.SpotProvisioningTimeoutActionSwitchToOnDemand, emr.SpotProvisioningTimeoutActionTerminateCluster))
+	}
+	return
+}
+
+func validateAwsEmrInstanceFleetType(v interface{}, k string) (ws []string, errors []error) {
+	validTypes := map[string]struct{}{
+		emr.InstanceFleetTypeMaster: {},
+		emr.InstanceFleetTypeCore:   {},
+		emr.InstanceFleetTypeTask:   {},
+	}
+
+	value := v.(string)
+
+	if _, ok := validTypes[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of [%q, %q, %q]", k, emr.InstanceFleetTypeMaster, emr.InstanceFleetTypeCore, emr.InstanceFleetTypeTask))
+	}
+	return
+}
+
+func validateAwsEmrRepoUpgradeOnBootSecurity(v interface{}, k string) (ws []string, errors []error) {
+	validTypes := map[string]struct{}{
+		emr.RepoUpgradeOnBootSecurity: {},
+		emr.RepoUpgradeOnBootNone:     {},
+	}
+
+	value := v.(string)
+
+	if _, ok := validTypes[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of [%q, %q]", k, emr.RepoUpgradeOnBootSecurity, emr.RepoUpgradeOnBootNone))
+	}
+	return
+}
+
+func validateAwsEmrActionOnFailure(v interface{}, k string) (ws []string, errors []error) {
+	validTypes := map[string]struct{}{
+		emr.ActionOnFailureTerminateJobFlow: {},
+		emr.ActionOnFailureTerminateCluster: {},
+		emr.ActionOnFailureCancelAndWait:    {},
+		emr.ActionOnFailureContinue:         {},
+	}
+
+	value := v.(string)
+
+	if _, ok := validTypes[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of [%q, %q, %q, %q]", k, emr.ActionOnFailureTerminateJobFlow, emr.ActionOnFailureTerminateCluster, emr.ActionOnFailureCancelAndWait, emr.ActionOnFailureContinue))
+	}
+	return
+}
+
+func validateAwsEmrScaleDownBehaviour(v interface{}, k string) (ws []string, errors []error) {
+	validTypes := map[string]struct{}{
+		emr.ScaleDownBehaviorTerminateAtInstanceHour:   {},
+		emr.ScaleDownBehaviorTerminateAtTaskCompletion: {},
+	}
+
+	value := v.(string)
+
+	if _, ok := validTypes[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of [%q, %q]", k, emr.ScaleDownBehaviorTerminateAtInstanceHour, emr.ScaleDownBehaviorTerminateAtTaskCompletion))
 	}
 	return
 }
