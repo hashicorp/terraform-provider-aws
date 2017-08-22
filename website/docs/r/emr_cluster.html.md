@@ -73,7 +73,7 @@ The following arguments are supported:
 * `log_uri` - (Optional) S3 bucket to write the log files of the job flow. If a value
 	is not provided, logs are not created
 * `applications` - (Optional) A list of applications for the cluster. Valid values are: `Flink`, `Hadoop`, `Hive`, `Mahout`, `Pig`, and `Spark`. Case insensitive
-* `termination_protection` - (Optional) Switch on/off termination protection (default is off) 
+* `termination_protection` - (Optional) Switch on/off termination protection (default is off)
 * `keep_job_flow_alive_when_no_steps` - (Optional) Switch on/off run cluster with no steps or when all steps are complete (default is on)
 * `ec2_attributes` - (Optional) Attributes for the EC2 instances running the job
 flow. Defined below
