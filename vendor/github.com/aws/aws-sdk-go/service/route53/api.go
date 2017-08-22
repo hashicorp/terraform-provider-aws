@@ -9651,11 +9651,11 @@ type ListResourceRecordSetsInput struct {
 
 	// The type of resource record set to begin the record listing from.
 	//
-	// Valid values for basic resource record sets: A | AAAA | CNAME | MX | NAPTR
-	// | NS | PTR | SOA | SPF | SRV | TXT
+	// Valid values for basic resource record sets: A | AAAA | CAA | CNAME | MX
+	// | NAPTR | NS | PTR | SOA | SPF | SRV | TXT
 	//
 	// Values for weighted, latency, geo, and failover resource record sets: A |
-	// AAAA | CNAME | MX | NAPTR | PTR | SPF | SRV | TXT
+	// AAAA | CAA | CNAME | MX | NAPTR | PTR | SPF | SRV | TXT
 	//
 	// Values for alias resource record sets:
 	//
@@ -9666,6 +9666,9 @@ type ListResourceRecordSetsInput struct {
 	//    * ELB load balancer: A | AAAA
 	//
 	//    * Amazon S3 bucket: A
+	//
+	//    * Another resource record set in this hosted zone: The type of the resource
+	//    record set that the alias references.
 	//
 	// Constraint: Specifying type without specifying name returns an InvalidInput
 	// error.
@@ -11425,13 +11428,13 @@ type ResourceRecordSet struct {
 	// data is encoded for them, see Supported DNS Resource Record Types (http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/ResourceRecordTypes.html)
 	// in the Amazon Route 53 Developer Guide.
 	//
-	// Valid values for basic resource record sets: A | AAAA | CNAME | MX | NAPTR
-	// | NS | PTR | SOA | SPF | SRV | TXT
+	// Valid values for basic resource record sets: A | AAAA | CAA | CNAME | MX
+	// | NAPTR | NS | PTR | SOA | SPF | SRV | TXT
 	//
 	// Values for weighted, latency, geolocation, and failover resource record sets:
-	// A | AAAA | CNAME | MX | NAPTR | PTR | SPF | SRV | TXT. When creating a group
-	// of weighted, latency, geolocation, or failover resource record sets, specify
-	// the same value for all of the resource record sets in the group.
+	// A | AAAA | CAA | CNAME | MX | NAPTR | PTR | SPF | SRV | TXT. When creating
+	// a group of weighted, latency, geolocation, or failover resource record sets,
+	// specify the same value for all of the resource record sets in the group.
 	//
 	// Valid values for multivalue answer resource record sets: A | AAAA | MX |
 	// NAPTR | PTR | SPF | SRV | TXT
@@ -13184,6 +13187,9 @@ const (
 
 	// RRTypeAaaa is a RRType enum value
 	RRTypeAaaa = "AAAA"
+
+	// RRTypeCaa is a RRType enum value
+	RRTypeCaa = "CAA"
 )
 
 const (
