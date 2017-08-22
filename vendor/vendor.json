@@ -53,6 +53,14 @@
 			"versionExact": "v1.10.28"
 		},
 		{
+			"checksumSHA1": "DtuTqKH29YnLjrIJkRYX0HQtXY0=",
+			"path": "github.com/aws/aws-sdk-go/aws/arn",
+			"revision": "3546c9128687af50e4bcedac5b1ffdd593db0c83",
+			"revisionTime": "2017-08-18T18:08:53Z",
+			"version": "v1.10.28",
+			"versionExact": "v1.10.28"
+		},
+		{
 			"checksumSHA1": "Y9W+4GimK4Fuxq+vyIskVYFRnX4=",
 			"path": "github.com/aws/aws-sdk-go/aws/awserr",
 			"revision": "3546c9128687af50e4bcedac5b1ffdd593db0c83",
