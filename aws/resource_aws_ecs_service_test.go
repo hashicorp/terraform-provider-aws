@@ -594,7 +594,7 @@ resource "aws_ecs_service" "mongo" {
 `, rInt, rInt)
 }
 
-func testAccAWSEcsServiceWithMultiPlacementStrategy(rInt int, rName string) string {
+func testAccAWSEcsServiceWithMultiPlacementStrategy(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
 	name = "terraformecstest%d"
@@ -629,7 +629,7 @@ resource "aws_ecs_service" "mongo" {
 	type = "spread"
   }
 }
-`, rInt, rInt, rName)
+`, rInt, rInt)
 }
 
 func testAccAWSEcsServiceWithPlacementConstraint(rInt int) string {
