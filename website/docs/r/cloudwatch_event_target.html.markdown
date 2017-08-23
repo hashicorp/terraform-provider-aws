@@ -72,7 +72,7 @@ The following arguments are supported:
 * `input` - (Optional) Valid JSON text passed to the target.
 * `input_path` - (Optional) The value of the [JSONPath](http://goessner.net/articles/JsonPath/)
 	that is used for extracting part of the matched event when passing it to the target.
-* `role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be used for this target when the rule is triggered.
+* `role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be used for this target when the rule is triggered. Required if `ecs_target` is used.
 * `run_command_targets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `ecs_target` - (Optional) Parameters used when you are using the rule to invoke Amazon ECS Task. Documented below. A maximum of 1 are allowed.
 
