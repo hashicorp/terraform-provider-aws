@@ -1253,6 +1253,7 @@ func TestValidateRoute53RecordType(t *testing.T) {
 		"SPF",
 		"SRV",
 		"NS",
+		"CAA",
 	}
 
 	invalidTypes := []string{

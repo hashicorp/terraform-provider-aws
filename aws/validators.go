@@ -801,7 +801,7 @@ func validateOnceADayWindowFormat(v interface{}, k string) (ws []string, errors 
 
 func validateRoute53RecordType(v interface{}, k string) (ws []string, errors []error) {
 	// Valid Record types
-	// SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA
+	// SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA, CAA
 	validTypes := map[string]struct{}{
 		"SOA":   {},
 		"A":     {},
@@ -814,12 +814,13 @@ func validateRoute53RecordType(v interface{}, k string) (ws []string, errors []e
 		"SRV":   {},
 		"SPF":   {},
 		"AAAA":  {},
+		"CAA":   {},
 	}
 
 	value := v.(string)
 	if _, ok := validTypes[value]; !ok {
 		errors = append(errors, fmt.Errorf(
-			"%q must be one of [SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA]", k))
+			"%q must be one of [SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA, CAA]", k))
 	}
 	return
 }
