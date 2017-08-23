@@ -12,6 +12,7 @@ IMPROVEMENTS:
 * resource/aws_rds_cluster_instance: Expose availability_zone attribute [GH-1439]
 * resource/aws_efs_file_system: Add support for encryption [GH-1420]
 * resource/aws_db_parameter_group: Allow underscores in names [GH-1460]
+* resource/aws_elasticsearch_domain: Assign tags right after creation [GH-1399]
 
 BUG FIXES:
 
