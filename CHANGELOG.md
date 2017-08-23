@@ -14,6 +14,7 @@ IMPROVEMENTS:
 * resource/aws_db_parameter_group: Allow underscores in names [GH-1460]
 * resource/aws_elasticsearch_domain: Assign tags right after creation [GH-1399]
 * resource/aws_route53_record: Allow CAA record type [GH-1467]
+* resource/aws_codebuild_project: Allowed for BITBUCKET source type [GH-1468]
 
 BUG FIXES:
 
