@@ -336,6 +336,15 @@ func TestAccAWSEcsServiceWithPlacementStrategy(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_strategy.#", "1"),
 				),
 			},
+			{
+				Config: testAccAWSEcsServiceWithMultiPlacementStrategy(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_strategy.#", "2"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_strategy.0.type", "binpack"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_strategy.1.type", "host"),
+				),
+			},
 		},
 	})
 }
@@ -583,6 +592,44 @@ resource "aws_ecs_service" "mongo" {
   }
 }
 `, rInt, rInt)
+}
+
+func testAccAWSEcsServiceWithMultiPlacementStrategy(rInt int, rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "default" {
+	name = "terraformecstest%d"
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "mongodb"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "mongo" {
+  name = "mongodb-%d"
+  cluster = "${aws_ecs_cluster.default.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count = 1
+  placement_strategy {
+	type = "binpack"
+	field = "memory"
+  }
+	placement_strategy {
+	field = "host"
+	type = "spread"
+  }
+}
+`, rInt, rInt, rName)
 }
 
 func testAccAWSEcsServiceWithPlacementConstraint(rInt int) string {

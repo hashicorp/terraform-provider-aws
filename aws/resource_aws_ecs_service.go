@@ -137,7 +137,7 @@ func resourceAwsEcsService() *schema.Resource {
 				},
 			},
 			"placement_strategy": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				MaxItems: 5,
@@ -160,20 +160,6 @@ func resourceAwsEcsService() *schema.Resource {
 							},
 						},
 					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
-					if m["field"] != nil {
-						field := m["field"].(string)
-						if field == "host" {
-							buf.WriteString("instanceId-")
-						} else {
-							buf.WriteString(fmt.Sprintf("%s-", field))
-						}
-					}
-					return hashcode.String(buf.String())
 				},
 			},
 
@@ -238,7 +224,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 	input.NetworkConfiguration = expandEcsNetworkConfigration(d.Get("network_configuration").([]interface{}))
 
-	strategies := d.Get("placement_strategy").(*schema.Set).List()
+	strategies := d.Get("placement_strategy").([]interface{})
 	if len(strategies) > 0 {
 		var ps []*ecs.PlacementStrategy
 		for _, raw := range strategies {
