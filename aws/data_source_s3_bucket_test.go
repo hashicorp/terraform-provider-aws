@@ -27,13 +27,14 @@ func TestAccDataSourceS3Bucket_basic(t *testing.T) {
 						"data.aws_s3_bucket.bucket", "bucket_domain_name", testAccBucketDomainName(rInt)),
 					resource.TestCheckResourceAttr(
 						"data.aws_s3_bucket.bucket", "hosted_zone_id", HostedZoneIDForRegion("us-west-2")),
+					resource.TestCheckNoResourceAttr("data.aws_s3_bucket.bucket", "website_endpoint"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccDataSourceS3BucketWithWebsite(t *testing.T) {
+func TestAccDataSourceS3Bucket_website(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{

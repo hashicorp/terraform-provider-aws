@@ -95,12 +95,20 @@ func bucketLocation(d *schema.ResourceData, bucket string, conn *s3.S3) error {
 		return err
 	}
 
-	websiteEndpoint := WebsiteEndpoint(bucket, region)
-	if err := d.Set("website_endpoint", websiteEndpoint.Endpoint); err != nil {
-		return err
-	}
-	if err := d.Set("website_domain", websiteEndpoint.Domain); err != nil {
-		return err
+	_, websiteErr := conn.GetBucketWebsite(
+		&s3.GetBucketWebsiteInput{
+			Bucket: aws.String(bucket),
+		},
+	)
+
+	if websiteErr == nil {
+		websiteEndpoint := WebsiteEndpoint(bucket, region)
+		if err := d.Set("website_endpoint", websiteEndpoint.Endpoint); err != nil {
+			return err
+		}
+		if err := d.Set("website_domain", websiteEndpoint.Domain); err != nil {
+			return err
+		}
 	}
 	return nil
 }
