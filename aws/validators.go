@@ -882,6 +882,22 @@ func validateAwsEmrEbsVolumeType(v interface{}, k string) (ws []string, errors [
 	return
 }
 
+func validateAwsEmrInstanceGroupRole(v interface{}, k string) (ws []string, errors []error) {
+	validRoles := map[string]struct{}{
+		"MASTER": {},
+		"CORE":   {},
+		"TASK":   {},
+	}
+
+	value := v.(string)
+
+	if _, ok := validRoles[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of ['MASTER', 'CORE', 'TASK']", k))
+	}
+	return
+}
+
 func validateSfnActivityName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 80 {
