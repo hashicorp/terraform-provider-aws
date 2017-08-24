@@ -15,6 +15,7 @@ IMPROVEMENTS:
 * resource/aws_elasticsearch_domain: Assign tags right after creation [GH-1399]
 * resource/aws_route53_record: Allow CAA record type [GH-1467]
 * resource/aws_codebuild_project: Allowed for BITBUCKET source type [GH-1468]
+* resource/aws_emr_cluster: Add `instance_group` parameter for EMR clusters [GH-1071]
 
 BUG FIXES:
 
