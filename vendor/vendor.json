@@ -341,6 +341,12 @@
 			"versionExact": "v1.10.29"
 		},
 		{
+			"checksumSHA1": "korrMGve3O88cRKjQ+27MK4CqAM=",
+			"path": "github.com/aws/aws-sdk-go/service/cloudsearch",
+			"revision": "826ec2077453adc020e9836a15fa704de931b4e6",
+			"revisionTime": "2017-08-24T00:57:25Z"
+		},
+		{
 			"checksumSHA1": "59kV70/8PuutX4eFkGfCCtdunIA=",
 			"path": "github.com/aws/aws-sdk-go/service/cloudtrail",
 			"revision": "264af29009637e0a9e5d4a276d0969c3ed918ffd",
@@ -1620,5 +1626,5 @@
 			"versionExact": "v1.6.1"
 		}
 	],
-	"rootPath": "github.com/terraform-providers/terraform-provider-aws"
+	"rootPath": "github.com/Mi3-14159/terraform-provider-aws"
 }
