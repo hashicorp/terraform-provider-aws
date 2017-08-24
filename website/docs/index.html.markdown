@@ -101,6 +101,11 @@ provider "aws" {
 }
 ```
 
+Note: strings do not automatically do path-expansion.  If you attempt
+an entry like `shared_credentials_file = "~/.aws/creds"`, you may find
+more success using `shared_credentials_file = "${pathexpand(~/.aws/creds)}"`.
+See [the interpolation docs](https://www.terraform.io/docs/configuration/interpolation.html#pathexpand-string-) for more detail.  
+
 ### EC2 Role
 
 If you're running Terraform from an EC2 instance with IAM Instance Profile
