@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform/helper/mutexkv"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 // Provider returns a terraform.ResourceProvider.
@@ -589,7 +590,6 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		AccessKey:               d.Get("access_key").(string),
 		SecretKey:               d.Get("secret_key").(string),
 		Profile:                 d.Get("profile").(string),
-		CredsFilename:           d.Get("shared_credentials_file").(string),
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
 		MaxRetries:              d.Get("max_retries").(int),
@@ -601,6 +601,13 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		SkipMetadataApiCheck:    d.Get("skip_metadata_api_check").(bool),
 		S3ForcePathStyle:        d.Get("s3_force_path_style").(bool),
 	}
+
+	// Set CredsFilename, expanding home directory
+	credsPath, err := homedir.Expand(d.Get("shared_credentials_file").(string))
+	if err != nil {
+		return nil, err
+	}
+	config.CredsFilename = credsPath
 
 	assumeRoleList := d.Get("assume_role").(*schema.Set).List()
 	if len(assumeRoleList) == 1 {
