@@ -222,10 +222,10 @@ resource "aws_api_gateway_rest_api" "test" {
   name = "test"
   body = <<EOF
 {
-	"swagger": "2.0",
-	"info": {
-		"title": "test",
-		"version": "2017-04-20T04:08:08Z"
+  "swagger": "2.0",
+  "info": {
+    "title": "test",
+    "version": "2017-04-20T04:08:08Z"
   },
   "schemes": [
     "https"
@@ -261,10 +261,10 @@ resource "aws_api_gateway_rest_api" "test" {
   name = "test"
   body = <<EOF
 {
-	"swagger": "2.0",
-	"info": {
-		"title": "test",
-		"version": "2017-04-20T04:08:08Z"
+  "swagger": "2.0",
+  "info": {
+    "title": "test",
+    "version": "2017-04-20T04:08:08Z"
   },
   "schemes": [
     "https"
