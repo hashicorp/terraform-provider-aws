@@ -28,6 +28,17 @@ The following arguments are supported:
 * `binary_media_types` - (Optional) The list of binary media types supported by the RestApi. By default, the RestApi supports only UTF-8-encoded text payloads.
 * `body` - (Optional) An OpenAPI specification that defines the set of routes and integrations to create as part of the REST API.
 
+__Note__: If the `body` argument is provided, the OpenAPI specification will be used to configure the resources, methods and integrations for the Rest API. If this argument is provided, the following resources should not be configured manually for the same REST API, as updates may cause manual resource updates to be overwritten:
+
+* `aws_api_gateway_resource`
+* `aws_api_gateway_method`
+* `aws_api_gateway_method_response`
+* `aws_api_gateway_method_settings`
+* `aws_api_gateway_integration`
+* `aws_api_gateway_integration_response`
+* `aws_api_gateway_gateway_response`
+* `aws_api_gateway_model`
+
 ## Attributes Reference
 
 The following attributes are exported:

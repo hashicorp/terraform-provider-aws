@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -82,13 +83,14 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 	d.SetId(*gateway.Id)
 
 	if body, ok := d.GetOk("body"); ok {
+		log.Printf("[DEBUG] Initializing API Gateway from OpenAPI spec %s", d.Id())
 		_, err := conn.PutRestApi(&apigateway.PutRestApiInput{
 			RestApiId: gateway.Id,
-			Mode:      aws.String("overwrite"),
+			Mode:      aws.String(apigateway.PutModeOverwrite),
 			Body:      []byte(body.(string)),
 		})
 		if err != nil {
-			return fmt.Errorf("Error putting API Gateway specification: %s", err)
+			return errwrap.Wrapf("Error creating API Gateway specification: {{err}}", err)
 		}
 	}
 
@@ -173,13 +175,14 @@ func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}
 
 	if d.HasChange("body") {
 		if body, ok := d.GetOk("body"); ok {
+			log.Printf("[DEBUG] Updating API Gateway from OpenAPI spec: %s", d.Id())
 			_, err := conn.PutRestApi(&apigateway.PutRestApiInput{
 				RestApiId: aws.String(d.Id()),
-				Mode:      aws.String("overwrite"),
+				Mode:      aws.String(apigateway.PutModeOverwrite),
 				Body:      []byte(body.(string)),
 			})
 			if err != nil {
-				return err
+				return errwrap.Wrapf("Error updating API Gateway specification: {{err}}", err)
 			}
 		}
 	}
