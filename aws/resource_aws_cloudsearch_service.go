@@ -2,7 +2,7 @@ package aws
 
 import (
 	"fmt"
-	"log"
+	"reflect"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -186,7 +186,6 @@ func defineIndexFields(d *schema.ResourceData, meta interface{}, conn *cloudsear
 		// Handle Removal
 		for k := range old {
 			if _, ok := new[k]; !ok {
-				log.Printf("MICHAS_DEBUG: delete %s", k)
 				deleteIndexField(d.Get("domain_name").(string), k, conn)
 			}
 		}
@@ -234,152 +233,211 @@ var parseError = func(d string, t string) error {
 	return fmt.Errorf("can't convert default_value '%s' of type '%s' to int", d, t)
 }
 
+func getOk(index map[string]interface{}, prop string, t interface{}) error {
+	v, ok := index[prop]
+	if !ok {
+		return fmt.Errorf("%s is not a valid propery of an index", prop)
+	}
+
+	if "default_value" == prop {
+		switch t.(type) {
+		case *int:
+			{
+				d, err := strconv.Atoi(v.(string))
+				if err != nil {
+					return parseError(v.(string), "int")
+				}
+
+				reflect.ValueOf(t).Elem().Set(reflect.ValueOf(d))
+			}
+		case *float64:
+			{
+				f, err := strconv.ParseFloat(v.(string), 64)
+				if err != nil {
+					return parseError(v.(string), "double")
+				}
+
+				reflect.ValueOf(t).Elem().Set(reflect.ValueOf(f))
+			}
+		default:
+			{
+				if v.(string) != "" {
+					reflect.ValueOf(t).Elem().Set(reflect.ValueOf(v))
+				}
+			}
+		}
+		return nil
+	}
+
+	reflect.ValueOf(t).Elem().Set(reflect.ValueOf(v))
+	return nil
+}
+
 func genIndexFieldInput(index map[string]interface{}) (*cloudsearch.IndexField, error) {
 	input := &cloudsearch.IndexField{
 		IndexFieldName: aws.String(index["name"].(string)),
 		IndexFieldType: aws.String(index["type"].(string)),
 	}
 
+	var facet bool
+	var returnV bool
+	var search bool
+	var sort bool
+	var highlight bool
+	var analysisScheme string
+
+	getOk(index, "facet", &facet)
+	getOk(index, "return", &returnV)
+	getOk(index, "search", &search)
+	getOk(index, "sort", &sort)
+	getOk(index, "highlight", &highlight)
+	getOk(index, "analysis_scheme", &analysisScheme)
+
 	switch index["type"] {
 	case "int":
 		{
 			input.IntOptions = &cloudsearch.IntOptions{
-				FacetEnabled:  aws.Bool(index["facet"].(bool)),
-				ReturnEnabled: aws.Bool(index["return"].(bool)),
-				SearchEnabled: aws.Bool(index["search"].(bool)),
-				SortEnabled:   aws.Bool(index["sort"].(bool)),
+				FacetEnabled:  aws.Bool(facet),
+				ReturnEnabled: aws.Bool(returnV),
+				SearchEnabled: aws.Bool(search),
+				SortEnabled:   aws.Bool(sort),
 			}
 
-			v, ok := index["default_value"]
-			if ok && v.(string) != "" {
-				d, err := strconv.Atoi(v.(string))
-				if err != nil {
-					return input, parseError(v.(string), index["type"].(string))
-				}
-
-				input.IntOptions.DefaultValue = aws.Int64(int64(d))
+			if index["default_value"].(string) != "" {
+				var defaultValue int
+				getOk(index, "default_value", &defaultValue)
+				input.IntOptions.DefaultValue = aws.Int64(int64(defaultValue))
 			}
 		}
 	case "int-array":
 		{
 			input.IntArrayOptions = &cloudsearch.IntArrayOptions{
-				FacetEnabled:  aws.Bool(index["facet"].(bool)),
-				ReturnEnabled: aws.Bool(index["return"].(bool)),
-				SearchEnabled: aws.Bool(index["search"].(bool)),
+				FacetEnabled:  aws.Bool(facet),
+				ReturnEnabled: aws.Bool(returnV),
+				SearchEnabled: aws.Bool(search),
 			}
 
-			v, ok := index["default_value"]
-			if ok && v.(string) != "" {
-				d, err := strconv.Atoi(v.(string))
-				if err != nil {
-					return input, parseError(v.(string), index["type"].(string))
-				}
-
-				input.IntArrayOptions.DefaultValue = aws.Int64(int64(d))
+			if index["default_value"].(string) != "" {
+				var defaultValue int
+				getOk(index, "default_value", &defaultValue)
+				input.IntArrayOptions.DefaultValue = aws.Int64(int64(defaultValue))
 			}
 		}
 	case "double":
 		{
 			input.DoubleOptions = &cloudsearch.DoubleOptions{
-				FacetEnabled:  aws.Bool(index["facet"].(bool)),
-				ReturnEnabled: aws.Bool(index["return"].(bool)),
-				SearchEnabled: aws.Bool(index["search"].(bool)),
-				SortEnabled:   aws.Bool(index["sort"].(bool)),
+				FacetEnabled:  aws.Bool(facet),
+				ReturnEnabled: aws.Bool(returnV),
+				SearchEnabled: aws.Bool(search),
+				SortEnabled:   aws.Bool(sort),
 			}
 
-			v, ok := index["default_value"]
-			if ok && v.(string) != "" {
-				f, err := strconv.ParseFloat(v.(string), 64)
-				if err != nil {
-					return input, parseError(v.(string), index["type"].(string))
-				}
-
-				input.DoubleOptions.DefaultValue = aws.Float64(f)
+			if index["default_value"].(string) != "" {
+				var defaultValue float64
+				getOk(index, "default_value", &defaultValue)
+				input.DoubleOptions.DefaultValue = aws.Float64(float64(defaultValue))
 			}
 		}
 	case "double-array":
 		{
 			input.DoubleArrayOptions = &cloudsearch.DoubleArrayOptions{
-				FacetEnabled:  aws.Bool(index["facet"].(bool)),
-				ReturnEnabled: aws.Bool(index["return"].(bool)),
-				SearchEnabled: aws.Bool(index["search"].(bool)),
+				FacetEnabled:  aws.Bool(facet),
+				ReturnEnabled: aws.Bool(returnV),
+				SearchEnabled: aws.Bool(search),
 			}
 
-			v, ok := index["default_value"]
-			if ok {
-				f, err := strconv.ParseFloat(v.(string), 64)
-				if err != nil {
-					return input, parseError(v.(string), index["type"].(string))
-				}
-
-				input.DoubleOptions.DefaultValue = aws.Float64(f)
+			if index["default_value"].(string) != "" {
+				var defaultValue float64
+				getOk(index, "default_value", &defaultValue)
+				input.DoubleArrayOptions.DefaultValue = aws.Float64(float64(defaultValue))
 			}
 		}
 	case "literal":
 		{
 			input.LiteralOptions = &cloudsearch.LiteralOptions{
-				DefaultValue:  aws.String(index["default_value"].(string)),
-				FacetEnabled:  aws.Bool(index["facet"].(bool)),
-				ReturnEnabled: aws.Bool(index["return"].(bool)),
-				SearchEnabled: aws.Bool(index["search"].(bool)),
-				SortEnabled:   aws.Bool(index["sort"].(bool)),
+				FacetEnabled:  aws.Bool(facet),
+				ReturnEnabled: aws.Bool(returnV),
+				SearchEnabled: aws.Bool(search),
+				SortEnabled:   aws.Bool(sort),
+			}
+
+			if index["default_value"].(string) != "" {
+				input.LiteralOptions.DefaultValue = aws.String(index["default_value"].(string))
 			}
 		}
 	case "literal-array":
 		{
 			input.LiteralArrayOptions = &cloudsearch.LiteralArrayOptions{
-				DefaultValue:  aws.String(index["default_value"].(string)),
-				FacetEnabled:  aws.Bool(index["facet"].(bool)),
-				ReturnEnabled: aws.Bool(index["return"].(bool)),
-				SearchEnabled: aws.Bool(index["search"].(bool)),
+				FacetEnabled:  aws.Bool(facet),
+				ReturnEnabled: aws.Bool(returnV),
+				SearchEnabled: aws.Bool(search),
+			}
+
+			if index["default_value"].(string) != "" {
+				input.LiteralOptions.DefaultValue = aws.String(index["default_value"].(string))
 			}
 		}
 	case "text":
 		{
 			input.TextOptions = &cloudsearch.TextOptions{
-				DefaultValue:     aws.String(index["default_value"].(string)),
-				SortEnabled:      aws.Bool(index["sort"].(bool)),
-				ReturnEnabled:    aws.Bool(index["return"].(bool)),
-				HighlightEnabled: aws.Bool(index["highlight"].(bool)),
-				AnalysisScheme:   aws.String(index["analysis_scheme"].(string)),
+				SortEnabled:      aws.Bool(sort),
+				ReturnEnabled:    aws.Bool(returnV),
+				HighlightEnabled: aws.Bool(highlight),
+				AnalysisScheme:   aws.String(analysisScheme),
+			}
+
+			if index["default_value"].(string) != "" {
+				input.LiteralOptions.DefaultValue = aws.String(index["default_value"].(string))
 			}
 		}
 	case "text-array":
 		{
 			input.TextOptions = &cloudsearch.TextOptions{
-				DefaultValue:     aws.String(index["default_value"].(string)),
-				ReturnEnabled:    aws.Bool(index["return"].(bool)),
-				HighlightEnabled: aws.Bool(index["highlight"].(bool)),
-				AnalysisScheme:   aws.String(index["analysis_scheme"].(string)),
+				ReturnEnabled:    aws.Bool(returnV),
+				HighlightEnabled: aws.Bool(highlight),
+				AnalysisScheme:   aws.String(analysisScheme),
+			}
+
+			if index["default_value"].(string) != "" {
+				input.LiteralOptions.DefaultValue = aws.String(index["default_value"].(string))
 			}
 		}
 	case "date":
 		{
 			input.DateOptions = &cloudsearch.DateOptions{
-				DefaultValue:  aws.String(index["default_value"].(string)),
-				FacetEnabled:  aws.Bool(index["facet"].(bool)),
-				ReturnEnabled: aws.Bool(index["return"].(bool)),
-				SearchEnabled: aws.Bool(index["search"].(bool)),
-				SortEnabled:   aws.Bool(index["sort"].(bool)),
+				FacetEnabled:  aws.Bool(facet),
+				ReturnEnabled: aws.Bool(returnV),
+				SearchEnabled: aws.Bool(search),
+				SortEnabled:   aws.Bool(sort),
+			}
+
+			if index["default_value"].(string) != "" {
+				input.LiteralOptions.DefaultValue = aws.String(index["default_value"].(string))
 			}
 		}
 	case "date-aray":
 		{
 			input.DateArrayOptions = &cloudsearch.DateArrayOptions{
-				DefaultValue:  aws.String(index["default_value"].(string)),
-				FacetEnabled:  aws.Bool(index["facet"].(bool)),
-				ReturnEnabled: aws.Bool(index["return"].(bool)),
-				SearchEnabled: aws.Bool(index["search"].(bool)),
+				FacetEnabled:  aws.Bool(facet),
+				ReturnEnabled: aws.Bool(returnV),
+				SearchEnabled: aws.Bool(search),
+			}
+
+			if index["default_value"].(string) != "" {
+				input.LiteralOptions.DefaultValue = aws.String(index["default_value"].(string))
 			}
 		}
 	case "latlon":
 		{
 			input.LatLonOptions = &cloudsearch.LatLonOptions{
-				DefaultValue:  aws.String(index["default_value"].(string)),
-				FacetEnabled:  aws.Bool(index["facet"].(bool)),
-				ReturnEnabled: aws.Bool(index["return"].(bool)),
-				SearchEnabled: aws.Bool(index["search"].(bool)),
-				SortEnabled:   aws.Bool(index["sort"].(bool)),
+				FacetEnabled:  aws.Bool(facet),
+				ReturnEnabled: aws.Bool(returnV),
+				SearchEnabled: aws.Bool(search),
+				SortEnabled:   aws.Bool(sort),
+			}
+
+			if index["default_value"].(string) != "" {
+				input.LiteralOptions.DefaultValue = aws.String(index["default_value"].(string))
 			}
 		}
 	default:
