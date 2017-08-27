@@ -75,7 +75,7 @@ func resourceAwsNetworkAclAssociationCreate(d *schema.ResourceData, meta interfa
 	d.SetId(naclId)
 	log.Printf("[INFO] Association ID: %s", d.Id())
 
-	return nil
+	return resourceAwsNetworkAclAssociationRead(d, meta)
 }
 
 func resourceAwsNetworkAclAssociationRead(d *schema.ResourceData, meta interface{}) error {
@@ -85,7 +85,9 @@ func resourceAwsNetworkAclAssociationRead(d *schema.ResourceData, meta interface
 	subnetId := d.Get("subnet_id").(string)
 	_, err_association := findNetworkAclAssociation(subnetId, conn)
 	if err_association != nil {
-		return fmt.Errorf("Failed to read acl %s with subnet %s: %s", d.Id(), subnetId, err_association)
+		log.Printf("[INFO] Association for %s was not found.", subnetId)
+		d.SetId("")
+		return nil
 	}
 
 	return nil
@@ -127,7 +129,7 @@ func resourceAwsNetworkAclAssociationUpdate(d *schema.ResourceData, meta interfa
 	d.SetId(*resp.NewAssociationId)
 	log.Printf("[INFO] Association ID: %s", d.Id())
 
-	return nil
+	return resourceAwsNetworkAclAssociationRead(d, meta)
 }
 
 func resourceAwsNetworkAclAssociationDelete(d *schema.ResourceData, meta interface{}) error {
