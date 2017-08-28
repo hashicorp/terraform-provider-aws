@@ -13,13 +13,21 @@ IMPROVEMENTS:
 * resource/aws_autoscaling_schedule: Allow empty value [GH-1268]
 * resource/aws_ssm_association: Add support for OutputLocation and Schedule Expression [GH-1253]
 * resource/aws_ssm_patch_baseline: Update support for Operating System [GH-1260]
+* resource/aws_db_instance: Expose db_instance ca_cert_identifier [GH-1256]
+* resource/aws_rds_cluster: Add support for iam_roles to rds_cluster [GH-1258]
+* resource/aws_rds_cluster_parameter_group: Support > 20 parameters [GH-1298]
 
 BUG FIXES:
 
+* resource/aws_instance: Guard check for aws_instance UserData to prevent panic [GH-1288]
 * resource/aws_config: Set AWS Config Configuration recorder & Delivery channel names as ForceNew [GH-1247]
 * resource/aws_kinesis: add retries for Kinesis throttling exceptions [GH-1085]
 * resource/aws_kinesis_firehose: adding support for `ExtendedS3DestinationConfiguration` [GH-1015]
 * resource/aws_spot_fleet_request: Ignore empty `key_name` [GH-1203]
+* resource/aws_emr_instance_group: fix crash when changing `instance_group.count` [GH-1287]
+* resource/aws_elasticsearch_domain: Fix updating config when update doesn't involve EBS [GH-1131]
+* resource/aws_s3_bucket: Avoid crashing when no lifecycle rule is defined [GH-1316]
+* resource/elastic_transcoder_preset: Fix provider validation [GH-1338]
 
 ## 0.1.3 (July 25, 2017)
 
