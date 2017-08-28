@@ -415,7 +415,7 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Failed to delete Lambda ENIs: %s", err)
 	}
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	return resource.Retry(30*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
 			GroupId: aws.String(d.Id()),
 		})
