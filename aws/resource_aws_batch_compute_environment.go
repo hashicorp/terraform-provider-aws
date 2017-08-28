@@ -11,6 +11,15 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
+const (
+	MANAGED   = "MANAGED"
+	UNMANAGED = "UNMANAGED"
+	EC2       = "EC2"
+	SPOT      = "SPOT"
+	ENABLED   = "ENABLED"
+	DISABLED  = "DISABLED"
+)
+
 func resourceAwsBatchComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsBatchComputeEnvironmentCreate,
@@ -94,7 +103,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice([]string{"EC2", "SPOT"}, true),
+							ValidateFunc: validation.StringInSlice([]string{EC2, SPOT}, true),
 						},
 					},
 				},
@@ -106,14 +115,14 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 			"state": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, true),
+				ValidateFunc: validation.StringInSlice([]string{ENABLED, DISABLED}, true),
 				Default:      "ENABLED",
 			},
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"MANAGED", "UNMANAGED"}, true),
+				ValidateFunc: validation.StringInSlice([]string{MANAGED, UNMANAGED}, true),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -155,7 +164,7 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 		input.State = aws.String(v.(string))
 	}
 
-	if computeEnvironmentType == "MANAGED" {
+	if computeEnvironmentType == MANAGED {
 		computeResources := d.Get("compute_resources").([]interface{})
 		if len(computeResources) == 0 {
 			return fmt.Errorf("One compute environment is expected, but no compute environments are set")
@@ -291,7 +300,7 @@ func resourceAwsBatchComputeEnvironmentDelete(d *schema.ResourceData, meta inter
 
 	updateInput := &batch.UpdateComputeEnvironmentInput{
 		ComputeEnvironment: aws.String(computeEnvironmentName),
-		State:              aws.String("DISABLED"),
+		State:              aws.String(DISABLED),
 	}
 
 	if _, err := conn.UpdateComputeEnvironment(updateInput); err != nil {
