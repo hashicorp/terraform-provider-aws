@@ -69,7 +69,6 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 						"max_vcpus": {
 							Type:     schema.TypeInt,
@@ -84,7 +83,6 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 						"spot_iam_fleet_role": {
 							Type:     schema.TypeString,
@@ -96,7 +94,6 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 						"tags": tagsSchema(),
 						"type": {
