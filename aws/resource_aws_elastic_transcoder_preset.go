@@ -18,12 +18,12 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 		Delete: resourceAwsElasticTranscoderPresetDelete,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			"arn": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"audio": {
+			"audio": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -31,27 +31,27 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 				Elem: &schema.Resource{
 					// elastictranscoder.AudioParameters
 					Schema: map[string]*schema.Schema{
-						"audio_packing_mode": {
+						"audio_packing_mode": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"bit_rate": {
+						"bit_rate": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"channels": {
+						"channels": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"codec": {
+						"codec": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"sample_rate": {
+						"sample_rate": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -59,29 +59,29 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 					},
 				},
 			},
-			"audio_codec_options": {
+			"audio_codec_options": &schema.Schema{
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bit_depth": {
+						"bit_depth": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"bit_order": {
+						"bit_order": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"profile": {
+						"profile": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"signed": {
+						"signed": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -90,26 +90,26 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 				},
 			},
 
-			"container": {
+			"container": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"description": {
+			"description": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
 
-			"name": {
+			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"thumbnails": {
+			"thumbnails": &schema.Schema{
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
@@ -117,42 +117,42 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 				Elem: &schema.Resource{
 					// elastictranscoder.Thumbnails
 					Schema: map[string]*schema.Schema{
-						"aspect_ratio": {
+						"aspect_ratio": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"format": {
+						"format": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"interval": {
+						"interval": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"max_height": {
+						"max_height": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"max_width": {
+						"max_width": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"padding_policy": {
+						"padding_policy": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"resolution": {
+						"resolution:": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"sizing_policy": {
+						"sizing_policy": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -161,13 +161,13 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 				},
 			},
 
-			"type": {
+			"type": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 
-			"video": {
+			"video": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -175,68 +175,68 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 				Elem: &schema.Resource{
 					// elastictranscoder.VideoParameters
 					Schema: map[string]*schema.Schema{
-						"aspect_ratio": {
+						"aspect_ratio": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"bit_rate": {
+						"bit_rate": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"codec": {
+						"codec": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"display_aspect_ratio": {
+						"display_aspect_ratio": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"fixed_gop": {
+						"fixed_gop": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"frame_rate": {
+						"frame_rate": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"keyframes_max_dist": {
+						"keyframes_max_dist": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"max_frame_rate": {
+						"max_frame_rate": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "30",
 							ForceNew: true,
 						},
-						"max_height": {
+						"max_height": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"max_width": {
+						"max_width": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"padding_policy": {
+						"padding_policy": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"resolution": {
+						"resolution": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"sizing_policy": {
+						"sizing_policy": &schema.Schema{
 							Type:     schema.TypeString,
 							Default:  "Fit",
 							Optional: true,
@@ -246,59 +246,59 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 				},
 			},
 
-			"video_watermarks": {
+			"video_watermarks": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					// elastictranscoder.PresetWatermark
 					Schema: map[string]*schema.Schema{
-						"horizontal_align": {
+						"horizontal_align": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"horizontal_offset": {
+						"horizontal_offset": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"id": {
+						"id": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"max_height": {
+						"max_height": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"max_width": {
+						"max_width": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"opacity": {
+						"opacity": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"sizing_policy": {
+						"sizing_policy": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"target": {
+						"target": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"vertical_align": {
+						"vertical_align": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"vertical_offset": {
+						"vertical_offset": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -307,7 +307,7 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 				},
 			},
 
-			"video_codec_options": {
+			"video_codec_options": &schema.Schema{
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,

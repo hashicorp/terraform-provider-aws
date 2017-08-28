@@ -784,24 +784,21 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 				rule["id"] = *lifecycleRule.ID
 			}
 			filter := lifecycleRule.Filter
-			if filter != nil {
-				if filter.And != nil {
-					// Prefix
-					if filter.And.Prefix != nil && *filter.And.Prefix != "" {
-						rule["prefix"] = *filter.And.Prefix
-					}
-					// Tag
-					if len(filter.And.Tags) > 0 {
-						rule["tags"] = tagsToMapS3(filter.And.Tags)
-					}
-				} else {
-					// Prefix
-					if filter.Prefix != nil && *filter.Prefix != "" {
-						rule["prefix"] = *filter.Prefix
-					}
+			if filter.And != nil {
+				// Prefix
+				if filter.And.Prefix != nil && *filter.And.Prefix != "" {
+					rule["prefix"] = *filter.And.Prefix
+				}
+				// Tag
+				if len(filter.And.Tags) > 0 {
+					rule["tags"] = tagsToMapS3(filter.And.Tags)
+				}
+			} else {
+				// Prefix
+				if filter.Prefix != nil && *filter.Prefix != "" {
+					rule["prefix"] = *filter.Prefix
 				}
 			}
-
 			// Enabled
 			if lifecycleRule.Status != nil {
 				if *lifecycleRule.Status == s3.ExpirationStatusEnabled {
