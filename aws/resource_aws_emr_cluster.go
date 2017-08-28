@@ -360,7 +360,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("cluster_state", cluster.Status.State)
 	}
 
-	instanceGroups, err := fetchAllEMRInstanceGroups(emrconn, d.Id())
+	instanceGroups, err := fetchAllEMRInstanceGroups(meta, d.Id())
 	if err == nil {
 		coreGroup := findGroup(instanceGroups, "CORE")
 		if coreGroup != nil {
@@ -414,7 +414,7 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("core_instance_count") {
 		d.SetPartial("core_instance_count")
 		log.Printf("[DEBUG] Modify EMR cluster")
-		groups, err := fetchAllEMRInstanceGroups(conn, d.Id())
+		groups, err := fetchAllEMRInstanceGroups(meta, d.Id())
 		if err != nil {
 			log.Printf("[DEBUG] Error finding all instance groups: %s", err)
 			return err

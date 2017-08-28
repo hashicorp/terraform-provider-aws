@@ -13,8 +13,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-const rdsClusterParameterGroupMaxParamsBulkEdit = 20
-
 func resourceAwsRDSClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsRDSClusterParameterGroupCreate,
@@ -217,29 +215,18 @@ func resourceAwsRDSClusterParameterGroupUpdate(d *schema.ResourceData, meta inte
 		}
 
 		if len(parameters) > 0 {
-			// We can only modify 20 parameters at a time, so walk them until
-			// we've got them all.
-			for parameters != nil {
-				paramsToModify := make([]*rds.Parameter, 0)
-				if len(parameters) <= rdsClusterParameterGroupMaxParamsBulkEdit {
-					paramsToModify, parameters = parameters[:], nil
-				} else {
-					paramsToModify, parameters = parameters[:rdsClusterParameterGroupMaxParamsBulkEdit], parameters[rdsClusterParameterGroupMaxParamsBulkEdit:]
-				}
-				parameterGroupName := d.Get("name").(string)
-				modifyOpts := rds.ModifyDBClusterParameterGroupInput{
-					DBClusterParameterGroupName: aws.String(parameterGroupName),
-					Parameters:                  paramsToModify,
-				}
-
-				log.Printf("[DEBUG] Modify DB Cluster Parameter Group: %s", modifyOpts)
-				_, err = rdsconn.ModifyDBClusterParameterGroup(&modifyOpts)
-				if err != nil {
-					return fmt.Errorf("Error modifying DB Cluster Parameter Group: %s", err)
-				}
+			modifyOpts := rds.ModifyDBClusterParameterGroupInput{
+				DBClusterParameterGroupName: aws.String(d.Get("name").(string)),
+				Parameters:                  parameters,
 			}
-			d.SetPartial("parameter")
+
+			log.Printf("[DEBUG] Modify DB Cluster Parameter Group: %s", modifyOpts)
+			_, err = rdsconn.ModifyDBClusterParameterGroup(&modifyOpts)
+			if err != nil {
+				return fmt.Errorf("Error modifying DB Cluster Parameter Group: %s", err)
+			}
 		}
+		d.SetPartial("parameter")
 	}
 
 	if arn, err := buildRDSCPGARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region); err == nil {
