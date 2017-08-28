@@ -16,6 +16,7 @@ IMPROVEMENTS:
 * resource/aws_route53_record: Allow CAA record type [GH-1467]
 * resource/aws_codebuild_project: Allowed for BITBUCKET source type [GH-1468]
 * resource/aws_emr_cluster: Add `instance_group` parameter for EMR clusters [GH-1071]
+* provider: expand shared_credentials_file [GH-1511]
 
 BUG FIXES:
 
