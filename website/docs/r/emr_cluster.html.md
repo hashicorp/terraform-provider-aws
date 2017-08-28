@@ -94,8 +94,8 @@ Attributes for the Amazon EC2 instances running the job flow
 	node as the user called `hadoop`
 * `subnet_id` - (Optional) VPC subnet id where you want the job flow to launch.
 Cannot specify the `cc1.4xlarge` instance type for nodes of a job flow launched in a Amazon VPC
-* `additional_master_security_groups` - (Optional) List of additional Amazon EC2 security group IDs for the master node
-* `additional_slave_security_groups` - (Optional) List of additional Amazon EC2 security group IDs for the slave nodes
+* `additional_master_security_groups` - (Optional) String containing a comma separated list of additional Amazon EC2 security group IDs for the master node
+* `additional_slave_security_groups` - (Optional) String containing a comma separated list of additional Amazon EC2 security group IDs for the slave nodes as a comma separated string
 * `emr_managed_master_security_group` - (Optional) Identifier of the Amazon EC2 EMR-Managed security group for the master node
 * `emr_managed_slave_security_group` - (Optional) Identifier of the Amazon EC2 EMR-Managed security group for the slave nodes
 * `service_access_security_group` - (Optional) Identifier of the Amazon EC2 service-access security group - required when the cluster runs on a private subnet
