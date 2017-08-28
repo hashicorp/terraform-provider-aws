@@ -40,8 +40,13 @@ resource "aws_db_instance" "default" {
 
 resource "aws_ssm_parameter" "secret" {
   name  = "${var.environment}/database/password/master"
+  description  = "The parameter description"
   type  = "SecureString"
   value = "${var.database_master_password}"
+
+  tags {
+    environment = "${var.environment}"
+  }
 }
 ```
 
@@ -55,13 +60,17 @@ The following arguments are supported:
 * `name` - (Required) The name of the parameter.
 * `type` - (Required) The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - (Required) The value of the parameter.
+* `description` - (Optional) The description of the parameter.
 * `key_id` - (Optional) The KMS key id or arn for encrypting a SecureString.
-* `overwrite` - (Optional) Overwrite an existing parameter. If not specified, will default to `false`.
+* `overwrite` - (Optional) Overwrite an existing parameter. If not specified, will default to `true`.
+* `allowed_pattern` - (Optional) A regular expression used to validate the parameter value.
+* `tags` - (Optional) A mapping of tags to assign to the object.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
 * `name` - (Required) The name of the parameter.
+* `description` - (Required) The description of the parameter.
 * `type` - (Required) The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - (Required) The value of the parameter.
