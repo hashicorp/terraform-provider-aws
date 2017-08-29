@@ -194,6 +194,50 @@ func TestAccAWSBatchComputeEnvironment_createSpotWithoutBidPercentage(t *testing
 	})
 }
 
+func TestAccAWSBatchComputeEnvironment_createEc2WithGoodComputeEnvironmentName(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigEC2WithGoodComputeEnvironmentName,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSBatchComputeEnvironment_createEc2WithBadComputeEnvironmentName1(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSBatchComputeEnvironmentConfigEC2WithBadComputeEnvironmentName1,
+				ExpectError: regexp.MustCompile(`computeEnvironmentName must be up to 128 letters \(uppercase and lowercase\), numbers, and underscores.`),
+			},
+		},
+	})
+}
+
+func TestAccAWSBatchComputeEnvironment_createEc2WithBadComputeEnvironmentName2(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSBatchComputeEnvironmentConfigEC2WithBadComputeEnvironmentName2,
+				ExpectError: regexp.MustCompile(`computeEnvironmentName must be up to 128 letters \(uppercase and lowercase\), numbers, and underscores.`),
+			},
+		},
+	})
+}
+
 func testAccCheckBatchComputeEnvironmentDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).batchconn
 
@@ -572,6 +616,75 @@ resource "aws_batch_compute_environment" "ec2" {
       "${aws_subnet.test_acc.id}"
     ]
     type = "SPOT"
+  }
+  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
+  type = "MANAGED"
+}
+`
+
+const testAccAWSBatchComputeEnvironmentConfigEC2WithGoodComputeEnvironmentName = testAccAWSBatchComputeEnvironmentConfigBase + `
+resource "aws_batch_compute_environment" "ec2" {
+  compute_environment_name = "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678"
+  compute_resources {
+    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_type = [
+      "c4.large",
+    ]
+    max_vcpus = 16
+    min_vcpus = 0
+    security_group_ids = [
+      "${aws_security_group.test_acc.id}"
+    ]
+    subnets = [
+      "${aws_subnet.test_acc.id}"
+    ]
+    type = "EC2"
+  }
+  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
+  type = "MANAGED"
+}
+`
+
+const testAccAWSBatchComputeEnvironmentConfigEC2WithBadComputeEnvironmentName1 = testAccAWSBatchComputeEnvironmentConfigBase + `
+resource "aws_batch_compute_environment" "ec2" {
+  compute_environment_name = "sam@ple"
+  compute_resources {
+    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_type = [
+      "c4.large",
+    ]
+    max_vcpus = 16
+    min_vcpus = 0
+    security_group_ids = [
+      "${aws_security_group.test_acc.id}"
+    ]
+    subnets = [
+      "${aws_subnet.test_acc.id}"
+    ]
+    type = "EC2"
+  }
+  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
+  type = "MANAGED"
+}
+`
+
+const testAccAWSBatchComputeEnvironmentConfigEC2WithBadComputeEnvironmentName2 = testAccAWSBatchComputeEnvironmentConfigBase + `
+resource "aws_batch_compute_environment" "ec2" {
+  compute_environment_name = "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789"
+  compute_resources {
+    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_type = [
+      "c4.large",
+    ]
+    max_vcpus = 16
+    min_vcpus = 0
+    security_group_ids = [
+      "${aws_security_group.test_acc.id}"
+    ]
+    subnets = [
+      "${aws_subnet.test_acc.id}"
+    ]
+    type = "EC2"
   }
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
   type = "MANAGED"

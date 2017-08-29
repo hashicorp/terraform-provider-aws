@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -20,6 +21,8 @@ const (
 	DISABLED  = "DISABLED"
 )
 
+var reComputeEnvironmentName = regexp.MustCompile(`^[A-Za-z0-9_]*$`)
+
 func resourceAwsBatchComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsBatchComputeEnvironmentCreate,
@@ -29,9 +32,10 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"compute_environment_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: isCorrentComputeEnvironmentName,
 			},
 			"compute_resources": {
 				Type:     schema.TypeList,
@@ -431,4 +435,19 @@ func waitComputeEnvironmentDeleted(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[DEBUG] Compute environment \"%s\" deleted.\n", computeEnvironmentName)
 	return nil
+}
+
+func isCorrentComputeEnvironmentName(i interface{}, k string) (s []string, es []error) {
+	v, ok := i.(string)
+	if !ok {
+		es = append(es, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+
+	if !(reComputeEnvironmentName.MatchString(v) && len(v) <= 128) {
+		es = append(es, fmt.Errorf("computeEnvironmentName must be up to 128 letters (uppercase and lowercase), numbers, and underscores."))
+		return
+	}
+
+	return
 }
