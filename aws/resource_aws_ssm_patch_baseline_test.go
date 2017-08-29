@@ -82,6 +82,8 @@ func TestAccAWSSSMPatchBaselineWithOperatingSystem(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "approval_rule.0.patch_filter.#", "2"),
 					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approval_rule.0.compliance_level", "CRITICAL"),
+					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "operating_system", "AMAZON_LINUX"),
 				),
 			},
@@ -95,6 +97,8 @@ func TestAccAWSSSMPatchBaselineWithOperatingSystem(t *testing.T) {
 						"aws_ssm_patch_baseline.foo", "approval_rule.0.approve_after_days", "7"),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "approval_rule.0.patch_filter.#", "2"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approval_rule.0.compliance_level", "INFORMATIONAL"),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "operating_system", "WINDOWS"),
 					testAccCheckAwsSsmPatchBaselineRecreated(t, &before, &after),
@@ -216,6 +220,7 @@ resource "aws_ssm_patch_baseline" "foo" {
   description = "Baseline containing all updates approved for production systems"
   approval_rule {
   	approve_after_days = 7
+  	compliance_level = "CRITICAL"
 
   	patch_filter {
 		key = "PRODUCT"
@@ -241,6 +246,7 @@ resource "aws_ssm_patch_baseline" "foo" {
   description = "Baseline containing all updates approved for production systems"
   approval_rule {
   	approve_after_days = 7
+  	compliance_level = "INFORMATIONAL"
 
   	patch_filter {
 		key = "PRODUCT"

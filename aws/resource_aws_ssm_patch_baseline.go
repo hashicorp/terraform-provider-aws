@@ -57,6 +57,13 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 							Required: true,
 						},
 
+						"compliance_level": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "UNSPECIFIED",
+							ValidateFunc: validation.StringInSlice([]string{"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFORMATIONAL", "UNSPECIFIED"}, false),
+						},
+
 						"patch_filter": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -306,6 +313,7 @@ func expandAwsSsmPatchRuleGroup(d *schema.ResourceData) *ssm.PatchRuleGroup {
 		rule := &ssm.PatchRule{
 			ApproveAfterDays: aws.Int64(int64(rCfg["approve_after_days"].(int))),
 			PatchFilterGroup: filterGroup,
+			ComplianceLevel:  aws.String(rCfg["compliance_level"].(string)),
 		}
 
 		rules = append(rules, rule)
@@ -326,6 +334,7 @@ func flattenAwsSsmPatchRuleGroup(group *ssm.PatchRuleGroup) []map[string]interfa
 	for _, rule := range group.PatchRules {
 		r := make(map[string]interface{})
 		r["approve_after_days"] = *rule.ApproveAfterDays
+		r["compliance_level"] = *rule.ComplianceLevel
 		r["patch_filter"] = flattenAwsSsmPatchFilterGroup(rule.PatchFilterGroup)
 		result = append(result, r)
 	}
