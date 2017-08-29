@@ -21,6 +21,9 @@ func resourceAwsIamUserLoginProfile() *schema.Resource {
 		Read:   schema.Noop,
 		Update: schema.Noop,
 		Delete: schema.RemoveFromState,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"user": {

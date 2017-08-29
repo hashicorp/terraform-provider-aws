@@ -96,6 +96,29 @@ func TestAccAWSUserLoginProfile_notAKey(t *testing.T) {
 	})
 }
 
+func TestAccAWSUserLoginProfile_importBasic(t *testing.T) {
+	resourceName := "aws_user_login_profile.test"
+
+	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSUserLoginProfileConfig(username, "/", testPubKey1),
+			},
+
+			resource.TestStep{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSUserLoginProfileDestroy(s *terraform.State) error {
 	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
 
