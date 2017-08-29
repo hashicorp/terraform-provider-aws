@@ -18,6 +18,7 @@ IMPROVEMENTS:
 * resource/aws_emr_cluster: Add `instance_group` parameter for EMR clusters [GH-1071]
 * resource/aws_alb_listener_rule: Populate `listener_arn` field [GH-1303]
 * provider: expand shared_credentials_file [GH-1511]
+* resource/aws_api_gateway_rest_api: Add a body property to API Gateway RestAPI for Swagger import support [GH-1197]
 
 BUG FIXES:
 
