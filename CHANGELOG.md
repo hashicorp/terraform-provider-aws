@@ -24,6 +24,7 @@ BUG FIXES:
 * resource/aws_instance: Fix import in EC2 Classic [GH-1453]
 * resource/aws_emr_cluster: Avoid spurious diff of `log_uri` [GH-1374]
 * resource/aws_cloudwatch_log_subscription_filter: Add support for ResourceNotFound [GH-1414]
+* resource/aws_sns_topic_subscription: Prevent duplicate (un)subscribe during initial creation [GH-1480]
 * resource/aws_alb: Cleanup ENIs after deleting ALB [GH-1427]
 
 ## 0.1.4 (August 08, 2017)
