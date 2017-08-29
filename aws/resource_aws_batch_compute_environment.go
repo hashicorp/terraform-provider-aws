@@ -150,8 +150,6 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 
 	computeEnvironmentName := d.Get("compute_environment_name").(string)
 
-	log.Printf("[DEBUG] Create compute environment \"%s\".\n", computeEnvironmentName)
-
 	serviceRole := d.Get("service_role").(string)
 	computeEnvironmentType := d.Get("type").(string)
 
@@ -222,6 +220,8 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 		}
 	}
 
+	log.Printf("[DEBUG] Create compute environment %s.\n", input)
+
 	if _, err := conn.CreateComputeEnvironment(input); err != nil {
 		return err
 	}
@@ -245,6 +245,8 @@ func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interfa
 			aws.String(computeEnvironmentName),
 		},
 	}
+
+	log.Printf("[DEBUG] Read compute environment %s.\n", input)
 
 	result, err := conn.DescribeComputeEnvironments(input)
 	if err != nil {
@@ -297,12 +299,12 @@ func resourceAwsBatchComputeEnvironmentDelete(d *schema.ResourceData, meta inter
 
 	computeEnvironmentName := d.Get("compute_environment_name").(string)
 
-	log.Printf("[DEBUG] Delete compute environment \"%s\".\n", computeEnvironmentName)
-
 	updateInput := &batch.UpdateComputeEnvironmentInput{
 		ComputeEnvironment: aws.String(computeEnvironmentName),
 		State:              aws.String(DISABLED),
 	}
+
+	log.Printf("[DEBUG] Delete compute environment %s.\n", updateInput)
 
 	if _, err := conn.UpdateComputeEnvironment(updateInput); err != nil {
 		return err
@@ -333,8 +335,6 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 	conn := meta.(*AWSClient).batchconn
 
 	computeEnvironmentName := d.Get("compute_environment_name").(string)
-
-	log.Printf("[DEBUG] Update compute environment \"%s\".\n", computeEnvironmentName)
 
 	input := &batch.UpdateComputeEnvironmentInput{
 		ComputeEnvironment: aws.String(computeEnvironmentName),
@@ -371,6 +371,8 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 			input.ComputeResources.MinvCpus = aws.Int64(int64(computeResource["min_vcpus"].(int)))
 		}
 	}
+
+	log.Printf("[DEBUG] Update compute environment %s.\n", input)
 
 	if _, err := conn.UpdateComputeEnvironment(input); err != nil {
 		return err
