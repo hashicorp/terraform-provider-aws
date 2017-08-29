@@ -66,7 +66,7 @@ The following arguments are supported:
 * `run_command_targets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `ecs_target` - (Optional) Parameters used when you are using the rule to invoke Amazon ECS Task. Documented below. A maximum of 1 are allowed.
 
-`run_command_parameters` support the following:
+`run_command_targets` support the following:
 
 * `key` - (Required) Can be either `tag:tag-key` or `InstanceIds`.
 * `values` - (Required) If Key is `tag:tag-key`, Values is a list of tag values. If Key is `InstanceIds`, Values is a list of Amazon EC2 instance IDs.
