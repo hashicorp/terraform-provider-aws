@@ -56,6 +56,47 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
+	var conf apigateway.RestApi
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigOpenAPI,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
+					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "test"),
+					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/test"}),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_rest_api.test", "name", "test"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_rest_api.test", "description", ""),
+					resource.TestCheckResourceAttrSet(
+						"aws_api_gateway_rest_api.test", "created_date"),
+					resource.TestCheckNoResourceAttr(
+						"aws_api_gateway_rest_api.test", "binary_media_types"),
+				),
+			},
+
+			{
+				Config: testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPI,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
+					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "test"),
+					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/update"}),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_rest_api.test", "name", "test"),
+					resource.TestCheckResourceAttrSet(
+						"aws_api_gateway_rest_api.test", "created_date"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayRestAPINameAttribute(conf *apigateway.RestApi, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.Name != name {
@@ -70,6 +111,37 @@ func testAccCheckAWSAPIGatewayRestAPIDescriptionAttribute(conf *apigateway.RestA
 	return func(s *terraform.State) error {
 		if *conf.Description != description {
 			return fmt.Errorf("Wrong Description: %q", *conf.Description)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSAPIGatewayRestAPIRoutes(conf *apigateway.RestApi, routes []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).apigateway
+
+		resp, err := conn.GetResources(&apigateway.GetResourcesInput{
+			RestApiId: conf.Id,
+		})
+		if err != nil {
+			return err
+		}
+
+		actualRoutePaths := map[string]bool{}
+		for _, resource := range resp.Items {
+			actualRoutePaths[*resource.Path] = true
+		}
+
+		for _, route := range routes {
+			if _, ok := actualRoutePaths[route]; !ok {
+				return fmt.Errorf("Expected path %v but did not find it in %v", route, actualRoutePaths)
+			}
+			delete(actualRoutePaths, route)
+		}
+
+		if len(actualRoutePaths) > 0 {
+			return fmt.Errorf("Found unexpected paths %v", actualRoutePaths)
 		}
 
 		return nil
@@ -142,5 +214,83 @@ resource "aws_api_gateway_rest_api" "test" {
   name = "test"
   description = "test"
   binary_media_types = ["application/octet-stream"]
+}
+`
+
+const testAccAWSAPIGatewayRestAPIConfigOpenAPI = `
+resource "aws_api_gateway_rest_api" "test" {
+  name = "test"
+  body = <<EOF
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "test",
+    "version": "2017-04-20T04:08:08Z"
+  },
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/test": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "200 response"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "HTTP",
+          "uri": "https://www.google.de",
+          "httpMethod": "GET",
+          "responses": {
+            "default": {
+              "statusCode": 200
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+}
+`
+
+const testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPI = `
+resource "aws_api_gateway_rest_api" "test" {
+  name = "test"
+  body = <<EOF
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "test",
+    "version": "2017-04-20T04:08:08Z"
+  },
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/update": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "200 response"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "HTTP",
+          "uri": "https://www.google.de",
+          "httpMethod": "GET",
+          "responses": {
+            "default": {
+              "statusCode": 200
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF
 }
 `
