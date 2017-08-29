@@ -342,16 +342,13 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("service_role") {
-		log.Printf("[DEBUG] Service role of \"%s\" has change.\n", computeEnvironmentName)
 		input.ServiceRole = aws.String(d.Get("service_role").(string))
 	}
 	if d.HasChange("state") {
-		log.Printf("[DEBUG] State of \"%s\" has change.\n", computeEnvironmentName)
 		input.ServiceRole = aws.String(d.Get("state").(string))
 	}
 
 	if d.HasChange("compute_resources") {
-		log.Printf("[DEBUG] Compute resources of \"%s\" has change.\n", computeEnvironmentName)
 		computeResources := d.Get("compute_resources").([]interface{})
 		if len(computeResources) == 0 {
 			return fmt.Errorf("One compute environment is expected, but no compute environments are set")
@@ -359,15 +356,12 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 		computeResource := computeResources[0].(map[string]interface{})
 
 		if d.HasChange("compute_resources.0.desired_vcpus") {
-			log.Printf("[DEBUG] Desired vCpus of \"%s\" has change.\n", computeEnvironmentName)
 			input.ComputeResources.DesiredvCpus = aws.Int64(int64(computeResource["desired_vcpus"].(int)))
 		}
 		if d.HasChange("compute_resources.0.max_vcpus") {
-			log.Printf("[DEBUG] Max vCpus of \"%s\" has change.\n", computeEnvironmentName)
 			input.ComputeResources.MaxvCpus = aws.Int64(int64(computeResource["max_vcpus"].(int)))
 		}
 		if d.HasChange("compute_resources.0.min_vcpus") {
-			log.Printf("[DEBUG] Min vCpus of \"%s\" has change.\n", computeEnvironmentName)
 			input.ComputeResources.MinvCpus = aws.Int64(int64(computeResource["min_vcpus"].(int)))
 		}
 	}
