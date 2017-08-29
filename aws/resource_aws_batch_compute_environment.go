@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -19,6 +20,12 @@ const (
 	SPOT      = "SPOT"
 	ENABLED   = "ENABLED"
 	DISABLED  = "DISABLED"
+	CREATING  = "CREATING"
+	DELETING  = "DELETING"
+	UPDATING  = "UPDATING"
+	DELETED   = "DELETED"
+	VALID     = "VALID"
+	FAILED    = "FAILED"
 )
 
 var reComputeEnvironmentName = regexp.MustCompile(`^[A-Za-z0-9_]*$`)
@@ -228,7 +235,14 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(computeEnvironmentName)
 
-	if err := waitComputeEnvironmentValid(d, meta); err != nil {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{CREATING},
+		Target:     []string{VALID},
+		Refresh:    resourceAwsBatchComputeEnvironmentStatusRefreshFunc(d, meta),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		MinTimeout: 5 * time.Second,
+	}
+	if _, err := stateConf.WaitForState(); err != nil {
 		return err
 	}
 
@@ -310,7 +324,14 @@ func resourceAwsBatchComputeEnvironmentDelete(d *schema.ResourceData, meta inter
 		return err
 	}
 
-	if err := waitComputeEnvironmentValid(d, meta); err != nil {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{UPDATING},
+		Target:     []string{VALID},
+		Refresh:    resourceAwsBatchComputeEnvironmentStatusRefreshFunc(d, meta),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
+		MinTimeout: 5 * time.Second,
+	}
+	if _, err := stateConf.WaitForState(); err != nil {
 		return err
 	}
 
@@ -322,7 +343,14 @@ func resourceAwsBatchComputeEnvironmentDelete(d *schema.ResourceData, meta inter
 		return err
 	}
 
-	if err := waitComputeEnvironmentDeleted(d, meta); err != nil {
+	stateConfForDelete := &resource.StateChangeConf{
+		Pending:    []string{DELETING},
+		Target:     []string{DELETED},
+		Refresh:    resourceAwsBatchComputeEnvironmentDeleteRefreshFunc(d, meta),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
+		MinTimeout: 5 * time.Second,
+	}
+	if _, err := stateConfForDelete.WaitForState(); err != nil {
 		return err
 	}
 
@@ -375,62 +403,52 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 	return resourceAwsBatchComputeEnvironmentRead(d, meta)
 }
 
-func waitComputeEnvironmentValid(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
+func resourceAwsBatchComputeEnvironmentStatusRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		conn := meta.(*AWSClient).batchconn
 
-	computeEnvironmentName := d.Get("compute_environment_name").(string)
+		computeEnvironmentName := d.Get("compute_environment_name").(string)
 
-	for {
 		result, err := conn.DescribeComputeEnvironments(&batch.DescribeComputeEnvironmentsInput{
 			ComputeEnvironments: []*string{
 				aws.String(computeEnvironmentName),
 			},
 		})
 		if err != nil {
-			return err
+			return nil, FAILED, err
 		}
 
 		if len(result.ComputeEnvironments) == 0 {
-			return fmt.Errorf("One compute environment is expected, but AWS return no compute environment")
-		} else if len(result.ComputeEnvironments) >= 2 {
-			return fmt.Errorf("One compute environment is expected, but AWS return too many compute environment")
+			return nil, FAILED, fmt.Errorf("One compute environment is expected, but AWS return no compute environment")
 		}
-		computeEnvironment := result.ComputeEnvironments[0]
-		if *(computeEnvironment.Status) == "VALID" {
-			break
-		} else {
-			time.Sleep(1 * time.Second)
-		}
-	}
 
-	log.Printf("[DEBUG] Status of compute environment \"%s\" get VALID.\n", computeEnvironmentName)
-	return nil
+		computeEnvironment := result.ComputeEnvironments[0]
+		return result, *(computeEnvironment.Status), nil
+	}
 }
 
-func waitComputeEnvironmentDeleted(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
+func resourceAwsBatchComputeEnvironmentDeleteRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		conn := meta.(*AWSClient).batchconn
 
-	computeEnvironmentName := d.Get("compute_environment_name").(string)
+		computeEnvironmentName := d.Get("compute_environment_name").(string)
 
-	for {
 		result, err := conn.DescribeComputeEnvironments(&batch.DescribeComputeEnvironmentsInput{
 			ComputeEnvironments: []*string{
 				aws.String(computeEnvironmentName),
 			},
 		})
 		if err != nil {
-			return err
+			return nil, FAILED, err
 		}
 
 		if len(result.ComputeEnvironments) == 0 {
-			break
-		} else {
-			time.Sleep(1 * time.Second)
+			return result, DELETED, nil
 		}
-	}
 
-	log.Printf("[DEBUG] Compute environment \"%s\" deleted.\n", computeEnvironmentName)
-	return nil
+		computeEnvironment := result.ComputeEnvironments[0]
+		return result, *(computeEnvironment.Status), nil
+	}
 }
 
 func isCorrentComputeEnvironmentName(i interface{}, k string) (s []string, es []error) {
