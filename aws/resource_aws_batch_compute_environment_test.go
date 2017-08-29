@@ -503,29 +503,6 @@ resource "aws_batch_compute_environment" "unmanaged" {
 }
 `
 
-const testAccAWSBatchComputeEnvironmentConfigUpdatevCpus = testAccAWSBatchComputeEnvironmentConfigBase + `
-resource "aws_batch_compute_environment" "ec2" {
-  compute_environment_name = "sample"
-  compute_resources {
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
-    instance_type = [
-      "c4.large",
-    ]
-    max_vcpus = 32
-    min_vcpus = 0
-    security_group_ids = [
-      "${aws_security_group.test_acc.id}"
-    ]
-    subnets = [
-      "${aws_subnet.test_acc.id}"
-    ]
-    type = "EC2"
-  }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-}
-`
-
 const testAccAWSBatchComputeEnvironmentConfigEC2UpdateMaxvCpus = testAccAWSBatchComputeEnvironmentConfigBase + `
 resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "sample"
