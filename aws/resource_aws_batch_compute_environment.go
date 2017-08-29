@@ -274,8 +274,6 @@ func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interfa
 
 	if len(result.ComputeEnvironments) == 0 {
 		return fmt.Errorf("One compute environment is expected, but AWS return no compute environment")
-	} else if len(result.ComputeEnvironments) >= 2 {
-		return fmt.Errorf("One compute environment is expected, but AWS return too many compute environment")
 	}
 	computeEnvironment := result.ComputeEnvironments[0]
 
