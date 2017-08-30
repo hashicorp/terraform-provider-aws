@@ -44,11 +44,11 @@ func resourceAwsCloudSearchDomain() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"type": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"search": {
 							Type:     schema.TypeBool,
