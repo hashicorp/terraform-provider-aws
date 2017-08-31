@@ -10,6 +10,38 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
+const (
+	ssmPatchComplianceLevelUnspecified   = "UNSPECIFIED"
+	ssmPatchComplianceLevelInformational = "INFORMATIONAL"
+	ssmPatchComplianceLevelLow           = "LOW"
+	ssmPatchComplianceLevelMedium        = "MEDIUM"
+	ssmPatchComplianceLevelHigh          = "HIGH"
+	ssmPatchComplianceLevelCritical      = "CRITICAL"
+)
+
+var ssmPatchComplianceLevels = []string{
+	ssmPatchComplianceLevelCritical,
+	ssmPatchComplianceLevelHigh,
+	ssmPatchComplianceLevelMedium,
+	ssmPatchComplianceLevelLow,
+	ssmPatchComplianceLevelInformational,
+	ssmPatchComplianceLevelUnspecified,
+}
+
+const (
+	ssmPatchOSWindows     = "WINDOWS"
+	ssmPatchOSAmazonLinux = "AMAZON_LINUX"
+	ssmPatchOSUbuntu      = "UBUNTU"
+	ssmPatchOSRHEL        = "REDHAT_ENTERPRISE_LINUX"
+)
+
+var ssmPatchOSs = []string{
+	ssmPatchOSWindows,
+	ssmPatchOSAmazonLinux,
+	ssmPatchOSUbuntu,
+	ssmPatchOSRHEL,
+}
+
 func resourceAwsSsmPatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSsmPatchBaselineCreate,
@@ -60,8 +92,8 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 						"compliance_level": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "UNSPECIFIED",
-							ValidateFunc: validation.StringInSlice([]string{"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFORMATIONAL", "UNSPECIFIED"}, false),
+							Default:      ssmPatchComplianceLevelUnspecified,
+							ValidateFunc: validation.StringInSlice(ssmPatchComplianceLevels, false),
 						},
 
 						"patch_filter": {
@@ -104,15 +136,15 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      "WINDOWS",
-				ValidateFunc: validation.StringInSlice([]string{"WINDOWS", "AMAZON_LINUX", "UBUNTU", "REDHAT_ENTERPRISE_LINUX"}, false),
+				Default:      ssmPatchOSWindows,
+				ValidateFunc: validation.StringInSlice(ssmPatchOSs, false),
 			},
 
 			"approved_patches_compliance_level": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "UNSPECIFIED",
-				ValidateFunc: validation.StringInSlice([]string{"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFORMATIONAL", "UNSPECIFIED"}, false),
+				Default:      ssmPatchComplianceLevelUnspecified,
+				ValidateFunc: validation.StringInSlice(ssmPatchComplianceLevels, false),
 			},
 		},
 	}
