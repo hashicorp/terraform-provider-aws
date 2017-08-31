@@ -16,7 +16,7 @@ Provides an API Gateway Authorizer.
 resource "aws_api_gateway_authorizer" "demo" {
   name                   = "demo"
   rest_api_id            = "${aws_api_gateway_rest_api.demo.id}"
-  authorizer_uri         = "arn:aws:apigateway:${var.myregion}:lambda:path/2015-03-31/functions/${aws_lambda_function.authorizer.arn}/invocations"
+  authorizer_uri         = "${aws_lambda_function.authorizer.invoke_arn}"
   authorizer_credentials = "${aws_iam_role.invocation_role.arn}"
 }
 
