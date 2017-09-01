@@ -1468,7 +1468,8 @@ func (c *EC2) AuthorizeSecurityGroupEgressRequest(input *AuthorizeSecurityGroupE
 // range or a source group. For the TCP and UDP protocols, you must also specify
 // the destination port or port range. For the ICMP protocol, you must also
 // specify the ICMP type and code. You can use -1 for the type or code to mean
-// all types or all codes.
+// all types or all codes. You can optionally specify a description for the
+// rule.
 //
 // Rule changes are propagated to affected instances as quickly as possible.
 // However, a small delay might occur.
@@ -1564,6 +1565,8 @@ func (c *EC2) AuthorizeSecurityGroupIngressRequest(input *AuthorizeSecurityGroup
 // group for your VPC. The security groups must all be for the same VPC or a
 // peer VPC in a VPC peering connection. For more information about VPC security
 // group limits, see Amazon VPC Limits (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Appendix_Limits.html).
+//
+// You can optionally specify a description for the security group rule.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -18906,13 +18909,14 @@ func (c *EC2) RevokeSecurityGroupEgressRequest(input *RevokeSecurityGroupEgressI
 //
 // [EC2-VPC only] Removes one or more egress rules from a security group for
 // EC2-VPC. This action doesn't apply to security groups for use in EC2-Classic.
-// The values that you specify in the revoke request (for example, ports) must
-// match the existing rule's values for the rule to be revoked.
+// To remove a rule, the values that you specify (for example, ports) must match
+// the existing rule's values exactly.
 //
 // Each rule consists of the protocol and the IPv4 or IPv6 CIDR range or source
 // security group. For the TCP and UDP protocols, you must also specify the
 // destination port or range of ports. For the ICMP protocol, you must also
-// specify the ICMP type and code.
+// specify the ICMP type and code. If the security group rule has a description,
+// you do not have to specify the description to revoke the rule.
 //
 // Rule changes are propagated to instances within the security group as quickly
 // as possible. However, a small delay might occur.
@@ -18991,9 +18995,9 @@ func (c *EC2) RevokeSecurityGroupIngressRequest(input *RevokeSecurityGroupIngres
 
 // RevokeSecurityGroupIngress API operation for Amazon Elastic Compute Cloud.
 //
-// Removes one or more ingress rules from a security group. The values that
-// you specify in the revoke request (for example, ports) must match the existing
-// rule's values for the rule to be removed.
+// Removes one or more ingress rules from a security group. To remove a rule,
+// the values that you specify (for example, ports) must match the existing
+// rule's values exactly.
 //
 // [EC2-Classic security groups only] If the values you specify do not match
 // the existing rule's values, no error is returned. Use DescribeSecurityGroups
@@ -19002,7 +19006,8 @@ func (c *EC2) RevokeSecurityGroupIngressRequest(input *RevokeSecurityGroupIngres
 // Each rule consists of the protocol and the CIDR range or source security
 // group. For the TCP and UDP protocols, you must also specify the destination
 // port or range of ports. For the ICMP protocol, you must also specify the
-// ICMP type and code.
+// ICMP type and code. If the security group rule has a description, you do
+// not have to specify the description to revoke the rule.
 //
 // Rule changes are propagated to instances within the security group as quickly
 // as possible. However, a small delay might occur.
@@ -19755,6 +19760,166 @@ func (c *EC2) UnmonitorInstances(input *UnmonitorInstancesInput) (*UnmonitorInst
 // for more information on using Contexts.
 func (c *EC2) UnmonitorInstancesWithContext(ctx aws.Context, input *UnmonitorInstancesInput, opts ...request.Option) (*UnmonitorInstancesOutput, error) {
 	req, out := c.UnmonitorInstancesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateSecurityGroupRuleDescriptionsEgress = "UpdateSecurityGroupRuleDescriptionsEgress"
+
+// UpdateSecurityGroupRuleDescriptionsEgressRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateSecurityGroupRuleDescriptionsEgress operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateSecurityGroupRuleDescriptionsEgress for more information on using the UpdateSecurityGroupRuleDescriptionsEgress
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateSecurityGroupRuleDescriptionsEgressRequest method.
+//    req, resp := client.UpdateSecurityGroupRuleDescriptionsEgressRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/UpdateSecurityGroupRuleDescriptionsEgress
+func (c *EC2) UpdateSecurityGroupRuleDescriptionsEgressRequest(input *UpdateSecurityGroupRuleDescriptionsEgressInput) (req *request.Request, output *UpdateSecurityGroupRuleDescriptionsEgressOutput) {
+	op := &request.Operation{
+		Name:       opUpdateSecurityGroupRuleDescriptionsEgress,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateSecurityGroupRuleDescriptionsEgressInput{}
+	}
+
+	output = &UpdateSecurityGroupRuleDescriptionsEgressOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateSecurityGroupRuleDescriptionsEgress API operation for Amazon Elastic Compute Cloud.
+//
+// [EC2-VPC only] Updates the description of an egress (outbound) security group
+// rule. You can replace an existing description, or add a description to a
+// rule that did not have one previously.
+//
+// You specify the description as part of the IP permissions structure. You
+// can remove a description for a security group rule by omitting the description
+// parameter in the request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation UpdateSecurityGroupRuleDescriptionsEgress for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/UpdateSecurityGroupRuleDescriptionsEgress
+func (c *EC2) UpdateSecurityGroupRuleDescriptionsEgress(input *UpdateSecurityGroupRuleDescriptionsEgressInput) (*UpdateSecurityGroupRuleDescriptionsEgressOutput, error) {
+	req, out := c.UpdateSecurityGroupRuleDescriptionsEgressRequest(input)
+	return out, req.Send()
+}
+
+// UpdateSecurityGroupRuleDescriptionsEgressWithContext is the same as UpdateSecurityGroupRuleDescriptionsEgress with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateSecurityGroupRuleDescriptionsEgress for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) UpdateSecurityGroupRuleDescriptionsEgressWithContext(ctx aws.Context, input *UpdateSecurityGroupRuleDescriptionsEgressInput, opts ...request.Option) (*UpdateSecurityGroupRuleDescriptionsEgressOutput, error) {
+	req, out := c.UpdateSecurityGroupRuleDescriptionsEgressRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateSecurityGroupRuleDescriptionsIngress = "UpdateSecurityGroupRuleDescriptionsIngress"
+
+// UpdateSecurityGroupRuleDescriptionsIngressRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateSecurityGroupRuleDescriptionsIngress operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateSecurityGroupRuleDescriptionsIngress for more information on using the UpdateSecurityGroupRuleDescriptionsIngress
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateSecurityGroupRuleDescriptionsIngressRequest method.
+//    req, resp := client.UpdateSecurityGroupRuleDescriptionsIngressRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/UpdateSecurityGroupRuleDescriptionsIngress
+func (c *EC2) UpdateSecurityGroupRuleDescriptionsIngressRequest(input *UpdateSecurityGroupRuleDescriptionsIngressInput) (req *request.Request, output *UpdateSecurityGroupRuleDescriptionsIngressOutput) {
+	op := &request.Operation{
+		Name:       opUpdateSecurityGroupRuleDescriptionsIngress,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateSecurityGroupRuleDescriptionsIngressInput{}
+	}
+
+	output = &UpdateSecurityGroupRuleDescriptionsIngressOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateSecurityGroupRuleDescriptionsIngress API operation for Amazon Elastic Compute Cloud.
+//
+// Updates the description of an ingress (inbound) security group rule. You
+// can replace an existing description, or add a description to a rule that
+// did not have one previously.
+//
+// You specify the description as part of the IP permissions structure. You
+// can remove a description for a security group rule by omitting the description
+// parameter in the request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation UpdateSecurityGroupRuleDescriptionsIngress for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/UpdateSecurityGroupRuleDescriptionsIngress
+func (c *EC2) UpdateSecurityGroupRuleDescriptionsIngress(input *UpdateSecurityGroupRuleDescriptionsIngressInput) (*UpdateSecurityGroupRuleDescriptionsIngressOutput, error) {
+	req, out := c.UpdateSecurityGroupRuleDescriptionsIngressRequest(input)
+	return out, req.Send()
+}
+
+// UpdateSecurityGroupRuleDescriptionsIngressWithContext is the same as UpdateSecurityGroupRuleDescriptionsIngress with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateSecurityGroupRuleDescriptionsIngress for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) UpdateSecurityGroupRuleDescriptionsIngressWithContext(ctx aws.Context, input *UpdateSecurityGroupRuleDescriptionsIngressInput, opts ...request.Option) (*UpdateSecurityGroupRuleDescriptionsIngressOutput, error) {
+	req, out := c.UpdateSecurityGroupRuleDescriptionsIngressRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -21745,12 +21910,16 @@ type AuthorizeSecurityGroupIngressInput struct {
 
 	// The start of port range for the TCP and UDP protocols, or an ICMP/ICMPv6
 	// type number. For the ICMP/ICMPv6 type number, use -1 to specify all types.
+	// If you specify all ICMP/ICMPv6 types, you must specify all codes.
 	FromPort *int64 `type:"integer"`
 
-	// The ID of the security group. Required for a nondefault VPC.
+	// The ID of the security group. You must specify either the security group
+	// ID or the security group name in the request. For security groups in a nondefault
+	// VPC, you must specify the security group ID.
 	GroupId *string `type:"string"`
 
-	// [EC2-Classic, default VPC] The name of the security group.
+	// [EC2-Classic, default VPC] The name of the security group. You must specify
+	// either the security group ID or the security group name in the request.
 	GroupName *string `type:"string"`
 
 	// A set of IP permissions. Can be used to specify multiple rules in a single
@@ -21783,7 +21952,8 @@ type AuthorizeSecurityGroupIngressInput struct {
 	SourceSecurityGroupOwnerId *string `type:"string"`
 
 	// The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code
-	// number. For the ICMP/ICMPv6 code number, use -1 to specify all codes.
+	// number. For the ICMP/ICMPv6 code number, use -1 to specify all codes. If
+	// you specify all ICMP/ICMPv6 types, you must specify all codes.
 	ToPort *int64 `type:"integer"`
 }
 
@@ -43994,7 +44164,8 @@ type IpPermission struct {
 	_ struct{} `type:"structure"`
 
 	// The start of port range for the TCP and UDP protocols, or an ICMP/ICMPv6
-	// type number. A value of -1 indicates all ICMP/ICMPv6 types.
+	// type number. A value of -1 indicates all ICMP/ICMPv6 types. If you specify
+	// all ICMP/ICMPv6 types, you must specify all codes.
 	FromPort *int64 `locationName:"fromPort" type:"integer"`
 
 	// The IP protocol name (tcp, udp, icmp) or number (see Protocol Numbers (http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)).
@@ -44021,6 +44192,7 @@ type IpPermission struct {
 
 	// The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
 	// A value of -1 indicates all ICMP/ICMPv6 codes for the specified ICMP type.
+	// If you specify all ICMP/ICMPv6 types, you must specify all codes.
 	ToPort *int64 `locationName:"toPort" type:"integer"`
 
 	// One or more security group and AWS account ID pairs.
@@ -44087,6 +44259,13 @@ type IpRange struct {
 	// The IPv4 CIDR range. You can either specify a CIDR range or a source security
 	// group, not both. To specify a single IPv4 address, use the /32 prefix.
 	CidrIp *string `locationName:"cidrIp" type:"string"`
+
+	// A description for the security group rule that references this IPv4 address
+	// range.
+	//
+	// Constraints: Up to 255 characters in length. Allowed characters are a-z,
+	// A-Z, 0-9, spaces, and ._-:/()#,@[]+=;{}!$*
+	Description *string `locationName:"description" type:"string"`
 }
 
 // String returns the string representation
@@ -44102,6 +44281,12 @@ func (s IpRange) GoString() string {
 // SetCidrIp sets the CidrIp field's value.
 func (s *IpRange) SetCidrIp(v string) *IpRange {
 	s.CidrIp = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *IpRange) SetDescription(v string) *IpRange {
+	s.Description = &v
 	return s
 }
 
@@ -44138,6 +44323,13 @@ type Ipv6Range struct {
 	// The IPv6 CIDR range. You can either specify a CIDR range or a source security
 	// group, not both. To specify a single IPv6 address, use the /128 prefix.
 	CidrIpv6 *string `locationName:"cidrIpv6" type:"string"`
+
+	// A description for the security group rule that references this IPv6 address
+	// range.
+	//
+	// Constraints: Up to 255 characters in length. Allowed characters are a-z,
+	// A-Z, 0-9, spaces, and ._-:/()#,@[]+=;{}!$*
+	Description *string `locationName:"description" type:"string"`
 }
 
 // String returns the string representation
@@ -44153,6 +44345,12 @@ func (s Ipv6Range) GoString() string {
 // SetCidrIpv6 sets the CidrIpv6 field's value.
 func (s *Ipv6Range) SetCidrIpv6(v string) *Ipv6Range {
 	s.CidrIpv6 = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *Ipv6Range) SetDescription(v string) *Ipv6Range {
+	s.Description = &v
 	return s
 }
 
@@ -47669,6 +47867,13 @@ func (s *PrefixList) SetPrefixListName(v string) *PrefixList {
 type PrefixListId struct {
 	_ struct{} `type:"structure"`
 
+	// A description for the security group rule that references this prefix list
+	// ID.
+	//
+	// Constraints: Up to 255 characters in length. Allowed characters are a-z,
+	// A-Z, 0-9, spaces, and ._-:/()#,@[]+=;{}!$*
+	Description *string `locationName:"description" type:"string"`
+
 	// The ID of the prefix.
 	PrefixListId *string `locationName:"prefixListId" type:"string"`
 }
@@ -47681,6 +47886,12 @@ func (s PrefixListId) String() string {
 // GoString returns the string representation
 func (s PrefixListId) GoString() string {
 	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *PrefixListId) SetDescription(v string) *PrefixListId {
+	s.Description = &v
+	return s
 }
 
 // SetPrefixListId sets the PrefixListId field's value.
@@ -56609,6 +56820,202 @@ func (s *UnsuccessfulItemError) SetMessage(v string) *UnsuccessfulItemError {
 	return s
 }
 
+// Contains the parameters for UpdateSecurityGroupRuleDescriptionsEgress.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/UpdateSecurityGroupRuleDescriptionsEgressRequest
+type UpdateSecurityGroupRuleDescriptionsEgressInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The ID of the security group. You must specify either the security group
+	// ID or the security group name in the request. For security groups in a nondefault
+	// VPC, you must specify the security group ID.
+	GroupId *string `type:"string"`
+
+	// [Default VPC] The name of the security group. You must specify either the
+	// security group ID or the security group name in the request.
+	GroupName *string `type:"string"`
+
+	// The IP permissions for the security group rule.
+	//
+	// IpPermissions is a required field
+	IpPermissions []*IpPermission `locationNameList:"item" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateSecurityGroupRuleDescriptionsEgressInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateSecurityGroupRuleDescriptionsEgressInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateSecurityGroupRuleDescriptionsEgressInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateSecurityGroupRuleDescriptionsEgressInput"}
+	if s.IpPermissions == nil {
+		invalidParams.Add(request.NewErrParamRequired("IpPermissions"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *UpdateSecurityGroupRuleDescriptionsEgressInput) SetDryRun(v bool) *UpdateSecurityGroupRuleDescriptionsEgressInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetGroupId sets the GroupId field's value.
+func (s *UpdateSecurityGroupRuleDescriptionsEgressInput) SetGroupId(v string) *UpdateSecurityGroupRuleDescriptionsEgressInput {
+	s.GroupId = &v
+	return s
+}
+
+// SetGroupName sets the GroupName field's value.
+func (s *UpdateSecurityGroupRuleDescriptionsEgressInput) SetGroupName(v string) *UpdateSecurityGroupRuleDescriptionsEgressInput {
+	s.GroupName = &v
+	return s
+}
+
+// SetIpPermissions sets the IpPermissions field's value.
+func (s *UpdateSecurityGroupRuleDescriptionsEgressInput) SetIpPermissions(v []*IpPermission) *UpdateSecurityGroupRuleDescriptionsEgressInput {
+	s.IpPermissions = v
+	return s
+}
+
+// Contains the output of UpdateSecurityGroupRuleDescriptionsEgress.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/UpdateSecurityGroupRuleDescriptionsEgressResult
+type UpdateSecurityGroupRuleDescriptionsEgressOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Returns true if the request succeeds; otherwise, returns an error.
+	Return *bool `locationName:"return" type:"boolean"`
+}
+
+// String returns the string representation
+func (s UpdateSecurityGroupRuleDescriptionsEgressOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateSecurityGroupRuleDescriptionsEgressOutput) GoString() string {
+	return s.String()
+}
+
+// SetReturn sets the Return field's value.
+func (s *UpdateSecurityGroupRuleDescriptionsEgressOutput) SetReturn(v bool) *UpdateSecurityGroupRuleDescriptionsEgressOutput {
+	s.Return = &v
+	return s
+}
+
+// Contains the parameters for UpdateSecurityGroupRuleDescriptionsIngress.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/UpdateSecurityGroupRuleDescriptionsIngressRequest
+type UpdateSecurityGroupRuleDescriptionsIngressInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The ID of the security group. You must specify either the security group
+	// ID or the security group name in the request. For security groups in a nondefault
+	// VPC, you must specify the security group ID.
+	GroupId *string `type:"string"`
+
+	// [EC2-Classic, default VPC] The name of the security group. You must specify
+	// either the security group ID or the security group name in the request.
+	GroupName *string `type:"string"`
+
+	// The IP permissions for the security group rule.
+	//
+	// IpPermissions is a required field
+	IpPermissions []*IpPermission `locationNameList:"item" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateSecurityGroupRuleDescriptionsIngressInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateSecurityGroupRuleDescriptionsIngressInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateSecurityGroupRuleDescriptionsIngressInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateSecurityGroupRuleDescriptionsIngressInput"}
+	if s.IpPermissions == nil {
+		invalidParams.Add(request.NewErrParamRequired("IpPermissions"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *UpdateSecurityGroupRuleDescriptionsIngressInput) SetDryRun(v bool) *UpdateSecurityGroupRuleDescriptionsIngressInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetGroupId sets the GroupId field's value.
+func (s *UpdateSecurityGroupRuleDescriptionsIngressInput) SetGroupId(v string) *UpdateSecurityGroupRuleDescriptionsIngressInput {
+	s.GroupId = &v
+	return s
+}
+
+// SetGroupName sets the GroupName field's value.
+func (s *UpdateSecurityGroupRuleDescriptionsIngressInput) SetGroupName(v string) *UpdateSecurityGroupRuleDescriptionsIngressInput {
+	s.GroupName = &v
+	return s
+}
+
+// SetIpPermissions sets the IpPermissions field's value.
+func (s *UpdateSecurityGroupRuleDescriptionsIngressInput) SetIpPermissions(v []*IpPermission) *UpdateSecurityGroupRuleDescriptionsIngressInput {
+	s.IpPermissions = v
+	return s
+}
+
+// Contains the output of UpdateSecurityGroupRuleDescriptionsIngress.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/UpdateSecurityGroupRuleDescriptionsIngressResult
+type UpdateSecurityGroupRuleDescriptionsIngressOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Returns true if the request succeeds; otherwise, returns an error.
+	Return *bool `locationName:"return" type:"boolean"`
+}
+
+// String returns the string representation
+func (s UpdateSecurityGroupRuleDescriptionsIngressOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateSecurityGroupRuleDescriptionsIngressOutput) GoString() string {
+	return s.String()
+}
+
+// SetReturn sets the Return field's value.
+func (s *UpdateSecurityGroupRuleDescriptionsIngressOutput) SetReturn(v bool) *UpdateSecurityGroupRuleDescriptionsIngressOutput {
+	s.Return = &v
+	return s
+}
+
 // Describes the S3 bucket for the disk image.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/UserBucket
 type UserBucket struct {
@@ -56709,6 +57116,13 @@ func (s *UserData) SetData(v string) *UserData {
 type UserIdGroupPair struct {
 	_ struct{} `type:"structure"`
 
+	// A description for the security group rule that references this user ID group
+	// pair.
+	//
+	// Constraints: Up to 255 characters in length. Allowed characters are a-z,
+	// A-Z, 0-9, spaces, and ._-:/()#,@[]+=;{}!$*
+	Description *string `locationName:"description" type:"string"`
+
 	// The ID of the security group.
 	GroupId *string `locationName:"groupId" type:"string"`
 
@@ -56742,6 +57156,12 @@ func (s UserIdGroupPair) String() string {
 // GoString returns the string representation
 func (s UserIdGroupPair) GoString() string {
 	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *UserIdGroupPair) SetDescription(v string) *UserIdGroupPair {
+	s.Description = &v
+	return s
 }
 
 // SetGroupId sets the GroupId field's value.
