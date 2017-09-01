@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -33,6 +34,54 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_duplicate(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-%d", ri)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		CheckDestroy: func(s *terraform.State) error {
+			conn := testAccProvider.Meta().(*AWSClient).esconn
+			_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
+				DomainName: aws.String(name),
+			})
+			return err
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					// Create duplicate
+					conn := testAccProvider.Meta().(*AWSClient).esconn
+					_, err := conn.CreateElasticsearchDomain(&elasticsearch.CreateElasticsearchDomainInput{
+						DomainName: aws.String(name),
+						EBSOptions: &elasticsearch.EBSOptions{
+							EBSEnabled: aws.Bool(true),
+							VolumeSize: aws.Int64(10),
+						},
+					})
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					err = waitForElasticSearchDomainCreation(conn, name, name)
+					if err != nil {
+						t.Fatal(err)
+					}
+				},
+				Config: testAccESDomainConfig(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					resource.TestCheckResourceAttr(
+						"aws_elasticsearch_domain.example", "elasticsearch_version", "1.5"),
+				),
+				ExpectError: regexp.MustCompile(`domain "[^"]+" already exists`),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_importBasic(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.example"
 	ri := acctest.RandInt()
@@ -41,7 +90,7 @@ func TestAccAWSElasticSearchDomain_importBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccESDomainConfig(ri),
