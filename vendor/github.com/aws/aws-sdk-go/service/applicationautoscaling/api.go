@@ -2990,6 +2990,8 @@ type TargetTrackingScalingPolicyConfiguration struct {
 	// Reserved for future use.
 	CustomizedMetricSpecification *CustomizedMetricSpecification `type:"structure"`
 
+	DisableScaleIn *bool `type:"boolean"`
+
 	// A predefined metric.
 	PredefinedMetricSpecification *PredefinedMetricSpecification `type:"structure"`
 
@@ -3055,6 +3057,12 @@ func (s *TargetTrackingScalingPolicyConfiguration) Validate() error {
 // SetCustomizedMetricSpecification sets the CustomizedMetricSpecification field's value.
 func (s *TargetTrackingScalingPolicyConfiguration) SetCustomizedMetricSpecification(v *CustomizedMetricSpecification) *TargetTrackingScalingPolicyConfiguration {
 	s.CustomizedMetricSpecification = v
+	return s
+}
+
+// SetDisableScaleIn sets the DisableScaleIn field's value.
+func (s *TargetTrackingScalingPolicyConfiguration) SetDisableScaleIn(v bool) *TargetTrackingScalingPolicyConfiguration {
+	s.DisableScaleIn = &v
 	return s
 }
 
