@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -126,25 +125,6 @@ func resourceAwsSnsTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceAwsSnsTopicRead(d, meta)
-}
-
-func resourceAwsSNSUpdateRefreshFunc(
-	meta interface{}, params sns.SetTopicAttributesInput) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		snsconn := meta.(*AWSClient).snsconn
-		if _, err := snsconn.SetTopicAttributes(&params); err != nil {
-			log.Printf("[WARN] Erroring updating topic attributes: %s", err)
-			if awsErr, ok := err.(awserr.Error); ok {
-				// if the error contains the PrincipalNotFound message, we can retry
-				if strings.Contains(awsErr.Message(), "PrincipalNotFound") {
-					log.Printf("[DEBUG] Retrying AWS SNS Topic Update: %s", params)
-					return nil, "retrying", nil
-				}
-			}
-			return nil, "failed", err
-		}
-		return 42, "success", nil
-	}
 }
 
 func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
