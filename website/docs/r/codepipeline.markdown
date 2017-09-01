@@ -120,6 +120,8 @@ resource "aws_codepipeline" "foo" {
 
 ## Argument Reference
 
+~> **Note:** For more in depth details regarding arguments below, refer to the [AWS CLI documentation](http://docs.aws.amazon.com/cli/latest/reference/codepipeline/index.html) for codepipeline.
+
 The following arguments are supported:
 
 * `name` - (Required) The name of the pipeline.
