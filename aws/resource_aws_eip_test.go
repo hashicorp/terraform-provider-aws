@@ -216,6 +216,44 @@ func TestAccAWSEIP_classic_disassociate(t *testing.T) {
 	})
 }
 
+func TestAccAWSEIP_disappears(t *testing.T) {
+	var conf ec2.Address
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSEIPConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
+					testAccCheckAWSEIPDisappears(&conf),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSEIPDisappears(v *ec2.Address) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_eip" {
+				continue
+			}
+
+			_, err := conn.ReleaseAddress(&ec2.ReleaseAddressInput{
+				AllocationId: aws.String(rs.Primary.ID),
+			})
+			return err
+		}
+		return nil
+	}
+}
+
 func testAccCheckAWSEIPDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
