@@ -3692,6 +3692,18 @@ type CreateTargetGroupInput struct {
 	// Protocol is a required field
 	Protocol *string `type:"string" required:"true" enum:"ProtocolEnum"`
 
+	// The type of target that you must specify when registering targets with this
+	// target group. The possible values are instance (targets are specified by
+	// instance ID) or ip (targets are specified by IP address). The default is
+	// instance. Note that you can't specify targets for a target group using both
+	// instance IDs and IP addresses.
+	//
+	// If the target type is ip, specify IP addresses from the subnets of the virtual
+	// private cloud (VPC) for the target group, the RFC 1918 range (10.0.0.0/8,
+	// 172.16.0.0/12, and 192.168.0.0/16), and the RFC 6598 range (100.64.0.0/10).
+	// You can't specify publicly routable IP addresses.
+	TargetType *string `type:"string" enum:"TargetTypeEnum"`
+
 	// The number of consecutive health check failures required before considering
 	// a target unhealthy. The default is 2.
 	UnhealthyThresholdCount *int64 `min:"2" type:"integer"`
@@ -3814,6 +3826,12 @@ func (s *CreateTargetGroupInput) SetPort(v int64) *CreateTargetGroupInput {
 // SetProtocol sets the Protocol field's value.
 func (s *CreateTargetGroupInput) SetProtocol(v string) *CreateTargetGroupInput {
 	s.Protocol = &v
+	return s
+}
+
+// SetTargetType sets the TargetType field's value.
+func (s *CreateTargetGroupInput) SetTargetType(v string) *CreateTargetGroupInput {
+	s.TargetType = &v
 	return s
 }
 
@@ -6671,7 +6689,19 @@ func (s *TagDescription) SetTags(v []*Tag) *TagDescription {
 type TargetDescription struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the target.
+	// The Availability Zone where the IP address is to be registered. Specify all
+	// to register an IP address outside the target group VPC with all Availability
+	// Zones that are enabled for the load balancer.
+	//
+	// If the IP address is in a subnet of the VPC for the target group, the Availability
+	// Zone is automatically detected and this parameter is optional.
+	//
+	// This parameter is not supported if the target type of the target group is
+	// instance.
+	AvailabilityZone *string `type:"string"`
+
+	// The ID of the target. If the target type of the target group is instance,
+	// specify an instance ID. If the target type is ip, specify an IP address.
 	//
 	// Id is a required field
 	Id *string `type:"string" required:"true"`
@@ -6704,6 +6734,12 @@ func (s *TargetDescription) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAvailabilityZone sets the AvailabilityZone field's value.
+func (s *TargetDescription) SetAvailabilityZone(v string) *TargetDescription {
+	s.AvailabilityZone = &v
+	return s
 }
 
 // SetId sets the Id field's value.
@@ -6762,6 +6798,11 @@ type TargetGroup struct {
 
 	// The name of the target group.
 	TargetGroupName *string `type:"string"`
+
+	// The type of target that you must specify when registering targets with this
+	// target group. The possible values are instance (targets are specified by
+	// instance ID) or ip (targets are specified by IP address).
+	TargetType *string `type:"string" enum:"TargetTypeEnum"`
 
 	// The number of consecutive health check failures required before considering
 	// the target unhealthy.
@@ -6850,6 +6891,12 @@ func (s *TargetGroup) SetTargetGroupArn(v string) *TargetGroup {
 // SetTargetGroupName sets the TargetGroupName field's value.
 func (s *TargetGroup) SetTargetGroupName(v string) *TargetGroup {
 	s.TargetGroupName = &v
+	return s
+}
+
+// SetTargetType sets the TargetType field's value.
+func (s *TargetGroup) SetTargetType(v string) *TargetGroup {
+	s.TargetType = &v
 	return s
 }
 
@@ -7116,6 +7163,9 @@ const (
 	// TargetHealthReasonEnumTargetInvalidState is a TargetHealthReasonEnum enum value
 	TargetHealthReasonEnumTargetInvalidState = "Target.InvalidState"
 
+	// TargetHealthReasonEnumTargetIpUnusable is a TargetHealthReasonEnum enum value
+	TargetHealthReasonEnumTargetIpUnusable = "Target.IpUnusable"
+
 	// TargetHealthReasonEnumElbInternalError is a TargetHealthReasonEnum enum value
 	TargetHealthReasonEnumElbInternalError = "Elb.InternalError"
 )
@@ -7135,4 +7185,12 @@ const (
 
 	// TargetHealthStateEnumDraining is a TargetHealthStateEnum enum value
 	TargetHealthStateEnumDraining = "draining"
+)
+
+const (
+	// TargetTypeEnumInstance is a TargetTypeEnum enum value
+	TargetTypeEnumInstance = "instance"
+
+	// TargetTypeEnumIp is a TargetTypeEnum enum value
+	TargetTypeEnumIp = "ip"
 )
