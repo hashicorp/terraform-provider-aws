@@ -139,7 +139,6 @@ func resourceAwsEcsService() *schema.Resource {
 			"placement_strategy": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -152,6 +151,13 @@ func resourceAwsEcsService() *schema.Resource {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Optional: true,
+							StateFunc: func(v interface{}) string {
+								value := v.(string)
+								if value == "host" {
+									return "instanceId"
+								}
+								return value
+							},
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								if strings.ToLower(old) == strings.ToLower(new) {
 									return true
