@@ -10,36 +10,20 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-const (
-	ssmPatchComplianceLevelUnspecified   = "UNSPECIFIED"
-	ssmPatchComplianceLevelInformational = "INFORMATIONAL"
-	ssmPatchComplianceLevelLow           = "LOW"
-	ssmPatchComplianceLevelMedium        = "MEDIUM"
-	ssmPatchComplianceLevelHigh          = "HIGH"
-	ssmPatchComplianceLevelCritical      = "CRITICAL"
-)
-
 var ssmPatchComplianceLevels = []string{
-	ssmPatchComplianceLevelCritical,
-	ssmPatchComplianceLevelHigh,
-	ssmPatchComplianceLevelMedium,
-	ssmPatchComplianceLevelLow,
-	ssmPatchComplianceLevelInformational,
-	ssmPatchComplianceLevelUnspecified,
+	ssm.PatchComplianceLevelCritical,
+	ssm.PatchComplianceLevelHigh,
+	ssm.PatchComplianceLevelMedium,
+	ssm.PatchComplianceLevelLow,
+	ssm.PatchComplianceLevelInformational,
+	ssm.PatchComplianceLevelUnspecified,
 }
 
-const (
-	ssmPatchOSWindows     = "WINDOWS"
-	ssmPatchOSAmazonLinux = "AMAZON_LINUX"
-	ssmPatchOSUbuntu      = "UBUNTU"
-	ssmPatchOSRHEL        = "REDHAT_ENTERPRISE_LINUX"
-)
-
 var ssmPatchOSs = []string{
-	ssmPatchOSWindows,
-	ssmPatchOSAmazonLinux,
-	ssmPatchOSUbuntu,
-	ssmPatchOSRHEL,
+	ssm.OperatingSystemWindows,
+	ssm.OperatingSystemAmazonLinux,
+	ssm.OperatingSystemUbuntu,
+	ssm.OperatingSystemRedhatEnterpriseLinux,
 }
 
 func resourceAwsSsmPatchBaseline() *schema.Resource {
@@ -92,7 +76,7 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 						"compliance_level": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      ssmPatchComplianceLevelUnspecified,
+							Default:      ssm.PatchComplianceLevelUnspecified,
 							ValidateFunc: validation.StringInSlice(ssmPatchComplianceLevels, false),
 						},
 
@@ -136,14 +120,14 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      ssmPatchOSWindows,
+				Default:      ssm.OperatingSystemWindows,
 				ValidateFunc: validation.StringInSlice(ssmPatchOSs, false),
 			},
 
 			"approved_patches_compliance_level": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      ssmPatchComplianceLevelUnspecified,
+				Default:      ssm.PatchComplianceLevelUnspecified,
 				ValidateFunc: validation.StringInSlice(ssmPatchComplianceLevels, false),
 			},
 		},
