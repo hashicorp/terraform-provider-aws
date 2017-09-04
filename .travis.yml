@@ -5,7 +5,9 @@ services:
 language: go
 
 env:
-  global: GOFLAGS=-mod=vendor
+  global:
+    GOFLAGS=-mod=vendor
+go_import_path: github.com/terraform-providers/terraform-provider-aws
 
 matrix:
   fast_finish: true
@@ -31,8 +33,9 @@ matrix:
         - make website-lint
 
 install:
-  - make tools
-
-branches:
-  only:
-    - master
+# This script is used by the Travis build to install a cookie for
+# go.googlesource.com so rate limits are higher when using `go get` to fetch
+# packages that live there.
+# See: https://github.com/golang/go/issues/12933
+- bash scripts/gogetcookie.sh
+- make tools
