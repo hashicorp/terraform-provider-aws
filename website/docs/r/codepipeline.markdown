@@ -120,8 +120,6 @@ resource "aws_codepipeline" "foo" {
 
 ## Argument Reference
 
-~> **Note:** For more in depth details regarding arguments below, refer to the [AWS CLI documentation](http://docs.aws.amazon.com/cli/latest/reference/codepipeline/index.html) for codepipeline.
-
 The following arguments are supported:
 
 * `name` - (Required) The name of the pipeline.
@@ -149,7 +147,7 @@ A `action` block supports the following arguments:
 * `name` - (Required) The action declaration's name.
 * `provider` - (Required) The provider of the service being called by the action. Valid providers are determined by the action category. For example, an action in the Deploy category type might have a provider of AWS CodeDeploy, which would be specified as CodeDeploy.
 * `version` - (Required) A string that identifies the action type.
-* `configuration` - (Optional) A Map of the action declaration's configuration.
+* `configuration` - (Optional) A Map of the action declaration's configuration. Find out more about configuring action configurations in the [Reference Pipeline Structure documentation](http://docs.aws.amazon.com/codepipeline/latest/userguide/reference-pipeline-structure.html#action-requirements).
 * `input_artifacts` - (Optional) A list of artifact names to be worked on.
 * `output_artifacts` - (Optional) A list of artifact names to output. Output artifact names must be unique within a pipeline.
 * `role_arn` - (Optional) The ARN of the IAM service role that will perform the declared action. This is assumed through the roleArn for the pipeline.
