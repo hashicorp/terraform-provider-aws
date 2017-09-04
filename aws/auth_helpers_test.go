@@ -671,6 +671,94 @@ func TestAWSGetCredentials_shouldBeENV(t *testing.T) {
 	}
 }
 
+func TestAWSReadAssumeRoleConfig(t *testing.T) {
+	cases := []struct {
+		Contents string
+		Result   *assumeRoleConfig
+	}{
+		{
+			Contents: `[profile myprofile]
+				role_arn = arn:aws:iam::1234567890:role/admin
+				source_profile = default
+				external_id = 123
+				mfa_serial = 456
+				role_session_name = mysession`,
+			Result: &assumeRoleConfig{
+				RoleARN:         "arn:aws:iam::1234567890:role/admin",
+				SourceProfile:   "default",
+				ExternalID:      "123",
+				MFASerial:       "456",
+				RoleSessionName: "mysession",
+			},
+		},
+		{
+			Contents: `[profile myprofile]
+				role_arn = arn:aws:iam::1234567890:role/admin
+				source_profile = default`,
+			Result: &assumeRoleConfig{
+				RoleARN:       "arn:aws:iam::1234567890:role/admin",
+				SourceProfile: "default",
+			},
+		},
+		{
+			Contents: `[profile myprofile]
+				source_profile = default`,
+			Result: nil,
+		},
+		{
+			Contents: `[profile myprofile]
+				role_arn = arn:aws:iam::1234567890:role/admin`,
+			Result: nil,
+		},
+		{
+			Contents: ``,
+			Result:   nil,
+		},
+		{
+			Contents: `[myprofile]
+				role_arn = arn:aws:iam::1234567890:role/admin
+				source_profile = default`,
+			Result: nil,
+		},
+		{
+			Contents: `[profile other]
+				role_arn = arn:aws:iam::1234567890:role/admin
+				source_profile = default`,
+			Result: nil,
+		},
+	}
+
+	for _, c := range cases {
+		file, err := ioutil.TempFile(os.TempDir(), "terraform_aws_config")
+		if err != nil {
+			t.Fatalf("Error writing temporary config file: %s", err)
+		}
+		_, err = file.WriteString(c.Contents)
+		if err != nil {
+			t.Fatalf("Error writing temporary config to file: %s", err)
+		}
+		err = file.Close()
+		if err != nil {
+			t.Fatalf("Error closing temporary config file: %s", err)
+		}
+		defer os.Remove(file.Name())
+
+		assumeRoleConfig := readAssumeRoleConfig(&Config{
+			Profile:        "myprofile",
+			ConfigFilename: file.Name(),
+		})
+
+		if c.Result == nil && assumeRoleConfig == nil {
+			continue
+		}
+
+		if *c.Result != *assumeRoleConfig {
+			t.Errorf("Config mismatch, expected: %#v, got %#v", c.Result, assumeRoleConfig)
+		}
+
+	}
+}
+
 func testGetAccountInfo(t *testing.T, iamSess, stsSess *session.Session, credProviderName string) {
 
 	iamConn := iam.New(iamSess)

@@ -165,6 +165,9 @@ The following arguments are supported in the `provider` block:
 * `shared_credentials_file` = (Optional) This is the path to the shared credentials file.
   If this is not set and a profile is specified, `~/.aws/credentials` will be used.
 
+* `shared_config_file` = (Optional) This is the path to the shared config file.
+  If this is not set and a profile is specified, `~/.aws/config` will be used.
+
 * `token` - (Optional) Use this to set an MFA token. It can also be sourced
   from the `AWS_SESSION_TOKEN` environment variable.
 

@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -17,9 +18,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/go-ini/ini"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/go-multierror"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 func GetAccountInfo(iamconn *iam.IAM, stsconn *sts.STS, authProviderName string) (string, string, error) {
@@ -169,6 +172,11 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 		}
 	}
 
+	assumeRoleConfig := readAssumeRoleConfig(c)
+	if assumeRoleConfig != nil {
+		assumeRoleConfig.assumeRole()
+	}
+
 	// This is the "normal" flow (i.e. not assuming a role)
 	if c.AssumeRoleARN == "" {
 		return awsCredentials.NewChainCredentials(providers), nil
@@ -234,6 +242,58 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 	}
 
 	return assumeRoleCreds, nil
+}
+
+type assumeRoleConfig struct {
+	RoleARN         string
+	SourceProfile   string
+	ExternalID      string
+	MFASerial       string
+	RoleSessionName string
+}
+
+func readAssumeRoleConfig(c *Config) *assumeRoleConfig {
+	configFilename, err := homedir.Expand(c.ConfigFilename)
+	if err != nil {
+		log.Printf("[WARN] Unable to expand config file path: %v", err)
+		return nil
+	}
+
+	configContent, err := ioutil.ReadFile(configFilename)
+	if err != nil {
+		log.Printf("[WARN] Unable read config file (%s): %v", configFilename, err)
+		return nil
+	}
+
+	iniData, err := ini.Load(configContent)
+	if err != nil {
+		log.Printf("[WARN] Unable parse config file (%s): %v", configFilename, err)
+		return nil
+	}
+
+	section, err := iniData.GetSection(fmt.Sprintf("profile %s", c.Profile))
+	if err != nil {
+		log.Printf("[DEBUG] Profile (%s) doesn't exist in config file (%s): %v", c.Profile, configFilename, err)
+		return nil
+	}
+
+	config := assumeRoleConfig{
+		RoleARN:         section.Key("role_arn").String(),
+		SourceProfile:   section.Key("source_profile").String(),
+		ExternalID:      section.Key("external_id").String(),
+		MFASerial:       section.Key("mfa_serial").String(),
+		RoleSessionName: section.Key("role_session_name").String(),
+	}
+
+	if config.RoleARN == "" || config.SourceProfile == "" {
+		log.Printf("[INFO] Config file (%s) doesn't have role_arn and source_profile", c.Profile)
+		return nil
+	}
+
+	return &config
+}
+
+func (a *assumeRoleConfig) assumeRole() {
 }
 
 func setOptionalEndpoint(cfg *aws.Config) string {

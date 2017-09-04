@@ -50,6 +50,13 @@ func Provider() terraform.ResourceProvider {
 				Description: descriptions["shared_credentials_file"],
 			},
 
+			"shared_config_file": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "~/.aws/config",
+				Description: descriptions["shared_config_file"],
+			},
+
 			"token": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -509,6 +516,9 @@ func init() {
 		"shared_credentials_file": "The path to the shared credentials file. If not set\n" +
 			"this defaults to ~/.aws/credentials.",
 
+		"shared_config_file": "The path to the shared config file. If not set\n" +
+			"this defaults to ~/.aws/config.",
+
 		"token": "session token. A session token is only required if you are\n" +
 			"using temporary security credentials.",
 
@@ -590,6 +600,8 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		AccessKey:               d.Get("access_key").(string),
 		SecretKey:               d.Get("secret_key").(string),
 		Profile:                 d.Get("profile").(string),
+		CredsFilename:           d.Get("shared_credentials_file").(string),
+		ConfigFilename:          d.Get("shared_config_file").(string),
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
 		MaxRetries:              d.Get("max_retries").(int),
