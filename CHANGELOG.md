@@ -22,6 +22,7 @@ IMPROVEMENTS:
 * resource/aws_opsworks_stack: Add support for tags [GH-1523]
 * Add retries for AppScaling policies throttling exceptions [GH-1430]
 * resource/aws_ssm_patch_baseline: Add compliance level to patch approval rules [GH-1531]
+* resource/aws_ssm_activation: Export ssm activation activation_code [GH-1570]
 
 BUG FIXES:
 
