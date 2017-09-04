@@ -374,7 +374,7 @@ func genIndexFieldInput(index map[string]interface{}) (*cloudsearch.IndexField, 
 			}
 
 			if index["default_value"].(string) != "" {
-				input.LiteralOptions.DefaultValue = aws.String(index["default_value"].(string))
+				input.LiteralArrayOptions.DefaultValue = aws.String(index["default_value"].(string))
 			}
 		}
 	case "text":
@@ -387,19 +387,19 @@ func genIndexFieldInput(index map[string]interface{}) (*cloudsearch.IndexField, 
 			}
 
 			if index["default_value"].(string) != "" {
-				input.LiteralOptions.DefaultValue = aws.String(index["default_value"].(string))
+				input.TextOptions.DefaultValue = aws.String(index["default_value"].(string))
 			}
 		}
 	case "text-array":
 		{
-			input.TextOptions = &cloudsearch.TextOptions{
+			input.TextArrayOptions = &cloudsearch.TextArrayOptions{
 				ReturnEnabled:    aws.Bool(returnV),
 				HighlightEnabled: aws.Bool(highlight),
 				AnalysisScheme:   aws.String(analysisScheme),
 			}
 
 			if index["default_value"].(string) != "" {
-				input.LiteralOptions.DefaultValue = aws.String(index["default_value"].(string))
+				input.TextArrayOptions.DefaultValue = aws.String(index["default_value"].(string))
 			}
 		}
 	case "date":
@@ -412,7 +412,7 @@ func genIndexFieldInput(index map[string]interface{}) (*cloudsearch.IndexField, 
 			}
 
 			if index["default_value"].(string) != "" {
-				input.LiteralOptions.DefaultValue = aws.String(index["default_value"].(string))
+				input.DateOptions.DefaultValue = aws.String(index["default_value"].(string))
 			}
 		}
 	case "date-aray":
@@ -424,7 +424,7 @@ func genIndexFieldInput(index map[string]interface{}) (*cloudsearch.IndexField, 
 			}
 
 			if index["default_value"].(string) != "" {
-				input.LiteralOptions.DefaultValue = aws.String(index["default_value"].(string))
+				input.DateArrayOptions.DefaultValue = aws.String(index["default_value"].(string))
 			}
 		}
 	case "latlon":
@@ -437,7 +437,7 @@ func genIndexFieldInput(index map[string]interface{}) (*cloudsearch.IndexField, 
 			}
 
 			if index["default_value"].(string) != "" {
-				input.LiteralOptions.DefaultValue = aws.String(index["default_value"].(string))
+				input.LatLonOptions.DefaultValue = aws.String(index["default_value"].(string))
 			}
 		}
 	default:
