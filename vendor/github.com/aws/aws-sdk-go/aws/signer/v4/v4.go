@@ -324,6 +324,10 @@ func (v4 Signer) signWithBody(r *http.Request, body io.ReadSeeker, service, regi
 		unsignedPayload:        v4.UnsignedPayload,
 	}
 
+	for key := range ctx.Query {
+		sort.Strings(ctx.Query[key])
+	}
+
 	if ctx.isRequestSigned() {
 		ctx.Time = currentTimeFn()
 		ctx.handlePresignRemoval()

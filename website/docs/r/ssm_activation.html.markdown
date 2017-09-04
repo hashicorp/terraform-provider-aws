@@ -56,6 +56,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
+* `activation_code` - The code the system generates when it processes the activation.
 * `name` - The default name of the registerd managed instance.
 * `description` - The description of the resource that was registered.
 * `expired` - If the current activation has expired.

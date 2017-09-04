@@ -20,6 +20,9 @@ IMPROVEMENTS:
 * provider: expand shared_credentials_file [GH-1511]
 * resource/aws_api_gateway_rest_api: Add a body property to API Gateway RestAPI for Swagger import support [GH-1197]
 * resource/aws_opsworks_stack: Add support for tags [GH-1523]
+* Add retries for AppScaling policies throttling exceptions [GH-1430]
+* resource/aws_ssm_patch_baseline: Add compliance level to patch approval rules [GH-1531]
+* resource/aws_ssm_activation: Export ssm activation activation_code [GH-1570]
 
 BUG FIXES:
 
@@ -29,6 +32,8 @@ BUG FIXES:
 * resource/aws_cloudwatch_log_subscription_filter: Add support for ResourceNotFound [GH-1414]
 * resource/aws_sns_topic_subscription: Prevent duplicate (un)subscribe during initial creation [GH-1480]
 * resource/aws_alb: Cleanup ENIs after deleting ALB [GH-1427]
+* resource/aws_s3_bucket: Wrap s3 calls in retry to avoid race during creation [GH-891]
+* resource/aws_eip: Remove from state on deletion [GH-1551]
 
 ## 0.1.4 (August 08, 2017)
 

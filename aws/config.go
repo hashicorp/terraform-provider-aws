@@ -403,6 +403,20 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	// Workaround for https://github.com/aws/aws-sdk-go/issues/1472
+	client.appautoscalingconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
+			return
+		}
+		err, ok := r.Error.(awserr.Error)
+		if !ok || err == nil {
+			return
+		}
+		if err.Code() == applicationautoscaling.ErrCodeFailedResourceAccessException {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
 	return &client, nil
 }
 

@@ -30,7 +30,7 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "name", fmt.Sprintf("patch-baseline-%s", name)),
 					resource.TestCheckResourceAttr(
-						"aws_ssm_patch_baseline.foo", "approved_patches_compliance_level", "CRITICAL"),
+						"aws_ssm_patch_baseline.foo", "approved_patches_compliance_level", ssm.PatchComplianceLevelCritical),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "description", "Baseline containing all updates approved for production systems"),
 				),
@@ -48,7 +48,7 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "name", fmt.Sprintf("updated-patch-baseline-%s", name)),
 					resource.TestCheckResourceAttr(
-						"aws_ssm_patch_baseline.foo", "approved_patches_compliance_level", "HIGH"),
+						"aws_ssm_patch_baseline.foo", "approved_patches_compliance_level", ssm.PatchComplianceLevelHigh),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "description", "Baseline containing all updates approved for production systems - August 2017"),
 					func(*terraform.State) error {
@@ -82,6 +82,8 @@ func TestAccAWSSSMPatchBaselineWithOperatingSystem(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "approval_rule.0.patch_filter.#", "2"),
 					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approval_rule.0.compliance_level", ssm.PatchComplianceLevelCritical),
+					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "operating_system", "AMAZON_LINUX"),
 				),
 			},
@@ -96,7 +98,9 @@ func TestAccAWSSSMPatchBaselineWithOperatingSystem(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "approval_rule.0.patch_filter.#", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_ssm_patch_baseline.foo", "operating_system", "WINDOWS"),
+						"aws_ssm_patch_baseline.foo", "approval_rule.0.compliance_level", ssm.PatchComplianceLevelInformational),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "operating_system", ssm.OperatingSystemWindows),
 					testAccCheckAwsSsmPatchBaselineRecreated(t, &before, &after),
 				),
 			},
@@ -216,6 +220,7 @@ resource "aws_ssm_patch_baseline" "foo" {
   description = "Baseline containing all updates approved for production systems"
   approval_rule {
   	approve_after_days = 7
+  	compliance_level = "CRITICAL"
 
   	patch_filter {
 		key = "PRODUCT"
@@ -241,6 +246,7 @@ resource "aws_ssm_patch_baseline" "foo" {
   description = "Baseline containing all updates approved for production systems"
   approval_rule {
   	approve_after_days = 7
+  	compliance_level = "INFORMATIONAL"
 
   	patch_filter {
 		key = "PRODUCT"
