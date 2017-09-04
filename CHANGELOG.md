@@ -21,6 +21,7 @@ IMPROVEMENTS:
 * resource/aws_api_gateway_rest_api: Add a body property to API Gateway RestAPI for Swagger import support [GH-1197]
 * resource/aws_opsworks_stack: Add support for tags [GH-1523]
 * Add retries for AppScaling policies throttling exceptions [GH-1430]
+* resource/aws_ssm_patch_baseline: Add compliance level to patch approval rules [GH-1531]
 
 BUG FIXES:
 
