@@ -600,8 +600,6 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		AccessKey:               d.Get("access_key").(string),
 		SecretKey:               d.Get("secret_key").(string),
 		Profile:                 d.Get("profile").(string),
-		CredsFilename:           d.Get("shared_credentials_file").(string),
-		ConfigFilename:          d.Get("shared_config_file").(string),
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
 		MaxRetries:              d.Get("max_retries").(int),
@@ -620,6 +618,12 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		return nil, err
 	}
 	config.CredsFilename = credsPath
+
+	configPath, err := homedir.Expand(d.Get("shared_config_file").(string))
+	if err != nil {
+		return nil, err
+	}
+	config.ConfigFilename = configPath
 
 	assumeRoleList := d.Get("assume_role").(*schema.Set).List()
 	if len(assumeRoleList) == 1 {
