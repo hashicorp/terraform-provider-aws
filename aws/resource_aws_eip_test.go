@@ -21,7 +21,7 @@ func TestAccAWSEIP_importEc2Classic(t *testing.T) {
 	resourceName := "aws_eip.bar"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -186,7 +186,7 @@ func TestAccAWSEIP_associated_user_private_ip(t *testing.T) {
 // https://github.com/terraform-providers/terraform-provider-aws/issues/42)
 func TestAccAWSEIP_classic_disassociate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
