@@ -60,3 +60,13 @@ func testAccPreCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func testAccEC2ClassicPreCheck(t *testing.T) {
+	client := testAccProvider.Meta().(*AWSClient)
+	platforms := client.supportedplatforms
+	region := client.region
+	if !hasEc2Classic(platforms) {
+		t.Skipf("This test can only run in EC2 Classic, platforms available in %s: %q",
+			region, platforms)
+	}
+}
