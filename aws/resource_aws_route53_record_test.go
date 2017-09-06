@@ -162,6 +162,26 @@ func TestAccAWSRoute53Record_spfSupport(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAWSRoute53Record_caaSupport(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_route53_record.default",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRoute53RecordConfigCAA,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists("aws_route53_record.default"),
+					resource.TestCheckResourceAttr(
+						"aws_route53_record.default", "records.2965463512", "0 issue \"exampleca.com;\""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute53Record_generatesSuffix(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -701,6 +721,20 @@ resource "aws_route53_record" "default" {
 	type = "SPF"
 	ttl = "30"
 	records = ["include:notexample.com"]
+}
+
+`
+const testAccRoute53RecordConfigCAA = `
+resource "aws_route53_zone" "main" {
+	name = "notexample.com"
+}
+
+resource "aws_route53_record" "default" {
+	zone_id = "${aws_route53_zone.main.zone_id}"
+	name = "test"
+	type = "CAA"
+	ttl = "30"
+	records = ["0 issue \"exampleca.com;\""]
 }
 `
 

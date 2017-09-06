@@ -76,6 +76,15 @@ The following attributes are exported:
 * `outputs` - A map of outputs from the stack.
 
 
+## Import
+
+Cloudformation Stacks can be imported using the `name`, e.g.
+
+```
+$ terraform import aws_cloudformation_stack.stack networking-stack
+```
+
+
 <a id="timeouts"></a>
 ## Timeouts
 

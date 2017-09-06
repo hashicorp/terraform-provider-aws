@@ -74,7 +74,8 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
      instance in a VPC.
 * `source_dest_check` - (Optional) Controls if traffic is routed to the instance when
   the destination address does not match the instance. Used for NAT or VPNs. Defaults true.
-* `user_data` - (Optional) The user data to provide when launching the instance.
+* `user_data` - (Optional) The user data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
+* `user_data_base64` - (Optional) Can be used instead of `user_data` to pass base64-encoded binary data directly. Use this instead of `user_data` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption.
 * `iam_instance_profile` - (Optional) The IAM Instance Profile to
   launch the instance with. Specified as the name of the Instance Profile.
 * `ipv6_address_count`- (Optional) A number of IPv6 addresses to associate with the primary network interface. Amazon EC2 chooses the IPv6 addresses from the range of your subnet.

@@ -19,19 +19,23 @@ func TestAccAWSInstance_basic(t *testing.T) {
 	var v ec2.Instance
 	var vol *ec2.Volume
 
-	testCheck := func(*terraform.State) error {
-		if *v.Placement.AvailabilityZone != "us-west-2a" {
-			return fmt.Errorf("bad availability zone: %#v", *v.Placement.AvailabilityZone)
-		}
+	rInt := acctest.RandInt()
 
-		if len(v.SecurityGroups) == 0 {
-			return fmt.Errorf("no security groups: %#v", v.SecurityGroups)
-		}
-		if *v.SecurityGroups[0].GroupName != "tf_test_foo" {
-			return fmt.Errorf("no security groups: %#v", v.SecurityGroups)
-		}
+	testCheck := func(rInt int) func(*terraform.State) error {
+		return func(*terraform.State) error {
+			if *v.Placement.AvailabilityZone != "us-west-2a" {
+				return fmt.Errorf("bad availability zone: %#v", *v.Placement.AvailabilityZone)
+			}
 
-		return nil
+			if len(v.SecurityGroups) == 0 {
+				return fmt.Errorf("no security groups: %#v", v.SecurityGroups)
+			}
+			if *v.SecurityGroups[0].GroupName != fmt.Sprintf("tf_test_%d", rInt) {
+				return fmt.Errorf("no security groups: %#v", v.SecurityGroups)
+			}
+
+			return nil
+		}
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -49,7 +53,7 @@ func TestAccAWSInstance_basic(t *testing.T) {
 			// Create a volume to cover #1249
 			{
 				// Need a resource in this config so the provisioner will be available
-				Config: testAccInstanceConfig_pre,
+				Config: testAccInstanceConfig_pre(rInt),
 				Check: func(*terraform.State) error {
 					conn := testAccProvider.Meta().(*AWSClient).ec2conn
 					var err error
@@ -62,11 +66,11 @@ func TestAccAWSInstance_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccInstanceConfig,
+				Config: testAccInstanceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"aws_instance.foo", &v),
-					testCheck,
+					testCheck(rInt),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo",
 						"user_data",
@@ -80,11 +84,11 @@ func TestAccAWSInstance_basic(t *testing.T) {
 			// that the user data hash stuff is working without generating
 			// an incorrect diff.
 			{
-				Config: testAccInstanceConfig,
+				Config: testAccInstanceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"aws_instance.foo", &v),
-					testCheck,
+					testCheck(rInt),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo",
 						"user_data",
@@ -96,12 +100,44 @@ func TestAccAWSInstance_basic(t *testing.T) {
 
 			// Clean up volume created above
 			{
-				Config: testAccInstanceConfig,
+				Config: testAccInstanceConfig(rInt),
 				Check: func(*terraform.State) error {
 					conn := testAccProvider.Meta().(*AWSClient).ec2conn
 					_, err := conn.DeleteVolume(&ec2.DeleteVolumeInput{VolumeId: vol.VolumeId})
 					return err
 				},
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_userDataBase64(t *testing.T) {
+	var v ec2.Instance
+
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+
+		// We ignore security groups because even with EC2 classic
+		// we'll import as VPC security groups, which is fine. We verify
+		// VPC security group import in other tests
+		IDRefreshName:   "aws_instance.foo",
+		IDRefreshIgnore: []string{"security_groups", "vpc_security_group_ids"},
+
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithUserDataBase64(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"aws_instance.foo", &v),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo",
+						"user_data_base64",
+						"aGVsbG8gd29ybGQ="),
+				),
 			},
 		},
 	})
@@ -287,7 +323,7 @@ func TestAccAWSInstance_rootInstanceStore(t *testing.T) {
 	})
 }
 
-func TestAcctABSInstance_noAMIEphemeralDevices(t *testing.T) {
+func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 	var v ec2.Instance
 
 	testCheck := func() resource.TestCheckFunc {
@@ -596,6 +632,8 @@ func TestAccAWSInstance_multipleRegions(t *testing.T) {
 func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 	var v ec2.Instance
 
+	rInt := acctest.RandInt()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_instance.foo_instance",
@@ -604,7 +642,7 @@ func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceNetworkInstanceSecurityGroups,
+				Config: testAccInstanceNetworkInstanceSecurityGroups(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"aws_instance.foo_instance", &v),
@@ -617,6 +655,8 @@ func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
 	var v ec2.Instance
 
+	rInt := acctest.RandInt()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_instance.foo_instance",
@@ -624,7 +664,7 @@ func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceNetworkInstanceVPCSecurityGroupIDs,
+				Config: testAccInstanceNetworkInstanceVPCSecurityGroupIDs(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"aws_instance.foo_instance", &v),
@@ -1087,6 +1127,144 @@ func TestAccAWSInstance_addSecurityGroupNetworkInterface(t *testing.T) {
 	})
 }
 
+// https://github.com/terraform-providers/terraform-provider-aws/issues/227
+func TestAccAWSInstance_associatePublic_defaultPrivate(t *testing.T) {
+	var before ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_associatePublic_defaultPrivate(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resName, "public_ip", ""),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/terraform-providers/terraform-provider-aws/issues/227
+func TestAccAWSInstance_associatePublic_defaultPublic(t *testing.T) {
+	var before ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_associatePublic_defaultPublic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttrSet(resName, "public_ip"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/terraform-providers/terraform-provider-aws/issues/227
+func TestAccAWSInstance_associatePublic_explicitPublic(t *testing.T) {
+	var before ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_associatePublic_explicitPublic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttrSet(resName, "public_ip"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/terraform-providers/terraform-provider-aws/issues/227
+func TestAccAWSInstance_associatePublic_explicitPrivate(t *testing.T) {
+	var before ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_associatePublic_explicitPrivate(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resName, "public_ip", ""),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/terraform-providers/terraform-provider-aws/issues/227
+func TestAccAWSInstance_associatePublic_overridePublic(t *testing.T) {
+	var before ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_associatePublic_overridePublic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttrSet(resName, "public_ip"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/terraform-providers/terraform-provider-aws/issues/227
+func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
+	var before ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_associatePublic_overridePrivate(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resName, "public_ip", ""),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceNotRecreated(t *testing.T,
 	before, after *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -1222,9 +1400,10 @@ func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 	}
 }
 
-const testAccInstanceConfig_pre = `
+func testAccInstanceConfig_pre(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_security_group" "tf_test_foo" {
-	name = "tf_test_foo"
+	name = "tf_test_%d"
 	description = "foo"
 
 	ingress {
@@ -1234,11 +1413,13 @@ resource "aws_security_group" "tf_test_foo" {
 		cidr_blocks = ["0.0.0.0/0"]
 	}
 }
-`
+`, rInt)
+}
 
-const testAccInstanceConfig = `
+func testAccInstanceConfig(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_security_group" "tf_test_foo" {
-	name = "tf_test_foo"
+	name = "tf_test_%d"
 	description = "foo"
 
 	ingress {
@@ -1258,7 +1439,34 @@ resource "aws_instance" "foo" {
 	security_groups = ["${aws_security_group.tf_test_foo.name}"]
 	user_data = "foo:-with-character's"
 }
-`
+`, rInt)
+}
+
+func testAccInstanceConfigWithUserDataBase64(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "tf_test_foo" {
+	name = "tf_test_%d"
+	description = "foo"
+
+	ingress {
+		protocol = "icmp"
+		from_port = -1
+		to_port = -1
+		cidr_blocks = ["0.0.0.0/0"]
+	}
+}
+
+resource "aws_instance" "foo" {
+	# us-west-2
+	ami = "ami-4fccb37f"
+	availability_zone = "us-west-2a"
+
+	instance_type = "m1.small"
+	security_groups = ["${aws_security_group.tf_test_foo.name}"]
+	user_data_base64 = "${base64encode("hello world")}"
+}
+`, rInt)
+}
 
 const testAccInstanceConfigWithSmallInstanceType = `
 resource "aws_instance" "foo" {
@@ -1836,7 +2044,8 @@ resource "aws_instance" "foo" {
 }
 `
 
-const testAccInstanceNetworkInstanceSecurityGroups = `
+func testAccInstanceNetworkInstanceSecurityGroups(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.foo.id}"
 }
@@ -1849,7 +2058,7 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_security_group" "tf_test_foo" {
-  name = "tf_test_foo"
+  name = "tf_test_%d"
   description = "foo"
   vpc_id="${aws_vpc.foo.id}"
 
@@ -1880,9 +2089,11 @@ resource "aws_eip" "foo_eip" {
   vpc = true
 	depends_on = ["aws_internet_gateway.gw"]
 }
-`
+`, rInt)
+}
 
-const testAccInstanceNetworkInstanceVPCSecurityGroupIDs = `
+func testAccInstanceNetworkInstanceVPCSecurityGroupIDs(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.foo.id}"
 }
@@ -1895,7 +2106,7 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_security_group" "tf_test_foo" {
-  name = "tf_test_foo"
+  name = "tf_test_%d"
   description = "foo"
   vpc_id="${aws_vpc.foo.id}"
 
@@ -1925,7 +2136,8 @@ resource "aws_eip" "foo_eip" {
   vpc = true
 	depends_on = ["aws_internet_gateway.gw"]
 }
-`
+`, rInt)
+}
 
 func testAccInstanceConfigKeyPair(keyPairName string) string {
 	return fmt.Sprintf(`
@@ -2305,3 +2517,163 @@ resource "aws_network_interface" "bar" {
     }
 }
 `
+
+func testAccInstanceConfig_associatePublic_defaultPrivate(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+  map_public_ip_on_launch = false
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-22b9a343" # us-west-2
+  instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.public_subnet.id}"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}`, rInt, rInt)
+}
+
+func testAccInstanceConfig_associatePublic_defaultPublic(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+  map_public_ip_on_launch = true
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-22b9a343" # us-west-2
+  instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.public_subnet.id}"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}`, rInt, rInt)
+}
+
+func testAccInstanceConfig_associatePublic_explicitPublic(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+  map_public_ip_on_launch = true
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-22b9a343" # us-west-2
+  instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.public_subnet.id}"
+  associate_public_ip_address = true
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}`, rInt, rInt)
+}
+
+func testAccInstanceConfig_associatePublic_explicitPrivate(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+  map_public_ip_on_launch = false
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-22b9a343" # us-west-2
+  instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.public_subnet.id}"
+  associate_public_ip_address = false
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}`, rInt, rInt)
+}
+
+func testAccInstanceConfig_associatePublic_overridePublic(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+  map_public_ip_on_launch = false
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-22b9a343" # us-west-2
+  instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.public_subnet.id}"
+  associate_public_ip_address = true
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}`, rInt, rInt)
+}
+
+func testAccInstanceConfig_associatePublic_overridePrivate(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+  map_public_ip_on_launch = true
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-22b9a343" # us-west-2
+  instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.public_subnet.id}"
+  associate_public_ip_address = false
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}`, rInt, rInt)
+}

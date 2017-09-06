@@ -14,6 +14,47 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestALBListenerARNFromRuleARN(t *testing.T) {
+	cases := []struct {
+		name     string
+		arn      string
+		expected string
+	}{
+		{
+			name:     "valid listener rule arn",
+			arn:      "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener-rule/app/name/0123456789abcdef/abcdef0123456789/456789abcedf1234",
+			expected: "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789",
+		},
+		{
+			name:     "listener arn",
+			arn:      "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789",
+			expected: "",
+		},
+		{
+			name:     "some other arn",
+			arn:      "arn:aws:elasticloadbalancing:us-east-1:123456:targetgroup/my-targets/73e2d6bc24d8a067",
+			expected: "",
+		},
+		{
+			name:     "not an arn",
+			arn:      "blah blah blah",
+			expected: "",
+		},
+		{
+			name:     "empty arn",
+			arn:      "",
+			expected: "",
+		},
+	}
+
+	for _, tc := range cases {
+		actual := albListenerARNFromRuleARN(tc.arn)
+		if actual != tc.expected {
+			t.Fatalf("incorrect arn returned: %q\nExpected: %s\n     Got: %s", tc.name, tc.expected, actual)
+		}
+	}
+}
+
 func TestAccAWSALBListenerRule_basic(t *testing.T) {
 	var conf elbv2.Rule
 	albName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
@@ -30,14 +71,15 @@ func TestAccAWSALBListenerRule_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSALBListenerRuleExists("aws_alb_listener_rule.static", &conf),
 					resource.TestCheckResourceAttrSet("aws_alb_listener_rule.static", "arn"),
+					resource.TestCheckResourceAttrSet("aws_alb_listener_rule.static", "listener_arn"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "priority", "100"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.#", "1"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.type", "forward"),
 					resource.TestCheckResourceAttrSet("aws_alb_listener_rule.static", "action.0.target_group_arn"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.#", "1"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.0.field", "path-pattern"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.0.values.#", "1"),
-					resource.TestCheckResourceAttrSet("aws_alb_listener_rule.static", "condition.0.values.0"),
+					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.1366281676.field", "path-pattern"),
+					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.1366281676.values.#", "1"),
+					resource.TestCheckResourceAttrSet("aws_alb_listener_rule.static", "condition.1366281676.values.0"),
 				),
 			},
 		},

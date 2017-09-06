@@ -48,6 +48,33 @@ func TestValidateEcrRepositoryName(t *testing.T) {
 	}
 }
 
+func TestValidateCloudWatchDashboardName(t *testing.T) {
+	validNames := []string{
+		"HelloWorl_d",
+		"hello-world",
+		"hello-world-012345",
+	}
+	for _, v := range validNames {
+		_, errors := validateCloudWatchDashboardName(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid CloudWatch dashboard name: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"special@character",
+		"slash/in-the-middle",
+		"dot.in-the-middle",
+		strings.Repeat("W", 256), // > 255
+	}
+	for _, v := range invalidNames {
+		_, errors := validateCloudWatchDashboardName(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid CloudWatch dashboard name", v)
+		}
+	}
+}
+
 func TestValidateCloudWatchEventRuleName(t *testing.T) {
 	validNames := []string{
 		"HelloWorl_d",
@@ -1226,6 +1253,7 @@ func TestValidateRoute53RecordType(t *testing.T) {
 		"SPF",
 		"SRV",
 		"NS",
+		"CAA",
 	}
 
 	invalidTypes := []string{

@@ -18,6 +18,7 @@ func TestAccAWSCloudTrail(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Trail": {
 			"basic":         testAccAWSCloudTrail_basic,
+			"cloudwatch":    testAccAWSCloudTrail_cloudwatch,
 			"enableLogging": testAccAWSCloudTrail_enable_logging,
 			"isMultiRegion": testAccAWSCloudTrail_is_multi_region,
 			"logValidation": testAccAWSCloudTrail_logValidation,
@@ -65,6 +66,35 @@ func testAccAWSCloudTrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "include_global_service_events", "false"),
 					testAccCheckCloudTrailLogValidationEnabled("aws_cloudtrail.foobar", false, &trail),
 					testAccCheckCloudTrailKmsKeyIdEquals("aws_cloudtrail.foobar", "", &trail),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSCloudTrail_cloudwatch(t *testing.T) {
+	var trail cloudtrail.Trail
+	randInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudTrailConfigCloudWatch(randInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudTrailExists("aws_cloudtrail.test", &trail),
+					resource.TestCheckResourceAttrSet("aws_cloudtrail.test", "cloud_watch_logs_group_arn"),
+					resource.TestCheckResourceAttrSet("aws_cloudtrail.test", "cloud_watch_logs_role_arn"),
+				),
+			},
+			{
+				Config: testAccAWSCloudTrailConfigCloudWatchModified(randInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudTrailExists("aws_cloudtrail.test", &trail),
+					resource.TestCheckResourceAttrSet("aws_cloudtrail.test", "cloud_watch_logs_group_arn"),
+					resource.TestCheckResourceAttrSet("aws_cloudtrail.test", "cloud_watch_logs_role_arn"),
 				),
 			},
 		},
@@ -499,6 +529,185 @@ resource "aws_s3_bucket" "foo" {
 POLICY
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
+}
+
+func testAccAWSCloudTrailConfigCloudWatch(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudtrail" "test" {
+  name = "tf-acc-test-%d"
+  s3_bucket_name = "${aws_s3_bucket.test.id}"
+
+  cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.test.arn}"
+  cloud_watch_logs_role_arn = "${aws_iam_role.test.arn}"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = "tf-test-trail-%d"
+  force_destroy = true
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "tf-acc-test-cloudtrail-%d"
+}
+
+resource "aws_iam_role" "test" {
+  name = "tf-acc-test-cloudtrail-%d"
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = "tf-acc-test-cloudtrail-%d"
+  role = "${aws_iam_role.test.id}"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailCreateLogStream",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "${aws_cloudwatch_log_group.test.arn}"
+    }
+  ]
+}
+POLICY
+}
+`, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
+}
+
+func testAccAWSCloudTrailConfigCloudWatchModified(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudtrail" "test" {
+  name = "tf-acc-test-%d"
+  s3_bucket_name = "${aws_s3_bucket.test.id}"
+
+  cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.second.arn}"
+  cloud_watch_logs_role_arn = "${aws_iam_role.test.arn}"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = "tf-test-trail-%d"
+  force_destroy = true
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "tf-acc-test-cloudtrail-%d"
+}
+
+resource "aws_cloudwatch_log_group" "second" {
+  name = "tf-acc-test-cloudtrail-second-%d"
+}
+
+resource "aws_iam_role" "test" {
+  name = "tf-acc-test-cloudtrail-%d"
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = "tf-acc-test-cloudtrail-%d"
+  role = "${aws_iam_role.test.id}"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailCreateLogStream",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "${aws_cloudwatch_log_group.second.arn}"
+    }
+  ]
+}
+POLICY
+}
+
+`, randInt, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
 }
 
 func testAccAWSCloudTrailConfigMultiRegion(cloudTrailRandInt int) string {

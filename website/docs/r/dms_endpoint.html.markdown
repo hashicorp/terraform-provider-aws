@@ -62,6 +62,7 @@ The following arguments are supported:
 * `ssl_mode` - (Optional, Default: none) The SSL mode to use for the connection. Can be one of `none | require | verify-ca | verify-full`
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `username` - (Optional) The user name to be used to login to the endpoint database.
+* `service_access_role` (Optional) The Amazon Resource Name (ARN) used by the service access IAM role for dynamodb endpoints.
 
 ## Attributes Reference
 
