@@ -50,6 +50,7 @@ resource "aws_waf_web_acl" "waf_acl" {
 
     priority = 1
     rule_id  = "${aws_waf_rule.wafrule.id}"
+    type     = "REGULAR"
   }
 }
 ```
@@ -83,6 +84,7 @@ See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ActivatedRule.
 * `priority` - (Required) Specifies the order in which the rules in a WebACL are evaluated.
   Rules with a lower value are evaluated before rules with a higher value.
 * `rule_id` - (Required) ID of the associated [rule](/docs/providers/aws/r/waf_rule.html)
+* `type` - (Required) The rule type, either `REGULAR`, as defined by [Rule](http://docs.aws.amazon.com/waf/latest/APIReference/API_Rule.html), or `RATE_BASED`, as defined by [RateBasedRule](http://docs.aws.amazon.com/waf/latest/APIReference/API_RateBasedRule.html)
 
 ## Attributes Reference
 
