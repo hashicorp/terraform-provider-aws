@@ -68,10 +68,24 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 			"rate_key": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					value := v.(string)
+					if value != waf.RateKeyIp {
+						errors = append(errors, fmt.Errorf("%q must be only %s", k, waf.RateKeyIp))
+					}
+					return
+				},
 			},
 			"rate_limit": &schema.Schema{
 				Type:     schema.TypeInt,
 				Required: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					value := v.(int)
+					if value < 2000 {
+						errors = append(errors, fmt.Errorf("%q cannot be less than 2000", k))
+					}
+					return
+				},
 			},
 		},
 	}
@@ -86,6 +100,8 @@ func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{})
 			ChangeToken: token,
 			MetricName:  aws.String(d.Get("metric_name").(string)),
 			Name:        aws.String(d.Get("name").(string)),
+			RateKey:     aws.String(d.Get("rate_key").(string)),
+			RateLimit:   aws.Int64(int64(d.Get("rate_limit").(int))),
 		}
 
 		return conn.CreateRateBasedRule(params)
@@ -142,8 +158,9 @@ func resourceAwsWafRateBasedRuleUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChange("predicates") {
 		o, n := d.GetChange("predicates")
 		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
+		rateLimit := aws.Int64(int64(d.Get("rate_limit").(int)))
 
-		err := updateWafRateBasedRuleResource(d.Id(), oldP, newP, conn)
+		err := updateWafRateBasedRuleResource(d.Id(), oldP, newP, rateLimit, conn)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rule: %s", err)
 		}
@@ -158,7 +175,9 @@ func resourceAwsWafRateBasedRuleDelete(d *schema.ResourceData, meta interface{})
 	oldPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(oldPredicates) > 0 {
 		noPredicates := []interface{}{}
-		err := updateWafRateBasedRuleResource(d.Id(), oldPredicates, noPredicates, conn)
+		rateLimit := aws.Int64(int64(d.Get("rate_limit").(int)))
+
+		err := updateWafRateBasedRuleResource(d.Id(), oldPredicates, noPredicates, rateLimit, conn)
 		if err != nil {
 			return fmt.Errorf("Error updating WAF Rate Based Rule Predicates: %s", err)
 		}
@@ -180,13 +199,14 @@ func resourceAwsWafRateBasedRuleDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func updateWafRateBasedRuleResource(id string, oldP, newP []interface{}, conn *waf.WAF) error {
+func updateWafRateBasedRuleResource(id string, oldP, newP []interface{}, rateLimit *int64, conn *waf.WAF) error {
 	wr := newWafRetryer(conn, "global")
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRateBasedRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(id),
 			Updates:     diffWafRulePredicates(oldP, newP),
+			RateLimit:   rateLimit,
 		}
 
 		return conn.UpdateRateBasedRule(req)
