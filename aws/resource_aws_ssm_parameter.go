@@ -66,7 +66,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if len(resp.Parameters) == 0 {
-		log.Printf("[INFO] SSM Param %q not found", d.Id())
+		log.Printf("[WARN] SSM Param %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
