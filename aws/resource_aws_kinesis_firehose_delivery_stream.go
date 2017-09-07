@@ -133,6 +133,28 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 				},
 			},
 
+			"source_configuration": {
+				Type:     schema.TypeList,
+				ForceNew: true,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kinesis_stream_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
+
 			"destination": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -445,6 +467,16 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 	}
 }
 
+func createSourceConfig(source map[string]interface{}) *firehose.KinesisStreamSourceConfiguration {
+
+	configuration := &firehose.KinesisStreamSourceConfiguration{
+		KinesisStreamARN: aws.String(source["kinesis_stream_arn"].(string)),
+		RoleARN:          aws.String(source["role_arn"].(string)),
+	}
+
+	return configuration
+}
+
 func createS3Config(d *schema.ResourceData) *firehose.S3DestinationConfiguration {
 	s3 := d.Get("s3_configuration").([]interface{})[0].(map[string]interface{})
 
@@ -485,6 +517,16 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 
 	if _, ok := s3["cloudwatch_logging_options"]; ok {
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
+	}
+
+	return configuration
+}
+
+func updateSourceConfig(source map[string]interface{}) *firehose.KinesisStreamSourceConfiguration {
+
+	configuration := &firehose.KinesisStreamSourceConfiguration{
+		KinesisStreamARN: aws.String(source["kinesis_stream_arn"].(string)),
+		RoleARN:          aws.String(source["role_arn"].(string)),
 	}
 
 	return configuration
@@ -802,6 +844,14 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 
 	createInput := &firehose.CreateDeliveryStreamInput{
 		DeliveryStreamName: aws.String(sn),
+	}
+
+	if v, ok := d.GetOk("source_configuration"); ok {
+		sourceConfig := createSourceConfig(v.([]interface{})[0].(map[string]interface{}))
+		createInput.KinesisStreamSourceConfiguration = sourceConfig
+		createInput.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeKinesisStreamAsSource)
+	} else {
+		createInput.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeDirectPut)
 	}
 
 	if d.Get("destination").(string) == "extended_s3" {
