@@ -522,16 +522,6 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 	return configuration
 }
 
-func updateSourceConfig(source map[string]interface{}) *firehose.KinesisStreamSourceConfiguration {
-
-	configuration := &firehose.KinesisStreamSourceConfiguration{
-		KinesisStreamARN: aws.String(source["kinesis_stream_arn"].(string)),
-		RoleARN:          aws.String(source["role_arn"].(string)),
-	}
-
-	return configuration
-}
-
 func updateS3Config(d *schema.ResourceData) *firehose.S3DestinationUpdate {
 	s3 := d.Get("s3_configuration").([]interface{})[0].(map[string]interface{})
 
