@@ -20,7 +20,7 @@ func TestAccAWSRedshiftServiceAccount_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccCheckAwsRedshiftServiceAccountExplicitRegionConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_redshift_service_account.regional", "id", "210876761215"),
+					resource.TestCheckResourceAttr("data.aws_redshift_service_account.regional", "id", "307160386991"),
 				),
 			},
 		},
@@ -33,6 +33,6 @@ data "aws_redshift_service_account" "main" { }
 
 const testAccCheckAwsRedshiftServiceAccountExplicitRegionConfig = `
 data "aws_redshift_service_account" "regional" {
-	region = "eu-west-1"
+	region = "eu-west-2"
 }
 `
