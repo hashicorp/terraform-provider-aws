@@ -23,6 +23,7 @@ IMPROVEMENTS:
 * Add retries for AppScaling policies throttling exceptions [GH-1430]
 * resource/aws_ssm_patch_baseline: Add compliance level to patch approval rules [GH-1531]
 * resource/aws_ssm_activation: Export ssm activation activation_code [GH-1570]
+* resource/aws_network_interface: Added private_dns_name to network_interface [GH-1599]
 
 BUG FIXES:
 
