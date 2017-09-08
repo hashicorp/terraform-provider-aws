@@ -45,11 +45,6 @@ var (
 
 func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 	resourceSchema := map[string]*schema.Schema{
-		"id": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-
 		"auto_assign_elastic_ips": &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,

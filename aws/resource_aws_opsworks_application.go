@@ -21,10 +21,6 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 		Update: resourceAwsOpsworksApplicationUpdate,
 		Delete: resourceAwsOpsworksApplicationDelete,
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,

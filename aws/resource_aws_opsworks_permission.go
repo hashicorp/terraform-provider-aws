@@ -20,10 +20,6 @@ func resourceAwsOpsworksPermission() *schema.Resource {
 		Read:   resourceAwsOpsworksPermissionRead,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"allow_ssh": {
 				Type:     schema.TypeBool,
 				Computed: true,

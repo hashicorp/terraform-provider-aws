@@ -32,11 +32,6 @@ func resourceAwsOpsworksInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"agent_version": {
 				Type:     schema.TypeString,
 				Optional: true,

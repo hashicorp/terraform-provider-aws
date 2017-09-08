@@ -26,12 +26,6 @@ func dataSourceAwsSecurityGroup() *schema.Resource {
 			},
 			"filter": ec2CustomFiltersSchema(),
 
-			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,

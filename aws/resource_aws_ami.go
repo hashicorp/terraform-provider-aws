@@ -397,10 +397,6 @@ func resourceAwsAmiCommonSchema(computed bool) map[string]*schema.Schema {
 	}
 
 	return map[string]*schema.Schema{
-		"id": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
 		"image_location": {
 			Type:     schema.TypeString,
 			Optional: !computed,

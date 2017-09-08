@@ -20,10 +20,6 @@ func resourceAwsOpsworksRdsDbInstance() *schema.Resource {
 		Read:   resourceAwsOpsworksRdsDbInstanceRead,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"stack_id": {
 				Type:     schema.TypeString,
 				Required: true,

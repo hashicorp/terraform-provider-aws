@@ -14,11 +14,6 @@ func dataSourceAwsVpnGateway() *schema.Resource {
 		Read: dataSourceAwsVpnGatewayRead,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
