@@ -58,7 +58,7 @@ The following arguments are supported:
   based on the settings in the specified `ByteMatchSet`, `IPSet`, `SqlInjectionMatchSet`, `XssMatchSet`, or `SizeConstraintSet`.
   For example, if an IPSet includes the IP address `192.0.2.44`, AWS WAF will allow or block requests based on that IP address.
   If set to `true`, AWS WAF will allow, block, or count requests based on all IP addresses _except_ `192.0.2.44`.
-* `data_id` - (Optional) A unique identifier for a predicate in the rule, such as Byte Match Set ID or IPSet ID.
+* `data_id` - (Required) A unique identifier for a predicate in the rule, such as Byte Match Set ID or IPSet ID.
 * `type` - (Required) The type of predicate in a rule, such as `ByteMatchSet` or `IPSet`
 
 ## Remarks
