@@ -26,6 +26,7 @@ IMPROVEMENTS:
 * resource/aws_network_interface: Added private_dns_name to network_interface [GH-1599]
 * data-source/aws_redshift_service_account: updated with latest redshift service account ID's [GH-1614]
 * resource/aws_ssm_parameter: Refresh from state on 404 [GH-1436]
+* resource/aws_api_gateway_rest_api: Allow binary media types to be updated [GH-1600]
 
 BUG FIXES:
 
