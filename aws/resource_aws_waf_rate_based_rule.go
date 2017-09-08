@@ -40,7 +40,7 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 						},
 						"data_id": &schema.Schema{
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 								value := v.(string)
 								if len(value) > 128 {
@@ -68,13 +68,6 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 			"rate_key": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if value != waf.RateKeyIp {
-						errors = append(errors, fmt.Errorf("%q must be only %s", k, waf.RateKeyIp))
-					}
-					return
-				},
 			},
 			"rate_limit": &schema.Schema{
 				Type:     schema.TypeInt,
@@ -158,7 +151,7 @@ func resourceAwsWafRateBasedRuleUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChange("predicates") {
 		o, n := d.GetChange("predicates")
 		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
-		rateLimit := aws.Int64(int64(d.Get("rate_limit").(int)))
+		rateLimit := d.Get("rate_limit")
 
 		err := updateWafRateBasedRuleResource(d.Id(), oldP, newP, rateLimit, conn)
 		if err != nil {
@@ -175,7 +168,7 @@ func resourceAwsWafRateBasedRuleDelete(d *schema.ResourceData, meta interface{})
 	oldPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(oldPredicates) > 0 {
 		noPredicates := []interface{}{}
-		rateLimit := aws.Int64(int64(d.Get("rate_limit").(int)))
+		rateLimit := d.Get("rate_limit")
 
 		err := updateWafRateBasedRuleResource(d.Id(), oldPredicates, noPredicates, rateLimit, conn)
 		if err != nil {
@@ -199,14 +192,14 @@ func resourceAwsWafRateBasedRuleDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func updateWafRateBasedRuleResource(id string, oldP, newP []interface{}, rateLimit *int64, conn *waf.WAF) error {
+func updateWafRateBasedRuleResource(id string, oldP, newP []interface{}, rateLimit interface{}, conn *waf.WAF) error {
 	wr := newWafRetryer(conn, "global")
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRateBasedRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(id),
 			Updates:     diffWafRulePredicates(oldP, newP),
-			RateLimit:   rateLimit,
+			RateLimit:   aws.Int64(int64(rateLimit.(int))),
 		}
 
 		return conn.UpdateRateBasedRule(req)
