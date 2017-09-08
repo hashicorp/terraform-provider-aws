@@ -37,6 +37,7 @@ BUG FIXES:
 * resource/aws_alb: Cleanup ENIs after deleting ALB [GH-1427]
 * resource/aws_s3_bucket: Wrap s3 calls in retry to avoid race during creation [GH-891]
 * resource/aws_eip: Remove from state on deletion [GH-1551]
+* resource/aws_security_group: Adding second scenario where IPv6 is not supported [GH-880]
 
 ## 0.1.4 (August 08, 2017)
 
