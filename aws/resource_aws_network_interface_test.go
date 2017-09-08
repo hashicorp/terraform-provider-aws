@@ -27,6 +27,8 @@ func TestAccAWSENI_basic(t *testing.T) {
 					testAccCheckAWSENIAttributes(&conf),
 					resource.TestCheckResourceAttr(
 						"aws_network_interface.bar", "private_ips.#", "1"),
+					resource.TestCheckResourceAttrSet(
+						"aws_network_interface.bar", "private_dns_name"),
 					resource.TestCheckResourceAttr(
 						"aws_network_interface.bar", "tags.Name", "bar_interface"),
 					resource.TestCheckResourceAttr(
@@ -205,6 +207,10 @@ func testAccCheckAWSENIAttributes(conf *ec2.NetworkInterface) resource.TestCheck
 			return fmt.Errorf("expected private ip to be 172.16.10.100, but was %s", *conf.PrivateIpAddress)
 		}
 
+		if *conf.PrivateDnsName != "ip-172-16-10-100.us-west-2.compute.internal" {
+			return fmt.Errorf("expected private dns name to be ip-172-16-10-100.us-west-2.compute.internal, but was %s", *conf.PrivateDnsName)
+		}
+
 		if *conf.SourceDestCheck != true {
 			return fmt.Errorf("expected source_dest_check to be true, but was %t", *conf.SourceDestCheck)
 		}
@@ -238,6 +244,10 @@ func testAccCheckAWSENIAttributesWithAttachment(conf *ec2.NetworkInterface) reso
 
 		if *conf.PrivateIpAddress != "172.16.10.100" {
 			return fmt.Errorf("expected private ip to be 172.16.10.100, but was %s", *conf.PrivateIpAddress)
+		}
+
+		if *conf.PrivateDnsName != "ip-172-16-10-100.us-west-2.compute.internal" {
+			return fmt.Errorf("expected private dns name to be ip-172-16-10-100.us-west-2.compute.internal, but was %s", *conf.PrivateDnsName)
 		}
 
 		return nil
@@ -290,7 +300,8 @@ func testAccCheckAWSENIMakeExternalAttachment(n string, conf *ec2.NetworkInterfa
 
 const testAccAWSENIConfig = `
 resource "aws_vpc" "foo" {
-    cidr_block = "172.16.0.0/16"
+	cidr_block = "172.16.0.0/16"
+	enable_dns_hostnames = true
 		tags {
 			Name = "testAccAWSENIConfig"
 		}
@@ -328,7 +339,8 @@ resource "aws_network_interface" "bar" {
 
 const testAccAWSENIConfigUpdatedDescription = `
 resource "aws_vpc" "foo" {
-    cidr_block = "172.16.0.0/16"
+	cidr_block = "172.16.0.0/16"
+	enable_dns_hostnames = true
 		tags {
 			Name = "testAccAWSENIConfigUpdatedDescription"
 		}
@@ -366,7 +378,8 @@ resource "aws_network_interface" "bar" {
 
 const testAccAWSENIConfigWithSourceDestCheck = `
 resource "aws_vpc" "foo" {
-    cidr_block = "172.16.0.0/16"
+	cidr_block = "172.16.0.0/16"
+	enable_dns_hostnames = true
 		tags {
 			Name = "testAccAWSENIConfigWithSourceDestCheck"
 		}
@@ -387,7 +400,8 @@ resource "aws_network_interface" "bar" {
 
 const testAccAWSENIConfigWithNoPrivateIPs = `
 resource "aws_vpc" "foo" {
-    cidr_block = "172.16.0.0/16"
+	cidr_block = "172.16.0.0/16"
+	enable_dns_hostnames = true
 		tags {
 			Name = "testAccAWSENIConfigWithNoPrivateIPs"
 		}
@@ -407,7 +421,8 @@ resource "aws_network_interface" "bar" {
 
 const testAccAWSENIConfigWithAttachment = `
 resource "aws_vpc" "foo" {
-    cidr_block = "172.16.0.0/16"
+	cidr_block = "172.16.0.0/16"
+	enable_dns_hostnames = true
         tags {
             Name = "tf-eni-test"
         }
@@ -464,7 +479,8 @@ resource "aws_network_interface" "bar" {
 
 const testAccAWSENIConfigExternalAttachment = `
 resource "aws_vpc" "foo" {
-    cidr_block = "172.16.0.0/16"
+	cidr_block = "172.16.0.0/16"
+	enable_dns_hostnames = true
         tags {
             Name = "tf-eni-test"
         }
