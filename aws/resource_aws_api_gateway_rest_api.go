@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -176,20 +175,18 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 		// Remove every binary media types. Simpler to remove and add new ones,
 		// since there are no replacings.
 		for _, v := range old {
-			m := v.(string)
 			operations = append(operations, &apigateway.PatchOperation{
 				Op:   aws.String("remove"),
-				Path: aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(m, "/", "~1", -1))),
+				Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJsonPointer(v.(string)))),
 			})
 		}
 
 		// Handle additions
 		if len(new) > 0 {
 			for _, v := range new {
-				m := v.(string)
 				operations = append(operations, &apigateway.PatchOperation{
 					Op:   aws.String("add"),
-					Path: aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(m, "/", "~1", -1))),
+					Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJsonPointer(v.(string)))),
 				})
 			}
 		}
