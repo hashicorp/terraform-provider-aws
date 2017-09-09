@@ -1,36 +1,38 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_alb_listener"
-sidebar_current: "docs-aws-resource-alb-listener"
+page_title: "AWS: aws_lb_listener"
+sidebar_current: "docs-aws-resource-elbv2-listener"
 description: |-
-  Provides an Application Load Balancer Listener resource.
+  Provides a Load Balancer Listener resource.
 ---
 
-# aws\_alb\_listener
+# aws_lb_listener
 
-Provides an Application Load Balancer Listener resource.
+Provides a Load Balancer Listener resource.
+
+~> **Note:** `aws_alb_listener` is known as `aws_lb_listener`. The functionality is identical.
 
 ## Example Usage
 
 ```hcl
 # Create a new load balancer
-resource "aws_alb" "front_end" {
+resource "aws_lb" "front_end" {
   # ...
 }
 
-resource "aws_alb_target_group" "front_end" {
+resource "aws_lb_target_group" "front_end" {
   # ...
 }
 
-resource "aws_alb_listener" "front_end" {
-  load_balancer_arn = "${aws_alb.front_end.arn}"
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = "${aws_lb.front_end.arn}"
   port              = "443"
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2015-05"
   certificate_arn   = "arn:aws:iam::187416307283:server-certificate/test_cert_rab3wuqwgja25ct3n4jdj2tzu4"
 
   default_action {
-    target_group_arn = "${aws_alb_target_group.front_end.arn}"
+    target_group_arn = "${aws_lb_target_group.front_end.arn}"
     type             = "forward"
   }
 }
@@ -64,5 +66,5 @@ The following attributes are exported in addition to the arguments listed above:
 Listeners can be imported using their ARN, e.g.
 
 ```
-$ terraform import aws_alb_listener.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener/app/front-end-alb/8e4497da625e2d8a/9ab28ade35828f96
+$ terraform import aws_lb_listener.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener/app/front-end-alb/8e4497da625e2d8a/9ab28ade35828f96
 ```

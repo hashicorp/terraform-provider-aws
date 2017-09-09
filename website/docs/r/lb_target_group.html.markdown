@@ -1,22 +1,22 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_alb_target_group"
-sidebar_current: "docs-aws-resource-alb-target-group"
+page_title: "AWS: aws_lb_target_group"
+sidebar_current: "docs-aws-resource-elbv2-target-group"
 description: |-
-  Provides a Target Group resource for use with Application Load
-  Balancers.
+  Provides a Target Group resource for use with Load Balancers.
 ---
 
-# aws\_alb\_target\_group
+# aws_lb_target_group
 
-Provides a Target Group resource for use with Application Load Balancer
-resources.
+Provides a Target Group resource for use with Load Balancer resources.
+
+~> **Note:** `aws_alb_target_group` is know as `aws_lb_target_group`. The functionality is identical.
 
 ## Example Usage
 
 ```hcl
-resource "aws_alb_target_group" "test" {
-  name     = "tf-example-alb-tg"
+resource "aws_lb_target_group" "test" {
+  name     = "tf-example-lb-tg"
   port     = 80
   protocol = "HTTP"
   vpc_id   = "${aws_vpc.main.id}"
@@ -71,5 +71,5 @@ The following attributes are exported in addition to the arguments listed above:
 Target Groups can be imported using their ARN, e.g.
 
 ```
-$ terraform import aws_alb_target_group.app_front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314
+$ terraform import aws_lb_target_group.app_front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314
 ```
