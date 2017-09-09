@@ -150,7 +150,6 @@ func resourceAwsOpsworksRdsDbInstanceRead(d *schema.ResourceData, meta interface
 		if fmt.Sprintf("%s%s", d.Get("rds_db_instance_arn").(string), d.Get("stack_id").(string)) == id {
 			found = true
 			d.SetId(id)
-			d.Set("id", id)
 			d.Set("stack_id", instance.StackId)
 			d.Set("rds_db_instance_arn", instance.RdsDbInstanceArn)
 			d.Set("db_user", instance.DbUser)

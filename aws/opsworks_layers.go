@@ -276,7 +276,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, client *opsworks.OpsWo
 	}
 
 	layer := resp.Layers[0]
-	d.Set("id", layer.LayerId)
+	d.SetId(aws.StringValue(layer.LayerId))
 	d.Set("auto_assign_elastic_ips", layer.AutoAssignElasticIps)
 	d.Set("auto_assign_public_ips", layer.AutoAssignPublicIps)
 	d.Set("custom_instance_profile_arn", layer.CustomInstanceProfileArn)
@@ -365,7 +365,6 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, client *opsworks.Ops
 
 	layerId := *resp.LayerId
 	d.SetId(layerId)
-	d.Set("id", layerId)
 
 	loadBalancer := aws.String(d.Get("elastic_load_balancer").(string))
 	if loadBalancer != nil && *loadBalancer != "" {

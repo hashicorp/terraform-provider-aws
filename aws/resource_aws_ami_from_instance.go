@@ -55,9 +55,7 @@ func resourceAwsAmiFromInstanceCreate(d *schema.ResourceData, meta interface{}) 
 	id := *res.ImageId
 	d.SetId(id)
 	d.Partial(true) // make sure we record the id even if the rest of this gets interrupted
-	d.Set("id", id)
 	d.Set("manage_ebs_snapshots", true)
-	d.SetPartial("id")
 	d.SetPartial("manage_ebs_snapshots")
 	d.Partial(false)
 

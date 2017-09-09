@@ -341,7 +341,6 @@ func resourceAwsOpsworksApplicationCreate(d *schema.ResourceData, meta interface
 
 	appID := *resp.AppId
 	d.SetId(appID)
-	d.Set("id", appID)
 
 	return resourceAwsOpsworksApplicationRead(d, meta)
 }
