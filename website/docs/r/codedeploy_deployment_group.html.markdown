@@ -152,7 +152,7 @@ The following arguments are supported:
 * `deployment_config_name` - (Optional) The name of the group's deployment config. The default is "CodeDeployDefault.OneAtATime".
 * `ec2_tag_filter` - (Optional) Tag filters associated with the group. See the AWS docs for details.
 * `on_premises_instance_tag_filter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
-* `trigger_configuration` - (Optional) A Trigger Configuration block (documented below).
+* `trigger_configuration` - (Optional) Trigger Configurations for the deployment group (documented below).
 * `auto_rollback_configuration` - (Optional) The automatic rollback configuration associated with the deployment group (documented below).
 * `alarm_configuration` - (Optional) Information about alarms associated with the deployment group (documented below).
 * `deployment_style` - (Optional) Information about the type of deployment, either in-place or blue/green, you want to run and whether to route deployment traffic behind a load balancer (documented below).
@@ -179,7 +179,7 @@ You can configure a deployment group to automatically rollback when a deployment
  * `enabled` - (Optional) Indicates whether a defined automatic rollback configuration is currently enabled for this Deployment Group. If you enable automatic rollback, you must specify at least one event type.
  * `events` - (Optional) The event type or types that trigger a rollback. Supported types are `DEPLOYMENT_FAILURE` and `DEPLOYMENT_STOP_ON_ALARM`.
 
-_Only one `auto_rollback_ configuration` block is allowed_.
+_Only one `auto_rollback_ configuration` is allowed_.
 
 ### Alarm Configuration
 You can configure a deployment to stop when a **CloudWatch** alarm detects that a metric has fallen below or exceeded a defined threshold. `alarm_configuration` supports the following:
@@ -190,7 +190,7 @@ You can configure a deployment to stop when a **CloudWatch** alarm detects that 
     * `true`: The deployment will proceed even if alarm status information can't be retrieved.
     * `false`: The deployment will stop if alarm status information can't be retrieved.
 
-_Only one `alarm_configuration` block is allowed_.
+_Only one `alarm_configuration` is allowed_.
 
 ### Deployment Style
 You can configure the type of deployment, either in-place` or blue/green, you want to run and whether to route deployment traffic behind a load balancer. `deployment_style` supports the following:
@@ -199,20 +199,25 @@ You can configure the type of deployment, either in-place` or blue/green, you wa
 
 * `deployment_type` - (Optional) Indicates whether to run an in-place deployment or a blue/green deployment. Valid Values are `IN_PLACE` or `BLUE_GREEN`.
 
-_Only one `deployment_style` block is allowed_.
+_Only one `deployment_style` is allowed_.
 
 ### Load Balancer Info
-You can configure the **Elastic Load Balancer** to use in a deployment. `load_balancer_info` supports the following:
+You can configure the **Load Balancer** to use in a deployment. `load_balancer_info` supports the following:
 
-* `elb_info_list` - (Optional) The load balancers to use in a deployment.
+* `elb_info` - (Optional) The load balancer to use in a deployment.
+* `target_group_info` - (Optional) The target group to use in a deployment.
 
-_Only one `load_balancer_info` block is allowed_.
+_Only one `load_balancer_info` is supported per deployment group.
 
-`elb_info_list` is a list of `elb_info`. `elb_info` supports the following:
+`elb_info` supports the following:
 
 * `name` - (Optional) The name of the load balancer that will be used to route traffic from original instances to replacement instances in a blue/green deployment. For in-place deployments, the name of the load balancer that instances are deregistered from so they are not serving traffic during a deployment, and then re-registered with after the deployment completes.
 
-_Only one `elb_info` block is supported at this time._
+`target_group_info` supports the following:
+
+* `name` - (Optional) The name of the target group that instances in the original environment are deregistered from, and instances in the replacement environment registered with. For in-place deployments, the name of the target group that instances are deregistered from, so they are not serving traffic during a deployment, and then re-registered with after the deployment completes.
+
+_Only a single `elb_info` or `target_group_info` can be used in a deployment._
 
 ### Blue Green Deployment Configuration
 You can configure options for a blue/green deployment. `blue_green_deployment_config` supports the following:
@@ -223,7 +228,7 @@ You can configure options for a blue/green deployment. `blue_green_deployment_co
 
 * `terminate_blue_instances_on_deployment_success` - (Optional) Information about whether to terminate instances in the original fleet during a blue/green deployment (documented below).
 
-_Only one `blue_green_deployment_config` block is allowed_.
+_Only one `blue_green_deployment_config` is allowed_.
 
 You can configure how traffic is rerouted to instances in a replacement environment in a blue/green deployment. `deployment_ready_option` supports the following:
 

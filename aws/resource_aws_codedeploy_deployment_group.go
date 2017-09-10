@@ -180,7 +180,21 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 						"elb_info": &schema.Schema{
 							Type:     schema.TypeSet,
 							Optional: true,
-							Set:      elbInfoHash,
+							Set:      loadBalancerInfoHash,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": &schema.Schema{
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+
+						"target_group_info": &schema.Schema{
+							Type:     schema.TypeSet,
+							Optional: true,
+							Set:      loadBalancerInfoHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": &schema.Schema{
@@ -719,18 +733,32 @@ func buildLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
 		return nil
 	}
 
-	lbInfo := list[0].(map[string]interface{})
-	elbs := lbInfo["elb_info"].(*schema.Set).List()
+	loadBalancerInfo := &codedeploy.LoadBalancerInfo{}
 
-	loadBalancerInfo := &codedeploy.LoadBalancerInfo{
-		ElbInfoList: make([]*codedeploy.ELBInfo, 0, len(elbs)),
+	lbInfo := list[0].(map[string]interface{})
+
+	if attr, ok := lbInfo["elb_info"]; ok {
+		elbs := attr.(*schema.Set).List()
+		loadBalancerInfo.ElbInfoList = make([]*codedeploy.ELBInfo, 0, len(elbs))
+
+		for _, v := range elbs {
+			elb := v.(map[string]interface{})
+			loadBalancerInfo.ElbInfoList = append(loadBalancerInfo.ElbInfoList, &codedeploy.ELBInfo{
+				Name: aws.String(elb["name"].(string)),
+			})
+		}
 	}
 
-	for _, v := range elbs {
-		elb := v.(map[string]interface{})
-		loadBalancerInfo.ElbInfoList = append(loadBalancerInfo.ElbInfoList, &codedeploy.ELBInfo{
-			Name: aws.String(elb["name"].(string)),
-		})
+	if attr, ok := lbInfo["target_group_info"]; ok {
+		targetGroups := attr.(*schema.Set).List()
+		loadBalancerInfo.TargetGroupInfoList = make([]*codedeploy.TargetGroupInfo, 0, len(targetGroups))
+
+		for _, v := range targetGroups {
+			targetGroup := v.(map[string]interface{})
+			loadBalancerInfo.TargetGroupInfoList = append(loadBalancerInfo.TargetGroupInfoList, &codedeploy.TargetGroupInfo{
+				Name: aws.String(targetGroup["name"].(string)),
+			})
+		}
 	}
 
 	return loadBalancerInfo
@@ -900,8 +928,16 @@ func loadBalancerInfoToMap(loadBalancerInfo *codedeploy.LoadBalancerInfo) []map[
 		elbs = append(elbs, item)
 	}
 
+	targetGroups := make([]interface{}, 0, len(loadBalancerInfo.TargetGroupInfoList))
+	for _, targetGroup := range loadBalancerInfo.TargetGroupInfoList {
+		item := make(map[string]interface{})
+		item["name"] = *targetGroup.Name
+		targetGroups = append(targetGroups, item)
+	}
+
 	lbInfo := make(map[string]interface{})
-	lbInfo["elb_info"] = schema.NewSet(elbInfoHash, elbs)
+	lbInfo["elb_info"] = schema.NewSet(loadBalancerInfoHash, elbs)
+	lbInfo["target_group_info"] = schema.NewSet(loadBalancerInfoHash, targetGroups)
 	result = append(result, lbInfo)
 
 	return result
@@ -979,7 +1015,7 @@ func resourceAwsCodeDeployTriggerConfigHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
-func elbInfoHash(v interface{}) int {
+func loadBalancerInfoHash(v interface{}) int {
 	var buf bytes.Buffer
 
 	if v == nil {
