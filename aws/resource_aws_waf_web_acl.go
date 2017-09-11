@@ -66,7 +66,8 @@ func resourceAwsWafWebAcl() *schema.Resource {
 						},
 						"type": &schema.Schema{
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+							Default:  waf.WafRuleTypeRegular,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 								value := v.(string)
 								if value != waf.WafRuleTypeRegular && value != waf.WafRuleTypeRateBased {

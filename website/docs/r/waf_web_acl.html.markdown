@@ -84,7 +84,7 @@ See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ActivatedRule.
 * `priority` - (Required) Specifies the order in which the rules in a WebACL are evaluated.
   Rules with a lower value are evaluated before rules with a higher value.
 * `rule_id` - (Required) ID of the associated [rule](/docs/providers/aws/r/waf_rule.html)
-* `type` - (Required) The rule type, either `REGULAR`, as defined by [Rule](http://docs.aws.amazon.com/waf/latest/APIReference/API_Rule.html), or `RATE_BASED`, as defined by [RateBasedRule](http://docs.aws.amazon.com/waf/latest/APIReference/API_RateBasedRule.html)
+* `type` - (Optional) The rule type, either `REGULAR`, as defined by [Rule](http://docs.aws.amazon.com/waf/latest/APIReference/API_Rule.html), or `RATE_BASED`, as defined by [RateBasedRule](http://docs.aws.amazon.com/waf/latest/APIReference/API_RateBasedRule.html). The default is REGULAR. If you add a RATE_BASED rule, you need to set `type` as `RATE_BASED`.
 
 ## Attributes Reference
 
