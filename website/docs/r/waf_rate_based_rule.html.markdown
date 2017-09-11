@@ -1,14 +1,14 @@
 ---
 layout: "aws"
-page_title: "AWS: waf_rule"
-sidebar_current: "docs-aws-resource-waf-rule"
+page_title: "AWS: waf_rate_based_rule"
+sidebar_current: "docs-aws-resource-waf-rate-based-rule"
 description: |-
   Provides a AWS WAF rule resource.
 ---
 
-# aws\_waf\_rule
+# aws\_waf\_rate\_based\_rule
 
-Provides a WAF Rule Resource
+Provides a WAF Rate Based Rule Resource
 
 ## Example Usage
 
@@ -22,10 +22,13 @@ resource "aws_waf_ipset" "ipset" {
   }
 }
 
-resource "aws_waf_rule" "wafrule" {
+resource "aws_waf_rate_based_rule" "wafrule" {
   depends_on  = ["aws_waf_ipset.ipset"]
   name        = "tfWAFRule"
   metric_name = "tfWAFRule"
+
+  rate_key = "IP"
+  rate_limit = 2000
 
   predicates {
     data_id = "${aws_waf_ipset.ipset.id}"
@@ -41,6 +44,8 @@ The following arguments are supported:
 
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
 * `name` - (Required) The name or description of the rule.
+* `rate_key` - (Required) Valid value is IP.
+* `rate_limit` - (Required) The maximum number of requests, which have an identical value in the field specified by the RateKey, allowed in a five-minute period. Minimum value is 2000.
 * `predicates` - (Optional) One of ByteMatchSet, IPSet, SizeConstraintSet, SqlInjectionMatchSet, or XssMatchSet objects to include in a rule.
 
 ## Nested Blocks
