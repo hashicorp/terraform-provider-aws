@@ -34,7 +34,8 @@ resource "aws_instance" "foo" {
 }
 
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s"
+  name          = "test_document_association-%s"
+  document_type = "Command"
 
   content = <<DOC
   {
