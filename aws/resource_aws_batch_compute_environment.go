@@ -14,8 +14,6 @@ import (
 )
 
 var reComputeEnvironmentName = regexp.MustCompile(`^[A-Za-z0-9_]*$`)
-var reArnOfIamRole = regexp.MustCompile(`^arn:aws:iam::[0-9]{12}:role/.*$`)
-var reArnOfIamInstanceProfile = regexp.MustCompile(`^arn:aws:iam::[0-9]{12}:instance-profile/.*$`)
 
 func resourceAwsBatchComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
@@ -61,7 +59,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: isArnOfIamInstanceProfile,
+							ValidateFunc: validateArn,
 						},
 						"instance_type": {
 							Type:     schema.TypeSet,
@@ -87,7 +85,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: isArnOfIamRole,
+							ValidateFunc: validateArn,
 						},
 						"subnets": {
 							Type:     schema.TypeSet,
@@ -108,7 +106,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 			"service_role": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: isArnOfIamRole,
+				ValidateFunc: validateArn,
 			},
 			"state": {
 				Type:         schema.TypeString,
@@ -443,38 +441,6 @@ func isCorrentComputeEnvironmentName(i interface{}, k string) (s []string, es []
 	if !(reComputeEnvironmentName.MatchString(v) && len(v) <= 128) {
 		es = append(es, fmt.Errorf("computeEnvironmentName must be up to 128 letters (uppercase and lowercase), numbers, and underscores."))
 		return
-	}
-
-	return
-}
-
-func isArnOfIamRole(i interface{}, k string) (s []string, es []error) {
-	v, ok := i.(string)
-	if !ok {
-		es = append(es, fmt.Errorf("expected type of %s to be string", k))
-		return
-	}
-
-	if !reArnOfIamRole.MatchString(v) {
-		es = append(es, fmt.Errorf("expected arn of iam role, got %s", v))
-		return
-
-	}
-
-	return
-}
-
-func isArnOfIamInstanceProfile(i interface{}, k string) (s []string, es []error) {
-	v, ok := i.(string)
-	if !ok {
-		es = append(es, fmt.Errorf("expected type of %s to be string", k))
-		return
-	}
-
-	if !reArnOfIamInstanceProfile.MatchString(v) {
-		es = append(es, fmt.Errorf("expected arn of iam instance profile, got %s", v))
-		return
-
 	}
 
 	return

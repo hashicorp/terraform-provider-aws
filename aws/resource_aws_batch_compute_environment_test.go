@@ -237,35 +237,6 @@ func TestAccAWSBatchComputeEnvironment_createEc2WithBadComputeEnvironmentName2(t
 		},
 	})
 }
-
-func TestAccAWSBatchComputeEnvironment_createEc2WithBadIamInstanceProfileArn(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSBatchComputeEnvironmentConfigEC2WithBadIamInstanceProfileArn,
-				ExpectError: regexp.MustCompile(`expected arn of iam instance profile, got bad_iam_instance_profile_arn`),
-			},
-		},
-	})
-}
-
-func TestAccAWSBatchComputeEnvironment_createEc2WithBadIamRoleArn(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSBatchComputeEnvironmentConfigEC2WithBadIamRoleArn,
-				ExpectError: regexp.MustCompile(`expected arn of iam role, got bad_iam_role_arn`),
-			},
-		},
-	})
-}
-
 func testAccCheckBatchComputeEnvironmentDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).batchconn
 
@@ -692,52 +663,6 @@ resource "aws_batch_compute_environment" "ec2" {
     type = "EC2"
   }
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-}
-`
-
-const testAccAWSBatchComputeEnvironmentConfigEC2WithBadIamInstanceProfileArn = testAccAWSBatchComputeEnvironmentConfigBase + `
-resource "aws_batch_compute_environment" "ec2" {
-  compute_environment_name = "sample"
-  compute_resources {
-    instance_role = "bad_iam_instance_profile_arn"
-    instance_type = [
-      "c4.large",
-    ]
-    max_vcpus = 16
-    min_vcpus = 0
-    security_group_ids = [
-      "${aws_security_group.test_acc.id}"
-    ]
-    subnets = [
-      "${aws_subnet.test_acc.id}"
-    ]
-    type = "EC2"
-  }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-}
-`
-
-const testAccAWSBatchComputeEnvironmentConfigEC2WithBadIamRoleArn = testAccAWSBatchComputeEnvironmentConfigBase + `
-resource "aws_batch_compute_environment" "ec2" {
-  compute_environment_name = "sample"
-  compute_resources {
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
-    instance_type = [
-      "c4.large",
-    ]
-    max_vcpus = 16
-    min_vcpus = 0
-    security_group_ids = [
-      "${aws_security_group.test_acc.id}"
-    ]
-    subnets = [
-      "${aws_subnet.test_acc.id}"
-    ]
-    type = "EC2"
-  }
-  service_role = "bad_iam_role_arn"
   type = "MANAGED"
 }
 `
