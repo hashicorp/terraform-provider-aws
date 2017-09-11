@@ -1,5 +1,9 @@
 ## 1.0.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_waf_rate_based_rule` [GH-1606]
+
 IMPROVEMENTS:
 
 * resource/aws_instance: New `user_data_base64` attribute that allows non-UTF8 data (such as gzip) to be assigned to user-data without corruption [GH-850]
@@ -27,6 +31,8 @@ IMPROVEMENTS:
 * data-source/aws_redshift_service_account: updated with latest redshift service account ID's [GH-1614]
 * resource/aws_ssm_parameter: Refresh from state on 404 [GH-1436]
 * resource/aws_api_gateway_rest_api: Allow binary media types to be updated [GH-1600]
+* resource/aws_waf_rule: Make `predicates`' `data_id` required (it always was on the API's side, it's just reflected in the schema) [GH-1606]
+* resource/aws_waf_web_acl: Introduce new `type` field in `rules` to allow referencing `RATE_BASED` type [GH-1606]
 
 BUG FIXES:
 
