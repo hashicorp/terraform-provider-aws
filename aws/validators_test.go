@@ -2399,3 +2399,26 @@ func TestValidateSsmParameterType(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateBatchComputeEnvironmentName(t *testing.T) {
+	validNames := []string{
+		strings.Repeat("W", 128), // <= 128
+	}
+	for _, v := range validNames {
+		_, errors := validateBatchComputeEnvironmentName(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Batch compute environment name: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"s@mple",
+		strings.Repeat("W", 129), // >= 129
+	}
+	for _, v := range invalidNames {
+		_, errors := validateBatchComputeEnvironmentName(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be a invalid Batch compute environment name: %q", v, errors)
+		}
+	}
+}
