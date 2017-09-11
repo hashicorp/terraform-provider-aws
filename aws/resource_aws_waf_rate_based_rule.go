@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsWafRule() *schema.Resource {
+func resourceAwsWafRateBasedRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRuleCreate,
-		Read:   resourceAwsWafRuleRead,
-		Update: resourceAwsWafRuleUpdate,
-		Delete: resourceAwsWafRuleDelete,
+		Create: resourceAwsWafRateBasedRuleCreate,
+		Read:   resourceAwsWafRateBasedRuleRead,
+		Update: resourceAwsWafRateBasedRuleUpdate,
+		Delete: resourceAwsWafRateBasedRuleDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -65,42 +65,59 @@ func resourceAwsWafRule() *schema.Resource {
 					},
 				},
 			},
+			"rate_key": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"rate_limit": &schema.Schema{
+				Type:     schema.TypeInt,
+				Required: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					value := v.(int)
+					if value < 2000 {
+						errors = append(errors, fmt.Errorf("%q cannot be less than 2000", k))
+					}
+					return
+				},
+			},
 		},
 	}
 }
 
-func resourceAwsWafRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
 
 	wr := newWafRetryer(conn, "global")
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		params := &waf.CreateRuleInput{
+		params := &waf.CreateRateBasedRuleInput{
 			ChangeToken: token,
 			MetricName:  aws.String(d.Get("metric_name").(string)),
 			Name:        aws.String(d.Get("name").(string)),
+			RateKey:     aws.String(d.Get("rate_key").(string)),
+			RateLimit:   aws.Int64(int64(d.Get("rate_limit").(int))),
 		}
 
-		return conn.CreateRule(params)
+		return conn.CreateRateBasedRule(params)
 	})
 	if err != nil {
 		return err
 	}
-	resp := out.(*waf.CreateRuleOutput)
+	resp := out.(*waf.CreateRateBasedRuleOutput)
 	d.SetId(*resp.Rule.RuleId)
-	return resourceAwsWafRuleUpdate(d, meta)
+	return resourceAwsWafRateBasedRuleUpdate(d, meta)
 }
 
-func resourceAwsWafRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsWafRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
 
-	params := &waf.GetRuleInput{
+	params := &waf.GetRateBasedRuleInput{
 		RuleId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetRule(params)
+	resp, err := conn.GetRateBasedRule(params)
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "WAFNonexistentItemException" {
-			log.Printf("[WARN] WAF Rule (%s) not found, error code (404)", d.Id())
+			log.Printf("[WARN] WAF Rate Based Rule (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -110,7 +127,7 @@ func resourceAwsWafRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 	var predicates []map[string]interface{}
 
-	for _, predicateSet := range resp.Rule.Predicates {
+	for _, predicateSet := range resp.Rule.MatchPredicates {
 		predicate := map[string]interface{}{
 			"negated": *predicateSet.Negated,
 			"type":    *predicateSet.Type,
@@ -122,104 +139,74 @@ func resourceAwsWafRuleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("predicates", predicates)
 	d.Set("name", resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
+	d.Set("rate_key", resp.Rule.RateKey)
+	d.Set("rate_limit", resp.Rule.RateLimit)
 
 	return nil
 }
 
-func resourceAwsWafRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsWafRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
 
 	if d.HasChange("predicates") {
 		o, n := d.GetChange("predicates")
 		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
+		rateLimit := d.Get("rate_limit")
 
-		err := updateWafRuleResource(d.Id(), oldP, newP, conn)
+		err := updateWafRateBasedRuleResource(d.Id(), oldP, newP, rateLimit, conn)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rule: %s", err)
 		}
 	}
 
-	return resourceAwsWafRuleRead(d, meta)
+	return resourceAwsWafRateBasedRuleRead(d, meta)
 }
 
-func resourceAwsWafRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsWafRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
 
 	oldPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(oldPredicates) > 0 {
 		noPredicates := []interface{}{}
-		err := updateWafRuleResource(d.Id(), oldPredicates, noPredicates, conn)
+		rateLimit := d.Get("rate_limit")
+
+		err := updateWafRateBasedRuleResource(d.Id(), oldPredicates, noPredicates, rateLimit, conn)
 		if err != nil {
-			return fmt.Errorf("Error updating WAF Rule Predicates: %s", err)
+			return fmt.Errorf("Error updating WAF Rate Based Rule Predicates: %s", err)
 		}
 	}
 
 	wr := newWafRetryer(conn, "global")
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		req := &waf.DeleteRuleInput{
+		req := &waf.DeleteRateBasedRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(d.Id()),
 		}
-		log.Printf("[INFO] Deleting WAF Rule")
-		return conn.DeleteRule(req)
+		log.Printf("[INFO] Deleting WAF Rate Based Rule")
+		return conn.DeleteRateBasedRule(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting WAF Rule: %s", err)
+		return fmt.Errorf("Error deleting WAF Rate Based Rule: %s", err)
 	}
 
 	return nil
 }
 
-func updateWafRuleResource(id string, oldP, newP []interface{}, conn *waf.WAF) error {
+func updateWafRateBasedRuleResource(id string, oldP, newP []interface{}, rateLimit interface{}, conn *waf.WAF) error {
 	wr := newWafRetryer(conn, "global")
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		req := &waf.UpdateRuleInput{
+		req := &waf.UpdateRateBasedRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(id),
 			Updates:     diffWafRulePredicates(oldP, newP),
+			RateLimit:   aws.Int64(int64(rateLimit.(int))),
 		}
 
-		return conn.UpdateRule(req)
+		return conn.UpdateRateBasedRule(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error Updating WAF Rule: %s", err)
+		return fmt.Errorf("Error Updating WAF Rate Based Rule: %s", err)
 	}
 
 	return nil
-}
-
-func diffWafRulePredicates(oldP, newP []interface{}) []*waf.RuleUpdate {
-	updates := make([]*waf.RuleUpdate, 0)
-
-	for _, op := range oldP {
-		predicate := op.(map[string]interface{})
-
-		if idx, contains := sliceContainsMap(newP, predicate); contains {
-			newP = append(newP[:idx], newP[idx+1:]...)
-			continue
-		}
-
-		updates = append(updates, &waf.RuleUpdate{
-			Action: aws.String(waf.ChangeActionDelete),
-			Predicate: &waf.Predicate{
-				Negated: aws.Bool(predicate["negated"].(bool)),
-				Type:    aws.String(predicate["type"].(string)),
-				DataId:  aws.String(predicate["data_id"].(string)),
-			},
-		})
-	}
-
-	for _, np := range newP {
-		predicate := np.(map[string]interface{})
-
-		updates = append(updates, &waf.RuleUpdate{
-			Action: aws.String(waf.ChangeActionInsert),
-			Predicate: &waf.Predicate{
-				Negated: aws.Bool(predicate["negated"].(bool)),
-				Type:    aws.String(predicate["type"].(string)),
-				DataId:  aws.String(predicate["data_id"].(string)),
-			},
-		})
-	}
-	return updates
 }
