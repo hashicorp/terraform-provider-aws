@@ -412,6 +412,41 @@ func TestAWSGetCredentials_shouldBeStatic(t *testing.T) {
 	}
 }
 
+func TestAWSGetCredentials_shouldECS(t *testing.T) {
+	resetEnv := unsetEnv(t)
+	defer resetEnv()
+
+	ts := awsMetadataApiMock(append(securityCredentialsEndpoints, instanceIdEndpoint, iamInfoEndpoint, containerCredentialsEndpoint))
+	defer ts()
+
+	os.Setenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI", "notempty") // relative uri is mocked by test server
+
+	// An empty config, no key supplied
+	cfg := Config{}
+
+	creds, err := GetCredentials(&cfg)
+	if err != nil {
+		t.Fatalf("Error gettings creds: %s", err)
+	}
+	if creds == nil {
+		t.Fatal("Expected a static creds provider to be returned")
+	}
+
+	v, err := creds.Get()
+	if err != nil {
+		t.Fatalf("Error gettings creds: %s", err)
+	}
+	if v.AccessKeyID != "someecskey" {
+		t.Fatalf("AccessKeyID mismatch, expected: (someecskey), got (%s)", v.AccessKeyID)
+	}
+	if v.SecretAccessKey != "someecssecret" {
+		t.Fatalf("SecretAccessKey mismatch, expected: (someecssecret), got (%s)", v.SecretAccessKey)
+	}
+	if v.SessionToken != "someecstoken" {
+		t.Fatalf("SessionToken mismatch, expected: (someecstoken), got (%s)", v.SessionToken)
+	}
+}
+
 // TestAWSGetCredentials_shouldIAM is designed to test the scenario of running Terraform
 // from an EC2 instance, without environment variables or manually supplied
 // credentials.
@@ -421,7 +456,7 @@ func TestAWSGetCredentials_shouldIAM(t *testing.T) {
 	defer resetEnv()
 
 	// capture the test server's close method, to call after the test returns
-	ts := awsMetadataApiMock(append(securityCredentialsEndpoints, instanceIdEndpoint, iamInfoEndpoint))
+	ts := awsMetadataApiMock(append(securityCredentialsEndpoints, instanceIdEndpoint, iamInfoEndpoint, containerCredentialsEndpoint))
 	defer ts()
 
 	// An empty config, no key supplied
@@ -713,7 +748,9 @@ func unsetEnv(t *testing.T) func() {
 	if err := os.Unsetenv("AWS_SHARED_CREDENTIALS_FILE"); err != nil {
 		t.Fatalf("Error unsetting env var AWS_SHARED_CREDENTIALS_FILE: %s", err)
 	}
-
+	if err := os.Unsetenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"); err != nil {
+		t.Fatalf("Error unsetting env var AWS_CONTAINER_CREDENTIALS_RELATIVE_URI %s", err)
+	}
 	return func() {
 		// re-set all the envs we unset above
 		if err := os.Setenv("AWS_ACCESS_KEY_ID", e.Key); err != nil {
@@ -730,6 +767,9 @@ func unsetEnv(t *testing.T) func() {
 		}
 		if err := os.Setenv("AWS_SHARED_CREDENTIALS_FILE", e.CredsFilename); err != nil {
 			t.Fatalf("Error resetting env var AWS_SHARED_CREDENTIALS_FILE: %s", err)
+		}
+		if err := os.Setenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI", e.EcsCredsUri); err != nil {
+			t.Fatalf("Error resetting env var AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: %s", err)
 		}
 	}
 }
@@ -793,6 +833,7 @@ func awsMetadataApiMock(endpoints []*endpoint) func() {
 	}))
 
 	os.Setenv("AWS_METADATA_URL", ts.URL+"/latest")
+	os.Setenv("AWS_CONTAINER_CREDENTIALS_ABSOLUTE_URI_OVERRIDE", ts.URL+"/v2/credentials/abcde")
 	return ts.Close
 }
 
@@ -816,12 +857,13 @@ func getEnv() *currentEnv {
 		Token:         os.Getenv("AWS_SESSION_TOKEN"),
 		Profile:       os.Getenv("AWS_PROFILE"),
 		CredsFilename: os.Getenv("AWS_SHARED_CREDENTIALS_FILE"),
+		EcsCredsUri:   os.Getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"),
 	}
 }
 
 // struct to preserve the current environment
 type currentEnv struct {
-	Key, Secret, Token, Profile, CredsFilename string
+	Key, Secret, Token, Profile, CredsFilename, EcsCredsUri string
 }
 
 type endpoint struct {
@@ -848,6 +890,11 @@ var securityCredentialsEndpoints = []*endpoint{
 var iamInfoEndpoint = &endpoint{
 	Uri:  "/latest/meta-data/iam/info",
 	Body: "{\"Code\": \"Success\",\"LastUpdated\": \"2016-03-17T12:27:32Z\",\"InstanceProfileArn\": \"arn:aws:iam::123456789013:instance-profile/my-instance-profile\",\"InstanceProfileId\": \"AIPAABCDEFGHIJKLMN123\"}",
+}
+
+var containerCredentialsEndpoint = &endpoint{
+	Uri:  "/v2/credentials/abcde",
+	Body: "{\"RoleArn\":\"someecsrolearn\",\"AccessKeyId\":\"someecskey\",\"SecretAccessKey\":\"someecssecret\",\"Token\":\"someecstoken\",\"Expiration\":\"2017-07-02T04:30:20Z\"}",
 }
 
 const iamResponse_GetUser_valid = `<GetUserResponse xmlns="https://iam.amazonaws.com/doc/2010-05-08/">
