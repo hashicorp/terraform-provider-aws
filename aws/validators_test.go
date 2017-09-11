@@ -2746,3 +2746,29 @@ func TestValidateDxConnectionBandWidth(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateCognitoUserPoolReplyEmailAddress(t *testing.T) {
+	validTypes := []string{
+		"foo@gmail.com",
+		"foo@bar",
+		"foo bar@gmail.com",
+		"foo+bar.baz@gmail.com",
+	}
+	for _, v := range validTypes {
+		_, errors := validateCognitoUserPoolReplyEmailAddress(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool Reply Email Address: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"foo",
+		"@bar.baz",
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateCognitoUserPoolReplyEmailAddress(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Cognito User Pool Reply Email Address", v)
+		}
+	}
+}

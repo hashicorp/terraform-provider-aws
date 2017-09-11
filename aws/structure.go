@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -2136,6 +2137,43 @@ func flattenCognitoIdentityProviders(ips []*cognitoidentity.Provider) []map[stri
 	}
 
 	return values
+}
+
+func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailConfigurationType) []map[string]interface{} {
+	m := make(map[string]interface{}, 0)
+
+	if s == nil {
+		return nil
+	}
+
+	if s.ReplyToEmailAddress != nil {
+		m["reply_to_email_address"] = *s.ReplyToEmailAddress
+	}
+
+	if s.SourceArn != nil {
+		m["source_arn"] = *s.SourceArn
+	}
+
+	if len(m) > 0 {
+		return []map[string]interface{}{m}
+	}
+
+	return []map[string]interface{}{}
+}
+
+func flattenCognitoUserPoolSmsConfiguration(s *cognitoidentityprovider.SmsConfigurationType) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if s == nil {
+		return nil
+	}
+
+	if s.ExternalId != nil {
+		m["external_id"] = *s.ExternalId
+	}
+	m["sns_caller_arn"] = *s.SnsCallerArn
+
+	return []map[string]interface{}{m}
 }
 
 func buildLambdaInvokeArn(lambdaArn, region string) string {

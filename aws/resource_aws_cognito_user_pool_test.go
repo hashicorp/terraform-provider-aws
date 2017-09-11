@@ -25,7 +25,7 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "name", name),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "name", "terraform-test-pool-"+name),
 				),
 			},
 		},
@@ -94,6 +94,31 @@ func TestAccAWSCognitoUserPool_withSmsVerificationMessage(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
+	name := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_basic(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_configuration.0.reply_to_email_address", "foo.bar@baz"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPool_withTags(t *testing.T) {
 	name := acctest.RandString(5)
 
@@ -122,10 +147,6 @@ func TestAccAWSCognitoUserPool_withTags(t *testing.T) {
 
 //func TestAccAWSCognitoUserPool_attributes(t *testing.T) {
 //	name := acctest.RandString(5)
-//	subject := acctest.RandString(10)
-//	message := fmt.Sprintf("%s {####}", acctest.RandString(10))
-//	authenticationMessage := fmt.Sprintf("%s {####}", acctest.RandString(10))
-//	verificationMessage := fmt.Sprintf("%s {####}", acctest.RandString(10))
 //
 //	resource.Test(t, resource.TestCase{
 //		PreCheck:     func() { testAccPreCheck(t) },
@@ -133,26 +154,23 @@ func TestAccAWSCognitoUserPool_withTags(t *testing.T) {
 //		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
 //		Steps: []resource.TestStep{
 //			{
-//				Config: testAccAWSCognitoUserPoolConfig_attributes(name, authenticationMessage, verificationMessage, subject, message),
+//				Config: testAccAWSCognitoUserPoolConfig_attributes(name),
 //				Check: resource.ComposeAggregateTestCheckFunc(
 //					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "3"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.0", "email"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.1", "phone_number"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.2", "preferred_username"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#", "2"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.0", "email"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.1", "phone_number"),
+//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "1"),
+//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.0", "preferred_username"),
+//					resource.TestCheckNoResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#"),
 //				),
 //			},
 //			{
-//				Config: testAccAWSCognitoUserPoolConfig_attributesUpdated(name, subject, message),
+//				Config: testAccAWSCognitoUserPoolConfig_attributesUpdated(name),
 //				Check: resource.ComposeAggregateTestCheckFunc(
 //					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "2"),
 //					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.0", "email"),
 //					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.1", "preferred_username"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#", "1"),
+//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#", "2"),
 //					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.0", "email"),
+//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.1", "phone_number"),
 //				),
 //			},
 //		},
@@ -214,7 +232,7 @@ func testAccCheckAWSCognitoUserPoolExists(name string) resource.TestCheckFunc {
 func testAccAWSCognitoUserPoolConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "pool" {
-  name = "%s"
+  name = "terraform-test-pool-%s"
 }`, name)
 }
 
@@ -249,6 +267,17 @@ resource "aws_cognito_user_pool" "pool" {
 }`, name)
 }
 
+func testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+  email_configuration {
+    reply_to_email_address = "foo.bar@baz"
+  }
+}`, name)
+}
+
 func testAccAWSCognitoUserPoolConfig_withTagsUpdated(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "pool" {
@@ -261,21 +290,21 @@ resource "aws_cognito_user_pool" "pool" {
 }`, name)
 }
 
-//func testAccAWSCognitoUserPoolConfig_attributes(name, authenticationMessage, verificationMessage, subject, message string) string {
+//func testAccAWSCognitoUserPoolConfig_attributes(name string) string {
 //	return fmt.Sprintf(`
-//	resource "aws_cognito_user_pool" "pool" {
-//		name = "terraform-test-pool-%s"
+//resource "aws_cognito_user_pool" "pool" {
+//  name = "terraform-test-pool-%s"
 //
-//		alias_attributes         = ["preferred_username"]
-//	}`, name, subject, message, authenticationMessage, verificationMessage)
+//  alias_attributes = ["preferred_username"]
+//}`, name)
 //}
 //
-//func testAccAWSCognitoUserPoolConfig_attributesUpdated(name, subject, message string) string {
+//func testAccAWSCognitoUserPoolConfig_attributesUpdated(name string) string {
 //	return fmt.Sprintf(`
-//	resource "aws_cognito_user_pool" "pool" {
-//		name = "terraform-test-pool-%s"
+//resource "aws_cognito_user_pool" "pool" {
+//  name = "terraform-test-pool-%s"
 //
-//		alias_attributes         = ["email", "preferred_username"]
-//		auto_verified_attributes = ["email", "phone_number"]
-//	}`, name, subject, message)
+//  alias_attributes         = ["email", "preferred_username"]
+//  auto_verified_attributes = ["email", "phone_number"]
+//}`, name)
 //}

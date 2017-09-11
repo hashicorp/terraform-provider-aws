@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/pkg/errors"
 )
 
 func resourceAwsCognitoUserPool() *schema.Resource {
@@ -18,12 +19,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 		Delete: resourceAwsCognitoUserPoolDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
 			"alias_attributes": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -43,6 +38,27 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				},
 			},
 
+			"email_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 0,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"reply_to_email_address": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateCognitoUserPoolReplyEmailAddress,
+						},
+						"source_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
+
 			"email_verification_subject": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -55,23 +71,50 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				ValidateFunc: validateCognitoUserPoolEmailVerificationMessage,
 			},
 
+			"mfa_configuration": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      cognitoidentityprovider.UserPoolMfaTypeOff,
+				ValidateFunc: validateCognitoUserPoolMfaConfiguration,
+			},
+
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+
 			"sms_authentication_message": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateCognitoUserPoolSmsAuthenticationMessage,
 			},
 
+			"sms_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 0,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"external_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+						"sns_caller_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
+
 			"sms_verification_message": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateCognitoUserPoolSmsVerificationMessage,
-			},
-
-			"mfa_configuration": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      cognitoidentityprovider.UserPoolMfaTypeOff,
-				ValidateFunc: validateCognitoUserPoolMfaConfiguration,
 			},
 
 			"tags": tagsSchema(),
@@ -94,6 +137,29 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		params.AutoVerifiedAttributes = expandStringList(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("email_configuration"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("email_configuration is <nil>")
+		}
+
+		if config != nil {
+			emailConfigurationType := &cognitoidentityprovider.EmailConfigurationType{}
+
+			if v, ok := config["reply_to_email_address"]; ok && v.(string) != "" {
+				emailConfigurationType.ReplyToEmailAddress = aws.String(v.(string))
+			}
+
+			if v, ok := config["source_arn"]; ok && v.(string) != "" {
+				emailConfigurationType.SourceArn = aws.String(v.(string))
+			}
+
+			params.EmailConfiguration = emailConfigurationType
+		}
+	}
+
 	if v, ok := d.GetOk("email_verification_subject"); ok {
 		params.EmailVerificationSubject = aws.String(v.(string))
 	}
@@ -108,6 +174,27 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 
 	if v, ok := d.GetOk("sms_authentication_message"); ok {
 		params.SmsAuthenticationMessage = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("sms_configuration"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("sms_configuration is <nil>")
+		}
+
+		if config != nil {
+			smsConfigurationType := &cognitoidentityprovider.SmsConfigurationType{
+				SnsCallerArn: aws.String(config["sns_caller_arn"].(string)),
+			}
+
+			if v, ok := config["external_id"]; ok && v.(string) != "" {
+				smsConfigurationType.ExternalId = aws.String(v.(string))
+			}
+
+			params.SmsConfiguration = smsConfigurationType
+		}
 	}
 
 	if v, ok := d.GetOk("sms_verification_message"); ok {
@@ -172,6 +259,14 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("sms_authentication_message", *resp.UserPool.SmsAuthenticationMessage)
 	}
 
+	if err := d.Set("email_configuration", flattenCognitoUserPoolEmailConfiguration(resp.UserPool.EmailConfiguration)); err != nil {
+		return errwrap.Wrapf("Failed setting email_configuration: {{err}}", err)
+	}
+
+	if err := d.Set("sms_configuration", flattenCognitoUserPoolSmsConfiguration(resp.UserPool.SmsConfiguration)); err != nil {
+		return errwrap.Wrapf("Failed setting sms_configuration: {{err}}", err)
+	}
+
 	d.Set("tags", tagsToMapGeneric(resp.UserPool.UserPoolTags))
 
 	return nil
@@ -190,6 +285,29 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		params.AutoVerifiedAttributes = expandStringList(d.Get("auto_verified_attributes").([]interface{}))
 	}
 
+	if d.HasChange("email_configuration") {
+		configs := d.Get("email_configuration").([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("email_configuration is <nil>")
+		}
+
+		if config != nil {
+			emailConfigurationType := &cognitoidentityprovider.EmailConfigurationType{}
+
+			if v, ok := config["reply_to_email_address"]; ok && v.(string) != "" {
+				emailConfigurationType.ReplyToEmailAddress = aws.String(v.(string))
+			}
+
+			if v, ok := config["source_arn"]; ok && v.(string) != "" {
+				emailConfigurationType.SourceArn = aws.String(v.(string))
+			}
+
+			params.EmailConfiguration = emailConfigurationType
+		}
+	}
+
 	if d.HasChange("email_verification_subject") {
 		params.EmailVerificationSubject = aws.String(d.Get("email_verification_subject").(string))
 	}
@@ -204,6 +322,27 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("sms_authentication_message") {
 		params.SmsAuthenticationMessage = aws.String(d.Get("sms_authentication_message").(string))
+	}
+
+	if d.HasChange("sms_configuration") {
+		configs := d.Get("sms_configuration").([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("sms_configuration is <nil>")
+		}
+
+		if config != nil {
+			smsConfigurationType := &cognitoidentityprovider.SmsConfigurationType{
+				SnsCallerArn: aws.String(config["sns_caller_arn"].(string)),
+			}
+
+			if v, ok := config["external_id"]; ok && v.(string) != "" {
+				smsConfigurationType.ExternalId = aws.String(v.(string))
+			}
+
+			params.SmsConfiguration = smsConfigurationType
+		}
 	}
 
 	if d.HasChange("sms_verification_message") {
