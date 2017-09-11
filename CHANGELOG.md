@@ -1,5 +1,9 @@
 ## 1.0.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_appautoscaling_policy: Nest step scaling policy fields, deprecate 1st level fields [GH-1620]
+
 FEATURES:
 
 * **New Resource:** `aws_waf_rate_based_rule` [GH-1606]
