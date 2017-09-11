@@ -6,6 +6,8 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* provider: Expand shared_credentials_file [GH-1511]
+* provider: Add support for Task Roles when running on ECS or CodeBuild [GH-1425]
 * resource/aws_instance: New `user_data_base64` attribute that allows non-UTF8 data (such as gzip) to be assigned to user-data without corruption [GH-850]
 * data-source/aws_vpc: Expose enable_dns_* in aws_vpc data_source [GH-1373]
 * resource/aws_directory_service_directory: Add support for `tags` [GH-1398]
@@ -21,7 +23,6 @@ IMPROVEMENTS:
 * resource/aws_codebuild_project: Allowed for BITBUCKET source type [GH-1468]
 * resource/aws_emr_cluster: Add `instance_group` parameter for EMR clusters [GH-1071]
 * resource/aws_alb_listener_rule: Populate `listener_arn` field [GH-1303]
-* provider: expand shared_credentials_file [GH-1511]
 * resource/aws_api_gateway_rest_api: Add a body property to API Gateway RestAPI for Swagger import support [GH-1197]
 * resource/aws_opsworks_stack: Add support for tags [GH-1523]
 * Add retries for AppScaling policies throttling exceptions [GH-1430]
