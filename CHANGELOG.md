@@ -40,6 +40,7 @@ IMPROVEMENTS:
 * resource/aws_waf_web_acl: Introduce new `type` field in `rules` to allow referencing `RATE_BASED` type [GH-1606]
 * resource/aws_ssm_association: Migrate the schema to use association_id [GH-1579]
 * resource/aws_ssm_document: Added name validation [GH-1638]
+* resource/aws_nat_gateway: Add tags support [GH-1625]
 
 BUG FIXES:
 
