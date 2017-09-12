@@ -39,6 +39,7 @@ IMPROVEMENTS:
 * resource/aws_waf_rule: Make `predicates`' `data_id` required (it always was on the API's side, it's just reflected in the schema) [GH-1606]
 * resource/aws_waf_web_acl: Introduce new `type` field in `rules` to allow referencing `RATE_BASED` type [GH-1606]
 * resource/aws_ssm_association: Migrate the schema to use association_id [GH-1579]
+* resource/aws_ssm_document: Added name validation [GH-1638]
 
 BUG FIXES:
 
