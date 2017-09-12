@@ -127,203 +127,203 @@ func testAccCheckNatGatewayExists(n string, ng *ec2.NatGateway) resource.TestChe
 
 const testAccNatGatewayConfig = `
 resource "aws_vpc" "vpc" {
-    cidr_block = "10.0.0.0/16"
-		tags {
-			Name = "testAccNatGatewayConfig"
-		}
+  cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "testAccNatGatewayConfig"
+  }
 }
 
 resource "aws_subnet" "private" {
-    vpc_id = "${aws_vpc.vpc.id}"
-    cidr_block = "10.0.1.0/24"
-    map_public_ip_on_launch = false
+  vpc_id = "${aws_vpc.vpc.id}"
+  cidr_block = "10.0.1.0/24"
+  map_public_ip_on_launch = false
 }
 
 resource "aws_subnet" "public" {
-    vpc_id = "${aws_vpc.vpc.id}"
-    cidr_block = "10.0.2.0/24"
-    map_public_ip_on_launch = true
+  vpc_id = "${aws_vpc.vpc.id}"
+  cidr_block = "10.0.2.0/24"
+  map_public_ip_on_launch = true
 }
 
 resource "aws_internet_gateway" "gw" {
-    vpc_id = "${aws_vpc.vpc.id}"
+  vpc_id = "${aws_vpc.vpc.id}"
 }
 
 resource "aws_eip" "nat_gateway" {
-    vpc = true
+  vpc = true
 }
 
 // Actual SUT
 resource "aws_nat_gateway" "gateway" {
-    allocation_id = "${aws_eip.nat_gateway.id}"
-    subnet_id = "${aws_subnet.public.id}"
+  allocation_id = "${aws_eip.nat_gateway.id}"
+  subnet_id = "${aws_subnet.public.id}"
 
-    depends_on = ["aws_internet_gateway.gw"]
+  depends_on = ["aws_internet_gateway.gw"]
 }
 
 resource "aws_route_table" "private" {
-    vpc_id = "${aws_vpc.vpc.id}"
+  vpc_id = "${aws_vpc.vpc.id}"
 
-    route {
-        cidr_block = "0.0.0.0/0"
-        nat_gateway_id = "${aws_nat_gateway.gateway.id}"
-    }
+  route {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = "${aws_nat_gateway.gateway.id}"
+  }
 }
 
 resource "aws_route_table_association" "private" {
-    subnet_id = "${aws_subnet.private.id}"
-    route_table_id = "${aws_route_table.private.id}"
+  subnet_id = "${aws_subnet.private.id}"
+  route_table_id = "${aws_route_table.private.id}"
 }
 
 resource "aws_route_table" "public" {
-    vpc_id = "${aws_vpc.vpc.id}"
+  vpc_id = "${aws_vpc.vpc.id}"
 
-    route {
-        cidr_block = "0.0.0.0/0"
-        gateway_id = "${aws_internet_gateway.gw.id}"
-    }
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.gw.id}"
+  }
 }
 
 resource "aws_route_table_association" "public" {
-    subnet_id = "${aws_subnet.public.id}"
-    route_table_id = "${aws_route_table.public.id}"
+  subnet_id = "${aws_subnet.public.id}"
+  route_table_id = "${aws_route_table.public.id}"
 }
 `
 
 const testAccNatGatewayConfigTags = `
 resource "aws_vpc" "vpc" {
-    cidr_block = "10.0.0.0/16"
-		tags {
-			Name = "testAccNatGatewayConfig"
-		}
+  cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "testAccNatGatewayConfig"
+  }
 }
 
 resource "aws_subnet" "private" {
-    vpc_id = "${aws_vpc.vpc.id}"
-    cidr_block = "10.0.1.0/24"
-    map_public_ip_on_launch = false
+  vpc_id = "${aws_vpc.vpc.id}"
+  cidr_block = "10.0.1.0/24"
+  map_public_ip_on_launch = false
 }
 
 resource "aws_subnet" "public" {
-    vpc_id = "${aws_vpc.vpc.id}"
-    cidr_block = "10.0.2.0/24"
-    map_public_ip_on_launch = true
+  vpc_id = "${aws_vpc.vpc.id}"
+  cidr_block = "10.0.2.0/24"
+  map_public_ip_on_launch = true
 }
 
 resource "aws_internet_gateway" "gw" {
-    vpc_id = "${aws_vpc.vpc.id}"
+  vpc_id = "${aws_vpc.vpc.id}"
 }
 
 resource "aws_eip" "nat_gateway" {
-    vpc = true
+  vpc = true
 }
 
 // Actual SUT
 resource "aws_nat_gateway" "gateway" {
-    allocation_id = "${aws_eip.nat_gateway.id}"
-	subnet_id = "${aws_subnet.public.id}"
+  allocation_id = "${aws_eip.nat_gateway.id}"
+  subnet_id = "${aws_subnet.public.id}"
 
-	tags {
-		foo = "bar"
-	}
+  tags {
+    foo = "bar"
+  }
 
-    depends_on = ["aws_internet_gateway.gw"]
+  depends_on = ["aws_internet_gateway.gw"]
 }
 
 resource "aws_route_table" "private" {
-    vpc_id = "${aws_vpc.vpc.id}"
+  vpc_id = "${aws_vpc.vpc.id}"
 
-    route {
-        cidr_block = "0.0.0.0/0"
-        nat_gateway_id = "${aws_nat_gateway.gateway.id}"
-    }
+  route {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = "${aws_nat_gateway.gateway.id}"
+  }
 }
 
 resource "aws_route_table_association" "private" {
-    subnet_id = "${aws_subnet.private.id}"
-    route_table_id = "${aws_route_table.private.id}"
+  subnet_id = "${aws_subnet.private.id}"
+  route_table_id = "${aws_route_table.private.id}"
 }
 
 resource "aws_route_table" "public" {
-    vpc_id = "${aws_vpc.vpc.id}"
+  vpc_id = "${aws_vpc.vpc.id}"
 
-    route {
-        cidr_block = "0.0.0.0/0"
-        gateway_id = "${aws_internet_gateway.gw.id}"
-    }
+  route {
+  cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.gw.id}"
+  }
 }
 
 resource "aws_route_table_association" "public" {
-    subnet_id = "${aws_subnet.public.id}"
-    route_table_id = "${aws_route_table.public.id}"
+  subnet_id = "${aws_subnet.public.id}"
+  route_table_id = "${aws_route_table.public.id}"
 }
 `
 
 const testAccNatGatewayConfigTagsUpdate = `
 resource "aws_vpc" "vpc" {
-    cidr_block = "10.0.0.0/16"
-		tags {
-			Name = "testAccNatGatewayConfig"
-		}
+  cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "testAccNatGatewayConfig"
+  }
 }
 
 resource "aws_subnet" "private" {
-    vpc_id = "${aws_vpc.vpc.id}"
-    cidr_block = "10.0.1.0/24"
-    map_public_ip_on_launch = false
+  vpc_id = "${aws_vpc.vpc.id}"
+  cidr_block = "10.0.1.0/24"
+  map_public_ip_on_launch = false
 }
 
 resource "aws_subnet" "public" {
-    vpc_id = "${aws_vpc.vpc.id}"
-    cidr_block = "10.0.2.0/24"
-    map_public_ip_on_launch = true
+  vpc_id = "${aws_vpc.vpc.id}"
+  cidr_block = "10.0.2.0/24"
+  map_public_ip_on_launch = true
 }
 
 resource "aws_internet_gateway" "gw" {
-    vpc_id = "${aws_vpc.vpc.id}"
+  vpc_id = "${aws_vpc.vpc.id}"
 }
 
 resource "aws_eip" "nat_gateway" {
-    vpc = true
+  vpc = true
 }
 
 // Actual SUT
 resource "aws_nat_gateway" "gateway" {
-    allocation_id = "${aws_eip.nat_gateway.id}"
-	subnet_id = "${aws_subnet.public.id}"
+  allocation_id = "${aws_eip.nat_gateway.id}"
+  subnet_id = "${aws_subnet.public.id}"
 
-	tags {
-		bar = "baz"
-	}
+  tags {
+    bar = "baz"
+  }
 
-    depends_on = ["aws_internet_gateway.gw"]
+  depends_on = ["aws_internet_gateway.gw"]
 }
 
 resource "aws_route_table" "private" {
-    vpc_id = "${aws_vpc.vpc.id}"
+  vpc_id = "${aws_vpc.vpc.id}"
 
-    route {
-        cidr_block = "0.0.0.0/0"
-        nat_gateway_id = "${aws_nat_gateway.gateway.id}"
-    }
+  route {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = "${aws_nat_gateway.gateway.id}"
+  }
 }
 
 resource "aws_route_table_association" "private" {
-    subnet_id = "${aws_subnet.private.id}"
-    route_table_id = "${aws_route_table.private.id}"
+  subnet_id = "${aws_subnet.private.id}"
+  route_table_id = "${aws_route_table.private.id}"
 }
 
 resource "aws_route_table" "public" {
-    vpc_id = "${aws_vpc.vpc.id}"
+  vpc_id = "${aws_vpc.vpc.id}"
 
-    route {
-        cidr_block = "0.0.0.0/0"
-        gateway_id = "${aws_internet_gateway.gw.id}"
-    }
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.gw.id}"
+  }
 }
 
 resource "aws_route_table_association" "public" {
-    subnet_id = "${aws_subnet.public.id}"
-    route_table_id = "${aws_route_table.public.id}"
+  subnet_id = "${aws_subnet.public.id}"
+  route_table_id = "${aws_route_table.public.id}"
 }
 `

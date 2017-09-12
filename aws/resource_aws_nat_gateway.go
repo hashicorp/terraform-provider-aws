@@ -142,9 +142,8 @@ func resourceAwsNatGatewayUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if err := setTags(conn, d); err != nil {
 		return err
-	} else {
-		d.SetPartial("tags")
 	}
+	d.SetPartial("tags")
 
 	d.Partial(false)
 	return resourceAwsNatGatewayRead(d, meta)
