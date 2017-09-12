@@ -1394,6 +1394,7 @@ func validateIamRoleDescription(v interface{}, k string) (ws []string, errors []
 }
 
 func validateAwsSSMName(v interface{}, k string) (ws []string, errors []error) {
+	// http://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#EC2-CreateDocument-request-Name
 	value := v.(string)
 
 	if !regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`).MatchString(value) {
