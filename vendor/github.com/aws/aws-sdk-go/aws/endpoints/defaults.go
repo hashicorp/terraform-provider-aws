@@ -2072,6 +2072,12 @@ var awscnPartition = partition{
 				"cn-north-1": endpoint{},
 			},
 		},
+		"snowball": service{
+
+			Endpoints: endpoints{
+				"cn-north-1": endpoint{},
+			},
+		},
 		"sns": service{
 			Defaults: endpoint{
 				Protocols: []string{"http", "https"},
