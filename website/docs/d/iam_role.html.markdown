@@ -22,12 +22,12 @@ data "aws_iam_role" "example" {
 
 ## Argument Reference
 
-* `role_name` - (Required) The friendly IAM role name to match.
+* `name` - (Required) The friendly IAM role name to match.
 
 ## Attributes Reference
 
 * `id` - The friendly IAM role name to match.
 * `arn` - The Amazon Resource Name (ARN) specifying the role.
-* `assume_role_policy_document` - The policy document associated with the role.
+* `assume_role_policy` - The policy document associated with the role.
 * `path` - The path to the role.
-* `role_id` - The stable and unique string identifying the role.
+* `unique_id` - The stable and unique string identifying the role.

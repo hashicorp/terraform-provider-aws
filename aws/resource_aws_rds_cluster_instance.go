@@ -159,6 +159,11 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				Default:  0,
 			},
 
+			"availability_zone": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -296,6 +301,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
+	d.Set("availability_zone", db.AvailabilityZone)
 
 	if db.MonitoringInterval != nil {
 		d.Set("monitoring_interval", db.MonitoringInterval)

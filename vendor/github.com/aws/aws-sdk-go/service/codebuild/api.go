@@ -11,23 +11,101 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 )
 
+const opBatchDeleteBuilds = "BatchDeleteBuilds"
+
+// BatchDeleteBuildsRequest generates a "aws/request.Request" representing the
+// client's request for the BatchDeleteBuilds operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchDeleteBuilds for more information on using the BatchDeleteBuilds
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchDeleteBuildsRequest method.
+//    req, resp := client.BatchDeleteBuildsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchDeleteBuilds
+func (c *CodeBuild) BatchDeleteBuildsRequest(input *BatchDeleteBuildsInput) (req *request.Request, output *BatchDeleteBuildsOutput) {
+	op := &request.Operation{
+		Name:       opBatchDeleteBuilds,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &BatchDeleteBuildsInput{}
+	}
+
+	output = &BatchDeleteBuildsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchDeleteBuilds API operation for AWS CodeBuild.
+//
+// Deletes one or more builds.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeBuild's
+// API operation BatchDeleteBuilds for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input value that was provided is not valid.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchDeleteBuilds
+func (c *CodeBuild) BatchDeleteBuilds(input *BatchDeleteBuildsInput) (*BatchDeleteBuildsOutput, error) {
+	req, out := c.BatchDeleteBuildsRequest(input)
+	return out, req.Send()
+}
+
+// BatchDeleteBuildsWithContext is the same as BatchDeleteBuilds with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchDeleteBuilds for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) BatchDeleteBuildsWithContext(ctx aws.Context, input *BatchDeleteBuildsInput, opts ...request.Option) (*BatchDeleteBuildsOutput, error) {
+	req, out := c.BatchDeleteBuildsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opBatchGetBuilds = "BatchGetBuilds"
 
 // BatchGetBuildsRequest generates a "aws/request.Request" representing the
 // client's request for the BatchGetBuilds operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See BatchGetBuilds for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the BatchGetBuilds method directly
-// instead.
+// See BatchGetBuilds for more information on using the BatchGetBuilds
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the BatchGetBuildsRequest method.
 //    req, resp := client.BatchGetBuildsRequest(params)
@@ -95,19 +173,18 @@ const opBatchGetProjects = "BatchGetProjects"
 
 // BatchGetProjectsRequest generates a "aws/request.Request" representing the
 // client's request for the BatchGetProjects operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See BatchGetProjects for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the BatchGetProjects method directly
-// instead.
+// See BatchGetProjects for more information on using the BatchGetProjects
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the BatchGetProjectsRequest method.
 //    req, resp := client.BatchGetProjectsRequest(params)
@@ -175,19 +252,18 @@ const opCreateProject = "CreateProject"
 
 // CreateProjectRequest generates a "aws/request.Request" representing the
 // client's request for the CreateProject operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See CreateProject for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the CreateProject method directly
-// instead.
+// See CreateProject for more information on using the CreateProject
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the CreateProjectRequest method.
 //    req, resp := client.CreateProjectRequest(params)
@@ -262,19 +338,18 @@ const opDeleteProject = "DeleteProject"
 
 // DeleteProjectRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteProject operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See DeleteProject for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the DeleteProject method directly
-// instead.
+// See DeleteProject for more information on using the DeleteProject
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the DeleteProjectRequest method.
 //    req, resp := client.DeleteProjectRequest(params)
@@ -342,19 +417,18 @@ const opListBuilds = "ListBuilds"
 
 // ListBuildsRequest generates a "aws/request.Request" representing the
 // client's request for the ListBuilds operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See ListBuilds for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the ListBuilds method directly
-// instead.
+// See ListBuilds for more information on using the ListBuilds
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the ListBuildsRequest method.
 //    req, resp := client.ListBuildsRequest(params)
@@ -422,19 +496,18 @@ const opListBuildsForProject = "ListBuildsForProject"
 
 // ListBuildsForProjectRequest generates a "aws/request.Request" representing the
 // client's request for the ListBuildsForProject operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See ListBuildsForProject for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the ListBuildsForProject method directly
-// instead.
+// See ListBuildsForProject for more information on using the ListBuildsForProject
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the ListBuildsForProjectRequest method.
 //    req, resp := client.ListBuildsForProjectRequest(params)
@@ -506,19 +579,18 @@ const opListCuratedEnvironmentImages = "ListCuratedEnvironmentImages"
 
 // ListCuratedEnvironmentImagesRequest generates a "aws/request.Request" representing the
 // client's request for the ListCuratedEnvironmentImages operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See ListCuratedEnvironmentImages for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the ListCuratedEnvironmentImages method directly
-// instead.
+// See ListCuratedEnvironmentImages for more information on using the ListCuratedEnvironmentImages
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the ListCuratedEnvironmentImagesRequest method.
 //    req, resp := client.ListCuratedEnvironmentImagesRequest(params)
@@ -581,19 +653,18 @@ const opListProjects = "ListProjects"
 
 // ListProjectsRequest generates a "aws/request.Request" representing the
 // client's request for the ListProjects operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See ListProjects for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the ListProjects method directly
-// instead.
+// See ListProjects for more information on using the ListProjects
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the ListProjectsRequest method.
 //    req, resp := client.ListProjectsRequest(params)
@@ -662,19 +733,18 @@ const opStartBuild = "StartBuild"
 
 // StartBuildRequest generates a "aws/request.Request" representing the
 // client's request for the StartBuild operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See StartBuild for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the StartBuild method directly
-// instead.
+// See StartBuild for more information on using the StartBuild
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the StartBuildRequest method.
 //    req, resp := client.StartBuildRequest(params)
@@ -748,19 +818,18 @@ const opStopBuild = "StopBuild"
 
 // StopBuildRequest generates a "aws/request.Request" representing the
 // client's request for the StopBuild operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See StopBuild for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the StopBuild method directly
-// instead.
+// See StopBuild for more information on using the StopBuild
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the StopBuildRequest method.
 //    req, resp := client.StopBuildRequest(params)
@@ -831,19 +900,18 @@ const opUpdateProject = "UpdateProject"
 
 // UpdateProjectRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateProject operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See UpdateProject for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the UpdateProject method directly
-// instead.
+// See UpdateProject for more information on using the UpdateProject
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the UpdateProjectRequest method.
 //    req, resp := client.UpdateProjectRequest(params)
@@ -908,6 +976,81 @@ func (c *CodeBuild) UpdateProjectWithContext(ctx aws.Context, input *UpdateProje
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchDeleteBuildsInput
+type BatchDeleteBuildsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The IDs of the builds to delete.
+	//
+	// Ids is a required field
+	Ids []*string `locationName:"ids" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchDeleteBuildsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchDeleteBuildsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchDeleteBuildsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchDeleteBuildsInput"}
+	if s.Ids == nil {
+		invalidParams.Add(request.NewErrParamRequired("Ids"))
+	}
+	if s.Ids != nil && len(s.Ids) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Ids", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetIds sets the Ids field's value.
+func (s *BatchDeleteBuildsInput) SetIds(v []*string) *BatchDeleteBuildsInput {
+	s.Ids = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchDeleteBuildsOutput
+type BatchDeleteBuildsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The IDs of the builds that were successfully deleted.
+	BuildsDeleted []*string `locationName:"buildsDeleted" min:"1" type:"list"`
+
+	// Information about any builds that could not be successfully deleted.
+	BuildsNotDeleted []*BuildNotDeleted `locationName:"buildsNotDeleted" type:"list"`
+}
+
+// String returns the string representation
+func (s BatchDeleteBuildsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchDeleteBuildsOutput) GoString() string {
+	return s.String()
+}
+
+// SetBuildsDeleted sets the BuildsDeleted field's value.
+func (s *BatchDeleteBuildsOutput) SetBuildsDeleted(v []*string) *BatchDeleteBuildsOutput {
+	s.BuildsDeleted = v
+	return s
+}
+
+// SetBuildsNotDeleted sets the BuildsNotDeleted field's value.
+func (s *BatchDeleteBuildsOutput) SetBuildsNotDeleted(v []*BuildNotDeleted) *BatchDeleteBuildsOutput {
+	s.BuildsNotDeleted = v
+	return s
 }
 
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetBuildsInput
@@ -1295,6 +1438,40 @@ func (s *BuildArtifacts) SetMd5sum(v string) *BuildArtifacts {
 // SetSha256sum sets the Sha256sum field's value.
 func (s *BuildArtifacts) SetSha256sum(v string) *BuildArtifacts {
 	s.Sha256sum = &v
+	return s
+}
+
+// Information about a build that could not be successfully deleted.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BuildNotDeleted
+type BuildNotDeleted struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the build that could not be successfully deleted.
+	Id *string `locationName:"id" min:"1" type:"string"`
+
+	// Additional information about the build that could not be successfully deleted.
+	StatusCode *string `locationName:"statusCode" type:"string"`
+}
+
+// String returns the string representation
+func (s BuildNotDeleted) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BuildNotDeleted) GoString() string {
+	return s.String()
+}
+
+// SetId sets the Id field's value.
+func (s *BuildNotDeleted) SetId(v string) *BuildNotDeleted {
+	s.Id = &v
+	return s
+}
+
+// SetStatusCode sets the StatusCode field's value.
+func (s *BuildNotDeleted) SetStatusCode(v string) *BuildNotDeleted {
+	s.StatusCode = &v
 	return s
 }
 
@@ -2581,8 +2758,8 @@ type ProjectEnvironment struct {
 	// with Docker support.)
 	//
 	// - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375
-	// --storage-driver=vfs& - timeout -t 15 sh -c "until docker info; do echo .;
-	// sleep 1; done"
+	// --storage-driver=overlay& - timeout -t 15 sh -c "until docker info; do echo
+	// .; sleep 1; done"
 	PrivilegedMode *bool `locationName:"privilegedMode" type:"boolean"`
 
 	// The type of build environment to use for related builds.
@@ -2673,7 +2850,7 @@ type ProjectSource struct {
 	//
 	// This information is for the AWS CodeBuild console's use only. Your code should
 	// not get or set this information directly (unless the build project's source
-	// type value is GITHUB).
+	// type value is BITBUCKET or GITHUB).
 	Auth *SourceAuth `locationName:"auth" type:"structure"`
 
 	// The build spec declaration to use for the builds in this build project.
@@ -2710,10 +2887,23 @@ type ProjectSource struct {
 	//    may then leave the AWS CodeBuild console.) To instruct AWS CodeBuild to
 	//    then use this connection, in the source object, set the auth object's
 	//    type value to OAUTH.
+	//
+	//    * For source code in a Bitbucket repository, the HTTPS clone URL to the
+	//    repository that contains the source and the build spec. Also, you must
+	//    connect your AWS account to your Bitbucket account. To do this, use the
+	//    AWS CodeBuild console to begin creating a build project. When you use
+	//    the console to connect (or reconnect) with Bitbucket, on the Bitbucket
+	//    Confirm access to your account page that displays, choose Grant access.
+	//    (After you have connected to your Bitbucket account, you do not need to
+	//    finish creating the build project, and you may then leave the AWS CodeBuild
+	//    console.) To instruct AWS CodeBuild to then use this connection, in the
+	//    source object, set the auth object's type value to OAUTH.
 	Location *string `locationName:"location" type:"string"`
 
 	// The type of repository that contains the source code to be built. Valid values
 	// include:
+	//
+	//    * BITBUCKET: The source code is in a Bitbucket repository.
 	//
 	//    * CODECOMMIT: The source code is in an AWS CodeCommit repository.
 	//
@@ -2786,7 +2976,7 @@ func (s *ProjectSource) SetType(v string) *ProjectSource {
 //
 // This information is for the AWS CodeBuild console's use only. Your code should
 // not get or set this information directly (unless the build project's source
-// type value is GITHUB).
+// type value is BITBUCKET or GITHUB).
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/SourceAuth
 type SourceAuth struct {
 	_ struct{} `type:"structure"`
@@ -2860,7 +3050,19 @@ type StartBuildInput struct {
 	// A version of the build input to be built, for this build only. If not specified,
 	// the latest version will be used. If specified, must be one of:
 	//
-	//    * For AWS CodeCommit or GitHub: the commit ID to use.
+	//    * For AWS CodeCommit: the commit ID to use.
+	//
+	//    * For GitHub: the commit ID, pull request ID, branch name, or tag name
+	//    that corresponds to the version of the source code you want to build.
+	//    If a pull request ID is specified, it must use the format pr/pull-request-ID
+	//    (for example pr/25). If a branch name is specified, the branch's HEAD
+	//    commit ID will be used. If not specified, the default branch's HEAD commit
+	//    ID will be used.
+	//
+	//    * For Bitbucket: the commit ID, branch name, or tag name that corresponds
+	//    to the version of the source code you want to build. If a branch name
+	//    is specified, the branch's HEAD commit ID will be used. If not specified,
+	//    the default branch's HEAD commit ID will be used.
 	//
 	//    * For Amazon Simple Storage Service (Amazon S3): the version ID of the
 	//    object representing the build input ZIP file to use.
@@ -3376,6 +3578,9 @@ const (
 	// LanguageTypeAndroid is a LanguageType enum value
 	LanguageTypeAndroid = "ANDROID"
 
+	// LanguageTypeDotnet is a LanguageType enum value
+	LanguageTypeDotnet = "DOTNET"
+
 	// LanguageTypeBase is a LanguageType enum value
 	LanguageTypeBase = "BASE"
 )
@@ -3427,6 +3632,9 @@ const (
 
 	// SourceTypeS3 is a SourceType enum value
 	SourceTypeS3 = "S3"
+
+	// SourceTypeBitbucket is a SourceType enum value
+	SourceTypeBitbucket = "BITBUCKET"
 )
 
 const (

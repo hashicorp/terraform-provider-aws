@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +14,57 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestDiffTagsDirectoryService(t *testing.T) {
+	cases := []struct {
+		Old, New       map[string]interface{}
+		Create, Remove map[string]string
+	}{
+		// Basic add/remove
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+			},
+			New: map[string]interface{}{
+				"bar": "baz",
+			},
+			Create: map[string]string{
+				"bar": "baz",
+			},
+			Remove: map[string]string{
+				"foo": "bar",
+			},
+		},
+
+		// Modify
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+			},
+			New: map[string]interface{}{
+				"foo": "baz",
+			},
+			Create: map[string]string{
+				"foo": "baz",
+			},
+			Remove: map[string]string{
+				"foo": "bar",
+			},
+		},
+	}
+
+	for i, tc := range cases {
+		c, r := diffTagsDS(tagsFromMapDS(tc.Old), tagsFromMapDS(tc.New))
+		cm := tagsToMapDS(c)
+		rm := tagsToMapDS(r)
+		if !reflect.DeepEqual(cm, tc.Create) {
+			t.Fatalf("%d: bad create: %#v", i, cm)
+		}
+		if !reflect.DeepEqual(rm, tc.Remove) {
+			t.Fatalf("%d: bad remove: %#v", i, rm)
+		}
+	}
+}
+
 func TestAccAWSDirectoryServiceDirectory_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -23,6 +75,23 @@ func TestAccAWSDirectoryServiceDirectory_basic(t *testing.T) {
 				Config: testAccDirectoryServiceDirectoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDirectoryServiceDirectory_tags(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccDirectoryServiceDirectoryTagsConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "tags.%", "2"),
 				),
 			},
 		},
@@ -229,6 +298,42 @@ resource "aws_directory_service_directory" "bar" {
     vpc_id = "${aws_vpc.main.id}"
     subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
   }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+	tags {
+		Name = "testAccDirectoryServiceDirectoryConfig"
+	}
+}
+
+resource "aws_subnet" "foo" {
+  vpc_id = "${aws_vpc.main.id}"
+  availability_zone = "us-west-2a"
+  cidr_block = "10.0.1.0/24"
+}
+resource "aws_subnet" "bar" {
+  vpc_id = "${aws_vpc.main.id}"
+  availability_zone = "us-west-2b"
+  cidr_block = "10.0.2.0/24"
+}
+`
+
+const testAccDirectoryServiceDirectoryTagsConfig = `
+resource "aws_directory_service_directory" "bar" {
+  name = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+  size = "Small"
+
+  vpc_settings {
+    vpc_id = "${aws_vpc.main.id}"
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+  }
+
+	tags {
+		foo = "bar"
+		project = "test"
+	}
 }
 
 resource "aws_vpc" "main" {

@@ -463,7 +463,6 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Assign the bucket name as the resource ID
 	d.SetId(bucket)
-
 	return resourceAwsS3BucketUpdate(d, meta)
 }
 
@@ -539,8 +538,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
 
 	var err error
-	_, err = s3conn.HeadBucket(&s3.HeadBucketInput{
-		Bucket: aws.String(d.Id()),
+
+	_, err = retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.HeadBucket(&s3.HeadBucketInput{
+			Bucket: aws.String(d.Id()),
+		})
 	})
 	if err != nil {
 		if awsError, ok := err.(awserr.RequestFailure); ok && awsError.StatusCode() == 404 {
@@ -563,8 +565,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the policy
 	if _, ok := d.GetOk("policy"); ok {
-		pol, err := s3conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
-			Bucket: aws.String(d.Id()),
+
+		pol, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+			return s3conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
+				Bucket: aws.String(d.Id()),
+			})
 		})
 		log.Printf("[DEBUG] S3 bucket: %s, read policy: %v", d.Id(), pol)
 		if err != nil {
@@ -572,7 +577,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		} else {
-			if v := pol.Policy; v == nil {
+			if v := pol.(*s3.GetBucketPolicyOutput).Policy; v == nil {
 				if err := d.Set("policy", ""); err != nil {
 					return err
 				}
@@ -587,9 +592,12 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Read the CORS
-	cors, err := s3conn.GetBucketCors(&s3.GetBucketCorsInput{
-		Bucket: aws.String(d.Id()),
+	corsResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.GetBucketCors(&s3.GetBucketCorsInput{
+			Bucket: aws.String(d.Id()),
+		})
 	})
+	cors := corsResponse.(*s3.GetBucketCorsOutput)
 	if err != nil {
 		// An S3 Bucket might not have CORS configuration set.
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() != "NoSuchCORSConfiguration" {
@@ -620,9 +628,12 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Read the website configuration
-	ws, err := s3conn.GetBucketWebsite(&s3.GetBucketWebsiteInput{
-		Bucket: aws.String(d.Id()),
+	wsResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.GetBucketWebsite(&s3.GetBucketWebsiteInput{
+			Bucket: aws.String(d.Id()),
+		})
 	})
+	ws := wsResponse.(*s3.GetBucketWebsiteOutput)
 	var websites []map[string]interface{}
 	if err == nil {
 		w := make(map[string]interface{})
@@ -673,9 +684,13 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Read the versioning configuration
-	versioning, err := s3conn.GetBucketVersioning(&s3.GetBucketVersioningInput{
-		Bucket: aws.String(d.Id()),
+
+	versioningResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.GetBucketVersioning(&s3.GetBucketVersioningInput{
+			Bucket: aws.String(d.Id()),
+		})
 	})
+	versioning := versioningResponse.(*s3.GetBucketVersioningOutput)
 	if err != nil {
 		return err
 	}
@@ -701,9 +716,13 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Read the acceleration status
-	accelerate, err := s3conn.GetBucketAccelerateConfiguration(&s3.GetBucketAccelerateConfigurationInput{
-		Bucket: aws.String(d.Id()),
+
+	accelerateResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.GetBucketAccelerateConfiguration(&s3.GetBucketAccelerateConfigurationInput{
+			Bucket: aws.String(d.Id()),
+		})
 	})
+	accelerate := accelerateResponse.(*s3.GetBucketAccelerateConfigurationOutput)
 	if err != nil {
 		// Amazon S3 Transfer Acceleration might not be supported in the
 		// given region, for example, China (Beijing) and the Government
@@ -726,9 +745,13 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Read the request payer configuration.
-	payer, err := s3conn.GetBucketRequestPayment(&s3.GetBucketRequestPaymentInput{
-		Bucket: aws.String(d.Id()),
+
+	payerResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.GetBucketRequestPayment(&s3.GetBucketRequestPaymentInput{
+			Bucket: aws.String(d.Id()),
+		})
 	})
+	payer := payerResponse.(*s3.GetBucketRequestPaymentOutput)
 	if err != nil {
 		return err
 	}
@@ -740,9 +763,12 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Read the logging configuration
-	logging, err := s3conn.GetBucketLogging(&s3.GetBucketLoggingInput{
-		Bucket: aws.String(d.Id()),
+	loggingResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.GetBucketLogging(&s3.GetBucketLoggingInput{
+			Bucket: aws.String(d.Id()),
+		})
 	})
+	logging := loggingResponse.(*s3.GetBucketLoggingOutput)
 	if err != nil {
 		return err
 	}
@@ -764,9 +790,13 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Read the lifecycle configuration
-	lifecycle, err := s3conn.GetBucketLifecycleConfiguration(&s3.GetBucketLifecycleConfigurationInput{
-		Bucket: aws.String(d.Id()),
+
+	lifecycleResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.GetBucketLifecycleConfiguration(&s3.GetBucketLifecycleConfigurationInput{
+			Bucket: aws.String(d.Id()),
+		})
 	})
+	lifecycle := lifecycleResponse.(*s3.GetBucketLifecycleConfigurationOutput)
 	if err != nil {
 		if awsError, ok := err.(awserr.RequestFailure); ok && awsError.StatusCode() != 404 {
 			return err
@@ -887,9 +917,13 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Read the bucket replication configuration
-	replication, err := s3conn.GetBucketReplication(&s3.GetBucketReplicationInput{
-		Bucket: aws.String(d.Id()),
+
+	replicationResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.GetBucketReplication(&s3.GetBucketReplicationInput{
+			Bucket: aws.String(d.Id()),
+		})
 	})
+	replication := replicationResponse.(*s3.GetBucketReplicationOutput)
 	if err != nil {
 		if awsError, ok := err.(awserr.RequestFailure); ok && awsError.StatusCode() != 404 {
 			return err
@@ -905,11 +939,15 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Add the region as an attribute
-	location, err := s3conn.GetBucketLocation(
-		&s3.GetBucketLocationInput{
-			Bucket: aws.String(d.Id()),
-		},
-	)
+
+	locationResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.GetBucketLocation(
+			&s3.GetBucketLocationInput{
+				Bucket: aws.String(d.Id()),
+			},
+		)
+	})
+	location := locationResponse.(*s3.GetBucketLocationOutput)
 	if err != nil {
 		return err
 	}
@@ -1039,7 +1077,7 @@ func resourceAwsS3BucketPolicyUpdate(s3conn *s3.S3, d *schema.ResourceData) erro
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			if _, err := s3conn.PutBucketPolicy(params); err != nil {
 				if awserr, ok := err.(awserr.Error); ok {
-					if awserr.Code() == "MalformedPolicy" {
+					if awserr.Code() == "MalformedPolicy" || awserr.Code() == "NoSuchBucket" {
 						return resource.RetryableError(awserr)
 					}
 				}
@@ -1053,8 +1091,10 @@ func resourceAwsS3BucketPolicyUpdate(s3conn *s3.S3, d *schema.ResourceData) erro
 		}
 	} else {
 		log.Printf("[DEBUG] S3 bucket: %s, delete policy: %s", bucket, policy)
-		_, err := s3conn.DeleteBucketPolicy(&s3.DeleteBucketPolicyInput{
-			Bucket: aws.String(bucket),
+		_, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+			return s3conn.DeleteBucketPolicy(&s3.DeleteBucketPolicyInput{
+				Bucket: aws.String(bucket),
+			})
 		})
 
 		if err != nil {
@@ -1072,8 +1112,11 @@ func resourceAwsS3BucketCorsUpdate(s3conn *s3.S3, d *schema.ResourceData) error 
 	if len(rawCors) == 0 {
 		// Delete CORS
 		log.Printf("[DEBUG] S3 bucket: %s, delete CORS", bucket)
-		_, err := s3conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
-			Bucket: aws.String(bucket),
+
+		_, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+			return s3conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
+				Bucket: aws.String(bucket),
+			})
 		})
 		if err != nil {
 			return fmt.Errorf("Error deleting S3 CORS: %s", err)
@@ -1115,7 +1158,10 @@ func resourceAwsS3BucketCorsUpdate(s3conn *s3.S3, d *schema.ResourceData) error 
 			},
 		}
 		log.Printf("[DEBUG] S3 bucket: %s, put CORS: %#v", bucket, corsInput)
-		_, err := s3conn.PutBucketCors(corsInput)
+
+		_, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+			return s3conn.PutBucketCors(corsInput)
+		})
 		if err != nil {
 			return fmt.Errorf("Error putting S3 CORS: %s", err)
 		}
@@ -1202,7 +1248,9 @@ func resourceAwsS3BucketWebsitePut(s3conn *s3.S3, d *schema.ResourceData, websit
 
 	log.Printf("[DEBUG] S3 put bucket website: %#v", putInput)
 
-	_, err := s3conn.PutBucketWebsite(putInput)
+	_, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.PutBucketWebsite(putInput)
+	})
 	if err != nil {
 		return fmt.Errorf("Error putting S3 website: %s", err)
 	}
@@ -1216,7 +1264,9 @@ func resourceAwsS3BucketWebsiteDelete(s3conn *s3.S3, d *schema.ResourceData) err
 
 	log.Printf("[DEBUG] S3 delete bucket website: %#v", deleteInput)
 
-	_, err := s3conn.DeleteBucketWebsite(deleteInput)
+	_, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.DeleteBucketWebsite(deleteInput)
+	})
 	if err != nil {
 		return fmt.Errorf("Error deleting S3 website: %s", err)
 	}
@@ -1237,11 +1287,15 @@ func websiteEndpoint(s3conn *s3.S3, d *schema.ResourceData) (*S3Website, error) 
 	bucket := d.Get("bucket").(string)
 
 	// Lookup the region for this bucket
-	location, err := s3conn.GetBucketLocation(
-		&s3.GetBucketLocationInput{
-			Bucket: aws.String(bucket),
-		},
-	)
+
+	locationResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.GetBucketLocation(
+			&s3.GetBucketLocationInput{
+				Bucket: aws.String(bucket),
+			},
+		)
+	})
+	location := locationResponse.(*s3.GetBucketLocationOutput)
 	if err != nil {
 		return nil, err
 	}
@@ -1303,7 +1357,9 @@ func resourceAwsS3BucketAclUpdate(s3conn *s3.S3, d *schema.ResourceData) error {
 	}
 	log.Printf("[DEBUG] S3 put bucket ACL: %#v", i)
 
-	_, err := s3conn.PutBucketAcl(i)
+	_, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.PutBucketAcl(i)
+	})
 	if err != nil {
 		return fmt.Errorf("Error putting S3 ACL: %s", err)
 	}
@@ -1341,7 +1397,9 @@ func resourceAwsS3BucketVersioningUpdate(s3conn *s3.S3, d *schema.ResourceData) 
 	}
 	log.Printf("[DEBUG] S3 put bucket versioning: %#v", i)
 
-	_, err := s3conn.PutBucketVersioning(i)
+	_, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.PutBucketVersioning(i)
+	})
 	if err != nil {
 		return fmt.Errorf("Error putting S3 versioning: %s", err)
 	}
@@ -1374,7 +1432,9 @@ func resourceAwsS3BucketLoggingUpdate(s3conn *s3.S3, d *schema.ResourceData) err
 	}
 	log.Printf("[DEBUG] S3 put bucket logging: %#v", i)
 
-	_, err := s3conn.PutBucketLogging(i)
+	_, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.PutBucketLogging(i)
+	})
 	if err != nil {
 		return fmt.Errorf("Error putting S3 logging: %s", err)
 	}
@@ -1394,7 +1454,9 @@ func resourceAwsS3BucketAccelerationUpdate(s3conn *s3.S3, d *schema.ResourceData
 	}
 	log.Printf("[DEBUG] S3 put bucket acceleration: %#v", i)
 
-	_, err := s3conn.PutBucketAccelerateConfiguration(i)
+	_, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.PutBucketAccelerateConfiguration(i)
+	})
 	if err != nil {
 		return fmt.Errorf("Error putting S3 acceleration: %s", err)
 	}
@@ -1414,7 +1476,9 @@ func resourceAwsS3BucketRequestPayerUpdate(s3conn *s3.S3, d *schema.ResourceData
 	}
 	log.Printf("[DEBUG] S3 put bucket request payer: %#v", i)
 
-	_, err := s3conn.PutBucketRequestPayment(i)
+	_, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.PutBucketRequestPayment(i)
+	})
 	if err != nil {
 		return fmt.Errorf("Error putting S3 request payer: %s", err)
 	}
@@ -1499,7 +1563,9 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 	}
 	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
 
-	_, err := s3conn.PutBucketReplication(i)
+	_, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.PutBucketReplication(i)
+	})
 	if err != nil {
 		return fmt.Errorf("Error putting S3 replication configuration: %s", err)
 	}
