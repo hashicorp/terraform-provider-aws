@@ -46,11 +46,10 @@ func resourceAwsNetworkInterface() *schema.Resource {
 			},
 
 			"private_ips": &schema.Schema{
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 
 			"private_ips_count": &schema.Schema{
@@ -119,7 +118,7 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 		request.Groups = expandStringList(security_groups)
 	}
 
-	private_ips := d.Get("private_ips").(*schema.Set).List()
+	private_ips := d.Get("private_ips").([]interface{})
 	if len(private_ips) != 0 {
 		request.PrivateIpAddresses = expandPrivateIPAddresses(private_ips)
 	}
