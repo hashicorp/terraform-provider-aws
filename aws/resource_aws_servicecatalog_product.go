@@ -229,7 +229,7 @@ func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("owner"); ok {
-		input.Name = aws.String(v.(string))
+		input.Owner = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("support_description"); ok {
