@@ -236,6 +236,35 @@ func TestAccAWSEIP_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSEIPAssociate_not_associated(t *testing.T) {
+	var conf ec2.Address
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_eip.bar",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSEIPAssociate_not_associated,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+				),
+			},
+
+			resource.TestStep{
+				Config: testAccAWSEIPAssociate_associated,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+					testAccCheckAWSEIPAssociated(&conf),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEIPDisappears(v *ec2.Address) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -686,3 +715,26 @@ resource "aws_route_table_association" "us-east-1b-public" {
   route_table_id = "${aws_route_table.us-east-1-public.id}"
 }`, ami)
 }
+
+const testAccAWSEIPAssociate_not_associated = `
+resource "aws_instance" "foo" {
+	# us-west-2
+	ami = "ami-4fccb37f"
+	instance_type = "m1.small"
+}
+
+resource "aws_eip" "bar" {
+}
+`
+
+const testAccAWSEIPAssociate_associated = `
+resource "aws_instance" "foo" {
+	# us-west-2
+	ami = "ami-4fccb37f"
+	instance_type = "m1.small"
+}
+
+resource "aws_eip" "bar" {
+	instance = "${aws_instance.foo.id}"
+}
+`
