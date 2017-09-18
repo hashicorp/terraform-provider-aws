@@ -661,12 +661,12 @@
 			"versionExact": "v1.10.44"
 		},
 		{
-			"checksumSHA1": "HQHIEdPu8wtbbJnECYl2HM9Ul5Q=",
+			"checksumSHA1": "TsLkr/jtNxQY3RSJjbCZXEaopG0=",
 			"path": "github.com/aws/aws-sdk-go/service/servicecatalog",
-			"revision": "88849eea79e8e48241987b1f0a11a7a0dcbb7716",
-			"revisionTime": "2017-09-15T19:52:47Z",
-			"version": "v1.10.46",
-			"versionExact": "v1.10.46"
+			"revision": "124a6dabcd822d9b88383d8e2186e696a12d791d",
+			"revisionTime": "2017-09-13T19:04:32Z",
+			"version": "v1.10.44",
+			"versionExact": "v1.10.44"
 		},
 		{
 			"checksumSHA1": "rIBHXHWyTmY/vsqECa2PB0xT2HU=",
