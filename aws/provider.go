@@ -200,7 +200,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ip_ranges":                        dataSourceAwsIPRanges(),
 			"aws_kinesis_stream":                   dataSourceAwsKinesisStream(),
 			"aws_kms_alias":                        dataSourceAwsKmsAlias(),
-			"aws_kms_ciphertext":                   dataSourceAwsKmsCiphetext(),
+			"aws_kms_ciphertext":                   dataSourceAwsKmsCiphertext(),
 			"aws_kms_secret":                       dataSourceAwsKmsSecret(),
 			"aws_partition":                        dataSourceAwsPartition(),
 			"aws_prefix_list":                      dataSourceAwsPrefixList(),
