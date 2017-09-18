@@ -573,6 +573,7 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("endpoint", dbc.Endpoint)
 	d.Set("engine", dbc.Engine)
+	d.Set("engine_version", dbc.EngineVersion)
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("port", dbc.Port)
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
