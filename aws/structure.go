@@ -28,6 +28,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -1190,6 +1191,14 @@ func flattenCloudFormationOutputs(cfOutputs []*cloudformation.Output) map[string
 		outputs[*o.OutputKey] = *o.OutputValue
 	}
 	return outputs
+}
+
+func flattenServiceCatalogTags(cfTags []*servicecatalog.Tag) map[string]string {
+	tags := make(map[string]string, len(cfTags))
+	for _, t := range cfTags {
+		tags[*t.Key] = *t.Value
+	}
+	return tags
 }
 
 func flattenAsgSuspendedProcesses(list []*autoscaling.SuspendedProcess) []string {
