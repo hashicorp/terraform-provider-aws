@@ -236,14 +236,14 @@ func TestAccAWSEMRCluster_root_volume_size(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEmrClusterConfig(r),
-				Check:  resource.ComposeTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
 					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "ebs_root_volume_size", "21"),
 				),
 			},
 			{
 				Config: testAccAWSEmrClusterConfigUpdatedRootVolumeSize(r),
-				Check:  resource.ComposeTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
 					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "ebs_root_volume_size", "48"),
 				),
@@ -2556,7 +2556,6 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
 }
 `, r, r, r, r, r, r, r, r, r, r)
 }
-
 
 func testAccAWSEmrClusterConfigUpdatedRootVolumeSize(r int) string {
 	return fmt.Sprintf(`
