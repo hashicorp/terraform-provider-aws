@@ -661,6 +661,12 @@
 			"versionExact": "v1.10.44"
 		},
 		{
+			"checksumSHA1": "TsLkr/jtNxQY3RSJjbCZXEaopG0=",
+			"path": "github.com/aws/aws-sdk-go/service/servicecatalog",
+			"revision": "f43761405cff341da21289c4f14800c41ccdc10b",
+			"revisionTime": "2017-08-25T16:44:15Z"
+		},
+		{
 			"checksumSHA1": "rIBHXHWyTmY/vsqECa2PB0xT2HU=",
 			"path": "github.com/aws/aws-sdk-go/service/ses",
 			"revision": "124a6dabcd822d9b88383d8e2186e696a12d791d",
