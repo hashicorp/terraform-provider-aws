@@ -523,8 +523,8 @@ func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{
 
 	if requestRecreate {
 		log.Printf("[DEBUG] Recreating ElastiCache Cluster (%s), opts:\n%s", d.Id(), req)
-		resourceAwsElasticacheClusterDelete(d,meta)
-		resourceAwsElasticacheClusterCreate(d,meta)
+		resourceAwsElasticacheClusterDelete(d, meta)
+		resourceAwsElasticacheClusterCreate(d, meta)
 	}
 
 	return resourceAwsElasticacheClusterRead(d, meta)
