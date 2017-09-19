@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New Resource:** `aws_waf_rate_based_rule` [GH-1606]
+* **New Resource:** `aws_batch_compute_environment` [GH-1048]
 
 IMPROVEMENTS:
 
