@@ -262,25 +262,7 @@ func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interfa
 	d.Set("type", computeEnvironment.Type)
 
 	if *(computeEnvironment.Type) == "MANAGED" {
-		computeResource := computeEnvironment.ComputeResources
-
-		d.Set("compute_resources", []interface{}{
-			map[string]interface{}{
-				"bid_percentage":      computeResource.BidPercentage,
-				"desired_vcpus":       computeResource.DesiredvCpus,
-				"ec2_key_pair":        computeResource.Ec2KeyPair,
-				"image_id":            computeResource.ImageId,
-				"instance_role":       computeResource.InstanceRole,
-				"instance_type":       schema.NewSet(schema.HashString, flattenStringList(computeResource.InstanceTypes)),
-				"max_vcpus":           computeResource.MaxvCpus,
-				"min_vcpus":           computeResource.MinvCpus,
-				"security_group_ids":  schema.NewSet(schema.HashString, flattenStringList(computeResource.SecurityGroupIds)),
-				"spot_iam_fleet_role": computeResource.SpotIamFleetRole,
-				"subnets":             schema.NewSet(schema.HashString, flattenStringList(computeResource.Subnets)),
-				"tags":                tagsToMapGeneric(computeResource.Tags),
-				"type":                computeResource.Type,
-			},
-		})
+		d.Set("compute_resources", flattenComputeResources(computeEnvironment.ComputeResources))
 	}
 
 	d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
@@ -289,6 +271,28 @@ func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interfa
 	d.Set("status_reason", computeEnvironment.StatusReason)
 
 	return nil
+}
+
+func flattenComputeResources(computeResource *batch.ComputeResource) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+	m := make(map[string]interface{})
+
+	m["bid_percentage"] = computeResource.BidPercentage
+	m["desired_vcpus"] = computeResource.DesiredvCpus
+	m["ec2_key_pair"] = computeResource.Ec2KeyPair
+	m["image_id"] = computeResource.ImageId
+	m["instance_role"] = computeResource.InstanceRole
+	m["instance_type"] = schema.NewSet(schema.HashString, flattenStringList(computeResource.InstanceTypes))
+	m["max_vcpus"] = computeResource.MaxvCpus
+	m["min_vcpus"] = computeResource.MinvCpus
+	m["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(computeResource.SecurityGroupIds))
+	m["spot_iam_fleet_role"] = computeResource.SpotIamFleetRole
+	m["subnets"] = schema.NewSet(schema.HashString, flattenStringList(computeResource.Subnets))
+	m["tags"] = tagsToMapGeneric(computeResource.Tags)
+	m["type"] = computeResource.Type
+
+	result = append(result, m)
+	return result
 }
 
 func resourceAwsBatchComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
