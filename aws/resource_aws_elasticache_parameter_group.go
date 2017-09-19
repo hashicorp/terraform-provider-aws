@@ -44,7 +44,6 @@ func resourceAwsElasticacheParameterGroup() *schema.Resource {
 			"parameter": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": &schema.Schema{
@@ -144,36 +143,63 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		// Expand the "parameter" set to aws-sdk-go compat []elasticacheconn.Parameter
-		parameters, err := expandElastiCacheParameters(ns.Difference(os).List())
+		toRemove, err := expandElastiCacheParameters(os.Difference(ns).List())
 		if err != nil {
 			return err
 		}
 
-		if len(parameters) > 0 {
-			// We can only modify 20 parameters at a time, so walk them until
-			// we've got them all.
-			maxParams := 20
-			for parameters != nil {
-				paramsToModify := make([]*elasticache.ParameterNameValue, 0)
-				if len(parameters) <= maxParams {
-					paramsToModify, parameters = parameters[:], nil
-				} else {
-					paramsToModify, parameters = parameters[:maxParams], parameters[maxParams:]
-				}
-				modifyOpts := elasticache.ModifyCacheParameterGroupInput{
-					CacheParameterGroupName: aws.String(d.Get("name").(string)),
-					ParameterNameValues:     paramsToModify,
-				}
+		log.Printf("[DEBUG] Parameters to remove: %#v", toRemove)
 
-				log.Printf("[DEBUG] Modify Cache Parameter Group: %#v", modifyOpts)
-				_, err = conn.ModifyCacheParameterGroup(&modifyOpts)
-				if err != nil {
-					return fmt.Errorf("Error modifying Cache Parameter Group: %s", err)
-				}
-			}
-			d.SetPartial("parameter")
+		toAdd, err := expandElastiCacheParameters(ns.Difference(os).List())
+		if err != nil {
+			return err
 		}
+
+		log.Printf("[DEBUG] Parameters to add: %#v", toAdd)
+
+		// We can only modify 20 parameters at a time, so walk them until
+		// we've got them all.
+		maxParams := 20
+
+		for len(toRemove) > 0 {
+			paramsToModify := make([]*elasticache.ParameterNameValue, 0)
+			if len(toRemove) <= maxParams {
+				paramsToModify, toRemove = toRemove[:], nil
+			} else {
+				paramsToModify, toRemove = toRemove[:maxParams], toRemove[maxParams:]
+			}
+			resetOpts := elasticache.ResetCacheParameterGroupInput{
+				CacheParameterGroupName: aws.String(d.Get("name").(string)),
+				ParameterNameValues:     paramsToModify,
+			}
+
+			log.Printf("[DEBUG] Reset Cache Parameter Group: %s", resetOpts)
+			_, err = conn.ResetCacheParameterGroup(&resetOpts)
+			if err != nil {
+				return fmt.Errorf("Error resetting Cache Parameter Group: %s", err)
+			}
+		}
+
+		for len(toAdd) > 0 {
+			paramsToModify := make([]*elasticache.ParameterNameValue, 0)
+			if len(toAdd) <= maxParams {
+				paramsToModify, toAdd = toAdd[:], nil
+			} else {
+				paramsToModify, toAdd = toAdd[:maxParams], toAdd[maxParams:]
+			}
+			modifyOpts := elasticache.ModifyCacheParameterGroupInput{
+				CacheParameterGroupName: aws.String(d.Get("name").(string)),
+				ParameterNameValues:     paramsToModify,
+			}
+
+			log.Printf("[DEBUG] Modify Cache Parameter Group: %s", modifyOpts)
+			_, err = conn.ModifyCacheParameterGroup(&modifyOpts)
+			if err != nil {
+				return fmt.Errorf("Error modifying Cache Parameter Group: %s", err)
+			}
+		}
+
+		d.SetPartial("parameter")
 	}
 
 	d.Partial(false)

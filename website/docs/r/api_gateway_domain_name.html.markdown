@@ -59,7 +59,7 @@ The following arguments are supported:
 
 * `domain_name` - (Required) The fully-qualified domain name to register
 * `certificate_name` - (Optional) The unique name to use when registering this
-  cert as an IAM server certificate. Conflicts with `certificate_arn`.
+  cert as an IAM server certificate. Conflicts with `certificate_arn`. Required if `certificate_arn` is not set.
 * `certificate_body` - (Optional) The certificate issued for the domain name
   being registered, in PEM format. Conflicts with `certificate_arn`.
 * `certificate_chain` - (Optional) The certificate for the CA that issued the
@@ -71,7 +71,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to the arguments, the following attributes are exported:
 
 * `id` - The internal id assigned to this domain name by API Gateway.
 * `certificate_upload_date` - The upload date associated with the domain certificate.

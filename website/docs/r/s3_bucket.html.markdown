@@ -16,7 +16,7 @@ Provides a S3 bucket resource.
 
 ```hcl
 resource "aws_s3_bucket" "b" {
-  bucket = "my_tf_test_bucket"
+  bucket = "my-tf-test-bucket"
   acl    = "private"
 
   tags {
@@ -73,7 +73,7 @@ resource "aws_s3_bucket" "b" {
 
 ```hcl
 resource "aws_s3_bucket" "b" {
-  bucket = "my_tf_test_bucket"
+  bucket = "my-tf-test-bucket"
   acl    = "private"
 
   versioning {
@@ -86,12 +86,12 @@ resource "aws_s3_bucket" "b" {
 
 ```hcl
 resource "aws_s3_bucket" "log_bucket" {
-  bucket = "my_tf_log_bucket"
+  bucket = "my-tf-log-bucket"
   acl    = "log-delivery-write"
 }
 
 resource "aws_s3_bucket" "b" {
-  bucket = "my_tf_test_bucket"
+  bucket = "my-tf-test-bucket"
   acl    = "private"
 
   logging {

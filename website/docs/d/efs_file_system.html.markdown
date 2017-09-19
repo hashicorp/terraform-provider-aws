@@ -28,7 +28,7 @@ data "aws_efs_file_system" "by_id" {
 The following arguments are supported:
 
 * `file_system_id` - (Optional) The ID that identifies the file system (e.g. fs-ccfc0d65).
-* `creation_token` - (Optional) Restricts the list to the file system with this creation token
+* `creation_token` - (Optional) Restricts the list to the file system with this creation token.
 
 ## Attributes Reference
 
@@ -36,4 +36,5 @@ The following attributes are exported:
 
 * `performance_mode` - The PerformanceMode of the file system.
 * `tags` - The list of tags assigned to the file system.
-
+* `encrypted` - Whether EFS is encrypted.
+* `kms_key_id` - The ARN for the KMS encryption key.

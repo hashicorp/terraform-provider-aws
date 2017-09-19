@@ -159,6 +159,7 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 			if ok && (awsErr.Code() == "InvalidAllocationID.NotFound" ||
 				awsErr.Code() == "InvalidAddress.NotFound") {
 				log.Printf("[WARN] EIP not found, removing from state: %s", req)
+				d.SetId("")
 				return nil
 			}
 			return err

@@ -100,9 +100,9 @@ func validateTagFilters(v interface{}, k string) (ws []string, errors []error) {
 
 func validateDbParamGroupName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+	if !regexp.MustCompile(`^[0-9a-z-_]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
+			"only lowercase alphanumeric characters, underscores and hyphens allowed in %q", k))
 	}
 	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -111,6 +111,10 @@ func validateDbParamGroupName(v interface{}, k string) (ws []string, errors []er
 	if regexp.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot contain two consecutive hyphens", k))
+	}
+	if regexp.MustCompile(`__`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot contain two consecutive underscores", k))
 	}
 	if regexp.MustCompile(`-$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -797,7 +801,7 @@ func validateOnceADayWindowFormat(v interface{}, k string) (ws []string, errors 
 
 func validateRoute53RecordType(v interface{}, k string) (ws []string, errors []error) {
 	// Valid Record types
-	// SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA
+	// SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA, CAA
 	validTypes := map[string]struct{}{
 		"SOA":   {},
 		"A":     {},
@@ -810,12 +814,13 @@ func validateRoute53RecordType(v interface{}, k string) (ws []string, errors []e
 		"SRV":   {},
 		"SPF":   {},
 		"AAAA":  {},
+		"CAA":   {},
 	}
 
 	value := v.(string)
 	if _, ok := validTypes[value]; !ok {
 		errors = append(errors, fmt.Errorf(
-			"%q must be one of [SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA]", k))
+			"%q must be one of [SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA, CAA]", k))
 	}
 	return
 }
@@ -873,6 +878,22 @@ func validateAwsEmrEbsVolumeType(v interface{}, k string) (ws []string, errors [
 	if _, ok := validTypes[value]; !ok {
 		errors = append(errors, fmt.Errorf(
 			"%q must be one of ['gp2', 'io1', 'standard']", k))
+	}
+	return
+}
+
+func validateAwsEmrInstanceGroupRole(v interface{}, k string) (ws []string, errors []error) {
+	validRoles := map[string]struct{}{
+		"MASTER": {},
+		"CORE":   {},
+		"TASK":   {},
+	}
+
+	value := v.(string)
+
+	if _, ok := validRoles[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of ['MASTER', 'CORE', 'TASK']", k))
 	}
 	return
 }
@@ -1372,6 +1393,19 @@ func validateIamRoleDescription(v interface{}, k string) (ws []string, errors []
 	return
 }
 
+func validateAwsSSMName(v interface{}, k string) (ws []string, errors []error) {
+	// http://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#EC2-CreateDocument-request-Name
+	value := v.(string)
+
+	if !regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"Only alphanumeric characters, hyphens, dots & underscores allowed in %q: %q (Must satisfy regular expression pattern: ^[a-zA-Z0-9_\\-.]{3,128}$)",
+			k, value))
+	}
+
+	return
+}
+
 func validateSsmParameterType(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	types := map[string]bool{
@@ -1382,6 +1416,14 @@ func validateSsmParameterType(v interface{}, k string) (ws []string, errors []er
 
 	if !types[value] {
 		errors = append(errors, fmt.Errorf("Parameter type %s is invalid. Valid types are String, StringList or SecureString", value))
+	}
+	return
+}
+
+func validateBatchComputeEnvironmentName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !(regexp.MustCompile(`^[A-Za-z0-9_]*$`).MatchString(value) && len(value) <= 128) {
+		errors = append(errors, fmt.Errorf("computeEnvironmentName must be up to 128 letters (uppercase and lowercase), numbers, and underscores."))
 	}
 	return
 }

@@ -5,14 +5,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
-	var conf lambda.GetFunctionOutput
+	var filter cloudwatchlogs.SubscriptionFilter
 
 	rstring := acctest.RandString(5)
 
@@ -24,28 +24,72 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
 			{
 				Config: testAccAWSCloudwatchLogSubscriptionFilterConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudwatchLogSubscriptionFilterExists("aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter", &conf, rstring),
-					testAccCheckAWSCloudwatchLogSubscriptionFilterAttributes(&conf, rstring),
+					testAccCheckAwsCloudwatchLogSubscriptionFilterExists("aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter", &filter, rstring),
+					resource.TestCheckResourceAttr(
+						"aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter", "filter_pattern", "logtype test"),
+					resource.TestCheckResourceAttr(
+						"aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter", "name", fmt.Sprintf("test_lambdafunction_logfilter_%s", rstring)),
+					resource.TestCheckResourceAttr(
+						"aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter", "log_group_name", fmt.Sprintf("example_lambda_name_%s", rstring)),
 				),
 			},
 		},
 	})
 }
 
+func TestAccAWSCloudwatchLogSubscriptionFilter_subscriptionFilterDisappears(t *testing.T) {
+	var filter cloudwatchlogs.SubscriptionFilter
+	rstring := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudwatchLogSubscriptionFilterConfig(rstring),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCloudwatchLogSubscriptionFilterExists("aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter", &filter, rstring),
+					testAccCheckCloudwatchLogSubscriptionFilterDisappears(rstring),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckCloudwatchLogSubscriptionFilterDisappears(rName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+		params := &cloudwatchlogs.DeleteLogGroupInput{
+			LogGroupName: aws.String(fmt.Sprintf("example_lambda_name_%s", rName)),
+		}
+		if _, err := conn.DeleteLogGroup(params); err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
 func testAccCheckCloudwatchLogSubscriptionFilterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+	conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_subscription_filter" {
 			continue
 		}
 
-		_, err := conn.GetFunction(&lambda.GetFunctionInput{
-			FunctionName: aws.String(rs.Primary.ID),
-		})
+		logGroupName, _ := rs.Primary.Attributes["log_group_name"]
+		filterNamePrefix, _ := rs.Primary.Attributes["name"]
 
+		input := cloudwatchlogs.DescribeSubscriptionFiltersInput{
+			LogGroupName:     aws.String(logGroupName),
+			FilterNamePrefix: aws.String(filterNamePrefix),
+		}
+
+		_, err := conn.DescribeSubscriptionFilters(&input)
 		if err == nil {
-			return fmt.Errorf("Lambda Function still exists")
+			return fmt.Errorf("SubscriptionFilter still exists")
 		}
 
 	}
@@ -54,45 +98,47 @@ func testAccCheckCloudwatchLogSubscriptionFilterDestroy(s *terraform.State) erro
 
 }
 
-func testAccCheckAwsCloudwatchLogSubscriptionFilterExists(n string, function *lambda.GetFunctionOutput, rstring string) resource.TestCheckFunc {
+func testAccCheckAwsCloudwatchLogSubscriptionFilterExists(n string, filter *cloudwatchlogs.SubscriptionFilter, rName string) resource.TestCheckFunc {
 	// Wait for IAM role
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Lambda function not found: %s", n)
+			return fmt.Errorf("SubscriptionFilter not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("Lambda function ID not set")
+			return fmt.Errorf("SubscriptionFilter ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
 
-		params := &lambda.GetFunctionInput{
-			FunctionName: aws.String("example_lambda_name_" + rstring),
+		logGroupName, _ := rs.Primary.Attributes["log_group_name"]
+		filterNamePrefix, _ := rs.Primary.Attributes["name"]
+
+		input := cloudwatchlogs.DescribeSubscriptionFiltersInput{
+			LogGroupName:     aws.String(logGroupName),
+			FilterNamePrefix: aws.String(filterNamePrefix),
 		}
 
-		getFunction, err := conn.GetFunction(params)
-		if err != nil {
+		resp, err := conn.DescribeSubscriptionFilters(&input)
+		if err == nil {
 			return err
 		}
 
-		*function = *getFunction
-
-		return nil
-	}
-}
-
-func testAccCheckAWSCloudwatchLogSubscriptionFilterAttributes(function *lambda.GetFunctionOutput, rstring string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		c := function.Configuration
-		expectedName := fmt.Sprintf("example_lambda_name_%s", rstring)
-		if *c.FunctionName != expectedName {
-			return fmt.Errorf("Expected function name %s, got %s", expectedName, *c.FunctionName)
+		if len(resp.SubscriptionFilters) == 0 {
+			return fmt.Errorf("SubscriptionFilter not found")
 		}
 
-		if *c.FunctionArn == "" {
-			return fmt.Errorf("Could not read Lambda Function's ARN")
+		var found bool
+		for _, i := range resp.SubscriptionFilters {
+			if *i.FilterName == fmt.Sprintf("test_lambdafunction_logfilter_%s", rName) {
+				*filter = *i
+				found = true
+			}
+		}
+
+		if !found {
+			return fmt.Errorf("SubscriptionFilter not found")
 		}
 
 		return nil

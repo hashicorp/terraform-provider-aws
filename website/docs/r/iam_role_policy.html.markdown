@@ -68,10 +68,10 @@ assign a random, unique name.
 
 ## Attributes Reference
 
-* `id` - The role policy ID.
+* `id` - The role policy ID, in the form of `role_name:role_policy_name`.
 * `name` - The name of the policy.
 * `policy` - The policy document attached to the role.
-* `role` - The role to which this policy applies.
+* `role` - The name of the role associated with the policy.
 
 ## Import
 

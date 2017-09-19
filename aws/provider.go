@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform/helper/mutexkv"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 // Provider returns a terraform.ResourceProvider.
@@ -199,7 +200,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ip_ranges":                        dataSourceAwsIPRanges(),
 			"aws_kinesis_stream":                   dataSourceAwsKinesisStream(),
 			"aws_kms_alias":                        dataSourceAwsKmsAlias(),
-			"aws_kms_ciphertext":                   dataSourceAwsKmsCiphetext(),
+			"aws_kms_ciphertext":                   dataSourceAwsKmsCiphertext(),
 			"aws_kms_secret":                       dataSourceAwsKmsSecret(),
 			"aws_nat_gateway":                      dataSourceAwsNatGateway(),
 			"aws_partition":                        dataSourceAwsPartition(),
@@ -479,12 +480,14 @@ func Provider() terraform.ResourceProvider {
 			"aws_waf_byte_match_set":                       resourceAwsWafByteMatchSet(),
 			"aws_waf_ipset":                                resourceAwsWafIPSet(),
 			"aws_waf_rule":                                 resourceAwsWafRule(),
+			"aws_waf_rate_based_rule":                      resourceAwsWafRateBasedRule(),
 			"aws_waf_size_constraint_set":                  resourceAwsWafSizeConstraintSet(),
 			"aws_waf_web_acl":                              resourceAwsWafWebAcl(),
 			"aws_waf_xss_match_set":                        resourceAwsWafXssMatchSet(),
 			"aws_waf_sql_injection_match_set":              resourceAwsWafSqlInjectionMatchSet(),
 			"aws_wafregional_byte_match_set":               resourceAwsWafRegionalByteMatchSet(),
 			"aws_wafregional_ipset":                        resourceAwsWafRegionalIPSet(),
+			"aws_batch_compute_environment":                resourceAwsBatchComputeEnvironment(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
@@ -590,7 +593,6 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		AccessKey:               d.Get("access_key").(string),
 		SecretKey:               d.Get("secret_key").(string),
 		Profile:                 d.Get("profile").(string),
-		CredsFilename:           d.Get("shared_credentials_file").(string),
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
 		MaxRetries:              d.Get("max_retries").(int),
@@ -602,6 +604,13 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		SkipMetadataApiCheck:    d.Get("skip_metadata_api_check").(bool),
 		S3ForcePathStyle:        d.Get("s3_force_path_style").(bool),
 	}
+
+	// Set CredsFilename, expanding home directory
+	credsPath, err := homedir.Expand(d.Get("shared_credentials_file").(string))
+	if err != nil {
+		return nil, err
+	}
+	config.CredsFilename = credsPath
 
 	assumeRoleList := d.Get("assume_role").(*schema.Set).List()
 	if len(assumeRoleList) == 1 {

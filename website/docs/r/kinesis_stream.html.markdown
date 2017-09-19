@@ -52,6 +52,13 @@ when creating a Kinesis stream. See [Amazon Kinesis Streams][2] for more.
 * `shard_count` - The count of Shards for this Stream
 * `arn` - The Amazon Resource Name (ARN) specifying the Stream (same as `id`)
 
+## Timeouts
+
+`aws_kinesis_stream` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `5 minutes`)  Used for Creating a Kinesis Stream
+- `update` - (Default `120 minutes`) Used for Updating a Kinesis Stream
+- `delete` - (Default `120 minutes`) Used for Destroying a Kinesis Stream
 
 ## Import
 
@@ -64,4 +71,3 @@ $ terraform import aws_kinesis_stream.test_stream terraform-kinesis-test
 [1]: https://aws.amazon.com/documentation/kinesis/
 [2]: https://docs.aws.amazon.com/kinesis/latest/dev/amazon-kinesis-streams.html
 [3]: https://docs.aws.amazon.com/streams/latest/dev/monitoring-with-cloudwatch.html
-

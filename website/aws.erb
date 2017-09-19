@@ -270,6 +270,15 @@
                     </ul>
                 </li>
 
+                <li<%= sidebar_current("docs-aws-resource-batch") %>>
+                    <a href="#">Batch Resources</a>
+                    <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-aws-resource-batch-compute-environment") %>>
+                            <a href="/docs/providers/aws/r/batch_compute_environment.html">aws_batch_compute_environment</a>
+                        </li>
+                    </ul>
+                </li>
+
                 <li<%= sidebar_current("docs-aws-resource-cloudformation") %>>
                     <a href="#">CloudFormation Resources</a>
                     <ul class="nav nav-visible">
@@ -303,6 +312,10 @@
                 <li<%= sidebar_current("docs-aws-resource-cloudwatch") %>>
                     <a href="#">CloudWatch Resources</a>
                     <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-aws-resource-cloudwatch-dashboard") %>>
+                            <a href="/docs/providers/aws/r/cloudwatch_dashboard.html">aws_cloudwatch_dashboard</a>
+                        </li>
+
                         <li<%= sidebar_current("docs-aws-resource-cloudwatch-event-rule") %>>
                             <a href="/docs/providers/aws/r/cloudwatch_event_rule.html">aws_cloudwatch_event_rule</a>
                         </li>
@@ -883,7 +896,7 @@
 
                     </ul>
                 </li>
-                
+
                 <li<%= sidebar_current("docs-aws-resource-iot") %>>
                   <a href="#">IoT Resources</a>
                   <ul class="nav nav-visible">
@@ -1158,6 +1171,10 @@
                     <a href="/docs/providers/aws/r/waf_rule.html">aws_waf_rule</a>
                   </li>
 
+                  <li<%= sidebar_current("docs-aws-resource-waf-rate-based-rule") %>>
+                    <a href="/docs/providers/aws/r/waf_rate_based_rule.html">aws_waf_rate_based_rule</a>
+                  </li>
+
                   <li<%= sidebar_current("docs-aws-resource-waf-size-constraint-set") %>>
                     <a href="/docs/providers/aws/r/waf_size_constraint_set.html">aws_waf_size_constraint_set</a>
                   </li>
@@ -1331,12 +1348,12 @@
                     <a href="#">SSM Resources</a>
                     <ul class="nav nav-visible">
 
-                        <li<%= sidebar_current("docs-aws-resource-ssm-association") %>>
-                            <a href="/docs/providers/aws/r/ssm_association.html">aws_ssm_association</a>
-                        </li>
-
                         <li<%= sidebar_current("docs-aws-resource-ssm-activation") %>>
                             <a href="/docs/providers/aws/r/ssm_activation.html">aws_ssm_activation</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-ssm-association") %>>
+                            <a href="/docs/providers/aws/r/ssm_association.html">aws_ssm_association</a>
                         </li>
 
                         <li<%= sidebar_current("docs-aws-resource-ssm-document") %>>

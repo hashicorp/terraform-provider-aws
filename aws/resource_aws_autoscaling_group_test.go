@@ -36,7 +36,7 @@ func testSweepAutoscalingGroups(region string) error {
 
 	resp, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{})
 	if err != nil {
-		return fmt.Errorf("Error retrieving launch configuration: %s", err)
+		return fmt.Errorf("Error retrieving AutoScaling Groups in Sweeper: %s", err)
 	}
 
 	if len(resp.AutoScalingGroups) == 0 {
@@ -46,9 +46,10 @@ func testSweepAutoscalingGroups(region string) error {
 
 	for _, asg := range resp.AutoScalingGroups {
 		var testOptGroup bool
-		for _, testName := range []string{"foobar", "terraform-"} {
+		for _, testName := range []string{"foobar", "terraform-", "tf-test"} {
 			if strings.HasPrefix(*asg.AutoScalingGroupName, testName) {
 				testOptGroup = true
+				break
 			}
 		}
 
