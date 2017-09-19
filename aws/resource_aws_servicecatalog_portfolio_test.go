@@ -27,6 +27,14 @@ func TestAccAWSServiceCatalogPortfolio_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "provider_name", "test-c"),
 				),
 			},
+			resource.TestStep{
+				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfig_basic3,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "name", "test-a"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "description", "test-only-change-me"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "provider_name", "test-c"),
+				),
+			},
 		},
 	})
 }
@@ -43,6 +51,14 @@ const testAccCheckAwsServiceCatalogPortfolioResourceConfig_basic2 = `
 resource "aws_servicecatalog_portfolio" "test" {
   name = "test-a"
   description = "test-b"
+  provider_name = "test-c"
+}
+`
+
+const testAccCheckAwsServiceCatalogPortfolioResourceConfig_basic3 = `
+resource "aws_servicecatalog_portfolio" "test" {
+  name = "test-a"
+  description = "test-only-change-me"
   provider_name = "test-c"
 }
 `
