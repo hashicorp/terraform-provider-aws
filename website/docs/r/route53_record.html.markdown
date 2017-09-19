@@ -107,6 +107,7 @@ The following arguments are supported:
 * `geolocation_routing_policy` - (Optional) A block indicating a routing policy based on the geolocation of the requestor. Conflicts with any other routing policy. Documented below.
 * `latency_routing_policy` - (Optional) A block indicating a routing policy based on the latency between the requestor and an AWS region. Conflicts with any other routing policy. Documented below.
 * `weighted_routing_policy` - (Optional) A block indicating a weighted routing policy. Conflicts with any other routing policy. Documented below.
+* `multivalue_answer_routing_policy` - (Optional) A block indicating a multivalue answer routing policy. Conflicts with any other routing policy.
 
 Exactly one of `records` or `alias` must be specified: this determines whether it's an alias record.
 
