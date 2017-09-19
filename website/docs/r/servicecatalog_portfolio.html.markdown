@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_service_catalog_portfolio"
-sidebar_current: "docs-aws-resource-service-catalog-portfolio-x"
+page_title: "AWS: aws_servicecatalog_portfolio"
+sidebar_current: "docs-aws-resource-servicecatalog-portfolio-x"
 description: |-
   Provides a resource to create a Service Catalog portfolio
 ---
 
-# aws\_service\_catalog\_portfolio
+# aws\_servicecatalog\_portfolio
 
 Provides a resource to create a Service Catalog Portfolio.
 
@@ -39,5 +39,5 @@ The following attributes are exported:
 Service Catalog Portfolios can be imported using the `service catalog portfolio id`, e.g.
 
 ```
-$ terraform import aws_service_catalog_portfolio.testfolio port-12344321
+$ terraform import aws_servicecatalog_portfolio.testfolio port-12344321
 ```
