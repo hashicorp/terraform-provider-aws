@@ -135,10 +135,10 @@ func testAccCheckBatchJobDefinitionAttributes(jd *batch.JobDefinition, compare *
 			}
 			if compare != nil {
 				if compare.Parameters != nil && !reflect.DeepEqual(compare.Parameters, jd.Parameters) {
-					return fmt.Errorf("Bad Job Definition Params\n\t expected: %s\n\tgot: %s\n", compare.Parameters, jd.Parameters)
+					return fmt.Errorf("Bad Job Definition Params\n\t expected: %v\n\tgot: %v\n", compare.Parameters, jd.Parameters)
 				}
 				if compare.RetryStrategy != nil && *compare.RetryStrategy.Attempts != *jd.RetryStrategy.Attempts {
-					return fmt.Errorf("Bad Job Definition Retry Strategy\n\t expected: %s\n\tgot: %s\n", *compare.RetryStrategy.Attempts, *jd.RetryStrategy.Attempts)
+					return fmt.Errorf("Bad Job Definition Retry Strategy\n\t expected: %d\n\tgot: %d\n", *compare.RetryStrategy.Attempts, *jd.RetryStrategy.Attempts)
 				}
 				if compare.ContainerProperties != nil && compare.ContainerProperties.Command != nil && !reflect.DeepEqual(compare.ContainerProperties, jd.ContainerProperties) {
 					return fmt.Errorf("Bad Job Definition Container Properties\n\t expected: %s\n\tgot: %s\n", compare.ContainerProperties, jd.ContainerProperties)

@@ -108,7 +108,7 @@ func testAccCheckBatchJobQueueAttributes(jq *batch.JobQueueDetail) resource.Test
 				return err
 			}
 			if *jq.Priority != priority {
-				return fmt.Errorf("Bad Job Queue Priority\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["priority"], *jq.Priority)
+				return fmt.Errorf("Bad Job Queue Priority\n\t expected: %s\n\tgot: %d\n", rs.Primary.Attributes["priority"], *jq.Priority)
 			}
 		}
 		return nil
