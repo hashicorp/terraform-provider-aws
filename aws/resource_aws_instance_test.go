@@ -307,6 +307,11 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 					testCheck(),
 				),
 			},
+			{
+				Config:             testAccInstanceGP2IopsDeviceExplicit,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
 		},
 	})
 }
@@ -1555,6 +1560,25 @@ resource "aws_instance" "foo" {
 		volume_type = "gp2"
 		volume_size = 11
         # configured explicitly
+		iops        = 10
+	}
+}
+`
+
+const testAccInstanceGP2IopsDeviceExplicit = `
+resource "aws_instance" "foo" {
+	# us-west-2
+	ami = "ami-55a7ea65"
+
+	# In order to attach an encrypted volume to an instance you need to have an
+	# m3.medium or larger. See "Supported Instance Types" in:
+	# http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html
+	instance_type = "m3.medium"
+
+	root_block_device {
+		volume_type = "gp2"
+		volume_size = 11
+        # demo a test scenario
 		iops        = 10
 	}
 }
