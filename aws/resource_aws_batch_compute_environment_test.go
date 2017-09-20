@@ -395,6 +395,7 @@ resource "aws_batch_compute_environment" "ec2" {
   }
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
   type = "MANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 `, rInt)
 }
@@ -423,6 +424,7 @@ resource "aws_batch_compute_environment" "ec2" {
   }
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
   type = "MANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 `, rInt)
 }
@@ -450,6 +452,7 @@ resource "aws_batch_compute_environment" "spot" {
   }
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
   type = "MANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 `, rInt)
 }
@@ -460,6 +463,7 @@ resource "aws_batch_compute_environment" "unmanaged" {
   compute_environment_name = "tf_acc_test_%d"
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
   type = "UNMANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 `, rInt)
 }
@@ -485,6 +489,7 @@ resource "aws_batch_compute_environment" "ec2" {
   }
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
   type = "MANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 `, rInt)
 }
@@ -511,6 +516,7 @@ resource "aws_batch_compute_environment" "ec2" {
   }
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
   type = "MANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 `, rInt)
 }
@@ -536,6 +542,7 @@ resource "aws_batch_compute_environment" "ec2" {
   }
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
   type = "MANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 `, rInt)
 }
@@ -546,6 +553,7 @@ resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "tf_acc_test_%d"
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
   type = "MANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 `, rInt)
 }
@@ -571,6 +579,7 @@ resource "aws_batch_compute_environment" "unmanaged" {
   }
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
   type = "UNMANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 `, rInt)
 }
@@ -596,6 +605,7 @@ resource "aws_batch_compute_environment" "ec2" {
   }
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
   type = "MANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 `, rInt)
 }
