@@ -51,6 +51,22 @@ func validateRdsIdentifierPrefix(v interface{}, k string) (ws []string, errors [
 	return
 }
 
+func validateRdsEngine(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	validTypes := map[string]bool{
+		"aurora":            true,
+		"aurora-postgresql": true,
+	}
+
+	if _, ok := validTypes[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q contains an invalid engine type %q. Valid types are either %q or %q.",
+			k, value, "aurora", "aurora-postgresql"))
+	}
+	return
+}
+
 func validateElastiCacheClusterId(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if (len(value) < 1) || (len(value) > 20) {

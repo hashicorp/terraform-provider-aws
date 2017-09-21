@@ -43,6 +43,9 @@ IMPROVEMENTS:
 * resource/aws_ssm_document: Added name validation [GH-1638]
 * resource/aws_nat_gateway: Add tags support [GH-1625]
 * resource/aws_route53_record: Add support for Route53 multi-value answer routing policy [GH-1686]
+* resource/aws_instance: Read iops only when volume type is io1 [GH-1573]
+* Allow RDS Cluster / Cluster instance to specify the engine [GH-1591]
+* resource/aws_cloudwatch_event_target: Add Input transformer for Cloudwatch Events [GH-1343]
 
 BUG FIXES:
 
