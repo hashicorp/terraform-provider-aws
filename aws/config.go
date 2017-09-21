@@ -32,6 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -127,6 +128,7 @@ type AWSClient struct {
 	cloudwatcheventsconn  *cloudwatchevents.CloudWatchEvents
 	cognitoconn           *cognitoidentity.CognitoIdentity
 	configconn            *configservice.ConfigService
+	daxconn               *dax.DAX
 	devicefarmconn        *devicefarm.DeviceFarm
 	dmsconn               *databasemigrationservice.DatabaseMigrationService
 	dsconn                *directoryservice.DirectoryService
@@ -353,6 +355,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.cognitoconn = cognitoidentity.New(sess)
 	client.dmsconn = databasemigrationservice.New(sess)
 	client.codepipelineconn = codepipeline.New(sess)
+	client.daxconn = dax.New(awsDynamoSess)
 	client.dsconn = directoryservice.New(sess)
 	client.dynamodbconn = dynamodb.New(awsDynamoSess)
 	client.ecrconn = ecr.New(sess)
