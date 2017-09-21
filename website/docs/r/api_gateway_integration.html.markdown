@@ -32,10 +32,12 @@ resource "aws_api_gateway_method" "MyDemoMethod" {
 }
 
 resource "aws_api_gateway_integration" "MyDemoIntegration" {
-  rest_api_id = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
-  resource_id = "${aws_api_gateway_resource.MyDemoResource.id}"
-  http_method = "${aws_api_gateway_method.MyDemoMethod.http_method}"
-  type        = "MOCK"
+  rest_api_id          = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
+  resource_id          = "${aws_api_gateway_resource.MyDemoResource.id}"
+  http_method          = "${aws_api_gateway_method.MyDemoMethod.http_method}"
+  type                 = "MOCK"
+  cache_key_parameters = ["method.request.path.param"]
+  cache_namespace      = "foobar"
 
   request_parameters = {
     "integration.request.header.X-Authorization" = "'static'"
@@ -150,5 +152,7 @@ The following arguments are supported:
 * `request_parameters` - (Optional) A map of request query string parameters and headers that should be passed to the backend responder.
   For example: `request_parameters = { "integration.request.header.X-Some-Other-Header" = "method.request.header.X-Some-Header" }`
 * `passthrough_behavior` - (Optional) The integration passthrough behavior (`WHEN_NO_MATCH`, `WHEN_NO_TEMPLATES`, `NEVER`).  **Required** if `request_templates` is used.
+* `cache_key_parameters` - (Optional) A list of cache key parameters for the integration.
+* `cache_key_namespace` - (Optional) The integration's cache namespace.
 * `request_parameters_in_json` - **Deprecated**, use `request_parameters` instead.
 * `content_handling` - (Optional) Specifies how to handle request payload content type conversions. Supported values are `CONVERT_TO_BINARY` and `CONVERT_TO_TEXT`. If this property is not defined, the request payload will be passed through from the method request to integration request without modification, provided that the passthroughBehaviors is configured to support payload pass-through.
