@@ -73,7 +73,7 @@ func resourceAwsServiceCatalogPortfolioCreate(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Creating Service Catalog Portfolio: %#v", input)
 	resp, err := conn.CreatePortfolio(&input)
 	if err != nil {
-		return fmt.Errorf("Creating ServiceCatalog portfolio failed: %s", err.Error())
+		return fmt.Errorf("Creating Service Catalog Portfolio failed: %s", err.Error())
 	}
 	d.SetId(*resp.PortfolioDetail.Id)
 
@@ -89,11 +89,11 @@ func resourceAwsServiceCatalogPortfolioRead(d *schema.ResourceData, meta interfa
 	resp, err := conn.DescribePortfolio(&input)
 	if err != nil {
 		if scErr, ok := err.(awserr.Error); ok && scErr.Code() == "ResourceNotFoundException" {
-			log.Printf("[WARN] Service Catalog %q not found, removing from state", d.Id())
+			log.Printf("[WARN] Service Catalog Portfolio %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Reading ServiceCatalog portfolio '%s' failed: %s", *input.Id, err.Error())
+		return fmt.Errorf("Reading ServiceCatalog Portfolio '%s' failed: %s", *input.Id, err.Error())
 	}
 	portfolioDetail := resp.PortfolioDetail
 
@@ -126,7 +126,7 @@ func resourceAwsServiceCatalogPortfolioUpdate(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Update Service Catalog Portfolio: %#v", input)
 	_, err := conn.UpdatePortfolio(&input)
 	if err != nil {
-		return fmt.Errorf("Updating ServiceCatalog portfolio '%s' failed: %s", *input.Id, err.Error())
+		return fmt.Errorf("Updating Service Catalog Portfolio '%s' failed: %s", *input.Id, err.Error())
 	}
 	return resourceAwsServiceCatalogPortfolioRead(d, meta)
 }
@@ -139,7 +139,7 @@ func resourceAwsServiceCatalogPortfolioDelete(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Delete Service Catalog Portfolio: %#v", input)
 	_, err := conn.DeletePortfolio(&input)
 	if err != nil {
-		return fmt.Errorf("Deleting ServiceCatalog portfolio '%s' failed: %s", *input.Id, err.Error())
+		return fmt.Errorf("Deleting Service Catalog Portfolio '%s' failed: %s", *input.Id, err.Error())
 	}
 	return nil
 }
