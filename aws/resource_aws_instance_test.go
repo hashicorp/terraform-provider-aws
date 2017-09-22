@@ -189,8 +189,26 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 					testCheck(),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAWSInstance_GP2WithIopsValue(t *testing.T) {
+	var v ec2.Instance
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_instance.foo",
+		IDRefreshIgnore: []string{
+			"ephemeral_block_device", "user_data", "security_groups", "vpc_security_groups"},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config:             testAccInstanceGP2IopsDeviceExplicit,
+				Config: testAccInstanceGP2WithIopsValue,
+				Check:  testAccCheckInstanceExists("aws_instance.foo", &v),
+			},
+			{
+				Config:             testAccInstanceGP2WithIopsValue,
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -1518,7 +1536,7 @@ resource "aws_instance" "foo" {
 }
 `
 
-const testAccInstanceGP2IopsDeviceExplicit = `
+const testAccInstanceGP2WithIopsValue = `
 resource "aws_instance" "foo" {
 	# us-west-2
 	ami = "ami-55a7ea65"
@@ -1531,7 +1549,7 @@ resource "aws_instance" "foo" {
 	root_block_device {
 		volume_type = "gp2"
 		volume_size = 11
-        # demo a test scenario
+        # configured explicitly
 		iops        = 10
 	}
 }
