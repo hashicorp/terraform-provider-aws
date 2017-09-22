@@ -33,7 +33,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the Lightsail Instance
 * `availability_zone` - (Required) The Availability Zone in which to create your
-instance. At this time, must be in `us-east-1`, `us-east-2`, `us-west-2`, `eu-west-1`, `eu-west-2`, `eu-central-1` regions
+instance. At this time, must be in `us-east-1`, `us-east-2`, `us-west-2`, `eu-west-1`, `eu-west-2`, `eu-central-1`, `ap-southeast-1`, `ap-southeast-2`, `ap-northeast-1`, `ap-south-1` regions
 * `blueprint_id` - (Required) The ID for a virtual private server image
 (see list below)
 * `bundle_id` - (Required) The bundle of specification information (see list below)
