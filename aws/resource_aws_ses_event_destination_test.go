@@ -26,6 +26,8 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 						"aws_ses_event_destination.kinesis", "name", "event-destination-kinesis"),
 					resource.TestCheckResourceAttr(
 						"aws_ses_event_destination.cloudwatch", "name", "event-destination-cloudwatch"),
+					resource.TestCheckResourceAttr(
+						"aws_ses_event_destination.sns", "name", "event-destination-sns"),
 				),
 			},
 		},
@@ -156,6 +158,10 @@ data "aws_iam_policy_document" "fh_felivery_document" {
     }
 }
 
+resource "aws_sns_topic" "ses_destination" {
+  name = "ses-destination-test"
+}
+
 resource "aws_ses_configuration_set" "test" {
     name = "some-configuration-set-%d"
 }
@@ -166,7 +172,7 @@ resource "aws_ses_event_destination" "kinesis" {
   enabled = true,
   matching_types = ["bounce", "send"],
 
-  kinesis_destination = {
+  kinesis_destination {
     stream_arn = "${aws_kinesis_firehose_delivery_stream.test_stream.arn}",
     role_arn = "${aws_iam_role.firehose_role.arn}"
   }
@@ -178,10 +184,22 @@ resource "aws_ses_event_destination" "cloudwatch" {
   enabled = true,
   matching_types = ["bounce", "send"],
 
-  cloudwatch_destination = {
+  cloudwatch_destination {
     default_value = "default"
 	dimension_name = "dimension"
 	value_source = "emailHeader"
   }
 }
+
+resource "aws_ses_event_destination" "sns" {
+  name = "event-destination-sns",
+  configuration_set_name = "${aws_ses_configuration_set.test.name}",
+  enabled = true,
+  matching_types = ["bounce", "send"],
+
+  sns_destination {
+    topic_arn = "${aws_sns_topic.ses_destination.arn}"
+  }
+}
+
 `, edRandomInteger)
