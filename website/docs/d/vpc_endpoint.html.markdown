@@ -44,5 +44,5 @@ The given filters must match exactly one VPC endpoint whose data will be exporte
 All of the argument attributes are also exported as result attributes.
 
 * `policy` - The policy document associated with the VPC Endpoint.
-
 * `route_table_ids` - One or more route tables associated with the VPC Endpoint.
+* `prefix_list_id` - The prefix list ID of the exposed service.
