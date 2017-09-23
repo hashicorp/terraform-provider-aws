@@ -103,6 +103,7 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 						"green_fleet_provisioning_option": &schema.Schema{
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -716,11 +717,16 @@ func buildAlarmConfig(configured []interface{}) *codedeploy.AlarmConfiguration {
 // into a single codedeploy.DeploymentStyle object
 func buildDeploymentStyle(list []interface{}) *codedeploy.DeploymentStyle {
 	result := &codedeploy.DeploymentStyle{}
+	if len(list) == 0 || list[0] == nil {
+		return result
+	}
 
-	if len(list) == 1 {
-		style := list[0].(map[string]interface{})
-		result.DeploymentOption = aws.String(style["deployment_option"].(string))
-		result.DeploymentType = aws.String(style["deployment_type"].(string))
+	style := list[0].(map[string]interface{})
+	if v, ok := style["deployment_option"]; ok {
+		result.DeploymentOption = aws.String(v.(string))
+	}
+	if v, ok := style["deployment_type"]; ok {
+		result.DeploymentType = aws.String(v.(string))
 	}
 
 	return result
@@ -767,38 +773,59 @@ func buildLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
 // buildBlueGreenDeploymentConfig converts a raw schema list containing a map[string]interface{}
 // into a single codedeploy.BlueGreenDeploymentConfiguration object
 func buildBlueGreenDeploymentConfig(list []interface{}) *codedeploy.BlueGreenDeploymentConfiguration {
-	if len(list) == 0 || list[0] == nil {
-		return nil
-	}
-
 	blueGreenDeploymentConfig := &codedeploy.BlueGreenDeploymentConfiguration{}
+	if len(list) == 0 || list[0] == nil {
+		return blueGreenDeploymentConfig
+	}
 
 	config := list[0].(map[string]interface{})
 
 	if attr, ok := config["deployment_ready_option"]; ok {
-		m := attr.([]interface{})[0].(map[string]interface{})
-		deploymentReadyOption := &codedeploy.DeploymentReadyOption{
-			ActionOnTimeout:   aws.String(m["action_on_timeout"].(string)),
-			WaitTimeInMinutes: aws.Int64(int64(m["wait_time_in_minutes"].(int))),
+		a := attr.([]interface{})
+
+		if len(a) > 0 && a[0] != nil {
+			m := a[0].(map[string]interface{})
+
+			deploymentReadyOption := &codedeploy.DeploymentReadyOption{}
+			if v, ok := m["action_on_timeout"]; ok {
+				deploymentReadyOption.ActionOnTimeout = aws.String(v.(string))
+			}
+			if v, ok := m["wait_time_in_minutes"]; ok {
+				deploymentReadyOption.WaitTimeInMinutes = aws.Int64(int64(v.(int)))
+			}
+			blueGreenDeploymentConfig.DeploymentReadyOption = deploymentReadyOption
 		}
-		blueGreenDeploymentConfig.DeploymentReadyOption = deploymentReadyOption
 	}
 
 	if attr, ok := config["green_fleet_provisioning_option"]; ok {
-		m := attr.([]interface{})[0].(map[string]interface{})
-		greenFleetProvisioningOption := &codedeploy.GreenFleetProvisioningOption{
-			Action: aws.String(m["action"].(string)),
+		a := attr.([]interface{})
+
+		if len(a) > 0 && a[0] != nil {
+			m := a[0].(map[string]interface{})
+
+			greenFleetProvisioningOption := &codedeploy.GreenFleetProvisioningOption{}
+			if v, ok := m["action"]; ok {
+				greenFleetProvisioningOption.Action = aws.String(v.(string))
+			}
+			blueGreenDeploymentConfig.GreenFleetProvisioningOption = greenFleetProvisioningOption
 		}
-		blueGreenDeploymentConfig.GreenFleetProvisioningOption = greenFleetProvisioningOption
 	}
 
 	if attr, ok := config["terminate_blue_instances_on_deployment_success"]; ok {
-		m := attr.([]interface{})[0].(map[string]interface{})
-		blueInstanceTerminationOption := &codedeploy.BlueInstanceTerminationOption{
-			Action: aws.String(m["action"].(string)),
-			TerminationWaitTimeInMinutes: aws.Int64(int64(m["termination_wait_time_in_minutes"].(int))),
+		a := attr.([]interface{})
+
+		if len(a) > 0 && a[0] != nil {
+			m := a[0].(map[string]interface{})
+
+			blueInstanceTerminationOption := &codedeploy.BlueInstanceTerminationOption{}
+			if v, ok := m["action"]; ok {
+				blueInstanceTerminationOption.Action = aws.String(v.(string))
+			}
+			if v, ok := m["termination_wait_time_in_minutes"]; ok {
+				blueInstanceTerminationOption.TerminationWaitTimeInMinutes = aws.Int64(int64(v.(int)))
+			}
+			blueGreenDeploymentConfig.TerminateBlueInstancesOnDeploymentSuccess = blueInstanceTerminationOption
 		}
-		blueGreenDeploymentConfig.TerminateBlueInstancesOnDeploymentSuccess = blueInstanceTerminationOption
 	}
 
 	return blueGreenDeploymentConfig
@@ -906,8 +933,12 @@ func deploymentStyleToMap(style *codedeploy.DeploymentStyle) []map[string]interf
 	}
 
 	item := make(map[string]interface{})
-	item["deployment_option"] = *style.DeploymentOption
-	item["deployment_type"] = *style.DeploymentType
+	if style.DeploymentOption != nil {
+		item["deployment_option"] = *style.DeploymentOption
+	}
+	if style.DeploymentType != nil {
+		item["deployment_type"] = *style.DeploymentType
+	}
 	result = append(result, item)
 	return result
 }
@@ -954,22 +985,44 @@ func blueGreenDeploymentConfigToMap(config *codedeploy.BlueGreenDeploymentConfig
 
 	m := make(map[string]interface{})
 
-	a := make([]map[string]interface{}, 0)
-	deploymentReadyOption := make(map[string]interface{})
-	deploymentReadyOption["action_on_timeout"] = *config.DeploymentReadyOption.ActionOnTimeout
-	deploymentReadyOption["wait_time_in_minutes"] = *config.DeploymentReadyOption.WaitTimeInMinutes
-	m["deployment_ready_option"] = append(a, deploymentReadyOption)
+	if config.DeploymentReadyOption != nil {
+		a := make([]map[string]interface{}, 0)
+		deploymentReadyOption := make(map[string]interface{})
 
-	b := make([]map[string]interface{}, 0)
-	greenFleetProvisioningOption := make(map[string]interface{})
-	greenFleetProvisioningOption["action"] = *config.GreenFleetProvisioningOption.Action
-	m["green_fleet_provisioning_option"] = append(b, greenFleetProvisioningOption)
+		if config.DeploymentReadyOption.ActionOnTimeout != nil {
+			deploymentReadyOption["action_on_timeout"] = *config.DeploymentReadyOption.ActionOnTimeout
+		}
+		if config.DeploymentReadyOption.WaitTimeInMinutes != nil {
+			deploymentReadyOption["wait_time_in_minutes"] = *config.DeploymentReadyOption.WaitTimeInMinutes
+		}
 
-	c := make([]map[string]interface{}, 0)
-	blueInstanceTerminationOption := make(map[string]interface{})
-	blueInstanceTerminationOption["action"] = *config.TerminateBlueInstancesOnDeploymentSuccess.Action
-	blueInstanceTerminationOption["termination_wait_time_in_minutes"] = *config.TerminateBlueInstancesOnDeploymentSuccess.TerminationWaitTimeInMinutes
-	m["terminate_blue_instances_on_deployment_success"] = append(c, blueInstanceTerminationOption)
+		m["deployment_ready_option"] = append(a, deploymentReadyOption)
+	}
+
+	if config.GreenFleetProvisioningOption != nil {
+		b := make([]map[string]interface{}, 0)
+		greenFleetProvisioningOption := make(map[string]interface{})
+
+		if config.GreenFleetProvisioningOption.Action != nil {
+			greenFleetProvisioningOption["action"] = *config.GreenFleetProvisioningOption.Action
+		}
+
+		m["green_fleet_provisioning_option"] = append(b, greenFleetProvisioningOption)
+	}
+
+	if config.TerminateBlueInstancesOnDeploymentSuccess != nil {
+		c := make([]map[string]interface{}, 0)
+		blueInstanceTerminationOption := make(map[string]interface{})
+
+		if config.TerminateBlueInstancesOnDeploymentSuccess.Action != nil {
+			blueInstanceTerminationOption["action"] = *config.TerminateBlueInstancesOnDeploymentSuccess.Action
+		}
+		if config.TerminateBlueInstancesOnDeploymentSuccess.TerminationWaitTimeInMinutes != nil {
+			blueInstanceTerminationOption["termination_wait_time_in_minutes"] = *config.TerminateBlueInstancesOnDeploymentSuccess.TerminationWaitTimeInMinutes
+		}
+
+		m["terminate_blue_instances_on_deployment_success"] = append(c, blueInstanceTerminationOption)
+	}
 
 	list = append(list, m)
 	return list
