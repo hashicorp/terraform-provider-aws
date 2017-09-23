@@ -57,6 +57,12 @@ func resourceAwsDbInstance() *schema.Resource {
 				Sensitive: true,
 			},
 
+			"hash_password": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"engine": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -575,6 +581,15 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		}
 
+		// If hash_password flag is true, hash the password state. Executed after
+		// rds.CreateDBInstanceInput and before the state is written to file.
+		if d.Get("hash_password").(bool) {
+			err := d.Set("password", hashPassword(d.Get("password")))
+			if err != nil {
+				return err
+			}
+		}
+
 		attr := d.Get("backup_retention_period")
 		opts.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
 		if attr, ok := d.GetOk("multi_az"); ok {
@@ -942,10 +957,47 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		req.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
 		requestUpdate = true
 	}
-	if d.HasChange("password") {
+	if d.HasChange("password") || d.HasChange("hash_password") {
 		d.SetPartial("password")
-		req.MasterUserPassword = aws.String(d.Get("password").(string))
-		requestUpdate = true
+		// Logic required to prevent unnecessary reset master credentials events in aws when
+		// switching hash_password value during updates.
+		o_passwd, n_passwd := d.GetChange("password")
+		n_passwdHash := hashPassword(n_passwd)
+		hashFlag := d.Get("hash_password").(bool)
+		if d.HasChange("hash_password") {
+			if hashFlag {
+				if n_passwd.(string) == o_passwd.(string) {
+					d.Set("password", n_passwdHash)
+				} else {
+					req.MasterUserPassword = aws.String(n_passwd.(string))
+					requestUpdate = true
+					d.Set("password", n_passwdHash)
+				}
+			} else {
+				if n_passwdHash == o_passwd.(string) {
+					d.Set("password", n_passwd)
+				} else {
+					req.MasterUserPassword = aws.String(n_passwd.(string))
+					requestUpdate = true
+					d.Set("password", n_passwd)
+				}
+			}
+		} else {
+			if hashFlag {
+				if n_passwdHash == o_passwd.(string) {
+					d.Set("password", n_passwdHash)
+				} else {
+					req.MasterUserPassword = aws.String(n_passwd.(string))
+					requestUpdate = true
+					d.Set("password", n_passwdHash)
+				}
+			} else {
+				if n_passwd.(string) != o_passwd.(string) {
+					req.MasterUserPassword = aws.String(n_passwd.(string))
+					requestUpdate = true
+				}
+			}
+		}
 	}
 	if d.HasChange("multi_az") {
 		d.SetPartial("multi_az")
