@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 // Base64Encode encodes data if the input isn't already encoded using base64.StdEncoding.EncodeToString.
@@ -49,4 +52,57 @@ func hashSum(value interface{}) string {
 
 func hashPassword(value interface{}) string {
 	return hashSum(value)
+}
+
+// Manages password hashing in state file based on hash_password config value.
+// Should be called from CRUD functions. Switches on method to accomplish different
+// tasks.
+func managePasswordHash(d *schema.ResourceData, method string) (bool, *string) {
+	var requestUpdate bool
+	var masterUserPassword *string
+	o_passwd, n_passwd := d.GetChange("password")
+	n_passwdHash := hashPassword(n_passwd)
+	hashFlag := d.Get("hash_password").(bool)
+	switch method {
+	case "create":
+		if hashFlag {
+			d.Set("password", n_passwdHash)
+		}
+	case "update":
+		if d.HasChange("hash_password") {
+			if hashFlag {
+				if n_passwd.(string) == o_passwd.(string) {
+					d.Set("password", n_passwdHash)
+				} else {
+					masterUserPassword = aws.String(n_passwd.(string))
+					requestUpdate = true
+					d.Set("password", n_passwdHash)
+				}
+			} else {
+				if n_passwdHash == o_passwd.(string) {
+					d.Set("password", n_passwd)
+				} else {
+					masterUserPassword = aws.String(n_passwd.(string))
+					requestUpdate = true
+					d.Set("password", n_passwd)
+				}
+			}
+		} else {
+			if hashFlag {
+				if n_passwdHash == o_passwd.(string) {
+					d.Set("password", n_passwdHash)
+				} else {
+					masterUserPassword = aws.String(n_passwd.(string))
+					requestUpdate = true
+					d.Set("password", n_passwdHash)
+				}
+			} else {
+				if n_passwd.(string) != o_passwd.(string) {
+					masterUserPassword = aws.String(n_passwd.(string))
+					requestUpdate = true
+				}
+			}
+		}
+	}
+	return requestUpdate, masterUserPassword
 }

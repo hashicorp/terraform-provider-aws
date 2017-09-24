@@ -581,14 +581,9 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		}
 
-		// If hash_password flag is true, hash the password state. Executed after
-		// rds.CreateDBInstanceInput and before the state is written to file.
-		if d.Get("hash_password").(bool) {
-			err := d.Set("password", hashPassword(d.Get("password")))
-			if err != nil {
-				return err
-			}
-		}
+		// If hash_password config is true, the create switch will hash the password.
+		// Otherwise no work is done.
+		managePasswordHash(d, "create")
 
 		attr := d.Get("backup_retention_period")
 		opts.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
@@ -959,45 +954,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("password") || d.HasChange("hash_password") {
 		d.SetPartial("password")
-		// Logic required to prevent unnecessary reset master credentials events in aws when
-		// switching hash_password value during updates.
-		o_passwd, n_passwd := d.GetChange("password")
-		n_passwdHash := hashPassword(n_passwd)
-		hashFlag := d.Get("hash_password").(bool)
-		if d.HasChange("hash_password") {
-			if hashFlag {
-				if n_passwd.(string) == o_passwd.(string) {
-					d.Set("password", n_passwdHash)
-				} else {
-					req.MasterUserPassword = aws.String(n_passwd.(string))
-					requestUpdate = true
-					d.Set("password", n_passwdHash)
-				}
-			} else {
-				if n_passwdHash == o_passwd.(string) {
-					d.Set("password", n_passwd)
-				} else {
-					req.MasterUserPassword = aws.String(n_passwd.(string))
-					requestUpdate = true
-					d.Set("password", n_passwd)
-				}
-			}
-		} else {
-			if hashFlag {
-				if n_passwdHash == o_passwd.(string) {
-					d.Set("password", n_passwdHash)
-				} else {
-					req.MasterUserPassword = aws.String(n_passwd.(string))
-					requestUpdate = true
-					d.Set("password", n_passwdHash)
-				}
-			} else {
-				if n_passwd.(string) != o_passwd.(string) {
-					req.MasterUserPassword = aws.String(n_passwd.(string))
-					requestUpdate = true
-				}
-			}
-		}
+		requestUpdate, req.MasterUserPassword = managePasswordHash(d, "update")
 	}
 	if d.HasChange("multi_az") {
 		d.SetPartial("multi_az")
