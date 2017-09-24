@@ -346,7 +346,7 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 	}
 
 	if attr, ok := d.GetOk("deployment_style"); ok {
-		input.DeploymentStyle = buildDeploymentStyle(attr.([]interface{}))
+		input.DeploymentStyle = expandDeploymentStyle(attr.([]interface{}))
 	}
 
 	if attr, ok := d.GetOk("deployment_config_name"); ok {
@@ -381,11 +381,11 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 	}
 
 	if attr, ok := d.GetOk("load_balancer_info"); ok {
-		input.LoadBalancerInfo = buildLoadBalancerInfo(attr.([]interface{}))
+		input.LoadBalancerInfo = expandLoadBalancerInfo(attr.([]interface{}))
 	}
 
 	if attr, ok := d.GetOk("blue_green_deployment_config"); ok {
-		input.BlueGreenDeploymentConfiguration = buildBlueGreenDeploymentConfig(attr.([]interface{}))
+		input.BlueGreenDeploymentConfiguration = expandBlueGreenDeploymentConfig(attr.([]interface{}))
 	}
 
 	// Retry to handle IAM role eventual consistency.
@@ -451,7 +451,7 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 	d.Set("deployment_group_name", resp.DeploymentGroupInfo.DeploymentGroupName)
 	d.Set("service_role_arn", resp.DeploymentGroupInfo.ServiceRoleArn)
 
-	if err := d.Set("deployment_style", deploymentStyleToMap(resp.DeploymentGroupInfo.DeploymentStyle)); err != nil {
+	if err := d.Set("deployment_style", flattenDeploymentStyle(resp.DeploymentGroupInfo.DeploymentStyle)); err != nil {
 		return err
 	}
 
@@ -475,11 +475,11 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 		return err
 	}
 
-	if err := d.Set("load_balancer_info", loadBalancerInfoToMap(resp.DeploymentGroupInfo.LoadBalancerInfo)); err != nil {
+	if err := d.Set("load_balancer_info", flattenLoadBalancerInfo(resp.DeploymentGroupInfo.LoadBalancerInfo)); err != nil {
 		return err
 	}
 
-	if err := d.Set("blue_green_deployment_config", blueGreenDeploymentConfigToMap(resp.DeploymentGroupInfo.BlueGreenDeploymentConfiguration)); err != nil {
+	if err := d.Set("blue_green_deployment_config", flattenBlueGreenDeploymentConfig(resp.DeploymentGroupInfo.BlueGreenDeploymentConfiguration)); err != nil {
 		return err
 	}
 
@@ -512,7 +512,7 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 
 	if d.HasChange("deployment_style") {
 		_, n := d.GetChange("deployment_style")
-		input.DeploymentStyle = buildDeploymentStyle(n.([]interface{}))
+		input.DeploymentStyle = expandDeploymentStyle(n.([]interface{}))
 	}
 
 	// TagFilters aren't like tags. They don't append. They simply replace.
@@ -546,12 +546,12 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 
 	if d.HasChange("load_balancer_info") {
 		_, n := d.GetChange("load_balancer_info")
-		input.LoadBalancerInfo = buildLoadBalancerInfo(n.([]interface{}))
+		input.LoadBalancerInfo = expandLoadBalancerInfo(n.([]interface{}))
 	}
 
 	if d.HasChange("blue_green_deployment_config") {
 		_, n := d.GetChange("blue_green_deployment_config")
-		input.BlueGreenDeploymentConfiguration = buildBlueGreenDeploymentConfig(n.([]interface{}))
+		input.BlueGreenDeploymentConfiguration = expandBlueGreenDeploymentConfig(n.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating CodeDeploy DeploymentGroup %s", d.Id())
@@ -713,9 +713,9 @@ func buildAlarmConfig(configured []interface{}) *codedeploy.AlarmConfiguration {
 	return result
 }
 
-// buildDeploymentStyle converts a raw schema list containing a map[string]interface{}
+// expandDeploymentStyle converts a raw schema list containing a map[string]interface{}
 // into a single codedeploy.DeploymentStyle object
-func buildDeploymentStyle(list []interface{}) *codedeploy.DeploymentStyle {
+func expandDeploymentStyle(list []interface{}) *codedeploy.DeploymentStyle {
 	result := &codedeploy.DeploymentStyle{}
 	if len(list) == 0 || list[0] == nil {
 		return result
@@ -732,9 +732,9 @@ func buildDeploymentStyle(list []interface{}) *codedeploy.DeploymentStyle {
 	return result
 }
 
-// buildLoadBalancerInfo converts a raw schema list containing a map[string]interface{}
+// expandLoadBalancerInfo converts a raw schema list containing a map[string]interface{}
 // into a single codedeploy.LoadBalancerInfo object
-func buildLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
+func expandLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
 	if len(list) == 0 || list[0] == nil {
 		return nil
 	}
@@ -770,9 +770,9 @@ func buildLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
 	return loadBalancerInfo
 }
 
-// buildBlueGreenDeploymentConfig converts a raw schema list containing a map[string]interface{}
+// expandBlueGreenDeploymentConfig converts a raw schema list containing a map[string]interface{}
 // into a single codedeploy.BlueGreenDeploymentConfiguration object
-func buildBlueGreenDeploymentConfig(list []interface{}) *codedeploy.BlueGreenDeploymentConfiguration {
+func expandBlueGreenDeploymentConfig(list []interface{}) *codedeploy.BlueGreenDeploymentConfiguration {
 	blueGreenDeploymentConfig := &codedeploy.BlueGreenDeploymentConfiguration{}
 	if len(list) == 0 || list[0] == nil {
 		return blueGreenDeploymentConfig
@@ -923,9 +923,9 @@ func alarmConfigToMap(config *codedeploy.AlarmConfiguration) []map[string]interf
 	return result
 }
 
-// deploymentStyleToMap converts a codedeploy.DeploymentStyle object
+// flattenDeploymentStyle converts a codedeploy.DeploymentStyle object
 // into a []map[string]interface{} list containing a single item
-func deploymentStyleToMap(style *codedeploy.DeploymentStyle) []map[string]interface{} {
+func flattenDeploymentStyle(style *codedeploy.DeploymentStyle) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
 	if style == nil {
@@ -943,9 +943,9 @@ func deploymentStyleToMap(style *codedeploy.DeploymentStyle) []map[string]interf
 	return result
 }
 
-// loadBalancerInfoToMap converts a codedeploy.LoadBalancerInfo object
+// flattenLoadBalancerInfo converts a codedeploy.LoadBalancerInfo object
 // into a []map[string]interface{} list containing a single item
-func loadBalancerInfoToMap(loadBalancerInfo *codedeploy.LoadBalancerInfo) []map[string]interface{} {
+func flattenLoadBalancerInfo(loadBalancerInfo *codedeploy.LoadBalancerInfo) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
 	if loadBalancerInfo == nil {
@@ -974,9 +974,9 @@ func loadBalancerInfoToMap(loadBalancerInfo *codedeploy.LoadBalancerInfo) []map[
 	return result
 }
 
-// blueGreenDeploymentConfigToMap converts a codedeploy.BlueGreenDeploymentConfiguration object
+// flattenBlueGreenDeploymentConfig converts a codedeploy.BlueGreenDeploymentConfiguration object
 // into a []map[string]interface{} list containing a single item
-func blueGreenDeploymentConfigToMap(config *codedeploy.BlueGreenDeploymentConfiguration) []map[string]interface{} {
+func flattenBlueGreenDeploymentConfig(config *codedeploy.BlueGreenDeploymentConfiguration) []map[string]interface{} {
 	list := make([]map[string]interface{}, 0)
 
 	if config == nil {

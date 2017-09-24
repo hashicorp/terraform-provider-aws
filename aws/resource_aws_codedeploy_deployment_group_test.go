@@ -1403,7 +1403,7 @@ func TestAWSCodeDeployDeploymentGroup_autoRollbackConfigToMap(t *testing.T) {
 	}
 }
 
-func TestAWSCodeDeployDeploymentGroup_buildDeploymentStyle(t *testing.T) {
+func TestAWSCodeDeployDeploymentGroup_expandDeploymentStyle(t *testing.T) {
 	input := []interface{}{
 		map[string]interface{}{
 			"deployment_option": "WITH_TRAFFIC_CONTROL",
@@ -1416,15 +1416,15 @@ func TestAWSCodeDeployDeploymentGroup_buildDeploymentStyle(t *testing.T) {
 		DeploymentType:   aws.String("BLUE_GREEN"),
 	}
 
-	actual := buildDeploymentStyle(input)
+	actual := expandDeploymentStyle(input)
 
 	if !reflect.DeepEqual(actual, expected) {
-		t.Fatalf("buildDeploymentStyle output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("expandDeploymentStyle output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
 
-func TestAWSCodeDeployDeploymentGroup_deploymentStyleToMap(t *testing.T) {
+func TestAWSCodeDeployDeploymentGroup_flattenDeploymentStyle(t *testing.T) {
 	expected := map[string]interface{}{
 		"deployment_option": "WITHOUT_TRAFFIC_CONTROL",
 		"deployment_type":   "IN_PLACE",
@@ -1435,7 +1435,7 @@ func TestAWSCodeDeployDeploymentGroup_deploymentStyleToMap(t *testing.T) {
 		DeploymentType:   aws.String("IN_PLACE"),
 	}
 
-	actual := deploymentStyleToMap(input)[0]
+	actual := flattenDeploymentStyle(input)[0]
 
 	fatal := false
 
@@ -1448,12 +1448,12 @@ func TestAWSCodeDeployDeploymentGroup_deploymentStyleToMap(t *testing.T) {
 	}
 
 	if fatal {
-		t.Fatalf("deploymentStyleToMap output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("flattenDeploymentStyle output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
 
-func TestAWSCodeDeployDeploymentGroup_buildLoadBalancerInfo(t *testing.T) {
+func TestAWSCodeDeployDeploymentGroup_expandLoadBalancerInfo(t *testing.T) {
 	input := []interface{}{
 		map[string]interface{}{
 			"elb_info": schema.NewSet(loadBalancerInfoHash, []interface{}{
@@ -1478,15 +1478,15 @@ func TestAWSCodeDeployDeploymentGroup_buildLoadBalancerInfo(t *testing.T) {
 		},
 	}
 
-	actual := buildLoadBalancerInfo(input)
+	actual := expandLoadBalancerInfo(input)
 
 	if !reflect.DeepEqual(actual, expected) {
-		t.Fatalf("buildLoadBalancerInfo output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("expandLoadBalancerInfo output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
 
-func TestAWSCodeDeployDeploymentGroup_loadBalancerInfoToMap(t *testing.T) {
+func TestAWSCodeDeployDeploymentGroup_flattenLoadBalancerInfo(t *testing.T) {
 	input := &codedeploy.LoadBalancerInfo{
 		TargetGroupInfoList: []*codedeploy.TargetGroupInfo{
 			{
@@ -1509,7 +1509,7 @@ func TestAWSCodeDeployDeploymentGroup_loadBalancerInfoToMap(t *testing.T) {
 		}),
 	}
 
-	actual := loadBalancerInfoToMap(input)[0]
+	actual := flattenLoadBalancerInfo(input)[0]
 
 	fatal := false
 
@@ -1520,12 +1520,12 @@ func TestAWSCodeDeployDeploymentGroup_loadBalancerInfoToMap(t *testing.T) {
 	}
 
 	if fatal {
-		t.Fatalf("loadBalancerInfoToMap output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("flattenLoadBalancerInfo output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
 
-func TestAWSCodeDeployDeploymentGroup_buildBlueGreenDeploymentConfig(t *testing.T) {
+func TestAWSCodeDeployDeploymentGroup_expandBlueGreenDeploymentConfig(t *testing.T) {
 	input := []interface{}{
 		map[string]interface{}{
 			"deployment_ready_option": []interface{}{
@@ -1566,15 +1566,15 @@ func TestAWSCodeDeployDeploymentGroup_buildBlueGreenDeploymentConfig(t *testing.
 		},
 	}
 
-	actual := buildBlueGreenDeploymentConfig(input)
+	actual := expandBlueGreenDeploymentConfig(input)
 
 	if !reflect.DeepEqual(actual, expected) {
-		t.Fatalf("buildBlueGreenDeploymentConfig output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("expandBlueGreenDeploymentConfig output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
 
-func TestAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfigToMap(t *testing.T) {
+func TestAWSCodeDeployDeploymentGroup_flattenBlueGreenDeploymentConfig(t *testing.T) {
 	input := &codedeploy.BlueGreenDeploymentConfiguration{
 		DeploymentReadyOption: &codedeploy.DeploymentReadyOption{
 			ActionOnTimeout:   aws.String("STOP_DEPLOYMENT"),
@@ -1613,7 +1613,7 @@ func TestAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfigToMap(t *testing.
 		},
 	}
 
-	actual := blueGreenDeploymentConfigToMap(input)[0]
+	actual := flattenBlueGreenDeploymentConfig(input)[0]
 
 	fatal := false
 
@@ -1641,7 +1641,7 @@ func TestAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfigToMap(t *testing.
 	}
 
 	if fatal {
-		t.Fatalf("blueGreenDeploymentConfigToMap output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("flattenBlueGreenDeploymentConfig output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
