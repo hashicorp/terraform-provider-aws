@@ -716,12 +716,13 @@ func buildAlarmConfig(configured []interface{}) *codedeploy.AlarmConfiguration {
 // expandDeploymentStyle converts a raw schema list containing a map[string]interface{}
 // into a single codedeploy.DeploymentStyle object
 func expandDeploymentStyle(list []interface{}) *codedeploy.DeploymentStyle {
-	result := &codedeploy.DeploymentStyle{}
 	if len(list) == 0 || list[0] == nil {
-		return result
+		return nil
 	}
 
 	style := list[0].(map[string]interface{})
+	result := &codedeploy.DeploymentStyle{}
+
 	if v, ok := style["deployment_option"]; ok {
 		result.DeploymentOption = aws.String(v.(string))
 	}
@@ -739,9 +740,8 @@ func expandLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
 		return nil
 	}
 
-	loadBalancerInfo := &codedeploy.LoadBalancerInfo{}
-
 	lbInfo := list[0].(map[string]interface{})
+	loadBalancerInfo := &codedeploy.LoadBalancerInfo{}
 
 	if attr, ok := lbInfo["elb_info"]; ok {
 		elbs := attr.(*schema.Set).List()
@@ -773,12 +773,12 @@ func expandLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
 // expandBlueGreenDeploymentConfig converts a raw schema list containing a map[string]interface{}
 // into a single codedeploy.BlueGreenDeploymentConfiguration object
 func expandBlueGreenDeploymentConfig(list []interface{}) *codedeploy.BlueGreenDeploymentConfiguration {
-	blueGreenDeploymentConfig := &codedeploy.BlueGreenDeploymentConfiguration{}
 	if len(list) == 0 || list[0] == nil {
-		return blueGreenDeploymentConfig
+		return nil
 	}
 
 	config := list[0].(map[string]interface{})
+	blueGreenDeploymentConfig := &codedeploy.BlueGreenDeploymentConfiguration{}
 
 	if attr, ok := config["deployment_ready_option"]; ok {
 		a := attr.([]interface{})
@@ -926,10 +926,8 @@ func alarmConfigToMap(config *codedeploy.AlarmConfiguration) []map[string]interf
 // flattenDeploymentStyle converts a codedeploy.DeploymentStyle object
 // into a []map[string]interface{} list containing a single item
 func flattenDeploymentStyle(style *codedeploy.DeploymentStyle) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, 1)
-
 	if style == nil {
-		return result
+		return nil
 	}
 
 	item := make(map[string]interface{})
@@ -939,6 +937,8 @@ func flattenDeploymentStyle(style *codedeploy.DeploymentStyle) []map[string]inte
 	if style.DeploymentType != nil {
 		item["deployment_type"] = *style.DeploymentType
 	}
+
+	result := make([]map[string]interface{}, 0, 1)
 	result = append(result, item)
 	return result
 }
@@ -946,10 +946,8 @@ func flattenDeploymentStyle(style *codedeploy.DeploymentStyle) []map[string]inte
 // flattenLoadBalancerInfo converts a codedeploy.LoadBalancerInfo object
 // into a []map[string]interface{} list containing a single item
 func flattenLoadBalancerInfo(loadBalancerInfo *codedeploy.LoadBalancerInfo) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, 1)
-
 	if loadBalancerInfo == nil {
-		return result
+		return nil
 	}
 
 	elbs := make([]interface{}, 0, len(loadBalancerInfo.ElbInfoList))
@@ -969,18 +967,18 @@ func flattenLoadBalancerInfo(loadBalancerInfo *codedeploy.LoadBalancerInfo) []ma
 	lbInfo := make(map[string]interface{})
 	lbInfo["elb_info"] = schema.NewSet(loadBalancerInfoHash, elbs)
 	lbInfo["target_group_info"] = schema.NewSet(loadBalancerInfoHash, targetGroups)
-	result = append(result, lbInfo)
 
+	result := make([]map[string]interface{}, 0, 1)
+	result = append(result, lbInfo)
 	return result
 }
 
 // flattenBlueGreenDeploymentConfig converts a codedeploy.BlueGreenDeploymentConfiguration object
 // into a []map[string]interface{} list containing a single item
 func flattenBlueGreenDeploymentConfig(config *codedeploy.BlueGreenDeploymentConfiguration) []map[string]interface{} {
-	list := make([]map[string]interface{}, 0)
 
 	if config == nil {
-		return list
+		return nil
 	}
 
 	m := make(map[string]interface{})
@@ -1024,6 +1022,7 @@ func flattenBlueGreenDeploymentConfig(config *codedeploy.BlueGreenDeploymentConf
 		m["terminate_blue_instances_on_deployment_success"] = append(c, blueInstanceTerminationOption)
 	}
 
+	list := make([]map[string]interface{}, 0)
 	list = append(list, m)
 	return list
 }
