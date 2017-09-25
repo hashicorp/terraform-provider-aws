@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -16,6 +17,7 @@ func resourceAwsSsmParameter() *schema.Resource {
 		Read:   resourceAwsSsmParameterRead,
 		Update: resourceAwsSsmParameterPut,
 		Delete: resourceAwsSsmParameterDelete,
+		Exists: resourceAwsSmmParameterExists,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -31,7 +33,6 @@ func resourceAwsSsmParameter() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validateSsmParameterType,
 			},
 			"value": {
@@ -42,14 +43,10 @@ func resourceAwsSsmParameter() *schema.Resource {
 			"key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				// The default should be set to true, terraform lifecycle should take care of not overriding the value if it is manually set by the user.
-				// Otherwise, it is causing a breaking change because the first version did not allow overwrite parameter and overwrite was allowed.
-				Default: true,
 			},
 			"allowed_pattern": {
 				Type:     schema.TypeString,
@@ -61,43 +58,64 @@ func resourceAwsSsmParameter() *schema.Resource {
 	}
 }
 
+func resourceAwsSmmParameterExists(d *schema.ResourceData, meta interface{}) (bool, error) {
+	conn := meta.(*AWSClient).ssmconn
+
+	resp, err := conn.GetParameters(&ssm.GetParametersInput{
+		Names:          []*string{aws.String(d.Get("name").(string))},
+		WithDecryption: aws.Bool(true),
+	})
+
+	if err != nil {
+		return false, err
+	}
+	return len(resp.InvalidParameters) == 0, nil
+}
+
 func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[DEBUG] Reading SSM Parameter: %s", d.Id())
 
-	if resp, err := conn.GetParameters(&ssm.GetParametersInput{
+	resp, err := conn.GetParameters(&ssm.GetParametersInput{
 		Names:          []*string{aws.String(d.Get("name").(string))},
 		WithDecryption: aws.Bool(true),
-	}); err != nil {
+	})
+	if err != nil {
 		return errwrap.Wrapf("[ERROR] Error getting SSM parameter: {{err}}", err)
-	} else {
-		if len(resp.InvalidParameters) > 0 {
-			log.Print("[INFO] The resource no longer exists, marking it for recreation:", d.Id())
-			d.SetId("")
-			return nil
-		}
-		param := resp.Parameters[0]
-		d.Set("name", param.Name)
-		d.Set("type", param.Type)
-		d.Set("value", param.Value)
 	}
 
-	if resp, err := conn.DescribeParameters(&ssm.DescribeParametersInput{
+	param := resp.Parameters[0]
+	d.Set("name", param.Name)
+	d.Set("type", param.Type)
+	d.Set("value", param.Value)
+
+	respDetailed, err := conn.DescribeParameters(&ssm.DescribeParametersInput{
 		Filters: []*ssm.ParametersFilter{
 			&ssm.ParametersFilter{
 				Key:    aws.String("Name"),
 				Values: []*string{aws.String(d.Get("name").(string))},
 			},
 		},
-	}); err != nil {
+	})
+	if err != nil {
 		return errwrap.Wrapf("[ERROR] Error describing SSM parameter: {{err}}", err)
-	} else {
-		param := resp.Parameters[0]
-		d.Set("key_id", param.KeyId)
-		d.Set("description", param.Description)
-		d.Set("allowed_pattern", param.AllowedPattern)
 	}
+
+	detail := respDetailed.Parameters[0]
+	if detail.Description != nil {
+		// Trailing spaces are not considered as a difference
+		*detail.Description = strings.TrimSpace(*detail.Description)
+	}
+	if _, ok := d.GetOk("key_id"); !ok && detail.KeyId != nil && *detail.KeyId == "alias/aws/ssm" {
+		// If the key_id is not specified and the actual key is set to the AWS default key, we set
+		// the key to nil to ensure that terraform does not consider that the actual key has changed.
+		detail.KeyId = nil
+	}
+
+	d.Set("key_id", detail.KeyId)
+	d.Set("description", detail.Description)
+	d.Set("allowed_pattern", detail.AllowedPattern)
 
 	if tagList, err := conn.ListTagsForResource(&ssm.ListTagsForResourceInput{
 		ResourceId:   aws.String(d.Get("name").(string)),
@@ -134,11 +152,18 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 
 	paramInput := &ssm.PutParameterInput{
 		Name:           aws.String(d.Get("name").(string)),
-		Description:    aws.String(d.Get("description").(string)),
 		Type:           aws.String(d.Get("type").(string)),
 		Value:          aws.String(d.Get("value").(string)),
-		Overwrite:      aws.Bool(d.Get("overwrite").(bool)),
+		Overwrite:      aws.Bool(shouldUpdateSsmParameter(d)),
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
+	}
+
+	if description, ok := d.GetOk("description"); ok {
+		paramInput.SetDescription(description.(string))
+	} else if d.HasChange("description") {
+		// There is a "bug" in the AWS API and is it not possible to unset a description once
+		// it has been initially set
+		paramInput.SetDescription(" ")
 	}
 
 	if keyID, ok := d.GetOk("key_id"); ok {
@@ -158,4 +183,15 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(d.Get("name").(string))
 
 	return resourceAwsSsmParameterRead(d, meta)
+}
+
+func shouldUpdateSsmParameter(d *schema.ResourceData) bool {
+	// If the user has specified a preference, return their preference
+	if value, ok := d.GetOkExists("overwrite"); ok {
+		return value.(bool)
+	}
+
+	// Since the user has not specified a preference, obey lifecycle rules
+	// if it is not a new resource, otherwise overwrite should be set to false.
+	return !d.IsNewResource()
 }
