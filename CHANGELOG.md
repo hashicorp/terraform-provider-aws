@@ -46,6 +46,7 @@ IMPROVEMENTS:
 * resource/aws_instance: Read iops only when volume type is io1 [GH-1573]
 * Allow RDS Cluster / Cluster instance to specify the engine [GH-1591]
 * resource/aws_cloudwatch_event_target: Add Input transformer for Cloudwatch Events [GH-1343]
+* resource/aws_directory_service_directory: Support Import functionality [GH-1732]
 
 BUG FIXES:
 
