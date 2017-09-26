@@ -581,9 +581,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		}
 
-		// If hash_password config is true, the create switch will hash the password.
-		// Otherwise no work is done.
-		managePasswordHash(d, "create")
+		// If hash_password config is true, hash the password
+		if d.Get("hash_password").(bool) {
+			d.Set("password", hashPassword(d.Get("password")))
+		}
 
 		attr := d.Get("backup_retention_period")
 		opts.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
@@ -954,7 +955,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("password") || d.HasChange("hash_password") {
 		d.SetPartial("password")
-		requestUpdate, req.MasterUserPassword = managePasswordHash(d, "update")
+		requestUpdate, req.MasterUserPassword = managePasswordHashUpdate(d)
 	}
 	if d.HasChange("multi_az") {
 		d.SetPartial("multi_az")
