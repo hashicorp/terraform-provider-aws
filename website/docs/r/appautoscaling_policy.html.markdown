@@ -47,9 +47,11 @@ The following arguments are supported:
 * `name` - (Required) The name of the policy.
 * `policy_type` - (Optional) Defaults to "StepScaling" because it is the only option available.
 * `resource_id` - (Required) The resource type and unique identifier string for the resource associated with the scaling policy. For Amazon ECS services, this value is the resource type, followed by the cluster name and service name, such as `service/default/sample-webapp`. For Amazon EC2 Spot fleet requests, the resource type is `spot-fleet-request`, and the identifier is the Spot fleet request ID; for example, `spot-fleet-request/sfr-73fbd2ce-aa30-494c-8788-1cee4EXAMPLE`.
+For DynamoDB tables, this value is `table/nameOfTheTable`.
 * `scalable_dimension` - (Required) The scalable dimension of the scalable target. The scalable dimension contains the service namespace,   resource  type, and scaling property, such as `ecs:service:DesiredCount` for the desired task count of an Amazon ECS service, or `ec2:spot-fleet-request:TargetCapacity` for the target capacity of an Amazon EC2 Spot fleet request.
-* `service_namespace` - (Required) The AWS service namespace of the scalable target. Valid values are `ecs` for Amazon ECS services and `ec2` Amazon EC2 Spot fleet requests.
+* `service_namespace` - (Required) The AWS service namespace of the scalable target. Valid values are `ecs` for Amazon ECS services, `ec2` for Amazon EC2 Spot fleet requests and `dynamodb` for DynamoDB tables.
 * `step_scaling_policy_configuration` - (Optional) Step scaling policy configuration, requires `policy_type = "StepScaling"` (default). See supported fields below.
+* `target_tracking_scaling_policy_configuration` - (Optional) A target tracking policy, requires `policy_type = "TargetTrackingScaling"`. See supported fields below.
 
 ## Nested fields
 
@@ -77,6 +79,28 @@ The following arguments are supported:
   * `metric_interval_lower_bound` - (Optional) The lower bound for the difference between the alarm threshold and the CloudWatch metric. Without a value, AWS will treat this bound as infinity.
   * `metric_interval_upper_bound` - (Optional) The upper bound for the difference between the alarm threshold and the CloudWatch metric. Without a value, AWS will treat this bound as infinity. The upper bound must be greater than the lower bound.
   * `scaling_adjustment` - (Required) The number of members by which to scale, when the adjustment bounds are breached. A positive value scales up. A negative value scales down.
+
+### `target_tracking_scaling_policy_configuration`
+
+* `target_value` - (Optional) The target value for the metric.
+* `disable_scale_in` - (Optional) Indicates whether scale in by the target tracking policy is disabled. If the value is true, scale in is disabled and the target tracking policy won't remove capacity from the scalable resource. Otherwise, scale in is enabled and the target tracking policy can remove capacity from the scalable resource. The default value is `false`.
+* `scale_in_cooldown` - (Optional) The amount of time, in seconds, after a scale in activity completes before another scale in activity can start.
+* `scale_out_cooldown` - (Optional) The amount of time, in seconds, after a scale out activity completes before another scale out activity can start.
+* `customized_metric_specification` - (Optional) Reserved for future use. See supported fields below.
+* `predefined_metric_specification` - (Optional) A predefined metric. See supported fields below.
+
+### `customized_metric_specification`
+
+* `dimensions` - (Optional) The dimensions of the metric.
+* `metric_name` - (Optional) The name of the metric.
+* `namespace` - (Optional) The namespace of the metric.
+* `statistic` - (Optional) The statistic of the metric.
+* `unit` - (Optional) The unit of the metric.
+
+### `predefined_metric_specification`
+
+* `predefined_metric_type` - (Required) The metric type.
+* `resource_label` - (Optional) Reserved for future use.
 
 ## Attribute Reference
 * `adjustment_type` - The scaling policy's adjustment type.
