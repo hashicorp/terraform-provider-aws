@@ -46,11 +46,10 @@ func resourceAwsNetworkInterface() *schema.Resource {
 			},
 
 			"private_ips": &schema.Schema{
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 
 			"private_ips_count": &schema.Schema{
@@ -119,7 +118,7 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 		request.Groups = expandStringList(security_groups)
 	}
 
-	private_ips := d.Get("private_ips").(*schema.Set).List()
+	private_ips := d.Get("private_ips").([]interface{})
 	if len(private_ips) != 0 {
 		request.PrivateIpAddresses = expandPrivateIPAddresses(private_ips)
 	}
@@ -275,9 +274,26 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		o, n := d.GetChange("private_ips")
 		if o == nil {
 			o = new(schema.Set)
+		} else {
+			t := new(schema.Set)
+			t.F = schema.HashString
+
+			for _, x := range o.([]interface{}) {
+				t.Add(x)
+			}
+			o = t
 		}
+
 		if n == nil {
 			n = new(schema.Set)
+		} else {
+			t := new(schema.Set)
+			t.F = schema.HashString
+
+			for _, x := range n.([]interface{}) {
+				t.Add(x)
+			}
+			n = t
 		}
 
 		os := o.(*schema.Set)
@@ -299,9 +315,17 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		// Assign new IP addresses
 		assignIps := ns.Difference(os)
 		if assignIps.Len() != 0 {
+			// Create ordered list of IPs to update
+			assignIpsList := make([]interface{}, 1)
+			for _, x := range d.Get("private_ips").([]interface{}) {
+				if assignIps.Contains(x) {
+					assignIpsList = append(assignIpsList, x)
+				}
+			}
+
 			input := &ec2.AssignPrivateIpAddressesInput{
 				NetworkInterfaceId: aws.String(d.Id()),
-				PrivateIpAddresses: expandStringList(assignIps.List()),
+				PrivateIpAddresses: expandStringList(assignIpsList),
 			}
 			_, err := conn.AssignPrivateIpAddresses(input)
 			if err != nil {
@@ -326,7 +350,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("private_ips_count") {
 		o, n := d.GetChange("private_ips_count")
-		private_ips := d.Get("private_ips").(*schema.Set).List()
+		private_ips := d.Get("private_ips").([]interface{})
 		private_ips_filtered := private_ips[:0]
 		primary_ip := d.Get("private_ip")
 
