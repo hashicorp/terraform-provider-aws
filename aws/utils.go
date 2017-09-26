@@ -62,46 +62,29 @@ func managePasswordHash(d *schema.ResourceData, method string) (bool, *string) {
 	var masterUserPassword *string
 	o_passwd, n_passwd := d.GetChange("password")
 	n_passwdHash := hashPassword(n_passwd)
-	hashFlag := d.Get("hash_password").(bool)
+	hash_flag := d.Get("hash_password").(bool)
 	switch method {
 	case "create":
-		if hashFlag {
+		if hash_flag {
 			d.Set("password", n_passwdHash)
 		}
 	case "update":
-		if d.HasChange("hash_password") {
-			if hashFlag {
-				if n_passwd.(string) == o_passwd.(string) {
-					d.Set("password", n_passwdHash)
-				} else {
-					masterUserPassword = aws.String(n_passwd.(string))
-					requestUpdate = true
-					d.Set("password", n_passwdHash)
-				}
+		values := []string{o_passwd.(string), n_passwd.(string), n_passwdHash}
+		encounter := map[string]bool{}
+		var match bool
+		for value := range values {
+			if encounter[values[value]] {
+				match = true
 			} else {
-				if n_passwdHash == o_passwd.(string) {
-					d.Set("password", n_passwd)
-				} else {
-					masterUserPassword = aws.String(n_passwd.(string))
-					requestUpdate = true
-					d.Set("password", n_passwd)
-				}
+				encounter[values[value]] = true
 			}
-		} else {
-			if hashFlag {
-				if n_passwdHash == o_passwd.(string) {
-					d.Set("password", n_passwdHash)
-				} else {
-					masterUserPassword = aws.String(n_passwd.(string))
-					requestUpdate = true
-					d.Set("password", n_passwdHash)
-				}
-			} else {
-				if n_passwd.(string) != o_passwd.(string) {
-					masterUserPassword = aws.String(n_passwd.(string))
-					requestUpdate = true
-				}
-			}
+		}
+		if !match {
+			masterUserPassword = aws.String(n_passwd.(string))
+			requestUpdate = true
+		}
+		if hash_flag {
+			d.Set("password", n_passwdHash)
 		}
 	}
 	return requestUpdate, masterUserPassword
