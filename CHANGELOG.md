@@ -15,6 +15,7 @@ IMPROVEMENTS:
 * provider: Add support for Task Roles when running on ECS or CodeBuild [GH-1425]
 * resource/aws_instance: New `user_data_base64` attribute that allows non-UTF8 data (such as gzip) to be assigned to user-data without corruption [GH-850]
 * data-source/aws_vpc: Expose enable_dns_* in aws_vpc data_source [GH-1373]
+* resource/aws_appautoscaling_policy: Add support for DynamoDB [GH-1650]
 * resource/aws_directory_service_directory: Add support for `tags` [GH-1398]
 * resource/aws_rds_cluster: Allow setting of rds cluster engine [GH-1415]
 * resource/aws_ssm_association: now supports update for `parameters`, `schedule_expression`,`output_location` [GH-1421]
@@ -44,7 +45,9 @@ IMPROVEMENTS:
 * resource/aws_nat_gateway: Add tags support [GH-1625]
 * resource/aws_route53_record: Add support for Route53 multi-value answer routing policy [GH-1686]
 * resource/aws_instance: Read iops only when volume type is io1 [GH-1573]
-* Allow RDS Cluster / Cluster instance to specify the engine [GH-1591]
+* resource/aws_rds_cluster(+_instance) Allow specifying the engine [GH-1591]
+* resource/aws_cloudwatch_event_target: Add Input transformer for Cloudwatch Events [GH-1343]
+* resource/aws_directory_service_directory: Support Import functionality [GH-1732]
 
 BUG FIXES:
 
