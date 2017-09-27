@@ -1,5 +1,9 @@
 ## 1.0.1 (Unreleased)
 
+IMPROVEMENTS:
+
+* resource/aws_cloudwatch_log_group: Add support for encryption via `kms_key_id` [GH-1751]
+
 BUG FIXES:
 
 * resource/aws_kinesis_firehose_delivery_stream: Fix crash caused by missing `processing_configuration` [GH-1738]
