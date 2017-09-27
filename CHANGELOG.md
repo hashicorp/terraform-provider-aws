@@ -1,7 +1,18 @@
 ## 1.0.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_appautoscaling_policy: Nest step scaling policy fields, deprecate 1st level fields [GH-1620]
+
+FEATURES:
+
+* **New Resource:** `aws_waf_rate_based_rule` [GH-1606]
+* **New Resource:** `aws_batch_compute_environment` [GH-1048]
+
 IMPROVEMENTS:
 
+* provider: Expand shared_credentials_file [GH-1511]
+* provider: Add support for Task Roles when running on ECS or CodeBuild [GH-1425]
 * resource/aws_instance: New `user_data_base64` attribute that allows non-UTF8 data (such as gzip) to be assigned to user-data without corruption [GH-850]
 * data-source/aws_vpc: Expose enable_dns_* in aws_vpc data_source [GH-1373]
 * resource/aws_directory_service_directory: Add support for `tags` [GH-1398]
@@ -17,12 +28,23 @@ IMPROVEMENTS:
 * resource/aws_codebuild_project: Allowed for BITBUCKET source type [GH-1468]
 * resource/aws_emr_cluster: Add `instance_group` parameter for EMR clusters [GH-1071]
 * resource/aws_alb_listener_rule: Populate `listener_arn` field [GH-1303]
-* provider: expand shared_credentials_file [GH-1511]
 * resource/aws_api_gateway_rest_api: Add a body property to API Gateway RestAPI for Swagger import support [GH-1197]
 * resource/aws_opsworks_stack: Add support for tags [GH-1523]
 * Add retries for AppScaling policies throttling exceptions [GH-1430]
 * resource/aws_ssm_patch_baseline: Add compliance level to patch approval rules [GH-1531]
 * resource/aws_ssm_activation: Export ssm activation activation_code [GH-1570]
+* resource/aws_network_interface: Added private_dns_name to network_interface [GH-1599]
+* data-source/aws_redshift_service_account: updated with latest redshift service account ID's [GH-1614]
+* resource/aws_ssm_parameter: Refresh from state on 404 [GH-1436]
+* resource/aws_api_gateway_rest_api: Allow binary media types to be updated [GH-1600]
+* resource/aws_waf_rule: Make `predicates`' `data_id` required (it always was on the API's side, it's just reflected in the schema) [GH-1606]
+* resource/aws_waf_web_acl: Introduce new `type` field in `rules` to allow referencing `RATE_BASED` type [GH-1606]
+* resource/aws_ssm_association: Migrate the schema to use association_id [GH-1579]
+* resource/aws_ssm_document: Added name validation [GH-1638]
+* resource/aws_nat_gateway: Add tags support [GH-1625]
+* resource/aws_route53_record: Add support for Route53 multi-value answer routing policy [GH-1686]
+* resource/aws_instance: Read iops only when volume type is io1 [GH-1573]
+* Allow RDS Cluster / Cluster instance to specify the engine [GH-1591]
 
 BUG FIXES:
 
@@ -34,6 +56,7 @@ BUG FIXES:
 * resource/aws_alb: Cleanup ENIs after deleting ALB [GH-1427]
 * resource/aws_s3_bucket: Wrap s3 calls in retry to avoid race during creation [GH-891]
 * resource/aws_eip: Remove from state on deletion [GH-1551]
+* resource/aws_security_group: Adding second scenario where IPv6 is not supported [GH-880]
 
 ## 0.1.4 (August 08, 2017)
 

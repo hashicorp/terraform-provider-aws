@@ -51,6 +51,22 @@ func validateRdsIdentifierPrefix(v interface{}, k string) (ws []string, errors [
 	return
 }
 
+func validateRdsEngine(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	validTypes := map[string]bool{
+		"aurora":            true,
+		"aurora-postgresql": true,
+	}
+
+	if _, ok := validTypes[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q contains an invalid engine type %q. Valid types are either %q or %q.",
+			k, value, "aurora", "aurora-postgresql"))
+	}
+	return
+}
+
 func validateElastiCacheClusterId(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if (len(value) < 1) || (len(value) > 20) {
@@ -1393,6 +1409,19 @@ func validateIamRoleDescription(v interface{}, k string) (ws []string, errors []
 	return
 }
 
+func validateAwsSSMName(v interface{}, k string) (ws []string, errors []error) {
+	// http://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#EC2-CreateDocument-request-Name
+	value := v.(string)
+
+	if !regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"Only alphanumeric characters, hyphens, dots & underscores allowed in %q: %q (Must satisfy regular expression pattern: ^[a-zA-Z0-9_\\-.]{3,128}$)",
+			k, value))
+	}
+
+	return
+}
+
 func validateSsmParameterType(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	types := map[string]bool{
@@ -1403,6 +1432,14 @@ func validateSsmParameterType(v interface{}, k string) (ws []string, errors []er
 
 	if !types[value] {
 		errors = append(errors, fmt.Errorf("Parameter type %s is invalid. Valid types are String, StringList or SecureString", value))
+	}
+	return
+}
+
+func validateBatchComputeEnvironmentName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !(regexp.MustCompile(`^[A-Za-z0-9_]*$`).MatchString(value) && len(value) <= 128) {
+		errors = append(errors, fmt.Errorf("computeEnvironmentName must be up to 128 letters (uppercase and lowercase), numbers, and underscores."))
 	}
 	return
 }
