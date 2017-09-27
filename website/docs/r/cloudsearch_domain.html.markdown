@@ -3,12 +3,12 @@ layout: "aws"
 page_title: "AWS: aws_cloudsearch_domain"
 sidebar_current: "docs-aws-resource-cloudsearch"
 description: |-
-  Provides an CloudSearch domain resource. This allows domains to be created, updated, and deleted.
+  Provides an CloudSearch domain resource.
 ---
 
-# aws\_cloudsearch\_domain
+# aws_cloudsearch_domain
 
-Provides an CloudSearch domain resource. This allows domains to be created, updated, and deleted.
+Provides an CloudSearch domain resource.
 
 ## Example Usage
 
@@ -63,17 +63,15 @@ EOF
 The following arguments are supported:
 
 * `domain_name` - (Required) Domain name
-* `instance_type` - (Required) The type of instance to start
+* `instance_type` - (Optional) The type of instance to start
 * `replication_count` - (Optional) The amount of replicas.
-* `partition_count` - (Optional) The amount of partitions on each instance. Currently only supported by `search.m3.2xlarg`
+* `partition_count` - (Optional) The amount of partitions on each instance. Currently only supported by `search.m3.2xlarge`
 * `indexes` - (Required) See [Indexes](#indexes) below for details.
 * `access_policy` - (Required) The iam access policy.
 
 ### Indexes
 
 Each of the `indexes` entities represents an index field of the domain.
-
-The `root_block_device` mapping supports the following:
 
 * `name` - (Required) Represents the property field name.
 * `type` - (Required) Represents the property type. It can be one of `int,int-array,double,double-array,literal,literal-array,text,text-array,date,date-array,lation` [AWS's Docs](http://docs.aws.amazon.com/cloudsearch/latest/developerguide/configuring-index-fields.html)

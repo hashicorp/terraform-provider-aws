@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,13 +20,14 @@ func resourceAwsCloudSearchDomain() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateDomainNameRegex,
 			},
 			"instance_type": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"replication_count": {
 				Type:     schema.TypeInt,
@@ -104,9 +106,7 @@ func resourceAwsCloudSearchDomainCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	d.SetId(*output.DomainStatus.ARN)
-	err = resourceAwsCloudSearchDomainUpdate(d, meta)
-
-	return err
+	return resourceAwsCloudSearchDomainUpdate(d, meta)
 }
 
 func resourceAwsCloudSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
@@ -156,9 +156,12 @@ func updateScalingParameters(d *schema.ResourceData, meta interface{}, conn *clo
 		DomainName: aws.String(d.Get("domain_name").(string)),
 		ScalingParameters: &cloudsearch.ScalingParameters{
 			DesiredInstanceType:     aws.String(d.Get("instance_type").(string)),
-			DesiredPartitionCount:   aws.Int64(int64(d.Get("partition_count").(int))),
 			DesiredReplicationCount: aws.Int64(int64(d.Get("replication_count").(int))),
 		},
+	}
+
+	if d.Get("instance_type").(string) == "search.m3.2xlarge" {
+		input.ScalingParameters.DesiredPartitionCount = aws.Int64(int64(d.Get("partition_count").(int)))
 	}
 
 	_, err := conn.UpdateScalingParameters(&input)
@@ -197,10 +200,8 @@ func defineIndexFields(d *schema.ResourceData, meta interface{}, conn *cloudsear
 				return true, err
 			}
 		}
-
 		return true, nil
 	}
-
 	return false, nil
 }
 
@@ -233,7 +234,12 @@ var parseError = func(d string, t string) error {
 	return fmt.Errorf("can't convert default_value '%s' of type '%s' to int", d, t)
 }
 
-func getOk(index map[string]interface{}, prop string, t interface{}) error {
+/*
+extractFromMapToType extracts a specific value from map[string]interface{} into an interface of type
+expects: map[string]interface{}, string, interface{}
+returns: error
+*/
+func extractFromMapToType(index map[string]interface{}, prop string, t interface{}) error {
 	v, ok := index[prop]
 	if !ok {
 		return fmt.Errorf("%s is not a valid propery of an index", prop)
@@ -286,12 +292,12 @@ func genIndexFieldInput(index map[string]interface{}) (*cloudsearch.IndexField, 
 	var highlight bool
 	var analysisScheme string
 
-	getOk(index, "facet", &facet)
-	getOk(index, "return", &returnV)
-	getOk(index, "search", &search)
-	getOk(index, "sort", &sort)
-	getOk(index, "highlight", &highlight)
-	getOk(index, "analysis_scheme", &analysisScheme)
+	extractFromMapToType(index, "facet", &facet)
+	extractFromMapToType(index, "return", &returnV)
+	extractFromMapToType(index, "search", &search)
+	extractFromMapToType(index, "sort", &sort)
+	extractFromMapToType(index, "highlight", &highlight)
+	extractFromMapToType(index, "analysis_scheme", &analysisScheme)
 
 	switch index["type"] {
 	case "int":
@@ -305,7 +311,7 @@ func genIndexFieldInput(index map[string]interface{}) (*cloudsearch.IndexField, 
 
 			if index["default_value"].(string) != "" {
 				var defaultValue int
-				getOk(index, "default_value", &defaultValue)
+				extractFromMapToType(index, "default_value", &defaultValue)
 				input.IntOptions.DefaultValue = aws.Int64(int64(defaultValue))
 			}
 		}
@@ -319,7 +325,7 @@ func genIndexFieldInput(index map[string]interface{}) (*cloudsearch.IndexField, 
 
 			if index["default_value"].(string) != "" {
 				var defaultValue int
-				getOk(index, "default_value", &defaultValue)
+				extractFromMapToType(index, "default_value", &defaultValue)
 				input.IntArrayOptions.DefaultValue = aws.Int64(int64(defaultValue))
 			}
 		}
@@ -334,7 +340,7 @@ func genIndexFieldInput(index map[string]interface{}) (*cloudsearch.IndexField, 
 
 			if index["default_value"].(string) != "" {
 				var defaultValue float64
-				getOk(index, "default_value", &defaultValue)
+				extractFromMapToType(index, "default_value", &defaultValue)
 				input.DoubleOptions.DefaultValue = aws.Float64(float64(defaultValue))
 			}
 		}
@@ -348,7 +354,7 @@ func genIndexFieldInput(index map[string]interface{}) (*cloudsearch.IndexField, 
 
 			if index["default_value"].(string) != "" {
 				var defaultValue float64
-				getOk(index, "default_value", &defaultValue)
+				extractFromMapToType(index, "default_value", &defaultValue)
 				input.DoubleArrayOptions.DefaultValue = aws.Float64(float64(defaultValue))
 			}
 		}
@@ -468,4 +474,13 @@ func resourceAwsCloudSearchDomainDelete(d *schema.ResourceData, meta interface{}
 	_, err := conn.DeleteDomain(&input)
 
 	return err
+}
+
+func validateDomainNameRegex(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[a-z]([a-z0-9-]){2,27}$`).MatchString(value) {
+		es = append(es, fmt.Errorf(
+			"%q must begin with a lower-case letter, contain only [a-z0-9-] and be at least 3 and at most 28 characters", k))
+	}
+	return
 }
