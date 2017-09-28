@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSBatchJobDefinition(t *testing.T) {
+func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 	var jd batch.JobDefinition
 	compare := batch.JobDefinition{
 		Parameters: map[string]*string{
@@ -64,7 +64,7 @@ func TestAccAWSBatchJobDefinition(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchJobDefinitionUpdateForcesNewResource(t *testing.T) {
+func TestAccAWSBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 	var before batch.JobDefinition
 	var after batch.JobDefinition
 	ri := acctest.RandInt()

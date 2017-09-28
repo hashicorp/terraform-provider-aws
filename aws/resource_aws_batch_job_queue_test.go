@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSBatchJobQueue(t *testing.T) {
+func TestAccAWSBatchJobQueue_basic(t *testing.T) {
 	var jq batch.JobQueueDetail
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccBatchJobQueueBasic, ri)
@@ -33,7 +33,7 @@ func TestAccAWSBatchJobQueue(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchJobQueueUpdate(t *testing.T) {
+func TestAccAWSBatchJobQueue_update(t *testing.T) {
 	var jq batch.JobQueueDetail
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccBatchJobQueueBasic, ri)
