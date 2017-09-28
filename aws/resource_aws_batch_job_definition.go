@@ -2,10 +2,7 @@ package aws
 
 import (
 	"fmt"
-	"log"
 
-	"crypto/sha1"
-	"encoding/hex"
 	"encoding/json"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -32,10 +29,11 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				StateFunc: func(v interface{}) string {
-					hash := sha1.Sum([]byte(v.(string)))
-					return hex.EncodeToString(hash[:])
+					json, _ := normalizeJsonString(v)
+					return json
 				},
-				ValidateFunc: validateAwsBatchJobContainerProperties,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				ValidateFunc:     validateAwsBatchJobContainerProperties,
 			},
 			"parameters": {
 				Type:     schema.TypeMap,
@@ -44,7 +42,7 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 				Elem:     schema.TypeString,
 			},
 			"retry_strategy": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				MaxItems: 1,
@@ -70,7 +68,6 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 			},
 			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 		},
@@ -99,7 +96,7 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("retry_strategy"); ok {
-		input.RetryStrategy = expandJobDefinitionRetryStrategy(v.(*schema.Set))
+		input.RetryStrategy = expandJobDefinitionRetryStrategy(v.([]interface{}))
 	}
 
 	out, err := conn.RegisterJobDefinition(input)
@@ -118,11 +115,15 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return fmt.Errorf("%s %q", err, arn)
 	}
-	d.Set("arn", *job.JobDefinitionArn)
-	d.Set("container_properties", *job.ContainerProperties)
-	d.Set("parameters", job.Parameters)
+	if job == nil {
+		d.SetId("")
+		return nil
+	}
+	d.Set("arn", job.JobDefinitionArn)
+	d.Set("container_properties", job.ContainerProperties)
+	d.Set("parameters", aws.StringValueMap(job.Parameters))
 	d.Set("retry_strategy", flattenRetryStrategy(job.RetryStrategy))
-	d.Set("revision", *job.Revision)
+	d.Set("revision", job.Revision)
 	d.Set("type", job.Type)
 	return nil
 }
@@ -152,10 +153,12 @@ func getJobDefinition(conn *batch.Batch, arn string) (*batch.JobDefinition, erro
 	numJobDefinitions := len(resp.JobDefinitions)
 	switch {
 	case numJobDefinitions == 0:
-		log.Printf("[DEBUG] Job Definition %q is already gone", arn)
 		return nil, nil
 	case numJobDefinitions == 1:
-		return resp.JobDefinitions[0], nil
+		if *resp.JobDefinitions[0].Status == "ACTIVE" {
+			return resp.JobDefinitions[0], nil
+		}
+		return nil, nil
 	case numJobDefinitions > 1:
 		return nil, fmt.Errorf("Multiple Job Definitions with name %s", arn)
 	}
@@ -191,8 +194,8 @@ func expandJobDefinitionParameters(params map[string]interface{}) map[string]*st
 	return jobParams
 }
 
-func expandJobDefinitionRetryStrategy(item *schema.Set) *batch.RetryStrategy {
-	data := item.List()[0].(map[string]interface{})
+func expandJobDefinitionRetryStrategy(item []interface{}) *batch.RetryStrategy {
+	data := item[0].(map[string]interface{})
 	return &batch.RetryStrategy{
 		Attempts: aws.Int64(int64(data["attempts"].(int))),
 	}

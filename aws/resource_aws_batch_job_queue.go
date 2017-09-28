@@ -41,7 +41,6 @@ func resourceAwsBatchJobQueue() *schema.Resource {
 			},
 			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 		},
@@ -51,7 +50,7 @@ func resourceAwsBatchJobQueue() *schema.Resource {
 func resourceAwsBatchJobQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).batchconn
 	input := batch.CreateJobQueueInput{
-		ComputeEnvironmentOrder: createComputeEnvironmentOrder(d),
+		ComputeEnvironmentOrder: createComputeEnvironmentOrder(d.Get("compute_environments").([]interface{})),
 		JobQueueName:            aws.String(d.Get("name").(string)),
 		Priority:                aws.Int64(int64(d.Get("priority").(int))),
 		State:                   aws.String(d.Get("state").(string)),
@@ -65,7 +64,7 @@ func resourceAwsBatchJobQueueCreate(d *schema.ResourceData, meta interface{}) er
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{batch.JQStatusCreating, batch.JQStatusUpdating},
 		Target:     []string{batch.JQStatusValid},
-		Refresh:    batchJobQueueRefreshFunc(conn, name),
+		Refresh:    batchJobQueueRefreshStatusFunc(conn, name),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -104,13 +103,27 @@ func resourceAwsBatchJobQueueRead(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsBatchJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).batchconn
 
+	name := d.Get("name").(string)
 	updateInput := &batch.UpdateJobQueueInput{
-		ComputeEnvironmentOrder: createComputeEnvironmentOrder(d),
-		JobQueue:                aws.String(d.Get("name").(string)),
+		ComputeEnvironmentOrder: createComputeEnvironmentOrder(d.Get("compute_environments").([]interface{})),
+		JobQueue:                aws.String(name),
 		Priority:                aws.Int64(int64(d.Get("priority").(int))),
 		State:                   aws.String(d.Get("state").(string)),
 	}
 	_, err := conn.UpdateJobQueue(updateInput)
+	if err != nil {
+		return err
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{batch.JQStatusUpdating},
+		Target:     []string{batch.JQStatusValid},
+		Refresh:    batchJobQueueRefreshStatusFunc(conn, name),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err = stateConf.WaitForState()
 	if err != nil {
 		return err
 	}
@@ -128,40 +141,48 @@ func resourceAwsBatchJobQueueDelete(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	// Wait until the Job Queue is disabled
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		log.Printf("[DEBUG] Trying to delete Job Queue %s", sn)
-		_, err = conn.DeleteJobQueue(&batch.DeleteJobQueueInput{
-			JobQueue: aws.String(sn),
-		})
-		if err == nil {
-			return nil
-		}
-		return resource.RetryableError(err)
-	})
-
+	// Wait until the Job Queue is disabled before deleting
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{batch.JQStatusUpdating, batch.JQStatusDeleting},
+		Pending:    []string{batch.JQStateEnabled},
+		Target:     []string{batch.JQStateDisabled},
+		Refresh:    batchJobQueueRefreshStateFunc(conn, sn),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return err
+	}
+	log.Printf("[DEBUG] Trying to delete Job Queue %s", sn)
+	_, err = conn.DeleteJobQueue(&batch.DeleteJobQueueInput{
+		JobQueue: aws.String(sn),
+	})
+	if err == nil {
+		return nil
+	}
+
+	deleteStateConf := &resource.StateChangeConf{
+		Pending:    []string{batch.JQStateDisabled, batch.JQStatusDeleting},
 		Target:     []string{batch.JQStatusDeleted},
-		Refresh:    batchJobQueueRefreshFunc(conn, sn),
+		Refresh:    batchJobQueueRefreshStatusFunc(conn, sn),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err = stateConf.WaitForState()
+	_, err = deleteStateConf.WaitForState()
 	if err != nil {
 		return fmt.Errorf(
-			"Error waiting for Job Queue (%s) to be destroyed: %s",
+			"Error waiting for Job Queue (%s) to be deleted: %s",
 			sn, err)
 	}
 	d.SetId("")
 	return nil
 }
 
-func createComputeEnvironmentOrder(d *schema.ResourceData) (envs []*batch.ComputeEnvironmentOrder) {
-	data := d.Get("compute_environments").([]interface{})
-	for i, env := range data {
+func createComputeEnvironmentOrder(order []interface{}) (envs []*batch.ComputeEnvironmentOrder) {
+	for i, env := range order {
 		envs = append(envs, &batch.ComputeEnvironmentOrder{
 			Order:              aws.Int64(int64(i)),
 			ComputeEnvironment: aws.String(env.(string)),
@@ -192,7 +213,7 @@ func getJobQueue(conn *batch.Batch, sn string) (*batch.JobQueueDetail, error) {
 	return nil, nil
 }
 
-func batchJobQueueRefreshFunc(conn *batch.Batch, sn string) resource.StateRefreshFunc {
+func batchJobQueueRefreshStatusFunc(conn *batch.Batch, sn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		ce, err := getJobQueue(conn, sn)
 		if err != nil {
@@ -202,5 +223,18 @@ func batchJobQueueRefreshFunc(conn *batch.Batch, sn string) resource.StateRefres
 			return 42, batch.JQStatusDeleted, nil
 		}
 		return ce, *ce.Status, nil
+	}
+}
+
+func batchJobQueueRefreshStateFunc(conn *batch.Batch, sn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		ce, err := getJobQueue(conn, sn)
+		if err != nil {
+			return nil, "failed", err
+		}
+		if ce == nil {
+			return 42, batch.JQStateDisabled, nil
+		}
+		return ce, *ce.State, nil
 	}
 }

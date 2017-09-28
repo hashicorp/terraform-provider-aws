@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"testing"
 
@@ -97,7 +96,6 @@ func TestAccAWSBatchJobDefinitionUpdateForcesNewResource(t *testing.T) {
 func testAccCheckBatchJobDefinitionExists(n string, jd *batch.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
-		log.Printf("State: %#v", s.RootModule().Resources)
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
@@ -166,8 +164,8 @@ func testAccCheckBatchJobDefinitionDestroy(s *terraform.State) error {
 		}
 		conn := testAccProvider.Meta().(*AWSClient).batchconn
 		js, err := getJobDefinition(conn, rs.Primary.Attributes["arn"])
-		if err == nil {
-			if *js.Status != "INACTIVE" {
+		if err == nil && js != nil {
+			if *js.Status == "ACTIVE" {
 				return fmt.Errorf("Error: Job Definition still active")
 			}
 		}
