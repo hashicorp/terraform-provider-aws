@@ -1,5 +1,10 @@
 ## 1.0.1 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_batch_job_definition` [GH-1710]
+* **New Resource:** `aws_batch_job_queue` [GH-1710]
+
 IMPROVEMENTS:
 
 * resource/aws_cloudwatch_log_group: Add support for encryption via `kms_key_id` [GH-1751]
