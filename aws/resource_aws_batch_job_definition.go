@@ -63,7 +63,6 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 			},
 			"revision": {
 				Type:     schema.TypeInt,
-				Optional: true,
 				Computed: true,
 			},
 			"arn": {
