@@ -248,7 +248,7 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "app" {
-  name  = "tf-ecs-instprofile"
+  name = "tf-ecs-instprofile"
   role = "${aws_iam_role.app_instance.name}"
 }
 

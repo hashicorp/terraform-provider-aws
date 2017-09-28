@@ -24,7 +24,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateBatchComputeEnvironmentName,
+				ValidateFunc: validateBatchName,
 			},
 			"compute_resources": {
 				Type:     schema.TypeList,
