@@ -801,7 +801,7 @@ var testAccKinesisFirehoseDeliveryStreamConfig_s3KinesisStreamSource = testAccKi
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   depends_on = ["aws_iam_role_policy.firehose", "aws_iam_role_policy.kinesis_source"]
   name = "terraform-kinesis-firehose-basictest-%d"
-  source_configuration {
+  kinesis_source_configuration {
     kinesis_stream_arn = "${aws_kinesis_stream.source.arn}"
     role_arn = "${aws_iam_role.kinesis_source.arn}"
   }

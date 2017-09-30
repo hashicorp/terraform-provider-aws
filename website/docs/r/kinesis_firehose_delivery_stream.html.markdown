@@ -207,7 +207,7 @@ The following arguments are supported:
 
 * `name` - (Required) A name to identify the stream. This is unique to the
 AWS account and region the Stream is created in.
-* `source_configuration` - (Optional) Allows the ability to specify the kinesis stream that is used as the source of the firehose delivery stream.
+* `kinesis_source_configuration` - (Optional) Allows the ability to specify the kinesis stream that is used as the source of the firehose delivery stream.
 * `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, and `elasticsearch`.
 * `s3_configuration` - (Optional, Deprecated, see/use `extended_s3_configuration` unless `destination` is `redshift`) Configuration options for the s3 destination (or the intermediate bucket if the destination
 is redshift). More details are given below.
@@ -216,7 +216,7 @@ is redshift). More details are given below.
 Using `redshift_configuration` requires the user to also specify a
 `s3_configuration` block. More details are given below.
 
-The `source_configuration` object supports the following:
+The `kinesis_source_configuration` object supports the following:
 * `kinesis_stream_arn` (Required) The kinesis stream used as the source of the firehose delivery stream.
 * `role_arn` (Required) The ARN of the role that provides access to the source Kinesis stream.
 

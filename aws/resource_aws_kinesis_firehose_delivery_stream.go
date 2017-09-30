@@ -133,7 +133,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 				},
 			},
 
-			"source_configuration": {
+			"kinesis_source_configuration": {
 				Type:     schema.TypeList,
 				ForceNew: true,
 				Optional: true,
@@ -836,7 +836,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		DeliveryStreamName: aws.String(sn),
 	}
 
-	if v, ok := d.GetOk("source_configuration"); ok {
+	if v, ok := d.GetOk("kinesis_source_configuration"); ok {
 		sourceConfig := createSourceConfig(v.([]interface{})[0].(map[string]interface{}))
 		createInput.KinesisStreamSourceConfiguration = sourceConfig
 		createInput.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeKinesisStreamAsSource)
