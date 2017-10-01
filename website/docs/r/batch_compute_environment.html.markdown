@@ -13,6 +13,9 @@ Creates a AWS Batch compute environment. Compute environments contain the Amazon
 For information about AWS Batch, see [What is AWS Batch?][1] .
 For information about compute environment, see [Compute Environments][2] .
 
+~> **Note:** To prevent a race condition during environment deletion, make sure to set `depends_on` to the related `aws_iam_role_policy_attachment`;
+   otherwise, the policy may be destroyed too soon and the compute environment will then get stuck in the `DELETING` state, see [Troubleshooting AWS Batch][3] .
+
 ## Example Usage
 
 ```hcl
@@ -99,6 +102,7 @@ resource "aws_batch_compute_environment" "sample" {
   }
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
   type = "MANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 ```
 
@@ -135,3 +139,4 @@ resource "aws_batch_compute_environment" "sample" {
 
 [1]: http://docs.aws.amazon.com/batch/latest/userguide/what-is-batch.html
 [2]: http://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html
+[3]: http://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html
