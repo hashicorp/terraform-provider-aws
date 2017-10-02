@@ -159,7 +159,7 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 
-		DataSourcesMap: map[string]*schema.Resource{
+		DataSourcesMap: makeAuthZMessageDecodingResources(map[string]*schema.Resource{
 			"aws_acm_certificate":          dataSourceAwsAcmCertificate(),
 			"aws_alb":                      dataSourceAwsAlb(),
 			"aws_alb_listener":             dataSourceAwsAlbListener(),
@@ -219,9 +219,9 @@ func Provider() terraform.ResourceProvider {
 			"aws_vpc_endpoint_service":             dataSourceAwsVpcEndpointService(),
 			"aws_vpc_peering_connection":           dataSourceAwsVpcPeeringConnection(),
 			"aws_vpn_gateway":                      dataSourceAwsVpnGateway(),
-		},
+		}),
 
-		ResourcesMap: map[string]*schema.Resource{
+		ResourcesMap: makeAuthZMessageDecodingResources(map[string]*schema.Resource{
 			"aws_alb":                                      resourceAwsAlb(),
 			"aws_alb_listener":                             resourceAwsAlbListener(),
 			"aws_alb_listener_rule":                        resourceAwsAlbListenerRule(),
@@ -489,7 +489,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_batch_compute_environment":                resourceAwsBatchComputeEnvironment(),
 			"aws_batch_job_definition":                     resourceAwsBatchJobDefinition(),
 			"aws_batch_job_queue":                          resourceAwsBatchJobQueue(),
-		},
+		}),
 		ConfigureFunc: providerConfigure,
 	}
 }
