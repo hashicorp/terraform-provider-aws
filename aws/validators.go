@@ -1582,6 +1582,23 @@ func validateCognitoUserPoolAutoVerifiedAttribute(v interface{}, k string) (ws [
 	return
 }
 
+func validateCognitoUserPoolClientAuthFlows(v interface{}, k string) (ws []string, es []error) {
+	validValues := []string{
+		cognitoidentityprovider.AuthFlowTypeAdminNoSrpAuth,
+		cognitoidentityprovider.AuthFlowTypeCustomAuth,
+	}
+	period := v.(string)
+	for _, f := range validValues {
+		if period == f {
+			return
+		}
+	}
+	es = append(es, fmt.Errorf(
+		"%q contains an invalid auth flow %q. Valid auth flows are %q.",
+		k, period, validValues))
+	return
+}
+
 func validateCognitoUserPoolTemplateDefaultEmailOption(v interface{}, k string) (ws []string, es []error) {
 	validValues := []string{
 		cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithLink,
@@ -1737,6 +1754,22 @@ func validateCognitoUserPoolSchemaName(v interface{}, k string) (ws []string, es
 
 	if len(value) > 20 {
 		es = append(es, fmt.Errorf("%q cannot be longer than 20 character", k))
+	}
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolClientURL(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 1 {
+		es = append(es, fmt.Errorf("%q cannot be less than 1 character", k))
+	}
+
+	if len(value) > 1024 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 1024 character", k))
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
