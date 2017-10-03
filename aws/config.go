@@ -116,6 +116,8 @@ type Config struct {
 	SkipRequestingAccountId bool
 	SkipMetadataApiCheck    bool
 	S3ForcePathStyle        bool
+
+	DecodeAuthorizationMessages bool
 }
 
 type AWSClient struct {
@@ -273,6 +275,13 @@ func (c *Config) Client() (interface{}, error) {
 		sess.Handlers.UnmarshalError.PushFrontNamed(debugAuthFailure)
 	}
 
+	if c.DecodeAuthorizationMessages {
+		log.Println("[INFO] Enabled automatic decode of authorization messages")
+		// sess.Handlers.Complete.PushFrontNamed(decodeAuthZMessages)
+		sess.Handlers.UnmarshalError.AfterEachFn = decodeAuthZMessages2
+		// sess.Handlers.UnmarshalError.AfterEachFn
+	}
+
 	// This restriction should only be used for Route53 sessions.
 	// Other resources that have restrictions should allow the API to fail, rather
 	// than Terraform abstracting the region for the user. This can lead to breaking
@@ -387,6 +396,10 @@ func (c *Config) Client() (interface{}, error) {
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
 	client.batchconn = batch.New(sess)
+
+	if c.DecodeAuthorizationMessages {
+		decoderHandle.decoder = client.stsconn
+	}
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
@@ -538,6 +551,26 @@ var debugAuthFailure = request.NamedHandler{
 			log.Printf("[INFO] Request object: %s", spew.Sdump(req))
 		}
 	},
+}
+
+// decodeAuthZMessages is a named handler that will attempt to automatically
+// decode any encoded authorization messages
+var decoderHandle = struct{ decoder stsDecoder }{}
+
+var decodeAuthZMessages = request.NamedHandler{
+	Name: "terraform.AuthorizationMessageDecodeHandler",
+	Fn: func(req *request.Request) {
+		if isAWSErr(req.Error, "UnauthorizedOperation", "") {
+			req.Error = decodeAWSError(decoderHandle.decoder, req.Error)
+		}
+	},
+}
+
+var decodeAuthZMessages2 = func(item request.HandlerListRunItem) bool {
+	if isAWSErr(item.Request.Error, "UnauthorizedOperation", "") {
+		item.Request.Error = decodeAWSError(decoderHandle.decoder, item.Request.Error)
+	}
+	return true
 }
 
 type awsLogger struct{}

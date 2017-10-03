@@ -157,9 +157,16 @@ func Provider() terraform.ResourceProvider {
 				Default:     false,
 				Description: descriptions["s3_force_path_style"],
 			},
+
+			"decode_authorization_messages": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: descriptions["decode_authorization_messages"],
+			},
 		},
 
-		DataSourcesMap: makeAuthZMessageDecodingResources(map[string]*schema.Resource{
+		DataSourcesMap: map[string]*schema.Resource{
 			"aws_acm_certificate":          dataSourceAwsAcmCertificate(),
 			"aws_alb":                      dataSourceAwsAlb(),
 			"aws_alb_listener":             dataSourceAwsAlbListener(),
@@ -219,9 +226,9 @@ func Provider() terraform.ResourceProvider {
 			"aws_vpc_endpoint_service":             dataSourceAwsVpcEndpointService(),
 			"aws_vpc_peering_connection":           dataSourceAwsVpcPeeringConnection(),
 			"aws_vpn_gateway":                      dataSourceAwsVpnGateway(),
-		}),
+		},
 
-		ResourcesMap: makeAuthZMessageDecodingResources(map[string]*schema.Resource{
+		ResourcesMap: map[string]*schema.Resource{
 			"aws_alb":                                      resourceAwsAlb(),
 			"aws_alb_listener":                             resourceAwsAlbListener(),
 			"aws_alb_listener_rule":                        resourceAwsAlbListenerRule(),
@@ -489,7 +496,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_batch_compute_environment":                resourceAwsBatchComputeEnvironment(),
 			"aws_batch_job_definition":                     resourceAwsBatchJobDefinition(),
 			"aws_batch_job_queue":                          resourceAwsBatchJobQueue(),
-		}),
+		},
 		ConfigureFunc: providerConfigure,
 	}
 }
@@ -586,24 +593,29 @@ func init() {
 		"assume_role_policy": "The permissions applied when assuming a role. You cannot use," +
 			" this policy to grant further permissions that are in excess to those of the, " +
 			" role that is being assumed.",
+
+		"decode_authorization_messages": "Attempt to automatically decode (using the" +
+			" sts:DecodeAuthorizationMessage API) any encoded authorization error messages;" +
+			" requires that the effective user/role have permission to 'sts:DecodeAuthorizationMessage'.",
 	}
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	config := Config{
-		AccessKey:               d.Get("access_key").(string),
-		SecretKey:               d.Get("secret_key").(string),
-		Profile:                 d.Get("profile").(string),
-		Token:                   d.Get("token").(string),
-		Region:                  d.Get("region").(string),
-		MaxRetries:              d.Get("max_retries").(int),
-		Insecure:                d.Get("insecure").(bool),
-		SkipCredsValidation:     d.Get("skip_credentials_validation").(bool),
-		SkipGetEC2Platforms:     d.Get("skip_get_ec2_platforms").(bool),
-		SkipRegionValidation:    d.Get("skip_region_validation").(bool),
-		SkipRequestingAccountId: d.Get("skip_requesting_account_id").(bool),
-		SkipMetadataApiCheck:    d.Get("skip_metadata_api_check").(bool),
-		S3ForcePathStyle:        d.Get("s3_force_path_style").(bool),
+		AccessKey:                   d.Get("access_key").(string),
+		SecretKey:                   d.Get("secret_key").(string),
+		Profile:                     d.Get("profile").(string),
+		Token:                       d.Get("token").(string),
+		Region:                      d.Get("region").(string),
+		MaxRetries:                  d.Get("max_retries").(int),
+		Insecure:                    d.Get("insecure").(bool),
+		SkipCredsValidation:         d.Get("skip_credentials_validation").(bool),
+		SkipGetEC2Platforms:         d.Get("skip_get_ec2_platforms").(bool),
+		SkipRegionValidation:        d.Get("skip_region_validation").(bool),
+		SkipRequestingAccountId:     d.Get("skip_requesting_account_id").(bool),
+		SkipMetadataApiCheck:        d.Get("skip_metadata_api_check").(bool),
+		S3ForcePathStyle:            d.Get("s3_force_path_style").(bool),
+		DecodeAuthorizationMessages: d.Get("decode_authorization_messages").(bool),
 	}
 
 	// Set CredsFilename, expanding home directory

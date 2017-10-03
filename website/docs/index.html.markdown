@@ -234,6 +234,11 @@ The following arguments are supported in the `provider` block:
   virtual hosted bucket addressing, `http://BUCKET.s3.amazonaws.com/KEY`,
   when possible. Specific to the Amazon S3 service.
 
+* `decode_authorization_messages` - (Optional) Set this to `true` to enable
+  automatic decoding of any encoded authorization message errors using the
+  `sts:DecodeAuthorizationMessage` API; requires that the effective user/role
+  has permissions to `sts:DecodeAuthorizationMessage` on resource `*`.
+
 The nested `assume_role` block supports the following:
 
 * `role_arn` - (Required) The ARN of the role to assume.
