@@ -277,9 +277,7 @@ func (c *Config) Client() (interface{}, error) {
 
 	if c.DecodeAuthorizationMessages {
 		log.Println("[INFO] Enabled automatic decode of authorization messages")
-		// sess.Handlers.Complete.PushFrontNamed(decodeAuthZMessages)
-		sess.Handlers.UnmarshalError.AfterEachFn = decodeAuthZMessages2
-		// sess.Handlers.UnmarshalError.AfterEachFn
+		sess.Handlers.UnmarshalError.AfterEachFn = decodeAuthZMessages
 	}
 
 	// This restriction should only be used for Route53 sessions.
@@ -553,20 +551,11 @@ var debugAuthFailure = request.NamedHandler{
 	},
 }
 
-// decodeAuthZMessages is a named handler that will attempt to automatically
+// decodeAuthZMessages is an AfterEachFn handler that will attempt to automatically
 // decode any encoded authorization messages
 var decoderHandle = struct{ decoder stsDecoder }{}
 
-var decodeAuthZMessages = request.NamedHandler{
-	Name: "terraform.AuthorizationMessageDecodeHandler",
-	Fn: func(req *request.Request) {
-		if isAWSErr(req.Error, "UnauthorizedOperation", "") {
-			req.Error = decodeAWSError(decoderHandle.decoder, req.Error)
-		}
-	},
-}
-
-var decodeAuthZMessages2 = func(item request.HandlerListRunItem) bool {
+var decodeAuthZMessages = func(item request.HandlerListRunItem) bool {
 	if isAWSErr(item.Request.Error, "UnauthorizedOperation", "") {
 		item.Request.Error = decodeAWSError(decoderHandle.decoder, item.Request.Error)
 	}
