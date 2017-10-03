@@ -26,7 +26,6 @@ func TestAccAwsSESDomainDkim_basic(t *testing.T) {
 				Config: fmt.Sprintf(testAccAwsSESDomainDkimConfig, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESDomainDkimExists("aws_ses_domain_dkim.test"),
-					testAccCheckAwsSESDomainDkimArn("aws_ses_domain_dkim.test", domain),
 				),
 			},
 		},
@@ -60,25 +59,6 @@ func testAccCheckAwsSESDomainDkimExists(n string) resource.TestCheckFunc {
 
 		if response.DkimAttributes[domain] == nil {
 			return fmt.Errorf("SES Domain DKIM %s not found in AWS", domain)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAwsSESDomainDkimArn(n string, domain string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
-
-		expected := fmt.Sprintf(
-			"arn:%s:ses:%s:%s:dkim/%s",
-			testAccProvider.Meta().(*AWSClient).partition,
-			testAccProvider.Meta().(*AWSClient).region,
-			testAccProvider.Meta().(*AWSClient).accountid,
-			domain)
-
-		if rs.Primary.Attributes["arn"] != expected {
-			return fmt.Errorf("Incorrect ARN: expected %q, got %q", expected, rs.Primary.Attributes["arn"])
 		}
 
 		return nil

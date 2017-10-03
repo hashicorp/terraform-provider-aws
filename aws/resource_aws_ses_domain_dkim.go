@@ -14,12 +14,11 @@ func resourceAwsSesDomainDkim() *schema.Resource {
 		Create: resourceAwsSesDomainDkimCreate,
 		Read:   resourceAwsSesDomainDkimRead,
 		Delete: resourceAwsSesDomainDkimDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"domain": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -78,8 +77,7 @@ func resourceAwsSesDomainDkimRead(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	}
 
-	d.Set("arn", fmt.Sprintf("arn:%s:ses:%s:%s:dkim/%s", meta.(*AWSClient).partition, meta.(*AWSClient).region, meta.(*AWSClient).accountid, d.Id()))
-	d.Set("dkim_tokens", verificationAttrs.DkimTokens)
+	d.Set("dkim_tokens", aws.StringValueSlice(verificationAttrs.DkimTokens))
 	return nil
 }
 
