@@ -16,6 +16,7 @@ BUG FIXES:
 * resource/aws_kinesis_firehose_delivery_stream: Fix crash caused by missing `processing_configuration` [GH-1738]
 * resource/aws_rds_cluster_instance: Treat `configuring-enhanced-monitoring` as pending state [GH-1744]
 * resource/aws_rds_cluster_instance: Treat more states as pending [GH-1790]
+* resource/aws_route_table: Increase number of not-found checks/retries after creation [GH-1791]
 * data-source/aws_db_instance: Make `db_instance_arn` expose ARN instead of identifier (use `db_cluster_identifier` for identifier) [GH-1766]
 
 ## 1.0.0 (September 27, 2017)
