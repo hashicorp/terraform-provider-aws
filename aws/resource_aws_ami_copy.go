@@ -42,6 +42,12 @@ func resourceAwsAmiCopy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAmiCopyCreate,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(AWSAMIRetryTimeout),
+			Update: schema.DefaultTimeout(AWSAMIRetryTimeout),
+			Delete: schema.DefaultTimeout(AWSAMIDeleteRetryTimeout),
+		},
+
 		Schema: resourceSchema,
 
 		// The remaining operations are shared with the generic aws_ami resource,
@@ -81,7 +87,7 @@ func resourceAwsAmiCopyCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetPartial("manage_ebs_snapshots")
 	d.Partial(false)
 
-	_, err = resourceAwsAmiWaitForAvailable(id, client)
+	_, err = resourceAwsAmiWaitForAvailable(d, id, client)
 	if err != nil {
 		return err
 	}
