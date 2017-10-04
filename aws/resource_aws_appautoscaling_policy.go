@@ -571,9 +571,10 @@ func getAwsAppautoscalingPolicy(d *schema.ResourceData, meta interface{}) (*appl
 	}
 
 	// find scaling policy
-	name := d.Get("name")
+	name := d.Get("name").(string)
+	dimension := d.Get("scalable_dimension").(string)
 	for idx, sp := range resp.ScalingPolicies {
-		if *sp.PolicyName == name {
+		if *sp.PolicyName == name && *sp.ScalableDimension == dimension {
 			return resp.ScalingPolicies[idx], nil
 		}
 	}
