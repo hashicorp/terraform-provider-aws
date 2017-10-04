@@ -97,7 +97,8 @@ func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).appautoscalingconn
 
 	namespace := d.Get("service_namespace").(string)
-	t, err := getAwsAppautoscalingTarget(d.Id(), namespace, conn)
+	dimension := d.Get("scalable_dimension").(string)
+	t, err := getAwsAppautoscalingTarget(d.Id(), namespace, dimension, conn)
 	if err != nil {
 		return err
 	}
@@ -121,8 +122,9 @@ func resourceAwsAppautoscalingTargetDelete(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).appautoscalingconn
 
 	namespace := d.Get("service_namespace").(string)
+	dimension := d.Get("scalable_dimension").(string)
 
-	t, err := getAwsAppautoscalingTarget(d.Id(), namespace, conn)
+	t, err := getAwsAppautoscalingTarget(d.Id(), namespace, dimension, conn)
 	if err != nil {
 		return err
 	}
@@ -156,7 +158,7 @@ func resourceAwsAppautoscalingTargetDelete(d *schema.ResourceData, meta interfac
 	}
 
 	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		if t, _ = getAwsAppautoscalingTarget(d.Id(), namespace, conn); t != nil {
+		if t, _ = getAwsAppautoscalingTarget(d.Id(), namespace, dimension, conn); t != nil {
 			return resource.RetryableError(
 				fmt.Errorf("Application AutoScaling Target still exists"))
 		}
@@ -164,7 +166,7 @@ func resourceAwsAppautoscalingTargetDelete(d *schema.ResourceData, meta interfac
 	})
 }
 
-func getAwsAppautoscalingTarget(resourceId, namespace string,
+func getAwsAppautoscalingTarget(resourceId, namespace, dimension string,
 	conn *applicationautoscaling.ApplicationAutoScaling) (*applicationautoscaling.ScalableTarget, error) {
 
 	describeOpts := applicationautoscaling.DescribeScalableTargetsInput{
@@ -182,7 +184,7 @@ func getAwsAppautoscalingTarget(resourceId, namespace string,
 	}
 
 	for idx, tgt := range describeTargets.ScalableTargets {
-		if *tgt.ResourceId == resourceId {
+		if *tgt.ResourceId == resourceId && *tgt.ScalableDimension == dimension {
 			return describeTargets.ScalableTargets[idx], nil
 		}
 	}
