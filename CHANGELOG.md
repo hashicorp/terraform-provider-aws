@@ -1,9 +1,31 @@
 ## 1.0.1 (Unreleased)
 
+NOTES:
+
+* resource/aws_alb_* & data-source/aws_alb_*: In order to support network LBs, ALBs were renamed to `aws_lb_*` due to the way APIs "new" (non-Classic) load balancers are structured in AWS. All existing ALB functionality remains untouched and new resources work the same way. `aws_alb_*` resources are still in place as "aliases", but documentation will only mention `aws_lb_*`.
+`aws_alb_*` aliases will be removed in future major version. [GH-1806]
+* Deprecated:
+  * data-source/aws_alb
+  * data-source/aws_alb_listener
+  * data-source/aws_alb_target_group
+  * resource/aws_alb
+  * resource/aws_alb_listener
+  * resource/aws_alb_listener_rule
+  * resource/aws_alb_target_group
+  * resource/aws_alb_target_group_attachment
+
 FEATURES:
 
 * **New Resource:** `aws_batch_job_definition` [GH-1710]
 * **New Resource:** `aws_batch_job_queue` [GH-1710]
+* **New Resource:** `aws_lb` [GH-1806]
+* **New Resource:** `aws_lb_listener` [GH-1806]
+* **New Resource:** `aws_lb_listener_rule` [GH-1806]
+* **New Resource:** `aws_lb_target_group` [GH-1806]
+* **New Resource:** `aws_lb_target_group_attachment` [GH-1806]
+* **New Data Source:** `aws_lb` [GH-1806]
+* **New Data Source:** `aws_lb_listener` [GH-1806]
+* **New Data Source:** `aws_lb_target_group` [GH-1806]
 
 IMPROVEMENTS:
 
