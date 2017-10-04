@@ -121,6 +121,11 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"ecc_cluster_arn": {
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Use ecs_cluster_arn instead",
+			},
 			"ecs_cluster_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -266,6 +271,7 @@ func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
+	d.Set("ecc_cluster_arn", computeEnvironment.EcsClusterArn)
 	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
 	d.Set("status", computeEnvironment.Status)
 	d.Set("status_reason", computeEnvironment.StatusReason)
