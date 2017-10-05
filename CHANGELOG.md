@@ -32,6 +32,7 @@ IMPROVEMENTS:
 * resource/aws_cloudwatch_log_group: Add support for encryption via `kms_key_id` [GH-1751]
 * resource/aws_spot_instance_request: Add support for `instance_interruption_behaviour` [GH-1735]
 * resource/aws_ses_event_destination: Add support for `open` & `click` event types [GH-1773]
+* data-source/aws_vpc_endpoint: Expose `prefix_list_id` [GH-1733]
 
 BUG FIXES:
 
