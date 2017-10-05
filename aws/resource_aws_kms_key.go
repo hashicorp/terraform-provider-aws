@@ -179,12 +179,15 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("policy", policy)
 
-	krs, err := conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
-		KeyId: metadata.KeyId,
+	out, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
+		return conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
+			KeyId: metadata.KeyId,
+		})
 	})
 	if err != nil {
 		return err
 	}
+	krs, _ := out.(*kms.GetKeyRotationStatusOutput)
 	d.Set("enable_key_rotation", krs.KeyRotationEnabled)
 
 	tagList, err := conn.ListResourceTags(&kms.ListResourceTagsInput{
