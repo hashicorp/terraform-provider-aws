@@ -40,6 +40,7 @@ BUG FIXES:
 * resource/aws_rds_cluster_instance: Treat more states as pending [GH-1790]
 * resource/aws_route_table: Increase number of not-found checks/retries after creation [GH-1791]
 * data-source/aws_db_instance: Make `db_instance_arn` expose ARN instead of identifier (use `db_cluster_identifier` for identifier) [GH-1766]
+* resource/aws_batch_compute_environment: Fix ARN attribute name/value (`ecc_cluster_arn` -> `ecs_cluster_arn`) [GH-1809]
 
 ## 1.0.0 (September 27, 2017)
 
