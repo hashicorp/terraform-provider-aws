@@ -123,7 +123,7 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetPartial("manage_ebs_block_devices")
 	d.Partial(false)
 
-	_, err = resourceAwsAmiWaitForAvailable(d, id, client)
+	_, err = resourceAwsAmiWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, client)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 		// before we continue. We should never take this branch in normal
 		// circumstances since we would've waited for availability during
 		// the "Create" step.
-		image, err = resourceAwsAmiWaitForAvailable(d, id, client)
+		image, err = resourceAwsAmiWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, client)
 		if err != nil {
 			return err
 		}
@@ -308,7 +308,7 @@ func resourceAwsAmiDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Verify that the image is actually removed, if not we need to wait for it to be removed
-	if err := resourceAwsAmiWaitForDestroy(d, d.Id(), client); err != nil {
+	if err := resourceAwsAmiWaitForDestroy(d.Timeout(schema.TimeoutDelete), d.Id(), client); err != nil {
 		return err
 	}
 
@@ -341,14 +341,14 @@ func AMIStateRefreshFunc(client *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
-func resourceAwsAmiWaitForDestroy(d *schema.ResourceData, id string, client *ec2.EC2) error {
+func resourceAwsAmiWaitForDestroy(timeout time.Duration, id string, client *ec2.EC2) error {
 	log.Printf("Waiting for AMI %s to be deleted...", id)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"available", "pending", "failed"},
 		Target:     []string{"destroyed"},
 		Refresh:    AMIStateRefreshFunc(client, id),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Timeout:    timeout,
 		Delay:      AWSAMIRetryDelay,
 		MinTimeout: AWSAMIRetryMinTimeout,
 	}
@@ -361,14 +361,14 @@ func resourceAwsAmiWaitForDestroy(d *schema.ResourceData, id string, client *ec2
 	return nil
 }
 
-func resourceAwsAmiWaitForAvailable(d *schema.ResourceData, id string, client *ec2.EC2) (*ec2.Image, error) {
+func resourceAwsAmiWaitForAvailable(timeout time.Duration, id string, client *ec2.EC2) (*ec2.Image, error) {
 	log.Printf("Waiting for AMI %s to become available...", id)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"pending"},
 		Target:     []string{"available"},
 		Refresh:    AMIStateRefreshFunc(client, id),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    timeout,
 		Delay:      AWSAMIRetryDelay,
 		MinTimeout: AWSAMIRetryMinTimeout,
 	}

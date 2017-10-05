@@ -87,7 +87,7 @@ func resourceAwsAmiCopyCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetPartial("manage_ebs_snapshots")
 	d.Partial(false)
 
-	_, err = resourceAwsAmiWaitForAvailable(d, id, client)
+	_, err = resourceAwsAmiWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, client)
 	if err != nil {
 		return err
 	}

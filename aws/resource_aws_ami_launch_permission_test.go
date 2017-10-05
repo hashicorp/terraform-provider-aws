@@ -117,9 +117,7 @@ func testAccAWSAMIDisappears(imageID *string) r.TestCheckFunc {
 			return err
 		}
 
-		r := resourceAwsAmiLaunchPermission() // dummy resource
-		d := r.TestResourceData()
-		if err := resourceAwsAmiWaitForDestroy(d, *imageID, conn); err != nil {
+		if err := resourceAwsAmiWaitForDestroy(AWSAMIDeleteRetryTimeout, *imageID, conn); err != nil {
 			return err
 		}
 		return nil
