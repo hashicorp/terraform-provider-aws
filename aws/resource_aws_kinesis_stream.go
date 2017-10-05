@@ -188,7 +188,7 @@ func resourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("retention_period", state.retentionPeriod)
 
 	d.Set("encryption_type", state.encryptionType)
-	d.Set("keyId", state.keyId)
+	d.Set("kms_key_id", state.keyId)
 
 	if len(state.shardLevelMetrics) > 0 {
 		d.Set("shard_level_metrics", state.shardLevelMetrics)
