@@ -1104,6 +1104,7 @@ func TestValidateSNSSubscriptionProtocol(t *testing.T) {
 		"application",
 		"http",
 		"https",
+		"sms",
 	}
 	for _, v := range validProtocols {
 		if _, errors := validateSNSSubscriptionProtocol(v, "protocol"); len(errors) > 0 {
@@ -1116,8 +1117,6 @@ func TestValidateSNSSubscriptionProtocol(t *testing.T) {
 		"email",
 		"Email-JSON",
 		"email-json",
-		"SMS",
-		"sms",
 	}
 	for _, v := range invalidProtocols {
 		if _, errors := validateSNSSubscriptionProtocol(v, "protocol"); len(errors) == 0 {

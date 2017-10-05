@@ -761,7 +761,7 @@ func validateSQSFifoQueueName(v interface{}, k string) (errors []error) {
 
 func validateSNSSubscriptionProtocol(v interface{}, k string) (ws []string, errors []error) {
 	value := strings.ToLower(v.(string))
-	forbidden := []string{"email", "sms"}
+	forbidden := []string{"email"}
 	for _, f := range forbidden {
 		if strings.Contains(value, f) {
 			errors = append(
