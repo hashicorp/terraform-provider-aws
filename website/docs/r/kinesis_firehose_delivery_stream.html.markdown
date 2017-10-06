@@ -167,6 +167,14 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     data_table_name    = "test-table"
     copy_options       = "delimiter '|'" # the default delimiter
     data_table_columns = "test-col"
+    s3_backup_mode     = "Enabled"
+    s3_backup_configuration {
+      role_arn           = "${aws_iam_role.firehose_role.arn}"
+      bucket_arn         = "${aws_s3_bucket.bucket.arn}"
+      buffer_size        = 15
+      buffer_interval    = 300
+      compression_format = "GZIP"
+    }
   }
 }
 ```
@@ -239,6 +247,8 @@ The `redshift_configuration` object supports the following:
 * `password` - (Required) The password for the username above.
 * `retry_duration` - (Optional) The length of time during which Firehose retries delivery after a failure, starting from the initial request and including the first attempt. The default value is 3600 seconds (60 minutes). Firehose does not retry if the value of DurationInSeconds is 0 (zero) or if the first delivery attempt takes longer than the current value.
 * `role_arn` - (Required) The arn of the role the stream assumes.
+* `s3_backup_mode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
+* `s3_backup_configuration` - (Optional) The configuration for backup in Amazon S3. Required if `s3_backup_mode` is `Enabled`. Supports the same fields as `s3_configuration` object.
 * `data_table_name` - (Required) The name of the table in the redshift cluster that the s3 bucket will copy to.
 * `copy_options` - (Optional) Copy options for copying the data from the s3 intermediate bucket into redshift, for example to change the default delimiter. For valid values, see the [AWS documentation](http://docs.aws.amazon.com/firehose/latest/APIReference/API_CopyCommand.html)
 * `data_table_columns` - (Optional) The data table columns that will be targeted by the copy command.
