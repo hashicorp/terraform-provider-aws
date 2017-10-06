@@ -242,6 +242,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T)
 		CopyCommand: &firehose.CopyCommand{
 			CopyOptions: aws.String("GZIP"),
 		},
+		S3BackupMode: aws.String("Enabled"),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -416,16 +417,19 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 				r := redshiftConfig.(*firehose.RedshiftDestinationDescription)
 				// Range over the Stream Destinations, looking for the matching Redshift
 				// destination
-				var match bool
+				var matchCopyOptions, matchS3BackupMode bool
 				for _, d := range stream.Destinations {
 					if d.RedshiftDestinationDescription != nil {
 						if *d.RedshiftDestinationDescription.CopyCommand.CopyOptions == *r.CopyCommand.CopyOptions {
-							match = true
+							matchCopyOptions = true
+						}
+						if *d.RedshiftDestinationDescription.S3BackupMode == *r.S3BackupMode {
+							matchS3BackupMode = true
 						}
 					}
 				}
-				if !match {
-					return fmt.Errorf("Mismatch Redshift CopyOptions, expected: %s, got: %s", r, stream.Destinations)
+				if !matchCopyOptions || !matchS3BackupMode {
+					return fmt.Errorf("Mismatch Redshift CopyOptions or S3BackupMode, expected: %s, got: %s", r, stream.Destinations)
 				}
 			}
 
@@ -890,6 +894,11 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     cluster_jdbcurl = "jdbc:redshift://${aws_redshift_cluster.test_cluster.endpoint}/${aws_redshift_cluster.test_cluster.database_name}"
     username = "testuser"
     password = "T3stPass"
+    s3_backup_mode = "Enabled"
+    s3_backup_configuration {
+      role_arn = "${aws_iam_role.firehose.arn}"
+      bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    }
     data_table_name = "test-table"
     copy_options = "GZIP"
     data_table_columns = "test-col"
