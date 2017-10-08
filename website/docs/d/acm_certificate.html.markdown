@@ -29,7 +29,7 @@ data "aws_acm_certificate" "example" {
  * `statuses` - (Optional) A list of statuses on which to filter the returned list. Valid values are `PENDING_VALIDATION`, `ISSUED`,
    `INACTIVE`, `EXPIRED`, `VALIDATION_TIMED_OUT`, `REVOKED` and `FAILED`. If no value is specified, only certificates in the `ISSUED` state
    are returned.
-
+ * `types` - (Optional) A list of types on which to filter the returned list. Valid values are `AMAZON_ISSUED` and `IMPORTED`
 ## Attributes Reference
 
  * `arn` - Set to the ARN of the found certificate, suitable for referencing in other resources that support ACM certificates.
