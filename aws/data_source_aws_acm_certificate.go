@@ -33,8 +33,31 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"most_recent": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
+}
+
+type arnData struct {
+	arn       string
+	notBefore *time.Time
+}
+
+func describeCertificate(arn *arnData, conn *acm.ACM) (*acm.DescribeCertificateOutput, error) {
+	params := &acm.DescribeCertificateInput{}
+	params.CertificateArn = &arn.arn
+
+	description, err := conn.DescribeCertificate(params)
+	if err != nil {
+		return nil, err
+	}
+
+	return description, nil
 }
 
 func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) error {
@@ -50,38 +73,38 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		params.CertificateStatuses = []*string{aws.String("ISSUED")}
 	}
 
-	var arns []string
+	var arns []*arnData
 	log.Printf("[DEBUG] Reading ACM Certificate: %s", params)
 	err := conn.ListCertificatesPages(params, func(page *acm.ListCertificatesOutput, lastPage bool) bool {
 		for _, cert := range page.CertificateSummaryList {
 			if *cert.DomainName == target {
-				arns = append(arns, *cert.CertificateArn)
+				arns = append(arns, &arnData{*cert.CertificateArn, nil})
 			}
 		}
 
 		return true
 	})
 	if err != nil {
-		return errwrap.Wrapf("Error describing certificates: {{err}}", err)
+		return errwrap.Wrapf("Error listing certificates: {{err}}", err)
 	}
 
 	// filter based on certificate type (imported or aws-issued)
 	types, ok := d.GetOk("types")
 	if ok {
 		typesStrings := expandStringList(types.([]interface{}))
-		var matchedArns []string
+		var matchedArns []*arnData
 		for _, arn := range arns {
-			params := &acm.DescribeCertificateInput{}
-			params.CertificateArn = &arn
-
-			description, err := conn.DescribeCertificate(params)
+			description, err := describeCertificate(arn, conn)
 			if err != nil {
 				return errwrap.Wrapf("Error describing certificates: {{err}}", err)
 			}
 
 			for _, certType := range typesStrings {
 				if *description.Certificate.Type == *certType {
-					matchedArns = append(matchedArns, arn)
+					matchedArns = append(
+						matchedArns,
+						&arnData{arn.arn, description.Certificate.NotBefore},
+					)
 					break
 				}
 			}
@@ -93,12 +116,38 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 	if len(arns) == 0 {
 		return fmt.Errorf("No certificate for domain %q found in this region.", target)
 	}
+
+	// Get most recent sorting by notBefore date. Notice that createdAt field is only valid
+	// for ACM issued certificated but not for imported ones so in a mixed scenario only
+	// fields extracted from the certificate are valid. I cannot find a scenario where the
+	// most recent certificate is not the one with a most recent `NotBefore` field.
+	_, ok = d.GetOk("most_recent")
+	if ok {
+		mr := arns[0]
+		for _, arn := range arns[1:] {
+			if arn.notBefore == nil {
+				description, err := describeCertificate(arn, conn)
+				if err != nil {
+					return errwrap.Wrapf("Error describing certificates: {{err}}", err)
+				}
+
+				arn.notBefore = description.Certificate.NotBefore
+			}
+
+			if arn.notBefore.After(*mr.notBefore) {
+				mr = arn
+			}
+		}
+
+		arns = []*arnData{mr}
+	}
+
 	if len(arns) > 1 {
 		return fmt.Errorf("Multiple certificates for domain %q found in this region.", target)
 	}
 
 	d.SetId(time.Now().UTC().String())
-	d.Set("arn", arns[0])
+	d.Set("arn", arns[0].arn)
 
 	return nil
 }
