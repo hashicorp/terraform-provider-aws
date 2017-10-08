@@ -124,6 +124,14 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 	_, ok = d.GetOk("most_recent")
 	if ok {
 		mr := arns[0]
+		if mr.notBefore == nil {
+			description, err := describeCertificate(mr, conn)
+			if err != nil {
+				return errwrap.Wrapf("Error describing certificates: {{err}}", err)
+			}
+
+			mr.notBefore = description.Certificate.NotBefore
+		}
 		for _, arn := range arns[1:] {
 			if arn.notBefore == nil {
 				description, err := describeCertificate(arn, conn)
