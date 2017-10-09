@@ -104,7 +104,7 @@ func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
 					resource.TestMatchResourceAttr("data.aws_ami.instance_store_ami", "creation_date", regexp.MustCompile("^20[0-9]{2}-")),
 					resource.TestCheckResourceAttr("data.aws_ami.instance_store_ami", "hypervisor", "xen"),
 					resource.TestMatchResourceAttr("data.aws_ami.instance_store_ami", "image_id", regexp.MustCompile("^ami-")),
-					resource.TestMatchResourceAttr("data.aws_ami.instance_store_ami", "image_location", regexp.MustCompile("images/hvm-instance/ubuntu-trusty-14.04-amd64-server")),
+					resource.TestMatchResourceAttr("data.aws_ami.instance_store_ami", "image_location", regexp.MustCompile("ubuntu-trusty-14.04-amd64-server")),
 					resource.TestCheckResourceAttr("data.aws_ami.instance_store_ami", "image_type", "machine"),
 					resource.TestCheckResourceAttr("data.aws_ami.instance_store_ami", "most_recent", "true"),
 					resource.TestMatchResourceAttr("data.aws_ami.instance_store_ami", "name", regexp.MustCompile("^ubuntu/images/hvm-instance/ubuntu-trusty-14.04-amd64-server")),
