@@ -26,6 +26,7 @@ FEATURES:
 * **New Data Source:** `aws_lb` [GH-1806]
 * **New Data Source:** `aws_lb_listener` [GH-1806]
 * **New Data Source:** `aws_lb_target_group` [GH-1806]
+* **New Data Source:** `aws_iam_user` [GH-1805]
 
 IMPROVEMENTS:
 
