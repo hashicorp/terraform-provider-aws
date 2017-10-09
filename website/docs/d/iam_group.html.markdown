@@ -1,7 +1,7 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_iam_role"
-sidebar_current: "docs-aws-datasource-iam-role"
+page_title: "AWS: aws_iam_group"
+sidebar_current: "docs-aws-datasource-iam-group"
 description: |-
   Get information on a Amazon IAM group
 ---
@@ -28,6 +28,6 @@ data "aws_iam_group" "example" {
 
 * `arn` - The Amazon Resource Name (ARN) specifying the group.
 
-* `path` - The path to the role.
+* `path` - The path to the group.
 
 * `group_id` - The stable and unique string identifying the group.

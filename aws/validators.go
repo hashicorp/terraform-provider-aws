@@ -1042,6 +1042,10 @@ func validateAppautoscalingScalableDimension(v interface{}, k string) (ws []stri
 		"ecs:service:DesiredCount":                     true,
 		"ec2:spot-fleet-request:TargetCapacity":        true,
 		"elasticmapreduce:instancegroup:InstanceCount": true,
+		"dynamodb:table:ReadCapacityUnits":             true,
+		"dynamodb:table:WriteCapacityUnits":            true,
+		"dynamodb:index:ReadCapacityUnits":             true,
+		"dynamodb:index:WriteCapacityUnits":            true,
 	}
 
 	if !dimensions[value] {
@@ -1055,11 +1059,58 @@ func validateAppautoscalingServiceNamespace(v interface{}, k string) (ws []strin
 	namespaces := map[string]bool{
 		"ecs":              true,
 		"ec2":              true,
+		"dynamodb":         true,
 		"elasticmapreduce": true,
 	}
 
 	if !namespaces[value] {
 		errors = append(errors, fmt.Errorf("%q must be a valid service namespace value: %q", k, value))
+	}
+	return
+}
+
+func validateAppautoscalingCustomizedMetricSpecificationStatistic(v interface{}, k string) (ws []string, errors []error) {
+	validStatistic := []string{
+		"Average",
+		"Minimum",
+		"Maximum",
+		"SampleCount",
+		"Sum",
+	}
+	statistic := v.(string)
+	for _, o := range validStatistic {
+		if statistic == o {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid statistic %q. Valid statistic are %q.",
+		k, statistic, validStatistic))
+	return
+}
+
+func validateAppautoscalingPredefinedMetricSpecification(v interface{}, k string) (ws []string, errors []error) {
+	validMetrics := []string{
+		"DynamoDBReadCapacityUtilization",
+		"DynamoDBWriteCapacityUtilization",
+	}
+	metric := v.(string)
+	for _, o := range validMetrics {
+		if metric == o {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid metric %q. Valid metric are %q.",
+		k, metric, validMetrics))
+	return
+}
+
+func validateAppautoscalingPredefinedResourceLabel(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 1023 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 1023 characters", k))
 	}
 	return
 }
@@ -1270,7 +1321,7 @@ func validateDbOptionGroupNamePrefix(v interface{}, k string) (ws []string, erro
 	return
 }
 
-func validateAwsAlbTargetGroupName(v interface{}, k string) (ws []string, errors []error) {
+func validateAwsLbTargetGroupName(v interface{}, k string) (ws []string, errors []error) {
 	name := v.(string)
 	if len(name) > 32 {
 		errors = append(errors, fmt.Errorf("%q (%q) cannot be longer than '32' characters", k, name))
@@ -1278,7 +1329,7 @@ func validateAwsAlbTargetGroupName(v interface{}, k string) (ws []string, errors
 	return
 }
 
-func validateAwsAlbTargetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validateAwsLbTargetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
 	name := v.(string)
 	if len(name) > 32 {
 		errors = append(errors, fmt.Errorf("%q (%q) cannot be longer than '6' characters", k, name))
@@ -1436,10 +1487,10 @@ func validateSsmParameterType(v interface{}, k string) (ws []string, errors []er
 	return
 }
 
-func validateBatchComputeEnvironmentName(v interface{}, k string) (ws []string, errors []error) {
+func validateBatchName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !(regexp.MustCompile(`^[A-Za-z0-9_]*$`).MatchString(value) && len(value) <= 128) {
-		errors = append(errors, fmt.Errorf("computeEnvironmentName must be up to 128 letters (uppercase and lowercase), numbers, and underscores."))
+	if !regexp.MustCompile(`^[A-Za-z0-9_]{1,128}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q (%q) must be up to 128 letters (uppercase and lowercase), numbers, and underscores.", k, v))
 	}
 	return
 }

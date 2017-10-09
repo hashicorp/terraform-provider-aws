@@ -1,35 +1,37 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_alb"
-sidebar_current: "docs-aws-datasource-alb-x"
+page_title: "AWS: aws_lb"
+sidebar_current: "docs-aws-datasource-lb-x"
 description: |-
-  Provides an Application Load Balancer data source.
+  Provides a Load Balancer data source.
 ---
 
-# aws\_alb
+# aws_lb
 
-Provides information about an Application Load Balancer.
+~> **Note:** `aws_alb` is known as `aws_lb`. The functionality is identical.
 
-This data source can prove useful when a module accepts an ALB as an input
+Provides information about a Load Balancer.
+
+This data source can prove useful when a module accepts an LB as an input
 variable and needs to, for example, determine the security groups associated
 with it, etc.
 
 ## Example Usage
 
 ```hcl
-variable "alb_arn" {
+variable "lb_arn" {
   type    = "string"
   default = ""
 }
 
-variable "alb_name" {
+variable "lb_name" {
   type    = "string"
   default = ""
 }
 
-data "aws_alb" "test" {
-  arn  = "${var.alb_arn}"
-  name = "${var.alb_name}"
+data "aws_lb" "test" {
+  arn  = "${var.lb_arn}"
+  name = "${var.lb_name}"
 }
 ```
 
@@ -44,5 +46,5 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-See the [ALB Resource](/docs/providers/aws/r/alb.html) for details on the
+See the [LB Resource](/docs/providers/aws/r/lb.html) for details on the
 returned attributes - they are identical.

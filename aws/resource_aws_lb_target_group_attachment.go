@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsAlbTargetGroupAttachment() *schema.Resource {
+func resourceAwsLbTargetGroupAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAlbAttachmentCreate,
-		Read:   resourceAwsAlbAttachmentRead,
-		Delete: resourceAwsAlbAttachmentDelete,
+		Create: resourceAwsLbAttachmentCreate,
+		Read:   resourceAwsLbAttachmentRead,
+		Delete: resourceAwsLbAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
 			"target_group_arn": {
@@ -40,7 +40,7 @@ func resourceAwsAlbTargetGroupAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsAlbAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 
 	target := &elbv2.TargetDescription{
@@ -69,7 +69,7 @@ func resourceAwsAlbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsAlbAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLbAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 
 	target := &elbv2.TargetDescription{
@@ -95,9 +95,9 @@ func resourceAwsAlbAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-// resourceAwsAlbAttachmentRead requires all of the fields in order to describe the correct
+// resourceAwsLbAttachmentRead requires all of the fields in order to describe the correct
 // target, so there is no work to do beyond ensuring that the target and group still exist.
-func resourceAwsAlbAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLbAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 
 	target := &elbv2.TargetDescription{

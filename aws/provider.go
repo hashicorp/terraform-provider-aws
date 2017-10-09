@@ -161,9 +161,6 @@ func Provider() terraform.ResourceProvider {
 
 		DataSourcesMap: map[string]*schema.Resource{
 			"aws_acm_certificate":          dataSourceAwsAcmCertificate(),
-			"aws_alb":                      dataSourceAwsAlb(),
-			"aws_alb_listener":             dataSourceAwsAlbListener(),
-			"aws_alb_target_group":         dataSourceAwsAlbTargetGroup(),
 			"aws_ami":                      dataSourceAwsAmi(),
 			"aws_ami_ids":                  dataSourceAwsAmiIds(),
 			"aws_autoscaling_groups":       dataSourceAwsAutoscalingGroups(),
@@ -219,14 +216,17 @@ func Provider() terraform.ResourceProvider {
 			"aws_vpc_endpoint_service":             dataSourceAwsVpcEndpointService(),
 			"aws_vpc_peering_connection":           dataSourceAwsVpcPeeringConnection(),
 			"aws_vpn_gateway":                      dataSourceAwsVpnGateway(),
+
+			// Adding the Aliases for the ALB -> LB Rename
+			"aws_lb":               dataSourceAwsLb(),
+			"aws_alb":              dataSourceAwsLb(),
+			"aws_lb_listener":      dataSourceAwsLbListener(),
+			"aws_alb_listener":     dataSourceAwsLbListener(),
+			"aws_lb_target_group":  dataSourceAwsLbTargetGroup(),
+			"aws_alb_target_group": dataSourceAwsLbTargetGroup(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"aws_alb":                                      resourceAwsAlb(),
-			"aws_alb_listener":                             resourceAwsAlbListener(),
-			"aws_alb_listener_rule":                        resourceAwsAlbListenerRule(),
-			"aws_alb_target_group":                         resourceAwsAlbTargetGroup(),
-			"aws_alb_target_group_attachment":              resourceAwsAlbTargetGroupAttachment(),
 			"aws_ami":                                      resourceAwsAmi(),
 			"aws_ami_copy":                                 resourceAwsAmiCopy(),
 			"aws_ami_from_instance":                        resourceAwsAmiFromInstance(),
@@ -488,6 +488,23 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafregional_byte_match_set":               resourceAwsWafRegionalByteMatchSet(),
 			"aws_wafregional_ipset":                        resourceAwsWafRegionalIPSet(),
 			"aws_batch_compute_environment":                resourceAwsBatchComputeEnvironment(),
+			"aws_batch_job_definition":                     resourceAwsBatchJobDefinition(),
+			"aws_batch_job_queue":                          resourceAwsBatchJobQueue(),
+
+			// ALBs are actually LBs because they can be type `network` or `application`
+			// To avoid regressions, we will add a new resource for each and they both point
+			// back to the old ALB version. IF the Terraform supported aliases for resources
+			// this would be a whole lot simplier
+			"aws_alb":                         resourceAwsLb(),
+			"aws_lb":                          resourceAwsLb(),
+			"aws_alb_listener":                resourceAwsLbListener(),
+			"aws_lb_listener":                 resourceAwsLbListener(),
+			"aws_alb_listener_rule":           resourceAwsLbbListenerRule(),
+			"aws_lb_listener_rule":            resourceAwsLbbListenerRule(),
+			"aws_alb_target_group":            resourceAwsLbTargetGroup(),
+			"aws_lb_target_group":             resourceAwsLbTargetGroup(),
+			"aws_alb_target_group_attachment": resourceAwsLbTargetGroupAttachment(),
+			"aws_lb_target_group_attachment":  resourceAwsLbTargetGroupAttachment(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

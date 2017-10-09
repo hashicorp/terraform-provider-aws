@@ -10,6 +10,8 @@ description: |-
 
 Provides a DynamoDB table resource
 
+~> **Note:** It is recommended to use `lifecycle` [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) for `read_capacity` and/or `write_capacity` if there's [autoscaling policy](/docs/providers/aws/r/appautoscaling_policy.html) attached to the table.
+
 ## Example Usage
 
 The following dynamodb table description models the table and GSI shown

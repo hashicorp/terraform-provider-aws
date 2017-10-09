@@ -65,13 +65,36 @@ func TestDiffTagsDirectoryService(t *testing.T) {
 	}
 }
 
+func TestAccAWSDirectoryServiceDirectory_importBasic(t *testing.T) {
+	resourceName := "aws_directory_service_directory.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryServiceDirectoryConfig,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSDirectoryServiceDirectory_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDirectoryServiceDirectoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
@@ -87,7 +110,7 @@ func TestAccAWSDirectoryServiceDirectory_tags(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDirectoryServiceDirectoryTagsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
@@ -104,7 +127,7 @@ func TestAccAWSDirectoryServiceDirectory_microsoft(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDirectoryServiceDirectoryConfig_microsoft,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
@@ -120,7 +143,7 @@ func TestAccAWSDirectoryServiceDirectory_connector(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDirectoryServiceDirectoryConfig_connector,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.connector"),
@@ -136,7 +159,7 @@ func TestAccAWSDirectoryServiceDirectory_withAliasAndSso(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDirectoryServiceDirectoryConfig_withAlias,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar_a"),
@@ -145,7 +168,7 @@ func TestAccAWSDirectoryServiceDirectory_withAliasAndSso(t *testing.T) {
 					testAccCheckServiceDirectorySso("aws_directory_service_directory.bar_a", false),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDirectoryServiceDirectoryConfig_withSso,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar_a"),
@@ -154,7 +177,7 @@ func TestAccAWSDirectoryServiceDirectory_withAliasAndSso(t *testing.T) {
 					testAccCheckServiceDirectorySso("aws_directory_service_directory.bar_a", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDirectoryServiceDirectoryConfig_withSso_modified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar_a"),

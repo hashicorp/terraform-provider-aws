@@ -1,34 +1,36 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_alb_listener_rule"
-sidebar_current: "docs-aws-resource-alb-listener-rule"
+page_title: "AWS: aws_lb_listener_rule"
+sidebar_current: "docs-aws-resource-elbv2-listener-rule"
 description: |-
-  Provides an Application Load Balancer Listener Rule resource.
+  Provides a Load Balancer Listener Rule resource.
 ---
 
-# aws\_alb\_listener\_rule
+# aws_lb_listener_rule
 
-Provides an Application Load Balancer Listener Rule resource.
+Provides a Load Balancer Listener Rule resource.
+
+~> **Note:** `aws_alb_listener_rule` is know as `aws_lb_listener_rule`. The functionality is identical.
 
 ## Example Usage
 
 ```hcl
 # Create a new load balancer
-resource "aws_alb" "front_end" {
+resource "aws_lb" "front_end" {
   # ...
 }
 
-resource "aws_alb_listener" "front_end" {
+resource "aws_lb_listener" "front_end" {
   # Other parameters
 }
 
-resource "aws_alb_listener_rule" "static" {
-  listener_arn = "${aws_alb_listener.front_end.arn}"
+resource "aws_lb_listener_rule" "static" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 100
 
   action {
     type             = "forward"
-    target_group_arn = "${aws_alb_target_group.static.arn}"
+    target_group_arn = "${aws_lb_target_group.static.arn}"
   }
 
   condition {
@@ -37,13 +39,13 @@ resource "aws_alb_listener_rule" "static" {
   }
 }
 
-resource "aws_alb_listener_rule" "host_based_routing" {
-  listener_arn = "${aws_alb_listener.front_end.arn}"
+resource "aws_lb_listener_rule" "host_based_routing" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 99
 
   action {
     type             = "forward"
-    target_group_arn = "${aws_alb_target_group.static.arn}"
+    target_group_arn = "${aws_lb_target_group.static.arn}"
   }
 
   condition {
@@ -85,5 +87,5 @@ The following attributes are exported in addition to the arguments listed above:
 Rules can be imported using their ARN, e.g.
 
 ```
-$ terraform import aws_alb_listener_rule.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener-rule/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b
+$ terraform import aws_lb_listener_rule.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener-rule/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b
 ```

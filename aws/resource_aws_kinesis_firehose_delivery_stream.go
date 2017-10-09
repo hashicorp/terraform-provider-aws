@@ -480,7 +480,10 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		Prefix:                  extractPrefixConfiguration(s3),
 		CompressionFormat:       aws.String(s3["compression_format"].(string)),
 		EncryptionConfiguration: extractEncryptionConfiguration(s3),
-		ProcessingConfiguration: extractProcessingConfiguration(s3),
+	}
+
+	if _, ok := s3["processing_configuration"]; ok {
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(s3)
 	}
 
 	if _, ok := s3["cloudwatch_logging_options"]; ok {
@@ -538,7 +541,12 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 }
 
 func extractProcessingConfiguration(s3 map[string]interface{}) *firehose.ProcessingConfiguration {
-	processingConfiguration := s3["processing_configuration"].([]interface{})[0].(map[string]interface{})
+	config := s3["processing_configuration"].([]interface{})
+	if len(config) == 0 {
+		return nil
+	}
+
+	processingConfiguration := config[0].(map[string]interface{})
 
 	return &firehose.ProcessingConfiguration{
 		Enabled:    aws.Bool(processingConfiguration["enabled"].(bool)),

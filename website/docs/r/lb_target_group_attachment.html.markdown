@@ -1,27 +1,29 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_alb_target_group_attachment"
-sidebar_current: "docs-aws-resource-alb-target-group-attachment"
+page_title: "AWS: aws_lb_target_group_attachment"
+sidebar_current: "docs-aws-resource-elbv2-target-group-attachment"
 description: |-
-  Provides the ability to register instances and containers with an ALB
+  Provides the ability to register instances and containers with a LB
   target group
 ---
 
-# aws\_alb\_target\_group\_attachment
+# aws_lb_target_group_attachment
 
-Provides the ability to register instances and containers with an ALB
+Provides the ability to register instances and containers with a LB
 target group
+
+~> **Note:** `aws_alb_target_group_attachment` is known as `aws_lb_target_group_attachment`. The functionality is identical.
 
 ## Example Usage
 
 ```hcl
-resource "aws_alb_target_group_attachment" "test" {
-  target_group_arn = "${aws_alb_target_group.test.arn}"
+resource "aws_lb_target_group_attachment" "test" {
+  target_group_arn = "${aws_lb_target_group.test.arn}"
   target_id        = "${aws_instance.test.id}"
   port             = 80
 }
 
-resource "aws_alb_target_group" "test" {
+resource "aws_lb_target_group" "test" {
   // Other arguments
 }
 
