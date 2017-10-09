@@ -111,6 +111,11 @@ func resourceAwsKinesisStreamCreate(d *schema.ResourceData, meta interface{}) er
 		if isAWSErr(err, "LimitExceededException", "simultaneously be in CREATING or DELETING") {
 			return resource.RetryableError(err)
 		}
+		// AWS (un)helpfully raises LimitExceededException
+		// rather than ThrottlingException here
+		if isAWSErr(err, "LimitExceededException", "Rate exceeded for stream") {
+			return resource.RetryableError(err)
+		}
 		return resource.NonRetryableError(err)
 	})
 
