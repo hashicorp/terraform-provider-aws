@@ -14,45 +14,64 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSALBTargetGroupAttachment_basic(t *testing.T) {
+func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_alb_target_group.test",
+		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSALBTargetGroupAttachmentDestroy,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSALBTargetGroupAttachmentConfig_basic(targetGroupName),
+				Config: testAccAWSLBTargetGroupAttachmentConfig_basic(targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBTargetGroupAttachmentExists("aws_alb_target_group_attachment.test"),
+					testAccCheckAWSLBTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSALBTargetGroupAttachment_withoutPort(t *testing.T) {
+func TestAccAWSLBTargetGroupAttachmentBackwardsCompatibility(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSALBTargetGroupAttachmentDestroy,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSALBTargetGroupAttachmentConfigWithoutPort(targetGroupName),
+				Config: testAccAWSLBTargetGroupAttachmentConfigBackwardsCompatibility(targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBTargetGroupAttachmentExists("aws_alb_target_group_attachment.test"),
+					testAccCheckAWSLBTargetGroupAttachmentExists("aws_alb_target_group_attachment.test"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSALBTargetGroupAttachmentExists(n string) resource.TestCheckFunc {
+func TestAccAWSLBTargetGroupAttachment_withoutPort(t *testing.T) {
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupAttachmentConfigWithoutPort(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckAWSLBTargetGroupAttachmentExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -93,11 +112,11 @@ func testAccCheckAWSALBTargetGroupAttachmentExists(n string) resource.TestCheckF
 	}
 }
 
-func testAccCheckAWSALBTargetGroupAttachmentDestroy(s *terraform.State) error {
+func testAccCheckAWSLBTargetGroupAttachmentDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).elbv2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_alb_target_group_attachment" {
+		if rs.Type != "aws_lb_target_group_attachment" && rs.Type != "aws_alb_target_group_attachment" {
 			continue
 		}
 
@@ -126,17 +145,17 @@ func testAccCheckAWSALBTargetGroupAttachmentDestroy(s *terraform.State) error {
 		if isTargetGroupNotFound(err) || isInvalidTarget(err) {
 			return nil
 		} else {
-			return errwrap.Wrapf("Unexpected error checking ALB destroyed: {{err}}", err)
+			return errwrap.Wrapf("Unexpected error checking LB destroyed: {{err}}", err)
 		}
 	}
 
 	return nil
 }
 
-func testAccAWSALBTargetGroupAttachmentConfigWithoutPort(targetGroupName string) string {
+func testAccAWSLBTargetGroupAttachmentConfigWithoutPort(targetGroupName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group_attachment" "test" {
-  target_group_arn = "${aws_alb_target_group.test.arn}"
+resource "aws_lb_target_group_attachment" "test" {
+  target_group_arn = "${aws_lb_target_group.test.arn}"
   target_id = "${aws_instance.test.id}"
 }
 
@@ -146,7 +165,7 @@ resource "aws_instance" "test" {
   subnet_id = "${aws_subnet.subnet.id}"
 }
 
-resource "aws_alb_target_group" "test" {
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTPS"
@@ -180,12 +199,65 @@ resource "aws_subnet" "subnet" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSALBTargetGroupAttachmentConfigWithoutPort"
+		Name = "testAccAWSLBTargetGroupAttachmentConfigWithoutPort"
 	}
 }`, targetGroupName)
 }
 
-func testAccAWSALBTargetGroupAttachmentConfig_basic(targetGroupName string) string {
+func testAccAWSLBTargetGroupAttachmentConfig_basic(targetGroupName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group_attachment" "test" {
+  target_group_arn = "${aws_lb_target_group.test.arn}"
+  target_id = "${aws_instance.test.id}"
+  port = 80
+}
+
+resource "aws_instance" "test" {
+  ami = "ami-f701cb97"
+  instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.subnet.id}"
+}
+
+resource "aws_lb_target_group" "test" {
+  name = "%s"
+  port = 443
+  protocol = "HTTPS"
+  vpc_id = "${aws_vpc.test.id}"
+
+  deregistration_delay = 200
+
+  stickiness {
+    type = "lb_cookie"
+    cookie_duration = 10000
+  }
+
+  health_check {
+    path = "/health"
+    interval = 60
+    port = 8081
+    protocol = "HTTP"
+    timeout = 3
+    healthy_threshold = 3
+    unhealthy_threshold = 3
+    matcher = "200-299"
+  }
+}
+
+resource "aws_subnet" "subnet" {
+  cidr_block = "10.0.1.0/24"
+  vpc_id = "${aws_vpc.test.id}"
+
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+	tags {
+		Name = "testAccAWSLBTargetGroupAttachmentConfig_basic"
+	}
+}`, targetGroupName)
+}
+
+func testAccAWSLBTargetGroupAttachmentConfigBackwardsCompatibility(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group_attachment" "test" {
   target_group_arn = "${aws_alb_target_group.test.arn}"
@@ -233,7 +305,7 @@ resource "aws_subnet" "subnet" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSALBTargetGroupAttachmentConfig_basic"
+		Name = "testAccAWSLBTargetGroupAttachmentConfig_basic"
 	}
 }`, targetGroupName)
 }

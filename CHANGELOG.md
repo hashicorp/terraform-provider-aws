@@ -1,20 +1,48 @@
 ## 1.0.1 (Unreleased)
 
+NOTES:
+
+* resource/aws_alb_* & data-source/aws_alb_*: In order to support network LBs, ALBs were renamed to `aws_lb_*` due to the way APIs "new" (non-Classic) load balancers are structured in AWS. All existing ALB functionality remains untouched and new resources work the same way. `aws_alb_*` resources are still in place as "aliases", but documentation will only mention `aws_lb_*`.
+`aws_alb_*` aliases will be removed in future major version. [GH-1806]
+* Deprecated:
+  * data-source/aws_alb
+  * data-source/aws_alb_listener
+  * data-source/aws_alb_target_group
+  * resource/aws_alb
+  * resource/aws_alb_listener
+  * resource/aws_alb_listener_rule
+  * resource/aws_alb_target_group
+  * resource/aws_alb_target_group_attachment
+
 FEATURES:
 
 * **New Resource:** `aws_batch_job_definition` [GH-1710]
 * **New Resource:** `aws_batch_job_queue` [GH-1710]
+* **New Resource:** `aws_lb` [GH-1806]
+* **New Resource:** `aws_lb_listener` [GH-1806]
+* **New Resource:** `aws_lb_listener_rule` [GH-1806]
+* **New Resource:** `aws_lb_target_group` [GH-1806]
+* **New Resource:** `aws_lb_target_group_attachment` [GH-1806]
+* **New Data Source:** `aws_lb` [GH-1806]
+* **New Data Source:** `aws_lb_listener` [GH-1806]
+* **New Data Source:** `aws_lb_target_group` [GH-1806]
 
 IMPROVEMENTS:
 
+* resource/aws_kinesis_stream: Add support for encryption [GH-1139]
 * resource/aws_cloudwatch_log_group: Add support for encryption via `kms_key_id` [GH-1751]
 * resource/aws_spot_instance_request: Add support for `instance_interruption_behaviour` [GH-1735]
+* resource/aws_ses_event_destination: Add support for `open` & `click` event types [GH-1773]
+* data-source/aws_vpc_endpoint: Expose `prefix_list_id` [GH-1733]
 
 BUG FIXES:
 
 * resource/aws_kinesis_firehose_delivery_stream: Fix crash caused by missing `processing_configuration` [GH-1738]
 * resource/aws_rds_cluster_instance: Treat `configuring-enhanced-monitoring` as pending state [GH-1744]
+* resource/aws_rds_cluster_instance: Treat more states as pending [GH-1790]
+* resource/aws_route_table: Increase number of not-found checks/retries after creation [GH-1791]
 * data-source/aws_db_instance: Make `db_instance_arn` expose ARN instead of identifier (use `db_cluster_identifier` for identifier) [GH-1766]
+* resource/aws_batch_compute_environment: Fix ARN attribute name/value (`ecc_cluster_arn` -> `ecs_cluster_arn`) [GH-1809]
 
 ## 1.0.0 (September 27, 2017)
 

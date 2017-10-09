@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestALBCloudwatchSuffixFromARN(t *testing.T) {
+func TestLBCloudwatchSuffixFromARN(t *testing.T) {
 	cases := []struct {
 		name   string
 		arn    *string
@@ -38,101 +38,166 @@ func TestALBCloudwatchSuffixFromARN(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := albSuffixFromARN(tc.arn)
+		actual := lbSuffixFromARN(tc.arn)
 		if actual != tc.suffix {
 			t.Fatalf("bad suffix: %q\nExpected: %s\n     Got: %s", tc.name, tc.suffix, actual)
 		}
 	}
 }
 
-func TestAccAWSALB_basic(t *testing.T) {
+func TestAccAWSLB_basic(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	albName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_alb.alb_test",
+		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSALBDestroy,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSALBConfig_basic(albName),
+				Config: testAccAWSLBConfig_basic(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &conf),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "name", albName),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "internal", "true"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "subnets.#", "2"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "security_groups.#", "1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.TestName", "TestAccAWSALB_basic"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "enable_deletion_protection", "false"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "idle_timeout", "30"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "ip_address_type", "ipv4"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "vpc_id"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "zone_id"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "dns_name"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "arn"),
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "security_groups.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.TestName", "TestAccAWSALB_basic"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "idle_timeout", "30"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "load_balancer_type", "application"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "zone_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "dns_name"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "arn"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSALB_generatedName(t *testing.T) {
+func TestAccAWSLB_networkLoadbalancer(t *testing.T) {
 	var conf elbv2.LoadBalancer
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_alb.alb_test",
+		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSALBDestroy,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSALBConfig_generatedName(),
+				Config: testAccAWSLBConfig_networkLoadbalancer(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &conf),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "name"),
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.TestName", "TestAccAWSALB_basic"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "zone_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "dns_name"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "arn"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "load_balancer_type", "network"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSALB_generatesNameForZeroValue(t *testing.T) {
+func TestAccAWSLBBackwardsCompatibility(t *testing.T) {
 	var conf elbv2.LoadBalancer
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_alb.alb_test",
+		IDRefreshName: "aws_alb.lb_test",
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSALBDestroy,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSALBConfig_zeroValueName(),
+				Config: testAccAWSLBConfigBackwardsCompatibility(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &conf),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "name"),
+					testAccCheckAWSLBExists("aws_alb.lb_test", &conf),
+					resource.TestCheckResourceAttr("aws_alb.lb_test", "name", lbName),
+					resource.TestCheckResourceAttr("aws_alb.lb_test", "internal", "true"),
+					resource.TestCheckResourceAttr("aws_alb.lb_test", "subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_alb.lb_test", "security_groups.#", "1"),
+					resource.TestCheckResourceAttr("aws_alb.lb_test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_alb.lb_test", "tags.TestName", "TestAccAWSALB_basic"),
+					resource.TestCheckResourceAttr("aws_alb.lb_test", "enable_deletion_protection", "false"),
+					resource.TestCheckResourceAttr("aws_alb.lb_test", "idle_timeout", "30"),
+					resource.TestCheckResourceAttr("aws_alb.lb_test", "ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttr("aws_alb.lb_test", "load_balancer_type", "application"),
+					resource.TestCheckResourceAttrSet("aws_alb.lb_test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("aws_alb.lb_test", "zone_id"),
+					resource.TestCheckResourceAttrSet("aws_alb.lb_test", "dns_name"),
+					resource.TestCheckResourceAttrSet("aws_alb.lb_test", "arn"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSALB_namePrefix(t *testing.T) {
+func TestAccAWSLB_generatedName(t *testing.T) {
 	var conf elbv2.LoadBalancer
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_alb.alb_test",
+		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSALBDestroy,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSALBConfig_namePrefix(),
+				Config: testAccAWSLBConfig_generatedName(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &conf),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "name"),
-					resource.TestMatchResourceAttr("aws_alb.alb_test", "name",
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLB_generatesNameForZeroValue(t *testing.T) {
+	var conf elbv2.LoadBalancer
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb.lb_test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_zeroValueName(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLB_namePrefix(t *testing.T) {
+	var conf elbv2.LoadBalancer
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb.lb_test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_namePrefix(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "name"),
+					resource.TestMatchResourceAttr("aws_lb.lb_test", "name",
 						regexp.MustCompile("^tf-lb-")),
 				),
 			},
@@ -140,117 +205,117 @@ func TestAccAWSALB_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSALB_tags(t *testing.T) {
+func TestAccAWSLB_tags(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	albName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_alb.alb_test",
+		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSALBDestroy,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSALBConfig_basic(albName),
+				Config: testAccAWSLBConfig_basic(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &conf),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.TestName", "TestAccAWSALB_basic"),
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.TestName", "TestAccAWSALB_basic"),
 				),
 			},
 			{
-				Config: testAccAWSALBConfig_updatedTags(albName),
+				Config: testAccAWSLBConfig_updatedTags(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &conf),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.%", "2"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.Type", "Sample Type Tag"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.Environment", "Production"),
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.Type", "Sample Type Tag"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.Environment", "Production"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSALB_updatedSecurityGroups(t *testing.T) {
+func TestAccAWSLB_updatedSecurityGroups(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
-	albName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_alb.alb_test",
+		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSALBDestroy,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSALBConfig_basic(albName),
+				Config: testAccAWSLBConfig_basic(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &pre),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "security_groups.#", "1"),
+					testAccCheckAWSLBExists("aws_lb.lb_test", &pre),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "security_groups.#", "1"),
 				),
 			},
 			{
-				Config: testAccAWSALBConfig_updateSecurityGroups(albName),
+				Config: testAccAWSLBConfig_updateSecurityGroups(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &post),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "security_groups.#", "2"),
-					testAccCheckAWSAlbARNs(&pre, &post),
+					testAccCheckAWSLBExists("aws_lb.lb_test", &post),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "security_groups.#", "2"),
+					testAccCheckAWSlbARNs(&pre, &post),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSALB_updatedSubnets(t *testing.T) {
+func TestAccAWSLB_updatedSubnets(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
-	albName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_alb.alb_test",
+		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSALBDestroy,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSALBConfig_basic(albName),
+				Config: testAccAWSLBConfig_basic(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &pre),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "subnets.#", "2"),
+					testAccCheckAWSLBExists("aws_lb.lb_test", &pre),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
 				),
 			},
 			{
-				Config: testAccAWSALBConfig_updateSubnets(albName),
+				Config: testAccAWSLBConfig_updateSubnets(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &post),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "subnets.#", "3"),
-					testAccCheckAWSAlbARNs(&pre, &post),
+					testAccCheckAWSLBExists("aws_lb.lb_test", &post),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "3"),
+					testAccCheckAWSlbARNs(&pre, &post),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSALB_updatedIpAddressType(t *testing.T) {
+func TestAccAWSLB_updatedIpAddressType(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
-	albName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_alb.alb_test",
+		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSALBDestroy,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSALBConfigWithIpAddressType(albName),
+				Config: testAccAWSLBConfigWithIpAddressType(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &pre),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "ip_address_type", "ipv4"),
+					testAccCheckAWSLBExists("aws_lb.lb_test", &pre),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "ip_address_type", "ipv4"),
 				),
 			},
 			{
-				Config: testAccAWSALBConfigWithIpAddressTypeUpdated(albName),
+				Config: testAccAWSLBConfigWithIpAddressTypeUpdated(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &post),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "ip_address_type", "dualstack"),
+					testAccCheckAWSLBExists("aws_lb.lb_test", &post),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "ip_address_type", "dualstack"),
 				),
 			},
 		},
@@ -260,123 +325,123 @@ func TestAccAWSALB_updatedIpAddressType(t *testing.T) {
 // TestAccAWSALB_noSecurityGroup regression tests the issue in #8264,
 // where if an ALB is created without a security group, a default one
 // is assigned.
-func TestAccAWSALB_noSecurityGroup(t *testing.T) {
+func TestAccAWSLB_noSecurityGroup(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	albName := fmt.Sprintf("testaccawsalb-nosg-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-nosg-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_alb.alb_test",
+		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSALBDestroy,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSALBConfig_nosg(albName),
+				Config: testAccAWSLBConfig_nosg(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &conf),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "name", albName),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "internal", "true"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "subnets.#", "2"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "security_groups.#", "1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.TestName", "TestAccAWSALB_basic"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "enable_deletion_protection", "false"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "idle_timeout", "30"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "vpc_id"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "zone_id"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "dns_name"),
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "security_groups.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.TestName", "TestAccAWSALB_basic"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "idle_timeout", "30"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "zone_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "dns_name"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSALB_accesslogs(t *testing.T) {
+func TestAccAWSLB_accesslogs(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	bucketName := fmt.Sprintf("testaccawsalbaccesslogs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
-	albName := fmt.Sprintf("testaccawsalbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	bucketName := fmt.Sprintf("testaccawslbaccesslogs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_alb.alb_test",
+		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSALBDestroy,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSALBConfig_basic(albName),
+				Config: testAccAWSLBConfig_basic(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &conf),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "name", albName),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "internal", "true"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "subnets.#", "2"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "security_groups.#", "1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.TestName", "TestAccAWSALB_basic"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "enable_deletion_protection", "false"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "idle_timeout", "30"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "vpc_id"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "zone_id"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "dns_name"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "arn"),
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "security_groups.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.TestName", "TestAccAWSALB_basic"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "idle_timeout", "30"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "zone_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "dns_name"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "arn"),
 				),
 			},
 			{
-				Config: testAccAWSALBConfig_accessLogs(true, albName, bucketName),
+				Config: testAccAWSLBConfig_accessLogs(true, lbName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &conf),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "name", albName),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "internal", "true"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "subnets.#", "2"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "security_groups.#", "1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.TestName", "TestAccAWSALB_basic1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "enable_deletion_protection", "false"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "idle_timeout", "50"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "vpc_id"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "zone_id"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "dns_name"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "access_logs.#", "1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "access_logs.0.bucket", bucketName),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "access_logs.0.prefix", "testAccAWSALBConfig_accessLogs"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "access_logs.0.enabled", "true"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "arn"),
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "security_groups.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.TestName", "TestAccAWSALB_basic1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "idle_timeout", "50"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "zone_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "dns_name"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.0.bucket", bucketName),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.0.prefix", "testAccAWSALBConfig_accessLogs"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "arn"),
 				),
 			},
 			{
-				Config: testAccAWSALBConfig_accessLogs(false, albName, bucketName),
+				Config: testAccAWSLBConfig_accessLogs(false, lbName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSALBExists("aws_alb.alb_test", &conf),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "name", albName),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "internal", "true"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "subnets.#", "2"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "security_groups.#", "1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "tags.TestName", "TestAccAWSALB_basic1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "enable_deletion_protection", "false"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "idle_timeout", "50"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "vpc_id"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "zone_id"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "dns_name"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "access_logs.#", "1"),
-					resource.TestCheckResourceAttr("aws_alb.alb_test", "access_logs.0.enabled", "false"),
-					resource.TestCheckResourceAttrSet("aws_alb.alb_test", "arn"),
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "security_groups.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.TestName", "TestAccAWSALB_basic1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "idle_timeout", "50"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "zone_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "dns_name"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "arn"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSAlbARNs(pre, post *elbv2.LoadBalancer) resource.TestCheckFunc {
+func testAccCheckAWSlbARNs(pre, post *elbv2.LoadBalancer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *pre.LoadBalancerArn != *post.LoadBalancerArn {
-			return errors.New("ALB has been recreated. ARNs are different")
+			return errors.New("LB has been recreated. ARNs are different")
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAWSALBExists(n string, res *elbv2.LoadBalancer) resource.TestCheckFunc {
+func testAccCheckAWSLBExists(n string, res *elbv2.LoadBalancer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -384,7 +449,7 @@ func testAccCheckAWSALBExists(n string, res *elbv2.LoadBalancer) resource.TestCh
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No ALB ID is set")
+			return errors.New("No LB ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
@@ -399,7 +464,7 @@ func testAccCheckAWSALBExists(n string, res *elbv2.LoadBalancer) resource.TestCh
 
 		if len(describe.LoadBalancers) != 1 ||
 			*describe.LoadBalancers[0].LoadBalancerArn != rs.Primary.ID {
-			return errors.New("ALB not found")
+			return errors.New("LB not found")
 		}
 
 		*res = *describe.LoadBalancers[0]
@@ -407,11 +472,11 @@ func testAccCheckAWSALBExists(n string, res *elbv2.LoadBalancer) resource.TestCh
 	}
 }
 
-func testAccCheckAWSALBDestroy(s *terraform.State) error {
+func testAccCheckAWSLBDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).elbv2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_alb" {
+		if rs.Type != "aws_lb" && rs.Type != "aws_alb" {
 			continue
 		}
 
@@ -422,7 +487,7 @@ func testAccCheckAWSALBDestroy(s *terraform.State) error {
 		if err == nil {
 			if len(describe.LoadBalancers) != 0 &&
 				*describe.LoadBalancers[0].LoadBalancerArn == rs.Primary.ID {
-				return fmt.Errorf("ALB %q still exists", rs.Primary.ID)
+				return fmt.Errorf("LB %q still exists", rs.Primary.ID)
 			}
 		}
 
@@ -430,15 +495,15 @@ func testAccCheckAWSALBDestroy(s *terraform.State) error {
 		if isLoadBalancerNotFound(err) {
 			return nil
 		} else {
-			return errwrap.Wrapf("Unexpected error checking ALB destroyed: {{err}}", err)
+			return errwrap.Wrapf("Unexpected error checking LB destroyed: {{err}}", err)
 		}
 	}
 
 	return nil
 }
 
-func testAccAWSALBConfigWithIpAddressTypeUpdated(albName string) string {
-	return fmt.Sprintf(`resource "aws_alb" "alb_test" {
+func testAccAWSLBConfigWithIpAddressTypeUpdated(lbName string) string {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test_1.id}", "${aws_subnet.alb_test_2.id}"]
@@ -453,18 +518,18 @@ func testAccAWSALBConfigWithIpAddressTypeUpdated(albName string) string {
   }
 }
 
-resource "aws_alb_listener" "test" {
-   load_balancer_arn = "${aws_alb.alb_test.id}"
+resource "aws_lb_listener" "test" {
+   load_balancer_arn = "${aws_lb.lb_test.id}"
    protocol = "HTTP"
    port = "80"
 
    default_action {
-     target_group_arn = "${aws_alb_target_group.test.id}"
+     target_group_arn = "${aws_lb_target_group.test.id}"
      type = "forward"
    }
 }
 
-resource "aws_alb_target_group" "test" {
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 80
   protocol = "HTTP"
@@ -545,11 +610,11 @@ resource "aws_security_group" "alb_test" {
   tags {
     TestName = "TestAccAWSALB_basic"
   }
-}`, albName, albName)
+}`, lbName, lbName)
 }
 
-func testAccAWSALBConfigWithIpAddressType(albName string) string {
-	return fmt.Sprintf(`resource "aws_alb" "alb_test" {
+func testAccAWSLBConfigWithIpAddressType(lbName string) string {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test_1.id}", "${aws_subnet.alb_test_2.id}"]
@@ -564,18 +629,18 @@ func testAccAWSALBConfigWithIpAddressType(albName string) string {
   }
 }
 
-resource "aws_alb_listener" "test" {
-   load_balancer_arn = "${aws_alb.alb_test.id}"
+resource "aws_lb_listener" "test" {
+   load_balancer_arn = "${aws_lb.lb_test.id}"
    protocol = "HTTP"
    port = "80"
 
    default_action {
-     target_group_arn = "${aws_alb_target_group.test.id}"
+     target_group_arn = "${aws_lb_target_group.test.id}"
      type = "forward"
    }
 }
 
-resource "aws_alb_target_group" "test" {
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 80
   protocol = "HTTP"
@@ -656,11 +721,11 @@ resource "aws_security_group" "alb_test" {
   tags {
     TestName = "TestAccAWSALB_basic"
   }
-}`, albName, albName)
+}`, lbName, lbName)
 }
 
-func testAccAWSALBConfig_basic(albName string) string {
-	return fmt.Sprintf(`resource "aws_alb" "alb_test" {
+func testAccAWSLBConfig_basic(lbName string) string {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -723,11 +788,117 @@ resource "aws_security_group" "alb_test" {
   tags {
     TestName = "TestAccAWSALB_basic"
   }
-}`, albName)
+}`, lbName)
 }
 
-func testAccAWSALBConfig_updateSubnets(albName string) string {
-	return fmt.Sprintf(`resource "aws_alb" "alb_test" {
+func testAccAWSLBConfig_networkLoadbalancer(lbName string) string {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+  name            = "%s"
+  internal        = true
+  load_balancer_type = "network"
+
+  enable_deletion_protection = false
+
+  subnet_mapping {
+  	subnet_id = "${aws_subnet.alb_test.id}"
+  }
+
+  tags {
+    TestName = "TestAccAWSALB_basic"
+  }
+}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.10.0.0/16"
+
+  tags {
+    TestName = "TestAccAWSALB_basic"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  vpc_id                  = "${aws_vpc.alb_test.id}"
+  cidr_block              = "10.10.0.0/21"
+  map_public_ip_on_launch = true
+  availability_zone       = "us-west-2a"
+
+  tags {
+    TestName = "TestAccAWSALB_basic"
+  }
+}
+
+`, lbName)
+}
+
+func testAccAWSLBConfigBackwardsCompatibility(lbName string) string {
+	return fmt.Sprintf(`resource "aws_alb" "lb_test" {
+  name            = "%s"
+  internal        = true
+  security_groups = ["${aws_security_group.alb_test.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id}"]
+
+  idle_timeout = 30
+  enable_deletion_protection = false
+
+  tags {
+    TestName = "TestAccAWSALB_basic"
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = "list"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    TestName = "TestAccAWSALB_basic"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = "${aws_vpc.alb_test.id}"
+  cidr_block              = "${element(var.subnets, count.index)}"
+  map_public_ip_on_launch = true
+  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+
+  tags {
+    TestName = "TestAccAWSALB_basic"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test"
+  description = "Used for ALB Testing"
+  vpc_id      = "${aws_vpc.alb_test.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags {
+    TestName = "TestAccAWSALB_basic"
+  }
+}`, lbName)
+}
+
+func testAccAWSLBConfig_updateSubnets(lbName string) string {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -790,12 +961,12 @@ resource "aws_security_group" "alb_test" {
   tags {
     TestName = "TestAccAWSALB_basic"
   }
-}`, albName)
+}`, lbName)
 }
 
-func testAccAWSALBConfig_generatedName() string {
+func testAccAWSLBConfig_generatedName() string {
 	return fmt.Sprintf(`
-resource "aws_alb" "alb_test" {
+resource "aws_lb" "lb_test" {
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id}"]
@@ -868,9 +1039,9 @@ resource "aws_security_group" "alb_test" {
 }`)
 }
 
-func testAccAWSALBConfig_zeroValueName() string {
+func testAccAWSLBConfig_zeroValueName() string {
 	return fmt.Sprintf(`
-resource "aws_alb" "alb_test" {
+resource "aws_lb" "lb_test" {
   name            = ""
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -944,9 +1115,9 @@ resource "aws_security_group" "alb_test" {
 }`)
 }
 
-func testAccAWSALBConfig_namePrefix() string {
+func testAccAWSLBConfig_namePrefix() string {
 	return fmt.Sprintf(`
-resource "aws_alb" "alb_test" {
+resource "aws_lb" "lb_test" {
   name_prefix     = "tf-lb-"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -1011,8 +1182,8 @@ resource "aws_security_group" "alb_test" {
   }
 }`)
 }
-func testAccAWSALBConfig_updatedTags(albName string) string {
-	return fmt.Sprintf(`resource "aws_alb" "alb_test" {
+func testAccAWSLBConfig_updatedTags(lbName string) string {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -1076,11 +1247,11 @@ resource "aws_security_group" "alb_test" {
   tags {
     TestName = "TestAccAWSALB_basic"
   }
-}`, albName)
+}`, lbName)
 }
 
-func testAccAWSALBConfig_accessLogs(enabled bool, albName, bucketName string) string {
-	return fmt.Sprintf(`resource "aws_alb" "alb_test" {
+func testAccAWSLBConfig_accessLogs(enabled bool, lbName, bucketName string) string {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -1187,11 +1358,11 @@ resource "aws_security_group" "alb_test" {
   tags {
     TestName = "TestAccAWSALB_basic"
   }
-}`, albName, enabled, bucketName)
+}`, lbName, enabled, bucketName)
 }
 
-func testAccAWSALBConfig_nosg(albName string) string {
-	return fmt.Sprintf(`resource "aws_alb" "alb_test" {
+func testAccAWSLBConfig_nosg(lbName string) string {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   subnets         = ["${aws_subnet.alb_test.*.id}"]
@@ -1229,11 +1400,11 @@ resource "aws_subnet" "alb_test" {
   tags {
     TestName = "TestAccAWSALB_basic"
   }
-}`, albName)
+}`, lbName)
 }
 
-func testAccAWSALBConfig_updateSecurityGroups(albName string) string {
-	return fmt.Sprintf(`resource "aws_alb" "alb_test" {
+func testAccAWSLBConfig_updateSecurityGroups(lbName string) string {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}", "${aws_security_group.alb_test_2.id}"]
@@ -1313,5 +1484,5 @@ resource "aws_security_group" "alb_test" {
   tags {
     TestName = "TestAccAWSALB_basic"
   }
-}`, albName)
+}`, lbName)
 }

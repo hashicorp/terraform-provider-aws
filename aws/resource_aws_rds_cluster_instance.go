@@ -246,7 +246,10 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 
 	// reuse db_instance refresh func
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "backing-up", "modifying", "configuring-enhanced-monitoring"},
+		Pending: []string{"creating", "backing-up", "modifying",
+			"configuring-enhanced-monitoring", "maintenance",
+			"rebooting", "renaming", "resetting-master-credentials",
+			"starting", "upgrading"},
 		Target:     []string{"available"},
 		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
@@ -414,7 +417,10 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 
 		// reuse db_instance refresh func
 		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"creating", "backing-up", "modifying", "configuring-enhanced-monitoring"},
+			Pending: []string{"creating", "backing-up", "modifying",
+				"configuring-enhanced-monitoring", "maintenance",
+				"rebooting", "renaming", "resetting-master-credentials",
+				"starting", "upgrading"},
 			Target:     []string{"available"},
 			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
