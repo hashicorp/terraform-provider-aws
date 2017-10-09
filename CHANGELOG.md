@@ -39,6 +39,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cloudtrail: Raise update retry timeout [GH-1820]
 * resource/aws_kinesis_firehose_delivery_stream: Fix crash caused by missing `processing_configuration` [GH-1738]
 * resource/aws_rds_cluster_instance: Treat `configuring-enhanced-monitoring` as pending state [GH-1744]
 * resource/aws_rds_cluster_instance: Treat more states as pending [GH-1790]
