@@ -40,6 +40,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * resource/aws_cloudtrail: Raise update retry timeout [GH-1820]
+* resource/aws_elasticache_parameter_group: Retry resetting group on pending changes [GH-1821]
 * resource/aws_kms_key: Retry getting rotation status [GH-1818]
 * resource/aws_vpn_connection: Raise timeout to 40mins [GH-1819]
 * resource/aws_kinesis_firehose_delivery_stream: Fix crash caused by missing `processing_configuration` [GH-1738]
