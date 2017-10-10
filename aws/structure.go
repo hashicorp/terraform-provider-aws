@@ -233,6 +233,24 @@ func expandIPPerms(
 			}
 		}
 
+		if raw, ok := m["description"]; ok {
+			description := raw.(string)
+			if description != "" {
+				for _, v := range perm.IpRanges {
+					v.Description = aws.String(description)
+				}
+				for _, v := range perm.Ipv6Ranges {
+					v.Description = aws.String(description)
+				}
+				for _, v := range perm.PrefixListIds {
+					v.Description = aws.String(description)
+				}
+				for _, v := range perm.UserIdGroupPairs {
+					v.Description = aws.String(description)
+				}
+			}
+		}
+
 		perms[i] = &perm
 	}
 
@@ -466,9 +484,9 @@ func flattenHealthCheck(check *elb.HealthCheck) []map[string]interface{} {
 	return result
 }
 
-// Flattens an array of UserSecurityGroups into a []*ec2.GroupIdentifier
-func flattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*ec2.GroupIdentifier {
-	result := make([]*ec2.GroupIdentifier, 0, len(list))
+// Flattens an array of UserSecurityGroups into a []*GroupIdentifier
+func flattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*GroupIdentifier {
+	result := make([]*GroupIdentifier, 0, len(list))
 	for _, g := range list {
 		var userId *string
 		if g.UserId != nil && *g.UserId != "" && (ownerId == nil || *ownerId != *g.UserId) {
@@ -492,13 +510,15 @@ func flattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*ec2.
 		}
 
 		if vpc {
-			result = append(result, &ec2.GroupIdentifier{
-				GroupId: id,
+			result = append(result, &GroupIdentifier{
+				GroupId:     id,
+				Description: g.Description,
 			})
 		} else {
-			result = append(result, &ec2.GroupIdentifier{
-				GroupId:   g.GroupId,
-				GroupName: id,
+			result = append(result, &GroupIdentifier{
+				GroupId:     g.GroupId,
+				GroupName:   id,
+				Description: g.Description,
 			})
 		}
 	}
@@ -2154,4 +2174,15 @@ func escapeJsonPointer(path string) string {
 	path = strings.Replace(path, "~", "~0", -1)
 	path = strings.Replace(path, "/", "~1", -1)
 	return path
+}
+
+// Like ec2.GroupIdentifier but with additional rule description.
+type GroupIdentifier struct {
+	// The ID of the security group.
+	GroupId *string
+
+	// The name of the security group.
+	GroupName *string
+
+	Description *string
 }
