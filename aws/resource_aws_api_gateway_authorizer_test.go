@@ -15,7 +15,7 @@ import (
 func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
 	var conf apigateway.Authorizer
 
-	expectedAuthUri := regexp.MustCompile("arn:aws:apigateway:region:lambda:path/2015-03-31/functions/" +
+	expectedAuthUri := regexp.MustCompile("arn:aws:apigateway:[a-z0-9-]+:lambda:path/2015-03-31/functions/" +
 		"arn:aws:lambda:[a-z0-9-]+:[0-9]{12}:function:tf_acc_api_gateway_authorizer/invocations")
 	expectedCreds := regexp.MustCompile("arn:aws:iam::[0-9]{12}:role/tf_acc_api_gateway_auth_invocation_role")
 
@@ -303,7 +303,7 @@ const testAccAWSAPIGatewayAuthorizerConfig = testAccAWSAPIGatewayAuthorizerConfi
 resource "aws_api_gateway_authorizer" "test" {
   name = "tf-acc-test-authorizer"
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  authorizer_uri = "arn:aws:apigateway:region:lambda:path/2015-03-31/functions/${aws_lambda_function.authorizer.arn}/invocations"
+  authorizer_uri = "${aws_lambda_function.authorizer.invoke_arn}"
   authorizer_credentials = "${aws_iam_role.invocation_role.arn}"
 }
 `
@@ -312,7 +312,7 @@ const testAccAWSAPIGatewayAuthorizerUpdatedConfig = testAccAWSAPIGatewayAuthoriz
 resource "aws_api_gateway_authorizer" "test" {
   name = "tf-acc-test-authorizer_modified"
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  authorizer_uri = "arn:aws:apigateway:region:lambda:path/2015-03-31/functions/${aws_lambda_function.authorizer.arn}/invocations"
+  authorizer_uri = "${aws_lambda_function.authorizer.invoke_arn}"
   authorizer_credentials = "${aws_iam_role.invocation_role.arn}"
   authorizer_result_ttl_in_seconds = 360
   identity_validation_expression = ".*"

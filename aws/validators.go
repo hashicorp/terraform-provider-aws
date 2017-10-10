@@ -51,6 +51,22 @@ func validateRdsIdentifierPrefix(v interface{}, k string) (ws []string, errors [
 	return
 }
 
+func validateRdsEngine(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	validTypes := map[string]bool{
+		"aurora":            true,
+		"aurora-postgresql": true,
+	}
+
+	if _, ok := validTypes[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q contains an invalid engine type %q. Valid types are either %q or %q.",
+			k, value, "aurora", "aurora-postgresql"))
+	}
+	return
+}
+
 func validateElastiCacheClusterId(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if (len(value) < 1) || (len(value) > 20) {
@@ -1026,6 +1042,10 @@ func validateAppautoscalingScalableDimension(v interface{}, k string) (ws []stri
 		"ecs:service:DesiredCount":                     true,
 		"ec2:spot-fleet-request:TargetCapacity":        true,
 		"elasticmapreduce:instancegroup:InstanceCount": true,
+		"dynamodb:table:ReadCapacityUnits":             true,
+		"dynamodb:table:WriteCapacityUnits":            true,
+		"dynamodb:index:ReadCapacityUnits":             true,
+		"dynamodb:index:WriteCapacityUnits":            true,
 	}
 
 	if !dimensions[value] {
@@ -1039,11 +1059,58 @@ func validateAppautoscalingServiceNamespace(v interface{}, k string) (ws []strin
 	namespaces := map[string]bool{
 		"ecs":              true,
 		"ec2":              true,
+		"dynamodb":         true,
 		"elasticmapreduce": true,
 	}
 
 	if !namespaces[value] {
 		errors = append(errors, fmt.Errorf("%q must be a valid service namespace value: %q", k, value))
+	}
+	return
+}
+
+func validateAppautoscalingCustomizedMetricSpecificationStatistic(v interface{}, k string) (ws []string, errors []error) {
+	validStatistic := []string{
+		"Average",
+		"Minimum",
+		"Maximum",
+		"SampleCount",
+		"Sum",
+	}
+	statistic := v.(string)
+	for _, o := range validStatistic {
+		if statistic == o {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid statistic %q. Valid statistic are %q.",
+		k, statistic, validStatistic))
+	return
+}
+
+func validateAppautoscalingPredefinedMetricSpecification(v interface{}, k string) (ws []string, errors []error) {
+	validMetrics := []string{
+		"DynamoDBReadCapacityUtilization",
+		"DynamoDBWriteCapacityUtilization",
+	}
+	metric := v.(string)
+	for _, o := range validMetrics {
+		if metric == o {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid metric %q. Valid metric are %q.",
+		k, metric, validMetrics))
+	return
+}
+
+func validateAppautoscalingPredefinedResourceLabel(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 1023 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 1023 characters", k))
 	}
 	return
 }
@@ -1254,7 +1321,7 @@ func validateDbOptionGroupNamePrefix(v interface{}, k string) (ws []string, erro
 	return
 }
 
-func validateAwsAlbTargetGroupName(v interface{}, k string) (ws []string, errors []error) {
+func validateAwsLbTargetGroupName(v interface{}, k string) (ws []string, errors []error) {
 	name := v.(string)
 	if len(name) > 32 {
 		errors = append(errors, fmt.Errorf("%q (%q) cannot be longer than '32' characters", k, name))
@@ -1262,7 +1329,7 @@ func validateAwsAlbTargetGroupName(v interface{}, k string) (ws []string, errors
 	return
 }
 
-func validateAwsAlbTargetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validateAwsLbTargetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
 	name := v.(string)
 	if len(name) > 32 {
 		errors = append(errors, fmt.Errorf("%q (%q) cannot be longer than '6' characters", k, name))
@@ -1393,6 +1460,19 @@ func validateIamRoleDescription(v interface{}, k string) (ws []string, errors []
 	return
 }
 
+func validateAwsSSMName(v interface{}, k string) (ws []string, errors []error) {
+	// http://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#EC2-CreateDocument-request-Name
+	value := v.(string)
+
+	if !regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"Only alphanumeric characters, hyphens, dots & underscores allowed in %q: %q (Must satisfy regular expression pattern: ^[a-zA-Z0-9_\\-.]{3,128}$)",
+			k, value))
+	}
+
+	return
+}
+
 func validateSsmParameterType(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	types := map[string]bool{
@@ -1403,6 +1483,31 @@ func validateSsmParameterType(v interface{}, k string) (ws []string, errors []er
 
 	if !types[value] {
 		errors = append(errors, fmt.Errorf("Parameter type %s is invalid. Valid types are String, StringList or SecureString", value))
+	}
+	return
+}
+
+func validateBatchName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[A-Za-z0-9_]{1,128}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q (%q) must be up to 128 letters (uppercase and lowercase), numbers, and underscores.", k, v))
+	}
+	return
+}
+
+func validateSecurityGroupRuleDescription(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 255 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 255 characters: %q", k, value))
+	}
+
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpRange.html
+	pattern := `^[A-Za-z0-9 \.\_\-\:\/\(\)\#\,\@\[\]\+\=\;\{\}\!\$\*]+$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q doesn't comply with restrictions (%q): %q",
+			k, pattern, value))
 	}
 	return
 }

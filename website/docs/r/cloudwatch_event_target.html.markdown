@@ -75,6 +75,7 @@ The following arguments are supported:
 * `role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be used for this target when the rule is triggered. Required if `ecs_target` is used.
 * `run_command_targets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `ecs_target` - (Optional) Parameters used when you are using the rule to invoke Amazon ECS Task. Documented below. A maximum of 1 are allowed.
+* `input_transformer` - (Optional) Parameters used when you are providing a custom input to a target based on certain event data.
 
 `run_command_targets` support the following:
 
@@ -86,3 +87,7 @@ The following arguments are supported:
 * `task_count` - (Optional) The number of tasks to create based on the TaskDefinition. The default is 1.
 * `task_definition_arn` - (Required) The ARN of the task definition to use if the event target is an Amazon ECS cluster.
 
+`input_transformer` support the following:
+
+* `input_paths` - (Optional) Key value pairs specified in the form of JSONPath (for example, time = $.time)
+* `input_template` - (Required) Structure containing the template body.

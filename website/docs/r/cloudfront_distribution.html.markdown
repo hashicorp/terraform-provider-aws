@@ -175,8 +175,7 @@ of several sub-resources - these resources are laid out below.
     handles query strings, cookies and headers (maximum one).
 
   * `lambda_function_association` (Optional) - A config block that triggers a lambda function with
-  specific actions. Defined below, maximum 4. **Lambda@Edge is in technical
-  Preview, and must be enabled on your AWS account to be used**
+  specific actions. Defined below, maximum 4.
 
   * `max_ttl` (Required) - The maximum amount of time (in seconds) that an
     object is in a CloudFront cache before CloudFront forwards another request

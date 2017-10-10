@@ -32,6 +32,8 @@ func TestAccAWSSpotInstanceRequest_basic(t *testing.T) {
 						"aws_spot_instance_request.foo", "spot_bid_status", "fulfilled"),
 					resource.TestCheckResourceAttr(
 						"aws_spot_instance_request.foo", "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(
+						"aws_spot_instance_request.foo", "instance_interruption_behaviour", "terminate"),
 				),
 			},
 		},
