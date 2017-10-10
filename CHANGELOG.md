@@ -37,6 +37,7 @@ IMPROVEMENTS:
 * resource/aws_efs_file_system: Expose `dns_name` [GH-1825]
 * data-source/aws_vpc_endpoint: Expose `prefix_list_id` [GH-1733]
 * Add support for security group rule description [GH-1587]
+* resource/emr_cluster: enable configuration of ebs root volume size [GH-1375]
 
 BUG FIXES:
 
