@@ -119,8 +119,9 @@ func resourceAwsVpnConnection() *schema.Resource {
 			},
 
 			"tunnel1_preshared_key": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Sensitive: true,
+				Computed:  true,
 			},
 			"tunnel1_bgp_asn": {
 				Type:     schema.TypeString,
@@ -146,8 +147,9 @@ func resourceAwsVpnConnection() *schema.Resource {
 			},
 
 			"tunnel2_preshared_key": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Sensitive: true,
+				Computed:  true,
 			},
 			"tunnel2_bgp_asn": {
 				Type:     schema.TypeString,
