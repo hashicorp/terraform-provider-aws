@@ -117,41 +117,40 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("No certificate for domain %q found in this region.", target)
 	}
 
-	// Get most recent sorting by notBefore date. Notice that createdAt field is only valid
-	// for ACM issued certificated but not for imported ones so in a mixed scenario only
-	// fields extracted from the certificate are valid. I cannot find a scenario where the
-	// most recent certificate is not the one with a most recent `NotBefore` field.
-	_, ok = d.GetOk("most_recent")
-	if ok {
-		mr := arns[0]
-		if mr.notBefore == nil {
-			description, err := describeCertificate(mr, conn)
-			if err != nil {
-				return errwrap.Wrapf("Error describing certificates: {{err}}", err)
-			}
-
-			mr.notBefore = description.Certificate.NotBefore
-		}
-		for _, arn := range arns[1:] {
-			if arn.notBefore == nil {
-				description, err := describeCertificate(arn, conn)
+	if len(arns) > 1 {
+		// Get most recent sorting by notBefore date. Notice that createdAt field is only valid
+		// for ACM issued certificates but not for imported ones so in a mixed scenario only
+		// fields extracted from the certificate are valid.
+		_, ok = d.GetOk("most_recent")
+		if ok {
+			mr := arns[0]
+			if mr.notBefore == nil {
+				description, err := describeCertificate(mr, conn)
 				if err != nil {
 					return errwrap.Wrapf("Error describing certificates: {{err}}", err)
 				}
 
-				arn.notBefore = description.Certificate.NotBefore
+				mr.notBefore = description.Certificate.NotBefore
+			}
+			for _, arn := range arns[1:] {
+				if arn.notBefore == nil {
+					description, err := describeCertificate(arn, conn)
+					if err != nil {
+						return errwrap.Wrapf("Error describing certificates: {{err}}", err)
+					}
+
+					arn.notBefore = description.Certificate.NotBefore
+				}
+
+				if arn.notBefore.After(*mr.notBefore) {
+					mr = arn
+				}
 			}
 
-			if arn.notBefore.After(*mr.notBefore) {
-				mr = arn
-			}
+			arns = []*arnData{mr}
+		} else {
+			return fmt.Errorf("Multiple certificates for domain %q found in this region.", target)
 		}
-
-		arns = []*arnData{mr}
-	}
-
-	if len(arns) > 1 {
-		return fmt.Errorf("Multiple certificates for domain %q found in this region.", target)
 	}
 
 	d.SetId(time.Now().UTC().String())
