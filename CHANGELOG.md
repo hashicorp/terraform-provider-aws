@@ -36,6 +36,7 @@ IMPROVEMENTS:
 * resource/aws_ses_event_destination: Add support for `open` & `click` event types [GH-1773]
 * resource/aws_efs_file_system: Expose `dns_name` [GH-1825]
 * data-source/aws_vpc_endpoint: Expose `prefix_list_id` [GH-1733]
+* Add support for security group rule description [GH-1587]
 
 BUG FIXES:
 
