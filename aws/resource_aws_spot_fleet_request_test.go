@@ -41,6 +41,31 @@ func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestConfig(rName, rInt),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(
+						"aws_spot_fleet_request.foo", &sfr),
+					resource.TestCheckResourceAttr(
+						"aws_spot_fleet_request.foo", "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(
+						"aws_spot_fleet_request.foo", "instance_interruption_behaviour", "stop"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 	var before, after ec2.SpotFleetRequestConfig
 	rName := acctest.RandString(10)
@@ -534,6 +559,7 @@ resource "aws_spot_fleet_request" "foo" {
     target_capacity = 2
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
+    instance_interruption_behaviour = "stop"
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
