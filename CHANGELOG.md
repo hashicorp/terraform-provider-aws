@@ -38,7 +38,7 @@ IMPROVEMENTS:
 * data-source/aws_vpc_endpoint: Expose `prefix_list_id` [GH-1733]
 * resource/aws_security_group+aws_security_group_rule: Add support for rule description [GH-1587]
 * resource/aws_emr_cluster: enable configuration of ebs root volume size [GH-1375]
-* resource/aws_aws_ami: Add root_snapshot_id attribute #1572
+* resource/aws_aws_ami: Add `root_snapshot_id` attribute [GH-1572]
 
 BUG FIXES:
 
