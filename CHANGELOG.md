@@ -39,6 +39,7 @@ IMPROVEMENTS:
 * resource/aws_security_group+aws_security_group_rule: Add support for rule description [GH-1587]
 * resource/aws_emr_cluster: enable configuration of ebs root volume size [GH-1375]
 * resource/aws_aws_ami: Add `root_snapshot_id` attribute [GH-1572]
+* resource/aws_vpn_connection: Mark preshared keys as sensitive [GH-1850]
 
 BUG FIXES:
 
