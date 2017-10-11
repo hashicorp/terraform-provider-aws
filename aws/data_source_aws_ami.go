@@ -169,7 +169,7 @@ func dataSourceAwsAmi() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"tags": dataSourceTagsSchema(),
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -304,7 +304,7 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image) error {
 	if err := d.Set("state_reason", amiStateReason(image.StateReason)); err != nil {
 		return err
 	}
-	if err := d.Set("tags", dataSourceTags(image.Tags)); err != nil {
+	if err := d.Set("tags", tagsToMap(image.Tags)); err != nil {
 		return err
 	}
 	return nil

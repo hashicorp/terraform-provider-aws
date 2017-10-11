@@ -46,7 +46,7 @@ func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_ami.nat_ami", "state", "available"),
 					resource.TestCheckResourceAttr("data.aws_ami.nat_ami", "state_reason.code", "UNSET"),
 					resource.TestCheckResourceAttr("data.aws_ami.nat_ami", "state_reason.message", "UNSET"),
-					resource.TestCheckResourceAttr("data.aws_ami.nat_ami", "tags.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_ami.nat_ami", "tags.%", "0"),
 					resource.TestCheckResourceAttr("data.aws_ami.nat_ami", "virtualization_type", "hvm"),
 				),
 			},
@@ -84,7 +84,7 @@ func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_ami.windows_ami", "state", "available"),
 					resource.TestCheckResourceAttr("data.aws_ami.windows_ami", "state_reason.code", "UNSET"),
 					resource.TestCheckResourceAttr("data.aws_ami.windows_ami", "state_reason.message", "UNSET"),
-					resource.TestCheckResourceAttr("data.aws_ami.windows_ami", "tags.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_ami.windows_ami", "tags.%", "0"),
 					resource.TestCheckResourceAttr("data.aws_ami.windows_ami", "virtualization_type", "hvm"),
 				),
 			},
@@ -119,7 +119,7 @@ func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_ami.instance_store_ami", "state", "available"),
 					resource.TestCheckResourceAttr("data.aws_ami.instance_store_ami", "state_reason.code", "UNSET"),
 					resource.TestCheckResourceAttr("data.aws_ami.instance_store_ami", "state_reason.message", "UNSET"),
-					resource.TestCheckResourceAttr("data.aws_ami.instance_store_ami", "tags.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_ami.instance_store_ami", "tags.%", "0"),
 					resource.TestCheckResourceAttr("data.aws_ami.instance_store_ami", "virtualization_type", "hvm"),
 				),
 			},
@@ -250,104 +250,104 @@ func testAccCheckAwsAmiDataSourceID(n string) resource.TestCheckFunc {
 // Amazon Linux AMIs.
 const testAccCheckAwsAmiDataSourceConfig = `
 data "aws_ami" "nat_ami" {
-	most_recent = true
-	filter {
-		name = "owner-alias"
-		values = ["amazon"]
-	}
-	filter {
-		name = "name"
-		values = ["amzn-ami-vpc-nat*"]
-	}
-	filter {
-		name = "virtualization-type"
-		values = ["hvm"]
-	}
-	filter {
-		name = "root-device-type"
-		values = ["ebs"]
-	}
-	filter {
-		name = "block-device-mapping.volume-type"
-		values = ["standard"]
-	}
+  most_recent = true
+  filter {
+    name = "owner-alias"
+    values = ["amazon"]
+  }
+  filter {
+    name = "name"
+    values = ["amzn-ami-vpc-nat*"]
+  }
+  filter {
+    name = "virtualization-type"
+    values = ["hvm"]
+  }
+  filter {
+    name = "root-device-type"
+    values = ["ebs"]
+  }
+  filter {
+    name = "block-device-mapping.volume-type"
+    values = ["standard"]
+  }
 }
 `
 
 // Windows image test.
 const testAccCheckAwsAmiDataSourceWindowsConfig = `
 data "aws_ami" "windows_ami" {
-	most_recent = true
-	filter {
-		name = "owner-alias"
-		values = ["amazon"]
-	}
-	filter {
-		name = "name"
-		values = ["Windows_Server-2012-R2*"]
-	}
-	filter {
-		name = "virtualization-type"
-		values = ["hvm"]
-	}
-	filter {
-		name = "root-device-type"
-		values = ["ebs"]
-	}
-	filter {
-		name = "block-device-mapping.volume-type"
-		values = ["gp2"]
-	}
+  most_recent = true
+  filter {
+    name = "owner-alias"
+    values = ["amazon"]
+  }
+  filter {
+    name = "name"
+    values = ["Windows_Server-2012-R2*"]
+  }
+  filter {
+    name = "virtualization-type"
+    values = ["hvm"]
+  }
+  filter {
+    name = "root-device-type"
+    values = ["ebs"]
+  }
+  filter {
+    name = "block-device-mapping.volume-type"
+    values = ["gp2"]
+  }
 }
 `
 
 // Instance store test - using Ubuntu images
 const testAccCheckAwsAmiDataSourceInstanceStoreConfig = `
 data "aws_ami" "instance_store_ami" {
-	most_recent = true
-	filter {
-		name = "owner-id"
-		values = ["099720109477"]
-	}
-	filter {
-		name = "name"
-		values = ["ubuntu/images/hvm-instance/ubuntu-trusty-14.04-amd64-server*"]
-	}
-	filter {
-		name = "virtualization-type"
-		values = ["hvm"]
-	}
-	filter {
-		name = "root-device-type"
-		values = ["instance-store"]
-	}
+  most_recent = true
+  filter {
+    name = "owner-id"
+    values = ["099720109477"]
+  }
+  filter {
+    name = "name"
+    values = ["ubuntu/images/hvm-instance/ubuntu-trusty-14.04-amd64-server*"]
+  }
+  filter {
+    name = "virtualization-type"
+    values = ["hvm"]
+  }
+  filter {
+    name = "root-device-type"
+    values = ["instance-store"]
+  }
 }
 `
 
 // Testing owner parameter
 const testAccCheckAwsAmiDataSourceOwnersConfig = `
 data "aws_ami" "amazon_ami" {
-	most_recent = true
-	owners = ["amazon"]
+  most_recent = true
+  owners = ["amazon"]
 }
 `
 
 const testAccCheckAwsAmiDataSourceEmptyOwnersConfig = `
 data "aws_ami" "amazon_ami" {
-	most_recent = true
-	owners = [""]
+  most_recent = true
+  owners = [""]
 }
 `
 
 // Testing name_regex parameter
 const testAccCheckAwsAmiDataSourceNameRegexConfig = `
 data "aws_ami" "name_regex_filtered_ami" {
-	most_recent = true
-	owners = ["amazon"]
-	filter {
-		name = "name"
-		values = ["amzn-ami-*"]
-	}
-	name_regex = "^amzn-ami-\\d{3}[5].*-ecs-optimized"
+  most_recent = true
+  owners = ["amazon"]
+  filter {
+    name = "name"
+    values = ["amzn-ami-*"]
+  }
+  name_regex = "^amzn-ami-\\d{3}[5].*-ecs-optimized"
 }
 `
