@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -18,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/go-ini/ini"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/go-multierror"
@@ -176,6 +178,27 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 		}
 	}
 
+	// Try to read AssumeRole data from ~/.aws/config
+	assumeRoleConfig := readAssumeRoleConfig(c)
+	if assumeRoleConfig != nil {
+		creds, err := assumeRoleConfig.assumeRole(c)
+		if err != nil {
+			return nil, err
+		}
+
+		value, err := creds.Get()
+		if err != nil {
+			return nil, err
+		}
+
+		// One might still want to assume a different role in the provider
+		// config, so we just update the providers instead of directly
+		// returning the credentials.
+		providers = []awsCredentials.Provider{
+			&awsCredentials.StaticProvider{Value: value},
+		}
+	}
+
 	// This is the "normal" flow (i.e. not assuming a role)
 	if c.AssumeRoleARN == "" {
 		return awsCredentials.NewChainCredentials(providers), nil
@@ -241,6 +264,101 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 	}
 
 	return assumeRoleCreds, nil
+}
+
+type assumeRoleConfig struct {
+	RoleARN         string
+	SourceProfile   string
+	ExternalID      string
+	MFASerial       string
+	RoleSessionName string
+}
+
+func readAssumeRoleConfig(c *Config) *assumeRoleConfig {
+	profile := os.Getenv("AWS_PROFILE")
+	if profile == "" {
+		profile = c.Profile
+	}
+	if profile == "" {
+		profile = "default"
+	}
+
+	configContent, err := ioutil.ReadFile(c.ConfigFilename)
+	if err != nil {
+		log.Printf("[WARN] Unable read config file (%s): %v", c.ConfigFilename, err)
+		return nil
+	}
+
+	iniData, err := ini.Load(configContent)
+	if err != nil {
+		log.Printf("[WARN] Unable parse config file (%s): %v", c.ConfigFilename, err)
+		return nil
+	}
+
+	section, err := iniData.GetSection(fmt.Sprintf("profile %s", profile))
+	if err != nil {
+		log.Printf("[DEBUG] Profile (%s) doesn't exist in config file (%s): %v", profile, c.ConfigFilename, err)
+		return nil
+	}
+
+	config := assumeRoleConfig{
+		RoleARN:         section.Key("role_arn").String(),
+		SourceProfile:   section.Key("source_profile").String(),
+		ExternalID:      section.Key("external_id").String(),
+		MFASerial:       section.Key("mfa_serial").String(),
+		RoleSessionName: section.Key("role_session_name").String(),
+	}
+
+	if config.RoleARN == "" || config.SourceProfile == "" {
+		log.Printf("[INFO] Config file (%s) doesn't have role_arn and source_profile", c.ConfigFilename)
+		return nil
+	}
+
+	return &config
+}
+
+func (a *assumeRoleConfig) assumeRole(c *Config) (*awsCredentials.Credentials, error) {
+	sharedCredentialsProvider := &awsCredentials.SharedCredentialsProvider{
+		Filename: c.CredsFilename,
+		Profile:  a.SourceProfile,
+	}
+
+	creds := awsCredentials.NewCredentials(sharedCredentialsProvider)
+	_, err := creds.Get()
+	if err != nil {
+		return nil, fmt.Errorf("Error loading shared credentials for the source profile: %s", err)
+	}
+
+	awsConfig := &aws.Config{
+		Credentials:      creds,
+		Region:           aws.String(c.Region),
+		MaxRetries:       aws.Int(c.MaxRetries),
+		HTTPClient:       cleanhttp.DefaultClient(),
+		S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle),
+	}
+
+	stsclient := sts.New(session.New(awsConfig))
+	assumeRoleProvider := &stscreds.AssumeRoleProvider{
+		Client:          stsclient,
+		RoleARN:         a.RoleARN,
+		RoleSessionName: a.RoleSessionName,
+	}
+
+	if a.ExternalID != "" {
+		assumeRoleProvider.ExternalID = &a.ExternalID
+	}
+
+	if a.MFASerial != "" {
+		assumeRoleProvider.SerialNumber = &a.MFASerial
+	}
+
+	creds = awsCredentials.NewCredentials(assumeRoleProvider)
+	_, err = creds.Get()
+	if err != nil {
+		return nil, fmt.Errorf("Error assuming the role: %s", err)
+	}
+
+	return creds, nil
 }
 
 func setOptionalEndpoint(cfg *aws.Config) string {
