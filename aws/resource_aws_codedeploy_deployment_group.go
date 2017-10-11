@@ -749,8 +749,13 @@ func expandLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
 
 		for _, v := range elbs {
 			elb := v.(map[string]interface{})
+			name, ok := elb["name"].(string)
+			if !ok {
+				continue
+			}
+
 			loadBalancerInfo.ElbInfoList = append(loadBalancerInfo.ElbInfoList, &codedeploy.ELBInfo{
-				Name: aws.String(elb["name"].(string)),
+				Name: aws.String(name),
 			})
 		}
 	}
@@ -761,8 +766,13 @@ func expandLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
 
 		for _, v := range targetGroups {
 			targetGroup := v.(map[string]interface{})
+			name, ok := targetGroup["name"].(string)
+			if !ok {
+				continue
+			}
+
 			loadBalancerInfo.TargetGroupInfoList = append(loadBalancerInfo.TargetGroupInfoList, &codedeploy.TargetGroupInfo{
-				Name: aws.String(targetGroup["name"].(string)),
+				Name: aws.String(name),
 			})
 		}
 	}
@@ -952,6 +962,9 @@ func flattenLoadBalancerInfo(loadBalancerInfo *codedeploy.LoadBalancerInfo) []ma
 
 	elbs := make([]interface{}, 0, len(loadBalancerInfo.ElbInfoList))
 	for _, elb := range loadBalancerInfo.ElbInfoList {
+		if elb.Name == nil {
+			continue
+		}
 		item := make(map[string]interface{})
 		item["name"] = *elb.Name
 		elbs = append(elbs, item)
@@ -959,6 +972,9 @@ func flattenLoadBalancerInfo(loadBalancerInfo *codedeploy.LoadBalancerInfo) []ma
 
 	targetGroups := make([]interface{}, 0, len(loadBalancerInfo.TargetGroupInfoList))
 	for _, targetGroup := range loadBalancerInfo.TargetGroupInfoList {
+		if targetGroup.Name == nil {
+			continue
+		}
 		item := make(map[string]interface{})
 		item["name"] = *targetGroup.Name
 		targetGroups = append(targetGroups, item)
