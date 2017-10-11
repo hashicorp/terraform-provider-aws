@@ -62,6 +62,7 @@ BUG FIXES:
 * resource/aws_vpn_connection_route: Treat route in state `deleted` as deleted [GH-1848]
 * resource/aws_eip: Avoid disassociating if there's no association [GH-1683]
 * resource/aws_elasticache_cluster: Allow scaling up cluster by modifying `az_mode` (avoid recreation) [GH-1758]
+* resource/aws_lambda_function: Fix Lambda Function Updates When Published [GH-1797]
 
 ## 1.0.0 (September 27, 2017)
 
