@@ -25,9 +25,13 @@ func TestAccDataSourceAwsVpnGateway_unattached(t *testing.T) {
 					resource.TestCheckResourceAttrPair(
 						"data.aws_vpn_gateway.test_by_tags", "id",
 						"aws_vpn_gateway.unattached", "id"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_vpn_gateway.test_by_amazon_side_asn", "id",
+						"aws_vpn_gateway.unattached", "id"),
 					resource.TestCheckResourceAttrSet("data.aws_vpn_gateway.test_by_id", "state"),
 					resource.TestCheckResourceAttr("data.aws_vpn_gateway.test_by_tags", "tags.%", "3"),
 					resource.TestCheckNoResourceAttr("data.aws_vpn_gateway.test_by_id", "attached_vpc_id"),
+					resource.TestCheckResourceAttr("data.aws_vpn_gateway.test_by_amazon_side_asn", "amazon_side_asn", "4294967293"),
 				),
 			},
 		},
@@ -64,19 +68,24 @@ provider "aws" {
 }
 
 resource "aws_vpn_gateway" "unattached" {
-    tags {
-		Name = "terraform-testacc-vpn-gateway-data-source-unattached-%d"
-      	ABC  = "testacc-%d"
-		XYZ  = "testacc-%d"
-    }
+  tags {
+    Name = "terraform-testacc-vpn-gateway-data-source-unattached-%d"
+    ABC  = "testacc-%d"
+    XYZ  = "testacc-%d"
+  }
+  amazon_side_asn = 4294967293
 }
 
 data "aws_vpn_gateway" "test_by_id" {
-	id = "${aws_vpn_gateway.unattached.id}"
+  id = "${aws_vpn_gateway.unattached.id}"
 }
 
 data "aws_vpn_gateway" "test_by_tags" {
-	tags = "${aws_vpn_gateway.unattached.tags}"
+  tags = "${aws_vpn_gateway.unattached.tags}"
+}
+
+data "aws_vpn_gateway" "test_by_amazon_side_asn" {
+	amazon_side_asn = "${aws_vpn_gateway.unattached.amazon_side_asn}"
 }
 `, rInt, rInt+1, rInt-1)
 }
@@ -88,17 +97,17 @@ provider "aws" {
 }
 
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
+  cidr_block = "10.1.0.0/16"
 
-  	tags {
-    	Name = "terraform-testacc-vpn-gateway-data-source-foo-%d"
-  	}
+  tags {
+    Name = "terraform-testacc-vpn-gateway-data-source-foo-%d"
+  }
 }
 
 resource "aws_vpn_gateway" "attached" {
-    tags {
-		Name = "terraform-testacc-vpn-gateway-data-source-attached-%d"
-    }
+  tags {
+    Name = "terraform-testacc-vpn-gateway-data-source-attached-%d"
+  }
 }
 
 resource "aws_vpn_gateway_attachment" "vpn_attachment" {
@@ -107,7 +116,7 @@ resource "aws_vpn_gateway_attachment" "vpn_attachment" {
 }
 
 data "aws_vpn_gateway" "test_by_attached_vpc_id" {
-	attached_vpc_id = "${aws_vpn_gateway_attachment.vpn_attachment.vpc_id}"
+  attached_vpc_id = "${aws_vpn_gateway_attachment.vpn_attachment.vpc_id}"
 }
 `, rInt, rInt)
 }
