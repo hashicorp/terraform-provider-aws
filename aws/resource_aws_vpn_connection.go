@@ -94,6 +94,36 @@ func resourceAwsVpnConnection() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"tunnel1_inside_cidr": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
+			"tunnel1_preshared_key": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				Computed:  true,
+				ForceNew:  true,
+			},
+
+			"tunnel2_inside_cidr": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
+			"tunnel2_preshared_key": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				Computed:  true,
+				ForceNew:  true,
+			},
+
 			"tags": tagsSchema(),
 
 			// Begin read only attributes
@@ -107,21 +137,13 @@ func resourceAwsVpnConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"tunnel1_cgw_inside_address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"tunnel1_vgw_inside_address": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-
-			"tunnel1_preshared_key": {
-				Type:      schema.TypeString,
-				Sensitive: true,
-				Computed:  true,
 			},
 			"tunnel1_bgp_asn": {
 				Type:     schema.TypeString,
@@ -131,25 +153,18 @@ func resourceAwsVpnConnection() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+
 			"tunnel2_address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"tunnel2_cgw_inside_address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"tunnel2_vgw_inside_address": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-
-			"tunnel2_preshared_key": {
-				Type:      schema.TypeString,
-				Sensitive: true,
-				Computed:  true,
 			},
 			"tunnel2_bgp_asn": {
 				Type:     schema.TypeString,
@@ -159,6 +174,7 @@ func resourceAwsVpnConnection() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+
 			"routes": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -245,8 +261,37 @@ func resourceAwsVpnConnection() *schema.Resource {
 func resourceAwsVpnConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
+	// Get the optional tunnel options
+	tunnel1_cidr := d.Get("tunnel1_inside_cidr").(string)
+	tunnel2_cidr := d.Get("tunnel2_inside_cidr").(string)
+
+	tunnel1_psk := d.Get("tunnel1_preshared_key").(string)
+	tunnel2_psk := d.Get("tunnel2_preshared_key").(string)
+
+	// Fill the tunnel options for the EC2 API
+	options := []*ec2.VpnTunnelOptionsSpecification{
+		{}, {},
+	}
+
+	if tunnel1_cidr != "" {
+		options[0].TunnelInsideCidr = aws.String(tunnel1_cidr)
+	}
+
+	if tunnel2_cidr != "" {
+		options[1].TunnelInsideCidr = aws.String(tunnel2_cidr)
+	}
+
+	if tunnel1_psk != "" {
+		options[0].PreSharedKey = aws.String(tunnel1_psk)
+	}
+
+	if tunnel2_psk != "" {
+		options[1].PreSharedKey = aws.String(tunnel2_psk)
+	}
+
 	connectOpts := &ec2.VpnConnectionOptionsSpecification{
 		StaticRoutesOnly: aws.Bool(d.Get("static_routes_only").(bool)),
+		TunnelOptions:    options,
 	}
 
 	createOpts := &ec2.CreateVpnConnectionInput{

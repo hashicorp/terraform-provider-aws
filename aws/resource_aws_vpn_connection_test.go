@@ -53,10 +53,44 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	var vpn ec2.VpnConnection
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_vpn_connection.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccAwsVpnConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsVpnConnectionConfigTunnelOptions(rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAwsVpnConnection(
+						"aws_vpc.vpc",
+						"aws_vpn_gateway.vpn_gateway",
+						"aws_customer_gateway.customer_gateway",
+						"aws_vpn_connection.foo",
+						&vpn,
+					),
+					resource.TestCheckResourceAttr("aws_vpn_connection.foo", "static_routes_only", "false"),
+
+					resource.TestCheckResourceAttr("aws_vpn_connection.foo", "tunnel1_inside_cidr", "169.254.8.0/30"),
+					resource.TestCheckResourceAttr("aws_vpn_connection.foo", "tunnel1_preshared_key", "lookatmethisisaprivatekey1"),
+
+					resource.TestCheckResourceAttr("aws_vpn_connection.foo", "tunnel2_inside_cidr", "169.254.9.0/30"),
+					resource.TestCheckResourceAttr("aws_vpn_connection.foo", "tunnel2_preshared_key", "lookatmethisisaprivatekey2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSVpnConnection_withoutStaticRoutes(t *testing.T) {
 	rInt := acctest.RandInt()
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	var vpn ec2.VpnConnection
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_vpn_connection.foo",
@@ -323,6 +357,38 @@ func testAccAwsVpnConnectionConfigUpdate(rInt, rBgpAsn int) string {
 	  static_routes_only = false
 	}
 	`, rBgpAsn, rInt)
+}
+
+func testAccAwsVpnConnectionConfigTunnelOptions(rBgpAsn int) string {
+	return fmt.Sprintf(`
+		resource "aws_vpn_gateway" "vpn_gateway" {
+		  tags {
+		    Name = "vpn_gateway"
+		  }
+		}
+
+		resource "aws_customer_gateway" "customer_gateway" {
+		  bgp_asn = %d
+		  ip_address = "178.0.0.1"
+		  type = "ipsec.1"
+			tags {
+				Name = "main-customer-gateway"
+			}
+		}
+
+		resource "aws_vpn_connection" "foo" {
+		  vpn_gateway_id = "${aws_vpn_gateway.vpn_gateway.id}"
+		  customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
+		  type = "ipsec.1"
+	  	  static_routes_only = false
+
+		  tunnel1_inside_cidr = "169.254.8.0/30"
+		  tunnel1_preshared_key = "lookatmethisisaprivatekey1"
+
+		  tunnel2_inside_cidr = "169.254.9.0/30"
+		  tunnel2_preshared_key = "lookatmethisisaprivatekey2"
+		}
+		`, rBgpAsn)
 }
 
 // Test our VPN tunnel config XML parsing
