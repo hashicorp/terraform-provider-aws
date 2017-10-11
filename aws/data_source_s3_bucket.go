@@ -2,10 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
 )
 
 func dataSourceAwsS3Bucket() *schema.Resource {
