@@ -1377,8 +1377,7 @@ func (c *EC2) AttachVpnGatewayRequest(input *AttachVpnGatewayInput) (req *reques
 // Attaches a virtual private gateway to a VPC. You can attach one virtual private
 // gateway to one VPC at a time.
 //
-// For more information, see Adding a Hardware Virtual Private Gateway to Your
-// VPC (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html)
+// For more information, see AWS Managed VPN Connections (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2612,9 +2611,9 @@ func (c *EC2) CreateCustomerGatewayRequest(input *CreateCustomerGatewayInput) (r
 // the exception of 7224, which is reserved in the us-east-1 region, and 9059,
 // which is reserved in the eu-west-1 region.
 //
-// For more information about VPN customer gateways, see Adding a Hardware Virtual
-// Private Gateway to Your VPC (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html)
-// in the Amazon Virtual Private Cloud User Guide.
+// For more information about VPN customer gateways, see AWS Managed VPN Connections
+// (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html) in the
+// Amazon Virtual Private Cloud User Guide.
 //
 // You cannot create more than one customer gateway with the same VPN type,
 // IP address, and BGP ASN parameter values. If you run an identical request
@@ -5122,9 +5121,9 @@ func (c *EC2) CreateVpnConnectionRouteRequest(input *CreateVpnConnectionRouteInp
 // traffic to be routed from the virtual private gateway to the VPN customer
 // gateway.
 //
-// For more information about VPN connections, see Adding a Hardware Virtual
-// Private Gateway to Your VPC (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html)
-// in the Amazon Virtual Private Cloud User Guide.
+// For more information about VPN connections, see AWS Managed VPN Connections
+// (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html) in the
+// Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5202,8 +5201,8 @@ func (c *EC2) CreateVpnGatewayRequest(input *CreateVpnGatewayInput) (req *reques
 // on the VPC side of your VPN connection. You can create a virtual private
 // gateway before creating the VPC itself.
 //
-// For more information about virtual private gateways, see Adding a Hardware
-// Virtual Private Gateway to Your VPC (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html)
+// For more information about virtual private gateways, see AWS Managed VPN
+// Connections (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -7957,9 +7956,9 @@ func (c *EC2) DescribeCustomerGatewaysRequest(input *DescribeCustomerGatewaysInp
 //
 // Describes one or more of your VPN customer gateways.
 //
-// For more information about VPN customer gateways, see Adding a Hardware Virtual
-// Private Gateway to Your VPC (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html)
-// in the Amazon Virtual Private Cloud User Guide.
+// For more information about VPN customer gateways, see AWS Managed VPN Connections
+// (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html) in the
+// Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -13572,9 +13571,9 @@ func (c *EC2) DescribeVpnConnectionsRequest(input *DescribeVpnConnectionsInput) 
 //
 // Describes one or more of your VPN connections.
 //
-// For more information about VPN connections, see Adding a Hardware Virtual
-// Private Gateway to Your VPC (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html)
-// in the Amazon Virtual Private Cloud User Guide.
+// For more information about VPN connections, see AWS Managed VPN Connections
+// (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html) in the
+// Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -13650,8 +13649,8 @@ func (c *EC2) DescribeVpnGatewaysRequest(input *DescribeVpnGatewaysInput) (req *
 //
 // Describes one or more of your virtual private gateways.
 //
-// For more information about virtual private gateways, see Adding an IPsec
-// Hardware VPN to Your VPC (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html)
+// For more information about virtual private gateways, see AWS Managed VPN
+// Connections (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -16207,15 +16206,15 @@ func (c *EC2) ModifyImageAttributeRequest(input *ModifyImageAttributeInput) (req
 // ModifyImageAttribute API operation for Amazon Elastic Compute Cloud.
 //
 // Modifies the specified attribute of the specified AMI. You can specify only
-// one attribute at a time.
+// one attribute at a time. You can use the Attribute parameter to specify the
+// attribute or one of the following parameters: Description, LaunchPermission,
+// or ProductCode.
 //
 // AWS Marketplace product codes cannot be modified. Images with an AWS Marketplace
 // product code cannot be made public.
 //
-// The SriovNetSupport enhanced networking attribute cannot be changed using
-// this command. Instead, enable SriovNetSupport on an instance and create an
-// AMI from the instance. This will result in an image with SriovNetSupport
-// enabled.
+// To enable the SriovNetSupport enhanced networking attribute of an image,
+// enable SriovNetSupport on an instance and create an AMI from the instance.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -22139,8 +22138,7 @@ func (s *AttributeValue) SetValue(v string) *AttributeValue {
 type AuthorizeSecurityGroupEgressInput struct {
 	_ struct{} `type:"structure"`
 
-	// The CIDR IPv4 address range. We recommend that you specify the CIDR range
-	// in a set of IP permissions instead.
+	// Not supported. Use a set of IP permissions to specify the CIDR.
 	CidrIp *string `locationName:"cidrIp" type:"string"`
 
 	// Checks whether you have the required permissions for the action, without
@@ -22149,8 +22147,7 @@ type AuthorizeSecurityGroupEgressInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// The start of port range for the TCP and UDP protocols, or an ICMP type number.
-	// We recommend that you specify the port range in a set of IP permissions instead.
+	// Not supported. Use a set of IP permissions to specify the port.
 	FromPort *int64 `locationName:"fromPort" type:"integer"`
 
 	// The ID of the security group.
@@ -22158,26 +22155,23 @@ type AuthorizeSecurityGroupEgressInput struct {
 	// GroupId is a required field
 	GroupId *string `locationName:"groupId" type:"string" required:"true"`
 
-	// A set of IP permissions. You can't specify a destination security group and
-	// a CIDR IP address range.
+	// One or more sets of IP permissions. You can't specify a destination security
+	// group and a CIDR IP address range in the same set of permissions.
 	IpPermissions []*IpPermission `locationName:"ipPermissions" locationNameList:"item" type:"list"`
 
-	// The IP protocol name or number. We recommend that you specify the protocol
-	// in a set of IP permissions instead.
+	// Not supported. Use a set of IP permissions to specify the protocol name or
+	// number.
 	IpProtocol *string `locationName:"ipProtocol" type:"string"`
 
-	// The name of a destination security group. To authorize outbound access to
-	// a destination security group, we recommend that you use a set of IP permissions
-	// instead.
+	// Not supported. Use a set of IP permissions to specify a destination security
+	// group.
 	SourceSecurityGroupName *string `locationName:"sourceSecurityGroupName" type:"string"`
 
-	// The AWS account number for a destination security group. To authorize outbound
-	// access to a destination security group, we recommend that you use a set of
-	// IP permissions instead.
+	// Not supported. Use a set of IP permissions to specify a destination security
+	// group.
 	SourceSecurityGroupOwnerId *string `locationName:"sourceSecurityGroupOwnerId" type:"string"`
 
-	// The end of port range for the TCP and UDP protocols, or an ICMP type number.
-	// We recommend that you specify the port range in a set of IP permissions instead.
+	// Not supported. Use a set of IP permissions to specify the port.
 	ToPort *int64 `locationName:"toPort" type:"integer"`
 }
 
@@ -22302,8 +22296,8 @@ type AuthorizeSecurityGroupIngressInput struct {
 	// either the security group ID or the security group name in the request.
 	GroupName *string `type:"string"`
 
-	// A set of IP permissions. Can be used to specify multiple rules in a single
-	// command.
+	// One or more sets of IP permissions. Can be used to specify multiple rules
+	// in a single command.
 	IpPermissions []*IpPermission `locationNameList:"item" type:"list"`
 
 	// The IP protocol name (tcp, udp, icmp) or number (see Protocol Numbers (http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)).
@@ -22323,8 +22317,8 @@ type AuthorizeSecurityGroupIngressInput struct {
 	// be in the same VPC.
 	SourceSecurityGroupName *string `type:"string"`
 
-	// [EC2-Classic] The AWS account number for the source security group, if the
-	// source security group is in a different account. You can't specify this parameter
+	// [EC2-Classic] The AWS account ID for the source security group, if the source
+	// security group is in a different account. You can't specify this parameter
 	// in combination with the following parameters: the CIDR IP address range,
 	// the IP protocol, the start of the port range, and the end of the port range.
 	// Creates rules that grant full ICMP, UDP, and TCP access. To create a rule
@@ -27537,6 +27531,13 @@ func (s CreateVpnConnectionRouteOutput) GoString() string {
 type CreateVpnGatewayInput struct {
 	_ struct{} `type:"structure"`
 
+	// A private Autonomous System Number (ASN) for the Amazon side of a BGP session.
+	// If you're using a 16-bit ASN, it must be in the 64512 to 65534 range. If
+	// you're using a 32-bit ASN, it must be in the 4200000000 to 4294967294 range.
+	//
+	// Default: 64512
+	AmazonSideAsn *int64 `type:"long"`
+
 	// The Availability Zone for the virtual private gateway.
 	AvailabilityZone *string `type:"string"`
 
@@ -27573,6 +27574,12 @@ func (s *CreateVpnGatewayInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAmazonSideAsn sets the AmazonSideAsn field's value.
+func (s *CreateVpnGatewayInput) SetAmazonSideAsn(v int64) *CreateVpnGatewayInput {
+	s.AmazonSideAsn = &v
+	return s
 }
 
 // SetAvailabilityZone sets the AvailabilityZone field's value.
@@ -37944,6 +37951,9 @@ type DescribeVpnGatewaysInput struct {
 
 	// One or more filters.
 	//
+	//    * amazon-side-asn - The Autonomous System Number (ASN) for the Amazon
+	//    side of the gateway.
+	//
 	//    * attachment.state - The current state of the attachment between the gateway
 	//    and the VPC (attaching | attached | detaching | detached).
 	//
@@ -44898,7 +44908,7 @@ func (s *InternetGatewayAttachment) SetVpcId(v string) *InternetGatewayAttachmen
 	return s
 }
 
-// Describes a security group rule.
+// Describes a set of permissions for a security group rule.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/IpPermission
 type IpPermission struct {
 	_ struct{} `type:"structure"`
@@ -44997,7 +45007,7 @@ type IpRange struct {
 	_ struct{} `type:"structure"`
 
 	// The IPv4 CIDR range. You can either specify a CIDR range or a source security
-	// group, not both. To specify a single IPv4 address, use the /32 prefix.
+	// group, not both. To specify a single IPv4 address, use the /32 prefix length.
 	CidrIp *string `locationName:"cidrIp" type:"string"`
 
 	// A description for the security group rule that references this IPv4 address
@@ -45061,7 +45071,7 @@ type Ipv6Range struct {
 	_ struct{} `type:"structure"`
 
 	// The IPv6 CIDR range. You can either specify a CIDR range or a source security
-	// group, not both. To specify a single IPv6 address, use the /128 prefix.
+	// group, not both. To specify a single IPv6 address, use the /128 prefix length.
 	CidrIpv6 *string `locationName:"cidrIpv6" type:"string"`
 
 	// A description for the security group rule that references this IPv6 address
@@ -45866,10 +45876,11 @@ func (s ModifyIdentityIdFormatOutput) GoString() string {
 type ModifyImageAttributeInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the attribute to modify.
+	// The name of the attribute to modify. The valid values are description, launchPermission,
+	// and productCodes.
 	Attribute *string `type:"string"`
 
-	// A description for the AMI.
+	// A new description for the AMI.
 	Description *AttributeValue `type:"structure"`
 
 	// Checks whether you have the required permissions for the action, without
@@ -45883,26 +45894,27 @@ type ModifyImageAttributeInput struct {
 	// ImageId is a required field
 	ImageId *string `type:"string" required:"true"`
 
-	// A launch permission modification.
+	// A new launch permission for the AMI.
 	LaunchPermission *LaunchPermissionModifications `type:"structure"`
 
-	// The operation type.
+	// The operation type. This parameter can be used only when the Attribute parameter
+	// is launchPermission.
 	OperationType *string `type:"string" enum:"OperationType"`
 
-	// One or more product codes. After you add a product code to an AMI, it can't
-	// be removed. This is only valid when modifying the productCodes attribute.
+	// One or more DevPay product codes. After you add a product code to an AMI,
+	// it can't be removed.
 	ProductCodes []*string `locationName:"ProductCode" locationNameList:"ProductCode" type:"list"`
 
-	// One or more user groups. This is only valid when modifying the launchPermission
-	// attribute.
+	// One or more user groups. This parameter can be used only when the Attribute
+	// parameter is launchPermission.
 	UserGroups []*string `locationName:"UserGroup" locationNameList:"UserGroup" type:"list"`
 
-	// One or more AWS account IDs. This is only valid when modifying the launchPermission
-	// attribute.
+	// One or more AWS account IDs. This parameter can be used only when the Attribute
+	// parameter is launchPermission.
 	UserIds []*string `locationName:"UserId" locationNameList:"UserId" type:"list"`
 
-	// The value of the attribute being modified. This is only valid when modifying
-	// the description attribute.
+	// The value of the attribute being modified. This parameter can be used only
+	// when the Attribute parameter is description or productCodes.
 	Value *string `type:"string"`
 }
 
@@ -52835,8 +52847,7 @@ func (s *RestoreAddressToClassicOutput) SetStatus(v string) *RestoreAddressToCla
 type RevokeSecurityGroupEgressInput struct {
 	_ struct{} `type:"structure"`
 
-	// The CIDR IP address range. We recommend that you specify the CIDR range in
-	// a set of IP permissions instead.
+	// Not supported. Use a set of IP permissions to specify the CIDR.
 	CidrIp *string `locationName:"cidrIp" type:"string"`
 
 	// Checks whether you have the required permissions for the action, without
@@ -52845,8 +52856,7 @@ type RevokeSecurityGroupEgressInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// The start of port range for the TCP and UDP protocols, or an ICMP type number.
-	// We recommend that you specify the port range in a set of IP permissions instead.
+	// Not supported. Use a set of IP permissions to specify the port.
 	FromPort *int64 `locationName:"fromPort" type:"integer"`
 
 	// The ID of the security group.
@@ -52854,26 +52864,23 @@ type RevokeSecurityGroupEgressInput struct {
 	// GroupId is a required field
 	GroupId *string `locationName:"groupId" type:"string" required:"true"`
 
-	// A set of IP permissions. You can't specify a destination security group and
-	// a CIDR IP address range.
+	// One or more sets of IP permissions. You can't specify a destination security
+	// group and a CIDR IP address range in the same set of permissions.
 	IpPermissions []*IpPermission `locationName:"ipPermissions" locationNameList:"item" type:"list"`
 
-	// The IP protocol name or number. We recommend that you specify the protocol
-	// in a set of IP permissions instead.
+	// Not supported. Use a set of IP permissions to specify the protocol name or
+	// number.
 	IpProtocol *string `locationName:"ipProtocol" type:"string"`
 
-	// The name of a destination security group. To revoke outbound access to a
-	// destination security group, we recommend that you use a set of IP permissions
-	// instead.
+	// Not supported. Use a set of IP permissions to specify a destination security
+	// group.
 	SourceSecurityGroupName *string `locationName:"sourceSecurityGroupName" type:"string"`
 
-	// The AWS account number for a destination security group. To revoke outbound
-	// access to a destination security group, we recommend that you use a set of
-	// IP permissions instead.
+	// Not supported. Use a set of IP permissions to specify a destination security
+	// group.
 	SourceSecurityGroupOwnerId *string `locationName:"sourceSecurityGroupOwnerId" type:"string"`
 
-	// The end of port range for the TCP and UDP protocols, or an ICMP type number.
-	// We recommend that you specify the port range in a set of IP permissions instead.
+	// Not supported. Use a set of IP permissions to specify the port.
 	ToPort *int64 `locationName:"toPort" type:"integer"`
 }
 
@@ -52988,15 +52995,17 @@ type RevokeSecurityGroupIngressInput struct {
 	// For the ICMP type number, use -1 to specify all ICMP types.
 	FromPort *int64 `type:"integer"`
 
-	// The ID of the security group. Required for a security group in a nondefault
-	// VPC.
+	// The ID of the security group. You must specify either the security group
+	// ID or the security group name in the request. For security groups in a nondefault
+	// VPC, you must specify the security group ID.
 	GroupId *string `type:"string"`
 
-	// [EC2-Classic, default VPC] The name of the security group.
+	// [EC2-Classic, default VPC] The name of the security group. You must specify
+	// either the security group ID or the security group name in the request.
 	GroupName *string `type:"string"`
 
-	// A set of IP permissions. You can't specify a source security group and a
-	// CIDR IP address range.
+	// One or more sets of IP permissions. You can't specify a source security group
+	// and a CIDR IP address range in the same set of permissions.
 	IpPermissions []*IpPermission `locationNameList:"item" type:"list"`
 
 	// The IP protocol name (tcp, udp, icmp) or number (see Protocol Numbers (http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)).
@@ -59780,6 +59789,9 @@ func (s *VpnConnectionOptionsSpecification) SetTunnelOptions(v []*VpnTunnelOptio
 type VpnGateway struct {
 	_ struct{} `type:"structure"`
 
+	// The private Autonomous System Number (ASN) for the Amazon side of a BGP session.
+	AmazonSideAsn *int64 `locationName:"amazonSideAsn" type:"long"`
+
 	// The Availability Zone where the virtual private gateway was created, if applicable.
 	// This field may be empty or not returned.
 	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
@@ -59808,6 +59820,12 @@ func (s VpnGateway) String() string {
 // GoString returns the string representation
 func (s VpnGateway) GoString() string {
 	return s.String()
+}
+
+// SetAmazonSideAsn sets the AmazonSideAsn field's value.
+func (s *VpnGateway) SetAmazonSideAsn(v int64) *VpnGateway {
+	s.AmazonSideAsn = &v
+	return s
 }
 
 // SetAvailabilityZone sets the AvailabilityZone field's value.
