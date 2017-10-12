@@ -44,6 +44,7 @@ IMPROVEMENTS:
 * resource/aws_vpn_connection: Mark preshared keys as sensitive [GH-1850]
 * resource/aws_codedeploy_deployment_group: Support blue/green and in-place deployments with traffic control [GH-1162]
 * resource/aws_elb: Update ELB idle timeout to 4000s [GH-1861]
+* resource/aws_spot_fleet_request: Add support for instance_interruption_behaviour [GH-1847]
 
 BUG FIXES:
 
