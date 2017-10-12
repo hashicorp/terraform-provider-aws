@@ -3,18 +3,20 @@ layout: "aws"
 page_title: "AWS: ses_domain_dkim"
 sidebar_current: "docs-aws-resource-ses-domain-dkim"
 description: |-
-  Provides an SES domain DKIM verification resource
+  Provides an SES domain DKIM generation resource
 ---
 
 # aws\_ses\_domain\_dkim
 
-Provides an SES domain DKIM verification resource
+Provides an SES domain DKIM generation resource.
+
+Domain ownership needs to be confirmed first using [ses_domain_identity Resource](/docs/providers/aws/r/ses_domain_identity.html)
 
 ## Argument Reference
 
 The following arguments are supported:
 
-* `domain` - (Required) The domain name to verify to SES
+* `domain` - (Required) Verified domain name to generate DKIM tokens for.
 
 ## Attributes Reference
 
@@ -30,8 +32,12 @@ The following attributes are exported:
 ## Example Usage
 
 ```hcl
-resource "aws_ses_domain_dkim" "example" {
+resource "aws_ses_domain_identity" "example" {
   domain = "example.com"
+}
+
+resource "aws_ses_domain_dkim" "example" {
+  domain = "${aws_ses_domain_identity.example.domain}"
 }
 
 resource "aws_route53_record" "example_amazonses_verification_record" {
@@ -44,3 +50,10 @@ resource "aws_route53_record" "example_amazonses_verification_record" {
 }
 ```
 
+## Import
+
+DKIM tokens can be imported using the `domain` attribute, e.g.
+
+```
+$ terraform import aws_ses_domain_dkim.example example.com
+```
