@@ -43,6 +43,7 @@ IMPROVEMENTS:
 * resource/aws_aws_ami: Add `root_snapshot_id` attribute [GH-1572]
 * resource/aws_vpn_connection: Mark preshared keys as sensitive [GH-1850]
 * resource/aws_codedeploy_deployment_group: Support blue/green and in-place deployments with traffic control [GH-1162]
+* resource/aws_elb: Update ELB idle timeout to 4000s [GH-1861]
 
 BUG FIXES:
 
