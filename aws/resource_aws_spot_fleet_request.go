@@ -278,6 +278,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Default:  "Default",
 				ForceNew: false,
 			},
+			"instance_interruption_behaviour": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "terminate",
+				ForceNew: true,
+			},
 			"spot_price": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -552,6 +558,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		ClientToken:                      aws.String(resource.UniqueId()),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
+		InstanceInterruptionBehavior:     aws.String(d.Get("instance_interruption_behaviour").(string)),
 	}
 
 	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok {
@@ -788,6 +795,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("replace_unhealthy_instances", config.ReplaceUnhealthyInstances)
+	d.Set("instance_interruption_behaviour", config.InstanceInterruptionBehavior)
 	d.Set("launch_specification", launchSpecsToSet(config.LaunchSpecifications, conn))
 
 	return nil
