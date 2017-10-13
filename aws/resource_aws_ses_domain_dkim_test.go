@@ -2,6 +2,8 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -26,6 +28,7 @@ func TestAccAwsSESDomainDkim_basic(t *testing.T) {
 				Config: fmt.Sprintf(testAccAwsSESDomainDkimConfig, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESDomainDkimExists("aws_ses_domain_dkim.test"),
+					testAccCheckAwsSESDomainDkimTokens("aws_ses_domain_dkim.test", domain),
 				),
 			},
 		},
@@ -65,8 +68,34 @@ func testAccCheckAwsSESDomainDkimExists(n string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckAwsSESDomainDkimTokens(n string, domain string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, _ := s.RootModule().Resources[n]
+
+		expectedNum := 3
+		expectedFormat := regexp.MustCompile("[a-z0-9]{32}")
+
+		tokenNum, _ := strconv.Atoi(rs.Primary.Attributes["dkim_tokens.#"])
+		if expectedNum != tokenNum {
+			return fmt.Errorf("Incorrect number of DKIM tokens, expected: %d, got: %d", expectedNum, tokenNum)
+		}
+		for i := 0; i < expectedNum; i++ {
+			key := fmt.Sprintf("dkim_tokens.%d", i)
+			token, _ := rs.Primary.Attributes[key]
+			if !expectedFormat.MatchString(token) {
+				return fmt.Errorf("Incorrect format of DKIM token: %v", token)
+			}
+		}
+
+		return nil
+	}
+}
+
 const testAccAwsSESDomainDkimConfig = `
-resource "aws_ses_domain_dkim" "test" {
+resource "aws_ses_domain_identity" "test" {
 	domain = "%s"
+}
+resource "aws_ses_domain_dkim" "test" {
+	domain = "${aws_ses_domain_identity.test.domain}"
 }
 `
