@@ -105,7 +105,7 @@ func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interfac
 	snsconn := meta.(*AWSClient).snsconn
 
 	// If any changes happened, un-subscribe and re-subscribe
-	if d.HasChange("protocol") || d.HasChange("endpoint") || d.HasChange("topic_arn") {
+	if !d.IsNewResource() && (d.HasChange("protocol") || d.HasChange("endpoint") || d.HasChange("topic_arn")) {
 		log.Printf("[DEBUG] Updating subscription %s", d.Id())
 		// Unsubscribe
 		_, err := snsconn.Unsubscribe(&sns.UnsubscribeInput{

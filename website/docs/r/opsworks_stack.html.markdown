@@ -19,6 +19,10 @@ resource "aws_opsworks_stack" "main" {
   service_role_arn             = "${aws_iam_role.opsworks.arn}"
   default_instance_profile_arn = "${aws_iam_instance_profile.opsworks.arn}"
 
+  tags {
+    Name = "foobar-terraform-stack"
+  }
+
   custom_json = <<EOT
 {
  "foobar": {
@@ -56,6 +60,7 @@ The following arguments are supported:
 * `hostname_theme` - (Optional) Keyword representing the naming scheme that will be used for instance hostnames
   within this stack.
 * `manage_berkshelf` - (Optional) Boolean value controlling whether Opsworks will run Berkshelf for this stack.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 * `use_custom_cookbooks` - (Optional) Boolean value controlling whether the custom cookbook settings are
   enabled.
 * `use_opsworks_security_groups` - (Optional) Boolean value controlling whether the standard OpsWorks

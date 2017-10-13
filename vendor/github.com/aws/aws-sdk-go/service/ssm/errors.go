@@ -36,6 +36,13 @@ const (
 	// You can have at most 2,000 active associations.
 	ErrCodeAssociationLimitExceeded = "AssociationLimitExceeded"
 
+	// ErrCodeAssociationVersionLimitExceeded for service response error code
+	// "AssociationVersionLimitExceeded".
+	//
+	// You have reached the maximum number versions allowed for an association.
+	// Each association has a limit of 1,000 versions.
+	ErrCodeAssociationVersionLimitExceeded = "AssociationVersionLimitExceeded"
+
 	// ErrCodeAutomationDefinitionNotFoundException for service response error code
 	// "AutomationDefinitionNotFoundException".
 	//
@@ -85,7 +92,7 @@ const (
 	// ErrCodeDocumentLimitExceeded for service response error code
 	// "DocumentLimitExceeded".
 	//
-	// You can have at most 200 active SSM documents.
+	// You can have at most 200 active Systems Manager documents.
 	ErrCodeDocumentLimitExceeded = "DocumentLimitExceeded"
 
 	// ErrCodeDocumentPermissionLimit for service response error code
@@ -127,7 +134,7 @@ const (
 	// "FeatureNotAvailableException".
 	//
 	// You attempted to register a LAMBDA or STEP_FUNCTION task in a region where
-	// there corresponding service is not available.
+	// the corresponding service is not available.
 	ErrCodeFeatureNotAvailableException = "FeatureNotAvailableException"
 
 	// ErrCodeHierarchyLevelLimitExceededException for service response error code
@@ -180,6 +187,14 @@ const (
 	//
 	// The request does not meet the regular expression requirement.
 	ErrCodeInvalidAllowedPatternException = "InvalidAllowedPatternException"
+
+	// ErrCodeInvalidAssociationVersion for service response error code
+	// "InvalidAssociationVersion".
+	//
+	// The version you specified is not valid. Use ListAssociationVersions to view
+	// all versions of an association according to the association ID. Or, use the
+	// $LATEST parameter to view the latest version of the association.
+	ErrCodeInvalidAssociationVersion = "InvalidAssociationVersion"
 
 	// ErrCodeInvalidAutomationExecutionParametersException for service response error code
 	// "InvalidAutomationExecutionParametersException".
@@ -327,8 +342,9 @@ const (
 	// ErrCodeInvalidParameters for service response error code
 	// "InvalidParameters".
 	//
-	// You must specify values for all required parameters in the SSM document.
-	// You can only supply values to parameters defined in the SSM document.
+	// You must specify values for all required parameters in the Systems Manager
+	// document. You can only supply values to parameters defined in the Systems
+	// Manager document.
 	ErrCodeInvalidParameters = "InvalidParameters"
 
 	// ErrCodeInvalidPermissionType for service response error code
@@ -354,8 +370,8 @@ const (
 	// ErrCodeInvalidResourceType for service response error code
 	// "InvalidResourceType".
 	//
-	// The resource type is not valid. If you are attempting to tag an instance,
-	// the instance must be a registered, managed instance.
+	// The resource type is not valid. For example, if you are attempting to tag
+	// an instance, the instance must be a registered, managed instance.
 	ErrCodeInvalidResourceType = "InvalidResourceType"
 
 	// ErrCodeInvalidResultAttributeException for service response error code
@@ -529,7 +545,7 @@ const (
 	// ErrCodeUnsupportedInventoryItemContextException for service response error code
 	// "UnsupportedInventoryItemContextException".
 	//
-	// The Context attribute you specified for the InventoryItem is not allowed
+	// The Context attribute that you specified for the InventoryItem is not allowed
 	// for this inventory type. You can only use the Context attribute with inventory
 	// types like AWS:ComplianceItem.
 	ErrCodeUnsupportedInventoryItemContextException = "UnsupportedInventoryItemContextException"

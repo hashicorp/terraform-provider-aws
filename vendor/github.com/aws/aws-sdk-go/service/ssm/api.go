@@ -56,14 +56,14 @@ func (c *SSM) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *requ
 // AddTagsToResource API operation for Amazon Simple Systems Manager (SSM).
 //
 // Adds or overwrites one or more tags for the specified resource. Tags are
-// metadata that you assign to your managed instances, Maintenance Windows,
-// or Parameter Store parameters. Tags enable you to categorize your resources
-// in different ways, for example, by purpose, owner, or environment. Each tag
-// consists of a key and an optional value, both of which you define. For example,
-// you could define a set of tags for your account's managed instances that
-// helps you track each instance's owner and stack level. For example: Key=Owner
-// and Value=DbAdmin, SysAdmin, or Dev. Or Key=Stack and Value=Production, Pre-Production,
-// or Test.
+// metadata that you can assign to your documents, managed instances, Maintenance
+// Windows, Parameter Store parameters, and patch baselines. Tags enable you
+// to categorize your resources in different ways, for example, by purpose,
+// owner, or environment. Each tag consists of a key and an optional value,
+// both of which you define. For example, you could define a set of tags for
+// your account's managed instances that helps you track each instance's owner
+// and stack level. For example: Key=Owner and Value=DbAdmin, SysAdmin, or Dev.
+// Or Key=Stack and Value=Production, Pre-Production, or Test.
 //
 // Each resource can have a maximum of 10 tags.
 //
@@ -85,8 +85,8 @@ func (c *SSM) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *requ
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidResourceType "InvalidResourceType"
-//   The resource type is not valid. If you are attempting to tag an instance,
-//   the instance must be a registered, managed instance.
+//   The resource type is not valid. For example, if you are attempting to tag
+//   an instance, the instance must be a registered, managed instance.
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
@@ -404,8 +404,9 @@ func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *requ
 //   The output location is not valid or does not exist.
 //
 //   * ErrCodeInvalidParameters "InvalidParameters"
-//   You must specify values for all required parameters in the SSM document.
-//   You can only supply values to parameters defined in the SSM document.
+//   You must specify values for all required parameters in the Systems Manager
+//   document. You can only supply values to parameters defined in the Systems
+//   Manager document.
 //
 //   * ErrCodeInvalidTarget "InvalidTarget"
 //   The target is not valid or does not exist. It might not be configured for
@@ -523,8 +524,9 @@ func (c *SSM) CreateAssociationBatchRequest(input *CreateAssociationBatchInput) 
 //   Stopping. Invalid states are: Shutting-down and Terminated.
 //
 //   * ErrCodeInvalidParameters "InvalidParameters"
-//   You must specify values for all required parameters in the SSM document.
-//   You can only supply values to parameters defined in the SSM document.
+//   You must specify values for all required parameters in the Systems Manager
+//   document. You can only supply values to parameters defined in the Systems
+//   Manager document.
 //
 //   * ErrCodeDuplicateInstanceId "DuplicateInstanceId"
 //   You cannot specify an instance ID in more than one association.
@@ -638,7 +640,7 @@ func (c *SSM) CreateDocumentRequest(input *CreateDocumentInput) (req *request.Re
 //   The content for the document is not valid.
 //
 //   * ErrCodeDocumentLimitExceeded "DocumentLimitExceeded"
-//   You can have at most 200 active SSM documents.
+//   You can have at most 200 active Systems Manager documents.
 //
 //   * ErrCodeInvalidDocumentSchemaVersion "InvalidDocumentSchemaVersion"
 //   The version of the document schema is not supported.
@@ -2191,6 +2193,11 @@ func (c *SSM) DescribeAssociationRequest(input *DescribeAssociationInput) (req *
 //   * ErrCodeAssociationDoesNotExist "AssociationDoesNotExist"
 //   The specified association does not exist.
 //
+//   * ErrCodeInvalidAssociationVersion "InvalidAssociationVersion"
+//   The version you specified is not valid. Use ListAssociationVersions to view
+//   all versions of an association according to the association ID. Or, use the
+//   $LATEST parameter to view the latest version of the association.
+//
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
@@ -2439,7 +2446,7 @@ func (c *SSM) DescribeDocumentRequest(input *DescribeDocumentInput) (req *reques
 
 // DescribeDocument API operation for Amazon Simple Systems Manager (SSM).
 //
-// Describes the specified SSM document.
+// Describes the specified Systems Manager document.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4577,7 +4584,7 @@ func (c *SSM) GetDocumentRequest(input *GetDocumentInput) (req *request.Request,
 
 // GetDocument API operation for Amazon Simple Systems Manager (SSM).
 //
-// Gets the contents of the specified SSM document.
+// Gets the contents of the specified Systems Manager document.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5852,6 +5859,91 @@ func (c *SSM) GetPatchBaselineForPatchGroupWithContext(ctx aws.Context, input *G
 	return out, req.Send()
 }
 
+const opListAssociationVersions = "ListAssociationVersions"
+
+// ListAssociationVersionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListAssociationVersions operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListAssociationVersions for more information on using the ListAssociationVersions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListAssociationVersionsRequest method.
+//    req, resp := client.ListAssociationVersionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationVersions
+func (c *SSM) ListAssociationVersionsRequest(input *ListAssociationVersionsInput) (req *request.Request, output *ListAssociationVersionsOutput) {
+	op := &request.Operation{
+		Name:       opListAssociationVersions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListAssociationVersionsInput{}
+	}
+
+	output = &ListAssociationVersionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListAssociationVersions API operation for Amazon Simple Systems Manager (SSM).
+//
+// Retrieves all versions of an association for a specific association ID.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation ListAssociationVersions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeInvalidNextToken "InvalidNextToken"
+//   The specified token is not valid.
+//
+//   * ErrCodeAssociationDoesNotExist "AssociationDoesNotExist"
+//   The specified association does not exist.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationVersions
+func (c *SSM) ListAssociationVersions(input *ListAssociationVersionsInput) (*ListAssociationVersionsOutput, error) {
+	req, out := c.ListAssociationVersionsRequest(input)
+	return out, req.Send()
+}
+
+// ListAssociationVersionsWithContext is the same as ListAssociationVersions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListAssociationVersions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) ListAssociationVersionsWithContext(ctx aws.Context, input *ListAssociationVersionsInput, opts ...request.Option) (*ListAssociationVersionsOutput, error) {
+	req, out := c.ListAssociationVersionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListAssociations = "ListAssociations"
 
 // ListAssociationsRequest generates a "aws/request.Request" representing the
@@ -6354,9 +6446,10 @@ func (c *SSM) ListComplianceItemsRequest(input *ListComplianceItemsInput) (req *
 
 // ListComplianceItems API operation for Amazon Simple Systems Manager (SSM).
 //
-// For a specified resource ID, this API returns a list of compliance statuses
-// for different resource types. Currently, you can only specify one resource
-// ID per call. List results depend on the criteria specified in the filter.
+// For a specified resource ID, this API action returns a list of compliance
+// statuses for different resource types. Currently, you can only specify one
+// resource ID per call. List results depend on the criteria specified in the
+// filter.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6367,8 +6460,8 @@ func (c *SSM) ListComplianceItemsRequest(input *ListComplianceItemsInput) (req *
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidResourceType "InvalidResourceType"
-//   The resource type is not valid. If you are attempting to tag an instance,
-//   the instance must be a registered, managed instance.
+//   The resource type is not valid. For example, if you are attempting to tag
+//   an instance, the instance must be a registered, managed instance.
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
@@ -6452,7 +6545,7 @@ func (c *SSM) ListComplianceSummariesRequest(input *ListComplianceSummariesInput
 //
 // Returns a summary count of compliant and non-compliant resources for a compliance
 // type. For example, this call can return State Manager associations, patches,
-// or custom compliance types according to the filter criteria you specify.
+// or custom compliance types according to the filter criteria that you specify.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6629,7 +6722,7 @@ func (c *SSM) ListDocumentsRequest(input *ListDocumentsInput) (req *request.Requ
 
 // ListDocuments API operation for Amazon Simple Systems Manager (SSM).
 //
-// Describes one or more of your SSM documents.
+// Describes one or more of your Systems Manager documents.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7058,8 +7151,8 @@ func (c *SSM) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidResourceType "InvalidResourceType"
-//   The resource type is not valid. If you are attempting to tag an instance,
-//   the instance must be a registered, managed instance.
+//   The resource type is not valid. For example, if you are attempting to tag
+//   an instance, the instance must be a registered, managed instance.
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
@@ -7163,7 +7256,7 @@ func (c *SSM) ModifyDocumentPermissionRequest(input *ModifyDocumentPermissionInp
 //   documents. If you need to increase this limit, contact AWS Support.
 //
 //   * ErrCodeDocumentLimitExceeded "DocumentLimitExceeded"
-//   You can have at most 200 active SSM documents.
+//   You can have at most 200 active Systems Manager documents.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ModifyDocumentPermission
 func (c *SSM) ModifyDocumentPermission(input *ModifyDocumentPermissionInput) (*ModifyDocumentPermissionOutput, error) {
@@ -7232,9 +7325,10 @@ func (c *SSM) PutComplianceItemsRequest(input *PutComplianceItemsInput) (req *re
 // PutComplianceItems API operation for Amazon Simple Systems Manager (SSM).
 //
 // Registers a compliance type and other compliance details on a designated
-// resource. This API lets you register custom compliance details with a resource.
-// This call overwrites existing compliance information on the resource, so
-// you must provide a full list of compliance items each time you send the request.
+// resource. This action lets you register custom compliance details with a
+// resource. This call overwrites existing compliance information on the resource,
+// so you must provide a full list of compliance items each time that you send
+// the request.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7261,8 +7355,8 @@ func (c *SSM) PutComplianceItemsRequest(input *PutComplianceItemsInput) (req *re
 //   of 10 different types.
 //
 //   * ErrCodeInvalidResourceType "InvalidResourceType"
-//   The resource type is not valid. If you are attempting to tag an instance,
-//   the instance must be a registered, managed instance.
+//   The resource type is not valid. For example, if you are attempting to tag
+//   an instance, the instance must be a registered, managed instance.
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
@@ -7389,7 +7483,7 @@ func (c *SSM) PutInventoryRequest(input *PutInventoryInput) (req *request.Reques
 //   for each type.
 //
 //   * ErrCodeUnsupportedInventoryItemContextException "UnsupportedInventoryItemContextException"
-//   The Context attribute you specified for the InventoryItem is not allowed
+//   The Context attribute that you specified for the InventoryItem is not allowed
 //   for this inventory type. You can only use the Context attribute with inventory
 //   types like AWS:ComplianceItem.
 //
@@ -7877,7 +7971,7 @@ func (c *SSM) RegisterTaskWithMaintenanceWindowRequest(input *RegisterTaskWithMa
 //
 //   * ErrCodeFeatureNotAvailableException "FeatureNotAvailableException"
 //   You attempted to register a LAMBDA or STEP_FUNCTION task in a region where
-//   there corresponding service is not available.
+//   the corresponding service is not available.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -7959,8 +8053,8 @@ func (c *SSM) RemoveTagsFromResourceRequest(input *RemoveTagsFromResourceInput) 
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidResourceType "InvalidResourceType"
-//   The resource type is not valid. If you are attempting to tag an instance,
-//   the instance must be a registered, managed instance.
+//   The resource type is not valid. For example, if you are attempting to tag
+//   an instance, the instance must be a registered, managed instance.
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
@@ -8160,8 +8254,9 @@ func (c *SSM) SendCommandRequest(input *SendCommandInput) (req *request.Request,
 //   The S3 bucket does not exist.
 //
 //   * ErrCodeInvalidParameters "InvalidParameters"
-//   You must specify values for all required parameters in the SSM document.
-//   You can only supply values to parameters defined in the SSM document.
+//   You must specify values for all required parameters in the Systems Manager
+//   document. You can only supply values to parameters defined in the Systems
+//   Manager document.
 //
 //   * ErrCodeUnsupportedPlatformType "UnsupportedPlatformType"
 //   The document does not support the platform type of the given instance ID(s).
@@ -8271,6 +8366,10 @@ func (c *SSM) StartAutomationExecutionRequest(input *StartAutomationExecutionInp
 //
 //   * ErrCodeAutomationDefinitionVersionNotFoundException "AutomationDefinitionVersionNotFoundException"
 //   An Automation document with the specified name and version could not be found.
+//
+//   * ErrCodeIdempotentParameterMismatch "IdempotentParameterMismatch"
+//   Error returned when an idempotent operation is retried and the parameters
+//   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -8424,8 +8523,8 @@ func (c *SSM) UpdateAssociationRequest(input *UpdateAssociationInput) (req *requ
 
 // UpdateAssociation API operation for Amazon Simple Systems Manager (SSM).
 //
-// Updates an association. You can only update the document version, schedule,
-// parameters, and Amazon S3 output of an association.
+// Updates an association. You can update the association name and version,
+// the document version, schedule, parameters, and Amazon S3 output.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8442,8 +8541,9 @@ func (c *SSM) UpdateAssociationRequest(input *UpdateAssociationInput) (req *requ
 //   The schedule is invalid. Verify your cron or rate expression and try again.
 //
 //   * ErrCodeInvalidParameters "InvalidParameters"
-//   You must specify values for all required parameters in the SSM document.
-//   You can only supply values to parameters defined in the SSM document.
+//   You must specify values for all required parameters in the Systems Manager
+//   document. You can only supply values to parameters defined in the Systems
+//   Manager document.
 //
 //   * ErrCodeInvalidOutputLocation "InvalidOutputLocation"
 //   The output location is not valid or does not exist.
@@ -8467,6 +8567,15 @@ func (c *SSM) UpdateAssociationRequest(input *UpdateAssociationInput) (req *requ
 //   * ErrCodeInvalidTarget "InvalidTarget"
 //   The target is not valid or does not exist. It might not be configured for
 //   EC2 Systems Manager or you might not have permission to perform the operation.
+//
+//   * ErrCodeInvalidAssociationVersion "InvalidAssociationVersion"
+//   The version you specified is not valid. Use ListAssociationVersions to view
+//   all versions of an association according to the association ID. Or, use the
+//   $LATEST parameter to view the latest version of the association.
+//
+//   * ErrCodeAssociationVersionLimitExceeded "AssociationVersionLimitExceeded"
+//   You have reached the maximum number versions allowed for an association.
+//   Each association has a limit of 1,000 versions.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociation
 func (c *SSM) UpdateAssociation(input *UpdateAssociationInput) (*UpdateAssociationOutput, error) {
@@ -8921,18 +9030,17 @@ func (c *SSM) UpdateMaintenanceWindowTargetRequest(input *UpdateMaintenanceWindo
 // The target from being an ID target to a Tag target, or a Tag target to an
 // ID target.
 //
-// The IDs of an ID target.
+// IDs for an ID target.
 //
-// The tags of a Tag target.
+// Tags for a Tag target.
 //
-// The Owner.
+// Owner.
 //
-// The Name.
+// Name.
 //
-// The Description.
+// Description.
 //
-// Also note that if a parameter is null, then the corresponding field is not
-// modified.
+// If a parameter is null, then the corresponding field is not modified.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9016,25 +9124,25 @@ func (c *SSM) UpdateMaintenanceWindowTaskRequest(input *UpdateMaintenanceWindowT
 // UpdateMaintenanceWindowTask API operation for Amazon Simple Systems Manager (SSM).
 //
 // Modifies a task assigned to a Maintenance Window. You can't change the task
-// type, but you can change the following:
+// type, but you can change the following values:
 //
-// The Task Arn. For example, you can change a RUN_COMMAND task from AWS-RunPowerShellScript
+// Task ARN. For example, you can change a RUN_COMMAND task from AWS-RunPowerShellScript
 // to AWS-RunShellScript.
 //
-// The service role ARN.
+// Service role ARN.
 //
-// The task parameters.
+// Task parameters.
 //
-// The task priority.
+// Task priority.
 //
-// The task MaxConcurrency and MaxErrors.
+// Task MaxConcurrency and MaxErrors.
 //
-// The log location.
+// Log location.
 //
 // If a parameter is null, then the corresponding field is not modified. Also,
 // if you set Replace to true, then all fields required by the RegisterTaskWithMaintenanceWindow
-// operation are required for this request. Optional fields that aren't specified
-// are be set to null.
+// action are required for this request. Optional fields that aren't specified
+// are set to null.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9456,6 +9564,12 @@ type Association struct {
 	// is a binding between a document and a set of targets with a schedule.
 	AssociationId *string `type:"string"`
 
+	// The association name.
+	AssociationName *string `type:"string"`
+
+	// The association version.
+	AssociationVersion *string `type:"string"`
+
 	// The version of the document used in the association.
 	DocumentVersion *string `type:"string"`
 
@@ -9465,7 +9579,7 @@ type Association struct {
 	// The date on which the association was last run.
 	LastExecutionDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 
 	// Information about the association.
@@ -9491,6 +9605,18 @@ func (s Association) GoString() string {
 // SetAssociationId sets the AssociationId field's value.
 func (s *Association) SetAssociationId(v string) *Association {
 	s.AssociationId = &v
+	return s
+}
+
+// SetAssociationName sets the AssociationName field's value.
+func (s *Association) SetAssociationName(v string) *Association {
+	s.AssociationName = &v
+	return s
+}
+
+// SetAssociationVersion sets the AssociationVersion field's value.
+func (s *Association) SetAssociationVersion(v string) *Association {
+	s.AssociationVersion = &v
 	return s
 }
 
@@ -9544,6 +9670,12 @@ type AssociationDescription struct {
 	// The association ID.
 	AssociationId *string `type:"string"`
 
+	// The association name.
+	AssociationName *string `type:"string"`
+
+	// The association version.
+	AssociationVersion *string `type:"string"`
+
 	// The date when the association was made.
 	Date *time.Time `type:"timestamp" timestampFormat:"unix"`
 
@@ -9562,7 +9694,7 @@ type AssociationDescription struct {
 	// The date when the association was last updated.
 	LastUpdateAssociationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 
 	// An Amazon S3 bucket where you want to store the output details of the request.
@@ -9597,6 +9729,18 @@ func (s AssociationDescription) GoString() string {
 // SetAssociationId sets the AssociationId field's value.
 func (s *AssociationDescription) SetAssociationId(v string) *AssociationDescription {
 	s.AssociationId = &v
+	return s
+}
+
+// SetAssociationName sets the AssociationName field's value.
+func (s *AssociationDescription) SetAssociationName(v string) *AssociationDescription {
+	s.AssociationName = &v
+	return s
+}
+
+// SetAssociationVersion sets the AssociationVersion field's value.
+func (s *AssociationDescription) SetAssociationVersion(v string) *AssociationDescription {
+	s.AssociationVersion = &v
 	return s
 }
 
@@ -9857,6 +10001,117 @@ func (s *AssociationStatus) SetMessage(v string) *AssociationStatus {
 // SetName sets the Name field's value.
 func (s *AssociationStatus) SetName(v string) *AssociationStatus {
 	s.Name = &v
+	return s
+}
+
+// Information about the association version.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AssociationVersionInfo
+type AssociationVersionInfo struct {
+	_ struct{} `type:"structure"`
+
+	// The ID created by the system when the association was created.
+	AssociationId *string `type:"string"`
+
+	// The name specified for the association version when the association version
+	// was created.
+	AssociationName *string `type:"string"`
+
+	// The association version.
+	AssociationVersion *string `type:"string"`
+
+	// The date the association version was created.
+	CreatedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The version of a Systems Manager document used when the association version
+	// was created.
+	DocumentVersion *string `type:"string"`
+
+	// The name specified when the association was created.
+	Name *string `type:"string"`
+
+	// The location in Amazon S3 specified for the association when the association
+	// version was created.
+	OutputLocation *InstanceAssociationOutputLocation `type:"structure"`
+
+	// Parameters specified when the association version was created.
+	Parameters map[string][]*string `type:"map"`
+
+	// The cron or rate schedule specified for the association when the association
+	// version was created.
+	ScheduleExpression *string `min:"1" type:"string"`
+
+	// The targets specified for the association when the association version was
+	// created.
+	Targets []*Target `type:"list"`
+}
+
+// String returns the string representation
+func (s AssociationVersionInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociationVersionInfo) GoString() string {
+	return s.String()
+}
+
+// SetAssociationId sets the AssociationId field's value.
+func (s *AssociationVersionInfo) SetAssociationId(v string) *AssociationVersionInfo {
+	s.AssociationId = &v
+	return s
+}
+
+// SetAssociationName sets the AssociationName field's value.
+func (s *AssociationVersionInfo) SetAssociationName(v string) *AssociationVersionInfo {
+	s.AssociationName = &v
+	return s
+}
+
+// SetAssociationVersion sets the AssociationVersion field's value.
+func (s *AssociationVersionInfo) SetAssociationVersion(v string) *AssociationVersionInfo {
+	s.AssociationVersion = &v
+	return s
+}
+
+// SetCreatedDate sets the CreatedDate field's value.
+func (s *AssociationVersionInfo) SetCreatedDate(v time.Time) *AssociationVersionInfo {
+	s.CreatedDate = &v
+	return s
+}
+
+// SetDocumentVersion sets the DocumentVersion field's value.
+func (s *AssociationVersionInfo) SetDocumentVersion(v string) *AssociationVersionInfo {
+	s.DocumentVersion = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *AssociationVersionInfo) SetName(v string) *AssociationVersionInfo {
+	s.Name = &v
+	return s
+}
+
+// SetOutputLocation sets the OutputLocation field's value.
+func (s *AssociationVersionInfo) SetOutputLocation(v *InstanceAssociationOutputLocation) *AssociationVersionInfo {
+	s.OutputLocation = v
+	return s
+}
+
+// SetParameters sets the Parameters field's value.
+func (s *AssociationVersionInfo) SetParameters(v map[string][]*string) *AssociationVersionInfo {
+	s.Parameters = v
+	return s
+}
+
+// SetScheduleExpression sets the ScheduleExpression field's value.
+func (s *AssociationVersionInfo) SetScheduleExpression(v string) *AssociationVersionInfo {
+	s.ScheduleExpression = &v
+	return s
+}
+
+// SetTargets sets the Targets field's value.
+func (s *AssociationVersionInfo) SetTargets(v []*Target) *AssociationVersionInfo {
+	s.Targets = v
 	return s
 }
 
@@ -10966,7 +11221,7 @@ type ComplianceItem struct {
 	_ struct{} `type:"structure"`
 
 	// The compliance type. For example, Association (for a State Manager association),
-	// Patch, or Custom:string are all valide compliance types.
+	// Patch, or Custom:string are all valid compliance types.
 	ComplianceType *string `min:"1" type:"string"`
 
 	// A "Key": "Value" tag combination for the compliance item.
@@ -10988,7 +11243,7 @@ type ComplianceItem struct {
 	ResourceType *string `min:"1" type:"string"`
 
 	// The severity of the compliance status. Severity can be one of the following:
-	// Critical, HIGH, Medium, Low, Informational, Unspecified.
+	// Critical, High, Medium, Low, Informational, Unspecified.
 	Severity *string `type:"string" enum:"ComplianceSeverity"`
 
 	// The status of the compliance item. An item is either COMPLIANT or NON_COMPLIANT.
@@ -11164,7 +11419,7 @@ type ComplianceStringFilter struct {
 	// BeginWith, LessThan, or GreaterThan.
 	Type *string `type:"string" enum:"ComplianceQueryOperatorType"`
 
-	// The value you want to search for.
+	// The value for which to search.
 	Values []*string `locationNameList:"FilterValue" min:"1" type:"list"`
 }
 
@@ -11499,6 +11754,9 @@ func (s *CreateAssociationBatchOutput) SetSuccessful(v []*AssociationDescription
 type CreateAssociationBatchRequestEntry struct {
 	_ struct{} `type:"structure"`
 
+	// Specify a descriptive name for the association.
+	AssociationName *string `type:"string"`
+
 	// The document version.
 	DocumentVersion *string `type:"string"`
 
@@ -11564,6 +11822,12 @@ func (s *CreateAssociationBatchRequestEntry) Validate() error {
 	return nil
 }
 
+// SetAssociationName sets the AssociationName field's value.
+func (s *CreateAssociationBatchRequestEntry) SetAssociationName(v string) *CreateAssociationBatchRequestEntry {
+	s.AssociationName = &v
+	return s
+}
+
 // SetDocumentVersion sets the DocumentVersion field's value.
 func (s *CreateAssociationBatchRequestEntry) SetDocumentVersion(v string) *CreateAssociationBatchRequestEntry {
 	s.DocumentVersion = &v
@@ -11609,6 +11873,9 @@ func (s *CreateAssociationBatchRequestEntry) SetTargets(v []*Target) *CreateAsso
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociationRequest
 type CreateAssociationInput struct {
 	_ struct{} `type:"structure"`
+
+	// Specify a descriptive name for the association.
+	AssociationName *string `type:"string"`
 
 	// The document version you want to associate with the target(s). Can be a specific
 	// version or the default version.
@@ -11674,6 +11941,12 @@ func (s *CreateAssociationInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAssociationName sets the AssociationName field's value.
+func (s *CreateAssociationInput) SetAssociationName(v string) *CreateAssociationInput {
+	s.AssociationName = &v
+	return s
 }
 
 // SetDocumentVersion sets the DocumentVersion field's value.
@@ -11836,8 +12109,13 @@ func (s *CreateDocumentOutput) SetDocumentDescription(v *DocumentDescription) *C
 type CreateMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
-	// Whether targets must be registered with the Maintenance Window before tasks
-	// can be defined for those targets.
+	// Enables a Maintenance Window task to execute on managed instances, even if
+	// you have not registered those instances as targets. If enabled, then you
+	// must specify the unregistered instances (by instance ID) when you register
+	// a task with the Maintenance Window
+	//
+	// If you don't enable this option, then you must specify previously-registered
+	// targets when you register a task with the Maintenance Window.
 	//
 	// AllowUnassociatedTargets is a required field
 	AllowUnassociatedTargets *bool `type:"boolean" required:"true"`
@@ -11852,7 +12130,7 @@ type CreateMaintenanceWindowInput struct {
 	Cutoff *int64 `type:"integer" required:"true"`
 
 	// An optional description for the Maintenance Window. We recommend specifying
-	// a description to help your organize your Maintenance Windows.
+	// a description to help you organize your Maintenance Windows.
 	Description *string `min:"1" type:"string"`
 
 	// The duration of the Maintenance Window in hours.
@@ -12861,7 +13139,7 @@ type DeregisterTargetFromMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
 	// The system checks if the target is being referenced by a task. If the target
-	// is being referenced, the system returns and error and does not deregister
+	// is being referenced, the system returns an error and does not deregister
 	// the target from the Maintenance Window.
 	Safe *bool `type:"boolean"`
 
@@ -13183,10 +13461,16 @@ type DescribeAssociationInput struct {
 	// The association ID for which you want information.
 	AssociationId *string `type:"string"`
 
+	// Specify the association version to retrieve. To view the latest version,
+	// either specify $LATEST for this parameter, or omit this parameter. To view
+	// a list of all associations for an instance, use ListInstanceAssociations.
+	// To get a list of versions for a specific association, use ListAssociationVersions.
+	AssociationVersion *string `type:"string"`
+
 	// The instance ID.
 	InstanceId *string `type:"string"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 }
 
@@ -13203,6 +13487,12 @@ func (s DescribeAssociationInput) GoString() string {
 // SetAssociationId sets the AssociationId field's value.
 func (s *DescribeAssociationInput) SetAssociationId(v string) *DescribeAssociationInput {
 	s.AssociationId = &v
+	return s
+}
+
+// SetAssociationVersion sets the AssociationVersion field's value.
+func (s *DescribeAssociationInput) SetAssociationVersion(v string) *DescribeAssociationInput {
+	s.AssociationVersion = &v
 	return s
 }
 
@@ -13456,7 +13746,7 @@ type DescribeDocumentInput struct {
 	// or the default version.
 	DocumentVersion *string `type:"string"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
@@ -13501,7 +13791,7 @@ func (s *DescribeDocumentInput) SetName(v string) *DescribeDocumentInput {
 type DescribeDocumentOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the SSM document.
+	// Information about the Systems Manager document.
 	Document *DocumentDescription `type:"structure"`
 }
 
@@ -15570,7 +15860,7 @@ func (s *DocumentDefaultVersionDescription) SetName(v string) *DocumentDefaultVe
 	return s
 }
 
-// Describes an SSM document.
+// Describes a Systems Manager document.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentDescription
 type DocumentDescription struct {
 	_ struct{} `type:"structure"`
@@ -15603,26 +15893,29 @@ type DocumentDescription struct {
 	// The latest version of the document.
 	LatestVersion *string `type:"string"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 
-	// The AWS user account of the person who created the document.
+	// The AWS user account that created the document.
 	Owner *string `type:"string"`
 
 	// A description of the parameters for a document.
 	Parameters []*DocumentParameter `locationNameList:"DocumentParameter" type:"list"`
 
-	// The list of OS platforms compatible with this SSM document.
+	// The list of OS platforms compatible with this Systems Manager document.
 	PlatformTypes []*string `locationNameList:"PlatformType" type:"list"`
 
 	// The schema version.
 	SchemaVersion *string `type:"string"`
 
-	// The SHA1 hash of the document, which you can use for verification purposes.
+	// The SHA1 hash of the document, which you can use for verification.
 	Sha1 *string `type:"string"`
 
-	// The status of the SSM document.
+	// The status of the Systems Manager document.
 	Status *string `type:"string" enum:"DocumentStatus"`
+
+	// The tags, or metadata, that have been applied to the document.
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -15725,6 +16018,12 @@ func (s *DocumentDescription) SetStatus(v string) *DocumentDescription {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *DocumentDescription) SetTags(v []*Tag) *DocumentDescription {
+	s.Tags = v
+	return s
+}
+
 // Describes a filter.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentFilter
 type DocumentFilter struct {
@@ -15782,7 +16081,7 @@ func (s *DocumentFilter) SetValue(v string) *DocumentFilter {
 	return s
 }
 
-// Describes the name of an SSM document.
+// Describes the name of a Systems Manager document.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentIdentifier
 type DocumentIdentifier struct {
 	_ struct{} `type:"structure"`
@@ -15793,10 +16092,10 @@ type DocumentIdentifier struct {
 	// The document version.
 	DocumentVersion *string `type:"string"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 
-	// The AWS user account of the person who created the document.
+	// The AWS user account that created the document.
 	Owner *string `type:"string"`
 
 	// The operating system platform.
@@ -15804,6 +16103,9 @@ type DocumentIdentifier struct {
 
 	// The schema version.
 	SchemaVersion *string `type:"string"`
+
+	// The tags, or metadata, that have been applied to the document.
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -15849,6 +16151,83 @@ func (s *DocumentIdentifier) SetPlatformTypes(v []*string) *DocumentIdentifier {
 // SetSchemaVersion sets the SchemaVersion field's value.
 func (s *DocumentIdentifier) SetSchemaVersion(v string) *DocumentIdentifier {
 	s.SchemaVersion = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *DocumentIdentifier) SetTags(v []*Tag) *DocumentIdentifier {
+	s.Tags = v
+	return s
+}
+
+// One or more filters. Use a filter to return a more specific list of documents.
+//
+// For keys, you can specify one or more tags that have been applied to a document.
+//
+// Other valid values include Owner, Name, PlatformTypes, and DocumentType.
+//
+// Note that only one Owner can be specified in a request. For example: Key=Owner,Values=Self.
+//
+// If you use Name as a key, you can use a name prefix to return a list of documents.
+// For example, in the AWS CLI, to return a list of all documents that begin
+// with Te, run the following command:
+//
+// aws ssm list-documents --filters Key=Name,Values=Te
+//
+// If you specify more than two keys, only documents that are identified by
+// all the tags are returned in the results. If you specify more than two values
+// for a key, documents that are identified by any of the values are returned
+// in the results.
+//
+// To specify a custom key and value pair, use the format Key=tag:[tagName],Values=[valueName].
+//
+// For example, if you created a Key called region and are using the AWS CLI
+// to call the list-documents command:
+//
+// aws ssm list-documents --filters Key=tag:region,Values=east,west Key=Owner,Values=Self
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentKeyValuesFilter
+type DocumentKeyValuesFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the filter key.
+	Key *string `min:"1" type:"string"`
+
+	// The value for the filter key.
+	Values []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s DocumentKeyValuesFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DocumentKeyValuesFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DocumentKeyValuesFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DocumentKeyValuesFilter"}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *DocumentKeyValuesFilter) SetKey(v string) *DocumentKeyValuesFilter {
+	s.Key = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *DocumentKeyValuesFilter) SetValues(v []*string) *DocumentKeyValuesFilter {
+	s.Values = v
 	return s
 }
 
@@ -16621,7 +17000,7 @@ type GetDocumentInput struct {
 	// The document version for which you want information.
 	DocumentVersion *string `type:"string"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
@@ -16666,7 +17045,7 @@ func (s *GetDocumentInput) SetName(v string) *GetDocumentInput {
 type GetDocumentOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The contents of the SSM document.
+	// The contents of the Systems Manager document.
 	Content *string `min:"1" type:"string"`
 
 	// The document type.
@@ -16675,7 +17054,7 @@ type GetDocumentOutput struct {
 	// The document version.
 	DocumentVersion *string `type:"string"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 }
 
@@ -17127,7 +17506,7 @@ type GetMaintenanceWindowExecutionTaskInvocationInput struct {
 	// TaskId is a required field
 	TaskId *string `min:"36" type:"string" required:"true"`
 
-	// The ID of the Maintenance Window execution the task is part of.
+	// The ID of the Maintenance Window execution for which the task is a part.
 	//
 	// WindowExecutionId is a required field
 	WindowExecutionId *string `min:"36" type:"string" required:"true"`
@@ -17193,7 +17572,7 @@ func (s *GetMaintenanceWindowExecutionTaskInvocationInput) SetWindowExecutionId(
 type GetMaintenanceWindowExecutionTaskInvocationOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The time the task finished executing on the target.
+	// The time that the task finished executing on the target.
 	EndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The execution ID.
@@ -17202,14 +17581,14 @@ type GetMaintenanceWindowExecutionTaskInvocationOutput struct {
 	// The invocation ID.
 	InvocationId *string `min:"36" type:"string"`
 
-	// User-provided value that will be included in any CloudWatch events raised
-	// while running tasks for these targets in this Maintenance Window.
+	// User-provided value to be included in any CloudWatch events raised while
+	// running tasks for these targets in this Maintenance Window.
 	OwnerInformation *string `min:"1" type:"string"`
 
-	// The parameters used at the time the task executed.
+	// The parameters used at the time that the task executed.
 	Parameters *string `type:"string"`
 
-	// The time the task started executing on the target.
+	// The time that the task started executing on the target.
 	StartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The task status for an invocation.
@@ -17669,7 +18048,7 @@ type GetMaintenanceWindowTaskOutput struct {
 	// The retrieved task description.
 	Description *string `min:"1" type:"string"`
 
-	// The location in Amazon S3 where the task results will be logged.
+	// The location in Amazon S3 where the task results are logged.
 	LoggingInfo *LoggingInfo `type:"structure"`
 
 	// The maximum number of targets allowed to run this task in parallel.
@@ -17691,10 +18070,10 @@ type GetMaintenanceWindowTaskOutput struct {
 	// The targets where the task should execute.
 	Targets []*Target `type:"list"`
 
-	// TaskArn is the resource that the task used during execution. For RUN_COMMAND
-	// and AUTOMATION task types, the TaskArn is the SSM Document Name/ARN. For
-	// LAMBDA tasks, TaskArn is the Function Name/ARN. For STEP_FUNCTION tasks,
-	// the TaskArn is the State Machine ARN.
+	// The resource that the task used during execution. For RUN_COMMAND and AUTOMATION
+	// task types, the TaskArn is the Systems Manager Document name/ARN. For LAMBDA
+	// tasks, the value is the function name/ARN. For STEP_FUNCTION tasks, the value
+	// is the state machine ARN.
 	TaskArn *string `min:"1" type:"string"`
 
 	// The parameters to pass to the task when it executes.
@@ -18522,6 +18901,9 @@ type InstanceAssociation struct {
 	// The association ID.
 	AssociationId *string `type:"string"`
 
+	// Version information for the association on the instance.
+	AssociationVersion *string `type:"string"`
+
 	// The content of the association document for the instance(s).
 	Content *string `min:"1" type:"string"`
 
@@ -18542,6 +18924,12 @@ func (s InstanceAssociation) GoString() string {
 // SetAssociationId sets the AssociationId field's value.
 func (s *InstanceAssociation) SetAssociationId(v string) *InstanceAssociation {
 	s.AssociationId = &v
+	return s
+}
+
+// SetAssociationVersion sets the AssociationVersion field's value.
+func (s *InstanceAssociation) SetAssociationVersion(v string) *InstanceAssociation {
+	s.AssociationVersion = &v
 	return s
 }
 
@@ -18630,6 +19018,12 @@ type InstanceAssociationStatusInfo struct {
 	// The association ID.
 	AssociationId *string `type:"string"`
 
+	// The name of the association applied to the instance.
+	AssociationName *string `type:"string"`
+
+	// The version of the association applied to the instance.
+	AssociationVersion *string `type:"string"`
+
 	// Detailed status information about the instance association.
 	DetailedStatus *string `type:"string"`
 
@@ -18672,6 +19066,18 @@ func (s InstanceAssociationStatusInfo) GoString() string {
 // SetAssociationId sets the AssociationId field's value.
 func (s *InstanceAssociationStatusInfo) SetAssociationId(v string) *InstanceAssociationStatusInfo {
 	s.AssociationId = &v
+	return s
+}
+
+// SetAssociationName sets the AssociationName field's value.
+func (s *InstanceAssociationStatusInfo) SetAssociationName(v string) *InstanceAssociationStatusInfo {
+	s.AssociationName = &v
+	return s
+}
+
+// SetAssociationVersion sets the AssociationVersion field's value.
+func (s *InstanceAssociationStatusInfo) SetAssociationVersion(v string) *InstanceAssociationStatusInfo {
+	s.AssociationVersion = &v
 	return s
 }
 
@@ -19646,6 +20052,103 @@ func (s *InventoryResultItem) SetTypeName(v string) *InventoryResultItem {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationVersionsRequest
+type ListAssociationVersionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The association ID for which you want to view all versions.
+	//
+	// AssociationId is a required field
+	AssociationId *string `type:"string" required:"true"`
+
+	// The maximum number of items to return for this call. The call also returns
+	// a token that you can specify in a subsequent call to get the next set of
+	// results.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A token to start the list. Use this token to get the next set of results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListAssociationVersionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAssociationVersionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAssociationVersionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAssociationVersionsInput"}
+	if s.AssociationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssociationId"))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAssociationId sets the AssociationId field's value.
+func (s *ListAssociationVersionsInput) SetAssociationId(v string) *ListAssociationVersionsInput {
+	s.AssociationId = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListAssociationVersionsInput) SetMaxResults(v int64) *ListAssociationVersionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAssociationVersionsInput) SetNextToken(v string) *ListAssociationVersionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationVersionsResult
+type ListAssociationVersionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about all versions of the association for the specified association
+	// ID.
+	AssociationVersions []*AssociationVersionInfo `min:"1" type:"list"`
+
+	// The token for the next set of items to return. Use this token to get the
+	// next set of results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListAssociationVersionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAssociationVersionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetAssociationVersions sets the AssociationVersions field's value.
+func (s *ListAssociationVersionsOutput) SetAssociationVersions(v []*AssociationVersionInfo) *ListAssociationVersionsOutput {
+	s.AssociationVersions = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAssociationVersionsOutput) SetNextToken(v string) *ListAssociationVersionsOutput {
+	s.NextToken = &v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationsRequest
 type ListAssociationsInput struct {
 	_ struct{} `type:"structure"`
@@ -20031,11 +20534,11 @@ type ListComplianceItemsInput struct {
 	// A token to start the list. Use this token to get the next set of results.
 	NextToken *string `type:"string"`
 
-	// The ID for the resources from which you want to get compliance information.
-	// Currently, you can only specify one resource ID.
+	// The ID for the resources from which to get compliance information. Currently,
+	// you can only specify one resource ID.
 	ResourceIds []*string `min:"1" type:"list"`
 
-	// The type of resource from which you want to get compliance information. Currently,
+	// The type of resource from which to get compliance information. Currently,
 	// the only supported resource type is ManagedInstance.
 	ResourceTypes []*string `min:"1" type:"list"`
 }
@@ -20217,7 +20720,7 @@ type ListComplianceSummariesOutput struct {
 
 	// A list of compliant and non-compliant summary counts based on compliance
 	// types. For example, this call returns State Manager associations, patches,
-	// or custom compliance types according to the filter criteria you specified.
+	// or custom compliance types according to the filter criteria that you specified.
 	ComplianceSummaryItems []*ComplianceSummaryItem `locationNameList:"Item" type:"list"`
 
 	// The token for the next set of items to return. Use this token to get the
@@ -20351,6 +20854,9 @@ type ListDocumentsInput struct {
 	// One or more filters. Use a filter to return a more specific list of results.
 	DocumentFilterList []*DocumentFilter `locationNameList:"DocumentFilter" min:"1" type:"list"`
 
+	// One or more filters. Use a filter to return a more specific list of results.
+	Filters []*DocumentKeyValuesFilter `type:"list"`
+
 	// The maximum number of items to return for this call. The call also returns
 	// a token that you can specify in a subsequent call to get the next set of
 	// results.
@@ -20390,6 +20896,16 @@ func (s *ListDocumentsInput) Validate() error {
 			}
 		}
 	}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -20400,6 +20916,12 @@ func (s *ListDocumentsInput) Validate() error {
 // SetDocumentFilterList sets the DocumentFilterList field's value.
 func (s *ListDocumentsInput) SetDocumentFilterList(v []*DocumentFilter) *ListDocumentsInput {
 	s.DocumentFilterList = v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *ListDocumentsInput) SetFilters(v []*DocumentKeyValuesFilter) *ListDocumentsInput {
+	s.Filters = v
 	return s
 }
 
@@ -20419,7 +20941,7 @@ func (s *ListDocumentsInput) SetNextToken(v string) *ListDocumentsInput {
 type ListDocumentsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The names of the SSM documents.
+	// The names of the Systems Manager documents.
 	DocumentIdentifiers []*DocumentIdentifier `locationNameList:"DocumentIdentifier" type:"list"`
 
 	// The token to use when requesting the next set of items. If there are no additional
@@ -20698,7 +21220,7 @@ type ListResourceComplianceSummariesOutput struct {
 
 	// A summary count for specified or targeted managed instances. Summary count
 	// includes information about compliant and non-compliant State Manager associations,
-	// patch statuses, or custom items according to the filter criteria you specify.
+	// patch status, or custom items according to the filter criteria that you specify.
 	ResourceComplianceSummaryItems []*ResourceComplianceSummaryItem `locationNameList:"Item" type:"list"`
 }
 
@@ -20952,15 +21474,15 @@ func (s *LoggingInfo) SetS3Region(v string) *LoggingInfo {
 	return s
 }
 
-// Parameters for an AUTOMATION task type.
+// The parameters for an AUTOMATION task type.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowAutomationParameters
 type MaintenanceWindowAutomationParameters struct {
 	_ struct{} `type:"structure"`
 
-	// The version of an SSM Automation document to use during task execution.
+	// The version of an Automation document to use during task execution.
 	DocumentVersion *string `type:"string"`
 
-	// Parameters for the AUTOMATION task.
+	// The parameters for the AUTOMATION task.
 	Parameters map[string][]*string `min:"1" type:"map"`
 }
 
@@ -21407,26 +21929,25 @@ func (s *MaintenanceWindowIdentity) SetWindowId(v string) *MaintenanceWindowIden
 	return s
 }
 
-// Parameters for a LAMBDA task type.
+// The parameters for a LAMBDA task type.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowLambdaParameters
 type MaintenanceWindowLambdaParameters struct {
 	_ struct{} `type:"structure"`
 
-	// Using the ClientContext you can pass client-specific information to the Lambda
-	// function you are invoking. You can then process the client information in
-	// your Lambda function as you choose through the context variable.
+	// Pass client-specific information to the Lambda function that you are invoking.
+	// You can then process the client information in your Lambda function as you
+	// choose through the context variable.
 	ClientContext *string `min:"1" type:"string"`
 
-	// JSON that you want to provide to your Lambda function as input.
+	// JSON to provide to your Lambda function as input.
 	//
 	// Payload is automatically base64 encoded/decoded by the SDK.
 	Payload []byte `type:"blob"`
 
-	// You can use this optional parameter to specify a Lambda function version
-	// or alias name. If you specify a function version, the API uses the qualified
-	// function ARN to invoke a specific Lambda function. If you specify an alias
-	// name, the API uses the alias ARN to invoke the Lambda function version to
-	// which the alias points.
+	// (Optional) Specify a Lambda function version or alias name. If you specify
+	// a function version, the action uses the qualified function ARN to invoke
+	// a specific Lambda function. If you specify an alias name, the action uses
+	// the alias ARN to invoke the Lambda function version to which the alias points.
 	Qualifier *string `min:"1" type:"string"`
 }
 
@@ -21474,7 +21995,7 @@ func (s *MaintenanceWindowLambdaParameters) SetQualifier(v string) *MaintenanceW
 	return s
 }
 
-// Parameters for a RUN_COMMAND task type.
+// The parameters for a RUN_COMMAND task type.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowRunCommandParameters
 type MaintenanceWindowRunCommandParameters struct {
 	_ struct{} `type:"structure"`
@@ -21482,15 +22003,15 @@ type MaintenanceWindowRunCommandParameters struct {
 	// Information about the command(s) to execute.
 	Comment *string `type:"string"`
 
-	// The Sha256 or Sha1 hash created by the system when the document was created.
-	// Sha1 hashes have been deprecated.
+	// The SHA-256 or SHA-1 hash created by the system when the document was created.
+	// SHA-1 hashes have been deprecated.
 	DocumentHash *string `type:"string"`
 
-	// Sha256 or Sha1. Sha1 hashes have been deprecated.
+	// SHA-256 or SHA-1. SHA-1 hashes have been deprecated.
 	DocumentHashType *string `type:"string" enum:"DocumentHashType"`
 
 	// Configurations for sending notifications about command status changes on
-	// a per instance basis.
+	// a per-instance basis.
 	NotificationConfig *NotificationConfig `type:"structure"`
 
 	// The name of the Amazon S3 bucket.
@@ -21499,14 +22020,14 @@ type MaintenanceWindowRunCommandParameters struct {
 	// The Amazon S3 bucket subfolder.
 	OutputS3KeyPrefix *string `type:"string"`
 
-	// Parameters for the RUN_COMMAND task execution.
+	// The parameters for the RUN_COMMAND task execution.
 	Parameters map[string][]*string `type:"map"`
 
-	// The IAM service role that to assume during task execution.
+	// The IAM service role to assume during task execution.
 	ServiceRoleArn *string `type:"string"`
 
 	// If this time is reached and the command has not already started executing,
-	// it will not execute.
+	// it doesn not execute.
 	TimeoutSeconds *int64 `min:"30" type:"integer"`
 }
 
@@ -21590,7 +22111,7 @@ func (s *MaintenanceWindowRunCommandParameters) SetTimeoutSeconds(v int64) *Main
 	return s
 }
 
-// Parameters for the STEP_FUNCTION execution.
+// The parameters for the STEP_FUNCTION execution.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowStepFunctionsParameters
 type MaintenanceWindowStepFunctionsParameters struct {
 	_ struct{} `type:"structure"`
@@ -21750,10 +22271,10 @@ type MaintenanceWindowTask struct {
 	// Tags are specified using Key=<tag name>,Values=<tag value>.
 	Targets []*Target `type:"list"`
 
-	// TaskArn is the resource that the task uses during execution. For RUN_COMMAND
-	// and AUTOMATION task types, the TaskArn is the SSM Document Name/ARN. For
-	// LAMBDA tasks, it's the Function Name/ARN. For STEP_FUNCTION tasks, it's the
-	// State Machine ARN.
+	// The resource that the task uses during execution. For RUN_COMMAND and AUTOMATION
+	// task types, TaskArn is the Systems Manager document name or ARN. For LAMBDA
+	// tasks, it's the function name or ARN. For STEP_FUNCTION tasks, it's the state
+	// machine ARN.
 	TaskArn *string `min:"1" type:"string"`
 
 	// The parameters that should be passed to the task when it is executed.
@@ -21858,21 +22379,21 @@ func (s *MaintenanceWindowTask) SetWindowTaskId(v string) *MaintenanceWindowTask
 	return s
 }
 
-// Parameters for task execution.
+// The parameters for task execution.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowTaskInvocationParameters
 type MaintenanceWindowTaskInvocationParameters struct {
 	_ struct{} `type:"structure"`
 
-	// Parameters for a AUTOMATION task type.
+	// The parameters for a AUTOMATION task type.
 	Automation *MaintenanceWindowAutomationParameters `type:"structure"`
 
-	// Parameters for a LAMBDA task type.
+	// The parameters for a LAMBDA task type.
 	Lambda *MaintenanceWindowLambdaParameters `type:"structure"`
 
-	// Parameters for a RUN_COMMAND task type.
+	// The parameters for a RUN_COMMAND task type.
 	RunCommand *MaintenanceWindowRunCommandParameters `type:"structure"`
 
-	// Parameters for a STEP_FUNCTION task type.
+	// The parameters for a STEP_FUNCTION task type.
 	StepFunctions *MaintenanceWindowStepFunctionsParameters `type:"structure"`
 }
 
@@ -23138,9 +23659,9 @@ type PutComplianceItemsInput struct {
 	// ExecutionSummary is a required field
 	ExecutionSummary *ComplianceExecutionSummary `type:"structure" required:"true"`
 
-	// MD5 or Sha256 content hash. The content hash is used to determine if existing
+	// MD5 or SHA-256 content hash. The content hash is used to determine if existing
 	// information should be overwritten or ignored. If the content hashes match,
-	// ,the request to put compliance information is ignored.
+	// the request to put compliance information is ignored.
 	ItemContentHash *string `type:"string"`
 
 	// Information about the compliance as defined by the resource type. For example,
@@ -23848,8 +24369,8 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	// TaskArn is a required field
 	TaskArn *string `min:"1" type:"string" required:"true"`
 
-	// Parameters the task should use during execution. Populate only the fields
-	// that match the task type. All other fields should be empty.
+	// The parameters that the task should use during execution. Populate only the
+	// fields that match the task type. All other fields should be empty.
 	TaskInvocationParameters *MaintenanceWindowTaskInvocationParameters `type:"structure"`
 
 	// The parameters that should be passed to the task when it is executed.
@@ -24303,6 +24824,10 @@ func (s *ResourceDataSyncItem) SetSyncName(v string) *ResourceDataSyncItem {
 type ResourceDataSyncS3Destination struct {
 	_ struct{} `type:"structure"`
 
+	// The ARN of an encryption key for a destination in Amazon S3. Must belong
+	// to the same region as the destination Amazon S3 bucket.
+	AWSKMSKeyARN *string `min:"1" type:"string"`
+
 	// The name of the Amazon S3 bucket where the aggregated data is stored.
 	//
 	// BucketName is a required field
@@ -24335,6 +24860,9 @@ func (s ResourceDataSyncS3Destination) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ResourceDataSyncS3Destination) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ResourceDataSyncS3Destination"}
+	if s.AWSKMSKeyARN != nil && len(*s.AWSKMSKeyARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AWSKMSKeyARN", 1))
+	}
 	if s.BucketName == nil {
 		invalidParams.Add(request.NewErrParamRequired("BucketName"))
 	}
@@ -24358,6 +24886,12 @@ func (s *ResourceDataSyncS3Destination) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAWSKMSKeyARN sets the AWSKMSKeyARN field's value.
+func (s *ResourceDataSyncS3Destination) SetAWSKMSKeyARN(v string) *ResourceDataSyncS3Destination {
+	s.AWSKMSKeyARN = &v
+	return s
 }
 
 // SetBucketName sets the BucketName field's value.
@@ -24928,6 +25462,10 @@ func (s *SeveritySummary) SetUnspecifiedCount(v int64) *SeveritySummary {
 type StartAutomationExecutionInput struct {
 	_ struct{} `type:"structure"`
 
+	// User-provided idempotency token. The token must be unique, is case insensitive,
+	// enforces the UUID format, and can't be reused.
+	ClientToken *string `min:"36" type:"string"`
+
 	// The name of the Automation document to use for this execution.
 	//
 	// DocumentName is a required field
@@ -24954,6 +25492,9 @@ func (s StartAutomationExecutionInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *StartAutomationExecutionInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "StartAutomationExecutionInput"}
+	if s.ClientToken != nil && len(*s.ClientToken) < 36 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientToken", 36))
+	}
 	if s.DocumentName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DocumentName"))
 	}
@@ -24965,6 +25506,12 @@ func (s *StartAutomationExecutionInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *StartAutomationExecutionInput) SetClientToken(v string) *StartAutomationExecutionInput {
+	s.ClientToken = &v
+	return s
 }
 
 // SetDocumentName sets the DocumentName field's value.
@@ -25185,9 +25732,10 @@ func (s StopAutomationExecutionOutput) GoString() string {
 	return s.String()
 }
 
-// Metadata that you assign to your managed instances. Tags enable you to categorize
-// your managed instances in different ways, for example, by purpose, owner,
-// or environment.
+// Metadata that you assign to your AWS resources. Tags enable you to categorize
+// your resources in different ways, for example, by purpose, owner, or environment.
+// In Systems Manager, you can apply tags to documents, managed instances, Maintenance
+// Windows, Parameter Store parameters, and patch baselines.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/Tag
 type Tag struct {
 	_ struct{} `type:"structure"`
@@ -25312,6 +25860,14 @@ type UpdateAssociationInput struct {
 	// AssociationId is a required field
 	AssociationId *string `type:"string" required:"true"`
 
+	// The name of the association that you want to update.
+	AssociationName *string `type:"string"`
+
+	// This parameter is provided for concurrency control purposes. You must specify
+	// the latest association version in the service. If you want to ensure that
+	// this request succeeds, either specify $LATEST, or omit this parameter.
+	AssociationVersion *string `type:"string"`
+
 	// The document version you want update for the association.
 	DocumentVersion *string `type:"string"`
 
@@ -25376,6 +25932,18 @@ func (s *UpdateAssociationInput) Validate() error {
 // SetAssociationId sets the AssociationId field's value.
 func (s *UpdateAssociationInput) SetAssociationId(v string) *UpdateAssociationInput {
 	s.AssociationId = &v
+	return s
+}
+
+// SetAssociationName sets the AssociationName field's value.
+func (s *UpdateAssociationInput) SetAssociationName(v string) *UpdateAssociationInput {
+	s.AssociationName = &v
+	return s
+}
+
+// SetAssociationVersion sets the AssociationVersion field's value.
+func (s *UpdateAssociationInput) SetAssociationVersion(v string) *UpdateAssociationInput {
+	s.AssociationVersion = &v
 	return s
 }
 
@@ -25453,7 +26021,7 @@ type UpdateAssociationStatusInput struct {
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
@@ -25726,9 +26294,9 @@ type UpdateMaintenanceWindowInput struct {
 	// The name of the Maintenance Window.
 	Name *string `min:"3" type:"string"`
 
-	// If you specify True, then all fields that are required by the CreateMaintenanceWindow
-	// API are also required for this API request. Optional fields that are not
-	// specified will be set to null.
+	// If True, then all fields that are required by the CreateMaintenanceWindow
+	// action are also required for this API request. Optional fields that are not
+	// specified are set to null.
 	Replace *bool `type:"boolean"`
 
 	// The schedule of the Maintenance Window in the form of a cron or rate expression.
@@ -25935,20 +26503,20 @@ type UpdateMaintenanceWindowTargetInput struct {
 	// while running tasks for these targets in this Maintenance Window.
 	OwnerInformation *string `min:"1" type:"string"`
 
-	// If you specify True, then all fields that are required by the RegisterTargetWithMaintenanceWindow
-	// API are also required for this API request. Optional fields that are not
-	// specified will be set to null.
+	// If True, then all fields that are required by the RegisterTargetWithMaintenanceWindow
+	// action are also required for this API request. Optional fields that are not
+	// specified are set to null.
 	Replace *bool `type:"boolean"`
 
-	// The targets that you want to add or replace.
+	// The targets to add or replace.
 	Targets []*Target `type:"list"`
 
-	// The Maintenance Window ID for which you want to modify the target.
+	// The Maintenance Window ID with which to modify the target.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
 
-	// The target ID that you want to modify.
+	// The target ID to modify.
 	//
 	// WindowTargetId is a required field
 	WindowTargetId *string `min:"36" type:"string" required:"true"`
@@ -26120,61 +26688,61 @@ func (s *UpdateMaintenanceWindowTargetOutput) SetWindowTargetId(v string) *Updat
 type UpdateMaintenanceWindowTaskInput struct {
 	_ struct{} `type:"structure"`
 
-	// The new task description that you want to specify.
+	// The new task description to specify.
 	Description *string `min:"1" type:"string"`
 
-	// The new logging location in Amazon S3 that you want to specify.
+	// The new logging location in Amazon S3 to specify.
 	LoggingInfo *LoggingInfo `type:"structure"`
 
 	// The new MaxConcurrency value you want to specify. MaxConcurrency is the number
 	// of targets that are allowed to run this task in parallel.
 	MaxConcurrency *string `min:"1" type:"string"`
 
-	// The new MaxErrors value you want to specify. MaxErrors is the maximum number
-	// of errors that are allowed before the task stops being scheduled.
+	// The new MaxErrors value to specify. MaxErrors is the maximum number of errors
+	// that are allowed before the task stops being scheduled.
 	MaxErrors *string `min:"1" type:"string"`
 
-	// The new task name that you want to specify.
+	// The new task name to specify.
 	Name *string `min:"3" type:"string"`
 
-	// The new task priority that you want to specify. The lower the number, the
-	// higher the priority. Tasks that have the same priority are scheduled in parallel.
+	// The new task priority to specify. The lower the number, the higher the priority.
+	// Tasks that have the same priority are scheduled in parallel.
 	Priority *int64 `type:"integer"`
 
-	// If you specify True, then all fields that are required by the RegisterTaskWithMaintenanceWndow
-	// API are also required for this API request. Optional fields that are not
-	// specified will be set to null.
+	// If True, then all fields that are required by the RegisterTaskWithMaintenanceWndow
+	// action are also required for this API request. Optional fields that are not
+	// specified are set to null.
 	Replace *bool `type:"boolean"`
 
-	// The IAM service role ARN that you want to modify. The system assumes this
-	// role during task exectuion.
+	// The IAM service role ARN to modify. The system assumes this role during task
+	// execution.
 	ServiceRoleArn *string `type:"string"`
 
-	// The targets (either instances or tags) that you want to modify. Instances
-	// are specified using Key=instanceids,Values=instanceID_1,instanceID_2. Tags
-	// are specified using Key=tag_name,Values=tag_value.
+	// The targets (either instances or tags) to modify. Instances are specified
+	// using Key=instanceids,Values=instanceID_1,instanceID_2. Tags are specified
+	// using Key=tag_name,Values=tag_value.
 	Targets []*Target `type:"list"`
 
-	// The task ARN that you want to modify.
+	// The task ARN to modify.
 	TaskArn *string `min:"1" type:"string"`
 
-	// Parameters the task should use during execution. Populate only the fields
-	// that match the task type. All other fields should be empty.
+	// The parameters that the task should use during execution. Populate only the
+	// fields that match the task type. All other fields should be empty.
 	TaskInvocationParameters *MaintenanceWindowTaskInvocationParameters `type:"structure"`
 
-	// The parameters that you want to modify. The map has the following format:
+	// The parameters to modify. The map has the following format:
 	//
 	// Key: string, between 1 and 255 characters
 	//
 	// Value: an array of strings, each string is between 1 and 255 characters
 	TaskParameters map[string]*MaintenanceWindowTaskParameterValueExpression `type:"map"`
 
-	// The Maintenance Window ID that contains the task that you want to modify.
+	// The Maintenance Window ID that contains the task to modify.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
 
-	// The task ID that you want to modify.
+	// The task ID to modify.
 	//
 	// WindowTaskId is a required field
 	WindowTaskId *string `min:"36" type:"string" required:"true"`
@@ -26368,10 +26936,10 @@ type UpdateMaintenanceWindowTaskOutput struct {
 	// The updated parameter values.
 	TaskParameters map[string]*MaintenanceWindowTaskParameterValueExpression `type:"map"`
 
-	// The Maintenance Window ID that was updated.
+	// The ID of the Maintenance Window that was updated.
 	WindowId *string `min:"20" type:"string"`
 
-	// The Maintenance Window task ID that was updated.
+	// The task ID of the Maintenance Window that was updated.
 	WindowTaskId *string `min:"36" type:"string"`
 }
 
@@ -26785,6 +27353,9 @@ const (
 
 	// AssociationFilterKeyLastExecutedAfter is a AssociationFilterKey enum value
 	AssociationFilterKeyLastExecutedAfter = "LastExecutedAfter"
+
+	// AssociationFilterKeyAssociationName is a AssociationFilterKey enum value
+	AssociationFilterKeyAssociationName = "AssociationName"
 )
 
 const (
@@ -27339,6 +27910,9 @@ const (
 )
 
 const (
+	// ResourceTypeForTaggingDocument is a ResourceTypeForTagging enum value
+	ResourceTypeForTaggingDocument = "Document"
+
 	// ResourceTypeForTaggingManagedInstance is a ResourceTypeForTagging enum value
 	ResourceTypeForTaggingManagedInstance = "ManagedInstance"
 
@@ -27347,6 +27921,9 @@ const (
 
 	// ResourceTypeForTaggingParameter is a ResourceTypeForTagging enum value
 	ResourceTypeForTaggingParameter = "Parameter"
+
+	// ResourceTypeForTaggingPatchBaseline is a ResourceTypeForTagging enum value
+	ResourceTypeForTaggingPatchBaseline = "PatchBaseline"
 )
 
 const (

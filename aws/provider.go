@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform/helper/mutexkv"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 // Provider returns a terraform.ResourceProvider.
@@ -160,9 +161,6 @@ func Provider() terraform.ResourceProvider {
 
 		DataSourcesMap: map[string]*schema.Resource{
 			"aws_acm_certificate":          dataSourceAwsAcmCertificate(),
-			"aws_alb":                      dataSourceAwsAlb(),
-			"aws_alb_listener":             dataSourceAwsAlbListener(),
-			"aws_alb_target_group":         dataSourceAwsAlbTargetGroup(),
 			"aws_ami":                      dataSourceAwsAmi(),
 			"aws_ami_ids":                  dataSourceAwsAmiIds(),
 			"aws_autoscaling_groups":       dataSourceAwsAutoscalingGroups(),
@@ -194,12 +192,13 @@ func Provider() terraform.ResourceProvider {
 			"aws_iam_policy_document":              dataSourceAwsIamPolicyDocument(),
 			"aws_iam_role":                         dataSourceAwsIAMRole(),
 			"aws_iam_server_certificate":           dataSourceAwsIAMServerCertificate(),
+			"aws_iam_user":                         dataSourceAwsIAMUser(),
 			"aws_internet_gateway":                 dataSourceAwsInternetGateway(),
 			"aws_instance":                         dataSourceAwsInstance(),
 			"aws_ip_ranges":                        dataSourceAwsIPRanges(),
 			"aws_kinesis_stream":                   dataSourceAwsKinesisStream(),
 			"aws_kms_alias":                        dataSourceAwsKmsAlias(),
-			"aws_kms_ciphertext":                   dataSourceAwsKmsCiphetext(),
+			"aws_kms_ciphertext":                   dataSourceAwsKmsCiphertext(),
 			"aws_kms_secret":                       dataSourceAwsKmsSecret(),
 			"aws_partition":                        dataSourceAwsPartition(),
 			"aws_prefix_list":                      dataSourceAwsPrefixList(),
@@ -207,6 +206,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_region":                           dataSourceAwsRegion(),
 			"aws_route_table":                      dataSourceAwsRouteTable(),
 			"aws_route53_zone":                     dataSourceAwsRoute53Zone(),
+			"aws_s3_bucket":                        dataSourceAwsS3Bucket(),
 			"aws_s3_bucket_object":                 dataSourceAwsS3BucketObject(),
 			"aws_sns_topic":                        dataSourceAwsSnsTopic(),
 			"aws_ssm_parameter":                    dataSourceAwsSsmParameter(),
@@ -218,14 +218,17 @@ func Provider() terraform.ResourceProvider {
 			"aws_vpc_endpoint_service":             dataSourceAwsVpcEndpointService(),
 			"aws_vpc_peering_connection":           dataSourceAwsVpcPeeringConnection(),
 			"aws_vpn_gateway":                      dataSourceAwsVpnGateway(),
+
+			// Adding the Aliases for the ALB -> LB Rename
+			"aws_lb":               dataSourceAwsLb(),
+			"aws_alb":              dataSourceAwsLb(),
+			"aws_lb_listener":      dataSourceAwsLbListener(),
+			"aws_alb_listener":     dataSourceAwsLbListener(),
+			"aws_lb_target_group":  dataSourceAwsLbTargetGroup(),
+			"aws_alb_target_group": dataSourceAwsLbTargetGroup(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"aws_alb":                                      resourceAwsAlb(),
-			"aws_alb_listener":                             resourceAwsAlbListener(),
-			"aws_alb_listener_rule":                        resourceAwsAlbListenerRule(),
-			"aws_alb_target_group":                         resourceAwsAlbTargetGroup(),
-			"aws_alb_target_group_attachment":              resourceAwsAlbTargetGroupAttachment(),
 			"aws_ami":                                      resourceAwsAmi(),
 			"aws_ami_copy":                                 resourceAwsAmiCopy(),
 			"aws_ami_from_instance":                        resourceAwsAmiFromInstance(),
@@ -478,12 +481,31 @@ func Provider() terraform.ResourceProvider {
 			"aws_waf_byte_match_set":                       resourceAwsWafByteMatchSet(),
 			"aws_waf_ipset":                                resourceAwsWafIPSet(),
 			"aws_waf_rule":                                 resourceAwsWafRule(),
+			"aws_waf_rate_based_rule":                      resourceAwsWafRateBasedRule(),
 			"aws_waf_size_constraint_set":                  resourceAwsWafSizeConstraintSet(),
 			"aws_waf_web_acl":                              resourceAwsWafWebAcl(),
 			"aws_waf_xss_match_set":                        resourceAwsWafXssMatchSet(),
 			"aws_waf_sql_injection_match_set":              resourceAwsWafSqlInjectionMatchSet(),
 			"aws_wafregional_byte_match_set":               resourceAwsWafRegionalByteMatchSet(),
 			"aws_wafregional_ipset":                        resourceAwsWafRegionalIPSet(),
+			"aws_batch_compute_environment":                resourceAwsBatchComputeEnvironment(),
+			"aws_batch_job_definition":                     resourceAwsBatchJobDefinition(),
+			"aws_batch_job_queue":                          resourceAwsBatchJobQueue(),
+
+			// ALBs are actually LBs because they can be type `network` or `application`
+			// To avoid regressions, we will add a new resource for each and they both point
+			// back to the old ALB version. IF the Terraform supported aliases for resources
+			// this would be a whole lot simplier
+			"aws_alb":                         resourceAwsLb(),
+			"aws_lb":                          resourceAwsLb(),
+			"aws_alb_listener":                resourceAwsLbListener(),
+			"aws_lb_listener":                 resourceAwsLbListener(),
+			"aws_alb_listener_rule":           resourceAwsLbbListenerRule(),
+			"aws_lb_listener_rule":            resourceAwsLbbListenerRule(),
+			"aws_alb_target_group":            resourceAwsLbTargetGroup(),
+			"aws_lb_target_group":             resourceAwsLbTargetGroup(),
+			"aws_alb_target_group_attachment": resourceAwsLbTargetGroupAttachment(),
+			"aws_lb_target_group_attachment":  resourceAwsLbTargetGroupAttachment(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
@@ -589,7 +611,6 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		AccessKey:               d.Get("access_key").(string),
 		SecretKey:               d.Get("secret_key").(string),
 		Profile:                 d.Get("profile").(string),
-		CredsFilename:           d.Get("shared_credentials_file").(string),
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
 		MaxRetries:              d.Get("max_retries").(int),
@@ -601,6 +622,13 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		SkipMetadataApiCheck:    d.Get("skip_metadata_api_check").(bool),
 		S3ForcePathStyle:        d.Get("s3_force_path_style").(bool),
 	}
+
+	// Set CredsFilename, expanding home directory
+	credsPath, err := homedir.Expand(d.Get("shared_credentials_file").(string))
+	if err != nil {
+		return nil, err
+	}
+	config.CredsFilename = credsPath
 
 	assumeRoleList := d.Get("assume_role").(*schema.Set).List()
 	if len(assumeRoleList) == 1 {

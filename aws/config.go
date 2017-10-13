@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
@@ -176,6 +177,7 @@ type AWSClient struct {
 	wafconn               *waf.WAF
 	wafregionalconn       *wafregional.WAFRegional
 	iotconn               *iot.IoT
+	batchconn             *batch.Batch
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -384,6 +386,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.ssmconn = ssm.New(sess)
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
+	client.batchconn = batch.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
@@ -395,6 +398,20 @@ func (c *Config) Client() (interface{}, error) {
 			return
 		}
 		if err.Code() == kinesis.ErrCodeLimitExceededException {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
+	// Workaround for https://github.com/aws/aws-sdk-go/issues/1472
+	client.appautoscalingconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
+			return
+		}
+		err, ok := r.Error.(awserr.Error)
+		if !ok || err == nil {
+			return
+		}
+		if err.Code() == applicationautoscaling.ErrCodeFailedResourceAccessException {
 			r.Retryable = aws.Bool(true)
 		}
 	})

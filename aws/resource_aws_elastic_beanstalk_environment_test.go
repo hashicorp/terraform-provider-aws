@@ -6,7 +6,9 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -15,6 +17,97 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+// initialize sweeper
+func init() {
+	resource.AddTestSweepers("aws_beanstalk_environment", &resource.Sweeper{
+		Name: "aws_beanstalk_environment",
+		F:    testSweepBeanstalkEnvironments,
+	})
+}
+
+func testSweepBeanstalkEnvironments(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	beanstalkconn := client.(*AWSClient).elasticbeanstalkconn
+
+	resp, err := beanstalkconn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
+		IncludeDeleted: aws.Bool(false),
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving beanstalk environment: %s", err)
+	}
+
+	if len(resp.Environments) == 0 {
+		log.Print("[DEBUG] No aws beanstalk environments to sweep")
+		return nil
+	}
+
+	for _, bse := range resp.Environments {
+		var testOptGroup bool
+		for _, testName := range []string{
+			"terraform-",
+			"tf-test-",
+			"tf_acc_",
+			"tf-acc-",
+		} {
+			if strings.HasPrefix(*bse.EnvironmentName, testName) {
+				testOptGroup = true
+			}
+		}
+
+		if !testOptGroup {
+			log.Printf("Skipping (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
+			continue
+		}
+
+		log.Printf("Trying to terminate (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
+
+		_, err := beanstalkconn.TerminateEnvironment(
+			&elasticbeanstalk.TerminateEnvironmentInput{
+				EnvironmentId:      bse.EnvironmentId,
+				TerminateResources: aws.Bool(true),
+			})
+
+		if err != nil {
+			elasticbeanstalkerr, ok := err.(awserr.Error)
+			if ok && (elasticbeanstalkerr.Code() == "InvalidConfiguration.NotFound" || elasticbeanstalkerr.Code() == "ValidationError") {
+				log.Printf("[DEBUG] beanstalk environment (%s) not found", *bse.EnvironmentName)
+				return nil
+			}
+
+			return err
+		}
+
+		waitForReadyTimeOut, _ := time.ParseDuration("5m")
+		pollInterval, _ := time.ParseDuration("10s")
+
+		// poll for deletion
+		t := time.Now()
+		stateConf := &resource.StateChangeConf{
+			Pending:      []string{"Terminating"},
+			Target:       []string{"Terminated"},
+			Refresh:      environmentStateRefreshFunc(beanstalkconn, *bse.EnvironmentId, t),
+			Timeout:      waitForReadyTimeOut,
+			Delay:        10 * time.Second,
+			PollInterval: pollInterval,
+			MinTimeout:   3 * time.Second,
+		}
+
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf(
+				"Error waiting for Elastic Beanstalk Environment (%s) to become terminated: %s",
+				*bse.EnvironmentId, err)
+		}
+		log.Printf("> Terminated (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
+	}
+
+	return nil
+}
 
 func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription

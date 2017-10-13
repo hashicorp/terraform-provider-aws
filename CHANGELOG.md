@@ -1,29 +1,136 @@
-## 1.0.0 (Unreleased)
+## 1.0.1 (Unreleased)
+
+NOTES:
+
+* resource/aws_alb_* & data-source/aws_alb_*: In order to support network LBs, ALBs were renamed to `aws_lb_*` due to the way APIs "new" (non-Classic) load balancers are structured in AWS. All existing ALB functionality remains untouched and new resources work the same way. `aws_alb_*` resources are still in place as "aliases", but documentation will only mention `aws_lb_*`.
+`aws_alb_*` aliases will be removed in future major version. [GH-1806]
+* Deprecated:
+  * data-source/aws_alb
+  * data-source/aws_alb_listener
+  * data-source/aws_alb_target_group
+  * resource/aws_alb
+  * resource/aws_alb_listener
+  * resource/aws_alb_listener_rule
+  * resource/aws_alb_target_group
+  * resource/aws_alb_target_group_attachment
+
+FEATURES:
+
+* **New Resource:** `aws_batch_job_definition` [GH-1710]
+* **New Resource:** `aws_batch_job_queue` [GH-1710]
+* **New Resource:** `aws_lb` [GH-1806]
+* **New Resource:** `aws_lb_listener` [GH-1806]
+* **New Resource:** `aws_lb_listener_rule` [GH-1806]
+* **New Resource:** `aws_lb_target_group` [GH-1806]
+* **New Resource:** `aws_lb_target_group_attachment` [GH-1806]
+* **New Data Source:** `aws_lb` [GH-1806]
+* **New Data Source:** `aws_lb_listener` [GH-1806]
+* **New Data Source:** `aws_lb_target_group` [GH-1806]
+* **New Data Source:** `aws_iam_user` [GH-1805]
+* **New Data Source:** `aws_s3_bucket` [GH-1505]
 
 IMPROVEMENTS:
 
-* resource/aws_instance: New `user_data_base64` attribute that allows non-UTF8 data (such as gzip) to be assigned to user-data without corruption [GH-850]
-* data-source/aws_vpc: Expose enable_dns_* in aws_vpc data_source [GH-1373]
-* resource/aws_directory_service_directory: Add support for `tags` [GH-1398]
-* resource/aws_rds_cluster: Allow setting of rds cluster engine [GH-1415]
-* resource/aws_ssm_association: now supports update for `parameters`, `schedule_expression`,`output_location` [GH-1421]
-* resource/aws_ssm_patch_baseline: now supports update for multiple attributes [GH-1421]
-* resource/aws_cloudformation_stack: Add support for Import [GH-1432]
-* resource/aws_rds_cluster_instance: Expose availability_zone attribute [GH-1439]
-* resource/aws_efs_file_system: Add support for encryption [GH-1420]
-* resource/aws_db_parameter_group: Allow underscores in names [GH-1460]
-* resource/aws_elasticsearch_domain: Assign tags right after creation [GH-1399]
-* resource/aws_route53_record: Allow CAA record type [GH-1467]
-* resource/aws_codebuild_project: Allowed for BITBUCKET source type [GH-1468]
-* resource/aws_emr_cluster: Add `instance_group` parameter for EMR clusters [GH-1071]
+* data-source/aws_redshift_service_account: Add `arn` attribute [GH-1775]
+* data-source/aws_vpc_endpoint: Expose `prefix_list_id` [GH-1733]
+* resource/aws_kinesis_stream: Add support for encryption [GH-1139]
+* resource/aws_cloudwatch_log_group: Add support for encryption via `kms_key_id` [GH-1751]
+* resource/aws_spot_instance_request: Add support for `instance_interruption_behaviour` [GH-1735]
+* resource/aws_ses_event_destination: Add support for `open` & `click` event types [GH-1773]
+* resource/aws_efs_file_system: Expose `dns_name` [GH-1825]
+* resource/aws_security_group+aws_security_group_rule: Add support for rule description [GH-1587]
+* resource/aws_emr_cluster: enable configuration of ebs root volume size [GH-1375]
+* resource/aws_aws_ami: Add `root_snapshot_id` attribute [GH-1572]
+* resource/aws_vpn_connection: Mark preshared keys as sensitive [GH-1850]
+* resource/aws_codedeploy_deployment_group: Support blue/green and in-place deployments with traffic control [GH-1162]
+* resource/aws_elb: Update ELB idle timeout to 4000s [GH-1861]
+* resource/aws_spot_fleet_request: Add support for instance_interruption_behaviour [GH-1847]
+* resource/aws_kinesis_firehose_delivery_stream: Specify kinesis stream as the source of a aws_kinesis_firehose_delivery_stream [GH-1605]
 
 BUG FIXES:
 
-* resource/aws_instance: Fix `associate_public_ip_address` [GH-1340]
-* resource/aws_instance: Fix import in EC2 Classic [GH-1453]
-* resource/aws_emr_cluster: Avoid spurious diff of `log_uri` [GH-1374]
-* resource/aws_cloudwatch_log_subscription_filter: Add support for ResourceNotFound [GH-1414]
-* resource/aws_alb: Cleanup ENIs after deleting ALB [GH-1427]
+* data-source/aws_db_instance: Make `db_instance_arn` expose ARN instead of identifier (use `db_cluster_identifier` for identifier) [GH-1766]
+* data-source/aws_db_snapshot: Expose `storage_type` (was not exposed) [GH-1833]
+* resource/aws_cloudtrail: Raise update retry timeout [GH-1820]
+* resource/aws_elasticache_parameter_group: Retry resetting group on pending changes [GH-1821]
+* resource/aws_kms_key: Retry getting rotation status [GH-1818]
+* resource/aws_kms_key: Retry getting key policy [GH-1854]
+* resource/aws_vpn_connection: Raise timeout to 40mins [GH-1819]
+* resource/aws_kinesis_firehose_delivery_stream: Fix crash caused by missing `processing_configuration` [GH-1738]
+* resource/aws_rds_cluster_instance: Treat `configuring-enhanced-monitoring` as pending state [GH-1744]
+* resource/aws_rds_cluster_instance: Treat more states as pending [GH-1790]
+* resource/aws_route_table: Increase number of not-found checks/retries after creation [GH-1791]
+* resource/aws_batch_compute_environment: Fix ARN attribute name/value (`ecc_cluster_arn` -> `ecs_cluster_arn`) [GH-1809]
+* resource/aws_kinesis_stream: Retry creation of the stream on `LimitExceededException` (handle throttling) [GH-1339]
+* resource/aws_vpn_connection_route: Treat route in state `deleted` as deleted [GH-1848]
+* resource/aws_eip: Avoid disassociating if there's no association [GH-1683]
+* resource/aws_elasticache_cluster: Allow scaling up cluster by modifying `az_mode` (avoid recreation) [GH-1758]
+* resource/aws_lambda_function: Fix Lambda Function Updates When Published [GH-1797]
+* resource/aws_appautoscaling_*: Use dimension to uniquely identify target/policy [GH-1808]
+* Updated the Data Source Tags structure [GH-1706]
+
+## 1.0.0 (September 27, 2017)
+
+NOTES:
+
+* resource/aws_appautoscaling_policy: Nest step scaling policy fields, deprecate 1st level fields ([#1620](https://github.com/terraform-providers/terraform-provider-aws/issues/1620))
+
+FEATURES:
+
+* **New Resource:** `aws_waf_rate_based_rule` ([#1606](https://github.com/terraform-providers/terraform-provider-aws/issues/1606))
+* **New Resource:** `aws_batch_compute_environment` ([#1048](https://github.com/terraform-providers/terraform-provider-aws/issues/1048))
+
+IMPROVEMENTS:
+
+* provider: Expand shared_credentials_file ([#1511](https://github.com/terraform-providers/terraform-provider-aws/issues/1511))
+* provider: Add support for Task Roles when running on ECS or CodeBuild ([#1425](https://github.com/terraform-providers/terraform-provider-aws/issues/1425))
+* resource/aws_instance: New `user_data_base64` attribute that allows non-UTF8 data (such as gzip) to be assigned to user-data without corruption ([#850](https://github.com/terraform-providers/terraform-provider-aws/issues/850))
+* data-source/aws_vpc: Expose enable_dns_* in aws_vpc data_source ([#1373](https://github.com/terraform-providers/terraform-provider-aws/issues/1373))
+* resource/aws_appautoscaling_policy: Add support for DynamoDB ([#1650](https://github.com/terraform-providers/terraform-provider-aws/issues/1650))
+* resource/aws_directory_service_directory: Add support for `tags` ([#1398](https://github.com/terraform-providers/terraform-provider-aws/issues/1398))
+* resource/aws_rds_cluster: Allow setting of rds cluster engine ([#1415](https://github.com/terraform-providers/terraform-provider-aws/issues/1415))
+* resource/aws_ssm_association: now supports update for `parameters`, `schedule_expression`,`output_location` ([#1421](https://github.com/terraform-providers/terraform-provider-aws/issues/1421))
+* resource/aws_ssm_patch_baseline: now supports update for multiple attributes ([#1421](https://github.com/terraform-providers/terraform-provider-aws/issues/1421))
+* resource/aws_cloudformation_stack: Add support for Import ([#1432](https://github.com/terraform-providers/terraform-provider-aws/issues/1432))
+* resource/aws_rds_cluster_instance: Expose availability_zone attribute ([#1439](https://github.com/terraform-providers/terraform-provider-aws/issues/1439))
+* resource/aws_efs_file_system: Add support for encryption ([#1420](https://github.com/terraform-providers/terraform-provider-aws/issues/1420))
+* resource/aws_db_parameter_group: Allow underscores in names ([#1460](https://github.com/terraform-providers/terraform-provider-aws/issues/1460))
+* resource/aws_elasticsearch_domain: Assign tags right after creation ([#1399](https://github.com/terraform-providers/terraform-provider-aws/issues/1399))
+* resource/aws_route53_record: Allow CAA record type ([#1467](https://github.com/terraform-providers/terraform-provider-aws/issues/1467))
+* resource/aws_codebuild_project: Allowed for BITBUCKET source type ([#1468](https://github.com/terraform-providers/terraform-provider-aws/issues/1468))
+* resource/aws_emr_cluster: Add `instance_group` parameter for EMR clusters ([#1071](https://github.com/terraform-providers/terraform-provider-aws/issues/1071))
+* resource/aws_alb_listener_rule: Populate `listener_arn` field ([#1303](https://github.com/terraform-providers/terraform-provider-aws/issues/1303))
+* resource/aws_api_gateway_rest_api: Add a body property to API Gateway RestAPI for Swagger import support ([#1197](https://github.com/terraform-providers/terraform-provider-aws/issues/1197))
+* resource/aws_opsworks_stack: Add support for tags ([#1523](https://github.com/terraform-providers/terraform-provider-aws/issues/1523))
+* Add retries for AppScaling policies throttling exceptions ([#1430](https://github.com/terraform-providers/terraform-provider-aws/issues/1430))
+* resource/aws_ssm_patch_baseline: Add compliance level to patch approval rules ([#1531](https://github.com/terraform-providers/terraform-provider-aws/issues/1531))
+* resource/aws_ssm_activation: Export ssm activation activation_code ([#1570](https://github.com/terraform-providers/terraform-provider-aws/issues/1570))
+* resource/aws_network_interface: Added private_dns_name to network_interface ([#1599](https://github.com/terraform-providers/terraform-provider-aws/issues/1599))
+* data-source/aws_redshift_service_account: updated with latest redshift service account ID's ([#1614](https://github.com/terraform-providers/terraform-provider-aws/issues/1614))
+* resource/aws_ssm_parameter: Refresh from state on 404 ([#1436](https://github.com/terraform-providers/terraform-provider-aws/issues/1436))
+* resource/aws_api_gateway_rest_api: Allow binary media types to be updated ([#1600](https://github.com/terraform-providers/terraform-provider-aws/issues/1600))
+* resource/aws_waf_rule: Make `predicates`' `data_id` required (it always was on the API's side, it's just reflected in the schema) ([#1606](https://github.com/terraform-providers/terraform-provider-aws/issues/1606))
+* resource/aws_waf_web_acl: Introduce new `type` field in `rules` to allow referencing `RATE_BASED` type ([#1606](https://github.com/terraform-providers/terraform-provider-aws/issues/1606))
+* resource/aws_ssm_association: Migrate the schema to use association_id ([#1579](https://github.com/terraform-providers/terraform-provider-aws/issues/1579))
+* resource/aws_ssm_document: Added name validation ([#1638](https://github.com/terraform-providers/terraform-provider-aws/issues/1638))
+* resource/aws_nat_gateway: Add tags support ([#1625](https://github.com/terraform-providers/terraform-provider-aws/issues/1625))
+* resource/aws_route53_record: Add support for Route53 multi-value answer routing policy ([#1686](https://github.com/terraform-providers/terraform-provider-aws/issues/1686))
+* resource/aws_instance: Read iops only when volume type is io1 ([#1573](https://github.com/terraform-providers/terraform-provider-aws/issues/1573))
+* resource/aws_rds_cluster(+_instance) Allow specifying the engine ([#1591](https://github.com/terraform-providers/terraform-provider-aws/issues/1591))
+* resource/aws_cloudwatch_event_target: Add Input transformer for Cloudwatch Events ([#1343](https://github.com/terraform-providers/terraform-provider-aws/issues/1343))
+* resource/aws_directory_service_directory: Support Import functionality ([#1732](https://github.com/terraform-providers/terraform-provider-aws/issues/1732))
+
+BUG FIXES:
+
+* resource/aws_instance: Fix `associate_public_ip_address` ([#1340](https://github.com/terraform-providers/terraform-provider-aws/issues/1340))
+* resource/aws_instance: Fix import in EC2 Classic ([#1453](https://github.com/terraform-providers/terraform-provider-aws/issues/1453))
+* resource/aws_emr_cluster: Avoid spurious diff of `log_uri` ([#1374](https://github.com/terraform-providers/terraform-provider-aws/issues/1374))
+* resource/aws_cloudwatch_log_subscription_filter: Add support for ResourceNotFound ([#1414](https://github.com/terraform-providers/terraform-provider-aws/issues/1414))
+* resource/aws_sns_topic_subscription: Prevent duplicate (un)subscribe during initial creation ([#1480](https://github.com/terraform-providers/terraform-provider-aws/issues/1480))
+* resource/aws_alb: Cleanup ENIs after deleting ALB ([#1427](https://github.com/terraform-providers/terraform-provider-aws/issues/1427))
+* resource/aws_s3_bucket: Wrap s3 calls in retry to avoid race during creation ([#891](https://github.com/terraform-providers/terraform-provider-aws/issues/891))
+* resource/aws_eip: Remove from state on deletion ([#1551](https://github.com/terraform-providers/terraform-provider-aws/issues/1551))
+* resource/aws_security_group: Adding second scenario where IPv6 is not supported ([#880](https://github.com/terraform-providers/terraform-provider-aws/issues/880))
 
 ## 0.1.4 (August 08, 2017)
 

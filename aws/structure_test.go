@@ -55,6 +55,7 @@ func TestExpandIPPerms(t *testing.T) {
 				"sg-11111",
 				"foo/sg-22222",
 			}),
+			"description": "desc",
 		},
 		map[string]interface{}{
 			"protocol":  "icmp",
@@ -77,14 +78,21 @@ func TestExpandIPPerms(t *testing.T) {
 			IpProtocol: aws.String("icmp"),
 			FromPort:   aws.Int64(int64(1)),
 			ToPort:     aws.Int64(int64(-1)),
-			IpRanges:   []*ec2.IpRange{&ec2.IpRange{CidrIp: aws.String("0.0.0.0/0")}},
+			IpRanges: []*ec2.IpRange{
+				&ec2.IpRange{
+					CidrIp:      aws.String("0.0.0.0/0"),
+					Description: aws.String("desc"),
+				},
+			},
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
 				&ec2.UserIdGroupPair{
-					UserId:  aws.String("foo"),
-					GroupId: aws.String("sg-22222"),
+					UserId:      aws.String("foo"),
+					GroupId:     aws.String("sg-22222"),
+					Description: aws.String("desc"),
 				},
 				&ec2.UserIdGroupPair{
-					GroupId: aws.String("sg-11111"),
+					GroupId:     aws.String("sg-11111"),
+					Description: aws.String("desc"),
 				},
 			},
 		},
@@ -922,7 +930,7 @@ func TestFlattenSecurityGroups(t *testing.T) {
 	cases := []struct {
 		ownerId  *string
 		pairs    []*ec2.UserIdGroupPair
-		expected []*ec2.GroupIdentifier
+		expected []*GroupIdentifier
 	}{
 		// simple, no user id included (we ignore it mostly)
 		{
@@ -932,8 +940,8 @@ func TestFlattenSecurityGroups(t *testing.T) {
 					GroupId: aws.String("sg-12345"),
 				},
 			},
-			expected: []*ec2.GroupIdentifier{
-				&ec2.GroupIdentifier{
+			expected: []*GroupIdentifier{
+				&GroupIdentifier{
 					GroupId: aws.String("sg-12345"),
 				},
 			},
@@ -948,8 +956,8 @@ func TestFlattenSecurityGroups(t *testing.T) {
 					UserId:  aws.String("user1234"),
 				},
 			},
-			expected: []*ec2.GroupIdentifier{
-				&ec2.GroupIdentifier{
+			expected: []*GroupIdentifier{
+				&GroupIdentifier{
 					GroupId: aws.String("sg-12345"),
 				},
 			},
@@ -966,8 +974,8 @@ func TestFlattenSecurityGroups(t *testing.T) {
 					UserId:    aws.String("user4321"),
 				},
 			},
-			expected: []*ec2.GroupIdentifier{
-				&ec2.GroupIdentifier{
+			expected: []*GroupIdentifier{
+				&GroupIdentifier{
 					GroupId:   aws.String("sg-12345"),
 					GroupName: aws.String("user4321/somegroup"),
 				},
@@ -984,9 +992,26 @@ func TestFlattenSecurityGroups(t *testing.T) {
 					UserId:  aws.String("user4321"),
 				},
 			},
-			expected: []*ec2.GroupIdentifier{
-				&ec2.GroupIdentifier{
+			expected: []*GroupIdentifier{
+				&GroupIdentifier{
 					GroupId: aws.String("user4321/sg-12345"),
+				},
+			},
+		},
+
+		// include description
+		{
+			ownerId: aws.String("user1234"),
+			pairs: []*ec2.UserIdGroupPair{
+				&ec2.UserIdGroupPair{
+					GroupId:     aws.String("sg-12345"),
+					Description: aws.String("desc"),
+				},
+			},
+			expected: []*GroupIdentifier{
+				&GroupIdentifier{
+					GroupId:     aws.String("sg-12345"),
+					Description: aws.String("desc"),
 				},
 			},
 		},

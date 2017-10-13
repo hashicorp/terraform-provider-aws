@@ -83,3 +83,12 @@ The following attributes are exported:
 * `id` - The directory identifier.
 * `access_url` - The access URL for the directory, such as `http://alias.awsapps.com`.
 * `dns_ip_addresses` - A list of IP addresses of the DNS servers for the directory or connector.
+
+
+## Import
+
+DirectoryService directories can be imported using the directory `id`, e.g.
+
+```
+$ terraform import aws_directory_service_directory.sample d-926724cf57
+```

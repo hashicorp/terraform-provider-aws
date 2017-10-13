@@ -165,26 +165,32 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_usage", metadata.KeyUsage)
 	d.Set("is_enabled", metadata.Enabled)
 
-	p, err := conn.GetKeyPolicy(&kms.GetKeyPolicyInput{
-		KeyId:      metadata.KeyId,
-		PolicyName: aws.String("default"),
+	pOut, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
+		return conn.GetKeyPolicy(&kms.GetKeyPolicyInput{
+			KeyId:      metadata.KeyId,
+			PolicyName: aws.String("default"),
+		})
 	})
 	if err != nil {
 		return err
 	}
 
+	p := pOut.(*kms.GetKeyPolicyOutput)
 	policy, err := normalizeJsonString(*p.Policy)
 	if err != nil {
 		return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
 	}
 	d.Set("policy", policy)
 
-	krs, err := conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
-		KeyId: metadata.KeyId,
+	out, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
+		return conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
+			KeyId: metadata.KeyId,
+		})
 	})
 	if err != nil {
 		return err
 	}
+	krs, _ := out.(*kms.GetKeyRotationStatusOutput)
 	d.Set("enable_key_rotation", krs.KeyRotationEnabled)
 
 	tagList, err := conn.ListResourceTags(&kms.ListResourceTagsInput{

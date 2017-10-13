@@ -471,6 +471,23 @@ func TestAccAWSRoute53Record_longTXTrecord(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute53Record_multivalue_answer_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRoute53MultiValueAnswerARecord,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists("aws_route53_record.www-server1"),
+					testAccCheckRoute53RecordExists("aws_route53_record.www-server2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).r53conn
 	for _, rs := range s.RootModule().Resources {
@@ -1268,5 +1285,31 @@ resource "aws_route53_record" "underscore" {
 	type = "A"
 	ttl = "30"
 	records = ["127.0.0.1"]
+}
+`
+
+const testAccRoute53MultiValueAnswerARecord = `
+resource "aws_route53_zone" "main" {
+	name = "notexample.com"
+}
+
+resource "aws_route53_record" "www-server1" {
+  zone_id = "${aws_route53_zone.main.zone_id}"
+  name = "www"
+  type = "A"
+  ttl = "5"
+  multivalue_answer_routing_policy = true
+  set_identifier = "server1"
+  records = ["127.0.0.1"]
+}
+
+resource "aws_route53_record" "www-server2" {
+  zone_id = "${aws_route53_zone.main.zone_id}"
+  name = "www"
+  type = "A"
+  ttl = "5"
+  multivalue_answer_routing_policy = true
+  set_identifier = "server2"
+  records = ["127.0.0.2"]
 }
 `

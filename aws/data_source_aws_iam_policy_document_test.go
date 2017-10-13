@@ -1,14 +1,14 @@
 package aws
 
 import (
+	"fmt"
 	"testing"
 
-	"fmt"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSIAMPolicyDocument(t *testing.T) {
+func TestAccAWSDataSourceIAMPolicyDocument_basic(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
 	// some AWS API calls, and so this needs valid AWS credentials to work.
@@ -19,9 +19,7 @@ func TestAccAWSIAMPolicyDocument(t *testing.T) {
 			{
 				Config: testAccAWSIAMPolicyDocumentConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStateValue(
-						"data.aws_iam_policy_document.test",
-						"json",
+					testAccCheckStateValue("data.aws_iam_policy_document.test", "json",
 						testAccAWSIAMPolicyDocumentExpectedJSON,
 					),
 				),

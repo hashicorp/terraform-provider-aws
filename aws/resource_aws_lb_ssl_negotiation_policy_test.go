@@ -16,7 +16,7 @@ import (
 func TestAccAWSLBSSLNegotiationPolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
@@ -51,7 +51,7 @@ func TestAccAWSLBSSLNegotiationPolicy_missingLB(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
@@ -193,64 +193,34 @@ func policyAttributesToMap(attributes *[]*elb.PolicyAttributeDescription) map[st
 // Sets the SSL Negotiation policy with attributes.
 func testAccSslNegotiationPolicyConfig(certName string, lbName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_server_certificate" "test_cert" {
-  name = "%s"
-  certificate_body = <<EOF
------BEGIN CERTIFICATE-----
-MIICqzCCAhSgAwIBAgIJAOH3Ca1oeCfOMA0GCSqGSIb3DQEBBQUAME4xCzAJBgNV
-BAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRIwEAYDVQQKEwlIYXNoaWNvcnAx
-FjAUBgNVBAMTDWhhc2hpY29ycC5jb20wHhcNMTYwODEwMTcxNDEwWhcNMTcwODEw
-MTcxNDEwWjBkMQswCQYDVQQGEwJVUzETMBEGA1UECAwKQ2FsaWZvcm5pYTEUMBIG
-A1UEBwwLTG9zIEFuZ2VsZXMxEjAQBgNVBAoMCUhhc2hpY29ycDEWMBQGA1UEAwwN
-aGFzaGljb3JwLmNvbTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAlQMKKTiK
-bawxxGOwX9iyIm/ITyVwjnSyyZ8kuz7flXUAw4u/ZqGmRck0gdOBlzPcvdu/ngCZ
-wMg6x03oe7iouDQHapQ6kCAUwl6zDmSOnjj8b4fKiaxW6Kw/UynrUjbjbdqKKsH3
-fBYxa1sIVhnsDBCaOnnznkCXFbeiMeUX6YkCAwEAAaN7MHkwCQYDVR0TBAIwADAs
-BglghkgBhvhCAQ0EHxYdT3BlblNTTCBHZW5lcmF0ZWQgQ2VydGlmaWNhdGUwHQYD
-VR0OBBYEFB+VNDp3tesqOLJTZEbOXIzINdecMB8GA1UdIwQYMBaAFDnmEwagl6fs
-/9oVTSmNdPUkhaRDMA0GCSqGSIb3DQEBBQUAA4GBAHMTokhZfM66L1dI8e21p4yp
-F2GMGYNqR2CLy7pCk3z9NovB5F1plk1cDnbpJPS/jXU7N5i3LgfjjbYmlNsezV3u
-gzYm7p7D6/AiMheL6VljPor5ZXXcq2yZ3xMJu6/hrSJGj0wtg9xsNPYPDGCyH+iI
-zAYQVBuFaLoTi3Fs7g1s
------END CERTIFICATE-----
-EOF
-  certificate_chain = <<EOF
------BEGIN CERTIFICATE-----
-MIICyzCCAjSgAwIBAgIJAOH3Ca1oeCfNMA0GCSqGSIb3DQEBBQUAME4xCzAJBgNV
-BAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRIwEAYDVQQKEwlIYXNoaWNvcnAx
-FjAUBgNVBAMTDWhhc2hpY29ycC5jb20wHhcNMTYwODEwMTcxMTAzWhcNMTkwODEw
-MTcxMTAzWjBOMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTESMBAG
-A1UEChMJSGFzaGljb3JwMRYwFAYDVQQDEw1oYXNoaWNvcnAuY29tMIGfMA0GCSqG
-SIb3DQEBAQUAA4GNADCBiQKBgQDOOIUDgTP+v6yXq0cI99S99jrczNv274BfmBzS
-XhExPnm62s5dnLGtzFokat/DIN0pyOh0C4+QnS4Qk7r31UCh1jLJRVkJJHtet8TM
-7PhebIUIAFaQQ5+792L7ZkCXkzl0MxENeE0avGUf5QXMd7/eUt36BOS4KaEfGVUw
-2Ldy0wIDAQABo4GwMIGtMB0GA1UdDgQWBBQ55hMGoJen7P/aFU0pjXT1JIWkQzB+
-BgNVHSMEdzB1gBQ55hMGoJen7P/aFU0pjXT1JIWkQ6FSpFAwTjELMAkGA1UEBhMC
-VVMxEzARBgNVBAgTCkNhbGlmb3JuaWExEjAQBgNVBAoTCUhhc2hpY29ycDEWMBQG
-A1UEAxMNaGFzaGljb3JwLmNvbYIJAOH3Ca1oeCfNMAwGA1UdEwQFMAMBAf8wDQYJ
-KoZIhvcNAQEFBQADgYEAvKhhRHHWuUl253pjlQJxHqJLv3a9g7pcF0vGkImw30lu
-B0LFpM6xZmfoFR3aflTWDGHDbwNbP+VatZNwZt7GpO7qiLOXCV9/UM0utxI1Doyd
-6oOaCDXtDDI9NliSFyAvNG5PKafR3ysWHsqEa/7VDWnRGYvCAIsaAEyurl4Gogk=
------END CERTIFICATE-----
-EOF
-  private_key =  <<EOF
------BEGIN RSA PRIVATE KEY-----
-MIICXQIBAAKBgQCVAwopOIptrDHEY7Bf2LIib8hPJXCOdLLJnyS7Pt+VdQDDi79m
-oaZFyTSB04GXM9y927+eAJnAyDrHTeh7uKi4NAdqlDqQIBTCXrMOZI6eOPxvh8qJ
-rFborD9TKetSNuNt2ooqwfd8FjFrWwhWGewMEJo6efOeQJcVt6Ix5RfpiQIDAQAB
-AoGAdx8p9U/84bXhRxVGfyi1JvBjmlncxBUohCPT8lhN1qXlSW2jQgGB8ZHqhsq1
-c1GDaseMRFxIjaPD0WZHrvgs73ReoDGTLf9Ne3mkE3g8Rp0Bg8CFG8ZFHvCbzAtQ
-F441nXsa/E3fUajfuxOeIEz8sJUG8VpMMtNUGB2cmJxzlYECQQDGosn4g0trBkn+
-wwwJ3CEnymTUZxgFQWr4UhGnScRHaHBJmw0sW9KsVOB5D4DEw/O7BDdVvpCoBlG1
-GhL/XFcZAkEAwAuINbY5jKTpa2Xve1MUJXpgGpuraYWCXaAn9sdSUhm6wHONhDHr
-O0S0a3P0aMA5M4GQ5JHeUq53r8/2oP2j8QJBAIzObu+8WqT2Y1O1/f2rTtF/FnS+
-0/c9xU9cFemJUBryfM6gm/j66l+BF1KZ28UfxtGmjnc4zCBfwmHnptngIlkCQFv5
-aeuncRptpKjd8frTSBPG7x3vLgHkghIK8Pjcbw2I6wrejIkiSzFgbzQDHavJW9vS
-Eq2VOq/IhOO7qrdholECQQDFmlx7LQsVEOQ26xQX/ieZQolfDqZLA6zhJFec3k2l
-wbEcTx10meJdinnhawqW7L0bhifeiTaPxbaCBXv/wiiL
------END RSA PRIVATE KEY-----
-EOF
+resource "tls_private_key" "example" {
+  algorithm = "RSA"
 }
+
+resource "tls_self_signed_cert" "example" {
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.example.private_key_pem}"
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+
+  validity_period_hours = 12
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_iam_server_certificate" "test_cert" {
+  name             = "%s"
+  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+  private_key      = "${tls_private_key.example.private_key_pem}"
+}
+
 resource "aws_elb" "lb" {
 	name = "%s"
 	availability_zones = ["us-west-2a"]
