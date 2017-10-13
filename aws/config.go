@@ -22,6 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -217,6 +218,7 @@ type AWSClient struct {
 	mediastoreconn        *mediastore.MediaStore
 	appsyncconn           *appsync.AppSync
 	lexmodelconn          *lexmodelbuildingservice.LexModelBuildingService
+	budgetconn            *budgets.Budgets
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -406,6 +408,7 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	}
 
+	client.budgetconn = budgets.New(sess)
 	client.acmconn = acm.New(awsAcmSess)
 	client.apigateway = apigateway.New(awsApigatewaySess)
 	client.appautoscalingconn = applicationautoscaling.New(sess)
