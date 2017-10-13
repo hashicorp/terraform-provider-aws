@@ -20,11 +20,11 @@ func resourceAwsBudget() *schema.Resource {
 
 func resourceAwsBudgetSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"name": {
+		"budget_name": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"type": {
+		"budget_type": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
@@ -49,11 +49,11 @@ func resourceAwsBudgetSchema() map[string]*schema.Schema {
 			Required: true,
 		},
 		"time_period_start": {
-			Type:     schema.TypeInt,
+			Type:     schema.TypeString,
 			Required: true,
 		},
 		"time_period_end": {
-			Type:     schema.TypeInt,
+			Type:     schema.TypeString,
 			Required: true,
 		},
 		"time_unit": {
@@ -66,15 +66,23 @@ func resourceAwsBudgetSchema() map[string]*schema.Schema {
 func resourceAwsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).budgetconn
 	accountID := meta.(*AWSClient).accountid
-	budgetName := d.Get("name").(string)
-	budgetType := d.Get("type").(string)
+	budgetName := d.Get("budget_name").(string)
+	budgetType := d.Get("budget_type").(string)
 	budgetLimitAmount := d.Get("limit_amount").(string)
 	budgetLimitUnit := d.Get("limit_unit").(string)
 	budgetIncludeTax := d.Get("include_tax").(bool)
 	budgetIncludeSubscriptions := d.Get("include_subscriptions").(bool)
 	budgetIncludeBlended := d.Get("include_blended").(bool)
-	budgetTimePeriodStart := time.Unix(int64(d.Get("time_period_start").(int)), 0)
-	budgetTimePeriodEnd := time.Unix(int64(d.Get("time_period_end").(int)), 0)
+	budgetTimePeriodStart, err := time.Parse("2006-01-02_15:04", d.Get("time_period_start").(string))
+	if err != nil {
+		return err
+	}
+
+	budgetTimePeriodEnd, err := time.Parse("2006-01-02_15:04", d.Get("time_period_end").(string))
+	if err != nil {
+		return err
+	}
+
 	budgetTimeUnit := d.Get("time_unit").(string)
 
 	budget := new(budgets.Budget)
@@ -97,7 +105,7 @@ func resourceAwsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 	createBudgetInput := new(budgets.CreateBudgetInput)
 	createBudgetInput.SetAccountId(accountID)
 	createBudgetInput.SetBudget(budget)
-	_, err := client.CreateBudget(createBudgetInput)
+	_, err = client.CreateBudget(createBudgetInput)
 	if err != nil {
 		return fmt.Errorf("create budget failed: ", err)
 	}
