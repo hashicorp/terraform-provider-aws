@@ -794,6 +794,39 @@ resource "aws_vpc" "test" {
 }`, targetGroupName)
 }
 
+func testAccAWSLBTargetGroupConfig_typeTCP(targetGroupName string) string {
+	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+  name = "%s"
+  port = 8082
+  protocol = "TCP"
+  vpc_id = "${aws_vpc.test.id}"
+
+  deregistration_delay = 200
+
+  stickiness {
+    type = "lb_cookie"
+    cookie_duration = 10000
+  }
+
+  health_check {
+    interval = 30
+    port = "traffic-port"
+    protocol = "TCP"
+    timeout = 10
+    healthy_threshold = 3
+    unhealthy_threshold = 3
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    TestName = "TestAccAWSLBtypeTCP"
+  }
+}`, targetGroupName)
+}
+
 func testAccAWSLBTargetGroupConfig_stickiness(targetGroupName string, addStickinessBlock bool, enabled bool) string {
 	var stickinessBlock string
 
