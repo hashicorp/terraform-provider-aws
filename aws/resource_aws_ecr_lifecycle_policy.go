@@ -20,9 +20,10 @@ func resourceAwsEcrLifecyclePolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateJsonString,
 			},
 			"registry_id": &schema.Schema{
 				Type:     schema.TypeString,
