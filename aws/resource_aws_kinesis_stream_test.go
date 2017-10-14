@@ -36,6 +36,45 @@ func TestAccAWSKinesisStream_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
+	var stream kinesis.StreamDescription
+
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisStreamConfigConcurrent(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.0", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.1", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.2", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.3", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.4", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.5", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.6", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.7", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.8", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.9", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.10", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.11", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.12", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.13", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.14", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.15", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.16", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.17", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.18", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.19", &stream),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisStream_encryptionWithoutKmsKeyThrowsError(t *testing.T) {
 	rInt := acctest.RandInt()
 
@@ -317,6 +356,18 @@ func testAccKinesisStreamConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
 	name = "terraform-kinesis-test-%d"
+	shard_count = 2
+	tags {
+		Name = "tf-test"
+	}
+}`, rInt)
+}
+
+func testAccKinesisStreamConfigConcurrent(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test_stream" {
+        count = 20
+	name = "terraform-kinesis-test-%d-${count.index}"
 	shard_count = 2
 	tags {
 		Name = "tf-test"

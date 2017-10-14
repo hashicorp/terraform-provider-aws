@@ -38,6 +38,28 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSKinesisFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	ri := acctest.RandInt()
+	config := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_s3KinesisStreamSource,
+		ri, os.Getenv("AWS_ACCOUNT_ID"), ri, ri, ri, ri, os.Getenv("AWS_ACCOUNT_ID"), ri, ri, ri)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     testAccKinesisFirehosePreCheck(t),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisFirehoseDeliveryStream_s3WithCloudwatchLogging(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
@@ -634,6 +656,62 @@ EOF
 
 `
 
+const testAccFirehoseKinesisStreamSource = `
+resource "aws_kinesis_stream" "source" {
+  name = "terraform-kinesis-source-stream-basictest-%d"
+  shard_count = 1
+}
+
+resource "aws_iam_role" "kinesis_source" {
+  name = "tf_acctest_kinesis_source_role_%d"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "firehose.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "%s"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "kinesis_source" {
+  name = "tf_acctest_kinesis_source_policy_%d"
+  role = "${aws_iam_role.kinesis_source.id}"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": [
+        "kinesis:DescribeStream",
+        "kinesis:GetShardIterator",
+        "kinesis:GetRecords"
+      ],
+      "Resource": [
+        "arn:aws:kinesis:*:*:stream/terraform-kinesis-source-stream-basictest-%d"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+`
+
 func testAccKinesisFirehoseDeliveryStreamConfig_s3WithCloudwatchLogging(accountId string, rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "firehose" {
@@ -732,6 +810,21 @@ var testAccKinesisFirehoseDeliveryStreamConfig_s3basic = testAccKinesisFirehoseD
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   depends_on = ["aws_iam_role_policy.firehose"]
   name = "terraform-kinesis-firehose-basictest-%d"
+  destination = "s3"
+  s3_configuration {
+    role_arn = "${aws_iam_role.firehose.arn}"
+    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+  }
+}`
+
+var testAccKinesisFirehoseDeliveryStreamConfig_s3KinesisStreamSource = testAccKinesisFirehoseDeliveryStreamBaseConfig + testAccFirehoseKinesisStreamSource + `
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  depends_on = ["aws_iam_role_policy.firehose", "aws_iam_role_policy.kinesis_source"]
+  name = "terraform-kinesis-firehose-basictest-%d"
+  kinesis_source_configuration {
+    kinesis_stream_arn = "${aws_kinesis_stream.source.arn}"
+    role_arn = "${aws_iam_role.kinesis_source.arn}"
+  }
   destination = "s3"
   s3_configuration {
     role_arn = "${aws_iam_role.firehose.arn}"

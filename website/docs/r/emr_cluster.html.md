@@ -29,6 +29,8 @@ resource "aws_emr_cluster" "emr-test-cluster" {
     emr_managed_slave_security_group  = "${aws_security_group.sg.id}"
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
+  
+  ebs_root_volume_size     = 100
 
   master_instance_type = "m3.xlarge"
   core_instance_type   = "m3.xlarge"
@@ -78,6 +80,7 @@ The following arguments are supported:
 * `keep_job_flow_alive_when_no_steps` - (Optional) Switch on/off run cluster with no steps or when all steps are complete (default is on)
 * `ec2_attributes` - (Optional) Attributes for the EC2 instances running the job
 flow. Defined below
+* `ebs_root_volume_size` - (Optional) Size in GiB of the EBS root device volume of the Linux AMI that is used for each EC2 instance. Available in Amazon EMR version 4.x and later.
 * `bootstrap_action` - (Optional) List of bootstrap actions that will be run before Hadoop is started on
 	the cluster nodes. Defined below
 * `configurations` - (Optional) List of configurations supplied for the EMR cluster you are creating

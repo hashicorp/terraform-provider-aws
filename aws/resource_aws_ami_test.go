@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 	"time"
 
@@ -29,6 +30,8 @@ func TestAccAWSAMI_basic(t *testing.T) {
 					testAccCheckAmiExists("aws_ami.foo", &ami),
 					resource.TestCheckResourceAttr(
 						"aws_ami.foo", "name", fmt.Sprintf("tf-testing-%d", rInt)),
+					resource.TestMatchResourceAttr(
+						"aws_ami.foo", "root_snapshot_id", regexp.MustCompile("^snap-")),
 				),
 			},
 		},
@@ -202,12 +205,14 @@ func testAccCheckAmiEbsBlockDevice(bd *ec2.BlockDeviceMapping, ed *ec2.EbsBlockD
 
 func testAccAmiConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
 resource "aws_ebs_volume" "foo" {
- 	availability_zone = "us-west-2a"
- 	size = 8
- 	tags {
- 	  Name = "testAccAmiConfig_basic"
- 	}
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  size = 8
+  tags {
+    Name = "testAccAmiConfig_basic"
+  }
 }
 
 resource "aws_ebs_snapshot" "foo" {
@@ -232,12 +237,14 @@ resource "aws_ami" "foo" {
 
 func testAccAmiConfig_snapshotSize(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
 resource "aws_ebs_volume" "foo" {
- 	availability_zone = "us-west-2a"
- 	size = 20
- 	tags {
- 	  Name = "testAccAmiConfig_snapshotSize"
- 	}
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  size = 20
+  tags {
+    Name = "testAccAmiConfig_snapshotSize"
+  }
 }
 
 resource "aws_ebs_snapshot" "foo" {

@@ -26,23 +26,48 @@ FEATURES:
 * **New Data Source:** `aws_lb` [GH-1806]
 * **New Data Source:** `aws_lb_listener` [GH-1806]
 * **New Data Source:** `aws_lb_target_group` [GH-1806]
+* **New Data Source:** `aws_iam_user` [GH-1805]
+* **New Data Source:** `aws_s3_bucket` [GH-1505]
 
 IMPROVEMENTS:
 
+* data-source/aws_redshift_service_account: Add `arn` attribute [GH-1775]
+* data-source/aws_vpc_endpoint: Expose `prefix_list_id` [GH-1733]
 * resource/aws_kinesis_stream: Add support for encryption [GH-1139]
 * resource/aws_cloudwatch_log_group: Add support for encryption via `kms_key_id` [GH-1751]
 * resource/aws_spot_instance_request: Add support for `instance_interruption_behaviour` [GH-1735]
 * resource/aws_ses_event_destination: Add support for `open` & `click` event types [GH-1773]
-* data-source/aws_vpc_endpoint: Expose `prefix_list_id` [GH-1733]
+* resource/aws_efs_file_system: Expose `dns_name` [GH-1825]
+* resource/aws_security_group+aws_security_group_rule: Add support for rule description [GH-1587]
+* resource/aws_emr_cluster: enable configuration of ebs root volume size [GH-1375]
+* resource/aws_aws_ami: Add `root_snapshot_id` attribute [GH-1572]
+* resource/aws_vpn_connection: Mark preshared keys as sensitive [GH-1850]
+* resource/aws_codedeploy_deployment_group: Support blue/green and in-place deployments with traffic control [GH-1162]
+* resource/aws_elb: Update ELB idle timeout to 4000s [GH-1861]
+* resource/aws_spot_fleet_request: Add support for instance_interruption_behaviour [GH-1847]
+* resource/aws_kinesis_firehose_delivery_stream: Specify kinesis stream as the source of a aws_kinesis_firehose_delivery_stream [GH-1605]
 
 BUG FIXES:
 
+* data-source/aws_db_instance: Make `db_instance_arn` expose ARN instead of identifier (use `db_cluster_identifier` for identifier) [GH-1766]
+* data-source/aws_db_snapshot: Expose `storage_type` (was not exposed) [GH-1833]
+* resource/aws_cloudtrail: Raise update retry timeout [GH-1820]
+* resource/aws_elasticache_parameter_group: Retry resetting group on pending changes [GH-1821]
+* resource/aws_kms_key: Retry getting rotation status [GH-1818]
+* resource/aws_kms_key: Retry getting key policy [GH-1854]
+* resource/aws_vpn_connection: Raise timeout to 40mins [GH-1819]
 * resource/aws_kinesis_firehose_delivery_stream: Fix crash caused by missing `processing_configuration` [GH-1738]
 * resource/aws_rds_cluster_instance: Treat `configuring-enhanced-monitoring` as pending state [GH-1744]
 * resource/aws_rds_cluster_instance: Treat more states as pending [GH-1790]
 * resource/aws_route_table: Increase number of not-found checks/retries after creation [GH-1791]
-* data-source/aws_db_instance: Make `db_instance_arn` expose ARN instead of identifier (use `db_cluster_identifier` for identifier) [GH-1766]
 * resource/aws_batch_compute_environment: Fix ARN attribute name/value (`ecc_cluster_arn` -> `ecs_cluster_arn`) [GH-1809]
+* resource/aws_kinesis_stream: Retry creation of the stream on `LimitExceededException` (handle throttling) [GH-1339]
+* resource/aws_vpn_connection_route: Treat route in state `deleted` as deleted [GH-1848]
+* resource/aws_eip: Avoid disassociating if there's no association [GH-1683]
+* resource/aws_elasticache_cluster: Allow scaling up cluster by modifying `az_mode` (avoid recreation) [GH-1758]
+* resource/aws_lambda_function: Fix Lambda Function Updates When Published [GH-1797]
+* resource/aws_appautoscaling_*: Use dimension to uniquely identify target/policy [GH-1808]
+* Updated the Data Source Tags structure [GH-1706]
 
 ## 1.0.0 (September 27, 2017)
 

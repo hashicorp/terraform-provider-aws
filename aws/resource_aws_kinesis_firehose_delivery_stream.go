@@ -133,6 +133,28 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 				},
 			},
 
+			"kinesis_source_configuration": {
+				Type:     schema.TypeList,
+				ForceNew: true,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kinesis_stream_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
+
 			"destination": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -443,6 +465,16 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 			},
 		},
 	}
+}
+
+func createSourceConfig(source map[string]interface{}) *firehose.KinesisStreamSourceConfiguration {
+
+	configuration := &firehose.KinesisStreamSourceConfiguration{
+		KinesisStreamARN: aws.String(source["kinesis_stream_arn"].(string)),
+		RoleARN:          aws.String(source["role_arn"].(string)),
+	}
+
+	return configuration
 }
 
 func createS3Config(d *schema.ResourceData) *firehose.S3DestinationConfiguration {
@@ -810,6 +842,14 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 
 	createInput := &firehose.CreateDeliveryStreamInput{
 		DeliveryStreamName: aws.String(sn),
+	}
+
+	if v, ok := d.GetOk("kinesis_source_configuration"); ok {
+		sourceConfig := createSourceConfig(v.([]interface{})[0].(map[string]interface{}))
+		createInput.KinesisStreamSourceConfiguration = sourceConfig
+		createInput.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeKinesisStreamAsSource)
+	} else {
+		createInput.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeDirectPut)
 	}
 
 	if d.Get("destination").(string) == "extended_s3" {

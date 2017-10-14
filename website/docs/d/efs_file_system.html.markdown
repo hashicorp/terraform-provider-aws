@@ -38,3 +38,4 @@ The following attributes are exported:
 * `tags` - The list of tags assigned to the file system.
 * `encrypted` - Whether EFS is encrypted.
 * `kms_key_id` - The ARN for the KMS encryption key.
+* `dns_name` - The DNS name for the filesystem per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).

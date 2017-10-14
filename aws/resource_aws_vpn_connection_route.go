@@ -100,7 +100,7 @@ func resourceAwsVpnConnectionRouteRead(d *schema.ResourceData, meta interface{})
 
 	var found bool
 	for _, r := range vpnConnection.Routes {
-		if *r.DestinationCidrBlock == cidrBlock {
+		if *r.DestinationCidrBlock == cidrBlock && *r.State != "deleted" {
 			d.Set("destination_cidr_block", *r.DestinationCidrBlock)
 			d.Set("vpn_connection_id", *vpnConnection.VpnConnectionId)
 			found = true
