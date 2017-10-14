@@ -51,6 +51,10 @@ BUG FIXES:
 
 * data-source/aws_db_instance: Make `db_instance_arn` expose ARN instead of identifier (use `db_cluster_identifier` for identifier) [GH-1766]
 * data-source/aws_db_snapshot: Expose `storage_type` (was not exposed) [GH-1833]
+* data-source/aws_ami: Update the `tags` structure for easier referencing [GH-1706]
+* data-source/aws_ebs_snapshot: Update the `tags` structure for easier referencing [GH-1706]
+* data-source/aws_ebs_volume: Update the `tags` structure for easier referencing [GH-1706]
+* data-source/aws_instance: Update the `tags` structure for easier referencing [GH-1706]
 * resource/aws_cloudtrail: Raise update retry timeout [GH-1820]
 * resource/aws_elasticache_parameter_group: Retry resetting group on pending changes [GH-1821]
 * resource/aws_kms_key: Retry getting rotation status [GH-1818]
@@ -67,11 +71,8 @@ BUG FIXES:
 * resource/aws_elasticache_cluster: Allow scaling up cluster by modifying `az_mode` (avoid recreation) [GH-1758]
 * resource/aws_lambda_function: Fix Lambda Function Updates When Published [GH-1797]
 * resource/aws_appautoscaling_*: Use dimension to uniquely identify target/policy [GH-1808]
-* resource/vpn_connection_route: Wait until route is available/deleted [GH-1849]
-* data-source/aws_ami: Update the `tags` structure for easier referencing [GH-1706]
-* data-source/aws_ebs_snapshot: Update the `tags` structure for easier referencing [GH-1706]
-* data-source/aws_ebs_volume: Update the `tags` structure for easier referencing [GH-1706]
-* data-source/aws_instance: Update the `tags` structure for easier referencing [GH-1706]
+* resource/aws_vpn_connection_route: Wait until route is available/deleted [GH-1849]
+* resource/aws_cloudfront_distribution: Ignore `minimum_protocol_version` if default certificate is used [GH-1785]
 
 ## 1.0.0 (September 27, 2017)
 
