@@ -119,7 +119,7 @@ func resourceAwsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 	createBudgetInput.SetBudget(budget)
 	_, err = client.CreateBudget(createBudgetInput)
 	if err != nil {
-		return fmt.Errorf("create budget failed: ", err)
+		return fmt.Errorf("create budget failed: %v", err)
 	}
 
 	d.SetId(budgetName)
@@ -135,7 +135,7 @@ func resourceAwsBudgetRead(d *schema.ResourceData, meta interface{}) error {
 	describeBudgetInput.SetAccountId(accountID)
 	_, err := client.DescribeBudget(describeBudgetInput)
 	if err != nil {
-		return fmt.Errorf("describe budget failed: ", err)
+		return fmt.Errorf("describe budget failed: %v", err)
 	}
 
 	return nil
@@ -143,7 +143,7 @@ func resourceAwsBudgetRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).budgetconn
-	return fmt.Errorf("not yet implemented", client)
+	return fmt.Errorf("not yet implemented %v", client)
 }
 
 func resourceAwsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
@@ -155,7 +155,7 @@ func resourceAwsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
 	deleteBudgetInput.SetAccountId(accountID)
 	_, err := client.DeleteBudget(deleteBudgetInput)
 	if err != nil {
-		return fmt.Errorf("delete budget failed: ", err)
+		return fmt.Errorf("delete budget failed: %v", err)
 	}
 
 	return nil

@@ -49,7 +49,7 @@ func testCheckBudgetDestroy(budgetName string, provider *schema.Provider) error 
 	describeBudgetInput.SetAccountId(accountID)
 	b, err := client.DescribeBudget(describeBudgetInput)
 	if b.Budget != nil {
-		return err
+		return fmt.Errorf("Budget not deleted properly %v %v", b.Budget, err)
 	}
 	return nil
 }
