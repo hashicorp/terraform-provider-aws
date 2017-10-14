@@ -898,7 +898,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 	})
 	if err != nil {
 		if awsErr, ok := lastError.(awserr.Error); ok {
-			return fmt.Errorf("[WARN] Error creating Kinesis Firehose Delivery Stream: \"%s\", code: \"%s\"", awsErr.Message(), awsErr.Code())
+			return fmt.Errorf("[WARN] Error creating Kinesis Firehose Delivery Stream: %s", awsErr.Error())
 		}
 		return err
 	}
