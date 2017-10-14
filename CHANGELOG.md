@@ -46,6 +46,7 @@ IMPROVEMENTS:
 * resource/aws_elb: Update ELB idle timeout to 4000s [GH-1861]
 * resource/aws_spot_fleet_request: Add support for instance_interruption_behaviour [GH-1847]
 * resource/aws_kinesis_firehose_delivery_stream: Specify kinesis stream as the source of a aws_kinesis_firehose_delivery_stream [GH-1605]
+* resource/aws_kinesis_firehose_delivery_stream: Output complete error when creation fails [GH-1881]
 
 BUG FIXES:
 
