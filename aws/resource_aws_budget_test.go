@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
 
@@ -16,20 +18,40 @@ func TestAwsBudget_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
-		//	CheckDestroy: func() { testCheckBudgetDestroy(name) },
+		CheckDestroy: func(s *terraform.State) error {
+			return testCheckBudgetDestroy(name, testAccProvider)
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: testBudgetConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckOutput("aws_budget.foo", name),
+					resource.TestCheckResourceAttr("aws_budget.foo", "budget_name", name),
+					resource.TestCheckResourceAttr("aws_budget.foo", "budget_type", "COST"),
+					resource.TestCheckResourceAttr("aws_budget.foo", "limit_amount", "100"),
+					resource.TestCheckResourceAttr("aws_budget.foo", "limit_unit", "USD"),
+					resource.TestCheckResourceAttr("aws_budget.foo", "include_tax", "true"),
+					resource.TestCheckResourceAttr("aws_budget.foo", "include_subscriptions", "false"),
+					resource.TestCheckResourceAttr("aws_budget.foo", "include_blended", "false"),
+					resource.TestCheckResourceAttr("aws_budget.foo", "time_period_start", "2017-01-01_12:00"),
+					resource.TestCheckResourceAttr("aws_budget.foo", "time_period_end", "2018-01-01_12:00"),
+					resource.TestCheckResourceAttr("aws_budget.foo", "time_unit", "MONTHLY"),
 				),
 			},
 		},
 	})
 }
 
-func testCheckBudgetDestroy(s *terraform.State) error {
-	return fmt.Errorf("not yet implemented")
+func testCheckBudgetDestroy(budgetName string, provider *schema.Provider) error {
+	client := provider.Meta().(*AWSClient).budgetconn
+	accountID := provider.Meta().(*AWSClient).accountid
+	describeBudgetInput := new(budgets.DescribeBudgetInput)
+	describeBudgetInput.SetBudgetName(budgetName)
+	describeBudgetInput.SetAccountId(accountID)
+	b, err := client.DescribeBudget(describeBudgetInput)
+	if b.Budget != nil {
+		return err
+	}
+	return nil
 }
 
 func testBudgetConfig_basic(name string) string {
