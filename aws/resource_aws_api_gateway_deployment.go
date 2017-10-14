@@ -115,17 +115,12 @@ func resourceAwsApiGatewayDeploymentRead(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Received API Gateway Deployment: %s", out)
 	d.Set("description", out.Description)
 
-	region := meta.(*AWSClient).region
 	stageName := d.Get("stage_name").(string)
 
-	d.Set("invoke_url", buildApiGatewayInvokeURL(restApiId, region, stageName))
+	d.Set("invoke_url", buildApiGatewayInvokeURL(restApiId, meta.(*AWSClient).region, stageName))
 
-	accountId := meta.(*AWSClient).accountid
-	arn, err := buildApiGatewayExecutionARN(restApiId, region, accountId)
-	if err != nil {
-		return err
-	}
-	d.Set("execution_arn", arn+"/"+stageName)
+	d.Set("execution_arn",
+		apiGatewayExecutionArnString(meta.(*AWSClient).partition, meta.(*AWSClient).region, meta.(*AWSClient).accountid, restApiId+"/"+stageName))
 
 	if err := d.Set("created_date", out.CreatedDate.Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Error setting created_date: %s", err)

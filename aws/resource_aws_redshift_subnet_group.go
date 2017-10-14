@@ -182,13 +182,5 @@ func validateRedshiftSubnetGroupName(v interface{}, k string) (ws []string, erro
 }
 
 func buildRedshiftSubnetGroupARN(identifier, partition, accountid, region string) (string, error) {
-	if partition == "" {
-		return "", fmt.Errorf("Unable to construct Subnet Group ARN because of missing AWS partition")
-	}
-	if accountid == "" {
-		return "", fmt.Errorf("Unable to construct Subnet Group ARN because of missing AWS Account ID")
-	}
-	arn := fmt.Sprintf("arn:%s:redshift:%s:%s:subnetgroup:%s", partition, region, accountid, identifier)
-	return arn, nil
-
+	return buildRedshiftArnString(identifier, partition, accountid, region, redshiftSubnetGroupArnString)
 }

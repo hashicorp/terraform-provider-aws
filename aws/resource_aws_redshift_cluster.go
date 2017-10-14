@@ -952,13 +952,5 @@ func validateRedshiftClusterMasterPassword(v interface{}, k string) (ws []string
 }
 
 func buildRedshiftARN(identifier, partition, accountid, region string) (string, error) {
-	if partition == "" {
-		return "", fmt.Errorf("Unable to construct cluster ARN because of missing AWS partition")
-	}
-	if accountid == "" {
-		return "", fmt.Errorf("Unable to construct cluster ARN because of missing AWS Account ID")
-	}
-	arn := fmt.Sprintf("arn:%s:redshift:%s:%s:cluster:%s", partition, region, accountid, identifier)
-	return arn, nil
-
+	return buildRedshiftArnString(identifier, partition, accountid, region, redshiftClusterArnString)
 }

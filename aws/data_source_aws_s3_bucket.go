@@ -63,7 +63,7 @@ func dataSourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(bucket)
-	d.Set("arn", fmt.Sprintf("arn:%s:s3:::%s", meta.(*AWSClient).partition, bucket))
+	d.Set("arn", s3ArnString(meta.(*AWSClient).partition, bucket))
 	d.Set("bucket_domain_name", bucketDomainName(bucket))
 
 	if err := bucketLocation(d, bucket, conn); err != nil {

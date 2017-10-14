@@ -690,7 +690,7 @@ func buildECARN(identifier, partition, accountid, region string) (string, error)
 	if accountid == "" {
 		return "", fmt.Errorf("Unable to construct ElastiCache ARN because of missing AWS Account ID")
 	}
-	arn := fmt.Sprintf("arn:%s:elasticache:%s:%s:cluster:%s", partition, region, accountid, identifier)
+	arn := elastiCacheClusterArnString(partition, region, accountid, identifier)
 	return arn, nil
 
 }

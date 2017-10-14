@@ -451,7 +451,8 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("version", lastVersion)
 	d.Set("qualified_arn", lastQualifiedArn)
 
-	d.Set("invoke_arn", buildLambdaInvokeArn(*function.FunctionArn, meta.(*AWSClient).region))
+	d.Set("invoke_arn", apiGatewayLambdaInvokeArnString(
+		meta.(*AWSClient).partition, meta.(*AWSClient).region, aws.StringValue(function.FunctionArn)))
 
 	return nil
 }

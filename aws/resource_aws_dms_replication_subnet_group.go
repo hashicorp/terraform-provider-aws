@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -95,8 +94,8 @@ func resourceAwsDmsReplicationSubnetGroupRead(d *schema.ResourceData, meta inter
 
 	// The AWS API for DMS subnet groups does not return the ARN which is required to
 	// retrieve tags. This ARN can be built.
-	d.Set("replication_subnet_group_arn", fmt.Sprintf("arn:aws:dms:%s:%s:subgrp:%s",
-		meta.(*AWSClient).region, meta.(*AWSClient).accountid, d.Id()))
+	d.Set("replication_subnet_group_arn",
+		dmsSubnetGroupArnString(meta.(*AWSClient).partition, meta.(*AWSClient).region, meta.(*AWSClient).accountid, d.Id()))
 
 	err = resourceAwsDmsReplicationSubnetGroupSetState(d, response.ReplicationSubnetGroups[0])
 	if err != nil {

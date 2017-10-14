@@ -251,9 +251,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func flattenAwsSsmDocumentArn(meta interface{}, docName *string) string {
-	region := meta.(*AWSClient).region
-
-	return fmt.Sprintf("arn:aws:ssm:%s::document/%s", region, *docName)
+	return ssmDocumentArnString(meta.(*AWSClient).partition, meta.(*AWSClient).region, "", aws.StringValue(docName))
 }
 
 func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
