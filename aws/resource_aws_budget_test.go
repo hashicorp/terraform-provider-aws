@@ -45,5 +45,8 @@ resource "aws_budget" "foo" {
 	time_period_start = "2017-01-01_12:00" 
 	time_period_end = "2018-01-01_12:00"
  	time_unit = "MONTHLY"
+	cost_filters {
+		AZ = "us-east-1"
+	}
 }`, name)
 }

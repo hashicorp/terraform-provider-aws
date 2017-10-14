@@ -60,6 +60,11 @@ func resourceAwsBudgetSchema() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"cost_filters": &schema.Schema{
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+		},
 	}
 }
 
@@ -73,6 +78,12 @@ func resourceAwsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 	budgetIncludeTax := d.Get("include_tax").(bool)
 	budgetIncludeSubscriptions := d.Get("include_subscriptions").(bool)
 	budgetIncludeBlended := d.Get("include_blended").(bool)
+	budgetCostFilters := make(map[string][]*string)
+	for k, v := range d.Get("cost_filters").(map[string]interface{}) {
+		filterValue := v.(string)
+		budgetCostFilters[k] = append(budgetCostFilters[k], &filterValue)
+	}
+
 	budgetTimePeriodStart, err := time.Parse("2006-01-02_15:04", d.Get("time_period_start").(string))
 	if err != nil {
 		return err
@@ -102,6 +113,7 @@ func resourceAwsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 		Start: &budgetTimePeriodStart,
 	})
 	budget.SetTimeUnit(budgetTimeUnit)
+	budget.SetCostFilters(budgetCostFilters)
 	createBudgetInput := new(budgets.CreateBudgetInput)
 	createBudgetInput.SetAccountId(accountID)
 	createBudgetInput.SetBudget(budget)
