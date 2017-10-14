@@ -67,7 +67,7 @@ BUG FIXES:
 * resource/aws_elasticache_cluster: Allow scaling up cluster by modifying `az_mode` (avoid recreation) [GH-1758]
 * resource/aws_lambda_function: Fix Lambda Function Updates When Published [GH-1797]
 * resource/aws_appautoscaling_*: Use dimension to uniquely identify target/policy [GH-1808]
-* resource/vpn_connection_route: Wait until route is available/deleted #1849
+* resource/vpn_connection_route: Wait until route is available/deleted [GH-1849]
 * data-source/aws_ami: Update the `tags` structure for easier referencing [GH-1706]
 * data-source/aws_ebs_snapshot: Update the `tags` structure for easier referencing [GH-1706]
 * data-source/aws_ebs_volume: Update the `tags` structure for easier referencing [GH-1706]
