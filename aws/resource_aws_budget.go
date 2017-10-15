@@ -93,6 +93,11 @@ func resourceAwsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsBudgetRead(d *schema.ResourceData, meta interface{}) error {
 	budgetName := d.Get("budget_name").(string)
 	describeBudgetOutput, err := describeBudget(budgetName, meta)
+	if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == budgets.ErrCodeNotFoundException {
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("describe budget failed: %v", err)
 	}
@@ -175,7 +180,6 @@ func newBudget(d *schema.ResourceData) (*budgets.Budget, error) {
 	}
 
 	budgetTimeUnit := d.Get("time_unit").(string)
-
 	budget := new(budgets.Budget)
 	budget.SetBudgetName(budgetName)
 	budget.SetBudgetType(budgetType)
