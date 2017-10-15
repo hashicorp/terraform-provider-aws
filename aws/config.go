@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
@@ -49,6 +50,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -174,6 +176,8 @@ type AWSClient struct {
 	ssmconn               *ssm.SSM
 	wafconn               *waf.WAF
 	wafregionalconn       *wafregional.WAFRegional
+	iotconn               *iot.IoT
+	batchconn             *batch.Batch
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -246,7 +250,7 @@ func (c *Config) Client() (interface{}, error) {
 	}
 
 	if logging.IsDebugOrHigher() {
-		awsConfig.LogLevel = aws.LogLevel(aws.LogDebugWithHTTPBody)
+		awsConfig.LogLevel = aws.LogLevel(aws.LogDebugWithHTTPBody | aws.LogDebugWithRequestRetries | aws.LogDebugWithRequestErrors)
 		awsConfig.Logger = awsLogger{}
 	}
 
@@ -364,6 +368,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.firehoseconn = firehose.New(sess)
 	client.inspectorconn = inspector.New(sess)
 	client.glacierconn = glacier.New(sess)
+	client.iotconn = iot.New(sess)
 	client.kinesisconn = kinesis.New(awsKinesisSess)
 	client.kmsconn = kms.New(awsKmsSess)
 	client.lambdaconn = lambda.New(sess)
@@ -381,8 +386,46 @@ func (c *Config) Client() (interface{}, error) {
 	client.ssmconn = ssm.New(sess)
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
+	client.batchconn = batch.New(sess)
+
+	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
+	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
+			return
+		}
+		err, ok := r.Error.(awserr.Error)
+		if !ok || err == nil {
+			return
+		}
+		if err.Code() == kinesis.ErrCodeLimitExceededException {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
+	// Workaround for https://github.com/aws/aws-sdk-go/issues/1472
+	client.appautoscalingconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
+			return
+		}
+		err, ok := r.Error.(awserr.Error)
+		if !ok || err == nil {
+			return
+		}
+		if err.Code() == applicationautoscaling.ErrCodeFailedResourceAccessException {
+			r.Retryable = aws.Bool(true)
+		}
+	})
 
 	return &client, nil
+}
+
+func hasEc2Classic(platforms []string) bool {
+	for _, p := range platforms {
+		if p == "EC2" {
+			return true
+		}
+	}
+	return false
 }
 
 // ValidateRegion returns an error if the configured region is not a

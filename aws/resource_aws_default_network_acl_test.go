@@ -17,12 +17,12 @@ var defaultEgressAcl = &ec2.NetworkAclEntry{
 	RuleAction: aws.String("allow"),
 	RuleNumber: aws.Int64(100),
 }
-var defaultIngressAcl = &ec2.NetworkAclEntry{
-	CidrBlock:  aws.String("0.0.0.0/0"),
-	Egress:     aws.Bool(false),
-	Protocol:   aws.String("-1"),
-	RuleAction: aws.String("allow"),
-	RuleNumber: aws.Int64(100),
+var ipv6IngressAcl = &ec2.NetworkAclEntry{
+	Ipv6CidrBlock: aws.String("::/0"),
+	Egress:        aws.Bool(false),
+	Protocol:      aws.String("-1"),
+	RuleAction:    aws.String("allow"),
+	RuleNumber:    aws.Int64(101),
 }
 
 func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
@@ -33,7 +33,7 @@ func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSDefaultNetworkConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
@@ -52,7 +52,7 @@ func TestAccAWSDefaultNetworkAcl_basicIpv6Vpc(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSDefaultNetworkConfig_basicIpv6Vpc,
 				Check: resource.ComposeTestCheckFunc(
 					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
@@ -74,11 +74,30 @@ func TestAccAWSDefaultNetworkAcl_deny_ingress(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSDefaultNetworkConfig_deny_ingress,
 				Check: resource.ComposeTestCheckFunc(
 					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{defaultEgressAcl}, 0, 2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDefaultNetworkAcl_withIpv6Ingress(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDefaultNetworkConfig_includingIpv6Rule,
+				Check: resource.ComposeTestCheckFunc(
+					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
+					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{ipv6IngressAcl}, 0, 2),
 				),
 			},
 		},
@@ -93,7 +112,7 @@ func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSDefaultNetworkConfig_Subnets,
 				Check: resource.ComposeTestCheckFunc(
 					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
@@ -104,7 +123,7 @@ func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
 			// Here the Subnets have been removed from the Default Network ACL Config,
 			// but have not been reassigned. The result is that the Subnets are still
 			// there, and we have a non-empty plan
-			resource.TestStep{
+			{
 				Config: testAccAWSDefaultNetworkConfig_Subnets_remove,
 				Check: resource.ComposeTestCheckFunc(
 					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
@@ -124,7 +143,7 @@ func TestAccAWSDefaultNetworkAcl_SubnetReassign(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSDefaultNetworkConfig_Subnets,
 				Check: resource.ComposeTestCheckFunc(
 					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
@@ -144,7 +163,7 @@ func TestAccAWSDefaultNetworkAcl_SubnetReassign(t *testing.T) {
 			// the default resource to the other acl resource, to ensure the latter's
 			// update occurs first, and the former's READ will correctly read zero
 			// subnets
-			resource.TestStep{
+			{
 				Config: testAccAWSDefaultNetworkConfig_Subnets_move,
 				Check: resource.ComposeTestCheckFunc(
 					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
@@ -227,7 +246,7 @@ resource "aws_default_network_acl" "default" {
 }
 `
 
-const testAccAWSDefaultNetworkConfig_basicDefaultRules = `
+const testAccAWSDefaultNetworkConfig_includingIpv6Rule = `
 resource "aws_vpc" "tftestvpc" {
   cidr_block = "10.1.0.0/16"
 
@@ -241,39 +260,12 @@ resource "aws_default_network_acl" "default" {
 
   ingress {
     protocol   = -1
-    rule_no    = 100
+    rule_no    = 101
     action     = "allow"
-    cidr_block = "0.0.0.0/0"
+    ipv6_cidr_block = "::/0"
     from_port  = 0
     to_port    = 0
   }
-
-  egress {
-    protocol   = -1
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 0
-    to_port    = 0
-  }
-
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basic"
-  }
-}
-`
-
-const testAccAWSDefaultNetworkConfig_deny = `
-resource "aws_vpc" "tftestvpc" {
-  cidr_block = "10.1.0.0/16"
-
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basic"
-  }
-}
-
-resource "aws_default_network_acl" "default" {
-  default_network_acl_id = "${aws_vpc.tftestvpc.default_network_acl_id}"
 
   tags {
     Name = "TestAccAWSDefaultNetworkAcl_basic"

@@ -39,7 +39,7 @@ func TestAccAWSDBInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_db_instance.bar", "license_model", "general-public-license"),
 					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "instance_class", "db.t1.micro"),
+						"aws_db_instance.bar", "instance_class", "db.t2.micro"),
 					resource.TestCheckResourceAttr(
 						"aws_db_instance.bar", "name", "baz"),
 					resource.TestCheckResourceAttr(
@@ -47,6 +47,7 @@ func TestAccAWSDBInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_db_instance.bar", "parameter_group_name", "default.mysql5.6"),
 					resource.TestCheckResourceAttrSet("aws_db_instance.bar", "hosted_zone_id"),
+					resource.TestCheckResourceAttrSet("aws_db_instance.bar", "ca_cert_identifier"),
 					resource.TestCheckResourceAttrSet(
 						"aws_db_instance.bar", "resource_id"),
 				),
@@ -338,6 +339,7 @@ func TestAccAWSDBInstance_portUpdate(t *testing.T) {
 
 func TestAccAWSDBInstance_MSSQL_TZ(t *testing.T) {
 	var v rds.DBInstance
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -345,7 +347,7 @@ func TestAccAWSDBInstance_MSSQL_TZ(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBMSSQL_timezone,
+				Config: testAccAWSDBMSSQL_timezone(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &v),
 					testAccCheckAWSDBInstanceAttributes_MSSQL(&v, ""),
@@ -357,7 +359,7 @@ func TestAccAWSDBInstance_MSSQL_TZ(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSDBMSSQL_timezone_AKST,
+				Config: testAccAWSDBMSSQL_timezone_AKST(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &v),
 					testAccCheckAWSDBInstanceAttributes_MSSQL(&v, "Alaskan Standard Time"),
@@ -669,8 +671,8 @@ var testAccAWSDBInstanceConfig = `
 resource "aws_db_instance" "bar" {
 	allocated_storage = 10
 	engine = "MySQL"
-	engine_version = "5.6.21"
-	instance_class = "db.t1.micro"
+	engine_version = "5.6.35"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
@@ -696,7 +698,7 @@ resource "aws_db_instance" "test" {
 	allocated_storage = 10
 	engine = "MySQL"
 	identifier_prefix = "tf-test-"
-	instance_class = "db.t1.micro"
+	instance_class = "db.t2.micro"
 	password = "password"
 	username = "root"
 	publicly_accessible = true
@@ -711,7 +713,7 @@ const testAccAWSDBInstanceConfig_generatedName = `
 resource "aws_db_instance" "test" {
 	allocated_storage = 10
 	engine = "MySQL"
-	instance_class = "db.t1.micro"
+	instance_class = "db.t2.micro"
 	password = "password"
 	username = "root"
 	publicly_accessible = true
@@ -747,7 +749,7 @@ POLICY
 resource "aws_db_instance" "bar" {
 	allocated_storage = 10
 	engine = "MySQL"
-	engine_version = "5.6.21"
+	engine_version = "5.6.35"
 	instance_class = "db.m3.medium"
 	name = "baz"
 	password = "barbarbarbar"
@@ -821,8 +823,8 @@ func testAccReplicaInstanceConfig(val int) string {
 
 		allocated_storage = 5
 		engine = "mysql"
-		engine_version = "5.6.21"
-		instance_class = "db.t1.micro"
+		engine_version = "5.6.35"
+		instance_class = "db.t2.micro"
 		name = "baz"
 		password = "barbarbarbar"
 		username = "foo"
@@ -861,8 +863,8 @@ resource "aws_db_instance" "snapshot" {
 
 	allocated_storage = 5
 	engine = "mysql"
-	engine_version = "5.6.21"
-	instance_class = "db.t1.micro"
+	engine_version = "5.6.35"
+	instance_class = "db.r3.large"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
@@ -888,8 +890,8 @@ resource "aws_db_instance" "snapshot" {
 
 	allocated_storage = 5
 	engine = "mysql"
-	engine_version = "5.6.21"
-	instance_class = "db.t1.micro"
+	engine_version = "5.6.35"
+	instance_class = "db.r3.large"
 	name = "baz"
 	password = "barbarbarbar"
 	publicly_accessible = true
@@ -945,7 +947,7 @@ resource "aws_db_instance" "enhanced_monitoring" {
 
 	allocated_storage = 5
 	engine = "mysql"
-	engine_version = "5.6.21"
+	engine_version = "5.6.35"
 	instance_class = "db.m3.medium"
 	name = "baz"
 	password = "barbarbarbar"
@@ -966,7 +968,7 @@ func testAccSnapshotInstanceConfig_iopsUpdate(rName string, iops int) string {
 resource "aws_db_instance" "bar" {
   identifier           = "mydb-rds-%s"
   engine               = "mysql"
-  engine_version       = "5.6.23"
+  engine_version       = "5.6.35"
   instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
@@ -987,7 +989,7 @@ func testAccSnapshotInstanceConfig_mysqlPort(rName string) string {
 resource "aws_db_instance" "bar" {
   identifier           = "mydb-rds-%s"
   engine               = "mysql"
-  engine_version       = "5.6.23"
+  engine_version       = "5.6.35"
   instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
@@ -1006,7 +1008,7 @@ func testAccSnapshotInstanceConfig_updateMysqlPort(rName string) string {
 resource "aws_db_instance" "bar" {
   identifier           = "mydb-rds-%s"
   engine               = "mysql"
-  engine_version       = "5.6.23"
+  engine_version       = "5.6.35"
   instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
@@ -1058,7 +1060,7 @@ resource "aws_db_subnet_group" "foo" {
 resource "aws_db_instance" "bar" {
   identifier           = "mydb-rds-%s"
   engine               = "mysql"
-  engine_version       = "5.6.23"
+  engine_version       = "5.6.35"
   instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
@@ -1145,7 +1147,7 @@ resource "aws_db_subnet_group" "bar" {
 resource "aws_db_instance" "bar" {
   identifier           = "mydb-rds-%s"
   engine               = "mysql"
-  engine_version       = "5.6.23"
+  engine_version       = "5.6.35"
   instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
@@ -1162,11 +1164,8 @@ resource "aws_db_instance" "bar" {
 }`, rName, rName, rName)
 }
 
-const testAccAWSDBMSSQL_timezone = `
-provider "aws" {
-  region = "us-west-2"
-}
-
+func testAccAWSDBMSSQL_timezone(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -1176,7 +1175,7 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_db_subnet_group" "rds_one" {
-  name        = "rds_one_db"
+  name        = "tf_acc_test_%d"
   description = "db subnets for rds_one"
 
   subnet_ids = ["${aws_subnet.main.id}", "${aws_subnet.other.id}"]
@@ -1195,7 +1194,7 @@ resource "aws_subnet" "other" {
 }
 
 resource "aws_db_instance" "mssql" {
-  #identifier = "tf-test-mssql"
+  identifier = "tf-test-mssql-%d"
 
   db_subnet_group_name = "${aws_db_subnet_group.rds_one.name}"
 
@@ -1213,7 +1212,7 @@ resource "aws_db_instance" "mssql" {
 }
 
 resource "aws_security_group" "rds-mssql" {
-  name = "tf-rds-mssql-test"
+  name = "tf-rds-mssql-test-%d"
 
   description = "TF Testing"
   vpc_id      = "${aws_vpc.foo.id}"
@@ -1228,13 +1227,11 @@ resource "aws_security_group_rule" "rds-mssql-1" {
 
   security_group_id = "${aws_security_group.rds-mssql.id}"
 }
-`
-
-const testAccAWSDBMSSQL_timezone_AKST = `
-provider "aws" {
-  region = "us-west-2"
+`, rInt, rInt, rInt)
 }
 
+func testAccAWSDBMSSQL_timezone_AKST(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -1244,7 +1241,7 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_db_subnet_group" "rds_one" {
-  name        = "rds_one_db"
+  name        = "tf_acc_test_%d"
   description = "db subnets for rds_one"
 
   subnet_ids = ["${aws_subnet.main.id}", "${aws_subnet.other.id}"]
@@ -1263,7 +1260,7 @@ resource "aws_subnet" "other" {
 }
 
 resource "aws_db_instance" "mssql" {
-  #identifier = "tf-test-mssql"
+  identifier = "tf-test-mssql-%d"
 
   db_subnet_group_name = "${aws_db_subnet_group.rds_one.name}"
 
@@ -1282,7 +1279,7 @@ resource "aws_db_instance" "mssql" {
 }
 
 resource "aws_security_group" "rds-mssql" {
-  name = "tf-rds-mssql-test"
+  name = "tf-rds-mssql-test-%d"
 
   description = "TF Testing"
   vpc_id      = "${aws_vpc.foo.id}"
@@ -1297,7 +1294,8 @@ resource "aws_security_group_rule" "rds-mssql-1" {
 
   security_group_id = "${aws_security_group.rds-mssql.id}"
 }
-`
+`, rInt, rInt, rInt)
+}
 
 var testAccAWSDBInstanceConfigAutoMinorVersion = fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
@@ -1305,7 +1303,7 @@ resource "aws_db_instance" "bar" {
 	allocated_storage = 10
 	engine = "MySQL"
 	engine_version = "5.6"
-	instance_class = "db.t1.micro"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
@@ -1319,7 +1317,7 @@ resource "aws_db_instance" "bar" {
   identifier = "foobarbaz-test-terraform-%d"
 	allocated_storage = 10
 	engine = "MySQL"
-	instance_class = "db.t1.micro"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"

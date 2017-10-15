@@ -43,7 +43,7 @@ The following arguments are supported:
 
 * `filter` - (Optional) One or more name/value pairs to filter off of. There are
 several valid keys, for a full reference, check out
-[describe-volumes in the AWS CLI reference][1].
+[describe-snapshots in the AWS CLI reference][1].
 
 
 ## Attributes Reference

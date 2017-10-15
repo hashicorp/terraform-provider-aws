@@ -22,6 +22,10 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 		Delete: resourceAwsSpotFleetRequestDelete,
 		Update: resourceAwsSpotFleetRequestUpdate,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsSpotFleetRequestMigrateState,
 
@@ -35,6 +39,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
+				Default:  false,
+			},
+			"wait_for_fulfillment": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: false,
 				Default:  false,
 			},
 			// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-SpotFleetLaunchSpecification
@@ -268,6 +278,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Default:  "Default",
 				ForceNew: false,
 			},
+			"instance_interruption_behaviour": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "terminate",
+				ForceNew: true,
+			},
 			"spot_price": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -340,7 +356,7 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 		opts.UserData = aws.String(base64Encode([]byte(v.(string))))
 	}
 
-	if v, ok := d["key_name"]; ok {
+	if v, ok := d["key_name"]; ok && v != "" {
 		opts.KeyName = aws.String(v.(string))
 	}
 
@@ -542,6 +558,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		ClientToken:                      aws.String(resource.UniqueId()),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
+		InstanceInterruptionBehavior:     aws.String(d.Get("instance_interruption_behaviour").(string)),
 	}
 
 	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok {
@@ -584,7 +601,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	// Since IAM is eventually consistent, we retry creation as a newly created role may not
 	// take effect immediately, resulting in an InvalidSpotFleetRequestConfig error
 	var resp *ec2.RequestSpotFleetOutput
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(10*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.RequestSpotFleet(spotFleetOpts)
 
@@ -623,6 +640,24 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
+	if d.Get("wait_for_fulfillment").(bool) {
+		log.Println("[INFO] Waiting for Spot Fleet Request to be fulfilled")
+		spotStateConf := &resource.StateChangeConf{
+			Pending:    []string{"pending_fulfillment"},
+			Target:     []string{"fulfilled"},
+			Refresh:    resourceAwsSpotFleetRequestFulfillmentRefreshFunc(d.Id(), meta.(*AWSClient).ec2conn),
+			Timeout:    d.Timeout(schema.TimeoutCreate),
+			Delay:      10 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+
+		_, err = spotStateConf.WaitForState()
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return resourceAwsSpotFleetRequestRead(d, meta)
 }
 
@@ -650,6 +685,32 @@ func resourceAwsSpotFleetRequestStateRefreshFunc(d *schema.ResourceData, meta in
 		spotFleetRequest := resp.SpotFleetRequestConfigs[0]
 
 		return spotFleetRequest, *spotFleetRequest.SpotFleetRequestState, nil
+	}
+}
+
+func resourceAwsSpotFleetRequestFulfillmentRefreshFunc(id string, conn *ec2.EC2) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		req := &ec2.DescribeSpotFleetRequestsInput{
+			SpotFleetRequestIds: []*string{aws.String(id)},
+		}
+		resp, err := conn.DescribeSpotFleetRequests(req)
+
+		if err != nil {
+			log.Printf("Error on retrieving Spot Fleet Request when waiting: %s", err)
+			return nil, "", nil
+		}
+
+		if resp == nil {
+			return nil, "", nil
+		}
+
+		if len(resp.SpotFleetRequestConfigs) == 0 {
+			return nil, "", nil
+		}
+
+		spotFleetRequest := resp.SpotFleetRequestConfigs[0]
+
+		return spotFleetRequest, *spotFleetRequest.ActivityStatus, nil
 	}
 }
 
@@ -734,6 +795,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("replace_unhealthy_instances", config.ReplaceUnhealthyInstances)
+	d.Set("instance_interruption_behaviour", config.InstanceInterruptionBehavior)
 	d.Set("launch_specification", launchSpecsToSet(config.LaunchSpecifications, conn))
 
 	return nil

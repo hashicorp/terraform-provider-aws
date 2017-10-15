@@ -140,6 +140,25 @@ func TestAccAWSNetworkAcl_OnlyIngressRules_update(t *testing.T) {
 	})
 }
 
+func TestAccAWSNetworkAcl_CaseSensitivityNoChanges(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_network_acl.foos",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclCaseSensitiveConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSNetworkAclExists("aws_network_acl.foos", &networkAcl),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSNetworkAcl_OnlyEgressRules(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
@@ -522,6 +541,33 @@ resource "aws_network_acl" "foos" {
 	subnet_ids = ["${aws_subnet.blob.id}"]
 }
 `
+
+const testAccAWSNetworkAclCaseSensitiveConfig = `
+resource "aws_vpc" "foo" {
+	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "TestAccAWSNetworkAcl_OnlyIngressRules"
+	}
+}
+resource "aws_subnet" "blob" {
+	cidr_block = "10.1.1.0/24"
+	vpc_id = "${aws_vpc.foo.id}"
+	map_public_ip_on_launch = true
+}
+resource "aws_network_acl" "foos" {
+	vpc_id = "${aws_vpc.foo.id}"
+	ingress = {
+		protocol = "tcp"
+		rule_no = 1
+		action = "Allow"
+		cidr_block =  "10.2.0.0/18"
+		from_port = 0
+		to_port = 22
+	}
+	subnet_ids = ["${aws_subnet.blob.id}"]
+}
+`
+
 const testAccAWSNetworkAclIngressConfigChange = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"

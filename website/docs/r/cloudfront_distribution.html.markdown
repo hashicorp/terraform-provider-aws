@@ -175,8 +175,7 @@ of several sub-resources - these resources are laid out below.
     handles query strings, cookies and headers (maximum one).
 
   * `lambda_function_association` (Optional) - A config block that triggers a lambda function with
-  specific actions. Defined below, maximum 4. **Lambda@Edge is in technical
-  Preview, and must be enabled on your AWS account to be used**
+  specific actions. Defined below, maximum 4.
 
   * `max_ttl` (Required) - The maximum amount of time (in seconds) that an
     object is in a CloudFront cache before CloudFront forwards another request
@@ -316,9 +315,9 @@ argument is not required.
     CloudFront to use when communicating with your origin over HTTPS. A list of
     one or more of `SSLv3`, `TLSv1`, `TLSv1.1`, and `TLSv1.2`.
 
-  * `origin_keepalive_timeout` - (Optional) The Custom KeepAlive timeout, in seconds. Value must be between `1` and `60`.
+  * `origin_keepalive_timeout` - (Optional) The Custom KeepAlive timeout, in seconds. By default, AWS enforces a limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout).
 
-  * `origin_read_timeout` - (Optional) The Custom Read timeout, in seconds. Value must be between `4` and `60`.
+  * `origin_read_timeout` - (Optional) The Custom Read timeout, in seconds. By default, AWS enforces a limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout).
 
 ##### S3 Origin Config Arguments
 

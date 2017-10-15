@@ -158,6 +158,16 @@ func resourceAwsElasticSearchDomainImport(
 func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).esconn
 
+	// The API doesn't check for duplicate names
+	// so w/out this check Create would act as upsert
+	// and might cause duplicate domain to appear in state
+	resp, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
+		DomainName: aws.String(d.Get("domain_name").(string)),
+	})
+	if err == nil {
+		return fmt.Errorf("ElasticSearch domain %q already exists", *resp.DomainStatus.DomainName)
+	}
+
 	input := elasticsearch.CreateElasticsearchDomainInput{
 		DomainName:           aws.String(d.Get("domain_name").(string)),
 		ElasticsearchVersion: aws.String(d.Get("elasticsearch_version").(string)),
@@ -224,7 +234,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
 	var out *elasticsearch.CreateElasticsearchDomainOutput
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err = resource.Retry(30*time.Second, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateElasticsearchDomain(&input)
 		if err != nil {
@@ -245,10 +255,35 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(*out.DomainStatus.ARN)
 
+	// Whilst the domain is being created, we can initialise the tags.
+	// This should mean that if the creation fails (eg because your token expired
+	// whilst the operation is being performed), we still get the required tags on
+	// the resources.
+	tags := tagsFromMapElasticsearchService(d.Get("tags").(map[string]interface{}))
+
+	if err := setTagsElasticsearchService(conn, d, *out.DomainStatus.ARN); err != nil {
+		return err
+	}
+
+	d.Set("tags", tagsToMapElasticsearchService(tags))
+	d.SetPartial("tags")
+
 	log.Printf("[DEBUG] Waiting for ElasticSearch domain %q to be created", d.Id())
-	err = resource.Retry(60*time.Minute, func() *resource.RetryError {
+	err = waitForElasticSearchDomainCreation(conn, d.Get("domain_name").(string), d.Id())
+	if err != nil {
+		return err
+	}
+	d.Partial(false)
+
+	log.Printf("[DEBUG] ElasticSearch domain %q created", d.Id())
+
+	return resourceAwsElasticSearchDomainRead(d, meta)
+}
+
+func waitForElasticSearchDomainCreation(conn *elasticsearch.ElasticsearchService, domainName, arn string) error {
+	return resource.Retry(60*time.Minute, func() *resource.RetryError {
 		out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
+			DomainName: aws.String(domainName),
 		})
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -259,25 +294,8 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 
 		return resource.RetryableError(
-			fmt.Errorf("%q: Timeout while waiting for the domain to be created", d.Id()))
+			fmt.Errorf("%q: Timeout while waiting for the domain to be created", arn))
 	})
-	if err != nil {
-		return err
-	}
-
-	tags := tagsFromMapElasticsearchService(d.Get("tags").(map[string]interface{}))
-
-	if err := setTagsElasticsearchService(conn, d, *out.DomainStatus.ARN); err != nil {
-		return err
-	}
-
-	d.Set("tags", tagsToMapElasticsearchService(tags))
-	d.SetPartial("tags")
-	d.Partial(false)
-
-	log.Printf("[DEBUG] ElasticSearch domain %q created", d.Id())
-
-	return resourceAwsElasticSearchDomainRead(d, meta)
 }
 
 func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
@@ -358,9 +376,9 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 
 	if err := setTagsElasticsearchService(conn, d, d.Id()); err != nil {
 		return err
-	} else {
-		d.SetPartial("tags")
 	}
+
+	d.SetPartial("tags")
 
 	input := elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -374,7 +392,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		input.AdvancedOptions = stringMapToPointers(d.Get("advanced_options").(map[string]interface{}))
 	}
 
-	if d.HasChange("ebs_options") {
+	if d.HasChange("ebs_options") || d.HasChange("cluster_config") {
 		options := d.Get("ebs_options").([]interface{})
 
 		if len(options) > 1 {
@@ -383,17 +401,18 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 			s := options[0].(map[string]interface{})
 			input.EBSOptions = expandESEBSOptions(s)
 		}
-	}
 
-	if d.HasChange("cluster_config") {
-		config := d.Get("cluster_config").([]interface{})
+		if d.HasChange("cluster_config") {
+			config := d.Get("cluster_config").([]interface{})
 
-		if len(config) > 1 {
-			return fmt.Errorf("Only a single cluster_config block is expected")
-		} else if len(config) == 1 {
-			m := config[0].(map[string]interface{})
-			input.ElasticsearchClusterConfig = expandESClusterConfig(m)
+			if len(config) > 1 {
+				return fmt.Errorf("Only a single cluster_config block is expected")
+			} else if len(config) == 1 {
+				m := config[0].(map[string]interface{})
+				input.ElasticsearchClusterConfig = expandESClusterConfig(m)
+			}
 		}
+
 	}
 
 	if d.HasChange("snapshot_options") {

@@ -62,7 +62,6 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"dead_letter_config": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -115,20 +114,18 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"vpc_config": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"subnet_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
-							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
-							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
@@ -275,9 +272,12 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
-		config, err := validateVPCConfig(v)
-		if err != nil {
-			return err
+
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("vpc_config is <nil>")
 		}
 
 		if config != nil {
@@ -508,49 +508,6 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 	d.SetPartial("tags")
 
-	if d.HasChange("filename") || d.HasChange("source_code_hash") || d.HasChange("s3_bucket") || d.HasChange("s3_key") || d.HasChange("s3_object_version") {
-		codeReq := &lambda.UpdateFunctionCodeInput{
-			FunctionName: aws.String(d.Id()),
-			Publish:      aws.Bool(d.Get("publish").(bool)),
-		}
-
-		if v, ok := d.GetOk("filename"); ok {
-			// Grab an exclusive lock so that we're only reading one function into
-			// memory at a time.
-			// See https://github.com/hashicorp/terraform/issues/9364
-			awsMutexKV.Lock(awsMutexLambdaKey)
-			defer awsMutexKV.Unlock(awsMutexLambdaKey)
-			file, err := loadFileContent(v.(string))
-			if err != nil {
-				return fmt.Errorf("Unable to load %q: %s", v.(string), err)
-			}
-			codeReq.ZipFile = file
-		} else {
-			s3Bucket, _ := d.GetOk("s3_bucket")
-			s3Key, _ := d.GetOk("s3_key")
-			s3ObjectVersion, versionOk := d.GetOk("s3_object_version")
-
-			codeReq.S3Bucket = aws.String(s3Bucket.(string))
-			codeReq.S3Key = aws.String(s3Key.(string))
-			if versionOk {
-				codeReq.S3ObjectVersion = aws.String(s3ObjectVersion.(string))
-			}
-		}
-
-		log.Printf("[DEBUG] Send Update Lambda Function Code request: %#v", codeReq)
-
-		_, err := conn.UpdateFunctionCode(codeReq)
-		if err != nil {
-			return fmt.Errorf("Error modifying Lambda Function Code %s: %s", d.Id(), err)
-		}
-
-		d.SetPartial("filename")
-		d.SetPartial("source_code_hash")
-		d.SetPartial("s3_bucket")
-		d.SetPartial("s3_key")
-		d.SetPartial("s3_object_version")
-	}
-
 	configReq := &lambda.UpdateFunctionConfigurationInput{
 		FunctionName: aws.String(d.Id()),
 	}
@@ -600,6 +557,32 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			configUpdate = true
 		}
 	}
+	if d.HasChange("vpc_config") {
+		vpcConfigRaw := d.Get("vpc_config").([]interface{})
+		vpcConfig, ok := vpcConfigRaw[0].(map[string]interface{})
+		if !ok {
+			return errors.New("vpc_config is <nil>")
+		}
+
+		if vpcConfig != nil {
+			var subnetIds []*string
+			for _, id := range vpcConfig["subnet_ids"].(*schema.Set).List() {
+				subnetIds = append(subnetIds, aws.String(id.(string)))
+			}
+
+			var securityGroupIds []*string
+			for _, id := range vpcConfig["security_group_ids"].(*schema.Set).List() {
+				securityGroupIds = append(securityGroupIds, aws.String(id.(string)))
+			}
+
+			configReq.VpcConfig = &lambda.VpcConfig{
+				SubnetIds:        subnetIds,
+				SecurityGroupIds: securityGroupIds,
+			}
+			configUpdate = true
+		}
+	}
+
 	if d.HasChange("runtime") {
 		configReq.Runtime = aws.String(d.Get("runtime").(string))
 		configUpdate = true
@@ -640,6 +623,50 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		d.SetPartial("role")
 		d.SetPartial("timeout")
 	}
+
+	if d.HasChange("filename") || d.HasChange("source_code_hash") || d.HasChange("s3_bucket") || d.HasChange("s3_key") || d.HasChange("s3_object_version") {
+		codeReq := &lambda.UpdateFunctionCodeInput{
+			FunctionName: aws.String(d.Id()),
+			Publish:      aws.Bool(d.Get("publish").(bool)),
+		}
+
+		if v, ok := d.GetOk("filename"); ok {
+			// Grab an exclusive lock so that we're only reading one function into
+			// memory at a time.
+			// See https://github.com/hashicorp/terraform/issues/9364
+			awsMutexKV.Lock(awsMutexLambdaKey)
+			defer awsMutexKV.Unlock(awsMutexLambdaKey)
+			file, err := loadFileContent(v.(string))
+			if err != nil {
+				return fmt.Errorf("Unable to load %q: %s", v.(string), err)
+			}
+			codeReq.ZipFile = file
+		} else {
+			s3Bucket, _ := d.GetOk("s3_bucket")
+			s3Key, _ := d.GetOk("s3_key")
+			s3ObjectVersion, versionOk := d.GetOk("s3_object_version")
+
+			codeReq.S3Bucket = aws.String(s3Bucket.(string))
+			codeReq.S3Key = aws.String(s3Key.(string))
+			if versionOk {
+				codeReq.S3ObjectVersion = aws.String(s3ObjectVersion.(string))
+			}
+		}
+
+		log.Printf("[DEBUG] Send Update Lambda Function Code request: %#v", codeReq)
+
+		_, err := conn.UpdateFunctionCode(codeReq)
+		if err != nil {
+			return fmt.Errorf("Error modifying Lambda Function Code %s: %s", d.Id(), err)
+		}
+
+		d.SetPartial("filename")
+		d.SetPartial("source_code_hash")
+		d.SetPartial("s3_bucket")
+		d.SetPartial("s3_key")
+		d.SetPartial("s3_object_version")
+	}
+
 	d.Partial(false)
 
 	return resourceAwsLambdaFunctionRead(d, meta)
@@ -665,34 +692,6 @@ func readEnvironmentVariables(ev map[string]interface{}) map[string]string {
 	}
 
 	return variables
-}
-
-func validateVPCConfig(v interface{}) (map[string]interface{}, error) {
-	configs := v.([]interface{})
-	if len(configs) > 1 {
-		return nil, errors.New("Only a single vpc_config block is expected")
-	}
-
-	config, ok := configs[0].(map[string]interface{})
-
-	if !ok {
-		return nil, errors.New("vpc_config is <nil>")
-	}
-
-	// if subnet_ids and security_group_ids are both empty then the VPC is optional
-	if config["subnet_ids"].(*schema.Set).Len() == 0 && config["security_group_ids"].(*schema.Set).Len() == 0 {
-		return nil, nil
-	}
-
-	if config["subnet_ids"].(*schema.Set).Len() == 0 {
-		return nil, errors.New("vpc_config.subnet_ids cannot be empty")
-	}
-
-	if config["security_group_ids"].(*schema.Set).Len() == 0 {
-		return nil, errors.New("vpc_config.security_group_ids cannot be empty")
-	}
-
-	return config, nil
 }
 
 func validateRuntime(v interface{}, k string) (ws []string, errors []error) {

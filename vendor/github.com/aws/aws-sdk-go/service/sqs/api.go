@@ -16,19 +16,18 @@ const opAddPermission = "AddPermission"
 
 // AddPermissionRequest generates a "aws/request.Request" representing the
 // client's request for the AddPermission operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See AddPermission for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the AddPermission method directly
-// instead.
+// See AddPermission for more information on using the AddPermission
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the AddPermissionRequest method.
 //    req, resp := client.AddPermissionRequest(params)
@@ -120,19 +119,18 @@ const opChangeMessageVisibility = "ChangeMessageVisibility"
 
 // ChangeMessageVisibilityRequest generates a "aws/request.Request" representing the
 // client's request for the ChangeMessageVisibility operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See ChangeMessageVisibility for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the ChangeMessageVisibility method directly
-// instead.
+// See ChangeMessageVisibility for more information on using the ChangeMessageVisibility
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the ChangeMessageVisibilityRequest method.
 //    req, resp := client.ChangeMessageVisibilityRequest(params)
@@ -169,14 +167,13 @@ func (c *SQS) ChangeMessageVisibilityRequest(input *ChangeMessageVisibilityInput
 // timeout of 12 hours. For more information, see Visibility Timeout (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html)
 // in the Amazon SQS Developer Guide.
 //
-// For example, you have a message and with the default visibility timeout of
-// 5 minutes. After 3 minutes, you call ChangeMessageVisiblity with a timeout
-// of 10 minutes. At that time, the timeout for the message is extended by 10
-// minutes beyond the time of the ChangeMessageVisibility action. This results
-// in a total visibility timeout of 13 minutes. You can continue to call the
-// ChangeMessageVisibility to extend the visibility timeout to a maximum of
-// 12 hours. If you try to extend the visibility timeout beyond 12 hours, your
-// request is rejected.
+// For example, you have a message with a visibility timeout of 5 minutes. After
+// 3 minutes, you call ChangeMessageVisiblity with a timeout of 10 minutes.
+// At that time, the timeout for the message is extended by 10 minutes beyond
+// the time of the ChangeMessageVisibility action. This results in a total visibility
+// timeout of 13 minutes. You can continue to call the ChangeMessageVisibility
+// to extend the visibility timeout to a maximum of 12 hours. If you try to
+// extend the visibility timeout beyond 12 hours, your request is rejected.
 //
 // A message is considered to be in flight after it's received from a queue
 // by a consumer, but not yet deleted from the queue.
@@ -241,19 +238,18 @@ const opChangeMessageVisibilityBatch = "ChangeMessageVisibilityBatch"
 
 // ChangeMessageVisibilityBatchRequest generates a "aws/request.Request" representing the
 // client's request for the ChangeMessageVisibilityBatch operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See ChangeMessageVisibilityBatch for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the ChangeMessageVisibilityBatch method directly
-// instead.
+// See ChangeMessageVisibilityBatch for more information on using the ChangeMessageVisibilityBatch
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the ChangeMessageVisibilityBatchRequest method.
 //    req, resp := client.ChangeMessageVisibilityBatchRequest(params)
@@ -345,19 +341,18 @@ const opCreateQueue = "CreateQueue"
 
 // CreateQueueRequest generates a "aws/request.Request" representing the
 // client's request for the CreateQueue operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See CreateQueue for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the CreateQueue method directly
-// instead.
+// See CreateQueue for more information on using the CreateQueue
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the CreateQueueRequest method.
 //    req, resp := client.CreateQueueRequest(params)
@@ -470,19 +465,18 @@ const opDeleteMessage = "DeleteMessage"
 
 // DeleteMessageRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteMessage operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See DeleteMessage for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the DeleteMessage method directly
-// instead.
+// See DeleteMessage for more information on using the DeleteMessage
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the DeleteMessageRequest method.
 //    req, resp := client.DeleteMessageRequest(params)
@@ -574,19 +568,18 @@ const opDeleteMessageBatch = "DeleteMessageBatch"
 
 // DeleteMessageBatchRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteMessageBatch operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See DeleteMessageBatch for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the DeleteMessageBatch method directly
-// instead.
+// See DeleteMessageBatch for more information on using the DeleteMessageBatch
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the DeleteMessageBatchRequest method.
 //    req, resp := client.DeleteMessageBatchRequest(params)
@@ -677,19 +670,18 @@ const opDeleteQueue = "DeleteQueue"
 
 // DeleteQueueRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteQueue operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See DeleteQueue for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the DeleteQueue method directly
-// instead.
+// See DeleteQueue for more information on using the DeleteQueue
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the DeleteQueueRequest method.
 //    req, resp := client.DeleteQueueRequest(params)
@@ -720,7 +712,7 @@ func (c *SQS) DeleteQueueRequest(input *DeleteQueueInput) (req *request.Request,
 
 // DeleteQueue API operation for Amazon Simple Queue Service.
 //
-// Deletes the queue specified by the QueueUrl, even if the queue is empty.
+// Deletes the queue specified by the QueueUrl, regardless of the queue's contents.
 // If the specified queue doesn't exist, Amazon SQS returns a successful response.
 //
 // Be careful with the DeleteQueue action: When you delete a queue, any messages
@@ -766,19 +758,18 @@ const opGetQueueAttributes = "GetQueueAttributes"
 
 // GetQueueAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the GetQueueAttributes operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See GetQueueAttributes for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the GetQueueAttributes method directly
-// instead.
+// See GetQueueAttributes for more information on using the GetQueueAttributes
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the GetQueueAttributesRequest method.
 //    req, resp := client.GetQueueAttributesRequest(params)
@@ -857,19 +848,18 @@ const opGetQueueUrl = "GetQueueUrl"
 
 // GetQueueUrlRequest generates a "aws/request.Request" representing the
 // client's request for the GetQueueUrl operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See GetQueueUrl for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the GetQueueUrl method directly
-// instead.
+// See GetQueueUrl for more information on using the GetQueueUrl
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the GetQueueUrlRequest method.
 //    req, resp := client.GetQueueUrlRequest(params)
@@ -944,19 +934,18 @@ const opListDeadLetterSourceQueues = "ListDeadLetterSourceQueues"
 
 // ListDeadLetterSourceQueuesRequest generates a "aws/request.Request" representing the
 // client's request for the ListDeadLetterSourceQueues operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See ListDeadLetterSourceQueues for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the ListDeadLetterSourceQueues method directly
-// instead.
+// See ListDeadLetterSourceQueues for more information on using the ListDeadLetterSourceQueues
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the ListDeadLetterSourceQueuesRequest method.
 //    req, resp := client.ListDeadLetterSourceQueuesRequest(params)
@@ -986,10 +975,10 @@ func (c *SQS) ListDeadLetterSourceQueuesRequest(input *ListDeadLetterSourceQueue
 // ListDeadLetterSourceQueues API operation for Amazon Simple Queue Service.
 //
 // Returns a list of your queues that have the RedrivePolicy queue attribute
-// configured with a dead letter queue.
+// configured with a dead-letter queue.
 //
-// For more information about using dead letter queues, see Using Amazon SQS
-// Dead Letter Queues (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
+// For more information about using dead-letter queues, see Using Amazon SQS
+// Dead-Letter Queues (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
 // in the Amazon SQS Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1029,19 +1018,18 @@ const opListQueues = "ListQueues"
 
 // ListQueuesRequest generates a "aws/request.Request" representing the
 // client's request for the ListQueues operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See ListQueues for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the ListQueues method directly
-// instead.
+// See ListQueues for more information on using the ListQueues
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the ListQueuesRequest method.
 //    req, resp := client.ListQueuesRequest(params)
@@ -1106,19 +1094,18 @@ const opPurgeQueue = "PurgeQueue"
 
 // PurgeQueueRequest generates a "aws/request.Request" representing the
 // client's request for the PurgeQueue operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See PurgeQueue for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the PurgeQueue method directly
-// instead.
+// See PurgeQueue for more information on using the PurgeQueue
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the PurgeQueueRequest method.
 //    req, resp := client.PurgeQueueRequest(params)
@@ -1202,19 +1189,18 @@ const opReceiveMessage = "ReceiveMessage"
 
 // ReceiveMessageRequest generates a "aws/request.Request" representing the
 // client's request for the ReceiveMessage operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See ReceiveMessage for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the ReceiveMessage method directly
-// instead.
+// See ReceiveMessage for more information on using the ReceiveMessage
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the ReceiveMessageRequest method.
 //    req, resp := client.ReceiveMessageRequest(params)
@@ -1284,8 +1270,8 @@ func (c *SQS) ReceiveMessageRequest(input *ReceiveMessageInput) (req *request.Re
 //
 // A message that isn't deleted or a message whose visibility isn't extended
 // before the visibility timeout expires counts as a failed receive. Depending
-// on the configuration of the queue, the message might be sent to the dead
-// letter queue.
+// on the configuration of the queue, the message might be sent to the dead-letter
+// queue.
 //
 // In the future, new attributes might be added. If you write code that calls
 // this action, we recommend that you structure your code so that it can handle
@@ -1331,19 +1317,18 @@ const opRemovePermission = "RemovePermission"
 
 // RemovePermissionRequest generates a "aws/request.Request" representing the
 // client's request for the RemovePermission operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See RemovePermission for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the RemovePermission method directly
-// instead.
+// See RemovePermission for more information on using the RemovePermission
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the RemovePermissionRequest method.
 //    req, resp := client.RemovePermissionRequest(params)
@@ -1409,19 +1394,18 @@ const opSendMessage = "SendMessage"
 
 // SendMessageRequest generates a "aws/request.Request" representing the
 // client's request for the SendMessage operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See SendMessage for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the SendMessage method directly
-// instead.
+// See SendMessage for more information on using the SendMessage
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the SendMessageRequest method.
 //    req, resp := client.SendMessageRequest(params)
@@ -1500,19 +1484,18 @@ const opSendMessageBatch = "SendMessageBatch"
 
 // SendMessageBatchRequest generates a "aws/request.Request" representing the
 // client's request for the SendMessageBatch operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See SendMessageBatch for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the SendMessageBatch method directly
-// instead.
+// See SendMessageBatch for more information on using the SendMessageBatch
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the SendMessageBatchRequest method.
 //    req, resp := client.SendMessageBatchRequest(params)
@@ -1625,19 +1608,18 @@ const opSetQueueAttributes = "SetQueueAttributes"
 
 // SetQueueAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the SetQueueAttributes operation. The "output" return
-// value can be used to capture response data after the request's "Send" method
-// is called.
+// value will be populated with the request's response once the request complets
+// successfuly.
 //
-// See SetQueueAttributes for usage and error information.
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
 //
-// Creating a request object using this method should be used when you want to inject
-// custom logic into the request's lifecycle using a custom handler, or if you want to
-// access properties on the request object before or after sending the request. If
-// you just want the service response, call the SetQueueAttributes method directly
-// instead.
+// See SetQueueAttributes for more information on using the SetQueueAttributes
+// API call, and error handling.
 //
-// Note: You must call the "Send" method on the returned request object in order
-// to execute the request.
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
 //
 //    // Example sending a request using the SetQueueAttributesRequest method.
 //    req, resp := client.SetQueueAttributesRequest(params)
@@ -2220,13 +2202,21 @@ type CreateQueueInput struct {
 	//    which a ReceiveMessage action waits for a message to arrive. Valid values:
 	//    An integer from 0 to 20 (seconds). The default is 0 (zero).
 	//
-	//    * RedrivePolicy - The parameters for the dead letter queue functionality
-	//    of the source queue. For more information about the redrive policy and
-	//    dead letter queues, see Using Amazon SQS Dead Letter Queues (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
+	//    * RedrivePolicy - The string that includes the parameters for the dead-letter
+	//    queue functionality of the source queue. For more information about the
+	//    redrive policy and dead-letter queues, see Using Amazon SQS Dead-Letter
+	//    Queues (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
 	//    in the Amazon SQS Developer Guide.
 	//
-	// The dead letter queue of a FIFO queue must also be a FIFO queue. Similarly,
-	//    the dead letter queue of a standard queue must also be a standard queue.
+	// deadLetterTargetArn - The Amazon Resource Name (ARN) of the dead-letter queue
+	//    to which Amazon SQS moves messages after the value of maxReceiveCount
+	//    is exceeded.
+	//
+	// maxReceiveCount - The number of times a message is delivered to the source
+	//    queue before being moved to the dead-letter queue.
+	//
+	// The dead-letter queue of a FIFO queue must also be a FIFO queue. Similarly,
+	//    the dead-letter queue of a standard queue must also be a standard queue.
 	//
 	//    * VisibilityTimeout - The visibility timeout for the queue. Valid values:
 	//    An integer from 0 to 43,200 (12 hours). The default is 30. For more information
@@ -2238,7 +2228,7 @@ type CreateQueueInput struct {
 	//    * KmsMasterKeyId - The ID of an AWS-managed customer master key (CMK)
 	//    for Amazon SQS or a custom CMK. For more information, see Key Terms (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-server-side-encryption.html#sqs-sse-key-terms).
 	//    While the alias of the AWS-managed CMK for Amazon SQS is always alias/aws/sqs,
-	//    the alias of a custom CMK can, for example, be alias/aws/sqs. For more
+	//    the alias of a custom CMK can, for example, be alias/MyAlias. For more
 	//    examples, see KeyId (http://docs.aws.amazon.com/kms/latest/APIReference/API_DescribeKey.html#API_DescribeKey_RequestParameters)
 	//    in the AWS Key Management Service API Reference.
 	//
@@ -2247,9 +2237,9 @@ type CreateQueueInput struct {
 	//    to encrypt or decrypt messages before calling AWS KMS again. An integer
 	//    representing seconds, between 60 seconds (1 minute) and 86,400 seconds
 	//    (24 hours). The default is 300 (5 minutes). A shorter time period provides
-	//    better security but results in more calls to KMS which incur charges after
-	//    Free Tier. For more information, see How Does the Data Key Reuse Period
-	//    Work? (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-server-side-encryption.html#sqs-how-does-the-data-key-reuse-period-work).
+	//    better security but results in more calls to KMS which might incur charges
+	//    after Free Tier. For more information, see How Does the Data Key Reuse
+	//    Period Work? (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-server-side-encryption.html#sqs-how-does-the-data-key-reuse-period-work).
 	//
 	//
 	// The following attributes apply only to FIFO (first-in-first-out) queues (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues.html):
@@ -2744,10 +2734,18 @@ type GetQueueAttributesInput struct {
 	//    * ReceiveMessageWaitTimeSeconds - Returns the length of time, in seconds,
 	//    for which the ReceiveMessage action waits for a message to arrive.
 	//
-	//    * RedrivePolicy - Returns the parameters for dead letter queue functionality
-	//    of the source queue. For more information about the redrive policy and
-	//    dead letter queues, see Using Amazon SQS Dead Letter Queues (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
+	//    * RedrivePolicy - Returns the string that includes the parameters for
+	//    dead-letter queue functionality of the source queue. For more information
+	//    about the redrive policy and dead-letter queues, see Using Amazon SQS
+	//    Dead-Letter Queues (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
 	//    in the Amazon SQS Developer Guide.
+	//
+	// deadLetterTargetArn - The Amazon Resource Name (ARN) of the dead-letter queue
+	//    to which Amazon SQS moves messages after the value of maxReceiveCount
+	//    is exceeded.
+	//
+	// maxReceiveCount - The number of times a message is delivered to the source
+	//    queue before being moved to the dead-letter queue.
 	//
 	//    * VisibilityTimeout - Returns the visibility timeout for the queue. For
 	//    more information about the visibility timeout, see Visibility Timeout
@@ -2763,7 +2761,9 @@ type GetQueueAttributesInput struct {
 	//
 	//    * KmsDataKeyReusePeriodSeconds - Returns the length of time, in seconds,
 	//    for which Amazon SQS can reuse a data key to encrypt or decrypt messages
-	//    before calling AWS KMS again.
+	//    before calling AWS KMS again. For more information, see How Does the Data
+	//    Key Reuse Period Work? (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-server-side-encryption.html#sqs-how-does-the-data-key-reuse-period-work).
+	//
 	//
 	// The following attributes apply only to FIFO (first-in-first-out) queues (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues.html):
 	//
@@ -2929,7 +2929,7 @@ func (s *GetQueueUrlOutput) SetQueueUrl(v string) *GetQueueUrlOutput {
 type ListDeadLetterSourceQueuesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The URL of a dead letter queue.
+	// The URL of a dead-letter queue.
 	//
 	// Queue URLs are case-sensitive.
 	//
@@ -2972,7 +2972,7 @@ type ListDeadLetterSourceQueuesOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of source queue URLs that have the RedrivePolicy queue attribute configured
-	// with a dead letter queue.
+	// with a dead-letter queue.
 	//
 	// QueueUrls is a required field
 	QueueUrls []*string `locationName:"queueUrls" locationNameList:"QueueUrl" type:"list" flattened:"true" required:"true"`
@@ -3445,7 +3445,8 @@ type ReceiveMessageInput struct {
 
 	// The duration (in seconds) for which the call waits for a message to arrive
 	// in the queue before returning. If a message is available, the call returns
-	// sooner than WaitTimeSeconds.
+	// sooner than WaitTimeSeconds. If no messages are available and the wait time
+	// expires, the call returns successfully with an empty list of messages.
 	WaitTimeSeconds *int64 `type:"integer"`
 }
 
@@ -4257,13 +4258,21 @@ type SetQueueAttributesInput struct {
 	//    which a ReceiveMessage action waits for a message to arrive. Valid values:
 	//    an integer from 0 to 20 (seconds). The default is 0.
 	//
-	//    * RedrivePolicy - The parameters for the dead letter queue functionality
-	//    of the source queue. For more information about the redrive policy and
-	//    dead letter queues, see Using Amazon SQS Dead Letter Queues (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
+	//    * RedrivePolicy - The string that includes the parameters for the dead-letter
+	//    queue functionality of the source queue. For more information about the
+	//    redrive policy and dead-letter queues, see Using Amazon SQS Dead-Letter
+	//    Queues (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
 	//    in the Amazon SQS Developer Guide.
 	//
-	// The dead letter queue of a FIFO queue must also be a FIFO queue. Similarly,
-	//    the dead letter queue of a standard queue must also be a standard queue.
+	// deadLetterTargetArn - The Amazon Resource Name (ARN) of the dead-letter queue
+	//    to which Amazon SQS moves messages after the value of maxReceiveCount
+	//    is exceeded.
+	//
+	// maxReceiveCount - The number of times a message is delivered to the source
+	//    queue before being moved to the dead-letter queue.
+	//
+	// The dead-letter queue of a FIFO queue must also be a FIFO queue. Similarly,
+	//    the dead-letter queue of a standard queue must also be a standard queue.
 	//
 	//    * VisibilityTimeout - The visibility timeout for the queue. Valid values:
 	//    an integer from 0 to 43,200 (12 hours). The default is 30. For more information
@@ -4275,7 +4284,7 @@ type SetQueueAttributesInput struct {
 	//    * KmsMasterKeyId - The ID of an AWS-managed customer master key (CMK)
 	//    for Amazon SQS or a custom CMK. For more information, see Key Terms (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-server-side-encryption.html#sqs-sse-key-terms).
 	//    While the alias of the AWS-managed CMK for Amazon SQS is always alias/aws/sqs,
-	//    the alias of a custom CMK can, for example, be alias/aws/sqs. For more
+	//    the alias of a custom CMK can, for example, be alias/MyAlias. For more
 	//    examples, see KeyId (http://docs.aws.amazon.com/kms/latest/APIReference/API_DescribeKey.html#API_DescribeKey_RequestParameters)
 	//    in the AWS Key Management Service API Reference.
 	//
@@ -4284,9 +4293,9 @@ type SetQueueAttributesInput struct {
 	//    to encrypt or decrypt messages before calling AWS KMS again. An integer
 	//    representing seconds, between 60 seconds (1 minute) and 86,400 seconds
 	//    (24 hours). The default is 300 (5 minutes). A shorter time period provides
-	//    better security but results in more calls to KMS which incur charges after
-	//    Free Tier. For more information, see How Does the Data Key Reuse Period
-	//    Work? (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-server-side-encryption.html#sqs-how-does-the-data-key-reuse-period-work).
+	//    better security but results in more calls to KMS which might incur charges
+	//    after Free Tier. For more information, see How Does the Data Key Reuse
+	//    Period Work? (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-server-side-encryption.html#sqs-how-does-the-data-key-reuse-period-work).
 	//
 	//
 	// The following attribute applies only to FIFO (first-in-first-out) queues

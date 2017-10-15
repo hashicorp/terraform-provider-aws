@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -14,6 +15,8 @@ import (
 )
 
 func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
+	refName := acctest.RandStringFromCharSet(15, acctest.CharSetAlphaNum)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_route53_delegation_set.test",
@@ -22,7 +25,7 @@ func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
 		CheckDestroy:    testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRoute53DelegationSetConfig,
+				Config: testAccRoute53DelegationSetConfig(refName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53DelegationSetExists("aws_route53_delegation_set.test"),
 				),
@@ -33,6 +36,7 @@ func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
 
 func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
+	refName := acctest.RandStringFromCharSet(15, acctest.CharSetAlphaNum)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
@@ -42,7 +46,7 @@ func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
 		CheckDestroy:    testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRoute53DelegationSetWithZonesConfig,
+				Config: testAccRoute53DelegationSetWithZonesConfig(refName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53DelegationSetExists("aws_route53_delegation_set.main"),
 					testAccCheckRoute53ZoneExists("aws_route53_zone.primary", &zone),
@@ -134,15 +138,18 @@ func testAccCheckRoute53NameServersMatch(delegationSetName, zoneName string) res
 	}
 }
 
-const testAccRoute53DelegationSetConfig = `
+func testAccRoute53DelegationSetConfig(refName string) string {
+	return fmt.Sprintf(`
 resource "aws_route53_delegation_set" "test" {
-	reference_name = "test"
+	reference_name = "%s"
 }
-`
+`, refName)
+}
 
-const testAccRoute53DelegationSetWithZonesConfig = `
+func testAccRoute53DelegationSetWithZonesConfig(refName string) string {
+	return fmt.Sprintf(`
 resource "aws_route53_delegation_set" "main" {
-    reference_name = "main"
+    reference_name = "%s"
 }
 
 resource "aws_route53_zone" "primary" {
@@ -154,4 +161,5 @@ resource "aws_route53_zone" "secondary" {
     name = "terraform.io"
     delegation_set_id = "${aws_route53_delegation_set.main.id}"
 }
-`
+`, refName)
+}

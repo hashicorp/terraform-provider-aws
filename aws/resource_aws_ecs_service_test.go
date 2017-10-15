@@ -108,6 +108,23 @@ func TestAccAWSEcsServiceWithARN(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsServiceWithUnnormalizedPlacementStrategy(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithInterchangeablePlacementStrategy(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsServiceWithFamilyAndRevision(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-test")
 	resource.Test(t, resource.TestCase{
@@ -427,6 +444,40 @@ resource "aws_ecs_service" "mongo" {
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 2
+}
+`, rInt, rInt)
+}
+
+func testAccAWSEcsServiceWithInterchangeablePlacementStrategy(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "default" {
+	name = "terraformecstest%d"
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "mongodb"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "mongo" {
+  name = "mongodb-%d"
+  cluster = "${aws_ecs_cluster.default.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count = 1
+  placement_strategy {
+  	  field = "host"
+	  type = "spread"
+  }
 }
 `, rInt, rInt)
 }
@@ -979,26 +1030,26 @@ resource "aws_iam_role_policy" "ecs_service" {
 EOF
 }
 
-resource "aws_alb_target_group" "test" {
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 80
   protocol = "HTTP"
   vpc_id = "${aws_vpc.main.id}"
 }
 
-resource "aws_alb" "main" {
+resource "aws_lb" "main" {
   name            = "%s"
   internal        = true
   subnets         = ["${aws_subnet.main.*.id}"]
 }
 
-resource "aws_alb_listener" "front_end" {
-  load_balancer_arn = "${aws_alb.main.id}"
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = "${aws_lb.main.id}"
   port = "80"
   protocol = "HTTP"
 
   default_action {
-    target_group_arn = "${aws_alb_target_group.test.id}"
+    target_group_arn = "${aws_lb_target_group.test.id}"
     type = "forward"
   }
 }
@@ -1011,14 +1062,14 @@ resource "aws_ecs_service" "with_alb" {
   iam_role = "${aws_iam_role.ecs_service.name}"
 
   load_balancer {
-    target_group_arn = "${aws_alb_target_group.test.id}"
+    target_group_arn = "${aws_lb_target_group.test.id}"
     container_name = "ghost"
     container_port = "2368"
   }
 
   depends_on = [
     "aws_iam_role_policy.ecs_service",
-    "aws_alb_listener.front_end"
+    "aws_lb_listener.front_end"
   ]
 }
 `, rName, rName, rName, rName, rName, rName, rName)

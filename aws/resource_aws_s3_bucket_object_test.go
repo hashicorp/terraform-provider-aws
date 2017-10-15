@@ -89,6 +89,8 @@ func TestAccAWSS3BucketObject_withContentCharacteristics(t *testing.T) {
 					testAccCheckAWSS3BucketObjectExists("aws_s3_bucket_object.object", &obj),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket_object.object", "content_type", "binary/octet-stream"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket_object.object", "website_redirect", "http://google.com"),
 				),
 			},
 		},
@@ -579,6 +581,7 @@ resource "aws_s3_bucket_object" "object" {
 	source = "%s"
 	content_language = "en"
 	content_type = "binary/octet-stream"
+	website_redirect = "http://google.com"
 }
 `, randInt, source)
 }
