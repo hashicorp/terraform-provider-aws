@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 
@@ -13,31 +14,32 @@ import (
 )
 
 func TestAccAWSServiceCatalogPortfolio_basic(t *testing.T) {
+	name := acctest.RandString(5)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfig_basic1,
+				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic1(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "name", "test-1"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "name", name),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "description", "test-2"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "provider_name", "test-3"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfig_basic2,
+				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic2(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "name", "test-a"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "name", name),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "description", "test-b"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "provider_name", "test-c"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfig_basic3,
+				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic3(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "name", "test-a"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "name", name),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "description", "test-only-change-me"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "provider_name", "test-c"),
 				),
@@ -47,6 +49,7 @@ func TestAccAWSServiceCatalogPortfolio_basic(t *testing.T) {
 }
 
 func TestAccAWSServiceCatalogPortfolio_disappears(t *testing.T) {
+	name := acctest.RandString(5)
 	var portfolioDetail servicecatalog.PortfolioDetail
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -54,12 +57,35 @@ func TestAccAWSServiceCatalogPortfolio_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfig_basic1,
+				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic1(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolio("aws_servicecatalog_portfolio.test", &portfolioDetail),
 					testAccCheckServiceCatlaogPortfolioDisappears(&portfolioDetail),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSServiceCatalogPortfolioImport(t *testing.T) {
+	resourceName := "aws_servicecatalog_portfolio.test"
+
+	name := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic1(name),
+			},
+
+			resource.TestStep{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -125,26 +151,32 @@ func testAccCheckServiceCatlaogPortfolioDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccCheckAwsServiceCatalogPortfolioResourceConfig_basic1 = `
+func testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic1(name string) string {
+	return fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio" "test" {
-  name = "test-1"
+  name = "%s"
   description = "test-2"
   provider_name = "test-3"
 }
-`
+`, name)
+}
 
-const testAccCheckAwsServiceCatalogPortfolioResourceConfig_basic2 = `
+func testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic2(name string) string {
+	return fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio" "test" {
-  name = "test-a"
+  name = "%s"
   description = "test-b"
   provider_name = "test-c"
 }
-`
+`, name)
+}
 
-const testAccCheckAwsServiceCatalogPortfolioResourceConfig_basic3 = `
+func testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic3(name string) string {
+	return fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio" "test" {
-  name = "test-a"
+  name = "%s"
   description = "test-only-change-me"
   provider_name = "test-c"
 }
-`
+`, name)
+}

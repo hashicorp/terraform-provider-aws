@@ -32,35 +32,35 @@ func resourceAwsServiceCatalogPortfolio() *schema.Resource {
 			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
-				ForceNew: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: false,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateServiceCatalogName,
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: false,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateServiceCatalogDescription,
 			},
 			"provider_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: false,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateServiceCatalogProviderName,
 			},
 		},
 	}
 }
-
 func resourceAwsServiceCatalogPortfolioCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
-	input := servicecatalog.CreatePortfolioInput{}
-	if v, ok := d.GetOk("name"); ok {
-		now := time.Now()
-		input.IdempotencyToken = aws.String(fmt.Sprintf("%d", now.UnixNano()))
-		input.DisplayName = aws.String(v.(string))
+	input := servicecatalog.CreatePortfolioInput{
+		AcceptLanguage: aws.String("en"),
 	}
+	name := d.Get("name").(string)
+	input.DisplayName = &name
+	now := time.Now()
+	input.IdempotencyToken = aws.String(fmt.Sprintf("%d", now.UnixNano()))
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -82,7 +82,9 @@ func resourceAwsServiceCatalogPortfolioCreate(d *schema.ResourceData, meta inter
 
 func resourceAwsServiceCatalogPortfolioRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
-	input := servicecatalog.DescribePortfolioInput{}
+	input := servicecatalog.DescribePortfolioInput{
+		AcceptLanguage: aws.String("en"),
+	}
 	input.Id = aws.String(d.Id())
 
 	log.Printf("[DEBUG] Reading Service Catalog Portfolio: %#v", input)
@@ -98,19 +100,26 @@ func resourceAwsServiceCatalogPortfolioRead(d *schema.ResourceData, meta interfa
 	portfolioDetail := resp.PortfolioDetail
 
 	d.Set("description", portfolioDetail.Description)
-	d.Set("display_name", portfolioDetail.DisplayName)
+	d.Set("name", portfolioDetail.DisplayName)
 	d.Set("provider_name", portfolioDetail.ProviderName)
 	return nil
 }
 
 func resourceAwsServiceCatalogPortfolioUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
-	input := servicecatalog.UpdatePortfolioInput{}
-	input.Id = aws.String(d.Id())
+	input := servicecatalog.UpdatePortfolioInput{
+		AcceptLanguage: aws.String("en"),
+		Id:             aws.String(d.Id()),
+	}
 
 	if d.HasChange("name") {
 		v, _ := d.GetOk("name")
 		input.DisplayName = aws.String(v.(string))
+	}
+
+	if d.HasChange("accept_language") {
+		v, _ := d.GetOk("accept_language")
+		input.AcceptLanguage = aws.String(v.(string))
 	}
 
 	if d.HasChange("description") {

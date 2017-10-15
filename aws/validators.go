@@ -1495,6 +1495,14 @@ func validateBatchName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
+func validateServiceCatalogName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) > 20) || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("Service catalog name must be between 1 and 20 characters."))
+	}
+	return
+}
+
 func validateSecurityGroupRuleDescription(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 255 {
@@ -1508,6 +1516,22 @@ func validateSecurityGroupRuleDescription(v interface{}, k string) (ws []string,
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't comply with restrictions (%q): %q",
 			k, pattern, value))
+	}
+	return
+}
+
+func validateServiceCatalogDescription(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 2000 {
+		errors = append(errors, fmt.Errorf("Service catalog description must be less than 2000 characters."))
+	}
+	return
+}
+
+func validateServiceCatalogProviderName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) > 20) || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("Service catalog provider name must be between 1 and 20 characters."))
 	}
 	return
 }
