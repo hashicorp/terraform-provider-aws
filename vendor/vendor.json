@@ -327,10 +327,10 @@
 		{
 			"checksumSHA1": "s3YX7GouNkKz4U+w/Id7ivv5i2c=",
 			"path": "github.com/aws/aws-sdk-go/service/budgets",
-			"revision": "da415b5fa0ff3f91d4707348a8ea1be53f700c22",
-			"revisionTime": "2017-10-05T19:55:01Z",
-			"version": "v1.12.6",
-			"versionExact": "v1.12.6"
+			"revision": "885962fbd7bf49bf62db54f63fb89f75611677cf",
+			"revisionTime": "2017-10-10T17:54:20Z",
+			"version": "v1.12.8",
+			"versionExact": "v1.12.8"
 		},
 		{
 			"checksumSHA1": "XPE0OmyX5xPvxP7QSdGuB7TY7AE=",
