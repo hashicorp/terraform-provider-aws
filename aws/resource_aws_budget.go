@@ -2,8 +2,10 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -71,6 +73,84 @@ func resourceAwsBudgetSchema() map[string]*schema.Schema {
 func resourceAwsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).budgetconn
 	accountID := meta.(*AWSClient).accountid
+	budget, err := newBudget(d)
+	if err != nil {
+		return fmt.Errorf("failed creating budget: %v", err)
+	}
+
+	createBudgetInput := new(budgets.CreateBudgetInput)
+	createBudgetInput.SetAccountId(accountID)
+	createBudgetInput.SetBudget(budget)
+	_, err = client.CreateBudget(createBudgetInput)
+	if err != nil {
+		return fmt.Errorf("create budget failed: %v", err)
+	}
+
+	d.SetId(*budget.BudgetName)
+	return resourceAwsBudgetUpdate(d, meta)
+}
+
+func resourceAwsBudgetRead(d *schema.ResourceData, meta interface{}) error {
+	budgetName := d.Get("budget_name").(string)
+	describeBudgetOutput, err := describeBudget(budgetName, meta)
+	if err != nil {
+		return fmt.Errorf("describe budget failed: %v", err)
+	}
+
+	d.Set("budget_name", describeBudgetOutput.Budget.BudgetName)
+	d.Set("budget_type", describeBudgetOutput.Budget.BudgetType)
+	d.Set("limit_amount", describeBudgetOutput.Budget.BudgetLimit.Amount)
+	d.Set("limit_unit", describeBudgetOutput.Budget.BudgetLimit.Unit)
+	d.Set("include_tax", describeBudgetOutput.Budget.CostTypes.IncludeTax)
+	d.Set("include_subscriptions", describeBudgetOutput.Budget.CostTypes.IncludeSubscription)
+	d.Set("include_blended", describeBudgetOutput.Budget.CostTypes.UseBlended)
+	d.Set("time_period_start", describeBudgetOutput.Budget.TimePeriod.Start)
+	d.Set("time_period_end", describeBudgetOutput.Budget.TimePeriod.End)
+	d.Set("time_unit", describeBudgetOutput.Budget.TimeUnit)
+	d.Set("cost_filters", describeBudgetOutput.Budget.CostFilters)
+	return nil
+}
+
+func resourceAwsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*AWSClient).budgetconn
+	accountID := meta.(*AWSClient).accountid
+	budget, err := newBudget(d)
+	if err != nil {
+		return fmt.Errorf("could not create budget: %v", err)
+	}
+
+	updateBudgetInput := new(budgets.UpdateBudgetInput)
+	updateBudgetInput.SetAccountId(accountID)
+	updateBudgetInput.SetNewBudget(budget)
+	_, err = client.UpdateBudget(updateBudgetInput)
+	if err != nil {
+		return fmt.Errorf("updaate budget failed: %v", err)
+	}
+
+	return resourceAwsBudgetRead(d, meta)
+}
+
+func resourceAwsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
+	budgetName := d.Get("budget_name").(string)
+	if !budgetExists(budgetName, meta) {
+		log.Printf("[INFO] budget %s could not be found. skipping delete.", d.Id())
+		return nil
+	}
+
+	client := meta.(*AWSClient).budgetconn
+	accountID := meta.(*AWSClient).accountid
+	deleteBudgetInput := new(budgets.DeleteBudgetInput)
+	deleteBudgetInput.SetBudgetName(budgetName)
+	deleteBudgetInput.SetAccountId(accountID)
+	_, err := client.DeleteBudget(deleteBudgetInput)
+	if err != nil {
+		return fmt.Errorf("delete budget failed: %v", err)
+	}
+
+	return nil
+}
+
+func newBudget(d *schema.ResourceData) (*budgets.Budget, error) {
 	budgetName := d.Get("budget_name").(string)
 	budgetType := d.Get("budget_type").(string)
 	budgetLimitAmount := d.Get("limit_amount").(string)
@@ -86,12 +166,12 @@ func resourceAwsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	budgetTimePeriodStart, err := time.Parse("2006-01-02_15:04", d.Get("time_period_start").(string))
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("failure parsing time: %v", err)
 	}
 
 	budgetTimePeriodEnd, err := time.Parse("2006-01-02_15:04", d.Get("time_period_end").(string))
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("failure parsing time: %v", err)
 	}
 
 	budgetTimeUnit := d.Get("time_unit").(string)
@@ -114,49 +194,23 @@ func resourceAwsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 	budget.SetTimeUnit(budgetTimeUnit)
 	budget.SetCostFilters(budgetCostFilters)
-	createBudgetInput := new(budgets.CreateBudgetInput)
-	createBudgetInput.SetAccountId(accountID)
-	createBudgetInput.SetBudget(budget)
-	_, err = client.CreateBudget(createBudgetInput)
-	if err != nil {
-		return fmt.Errorf("create budget failed: %v", err)
-	}
-
-	d.SetId(budgetName)
-	return nil
+	return budget, nil
 }
 
-func resourceAwsBudgetRead(d *schema.ResourceData, meta interface{}) error {
+func budgetExists(budgetName string, meta interface{}) bool {
+	_, err := describeBudget(budgetName, meta)
+	if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == budgets.ErrCodeNotFoundException {
+		return false
+	}
+
+	return true
+}
+
+func describeBudget(budgetName string, meta interface{}) (*budgets.DescribeBudgetOutput, error) {
 	client := meta.(*AWSClient).budgetconn
 	accountID := meta.(*AWSClient).accountid
-	budgetName := d.Get("budget_name").(string)
 	describeBudgetInput := new(budgets.DescribeBudgetInput)
 	describeBudgetInput.SetBudgetName(budgetName)
 	describeBudgetInput.SetAccountId(accountID)
-	_, err := client.DescribeBudget(describeBudgetInput)
-	if err != nil {
-		return fmt.Errorf("describe budget failed: %v", err)
-	}
-
-	return nil
-}
-
-func resourceAwsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).budgetconn
-	return fmt.Errorf("not yet implemented %v", client)
-}
-
-func resourceAwsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).budgetconn
-	accountID := meta.(*AWSClient).accountid
-	budgetName := d.Get("budget_name").(string)
-	deleteBudgetInput := new(budgets.DeleteBudgetInput)
-	deleteBudgetInput.SetBudgetName(budgetName)
-	deleteBudgetInput.SetAccountId(accountID)
-	_, err := client.DeleteBudget(deleteBudgetInput)
-	if err != nil {
-		return fmt.Errorf("delete budget failed: %v", err)
-	}
-
-	return nil
+	return client.DescribeBudget(describeBudgetInput)
 }
