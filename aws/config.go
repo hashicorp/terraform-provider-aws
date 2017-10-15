@@ -62,6 +62,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/aws/aws-sdk-go/service/simpledb"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -178,6 +179,7 @@ type AWSClient struct {
 	wafregionalconn       *wafregional.WAFRegional
 	iotconn               *iot.IoT
 	batchconn             *batch.Batch
+	shieldconn            *shield.Shield
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -387,6 +389,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
 	client.batchconn = batch.New(sess)
+	client.shieldconn = shield.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
