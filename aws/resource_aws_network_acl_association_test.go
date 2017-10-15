@@ -12,30 +12,18 @@ func TestAccAWSNetworkAclAssociation(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_network_acl.bar",
+		IDRefreshName: "aws_network_acl.acl_a",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclAssoc,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testCheckAwsRMNetworkAclAssocExists("aws_network_acl_association.test"),
+					testAccCheckSubnetIsAssociatedWithAcl("aws_network_acl.acl_a", "aws_subnet.sunet_a"),
 				),
 			},
 		},
 	})
-}
-
-func testCheckAwsRMNetworkAclAssocExists(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		return nil
-	}
 }
 
 const testAccAWSNetworkAclAssoc = `
