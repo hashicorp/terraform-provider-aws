@@ -19,7 +19,7 @@ func resourceAwsNetworkAclAssociation() *schema.Resource {
 		Update: resourceAwsNetworkAclAssociationUpdate,
 		Delete: resourceAwsNetworkAclAssociationDelete,
 
-		Schema: {
+		Schema: map[string]*schema.Schema{
 			"subnet_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -97,11 +97,12 @@ func resourceAwsNetworkAclAssociationUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Failed to find association for subnet %s: %s", subnetId, errAssociation)
 	}
 
-	req := &ec2.ReplaceNetworkAclAssociationInput{
+	associationOpts := ec2.ReplaceNetworkAclAssociationInput{
 		AssociationId: association.NetworkAclAssociationId,
 		NetworkAclId:  aws.String(naclId),
 	}
-	resp, err := conn.ReplaceNetworkAclAssociation(req)
+
+	_, err := conn.ReplaceNetworkAclAssociation(&associationOpts)
 
 	log.Printf("[DEBUG] Updating Network ACL association: %#v", associationOpts)
 
@@ -122,7 +123,6 @@ func resourceAwsNetworkAclAssociationDelete(d *schema.ResourceData, meta interfa
 
 	conn := meta.(*AWSClient).ec2conn
 
-	naclId := d.Get("network_acl_id").(string)
 	subnetId := d.Get("subnet_id").(string)
 
 	association, errAssociation := findNetworkAclAssociation(subnetId, conn)
@@ -133,7 +133,7 @@ func resourceAwsNetworkAclAssociationDelete(d *schema.ResourceData, meta interfa
 	defaultAcl, err := getDefaultNetworkAcl(d.Get("vpc_id").(string), conn)
 
 	if err != nil {
-		return resource.NonRetryableError(err)
+		return fmt.Errorf("Failed to get networkAcl : %s", err)
 	}
 
 	associationOpts := ec2.ReplaceNetworkAclAssociationInput{
@@ -143,7 +143,6 @@ func resourceAwsNetworkAclAssociationDelete(d *schema.ResourceData, meta interfa
 
 	log.Printf("[DEBUG] Replacing Network ACL association: %#v", associationOpts)
 
-	var err error
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err = conn.ReplaceNetworkAclAssociation(&associationOpts)
 		if err != nil {
