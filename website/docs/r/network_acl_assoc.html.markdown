@@ -6,8 +6,6 @@ description: |-
   Provides an network ACL association resource.
 ---
 
-# aws\_network\_acl\_association
-
 Provides an network ACL association resource. You might set up network ACLs associate to your subnet.
 
 ## Example Usage
@@ -33,4 +31,3 @@ The following attributes are exported:
 * `id` - The ID of the network ACL
 * `network_acl_id` - The ID of the network ACL
 * `subnet_id` - The ID of the subnet id
-
