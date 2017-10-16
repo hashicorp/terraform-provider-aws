@@ -193,12 +193,15 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	krs, _ := out.(*kms.GetKeyRotationStatusOutput)
 	d.Set("enable_key_rotation", krs.KeyRotationEnabled)
 
-	tagList, err := conn.ListResourceTags(&kms.ListResourceTagsInput{
-		KeyId: metadata.KeyId,
+	tOut, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
+		return conn.ListResourceTags(&kms.ListResourceTagsInput{
+			KeyId: metadata.KeyId,
+		})
 	})
 	if err != nil {
 		return fmt.Errorf("Failed to get KMS key tags (key: %s): %s", d.Get("key_id").(string), err)
 	}
+	tagList := tOut.(*kms.ListResourceTagsOutput)
 	d.Set("tags", tagsToMapKMS(tagList.Tags))
 
 	return nil
