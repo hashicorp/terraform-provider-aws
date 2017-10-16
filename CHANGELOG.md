@@ -76,6 +76,7 @@ BUG FIXES:
 * resource/aws_vpn_connection_route: Wait until route is available/deleted [GH-1849]
 * resource/aws_cloudfront_distribution: Ignore `minimum_protocol_version` if default certificate is used [GH-1785]
 * resource/aws_security_group: Using `self = false` with `cidr_blocks` should be allowed [GH-1839]
+* resource/aws_instance: Check VPC array size to avoid crashes on Eucalyptus Cloud [GH-1882]
 
 ## 1.0.0 (September 27, 2017)
 
