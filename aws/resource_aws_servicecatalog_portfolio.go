@@ -155,6 +155,7 @@ func resourceAwsServiceCatalogPortfolioUpdate(d *schema.ResourceData, meta inter
 		currentTags, requiredTags := d.GetChange("tags")
 		log.Printf("[DEBUG] Current Tags: %#v", currentTags)
 		log.Printf("[DEBUG] Required Tags: %#v", requiredTags)
+
 		tagsToAdd, tagsToRemove := tagUpdates(requiredTags.(map[string]interface{}), currentTags.(map[string]interface{}))
 		log.Printf("[DEBUG] Tags To Add: %#v", tagsToAdd)
 		log.Printf("[DEBUG] Tags To Remove: %#v", tagsToRemove)
