@@ -93,7 +93,7 @@ func resourceAwsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsBudgetRead(d *schema.ResourceData, meta interface{}) error {
 	budgetName := d.Get("budget_name").(string)
 	describeBudgetOutput, err := describeBudget(budgetName, meta)
-	if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == budgets.ErrCodeNotFoundException {
+	if isBudgetNotFoundException(err) {
 		d.SetId("")
 		return nil
 	}
@@ -163,6 +163,7 @@ func newBudget(d *schema.ResourceData) (*budgets.Budget, error) {
 	budgetIncludeTax := d.Get("include_tax").(bool)
 	budgetIncludeSubscriptions := d.Get("include_subscriptions").(bool)
 	budgetIncludeBlended := d.Get("include_blended").(bool)
+	budgetTimeUnit := d.Get("time_unit").(string)
 	budgetCostFilters := make(map[string][]*string)
 	for k, v := range d.Get("cost_filters").(map[string]interface{}) {
 		filterValue := v.(string)
@@ -179,7 +180,6 @@ func newBudget(d *schema.ResourceData) (*budgets.Budget, error) {
 		return nil, fmt.Errorf("failure parsing time: %v", err)
 	}
 
-	budgetTimeUnit := d.Get("time_unit").(string)
 	budget := new(budgets.Budget)
 	budget.SetBudgetName(budgetName)
 	budget.SetBudgetType(budgetType)
@@ -203,11 +203,19 @@ func newBudget(d *schema.ResourceData) (*budgets.Budget, error) {
 
 func budgetExists(budgetName string, meta interface{}) bool {
 	_, err := describeBudget(budgetName, meta)
-	if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == budgets.ErrCodeNotFoundException {
+	if isBudgetNotFoundException(err) {
 		return false
 	}
 
 	return true
+}
+
+func isBudgetNotFoundException(err error) bool {
+	if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == budgets.ErrCodeNotFoundException {
+		return true
+	}
+
+	return false
 }
 
 func describeBudget(budgetName string, meta interface{}) (*budgets.DescribeBudgetOutput, error) {
