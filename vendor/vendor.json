@@ -893,6 +893,14 @@
 			"revisionTime": "2017-10-15T22:09:51Z"
 		},
 		{
+			"checksumSHA1": "OHfwSU+p4N0Ft+BrzJfdE6AVRsY=",
+			"path": "github.com/aws/aws-sdk-go/service/workspaces",
+			"revision": "885962fbd7bf49bf62db54f63fb89f75611677cf",
+			"revisionTime": "2017-10-10T17:54:20Z",
+			"version": "v1.12.8",
+			"versionExact": "v1.12.8"
+		},
+		{
 			"checksumSHA1": "nqw2Qn5xUklssHTubS5HDvEL9L4=",
 			"path": "github.com/bgentry/go-netrc/netrc",
 			"revision": "9fd32a8b3d3d3f9d43c341bfe098430e07609480",

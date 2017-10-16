@@ -201,6 +201,7 @@ type AWSClient struct {
 	ssmconn               *ssm.SSM
 	wafconn               *waf.WAF
 	wafregionalconn       *wafregional.WAFRegional
+	workspacesconn        *workspaces.WorkSpaces
 	iotconn               *iot.IoT
 	batchconn             *batch.Batch
 	glueconn              *glue.Glue
@@ -448,6 +449,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.ssmconn = ssm.New(sess)
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
+	client.workspacesconn = workspaces.New(sess)
 	client.batchconn = batch.New(sess)
 	client.glueconn = glue.New(sess)
 	client.athenaconn = athena.New(sess)
