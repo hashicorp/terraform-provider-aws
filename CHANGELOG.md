@@ -1,4 +1,4 @@
-## 1.0.1 (Unreleased)
+## 1.1.0 (Unreleased)
 
 NOTES:
 
@@ -56,6 +56,7 @@ BUG FIXES:
 * data-source/aws_ebs_snapshot: Update the `tags` structure for easier referencing [GH-1706]
 * data-source/aws_ebs_volume: Update the `tags` structure for easier referencing [GH-1706]
 * data-source/aws_instance: Update the `tags` structure for easier referencing [GH-1706]
+* resource/aws_spot_instance_request: Handle `closed` request correctly [GH-1903]
 * resource/aws_cloudtrail: Raise update retry timeout [GH-1820]
 * resource/aws_elasticache_parameter_group: Retry resetting group on pending changes [GH-1821]
 * resource/aws_kms_key: Retry getting rotation status [GH-1818]

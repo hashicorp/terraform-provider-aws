@@ -325,6 +325,14 @@
 			"versionExact": "v1.12.8"
 		},
 		{
+			"checksumSHA1": "s3YX7GouNkKz4U+w/Id7ivv5i2c=",
+			"path": "github.com/aws/aws-sdk-go/service/budgets",
+			"revision": "885962fbd7bf49bf62db54f63fb89f75611677cf",
+			"revisionTime": "2017-10-10T17:54:20Z",
+			"version": "v1.12.8",
+			"versionExact": "v1.12.8"
+		},
+		{
 			"checksumSHA1": "XPE0OmyX5xPvxP7QSdGuB7TY7AE=",
 			"path": "github.com/aws/aws-sdk-go/service/cloudformation",
 			"revision": "885962fbd7bf49bf62db54f63fb89f75611677cf",
@@ -687,8 +695,10 @@
 		{
 			"checksumSHA1": "6DiA9x0ibBF3ZBnILXiugtdTufc=",
 			"path": "github.com/aws/aws-sdk-go/service/shield",
-			"revision": "8df786dd79b07878e6b6021e95b6e2417b06cbf4",
-			"revisionTime": "2017-10-13T17:55:20Z"
+			"revision": "885962fbd7bf49bf62db54f63fb89f75611677cf",
+			"revisionTime": "2017-10-10T17:54:20Z",
+			"version": "v1.12.8",
+			"versionExact": "v1.12.8"
 		},
 		{
 			"checksumSHA1": "hOcVb1zJiDUmafXSJQhkEascWwA=",
