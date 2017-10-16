@@ -693,6 +693,14 @@
 			"versionExact": "v1.12.8"
 		},
 		{
+			"checksumSHA1": "6DiA9x0ibBF3ZBnILXiugtdTufc=",
+			"path": "github.com/aws/aws-sdk-go/service/shield",
+			"revision": "885962fbd7bf49bf62db54f63fb89f75611677cf",
+			"revisionTime": "2017-10-10T17:54:20Z",
+			"version": "v1.12.8",
+			"versionExact": "v1.12.8"
+		},
+		{
 			"checksumSHA1": "hOcVb1zJiDUmafXSJQhkEascWwA=",
 			"path": "github.com/aws/aws-sdk-go/service/simpledb",
 			"revision": "885962fbd7bf49bf62db54f63fb89f75611677cf",
