@@ -75,6 +75,7 @@ BUG FIXES:
 * resource/aws_appautoscaling_*: Use dimension to uniquely identify target/policy [GH-1808]
 * resource/aws_vpn_connection_route: Wait until route is available/deleted [GH-1849]
 * resource/aws_cloudfront_distribution: Ignore `minimum_protocol_version` if default certificate is used [GH-1785]
+* resource/aws_security_group: Using `self = false` with `cidr_blocks` should be allowed [GH-1839]
 
 ## 1.0.0 (September 27, 2017)
 
