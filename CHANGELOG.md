@@ -1,4 +1,9 @@
 ## 1.1.1 (Unreleased)
+
+BUG FIXES:
+
+* resourcee/aws_elasticache_parameter_group: Add missing return to retry logic [GH-1891]
+
 ## 1.1.0 (October 16, 2017)
 
 NOTES:
