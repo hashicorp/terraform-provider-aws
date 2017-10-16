@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -57,12 +56,7 @@ func newComposedBudgetTestCheck(name, limit, filterKey, filterValue string, prov
 
 func testBudgetExists(budgetName, limit, filterKey, filterValue string, provider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := provider.Meta().(*AWSClient).budgetconn
-		accountID := provider.Meta().(*AWSClient).accountid
-		describeBudgetInput := new(budgets.DescribeBudgetInput)
-		describeBudgetInput.SetBudgetName(budgetName)
-		describeBudgetInput.SetAccountId(accountID)
-		b, err := client.DescribeBudget(describeBudgetInput)
+		b, err := describeBudget(budgetName, provider.Meta())
 		if err != nil {
 			return fmt.Errorf("Describebudget error: %v", err)
 		}
