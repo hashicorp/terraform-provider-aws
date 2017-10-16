@@ -157,6 +157,9 @@ resource "aws_servicecatalog_portfolio" "test" {
   name = "%s"
   description = "test-2"
   provider_name = "test-3"
+  tags {
+    Key1 = "Value One"
+  }
 }
 `, name)
 }
@@ -167,6 +170,10 @@ resource "aws_servicecatalog_portfolio" "test" {
   name = "%s"
   description = "test-b"
   provider_name = "test-c"
+  tags {
+    Key1 = "Value One"
+    Key2 = "Value Two"
+  }
 }
 `, name)
 }
@@ -177,6 +184,9 @@ resource "aws_servicecatalog_portfolio" "test" {
   name = "%s"
   description = "test-only-change-me"
   provider_name = "test-c"
+  tags {
+    Key3 = "Value Three"
+  }
 }
 `, name)
 }

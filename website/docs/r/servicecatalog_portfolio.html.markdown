@@ -27,6 +27,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the portfolio.
 * `description` - (Required) Description of the portfolio
 * `provider_name` - (Required) Name of the person or organization who owns the portfolio.
+* `tags` - (Optional) Tags to apply to the connection.
 
 ## Attributes Reference
 
