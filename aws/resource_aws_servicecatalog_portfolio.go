@@ -36,18 +36,18 @@ func resourceAwsServiceCatalogPortfolio() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateServiceCatalogName,
+				ValidateFunc: validateServiceCatalogPortfolioName,
 			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateServiceCatalogDescription,
+				ValidateFunc: validateServiceCatalogPortfolioDescription,
 			},
 			"provider_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateServiceCatalogProviderName,
+				ValidateFunc: validateServiceCatalogPortfolioProviderName,
 			},
 			"tags": tagsSchema(),
 		},

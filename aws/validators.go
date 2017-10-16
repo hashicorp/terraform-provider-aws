@@ -1495,14 +1495,6 @@ func validateBatchName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validateServiceCatalogName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if (len(value) > 20) || (len(value) == 0) {
-		errors = append(errors, fmt.Errorf("Service catalog name must be between 1 and 20 characters."))
-	}
-	return
-}
-
 func validateSecurityGroupRuleDescription(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 255 {
@@ -1520,7 +1512,15 @@ func validateSecurityGroupRuleDescription(v interface{}, k string) (ws []string,
 	return
 }
 
-func validateServiceCatalogDescription(v interface{}, k string) (ws []string, errors []error) {
+func validateServiceCatalogPortfolioName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) > 20) || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("Service catalog name must be between 1 and 20 characters."))
+	}
+	return
+}
+
+func validateServiceCatalogPortfolioDescription(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 2000 {
 		errors = append(errors, fmt.Errorf("Service catalog description must be less than 2000 characters."))
@@ -1528,7 +1528,7 @@ func validateServiceCatalogDescription(v interface{}, k string) (ws []string, er
 	return
 }
 
-func validateServiceCatalogProviderName(v interface{}, k string) (ws []string, errors []error) {
+func validateServiceCatalogPortfolioProviderName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if (len(value) > 20) || (len(value) == 0) {
 		errors = append(errors, fmt.Errorf("Service catalog provider name must be between 1 and 20 characters."))
