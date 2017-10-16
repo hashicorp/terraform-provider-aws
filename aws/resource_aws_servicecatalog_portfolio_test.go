@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func TestAccAWSServiceCatalogPortfolio_basic(t *testing.T) {
+func TestAccAWSServiceCatalogPortfolioBasic(t *testing.T) {
 	name := acctest.RandString(5)
 	var dpo servicecatalog.DescribePortfolioOutput
 	resource.Test(t, resource.TestCase{
@@ -59,7 +59,7 @@ func TestAccAWSServiceCatalogPortfolio_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogPortfolio_disappears(t *testing.T) {
+func TestAccAWSServiceCatalogPortfolioDisappears(t *testing.T) {
 	name := acctest.RandString(5)
 	var dpo servicecatalog.DescribePortfolioOutput
 	resource.Test(t, resource.TestCase{
