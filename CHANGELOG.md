@@ -4,7 +4,7 @@ BUG FIXES:
 
 * resource/aws_elasticache_parameter_group: Add missing return to retry logic [GH-1891]
 * resource/aws_batch_job_queue: Wait for update completion when disabling [GH-1892]
-* resource/aws_snapshot_create_volume_permission: Raise timeout [GH-1894]
+* resource/aws_snapshot_create_volume_permission: Raise timeout to 10mins [GH-1894]
 * resource/aws_kms_alias: Retry creation on `NotFoundException` [GH-1896]
 * resource/aws_kms_key: Retry reading tags on `NotFoundException` [GH-1900]
 * resource/aws_db_snapshot: Raise creation timeout to 20mins [GH-1905]
