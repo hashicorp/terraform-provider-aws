@@ -92,6 +92,64 @@ func TestAccAWSBeanstalkApp_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSBeanstalkApp_appversionlifecycle(t *testing.T) {
+	var app elasticbeanstalk.ApplicationDescription
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBeanstalkAppDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccBeanstalkAppConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
+					resource.TestCheckNoResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.service_role"),
+					resource.TestCheckNoResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.max_age_in_days"),
+					resource.TestCheckNoResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.max_count"),
+					resource.TestCheckNoResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.delete_source_from_s3"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccBeanstalkAppConfigWithMaxAge,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
+					resource.TestCheckResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.#", "1"),
+					resource.TestCheckResourceAttrPair(
+						"aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.service_role",
+						"aws_iam_role.beanstalk_service", "arn"),
+					resource.TestCheckResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.max_age_in_days", "90"),
+					resource.TestCheckResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.max_count", "0"),
+					resource.TestCheckResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.delete_source_from_s3", "true"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccBeanstalkAppConfigWithMaxCount,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
+					resource.TestCheckResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.#", "1"),
+					resource.TestCheckResourceAttrPair(
+						"aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.service_role",
+						"aws_iam_role.beanstalk_service", "arn"),
+					resource.TestCheckResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.max_age_in_days", "0"),
+					resource.TestCheckResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.max_count", "10"),
+					resource.TestCheckResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.delete_source_from_s3", "false"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccBeanstalkAppConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
+					resource.TestCheckNoResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.service_role"),
+					resource.TestCheckNoResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.max_age_in_days"),
+					resource.TestCheckNoResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.max_count"),
+					resource.TestCheckNoResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.delete_source_from_s3"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBeanstalkAppDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
 
@@ -159,5 +217,79 @@ const testAccBeanstalkAppConfig = `
 resource "aws_elastic_beanstalk_application" "tftest" {
   name = "tf-test-name"
   description = "tf-test-desc"
+}
+`
+
+const testAccBeanstalkAppServiceRole = `
+resource "aws_iam_role" "beanstalk_service" {
+  name = "tf-test-service-role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "elasticbeanstalk.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "elasticbeanstalk"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "beanstalk_service" {
+  name = "tf-test-service-role-polcy"
+  role = "${aws_iam_role.beanstalk_service.id}"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowOperations",
+            "Effect": "Allow",
+            "Action": [
+                "iam:PassRole"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
+EOF
+}
+`
+
+const testAccBeanstalkAppConfigWithMaxAge = testAccBeanstalkAppServiceRole + `
+resource "aws_elastic_beanstalk_application" "tftest" {
+  name = "tf-test-name"
+  description = "tf-test-desc"
+	appversion_lifecycle {
+		service_role = "${aws_iam_role.beanstalk_service.arn}"
+		max_age_in_days = 90
+		delete_source_from_s3 = true
+	}
+}
+`
+
+const testAccBeanstalkAppConfigWithMaxCount = testAccBeanstalkAppServiceRole + `
+resource "aws_elastic_beanstalk_application" "tftest" {
+  name = "tf-test-name"
+  description = "tf-test-desc"
+	appversion_lifecycle {
+		service_role = "${aws_iam_role.beanstalk_service.arn}"
+		max_count = 10
+		delete_source_from_s3 = false
+	}
 }
 `
