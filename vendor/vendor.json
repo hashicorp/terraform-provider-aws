@@ -453,6 +453,14 @@
 			"versionExact": "v1.12.8"
 		},
 		{
+			"checksumSHA1": "vJAA3F/3UhmdWX7s3r+5YxEUuUg=",
+			"path": "github.com/aws/aws-sdk-go/service/directconnect",
+			"revision": "885962fbd7bf49bf62db54f63fb89f75611677cf",
+			"revisionTime": "2017-10-10T17:54:20Z",
+			"version": "v1.12.8",
+			"versionExact": "v1.12.8"
+		},
+		{
 			"checksumSHA1": "1O8BtYGfkXglIqgl/uxunrq3Djs=",
 			"path": "github.com/aws/aws-sdk-go/service/directoryservice",
 			"revision": "885962fbd7bf49bf62db54f63fb89f75611677cf",
