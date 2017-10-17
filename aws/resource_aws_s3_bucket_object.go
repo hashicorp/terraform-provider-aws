@@ -60,6 +60,11 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Optional: true,
 			},
 
+			"metadata": &schema.Schema{
+				Type:     schema.TypeMap,
+				Optional: true,
+			},
+
 			"content_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -177,6 +182,16 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 		putInput.ContentType = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("metadata"); ok {
+		meta := make(map[string]*string)
+		for key, value := range v.(map[string]interface{}) {
+			valueStr := fmt.Sprintf("%v", value)
+			meta[key] = &valueStr
+		}
+
+		putInput.Metadata = meta
+	}
+
 	if v, ok := d.GetOk("content_encoding"); ok {
 		putInput.ContentEncoding = aws.String(v.(string))
 	}
@@ -258,6 +273,7 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("content_encoding", resp.ContentEncoding)
 	d.Set("content_language", resp.ContentLanguage)
 	d.Set("content_type", resp.ContentType)
+	d.Set("metadata", pointersMapToStringList(resp.Metadata))
 	d.Set("version_id", resp.VersionId)
 	d.Set("server_side_encryption", resp.ServerSideEncryption)
 	d.Set("website_redirect", resp.WebsiteRedirectLocation)
