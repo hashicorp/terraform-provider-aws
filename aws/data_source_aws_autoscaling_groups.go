@@ -21,6 +21,11 @@ func dataSourceAwsAutoscalingGroups() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"arns": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -49,7 +54,8 @@ func dataSourceAwsAutoscalingGroupsRead(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Reading Autoscaling Groups.")
 	d.SetId(time.Now().UTC().String())
 
-	var raw []string
+	var rawNames []string
+	var rawArns []string
 
 	tf := d.Get("filter").(*schema.Set)
 	if tf.Len() > 0 {
@@ -60,9 +66,24 @@ func dataSourceAwsAutoscalingGroupsRead(d *schema.ResourceData, meta interface{}
 			return err
 		}
 
-		raw = make([]string, len(out.Tags))
+		rawNames = make([]string, len(out.Tags))
+		namesSlicePointer := make([]*string, len(out.Tags))
 		for i, v := range out.Tags {
-			raw[i] = *v.ResourceId
+			rawNames[i] = *v.ResourceId
+			namesSlicePointer[i] = v.ResourceId
+		}
+
+		// Fetch the group ARNs.
+		rawArns = make([]string, len(namesSlicePointer))
+		resp, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
+			AutoScalingGroupNames: namesSlicePointer,
+		})
+		if err != nil {
+			return fmt.Errorf("Error fetching Autoscaling Groups: %s", err)
+		}
+
+		for i, v := range resp.AutoScalingGroups {
+			rawArns[i] = *v.AutoScalingGroupARN
 		}
 	} else {
 
@@ -71,16 +92,22 @@ func dataSourceAwsAutoscalingGroupsRead(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("Error fetching Autoscaling Groups: %s", err)
 		}
 
-		raw = make([]string, len(resp.AutoScalingGroups))
+		rawNames = make([]string, len(resp.AutoScalingGroups))
+		rawArns = make([]string, len(resp.AutoScalingGroups))
 		for i, v := range resp.AutoScalingGroups {
-			raw[i] = *v.AutoScalingGroupName
+			rawNames[i] = *v.AutoScalingGroupName
+			rawArns[i] = *v.AutoScalingGroupARN
 		}
 	}
 
-	sort.Strings(raw)
+	sort.Strings(rawNames)
 
-	if err := d.Set("names", raw); err != nil {
+	if err := d.Set("names", rawNames); err != nil {
 		return fmt.Errorf("[WARN] Error setting Autoscaling Group Names: %s", err)
+	}
+
+	if err := d.Set("arns", rawArns); err != nil {
+		return fmt.Errorf("[WARN] Error setting Autoscaling Group ARNs: %s", err)
 	}
 
 	return nil
