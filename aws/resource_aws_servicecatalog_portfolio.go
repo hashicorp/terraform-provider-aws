@@ -33,6 +33,14 @@ func resourceAwsServiceCatalogPortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -112,7 +120,10 @@ func resourceAwsServiceCatalogPortfolioRead(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Reading ServiceCatalog Portfolio '%s' failed: %s", *input.Id, err.Error())
 	}
 	portfolioDetail := resp.PortfolioDetail
-
+	if err := d.Set("created_time", portfolioDetail.CreatedTime.Format(time.RFC3339)); err != nil {
+		log.Printf("[DEBUG] Error setting created_time: %s", err)
+	}
+	d.Set("arn", portfolioDetail.ARN)
 	d.Set("description", portfolioDetail.Description)
 	d.Set("name", portfolioDetail.DisplayName)
 	d.Set("provider_name", portfolioDetail.ProviderName)

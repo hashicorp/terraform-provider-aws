@@ -25,6 +25,8 @@ func TestAccAWSServiceCatalogPortfolioBasic(t *testing.T) {
 				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic1(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolio("aws_servicecatalog_portfolio.test", &dpo),
+					resource.TestCheckResourceAttrSet("aws_servicecatalog_portfolio.test", "arn"),
+					resource.TestCheckResourceAttrSet("aws_servicecatalog_portfolio.test", "created_time"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "name", name),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "description", "test-2"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "provider_name", "test-3"),
@@ -36,6 +38,8 @@ func TestAccAWSServiceCatalogPortfolioBasic(t *testing.T) {
 				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic2(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolio("aws_servicecatalog_portfolio.test", &dpo),
+					resource.TestCheckResourceAttrSet("aws_servicecatalog_portfolio.test", "arn"),
+					resource.TestCheckResourceAttrSet("aws_servicecatalog_portfolio.test", "created_time"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "name", name),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "description", "test-b"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "provider_name", "test-c"),
@@ -48,6 +52,8 @@ func TestAccAWSServiceCatalogPortfolioBasic(t *testing.T) {
 				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic3(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolio("aws_servicecatalog_portfolio.test", &dpo),
+					resource.TestCheckResourceAttrSet("aws_servicecatalog_portfolio.test", "arn"),
+					resource.TestCheckResourceAttrSet("aws_servicecatalog_portfolio.test", "created_time"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "name", name),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "description", "test-only-change-me"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "provider_name", "test-c"),
