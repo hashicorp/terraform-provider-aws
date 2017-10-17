@@ -83,6 +83,9 @@ func TestAccAWSVpc_basic(t *testing.T) {
 					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(
 						"aws_vpc.foo", "cidr_block", "10.1.0.0/16"),
+					// ipv6 should be empty if disabled so we can still use the property in conditionals
+					resource.TestCheckResourceAttr(
+						"aws_vpc.foo", "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttrSet(
 						"aws_vpc.foo", "default_route_table_id"),
 					resource.TestCheckResourceAttr(
