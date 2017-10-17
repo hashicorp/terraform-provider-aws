@@ -1268,7 +1268,6 @@ provider "aws" {
 resource "aws_s3_bucket" "bucket" {
 	provider = "aws.west"
 	bucket = "tf-test-bucket-%d"
-	region = "eu-west-1"
 }
 `, randInt)
 }
@@ -1360,7 +1359,6 @@ provider "aws" {
 resource "aws_s3_bucket" "bucket" {
 	provider = "aws.west"
 	bucket = "tf-test-bucket-%d"
-	region = "eu-west-1"
 	acl = "public-read"
 	acceleration_status = "Enabled"
 }
@@ -1377,7 +1375,6 @@ provider "aws" {
 resource "aws_s3_bucket" "bucket" {
 	provider = "aws.west"
 	bucket = "tf-test-bucket-%d"
-	region = "eu-west-1"
 	acl = "public-read"
 	acceleration_status = "Suspended"
 }
@@ -1658,7 +1655,6 @@ resource "aws_s3_bucket" "bucket" {
 resource "aws_s3_bucket" "destination" {
     provider = "aws.euwest"
     bucket   = "tf-test-bucket-destination-%d"
-    region   = "eu-west-1"
 
     versioning {
         enabled = true
@@ -1696,7 +1692,6 @@ resource "aws_s3_bucket" "bucket" {
 resource "aws_s3_bucket" "destination" {
     provider = "aws.euwest"
     bucket   = "tf-test-bucket-destination-%d"
-    region   = "eu-west-1"
 
     versioning {
         enabled = true
@@ -1733,7 +1728,6 @@ resource "aws_s3_bucket" "bucket" {
 resource "aws_s3_bucket" "destination" {
     provider = "aws.euwest"
     bucket   = "tf-test-bucket-destination-%d"
-    region   = "eu-west-1"
 
     versioning {
         enabled = true
@@ -1767,7 +1761,6 @@ resource "aws_s3_bucket" "bucket" {
 resource "aws_s3_bucket" "destination" {
     provider = "aws.euwest"
     bucket   = "tf-test-bucket-destination-%d"
-    region   = "eu-west-1"
 
     versioning {
         enabled = true

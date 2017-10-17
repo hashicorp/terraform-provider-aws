@@ -145,9 +145,10 @@ func resourceAwsS3Bucket() *schema.Resource {
 			},
 
 			"region": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "Use appropriate provider defined in the desired region (you can define multiple providers).",
 			},
 			"website_endpoint": {
 				Type:     schema.TypeString,
