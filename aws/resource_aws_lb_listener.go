@@ -201,6 +201,8 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 
+	shouldWaitForCapacity := false
+
 	params := &elbv2.ModifyListenerInput{
 		ListenerArn: aws.String(d.Id()),
 		Port:        aws.Int64(int64(d.Get("port").(int))),
@@ -221,6 +223,9 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 	if defaultActions := d.Get("default_action").([]interface{}); len(defaultActions) == 1 {
 		params.DefaultActions = make([]*elbv2.Action, len(defaultActions))
 
+		// TODO: does this only execute on a change to the target_group_arn ?
+		shouldWaitForCapacity = true
+
 		for i, defaultAction := range defaultActions {
 			defaultActionMap := defaultAction.(map[string]interface{})
 
@@ -231,9 +236,31 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
+	if shouldWaitForCapacity {
+
+		err := addHealthCheckOnlyRule(params, elbconn, d.Get("arn").(string))
+		if err != nil {
+			return errwrap.Wrapf("Error adding health-check only rule to listener: {{err}}", err)
+		}
+
+		if err := waitForListenerTargetGroupCapacity(d, meta, func(d *schema.ResourceData, current int, target int) (bool, string) {
+			if current < target {
+				return false, fmt.Sprintf("Need at least %d healthy instances in target group, have %d", current, target)
+			}
+			return true, ""
+		}); err != nil {
+			return errwrap.Wrapf("Error waiting for Target Group Capacity: {{err}}", err)
+		}
+	}
+
 	_, err := elbconn.ModifyListener(params)
 	if err != nil {
 		return errwrap.Wrapf("Error modifying LB Listener: {{err}}", err)
+	}
+
+	err = removeHealthCheckOnlyRule(params, elbconn, d.Get("arn").(string))
+	if err != nil {
+		return errwrap.Wrapf("Error modifying ALB Listener: {{err}}", err)
 	}
 
 	return resourceAwsLbListenerRead(d, meta)
@@ -281,4 +308,67 @@ func validateAwsLbListenerActionType(v interface{}, k string) (ws []string, erro
 func isListenerNotFound(err error) bool {
 	elberr, ok := err.(awserr.Error)
 	return ok && elberr.Code() == "ListenerNotFound"
+}
+
+// Adds a custom rule to a listener for the sole purpose of
+// enabling health checks on a target group
+func addHealthCheckOnlyRule(params *elbv2.ModifyListenerInput, elbconn *elbv2.ELBV2, listenerArn string) error {
+	targetGroupArn := params.DefaultActions[0].TargetGroupArn
+
+	resp, err := elbconn.CreateRule(&elbv2.CreateRuleInput{
+		ListenerArn: aws.String(listenerArn),
+		Actions: []*elbv2.Action{&elbv2.Action{
+			TargetGroupArn: targetGroupArn,
+			Type:           aws.String("forward"),
+		}},
+		Conditions: []*elbv2.RuleCondition{&elbv2.RuleCondition{
+			Field:  aws.String("host-header"),
+			Values: aws.StringSlice([]string{healthCheckOnlyHostname}),
+		}},
+		Priority: aws.Int64(100),
+	})
+
+	log.Printf("[DEBUG] resp.Rules.length: %d", len(resp.Rules))
+
+	if err != nil {
+		return errwrap.Wrapf("Error creating temporary listener rule: {{err}}", err)
+	}
+	log.Printf("[DEBUG] addHealthCheckOnlyRule: added rule")
+	return nil
+}
+
+// Removes the custom health-check-only rule from a listener
+func removeHealthCheckOnlyRule(params *elbv2.ModifyListenerInput, elbconn *elbv2.ELBV2, listenerArn string) error {
+
+	resp, err := elbconn.DescribeRules(&elbv2.DescribeRulesInput{
+		ListenerArn: aws.String(listenerArn),
+	})
+
+	if err != nil {
+		return errwrap.Wrapf("Error describing temporary listener rules: {{err}}", err)
+	}
+
+Rules:
+	for _, rule := range resp.Rules {
+		log.Printf("[DEBUG] removeHealthCheckOnlyRule: testing rule %v", rule)
+		if !aws.BoolValue(rule.IsDefault) {
+			for _, cond := range rule.Conditions {
+				field := aws.StringValue(cond.Field)
+				values := aws.StringValueSlice(cond.Values)
+				if field == "host-header" && len(values) == 1 && values[0] == healthCheckOnlyHostname {
+					log.Printf("[DEBUG] removeHealthCheckOnlyRule: removing rule %v", rule)
+					_, err = elbconn.DeleteRule(&elbv2.DeleteRuleInput{
+						RuleArn: rule.RuleArn,
+					})
+
+					if err != nil {
+						return errwrap.Wrapf("Error removing temporary listener rule: {{err}}", err)
+					}
+					continue Rules
+				}
+			}
+		}
+	}
+
+	return nil
 }
