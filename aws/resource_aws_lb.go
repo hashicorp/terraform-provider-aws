@@ -390,6 +390,10 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("subnets") {
+		if d.Get("load_balancer_type").(string) == "network" {
+			return fmt.Errorf("Unable to update subnets for loadbalancer %s, updating subnets is not supported for type network", d.Id())
+		}
+
 		subnets := expandStringList(d.Get("subnets").(*schema.Set).List())
 
 		params := &elbv2.SetSubnetsInput{
