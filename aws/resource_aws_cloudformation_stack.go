@@ -21,6 +21,10 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 		Update: resourceAwsCloudFormationStackUpdate,
 		Delete: resourceAwsCloudFormationStackDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),

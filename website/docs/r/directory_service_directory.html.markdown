@@ -25,6 +25,10 @@ resource "aws_directory_service_directory" "bar" {
     vpc_id     = "${aws_vpc.main.id}"
     subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
   }
+
+  tags {
+    Project = "foo"
+  }
 }
 
 resource "aws_vpc" "main" {
@@ -58,6 +62,7 @@ The following arguments are supported:
 * `short_name` - (Optional) The short name of the directory, such as `CORP`.
 * `enable_sso` - (Optional) Whether to enable single-sign on for the directory. Requires `alias`. Defaults to `false`.
 * `type` (Optional) - The directory type (`SimpleAD` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 **vpc\_settings** supports the following:
 
@@ -78,3 +83,12 @@ The following attributes are exported:
 * `id` - The directory identifier.
 * `access_url` - The access URL for the directory, such as `http://alias.awsapps.com`.
 * `dns_ip_addresses` - A list of IP addresses of the DNS servers for the directory or connector.
+
+
+## Import
+
+DirectoryService directories can be imported using the directory `id`, e.g.
+
+```
+$ terraform import aws_directory_service_directory.sample d-926724cf57
+```

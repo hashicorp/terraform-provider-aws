@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -65,6 +66,22 @@ func TestAccAWSSNSTopic_withIAMRole(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSNSTopic_withFakeIAMRole(t *testing.T) {
+	rName := acctest.RandString(10)
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_sns_topic.test_topic",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config:      testAccAWSSNSTopicConfig_withFakeIAMRole(rName),
+				ExpectError: regexp.MustCompile(`PrincipalNotFound`),
 			},
 		},
 	})
@@ -331,6 +348,32 @@ resource "aws_sns_topic" "test_topic" {
     },
     "disableSubscriptionOverrides": false
   }
+}
+EOF
+}
+`, r)
+}
+
+// Test for https://github.com/hashicorp/terraform/issues/3660
+func testAccAWSSNSTopicConfig_withFakeIAMRole(r string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test_topic" {
+  name = "tf_acc_test_fake_iam_role_%s"
+  policy = <<EOF
+{
+  "Statement": [
+    {
+      "Sid": "Stmt1445931846145",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::012345678901:role/wooo"
+			},
+      "Action": "sns:Publish",
+      "Resource": "arn:aws:sns:us-west-2::example"
+    }
+  ],
+  "Version": "2012-10-17",
+  "Id": "Policy1445931846145"
 }
 EOF
 }

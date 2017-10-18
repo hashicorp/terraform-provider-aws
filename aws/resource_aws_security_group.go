@@ -132,6 +132,12 @@ func resourceAwsSecurityGroup() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+
+						"description": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateSecurityGroupRuleDescription,
+						},
 					},
 				},
 				Set: resourceAwsSecurityGroupRuleHash,
@@ -194,6 +200,12 @@ func resourceAwsSecurityGroup() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
+						},
+
+						"description": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateSecurityGroupRuleDescription,
 						},
 					},
 				},
@@ -314,9 +326,9 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 		_, err = conn.RevokeSecurityGroupEgress(req)
 		if err != nil {
-			//If we have a NotFound, then we are trying to remove the default IPv6 egress of a non-IPv6
+			//If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6
 			//enabled SG
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() != "InvalidPermission.NotFound" {
+			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() != "InvalidPermission.NotFound" && !isAWSErr(err, "InvalidParameterValue", "remote-ipv6-range") {
 				return fmt.Errorf(
 					"Error revoking default IPv6 egress rule for Security Group (%s): %s",
 					d.Id(), err)
@@ -500,6 +512,9 @@ func resourceAwsSecurityGroupRuleHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s-", v))
 		}
 	}
+	if m["description"].(string) != "" {
+		buf.WriteString(fmt.Sprintf("%s-", m["description"].(string)))
+	}
 
 	return hashcode.String(buf.String())
 }
@@ -526,6 +541,8 @@ func resourceAwsSecurityGroupIPPermGather(groupId string, permissions []*ec2.IpP
 		m["to_port"] = toPort
 		m["protocol"] = *perm.IpProtocol
 
+		var description string
+
 		if len(perm.IpRanges) > 0 {
 			raw, ok := m["cidr_blocks"]
 			if !ok {
@@ -535,6 +552,11 @@ func resourceAwsSecurityGroupIPPermGather(groupId string, permissions []*ec2.IpP
 
 			for _, ip := range perm.IpRanges {
 				list = append(list, *ip.CidrIp)
+
+				desc := aws.StringValue(ip.Description)
+				if desc != "" {
+					description = desc
+				}
 			}
 
 			m["cidr_blocks"] = list
@@ -549,6 +571,11 @@ func resourceAwsSecurityGroupIPPermGather(groupId string, permissions []*ec2.IpP
 
 			for _, ip := range perm.Ipv6Ranges {
 				list = append(list, *ip.CidrIpv6)
+
+				desc := aws.StringValue(ip.Description)
+				if desc != "" {
+					description = desc
+				}
 			}
 
 			m["ipv6_cidr_blocks"] = list
@@ -563,6 +590,11 @@ func resourceAwsSecurityGroupIPPermGather(groupId string, permissions []*ec2.IpP
 
 			for _, pl := range perm.PrefixListIds {
 				list = append(list, *pl.PrefixListId)
+
+				desc := aws.StringValue(pl.Description)
+				if desc != "" {
+					description = desc
+				}
 			}
 
 			m["prefix_list_ids"] = list
@@ -573,6 +605,11 @@ func resourceAwsSecurityGroupIPPermGather(groupId string, permissions []*ec2.IpP
 			if *g.GroupId == groupId {
 				groups[i], groups = groups[len(groups)-1], groups[:len(groups)-1]
 				m["self"] = true
+
+				desc := aws.StringValue(g.Description)
+				if desc != "" {
+					description = desc
+				}
 			}
 		}
 
@@ -589,10 +626,17 @@ func resourceAwsSecurityGroupIPPermGather(groupId string, permissions []*ec2.IpP
 				} else {
 					list.Add(*g.GroupId)
 				}
+
+				desc := aws.StringValue(g.Description)
+				if desc != "" {
+					description = desc
+				}
 			}
 
 			m["security_groups"] = list
 		}
+
+		m["description"] = description
 	}
 	rules := make([]map[string]interface{}, 0, len(ruleMap))
 	for _, m := range ruleMap {
@@ -1007,6 +1051,11 @@ func matchRules(rType string, local []interface{}, remote []map[string]interface
 										r["security_groups"] = diffSGs
 									} else {
 										delete(r, "security_groups")
+									}
+
+									// copy over any remote rule description
+									if _, ok := r["description"]; ok {
+										l["description"] = r["description"]
 									}
 
 									saves = append(saves, l)

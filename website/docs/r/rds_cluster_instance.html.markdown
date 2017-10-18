@@ -50,6 +50,8 @@ The following arguments are supported:
 * `identifier` - (Optional, Forces new resource) The indentifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifer`.
 * `cluster_identifier` - (Required) The identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
+* `engine` - (Optional) The name of the database engine to be used for the RDS instance. Defaults to `aurora`.
+* `engine_version` - (Optional) The database engine version.
 * `instance_class` - (Required) The instance class to use. For details on CPU
 and memory, see [Scaling Aurora DB Instances][4]. Aurora currently
   supports the below instance classes.
@@ -89,7 +91,7 @@ The following attributes are exported:
 * `writer` – Boolean indicating if this instance is writable. `False` indicates
 this instance is a read replica
 * `allocated_storage` - The amount of allocated storage
-* `availability_zones` - The availability zone of the instance
+* `availability_zone` - The availability zone of the instance
 * `endpoint` - The DNS address for this instance. May not be writable
 * `engine` - The database engine
 * `engine_version` - The database engine version

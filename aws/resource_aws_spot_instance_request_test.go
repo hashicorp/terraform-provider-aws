@@ -32,6 +32,8 @@ func TestAccAWSSpotInstanceRequest_basic(t *testing.T) {
 						"aws_spot_instance_request.foo", "spot_bid_status", "fulfilled"),
 					resource.TestCheckResourceAttr(
 						"aws_spot_instance_request.foo", "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(
+						"aws_spot_instance_request.foo", "instance_interruption_behaviour", "terminate"),
 				),
 			},
 		},
@@ -209,8 +211,9 @@ func testAccCheckAWSSpotInstanceRequestDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		if *s.State == "canceled" {
+		if *s.State == "canceled" || *s.State == "closed" {
 			// Requests stick around for a while, so we make sure it's cancelled
+			// or closed.
 			return nil
 		}
 

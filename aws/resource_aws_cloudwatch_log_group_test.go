@@ -195,6 +195,32 @@ func TestAccAWSCloudWatchLogGroup_tagging(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchLogGroup_kmsKey(t *testing.T) {
+	var lg cloudwatchlogs.LogGroup
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchLogGroupConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogGroupExists("aws_cloudwatch_log_group.foobar", &lg),
+				),
+			},
+			{
+				Config: testAccAWSCloudWatchLogGroupConfigWithKmsKeyId(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogGroupExists("aws_cloudwatch_log_group.foobar", &lg),
+					resource.TestCheckResourceAttrSet("aws_cloudwatch_log_group.foobar", "kms_key_id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCloudWatchLogGroupDisappears(lg *cloudwatchlogs.LogGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
@@ -348,6 +374,37 @@ resource "aws_cloudwatch_log_group" "charlie" {
     retention_in_days = 3653
 }
 `, rInt, rInt+1, rInt+2)
+}
+
+func testAccAWSCloudWatchLogGroupConfigWithKmsKeyId(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "foo" {
+    description = "Terraform acc test %d"
+    deletion_window_in_days = 7
+    policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_cloudwatch_log_group" "foobar" {
+    name = "foo-bar-%d"
+	kms_key_id = "${aws_kms_key.foo.arn}"
+}
+`, rInt, rInt)
 }
 
 const testAccAWSCloudWatchLogGroup_namePrefix = `

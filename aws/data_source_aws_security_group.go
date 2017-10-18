@@ -38,6 +38,11 @@ func dataSourceAwsSecurityGroup() *schema.Resource {
 			},
 
 			"tags": tagsSchemaComputed(),
+
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }

@@ -159,6 +159,7 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 			if ok && (awsErr.Code() == "InvalidAllocationID.NotFound" ||
 				awsErr.Code() == "InvalidAddress.NotFound") {
 				log.Printf("[WARN] EIP not found, removing from state: %s", req)
+				d.SetId("")
 				return nil
 			}
 			return err
@@ -339,8 +340,14 @@ func disassociateEip(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	switch resourceAwsEipDomain(d) {
 	case "vpc":
+		associationID := d.Get("association_id").(string)
+		if associationID == "" {
+			// If assiciationID is empty, it means there's no association.
+			// Hence this disassociation can be skipped.
+			return nil
+		}
 		_, err = ec2conn.DisassociateAddress(&ec2.DisassociateAddressInput{
-			AssociationId: aws.String(d.Get("association_id").(string)),
+			AssociationId: aws.String(associationID),
 		})
 	case "standard":
 		_, err = ec2conn.DisassociateAddress(&ec2.DisassociateAddressInput{
