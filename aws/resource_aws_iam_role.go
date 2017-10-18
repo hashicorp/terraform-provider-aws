@@ -127,10 +127,16 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 		name = resource.UniqueId()
 	}
 
+	// Normalize the Policy Document.
+	normalizedPolicyDocument, err := normalizeJsonString(d.Get("assume_role_policy").(string))
+	if err != nil {
+		return fmt.Errorf("Error normalizing JSON Assume Role Policy Document: %s", err)
+	}
+
 	request := &iam.CreateRoleInput{
 		Path:                     aws.String(d.Get("path").(string)),
 		RoleName:                 aws.String(name),
-		AssumeRolePolicyDocument: aws.String(d.Get("assume_role_policy").(string)),
+		AssumeRolePolicyDocument: aws.String(normalizedPolicyDocument),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -138,7 +144,7 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var createResp *iam.CreateRoleOutput
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err = resource.Retry(30*time.Second, func() *resource.RetryError {
 		var err error
 		createResp, err = iamconn.CreateRole(request)
 		// IAM users (referenced in Principal field of assume policy)

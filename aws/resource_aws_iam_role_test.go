@@ -138,6 +138,25 @@ func TestAccAWSIAMRole_badJSON(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMRole_leadingWhitespaceJSON(t *testing.T) {
+	var conf iam.GetRoleOutput
+	rName := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMRoleConfig_leadingWhitespaceJson(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists("aws_iam_role.role", &conf),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRoleDestroy(s *terraform.State) error {
 	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
 
@@ -372,6 +391,33 @@ resource "aws_iam_role" "my_instance_role" {
   ]
 }
 POLICY
+}
+`, rName)
+}
+
+func testAccAWSIAMRoleConfig_leadingWhitespaceJson(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role" {
+  name   = "test-role-%s"
+  path = "/"
+  assume_role_policy = <<EOF
+    {
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
 }
 `, rName)
 }
