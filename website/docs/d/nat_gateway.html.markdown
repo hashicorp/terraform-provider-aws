@@ -16,9 +16,7 @@ description: |-
 variable "subnet_id" {}
 
 data "aws_nat_gateway" "default" {
-
   subnet_id = "${var.subnet_id}"
-
 }
 ```
 
@@ -28,20 +26,14 @@ The arguments of this data source act as filters for querying the available
 Nat Gateway in the current region. The given filters must match exactly one
 Nat Gateway whose data will be exported as attributes.
 
-* `nat_gateway_id` - (Optional) The id of the specific Nat Gateway to retrieve.
-
+* `id` - (Optional) The id of the specific Nat Gateway to retrieve.
 * `subnet_id` - (Optional) The id of subnet that the Nat Gateway resides in.
-
 * `vpc_id` - (Optional) The id of the VPC that the Nat Gateway resides in.
-
 * `filter` - (Optional) Custom filter block as described below.
-
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
-
 * `name` - (Required) The name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNatGateways.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   An Nat Gateway will be selected if any one of the given values matches.
 
