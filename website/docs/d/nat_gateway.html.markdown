@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific Nat Gateway
 ---
 
-# aws\_nat\_gateway
+# aws_nat_gateway
 
 `aws_nat_gateway` provides details about a specific Nat Gateway.
 
@@ -18,7 +18,7 @@ variable "subnet_id" {}
 data "aws_nat_gateway" "default" {
 
   subnet_id = "${var.subnet_id}"
-  
+
 }
 ```
 
