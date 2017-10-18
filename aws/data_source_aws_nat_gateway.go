@@ -81,7 +81,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 		// Don't send an empty filters list; the EC2 API won't accept it.
 		req.Filter = nil
 	}
-  log.Printf("[DEBUG] Reading NAT Gateway: %s", req)
+	log.Printf("[DEBUG] Reading NAT Gateway: %s", req)
 	resp, err := conn.DescribeNatGateways(req)
 	if err != nil {
 		return err
