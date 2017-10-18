@@ -1,5 +1,9 @@
 ## 1.1.1 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_servicecatalog_portfolio` [GH-1694]
+
 IMPROVEMENTS:
 
 * data-source/aws_security_group: add description [GH-1943]
