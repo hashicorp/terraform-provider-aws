@@ -1,5 +1,9 @@
 ## 1.1.1 (Unreleased)
 
+IMPROVEMENTS:
+
+* data-source/aws_security_group: add description [GH-1943]
+
 BUG FIXES:
 
 * resource/aws_elasticache_parameter_group: Add missing return to retry logic [GH-1891]
