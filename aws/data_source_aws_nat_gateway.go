@@ -34,6 +34,8 @@ func dataSourceAwsNatGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"tags": tagsSchemaComputed(),
+
 			"filter": ec2CustomFiltersSchema(),
 		},
 	}
@@ -41,8 +43,6 @@ func dataSourceAwsNatGateway() *schema.Resource {
 
 func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-
-	log.Printf("[DEBUG] Reading NAT Gateways.")
 
 	req := &ec2.DescribeNatGatewaysInput{}
 
@@ -81,7 +81,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 		// Don't send an empty filters list; the EC2 API won't accept it.
 		req.Filter = nil
 	}
-
+  log.Printf("[DEBUG] Reading NAT Gateway: %s", req)
 	resp, err := conn.DescribeNatGateways(req)
 	if err != nil {
 		return err
