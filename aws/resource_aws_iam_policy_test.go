@@ -46,6 +46,24 @@ func TestAWSPolicy_invalidJson(t *testing.T) {
 	})
 }
 
+func TestAWSPolicy_leadingWhitespaceJson(t *testing.T) {
+	var out iam.GetPolicyOutput
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSPolicyLeadingWhitespaceJsonConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPolicyExists("aws_iam_policy.policy", &out),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSPolicyExists(resource string, res *iam.GetPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resource]
@@ -127,5 +145,26 @@ resource "aws_iam_policy" "policy" {
     ]
   }
   EOF
+}
+`
+
+const testAccAWSPolicyLeadingWhitespaceJsonConfig = `
+resource "aws_iam_policy" "policy" {
+  name_prefix = "test-policy-"
+  path = "/"
+  policy = <<EOF
+      {
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
 }
 `

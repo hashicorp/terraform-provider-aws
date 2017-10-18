@@ -662,7 +662,8 @@ func validateJsonString(v interface{}, k string) (ws []string, errors []error) {
 
 func validateIAMPolicyJson(v interface{}, k string) (ws []string, errors []error) {
 	// IAM Policy documents need to be valid JSON, and pass legacy parsing
-	value := v.(string)
+	// Trim away any whitespace " " and "\t".
+	value := strings.TrimLeft(v.(string), " \t")
 	if len(value) < 1 {
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy", k))
 		return

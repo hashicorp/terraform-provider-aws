@@ -908,10 +908,6 @@ func TestValidateIAMPolicyJsonString(t *testing.T) {
 			Value:    ``,
 			ErrCount: 1,
 		},
-		{
-			Value:    `    {"xyz": "foo"}`,
-			ErrCount: 1,
-		},
 	}
 
 	for _, tc := range invalidCases {
@@ -928,6 +924,10 @@ func TestValidateIAMPolicyJsonString(t *testing.T) {
 		},
 		{
 			Value:    `{"abc":["1","2"]}`,
+			ErrCount: 0,
+		},
+		{
+			Value:    `    {"xyz": "foo"}`,
 			ErrCount: 0,
 		},
 	}

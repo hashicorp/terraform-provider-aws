@@ -99,10 +99,16 @@ func resourceAwsIamPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 		name = resource.UniqueId()
 	}
 
+	// Normalize the Policy Document.
+	normalizedPolicyDocument, err := normalizeJsonString(d.Get("policy").(string))
+	if err != nil {
+		return fmt.Errorf("Error normalizing JSON Policy Document: %s", err)
+	}
+
 	request := &iam.CreatePolicyInput{
 		Description:    aws.String(d.Get("description").(string)),
 		Path:           aws.String(d.Get("path").(string)),
-		PolicyDocument: aws.String(d.Get("policy").(string)),
+		PolicyDocument: aws.String(normalizedPolicyDocument),
 		PolicyName:     aws.String(name),
 	}
 
