@@ -18,10 +18,11 @@ func TestAccAWSSSMActivation_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSSMActivationBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMActivationExists("aws_ssm_activation.foo"),
+					resource.TestCheckResourceAttrSet("aws_ssm_activation.foo", "activation_code"),
 				),
 			},
 		},

@@ -414,6 +414,10 @@ func TestResourceAWSDBParameterGroupName_validation(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
+			Value:    "testing__123",
+			ErrCount: 1,
+		},
+		{
 			Value:    "testing123-",
 			ErrCount: 1,
 		},

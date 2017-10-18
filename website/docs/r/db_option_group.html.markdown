@@ -63,6 +63,7 @@ Option Settings blocks support the following:
 
 The following attributes are exported:
 
+* `id` - The db option group name.
 * `arn` - The ARN of the db option group.
 
 <a id="timeouts"></a>

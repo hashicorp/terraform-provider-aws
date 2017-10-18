@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
@@ -59,6 +60,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/simpledb"
@@ -143,6 +145,7 @@ type AWSClient struct {
 	appautoscalingconn    *applicationautoscaling.ApplicationAutoScaling
 	autoscalingconn       *autoscaling.AutoScaling
 	s3conn                *s3.S3
+	scconn                *servicecatalog.ServiceCatalog
 	sesConn               *ses.SES
 	simpledbconn          *simpledb.SimpleDB
 	sqsconn               *sqs.SQS
@@ -176,6 +179,7 @@ type AWSClient struct {
 	wafconn               *waf.WAF
 	wafregionalconn       *wafregional.WAFRegional
 	iotconn               *iot.IoT
+	batchconn             *batch.Batch
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -377,6 +381,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.redshiftconn = redshift.New(sess)
 	client.simpledbconn = simpledb.New(sess)
 	client.s3conn = s3.New(awsS3Sess)
+	client.scconn = servicecatalog.New(sess)
 	client.sesConn = ses.New(sess)
 	client.sfnconn = sfn.New(sess)
 	client.snsconn = sns.New(awsSnsSess)
@@ -384,6 +389,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.ssmconn = ssm.New(sess)
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
+	client.batchconn = batch.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
@@ -399,7 +405,30 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	// Workaround for https://github.com/aws/aws-sdk-go/issues/1472
+	client.appautoscalingconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
+			return
+		}
+		err, ok := r.Error.(awserr.Error)
+		if !ok || err == nil {
+			return
+		}
+		if err.Code() == applicationautoscaling.ErrCodeFailedResourceAccessException {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
 	return &client, nil
+}
+
+func hasEc2Classic(platforms []string) bool {
+	for _, p := range platforms {
+		if p == "EC2" {
+			return true
+		}
+	}
+	return false
 }
 
 // ValidateRegion returns an error if the configured region is not a

@@ -74,7 +74,8 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
      instance in a VPC.
 * `source_dest_check` - (Optional) Controls if traffic is routed to the instance when
   the destination address does not match the instance. Used for NAT or VPNs. Defaults true.
-* `user_data` - (Optional) The user data to provide when launching the instance.
+* `user_data` - (Optional) The user data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
+* `user_data_base64` - (Optional) Can be used instead of `user_data` to pass base64-encoded binary data directly. Use this instead of `user_data` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption.
 * `iam_instance_profile` - (Optional) The IAM Instance Profile to
   launch the instance with. Specified as the name of the Instance Profile.
 * `ipv6_address_count`- (Optional) A number of IPv6 addresses to associate with the primary network interface. Amazon EC2 chooses the IPv6 addresses from the range of your subnet.
@@ -222,6 +223,7 @@ The following attributes are exported:
 * `public_dns` - The public DNS name assigned to the instance. For EC2-VPC, this
   is only available if you've enabled DNS hostnames for your VPC
 * `public_ip` - The public IP address assigned to the instance, if applicable. **NOTE**: If you are using an [`aws_eip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `public_ip`, as this field will change after the EIP is attached.
+* `ipv6_addresses` - A list of assigned IPv6 addresses, if any
 * `network_interface_id` - The ID of the network interface that was created with the instance.
 * `primary_network_interface_id` - The ID of the instance's primary network interface.
 * `private_dns` - The private DNS name assigned to the instance. Can only be

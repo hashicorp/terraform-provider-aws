@@ -126,7 +126,7 @@ The following arguments are supported:
 `environment` supports the following:
 
 * `compute_type` - (Required) Information about the compute resources the build project will use. Available values for this parameter are: `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM` or `BUILD_GENERAL1_LARGE`
-* `image` - (Required) The ID of the Docker image to use for this build project
+* `image` - (Required) The ID of the Docker image to use for this build project. You can read more about the AWS curated environment images in the [documentation](https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ListCuratedEnvironmentImages.html).
 * `type` - (Required) The type of build environment to use for related builds. The only valid value is `LINUX_CONTAINER`.
 * `privileged_mode` - (Optional) If set to true, enables running the Docker daemon inside a Docker container. Defaults to `false`.
 * `environment_variable` - (Optional) A set of environment variables to make available to builds for this build project.
@@ -137,7 +137,7 @@ The following arguments are supported:
 
 `source` supports the following:
 
-* `type` - (Required) The type of repository that contains the source code to be built. Valid values for this parameter are: `CODECOMMIT`, `CODEPIPELINE`, `GITHUB` or `S3`.
+* `type` - (Required) The type of repository that contains the source code to be built. Valid values for this parameter are: `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `BITBUCKET` or `S3`.
 * `auth` - (Optional) Information about the authorization settings for AWS CodeBuild to access the source code to be built. Auth blocks are documented below.
 * `buildspec` - (Optional) The build spec declaration to use for this build project's related builds.
 * `location` - (Optional) The location of the source code from git or s3.

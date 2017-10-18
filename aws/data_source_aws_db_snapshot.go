@@ -196,6 +196,7 @@ func dbSnapshotDescriptionAttributes(d *schema.ResourceData, snapshot *rds.DBSna
 	d.Set("db_instance_identifier", snapshot.DBInstanceIdentifier)
 	d.Set("db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
 	d.Set("snapshot_type", snapshot.SnapshotType)
+	d.Set("storage_type", snapshot.StorageType)
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
 	d.Set("availability_zone", snapshot.AvailabilityZone)
 	d.Set("db_snapshot_arn", snapshot.DBSnapshotArn)

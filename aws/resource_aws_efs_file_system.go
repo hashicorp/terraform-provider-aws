@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -48,6 +49,26 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 				ValidateFunc: validatePerformanceModeType,
 			},
 
+			"encrypted": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+			},
+
+			"dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -74,6 +95,21 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("performance_mode"); ok {
 		createOpts.PerformanceMode = aws.String(v.(string))
+	}
+
+	encrypted, hasEncrypted := d.GetOk("encrypted")
+	kmsKeyId, hasKmsKeyId := d.GetOk("kms_key_id")
+
+	if hasEncrypted {
+		createOpts.Encrypted = aws.Bool(encrypted.(bool))
+	}
+
+	if hasKmsKeyId {
+		createOpts.KmsKeyId = aws.String(kmsKeyId.(string))
+	}
+
+	if encrypted == false && hasKmsKeyId {
+		return errors.New("encrypted must be set to true when kms_key_id is specified")
 	}
 
 	log.Printf("[DEBUG] EFS file system create options: %#v", *createOpts)
@@ -196,6 +232,14 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("creation_token", fs.CreationToken)
 	d.Set("performance_mode", fs.PerformanceMode)
+	d.Set("encrypted", fs.Encrypted)
+	d.Set("kms_key_id", fs.KmsKeyId)
+
+	region := meta.(*AWSClient).region
+	err = d.Set("dns_name", resourceAwsEfsDnsName(*fs.FileSystemId, region))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -271,4 +315,8 @@ func hasEmptyFileSystems(fs *efs.DescribeFileSystemsOutput) bool {
 		return false
 	}
 	return true
+}
+
+func resourceAwsEfsDnsName(fileSystemId, region string) string {
+	return fmt.Sprintf("%s.efs.%s.amazonaws.com", fileSystemId, region)
 }

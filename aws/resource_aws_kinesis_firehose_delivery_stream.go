@@ -133,6 +133,28 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 				},
 			},
 
+			"kinesis_source_configuration": {
+				Type:     schema.TypeList,
+				ForceNew: true,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kinesis_stream_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
+
 			"destination": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -445,6 +467,16 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 	}
 }
 
+func createSourceConfig(source map[string]interface{}) *firehose.KinesisStreamSourceConfiguration {
+
+	configuration := &firehose.KinesisStreamSourceConfiguration{
+		KinesisStreamARN: aws.String(source["kinesis_stream_arn"].(string)),
+		RoleARN:          aws.String(source["role_arn"].(string)),
+	}
+
+	return configuration
+}
+
 func createS3Config(d *schema.ResourceData) *firehose.S3DestinationConfiguration {
 	s3 := d.Get("s3_configuration").([]interface{})[0].(map[string]interface{})
 
@@ -480,7 +512,10 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		Prefix:                  extractPrefixConfiguration(s3),
 		CompressionFormat:       aws.String(s3["compression_format"].(string)),
 		EncryptionConfiguration: extractEncryptionConfiguration(s3),
-		ProcessingConfiguration: extractProcessingConfiguration(s3),
+	}
+
+	if _, ok := s3["processing_configuration"]; ok {
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(s3)
 	}
 
 	if _, ok := s3["cloudwatch_logging_options"]; ok {
@@ -538,7 +573,12 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 }
 
 func extractProcessingConfiguration(s3 map[string]interface{}) *firehose.ProcessingConfiguration {
-	processingConfiguration := s3["processing_configuration"].([]interface{})[0].(map[string]interface{})
+	config := s3["processing_configuration"].([]interface{})
+	if len(config) == 0 {
+		return nil
+	}
+
+	processingConfiguration := config[0].(map[string]interface{})
 
 	return &firehose.ProcessingConfiguration{
 		Enabled:    aws.Bool(processingConfiguration["enabled"].(bool)),
@@ -804,6 +844,14 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		DeliveryStreamName: aws.String(sn),
 	}
 
+	if v, ok := d.GetOk("kinesis_source_configuration"); ok {
+		sourceConfig := createSourceConfig(v.([]interface{})[0].(map[string]interface{}))
+		createInput.KinesisStreamSourceConfiguration = sourceConfig
+		createInput.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeKinesisStreamAsSource)
+	} else {
+		createInput.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeDirectPut)
+	}
+
 	if d.Get("destination").(string) == "extended_s3" {
 		extendedS3Config := createExtendedS3Config(d)
 		createInput.ExtendedS3DestinationConfiguration = extendedS3Config
@@ -850,7 +898,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 	})
 	if err != nil {
 		if awsErr, ok := lastError.(awserr.Error); ok {
-			return fmt.Errorf("[WARN] Error creating Kinesis Firehose Delivery Stream: \"%s\", code: \"%s\"", awsErr.Message(), awsErr.Code())
+			return fmt.Errorf("[WARN] Error creating Kinesis Firehose Delivery Stream: %s", awsErr.Error())
 		}
 		return err
 	}

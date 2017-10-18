@@ -96,7 +96,7 @@ The following arguments are supported:
 
 * `zone_id` - (Required) The ID of the hosted zone to contain this record.
 * `name` - (Required) The name of the record.
-* `type` - (Required) The record type.
+* `type` - (Required) The record type. Valid values are `A`, `AAAA`, `CAA`, `CNAME`, `MX`, `NAPTR`, `NS`, `PTR`, `SOA`, `SPF`, `SRV` and `TXT`.
 * `ttl` - (Required for non-alias records) The TTL of the record.
 * `records` - (Required for non-alias records) A string list of records.
 * `set_identifier` - (Optional) Unique identifier to differentiate records with routing policies from one another. Required if using `failover`, `geolocation`, `latency`, or `weighted` routing policies documented below.
@@ -107,6 +107,7 @@ The following arguments are supported:
 * `geolocation_routing_policy` - (Optional) A block indicating a routing policy based on the geolocation of the requestor. Conflicts with any other routing policy. Documented below.
 * `latency_routing_policy` - (Optional) A block indicating a routing policy based on the latency between the requestor and an AWS region. Conflicts with any other routing policy. Documented below.
 * `weighted_routing_policy` - (Optional) A block indicating a weighted routing policy. Conflicts with any other routing policy. Documented below.
+* `multivalue_answer_routing_policy` - (Optional) A block indicating a multivalue answer routing policy. Conflicts with any other routing policy.
 
 Exactly one of `records` or `alias` must be specified: this determines whether it's an alias record.
 
