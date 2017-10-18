@@ -223,9 +223,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if subnetMap["allocation_id"].(string) != "" {
-				elbOpts.SubnetMappings[i] = &elbv2.SubnetMapping{
-					AllocationId: aws.String(subnetMap["allocation_id"].(string)),
-				}
+				elbOpts.SubnetMappings[i].AllocationId = aws.String(subnetMap["allocation_id"].(string))
 			}
 		}
 	}
