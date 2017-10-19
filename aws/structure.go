@@ -1014,6 +1014,32 @@ func expandESEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 	return &options
 }
 
+func flattenESVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if o.SecurityGroupIds != nil {
+		m["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(o.SecurityGroupIds))
+	}
+	if o.SubnetIds != nil {
+		m["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(o.SubnetIds))
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandESVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
+	options := elasticsearch.VPCOptions{}
+
+	if v, ok := m["security_group_ids"]; ok {
+		options.SecurityGroupIds = expandStringList(v.(*schema.Set).List())
+	}
+	if v, ok := m["subnet_ids"]; ok {
+		options.SubnetIds = expandStringList(v.(*schema.Set).List())
+	}
+
+	return &options
+}
+
 func expandConfigRecordingGroup(configured []interface{}) *configservice.RecordingGroup {
 	recordingGroup := configservice.RecordingGroup{}
 	group := configured[0].(map[string]interface{})

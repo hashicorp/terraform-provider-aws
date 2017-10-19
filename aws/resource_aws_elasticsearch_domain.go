@@ -137,6 +137,38 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 					},
 				},
 			},
+			"vpc_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"security_group_ids": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
+						},
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
+						},
+					},
+				},
+			},
+			"vpc_availability_zones": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"elasticsearch_version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -227,6 +259,21 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 			}
 
 			input.SnapshotOptions = &snapshotOptions
+		}
+	}
+
+	if v, ok := d.GetOk("vpc_options"); ok {
+		options := v.([]interface{})
+
+		if len(options) > 1 {
+			return fmt.Errorf("Only a single vpc_options block is expected")
+		} else if len(options) == 1 {
+			if options[0] == nil {
+				return fmt.Errorf("At least one field is expected inside vpc_options")
+			}
+
+			s := options[0].(map[string]interface{})
+			input.VPCOptions = expandESVPCOptions(s)
 		}
 	}
 
@@ -349,6 +396,20 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 			"automated_snapshot_start_hour": *ds.SnapshotOptions.AutomatedSnapshotStartHour,
 		})
 	}
+	if ds.VPCOptions != nil {
+		err = d.Set("vpc_options", flattenESVPCDerivedInfo(ds.VPCOptions))
+		if err != nil {
+			return err
+		}
+		err = d.Set("vpc_availability_zones", schema.NewSet(schema.HashString, flattenStringList(ds.VPCOptions.AvailabilityZones)))
+		if err != nil {
+			return err
+		}
+		err = d.Set("vpc_id", *ds.VPCOptions.VPCId)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.Set("arn", ds.ARN)
 
@@ -428,6 +489,17 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 			}
 
 			input.SnapshotOptions = &snapshotOptions
+		}
+	}
+
+	if d.HasChange("vpc_options") {
+		options := d.Get("vpc_options").([]interface{})
+
+		if len(options) > 1 {
+			return fmt.Errorf("Only a single vpc_options block is expected")
+		} else if len(options) == 1 {
+			s := options[0].(map[string]interface{})
+			input.VPCOptions = expandESVPCOptions(s)
 		}
 	}
 
