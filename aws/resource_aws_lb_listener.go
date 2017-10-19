@@ -86,6 +86,7 @@ func resourceAwsLbListener() *schema.Resource {
 			},
 
 			"wait_for_target_group_capacity": {
+				Default:  -1,
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -260,6 +261,8 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 				Type:           aws.String(defaultActionMap["type"].(string)),
 			}
 		}
+	} else {
+		fmt.Printf("[DEBUG] Not waiting for healthy target group capacity")
 	}
 
 	if shouldWaitForCapacity {
@@ -269,9 +272,11 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 			return errwrap.Wrapf("Error adding health-check only rule to listener: {{err}}", err)
 		}
 
+		fmt.Printf("Waiting for healthy target group capacity...")
+
 		if err := waitForListenerTargetGroupCapacity(d, meta, func(d *schema.ResourceData, current int, target int) (bool, string) {
 			if current < target {
-				return false, fmt.Sprintf("Need at least %d healthy instances in target group, have %d", current, target)
+				return false, fmt.Sprintf("Need at least %d healthy instances in target group, have %d", target, current)
 			}
 			return true, ""
 		}); err != nil {
@@ -284,7 +289,7 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 		return errwrap.Wrapf("Error modifying LB Listener: {{err}}", err)
 	}
 
-	err = removeHealthCheckOnlyRule(params, elbconn, d.Get("arn").(string))
+	err = removeHealthCheckOnlyRule(elbconn, d.Get("arn").(string))
 	if err != nil {
 		return errwrap.Wrapf("Error modifying ALB Listener: {{err}}", err)
 	}
@@ -341,6 +346,10 @@ func isListenerNotFound(err error) bool {
 func addHealthCheckOnlyRule(params *elbv2.ModifyListenerInput, elbconn *elbv2.ELBV2, listenerArn string) error {
 	targetGroupArn := params.DefaultActions[0].TargetGroupArn
 
+	err := removeHealthCheckOnlyRule(elbconn, listenerArn)
+	if err != nil {
+		return errwrap.Wrapf("Error creating temporary listener rule: {{err}}", err)
+	}
 	resp, err := elbconn.CreateRule(&elbv2.CreateRuleInput{
 		ListenerArn: aws.String(listenerArn),
 		Actions: []*elbv2.Action{&elbv2.Action{
@@ -364,7 +373,7 @@ func addHealthCheckOnlyRule(params *elbv2.ModifyListenerInput, elbconn *elbv2.EL
 }
 
 // Removes the custom health-check-only rule from a listener
-func removeHealthCheckOnlyRule(params *elbv2.ModifyListenerInput, elbconn *elbv2.ELBV2, listenerArn string) error {
+func removeHealthCheckOnlyRule(elbconn *elbv2.ELBV2, listenerArn string) error {
 
 	resp, err := elbconn.DescribeRules(&elbv2.DescribeRulesInput{
 		ListenerArn: aws.String(listenerArn),
