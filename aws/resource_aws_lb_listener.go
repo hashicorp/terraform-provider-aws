@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const healthCheckOnlyHostname = "health-check-only.terraform.localhost"
+
 func resourceAwsLbListener() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLbListenerCreate,
@@ -61,6 +63,30 @@ func resourceAwsLbListener() *schema.Resource {
 
 			"certificate_arn": {
 				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"wait_for_capacity_timeout": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "10m",
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					value := v.(string)
+					duration, err := time.ParseDuration(value)
+					if err != nil {
+						errors = append(errors, fmt.Errorf(
+							"%q cannot be parsed as a duration: %s", k, err))
+					}
+					if duration < 0 {
+						errors = append(errors, fmt.Errorf(
+							"%q must be greater than zero", k))
+					}
+					return
+				},
+			},
+
+			"wait_for_target_group_capacity": {
+				Type:     schema.TypeInt,
 				Optional: true,
 			},
 
