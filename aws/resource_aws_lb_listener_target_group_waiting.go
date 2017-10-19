@@ -49,6 +49,20 @@ func waitForListenerTargetGroupCapacity(
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
+
+		if len(states) == 0 {
+			return resource.RetryableError(
+				fmt.Errorf("%q: Waiting up to %s: states not yet available for target group %s",
+					d.Id(), wait, targetGroupArn))
+		}
+
+		healthyCount := 0
+		for _, state := range states {
+			if strings.EqualFold(state, "healthy") {
+				healthyCount++
+			}
+		}
+
 		if targetGroupCapacity == -1 {
 			instanceIDs := make([]string, 0, len(states))
 			for instanceID := range states {
@@ -60,17 +74,10 @@ func waitForListenerTargetGroupCapacity(
 			}
 		}
 
-		healthyCount := 0
-		for _, state := range states {
-			if strings.EqualFold(state, "healthy") {
-				healthyCount++
-			}
-		}
-
 		satisfied, reason := satisfiedFunc(d, healthyCount, targetGroupCapacity)
 
-		log.Printf("[DEBUG] %q Capacity: %d target group, %d healthy, satisfied: %t, reason: %q",
-			d.Id(), healthyCount, targetGroupCapacity, satisfied, reason)
+		log.Printf("[DEBUG] %q Capacity: %d in target group, %d healthy, satisfied: %t, reason: %q",
+			d.Id(), targetGroupCapacity, healthyCount, satisfied, reason)
 
 		if satisfied {
 			return nil
@@ -114,28 +121,31 @@ func getTargetCapacity(d *schema.ResourceData, instanceIDs []string, meta interf
 
 		ec2conn := meta.(*AWSClient).ec2conn
 		autoscalingconn := meta.(*AWSClient).autoscalingconn
-
 		autoscalingGroupNames := make(map[string]bool)
-		tagsResp, err := ec2conn.DescribeTags(&ec2.DescribeTagsInput{
-			Filters: []*ec2.Filter{
-				&ec2.Filter{
-					Name:   aws.String("key"),
-					Values: aws.StringSlice([]string{"aws:autoscaling:groupName"}),
-				},
-				&ec2.Filter{
-					Name:   aws.String("resource-id"),
-					Values: aws.StringSlice(instanceIDs),
-				},
-			},
+		instancesResp, err := ec2conn.DescribeInstances(&ec2.DescribeInstancesInput{
+			InstanceIds: aws.StringSlice(instanceIDs),
 		})
+
 		if err != nil {
-			return -1, fmt.Errorf("Error describing Tags for instances: %s", err)
+			return -1, fmt.Errorf("Error describing Instances %v; %v", instanceIDs, err)
 		}
-		for _, tagDesc := range tagsResp.Tags {
-			autoscalingGroupNames[aws.StringValue(tagDesc.Value)] = true
+		for _, resv := range instancesResp.Reservations {
+			for _, instance := range resv.Instances {
+				for _, tag := range instance.Tags {
+					if aws.StringValue(tag.Key) == "aws:autoscaling:groupName" {
+						asgName := aws.StringValue(tag.Value)
+						log.Printf("[DEBUG] getTargetCapacity: Found autoscaling group name %s on instance tag: %v",
+							asgName, aws.StringValue(instance.InstanceId))
+						autoscalingGroupNames[asgName] = true
+					}
+				}
+			}
 		}
 
 		asgNames := make([]string, 0, len(autoscalingGroupNames))
+		for name := range autoscalingGroupNames {
+			asgNames = append(asgNames, name)
+		}
 		asgResp, err := autoscalingconn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
 			AutoScalingGroupNames: aws.StringSlice(asgNames),
 		})
@@ -144,8 +154,11 @@ func getTargetCapacity(d *schema.ResourceData, instanceIDs []string, meta interf
 		}
 		target = 0
 		for _, asg := range asgResp.AutoScalingGroups {
-			target += int(aws.Int64Value(asg.DesiredCapacity))
+			desired := int(aws.Int64Value(asg.DesiredCapacity))
+			log.Printf("[DEBUG] getTargetCapacity: Adding %d capacity from %s", desired, aws.StringValue(asg.AutoScalingGroupName))
+			target += desired
 		}
+		log.Printf("[DEBUG] getTargetCapacity: Resolved target capacity of %d from ASGs: %v", target, asgNames)
 	}
 	return target, nil
 }
