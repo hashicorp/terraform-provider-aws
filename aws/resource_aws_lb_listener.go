@@ -176,6 +176,15 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(*resp.Listeners[0].ListenerArn)
 
+	if err := waitForListenerTargetGroupCapacity(d, meta, func(d *schema.ResourceData, current int, target int) (bool, string) {
+		if current < target {
+			return false, fmt.Sprintf("Need at least %d healthy instances in target group, have %d", target, current)
+		}
+		return true, ""
+	}); err != nil {
+		return errwrap.Wrapf("Error waiting for Target Group Capacity: {{err}}", err)
+	}
+
 	return resourceAwsLbListenerRead(d, meta)
 }
 
@@ -262,7 +271,7 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 			}
 		}
 	} else {
-		fmt.Printf("[DEBUG] Not waiting for healthy target group capacity")
+		log.Printf("[DEBUG] Not waiting for healthy target group capacity")
 	}
 
 	if shouldWaitForCapacity {
@@ -272,7 +281,7 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 			return errwrap.Wrapf("Error adding health-check only rule to listener: {{err}}", err)
 		}
 
-		fmt.Printf("Waiting for healthy target group capacity...")
+		log.Printf("[DEBUG] Waiting for healthy target group capacity...")
 
 		if err := waitForListenerTargetGroupCapacity(d, meta, func(d *schema.ResourceData, current int, target int) (bool, string) {
 			if current < target {
