@@ -26,7 +26,7 @@ func waitForListenerTargetGroupCapacity(
 	meta interface{},
 	satisfiedFunc capacitySatisfiedFunc) error {
 
-	wait, err := time.ParseDuration(d.Get("wait_for_capacity_timeout").(string))
+	wait, err := time.ParseDuration(d.Get("min_target_group_capacity").(string))
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func waitForListenerTargetGroupCapacity(
 // resource, defaulting to the sum of the DesiredCapacity values configured
 // for the associated autoscaling groups
 func getTargetCapacity(d *schema.ResourceData, instanceIDs []string, meta interface{}) (int, error) {
-	target := d.Get("wait_for_target_group_capacity").(int)
+	target := d.Get("min_target_group_capacity").(int)
 	if target == -1 {
 
 		ec2conn := meta.(*AWSClient).ec2conn

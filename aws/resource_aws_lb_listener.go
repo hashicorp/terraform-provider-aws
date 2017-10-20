@@ -15,7 +15,8 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-const healthCheckOnlyHostname = "health-check-only.terraform.localhost"
+const healthCheckOnlyHostname = "health-check.terraform.localhost"
+const healthCheckOnlyPriority = 1
 
 func resourceAwsLbListener() *schema.Resource {
 	return &schema.Resource{
@@ -85,7 +86,7 @@ func resourceAwsLbListener() *schema.Resource {
 				},
 			},
 
-			"wait_for_target_group_capacity": {
+			"min_target_group_capacity": {
 				Default:  -1,
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -369,7 +370,7 @@ func addHealthCheckOnlyRule(params *elbv2.ModifyListenerInput, elbconn *elbv2.EL
 			Field:  aws.String("host-header"),
 			Values: aws.StringSlice([]string{healthCheckOnlyHostname}),
 		}},
-		Priority: aws.Int64(100),
+		Priority: aws.Int64(healthCheckOnlyPriority),
 	})
 
 	log.Printf("[DEBUG] resp.Rules.length: %d", len(resp.Rules))
