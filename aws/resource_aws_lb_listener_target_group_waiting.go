@@ -26,7 +26,7 @@ func waitForListenerTargetGroupCapacity(
 	meta interface{},
 	satisfiedFunc capacitySatisfiedFunc) error {
 
-	wait, err := time.ParseDuration(d.Get("min_target_group_capacity").(string))
+	wait, err := time.ParseDuration(d.Get("wait_for_capacity_timeout").(string))
 	if err != nil {
 		return err
 	}
