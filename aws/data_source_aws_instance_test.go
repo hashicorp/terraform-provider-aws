@@ -1,9 +1,9 @@
 package aws
 
 import (
-	"testing"
-
 	"fmt"
+	"regexp"
+	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -21,6 +21,37 @@ func TestAccAWSInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_instance.web-instance", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_instance.web-instance", "instance_type", "m1.small"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstanceDataSource_ebs_stopped(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_ebs_stopped,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_instance.web-instance", "ami", "ami-e389729b"),
+					resource.TestCheckResourceAttr("data.aws_instance.web-instance", "tags.%", "1"),
+					resource.TestCheckResourceAttr("data.aws_instance.web-instance", "instance_type", "m1.small"),
+					resource.TestCheckResourceAttr("data.aws_instance.web-instance", "instance_state", "stopped"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstanceDataSource_instanceStore_stopped(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccInstanceDataSourceConfig_instanceStore_stopped,
+				ExpectError: regexp.MustCompile(`AMIs with an 'instance-store' root device cannot be stopped.`),
 			},
 		},
 	})
@@ -222,6 +253,43 @@ resource "aws_instance" "web" {
   # us-west-2
   ami = "ami-4fccb37f"
   instance_type = "m1.small"
+  tags {
+    Name = "HelloWorld"
+  }
+}
+
+data "aws_instance" "web-instance" {
+  filter {
+    name = "instance-id"
+    values = ["${aws_instance.web.id}"]
+  }
+}
+`
+
+const testAccInstanceDataSourceConfig_ebs_stopped = `
+resource "aws_instance" "web" {
+  # us-west-2
+  ami = "ami-e389729b"
+  instance_type = "m1.small"
+  instance_state = "stopped"
+  tags {
+    Name = "HelloWorld"
+  }
+}
+
+data "aws_instance" "web-instance" {
+  filter {
+    name = "instance-id"
+    values = ["${aws_instance.web.id}"]
+  }
+}
+`
+const testAccInstanceDataSourceConfig_instanceStore_stopped = `
+resource "aws_instance" "web" {
+  # us-west-2
+  ami = "ami-4fccb37f"
+  instance_type = "m1.small"
+  instance_state = "stopped"
   tags {
     Name = "HelloWorld"
   }
