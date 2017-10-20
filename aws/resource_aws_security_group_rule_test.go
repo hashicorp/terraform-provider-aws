@@ -781,10 +781,6 @@ func TestAccAWSSecurityGroupRule_MultiDescription(t *testing.T) {
 					setupSG,
 					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.ingress_rule_3", &group, &rule3, "ingress"),
 					resource.TestCheckResourceAttr("aws_security_group_rule.ingress_rule_3", "description", "NAT SG Description"),
-
-					setupPL,
-					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.ingress_rule_4", &group, &rule4, "ingress"),
-					resource.TestCheckResourceAttr("aws_security_group_rule.ingress_rule_4", "description", "Prefix List Description"),
 				),
 			},
 			{
@@ -1153,7 +1149,8 @@ resource "aws_security_group_rule" "ingress_2" {
 `
 
 func testAccAWSSecurityGroupRuleMultiDescription(rInt int, rType string) string {
-	return fmt.Sprintf(`
+	var b bytes.Buffer
+	b.WriteString(fmt.Sprintf(`
 	resource "aws_vpc" "tf_sgrule_description_test" {
 		cidr_block = "10.0.0.0/16"
 		tags { Name = "tf-sg-rule-description" }
@@ -1207,17 +1204,23 @@ func testAccAWSSecurityGroupRuleMultiDescription(rInt int, rType string) string 
 		to_port = 22
 		source_security_group_id = "${aws_security_group.nat.id}"
 	}
+	`, rInt, rType))
 
-	resource "aws_security_group_rule" "%[2]s_rule_4" {
+	if rType == "egress" {
+		b.WriteString(fmt.Sprintf(`
+	resource "aws_security_group_rule" "egress_rule_4" {
 		security_group_id = "${aws_security_group.worker.id}"
 		description = "Prefix List Description"
-		type = "%[2]s"
+		type = "egress"
 		protocol = "tcp"
 		from_port = 22
 		to_port = 22
 		prefix_list_ids = ["${aws_vpc_endpoint.s3-us-west-2.prefix_list_id}"]
 	}
-	`, rInt, rType)
+		`))
+	}
+
+	return b.String()
 }
 
 // check for GH-1985 regression
