@@ -15403,9 +15403,10 @@ func (c *EC2) GetReservedInstancesExchangeQuoteRequest(input *GetReservedInstanc
 
 // GetReservedInstancesExchangeQuote API operation for Amazon Elastic Compute Cloud.
 //
-// Returns details about the values and term of your specified Convertible Reserved
-// Instances. When a target configuration is specified, it returns information
-// about whether the exchange is valid and can be performed.
+// Returns a quote and exchange information for exchanging one or more specified
+// Convertible Reserved Instances for a new Convertible Reserved Instance. If
+// the exchange cannot be performed, the reason is returned in the response.
+// Use AcceptReservedInstancesExchangeQuote to perform the exchange.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -16539,9 +16540,9 @@ func (c *EC2) ModifyReservedInstancesRequest(input *ModifyReservedInstancesInput
 // ModifyReservedInstances API operation for Amazon Elastic Compute Cloud.
 //
 // Modifies the Availability Zone, instance count, instance type, or network
-// platform (EC2-Classic or EC2-VPC) of your Standard Reserved Instances. The
-// Reserved Instances to be modified must be identical, except for Availability
-// Zone, network platform, and instance type.
+// platform (EC2-Classic or EC2-VPC) of your Reserved Instances. The Reserved
+// Instances to be modified must be identical, except for Availability Zone,
+// network platform, and instance type.
 //
 // For more information, see Modifying Reserved Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ri-modifying.html)
 // in the Amazon Elastic Compute Cloud User Guide.
@@ -17262,6 +17263,89 @@ func (c *EC2) ModifyVpcPeeringConnectionOptions(input *ModifyVpcPeeringConnectio
 // for more information on using Contexts.
 func (c *EC2) ModifyVpcPeeringConnectionOptionsWithContext(ctx aws.Context, input *ModifyVpcPeeringConnectionOptionsInput, opts ...request.Option) (*ModifyVpcPeeringConnectionOptionsOutput, error) {
 	req, out := c.ModifyVpcPeeringConnectionOptionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opModifyVpcTenancy = "ModifyVpcTenancy"
+
+// ModifyVpcTenancyRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyVpcTenancy operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyVpcTenancy for more information on using the ModifyVpcTenancy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyVpcTenancyRequest method.
+//    req, resp := client.ModifyVpcTenancyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyVpcTenancy
+func (c *EC2) ModifyVpcTenancyRequest(input *ModifyVpcTenancyInput) (req *request.Request, output *ModifyVpcTenancyOutput) {
+	op := &request.Operation{
+		Name:       opModifyVpcTenancy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyVpcTenancyInput{}
+	}
+
+	output = &ModifyVpcTenancyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyVpcTenancy API operation for Amazon Elastic Compute Cloud.
+//
+// Modifies the instance tenancy attribute of the specified VPC. You can change
+// the instance tenancy attribute of a VPC to default only. You cannot change
+// the instance tenancy attribute to dedicated.
+//
+// After you modify the tenancy of the VPC, any new instances that you launch
+// into the VPC have a tenancy of default, unless you specify otherwise during
+// launch. The tenancy of any existing instances in the VPC is not affected.
+//
+// For more information about Dedicated Instances, see Dedicated Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-instance.html)
+// in the Amazon Elastic Compute Cloud User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation ModifyVpcTenancy for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyVpcTenancy
+func (c *EC2) ModifyVpcTenancy(input *ModifyVpcTenancyInput) (*ModifyVpcTenancyOutput, error) {
+	req, out := c.ModifyVpcTenancyRequest(input)
+	return out, req.Send()
+}
+
+// ModifyVpcTenancyWithContext is the same as ModifyVpcTenancy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyVpcTenancy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) ModifyVpcTenancyWithContext(ctx aws.Context, input *ModifyVpcTenancyInput, opts ...request.Option) (*ModifyVpcTenancyOutput, error) {
+	req, out := c.ModifyVpcTenancyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -20315,14 +20399,14 @@ type AcceptReservedInstancesExchangeQuoteInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
 
-	// The IDs of the Convertible Reserved Instances to exchange for other Convertible
-	// Reserved Instances of the same or higher value.
+	// The IDs of the Convertible Reserved Instances to exchange for another Convertible
+	// Reserved Instance of the same or higher value.
 	//
 	// ReservedInstanceIds is a required field
 	ReservedInstanceIds []*string `locationName:"ReservedInstanceId" locationNameList:"ReservedInstanceId" type:"list" required:"true"`
 
-	// The configurations of the Convertible Reserved Instance offerings that you
-	// are purchasing in this exchange.
+	// The configuration of the target Convertible Reserved Instance to exchange
+	// for your current Convertible Reserved Instances.
 	TargetConfigurations []*TargetConfigurationRequest `locationName:"TargetConfiguration" locationNameList:"TargetConfigurationRequest" type:"list"`
 }
 
@@ -41051,7 +41135,7 @@ type GetReservedInstancesExchangeQuoteInput struct {
 	// ReservedInstanceIds is a required field
 	ReservedInstanceIds []*string `locationName:"ReservedInstanceId" locationNameList:"ReservedInstanceId" type:"list" required:"true"`
 
-	// The configuration requirements of the Convertible Reserved Instances to exchange
+	// The configuration of the target Convertible Reserved Instance to exchange
 	// for your current Convertible Reserved Instances.
 	TargetConfigurations []*TargetConfigurationRequest `locationName:"TargetConfiguration" locationNameList:"TargetConfigurationRequest" type:"list"`
 }
@@ -47316,6 +47400,97 @@ func (s *ModifyVpcPeeringConnectionOptionsOutput) SetRequesterPeeringConnectionO
 	return s
 }
 
+// Contains the parameters for ModifyVpcTenancy.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyVpcTenancyRequest
+type ModifyVpcTenancyInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the operation, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The instance tenancy attribute for the VPC.
+	//
+	// InstanceTenancy is a required field
+	InstanceTenancy *string `type:"string" required:"true" enum:"VpcTenancy"`
+
+	// The ID of the VPC.
+	//
+	// VpcId is a required field
+	VpcId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ModifyVpcTenancyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyVpcTenancyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyVpcTenancyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyVpcTenancyInput"}
+	if s.InstanceTenancy == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceTenancy"))
+	}
+	if s.VpcId == nil {
+		invalidParams.Add(request.NewErrParamRequired("VpcId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *ModifyVpcTenancyInput) SetDryRun(v bool) *ModifyVpcTenancyInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetInstanceTenancy sets the InstanceTenancy field's value.
+func (s *ModifyVpcTenancyInput) SetInstanceTenancy(v string) *ModifyVpcTenancyInput {
+	s.InstanceTenancy = &v
+	return s
+}
+
+// SetVpcId sets the VpcId field's value.
+func (s *ModifyVpcTenancyInput) SetVpcId(v string) *ModifyVpcTenancyInput {
+	s.VpcId = &v
+	return s
+}
+
+// Contains the output of ModifyVpcTenancy.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyVpcTenancyResult
+type ModifyVpcTenancyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Returns true if the request succeeds; otherwise, returns an error.
+	ReturnValue *bool `locationName:"return" type:"boolean"`
+}
+
+// String returns the string representation
+func (s ModifyVpcTenancyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyVpcTenancyOutput) GoString() string {
+	return s.String()
+}
+
+// SetReturnValue sets the ReturnValue field's value.
+func (s *ModifyVpcTenancyOutput) SetReturnValue(v bool) *ModifyVpcTenancyOutput {
+	s.ReturnValue = &v
+	return s
+}
+
 // Contains the parameters for MonitorInstances.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/MonitorInstancesRequest
 type MonitorInstancesInput struct {
@@ -53542,9 +53717,9 @@ type RunInstancesInput struct {
 	// The user data to make available to the instance. For more information, see
 	// Running Commands on Your Linux Instance at Launch (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html)
 	// (Linux) and Adding User Data (http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/ec2-instance-metadata.html#instancedata-add-user-data)
-	// (Windows). If you are using an AWS SDK or command line tool, base64-encoding
-	// is performed for you, and you can load the text from a file. Otherwise, you
-	// must provide base64-encoded text.
+	// (Windows). If you are using a command line tool, base64-encoding is performed
+	// for you, and you can load the text from a file. Otherwise, you must provide
+	// base64-encoded text.
 	UserData *string `type:"string"`
 }
 
@@ -61462,6 +61637,11 @@ const (
 
 	// VpcStateAvailable is a VpcState enum value
 	VpcStateAvailable = "available"
+)
+
+const (
+	// VpcTenancyDefault is a VpcTenancy enum value
+	VpcTenancyDefault = "default"
 )
 
 const (

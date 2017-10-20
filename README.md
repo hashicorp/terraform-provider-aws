@@ -50,6 +50,8 @@ $ $GOPATH/bin/terraform-provider-aws
 
 In order to test the provider, you can simply run `make test`.
 
+*Note:* Make sure no `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY` variables are set, and there's no `[default]` section in the AWS credentials file `~/.aws/credentials`.
+
 ```sh
 $ make test
 ```

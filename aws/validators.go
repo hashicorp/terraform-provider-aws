@@ -761,7 +761,7 @@ func validateSQSFifoQueueName(v interface{}, k string) (errors []error) {
 
 func validateSNSSubscriptionProtocol(v interface{}, k string) (ws []string, errors []error) {
 	value := strings.ToLower(v.(string))
-	forbidden := []string{"email", "sms"}
+	forbidden := []string{"email"}
 	for _, f := range forbidden {
 		if strings.Contains(value, f) {
 			errors = append(
@@ -1508,6 +1508,30 @@ func validateSecurityGroupRuleDescription(v interface{}, k string) (ws []string,
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't comply with restrictions (%q): %q",
 			k, pattern, value))
+	}
+	return
+}
+
+func validateServiceCatalogPortfolioName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) > 20) || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("Service catalog name must be between 1 and 20 characters."))
+	}
+	return
+}
+
+func validateServiceCatalogPortfolioDescription(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 2000 {
+		errors = append(errors, fmt.Errorf("Service catalog description must be less than 2000 characters."))
+	}
+	return
+}
+
+func validateServiceCatalogPortfolioProviderName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) > 20) || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("Service catalog provider name must be between 1 and 20 characters."))
 	}
 	return
 }

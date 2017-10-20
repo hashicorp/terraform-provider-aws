@@ -21,6 +21,7 @@ func TestAccDataSourceAwsSecurityGroup(t *testing.T) {
 				Config: testAccDataSourceAwsSecurityGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_id"),
+					resource.TestCheckResourceAttr("data.aws_security_group.by_id", "description", "sg description"),
 					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_tag"),
 					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_filter"),
 					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_name"),
@@ -121,6 +122,7 @@ func testAccDataSourceAwsSecurityGroupConfig(rInt int) string {
 			Name = "tf-acctest"
 			Seed = "%d"
 		}
+		description = "sg description"
 	}
 
 	data "aws_security_group" "by_id" {
