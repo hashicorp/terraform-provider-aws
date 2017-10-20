@@ -930,6 +930,19 @@ func testAccCheckAWSSecurityGroupRuleAttributes(n string, group *ec2.SecurityGro
 				continue
 			}
 
+			remaining = len(p.Ipv6Ranges)
+			for _, ip := range p.Ipv6Ranges {
+				for _, rip := range r.Ipv6Ranges {
+					if *ip.CidrIpv6 == *rip.CidrIpv6 {
+						remaining--
+					}
+				}
+			}
+
+			if remaining > 0 {
+				continue
+			}
+
 			remaining = len(p.UserIdGroupPairs)
 			for _, ip := range p.UserIdGroupPairs {
 				for _, rip := range r.UserIdGroupPairs {
