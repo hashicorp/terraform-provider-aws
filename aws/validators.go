@@ -427,14 +427,14 @@ func validatePolicyStatementId(v interface{}, k string) (ws []string, errors []e
 // represents a network address - it adds an error otherwise
 func validateCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	_, ipnet, err := net.ParseCIDR(value)
+	ip, ipnet, err := net.ParseCIDR(value)
 	if err != nil {
 		errors = append(errors, fmt.Errorf(
 			"%q must contain a valid CIDR, got error parsing: %s", k, err))
 		return
 	}
 
-	if ipnet == nil || value != ipnet.String() {
+	if ipnet == nil || (ip.To4() != nil && value != ipnet.String()) {
 		errors = append(errors, fmt.Errorf(
 			"%q must contain a valid network CIDR, got %q", k, value))
 	}
