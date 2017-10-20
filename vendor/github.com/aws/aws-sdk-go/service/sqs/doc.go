@@ -29,7 +29,7 @@
 //
 //    * Amazon SQS Product Page (http://aws.amazon.com/sqs/)
 //
-//    * Amazon SQS Developer Guide
+//    * Amazon Simple Queue Service Developer Guide
 //
 // Making API Requests (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/MakingRequestsArticle.html)
 //
