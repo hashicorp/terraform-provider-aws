@@ -140,6 +140,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 			"vpc_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"security_group_ids": {
@@ -264,17 +265,12 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 
 	if v, ok := d.GetOk("vpc_options"); ok {
 		options := v.([]interface{})
-
-		if len(options) > 1 {
-			return fmt.Errorf("Only a single vpc_options block is expected")
-		} else if len(options) == 1 {
-			if options[0] == nil {
-				return fmt.Errorf("At least one field is expected inside vpc_options")
-			}
-
-			s := options[0].(map[string]interface{})
-			input.VPCOptions = expandESVPCOptions(s)
+		if options[0] == nil {
+			return fmt.Errorf("At least one field is expected inside vpc_options")
 		}
+
+		s := options[0].(map[string]interface{})
+		input.VPCOptions = expandESVPCOptions(s)
 	}
 
 	log.Printf("[DEBUG] Creating ElasticSearch domain: %s", input)
@@ -506,13 +502,8 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("vpc_options") {
 		options := d.Get("vpc_options").([]interface{})
-
-		if len(options) > 1 {
-			return fmt.Errorf("Only a single vpc_options block is expected")
-		} else if len(options) == 1 {
-			s := options[0].(map[string]interface{})
-			input.VPCOptions = expandESVPCOptions(s)
-		}
+		s := options[0].(map[string]interface{})
+		input.VPCOptions = expandESVPCOptions(s)
 	}
 
 	_, err := conn.UpdateElasticsearchDomainConfig(&input)

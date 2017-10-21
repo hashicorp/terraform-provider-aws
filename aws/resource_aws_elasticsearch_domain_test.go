@@ -147,7 +147,6 @@ func TestAccAWSElasticSearchDomain_complex(t *testing.T) {
 
 func TestAccAWSElasticSearchDomain_vpc(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	ri := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -155,7 +154,7 @@ func TestAccAWSElasticSearchDomain_vpc(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig_vpc(ri),
+				Config: testAccESDomainConfig_vpc(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
 				),
@@ -468,32 +467,38 @@ resource "aws_elasticsearch_domain" "example" {
 `, randInt)
 }
 
-func testAccESDomainConfig_vpc(randInt int) string {
-	return fmt.Sprintf(`
+func testAccESDomainConfig_vpc() string {
+	return `
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
-resource "aws_default_vpc" "default" {}
-
-resource "aws_default_subnet" "first" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+resource "aws_vpc" "elasticsearch_in_vpc" {
+  cidr_block = "192.168.0.0/22"
 }
 
-resource "aws_default_subnet" "second" {
+resource "aws_subnet" "first" {
+  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "192.168.0.0/24"
+}
+
+resource "aws_subnet" "second" {
+  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  cidr_block        = "192.168.1.0/24"
 }
 
 resource "aws_security_group" "first" {
-  vpc_id = "${aws_default_vpc.default.id}"
+  vpc_id = "${aws_vpc.elasticsearch_in_vpc.id}"
 }
 
 resource "aws_security_group" "second" {
-  vpc_id = "${aws_default_vpc.default.id}"
+  vpc_id = "${aws_vpc.elasticsearch_in_vpc.id}"
 }
 
 resource "aws_elasticsearch_domain" "example" {
-  domain_name = "tf-test-%d"
+  domain_name = "tf-test-in-vpc"
 
   ebs_options {
     ebs_enabled = false
@@ -507,8 +512,8 @@ resource "aws_elasticsearch_domain" "example" {
 
   vpc_options {
     security_group_ids = ["${aws_security_group.first.id}", "${aws_security_group.second.id}"]
-    subnet_ids = ["${aws_default_subnet.first.id}", "${aws_default_subnet.second.id}"]
+    subnet_ids = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
   }
 }
-`, randInt)
+`
 }
