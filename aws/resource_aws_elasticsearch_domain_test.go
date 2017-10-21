@@ -145,6 +145,25 @@ func TestAccAWSElasticSearchDomain_complex(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_vpc(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_vpc(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_policy(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
@@ -445,6 +464,51 @@ resource "aws_elasticsearch_domain" "example" {
     volume_size = 10
   }
   elasticsearch_version = "2.3"
+}
+`, randInt)
+}
+
+func testAccESDomainConfig_vpc(randInt int) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_default_vpc" "default" {}
+
+resource "aws_default_subnet" "first" {
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+}
+
+resource "aws_default_subnet" "second" {
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+}
+
+resource "aws_security_group" "first" {
+  vpc_id = "${aws_default_vpc.default.id}"
+}
+
+resource "aws_security_group" "second" {
+  vpc_id = "${aws_default_vpc.default.id}"
+}
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+  ebs_options {
+    ebs_enabled = false
+  }
+
+  cluster_config {
+    instance_count = 2
+    zone_awareness_enabled = true
+    instance_type = "r3.large.elasticsearch"
+  }
+
+  vpc_options {
+    security_group_ids = ["${aws_security_group.first.id}", "${aws_security_group.second.id}"]
+    subnet_ids = ["${aws_default_subnet.first.id}", "${aws_default_subnet.second.id}"]
+  }
 }
 `, randInt)
 }

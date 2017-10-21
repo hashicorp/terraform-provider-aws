@@ -336,7 +336,7 @@ func waitForElasticSearchDomainCreation(conn *elasticsearch.ElasticsearchService
 			return resource.NonRetryableError(err)
 		}
 
-		if !*out.DomainStatus.Processing && out.DomainStatus.Endpoint != nil {
+		if !*out.DomainStatus.Processing && (out.DomainStatus.Endpoint != nil || out.DomainStatus.Endpoints != nil) {
 			return nil
 		}
 
@@ -379,9 +379,6 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	d.Set("domain_id", ds.DomainId)
 	d.Set("domain_name", ds.DomainName)
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
-	if ds.Endpoint != nil {
-		d.Set("endpoint", *ds.Endpoint)
-	}
 
 	err = d.Set("ebs_options", flattenESEBSOptions(ds.EBSOptions))
 	if err != nil {
@@ -408,6 +405,21 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		err = d.Set("vpc_id", *ds.VPCOptions.VPCId)
 		if err != nil {
 			return err
+		}
+		endpoints := pointersMapToStringList(ds.Endpoints)
+		err = d.Set("endpoint", endpoints["vpc"])
+		if err != nil {
+			return err
+		}
+		if ds.Endpoint != nil {
+			return fmt.Errorf("%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
+		}
+	} else {
+		if ds.Endpoint != nil {
+			d.Set("endpoint", *ds.Endpoint)
+		}
+		if ds.Endpoints != nil {
+			return fmt.Errorf("%q: Elasticsearch domain not in VPC expected to have null Endpoints value", d.Id())
 		}
 	}
 
