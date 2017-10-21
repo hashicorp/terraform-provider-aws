@@ -283,7 +283,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		ns := n.([]interface{})
 
 		// Unassign old IP addresses
-		unassignIps := difference(os, ns)
+		unassignIps := difference(ns, os)
 		if len(unassignIps) != 0 {
 			input := &ec2.UnassignPrivateIpAddressesInput{
 				NetworkInterfaceId: aws.String(d.Id()),
@@ -296,7 +296,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		}
 
 		// Assign new IP addresses
-		assignIps := difference(ns, os)
+		assignIps := difference(os, ns)
 		if len(assignIps) != 0 {
 			input := &ec2.AssignPrivateIpAddressesInput{
 				NetworkInterfaceId: aws.String(d.Id()),
