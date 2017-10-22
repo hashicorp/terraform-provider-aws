@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSourceAwsELb() *schema.Resource {
+func dataSourceAwsElb() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsELbRead,
+		Read: dataSourceAwsElbRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -198,7 +198,7 @@ func dataSourceAwsELb() *schema.Resource {
 	}
 }
 
-func dataSourceAwsELbRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbconn
 	lbName := d.Get("name").(string)
 
