@@ -184,6 +184,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_eip":                      dataSourceAwsEip(),
 			"aws_elastic_beanstalk_solution_stack": dataSourceAwsElasticBeanstalkSolutionStack(),
 			"aws_elasticache_cluster":              dataSourceAwsElastiCacheCluster(),
+			"aws_elb":                              dataSourceAwsElb(),
 			"aws_elb_hosted_zone_id":               dataSourceAwsElbHostedZoneId(),
 			"aws_elb_service_account":              dataSourceAwsElbServiceAccount(),
 			"aws_iam_account_alias":                dataSourceAwsIamAccountAlias(),

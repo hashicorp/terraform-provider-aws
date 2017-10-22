@@ -348,23 +348,22 @@ func resourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
 	}
 
+	return flattenAwsELbResource(d, meta, describeResp.LoadBalancerDescriptions[0])
+}
+
+// flattenAwsELbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
+func flattenAwsELbResource(d *schema.ResourceData, meta interface{}, lb *elb.LoadBalancerDescription) error {
+	elbconn := meta.(*AWSClient).elbconn
+
 	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
-		LoadBalancerName: aws.String(elbName),
+		LoadBalancerName: aws.String(d.Id()),
 	}
 	describeAttrsResp, err := elbconn.DescribeLoadBalancerAttributes(describeAttrsOpts)
 	if err != nil {
-		if isLoadBalancerNotFound(err) {
-			// The ELB is gone now, so just remove it from the state
-			d.SetId("")
-			return nil
-		}
-
 		return fmt.Errorf("Error retrieving ELB: %s", err)
 	}
 
 	lbAttrs := describeAttrsResp.LoadBalancerAttributes
-
-	lb := describeResp.LoadBalancerDescriptions[0]
 
 	d.Set("name", lb.LoadBalancerName)
 	d.Set("dns_name", lb.DNSName)
