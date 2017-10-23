@@ -25,6 +25,7 @@ resource "aws_db_instance" "default" {
   password             = "bar"
   db_subnet_group_name = "my_database_subnet_group"
   parameter_group_name = "default.mysql5.6"
+  snapshot_identifier  = "${data.aws_db_snapshot.db_snapshot.id}"
 }
 
 data "aws_db_snapshot" "db_snapshot" {
