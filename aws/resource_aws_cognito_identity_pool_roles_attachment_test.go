@@ -187,9 +187,10 @@ func testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy(s *terraform.State
 	return nil
 }
 
-const baseAWSCognitoIdentityPoolRolesAttachmentConfig = `
+func baseAWSCognitoIdentityPoolRolesAttachmentConfig(name string) string {
+	return fmt.Sprintf(`
 resource "aws_cognito_identity_pool" "main" {
-  identity_pool_name               = "identity pool %s"
+  identity_pool_name               = "identity pool %[1]s"
   allow_unauthenticated_identities = false
 
   supported_login_providers {
@@ -199,7 +200,7 @@ resource "aws_cognito_identity_pool" "main" {
 
 # Unauthenticated Role
 resource "aws_iam_role" "unauthenticated" {
-  name = "cognito_unauthenticated_%s"
+  name = "cognito_unauthenticated_%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -226,7 +227,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "unauthenticated" {
-  name = "unauthenticated_policy_%s"
+  name = "unauthenticated_policy_%[1]s"
   role = "${aws_iam_role.unauthenticated.id}"
 
   policy = <<EOF
@@ -250,7 +251,7 @@ EOF
 
 # Authenticated Role
 resource "aws_iam_role" "authenticated" {
-  name = "cognito_authenticated_%s"
+  name = "cognito_authenticated_%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -277,7 +278,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "authenticated" {
-  name = "authenticated_policy_%s"
+  name = "authenticated_policy_%[1]s"
   role = "${aws_iam_role.authenticated.id}"
 
   policy = <<EOF
@@ -299,10 +300,11 @@ resource "aws_iam_role_policy" "authenticated" {
 }
 EOF
 }
-`
+`, name)
+}
 
 func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_basic(name string) string {
-	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig+`
+	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig(name) + `
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
   identity_pool_id = "${aws_cognito_identity_pool.main.id}"
 
@@ -310,11 +312,11 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
-`, name, name, name, name, name)
+`)
 }
 
 func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_roleMappings(name string) string {
-	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig+`
+	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig(name) + `
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
   identity_pool_id = "${aws_cognito_identity_pool.main.id}"
 
@@ -335,11 +337,11 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
-`, name, name, name, name, name)
+`)
 }
 
 func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_roleMappingsUpdated(name string) string {
-	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig+`
+	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig(name) + `
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
   identity_pool_id = "${aws_cognito_identity_pool.main.id}"
 
@@ -354,17 +356,24 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
       role_arn   = "${aws_iam_role.authenticated.arn}"
       value      = "unpaid"
     }
+
+    mapping_rule {
+      claim      = "isFoo"
+      match_type = "Equals"
+      role_arn   = "${aws_iam_role.authenticated.arn}"
+      value      = "bar"
+    }
   }
 
   roles {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
-`, name, name, name, name, name)
+`)
 }
 
 func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_roleMappingsWithAmbiguousRoleResolutionError(name string) string {
-	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig+`
+	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig(name) + `
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
   identity_pool_id = "${aws_cognito_identity_pool.main.id}"
 
@@ -384,11 +393,11 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
-`, name, name, name, name, name)
+`)
 }
 
 func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_roleMappingsWithRulesTypeError(name string) string {
-	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig+`
+	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig(name) + `
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
   identity_pool_id = "${aws_cognito_identity_pool.main.id}"
 
@@ -402,11 +411,11 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
-`, name, name, name, name, name)
+`)
 }
 
 func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_roleMappingsWithTokenTypeError(name string) string {
-	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig+`
+	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig(name) + `
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
   identity_pool_id = "${aws_cognito_identity_pool.main.id}"
 
@@ -427,5 +436,5 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
-`, name, name, name, name, name)
+`)
 }

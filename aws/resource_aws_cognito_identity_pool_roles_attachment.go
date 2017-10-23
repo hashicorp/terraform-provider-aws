@@ -125,10 +125,10 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentCreate(d *schema.ResourceData,
 			return fmt.Errorf("Error validating ambiguous role resolution: %v", errors)
 		}
 
-		params.RoleMappings = expandCognitoIdentityPoolRoleMappingsAttachment(v.([]interface{}))
+		params.RoleMappings = expandCognitoIdentityPoolRoleMappingsAttachment(v.(*schema.Set).List())
 	}
 
-	log.Sprintf("[DEBUG] Creating Cognito Identity Pool Roles Association: %#v", params)
+	log.Printf("[DEBUG] Creating Cognito Identity Pool Roles Association: %#v", params)
 	_, err := conn.SetIdentityPoolRoles(params)
 	if err != nil {
 		return fmt.Errorf("Error creating Cognito Identity Pool Roles Association: %s", err)
@@ -198,7 +198,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentUpdate(d *schema.ResourceData,
 		params.RoleMappings = expandCognitoIdentityPoolRoleMappingsAttachment(mappings)
 	}
 
-	log.Sprintf("[DEBUG] Updating Cognito Identity Pool Roles Association: %#v", params)
+	log.Printf("[DEBUG] Updating Cognito Identity Pool Roles Association: %#v", params)
 	_, err := conn.SetIdentityPoolRoles(params)
 	if err != nil {
 		return fmt.Errorf("Error updating Cognito Identity Pool Roles Association: %s", err)
