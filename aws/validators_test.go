@@ -2863,3 +2863,30 @@ func TestResourceAWSElastiCacheReplicationGroupAuthTokenValidation(t *testing.T)
 		}
 	}
 }
+
+func TestValidateCognitoUserPoolDomain(t *testing.T) {
+	validTypes := []string{
+		"valid-domain",
+		"validdomain",
+		"val1d-d0main",
+	}
+	for _, v := range validTypes {
+		_, errors := validateCognitoUserPoolDomain(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool Domain: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"UpperCase",
+		"-invalid",
+		"invalid-",
+		strings.Repeat("i", 64), // > 63
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateCognitoUserPoolDomain(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Cognito User Pool Domain", v)
+		}
+	}
+}
