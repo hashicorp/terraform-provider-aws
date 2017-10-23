@@ -156,7 +156,6 @@ func resourceAwsAlbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 			if v, ok := d.GetOk("port"); ok {
 				targetPortToAdd.Port = aws.Int64(int64(v.(int)))
 			}
-
 			params.Targets = append(params.Targets, targetPortToAdd)
 		}
 	}
@@ -185,7 +184,6 @@ func resourceAwsAlbAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 		if v, ok := d.GetOk("port"); ok {
 			targetPortToAdd.Port = aws.Int64(int64(v.(int)))
 		}
-
 		params.Targets = append(params.Targets, targetPortToAdd)
 		log.Printf("[INFO] Registering Target %s (%d) with Target Group %s", d.Get("target_id").(string),
 			d.Get("port").(int), d.Get("target_group_arn").(string))
@@ -199,7 +197,6 @@ func resourceAwsAlbAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 			if v, ok := d.GetOk("port"); ok {
 				targetPortToAdd.Port = aws.Int64(int64(v.(int)))
 			}
-
 			params.Targets = append(params.Targets, targetPortToAdd)
 		}
 	}
@@ -243,7 +240,6 @@ func resourceAwsAlbAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 			if v, ok := d.GetOk("port"); ok {
 				targetPortToAdd.Port = aws.Int64(int64(v.(int)))
 			}
-
 			params.Targets = append(params.Targets, targetPortToAdd)
 		}
 	}
