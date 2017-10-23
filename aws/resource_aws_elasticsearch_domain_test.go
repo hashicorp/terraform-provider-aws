@@ -221,6 +221,24 @@ func TestAccAWSElasticSearchDomain_update(t *testing.T) {
 		}})
 }
 
+func TestAccAWSElasticSearchDomain_VPCOptions(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_WithVPCOptions(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckESSnapshotHour(snapshotHour int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.SnapshotOptions
@@ -333,7 +351,7 @@ resource "aws_elasticsearch_domain" "example" {
   ebs_options {
     ebs_enabled = true
 		volume_size = 10
-		
+
   }
 
   cluster_config {
@@ -347,6 +365,52 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt, instanceInt, snapshotInt)
+}
+
+func testAccESDomainConfig_WithVPCOptions(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+	cidr_block = "10.10.0.0/16"
+}
+
+resource "aws_subnet" "foo" {
+	cidr_block = "10.10.1.0/24"
+	vpc_id = "${aws_vpc.foo.id}"
+}
+
+resource "aws_security_group" "foo" {
+  name = "terraform_acceptance_test_example"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.foo.id}"
+  ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["10.0.0.0/8"]
+  }
+  egress {
+    protocol = "tcp"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["10.0.0.0/8"]
+  }
+	tags {
+		Name = "tf-acc-test"
+	}
+}
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+	vpc_options {
+		subnet_ids = ["${aws_subnet.foo.id}"]
+		security_group_ids = ["${aws_security_group.foo.id}"]
+	}
+}
+`, randInt)
 }
 
 func testAccESDomainConfig_TagUpdate(randInt int) string {
