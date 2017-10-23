@@ -43,6 +43,7 @@ func resourceAwsIamUser() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateAwsIamUserName,
+				ForceNew:     true,
 			},
 			"path": &schema.Schema{
 				Type:     schema.TypeString,
