@@ -20,6 +20,7 @@ BUG FIXES:
 * resource/aws_kms_key: Retry reading tags on `NotFoundException` [GH-1900]
 * resource/aws_db_snapshot: Raise creation timeout to 20mins [GH-1905]
 * resource/aws_lb: Allow assigning EIP to network LB [GH-1956]
+* resource/aws_s3_bucket: Retry tagging on OperationAborted [GH-2008]
 
 ## 1.1.0 (October 16, 2017)
 
