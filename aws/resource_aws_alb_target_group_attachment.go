@@ -17,6 +17,7 @@ func resourceAwsAlbTargetGroupAttachment() *schema.Resource {
 		Create: resourceAwsAlbAttachmentCreate,
 		Read:   resourceAwsAlbAttachmentRead,
 		Delete: resourceAwsAlbAttachmentDelete,
+		Update: resourceAwsAlbAttachmentUpdate,
 
 		Schema: map[string]*schema.Schema{
 			"target_group_arn": {
@@ -39,7 +40,7 @@ func resourceAwsAlbTargetGroupAttachment() *schema.Resource {
 
 			"instances": &schema.Schema{
 				Type:     schema.TypeSet,
-				ForceNew: true,
+				ForceNew: false,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
@@ -49,16 +50,86 @@ func resourceAwsAlbTargetGroupAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsAlbAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsAlbAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[INFO] Update Target  %s (%d) with Target Group %s", d.Get("target_id").(string),
+		d.Get("port").(int), d.Get("target_group_arn").(string))
+
 	elbconn := meta.(*AWSClient).elbv2conn
 
-	target := &elbv2.TargetDescription{
-		Id: aws.String(d.Get("target_id").(string)),
+	if _, ok := d.GetOk("instances"); !ok {
+		log.Printf("[ERROR] Call update and instances is empty for Target Group %s", d.Get("target_group_arn").(string))
+		return nil
 	}
 
-	if v, ok := d.GetOk("port"); ok {
-		target.Port = aws.Int64(int64(v.(int)))
+	resp, err := elbconn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
+		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
+	})
+
+	if err != nil {
+		return errwrap.Wrapf("Error reading Target Health: {{err}}", err)
 	}
+
+	targets := d.Get("instances").(*schema.Set)
+
+	paramsDereg := &elbv2.DeregisterTargetsInput{
+		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
+	}
+
+	for _, targetDeployed := range resp.TargetHealthDescriptions {
+		log.Printf("[DEBUG] Look for targets to remove from target group : current loop %s", *(targetDeployed.Target.Id))
+
+		//Target deployed not in  given in the resource  -> remove it
+		if !targets.Contains(*(targetDeployed.Target.Id)) {
+			targetPortToAdd := &elbv2.TargetDescription{
+				Id: aws.String(*(targetDeployed.Target.Id)),
+			}
+			if v, ok := d.GetOk("port"); ok {
+				targetPortToAdd.Port = aws.Int64(int64(v.(int)))
+			}
+			paramsDereg.Targets = append(paramsDereg.Targets, targetPortToAdd)
+
+		}
+	}
+
+	if len(paramsDereg.Targets) > 0 {
+		log.Printf("[DEBUG] %d target to remove from %s", len(paramsDereg.Targets), d.Get("target_group_arn").(string))
+		_, err = elbconn.DeregisterTargets(paramsDereg)
+		if err != nil {
+			return errwrap.Wrapf("Error deregistering Targets: {{err}}", err)
+		}
+	}
+
+	//Get the ID from the TargetHealthDescription
+	thd := make(map[string]bool)
+	for _, v := range resp.TargetHealthDescriptions {
+		thd[*(v.Target.Id)] = true
+	}
+	paramsRegister := &elbv2.RegisterTargetsInput{
+		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
+	}
+	for _, target := range targets.List() {
+		if _, ok := thd[target.(string)]; !ok {
+			targetPortToAdd := &elbv2.TargetDescription{
+				Id: aws.String(target.(string)),
+			}
+			if v, ok := d.GetOk("port"); ok {
+				targetPortToAdd.Port = aws.Int64(int64(v.(int)))
+			}
+			paramsRegister.Targets = append(paramsRegister.Targets, targetPortToAdd)
+		}
+	}
+	if len(paramsRegister.Targets) > 0 {
+		log.Printf("[DEBUG] %d target to add to %s", len(paramsRegister.Targets), d.Get("target_group_arn").(string))
+		_, err = elbconn.RegisterTargets(paramsRegister)
+		if err != nil {
+			return errwrap.Wrapf("Error registering targets with target group: {{err}}", err)
+		}
+	}
+	return nil
+}
+
+func resourceAwsAlbAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+	elbconn := meta.(*AWSClient).elbv2conn
 
 	params := &elbv2.RegisterTargetsInput{
 		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
@@ -66,9 +137,12 @@ func resourceAwsAlbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 
 	if _, ok := d.GetOk("target_id"); ok {
 		targetPortToAdd := &elbv2.TargetDescription{
-			Id:   aws.String(d.Get("target_id").(string)),
-			Port: aws.Int64(int64(d.Get("port").(int))),
+			Id: aws.String(d.Get("target_id").(string)),
 		}
+		if v, ok := d.GetOk("port"); ok {
+			targetPortToAdd.Port = aws.Int64(int64(v.(int)))
+		}
+
 		params.Targets = append(params.Targets, targetPortToAdd)
 		log.Printf("[INFO] Registering Target %s (%d) with Target Group %s", d.Get("target_id").(string),
 			d.Get("port").(int), d.Get("target_group_arn").(string))
@@ -77,8 +151,10 @@ func resourceAwsAlbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 
 		for _, target := range targets.List() {
 			targetPortToAdd := &elbv2.TargetDescription{
-				Id:   aws.String(target.(string)),
-				Port: aws.Int64(int64(d.Get("port").(int))),
+				Id: aws.String(target.(string)),
+			}
+			if v, ok := d.GetOk("port"); ok {
+				targetPortToAdd.Port = aws.Int64(int64(v.(int)))
 			}
 			params.Targets = append(params.Targets, targetPortToAdd)
 		}
@@ -97,22 +173,16 @@ func resourceAwsAlbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 func resourceAwsAlbAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 
-	target := &elbv2.TargetDescription{
-		Id: aws.String(d.Get("target_id").(string)),
-	}
-
-	if v, ok := d.GetOk("port"); ok {
-		target.Port = aws.Int64(int64(v.(int)))
-	}
-
 	params := &elbv2.DeregisterTargetsInput{
 		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
 	}
 
 	if _, ok := d.GetOk("target_id"); ok {
 		targetPortToAdd := &elbv2.TargetDescription{
-			Id:   aws.String(d.Get("target_id").(string)),
-			Port: aws.Int64(int64(d.Get("port").(int))),
+			Id: aws.String(d.Get("target_id").(string)),
+		}
+		if v, ok := d.GetOk("port"); ok {
+			targetPortToAdd.Port = aws.Int64(int64(v.(int)))
 		}
 		params.Targets = append(params.Targets, targetPortToAdd)
 		log.Printf("[INFO] Registering Target %s (%d) with Target Group %s", d.Get("target_id").(string),
@@ -122,8 +192,10 @@ func resourceAwsAlbAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 
 		for _, target := range targets.List() {
 			targetPortToAdd := &elbv2.TargetDescription{
-				Id:   aws.String(target.(string)),
-				Port: aws.Int64(int64(d.Get("port").(int))),
+				Id: aws.String(target.(string)),
+			}
+			if v, ok := d.GetOk("port"); ok {
+				targetPortToAdd.Port = aws.Int64(int64(v.(int)))
 			}
 			params.Targets = append(params.Targets, targetPortToAdd)
 		}
@@ -150,8 +222,10 @@ func resourceAwsAlbAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 
 	if _, ok := d.GetOk("target_id"); ok {
 		targetPortToAdd := &elbv2.TargetDescription{
-			Id:   aws.String(d.Get("target_id").(string)),
-			Port: aws.Int64(int64(d.Get("port").(int))),
+			Id: aws.String(d.Get("target_id").(string)),
+		}
+		if v, ok := d.GetOk("port"); ok {
+			targetPortToAdd.Port = aws.Int64(int64(v.(int)))
 		}
 		params.Targets = append(params.Targets, targetPortToAdd)
 		log.Printf("[INFO] Registering Target %s (%d) with Target Group %s", d.Get("target_id").(string),
@@ -161,8 +235,10 @@ func resourceAwsAlbAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 
 		for _, target := range targets.List() {
 			targetPortToAdd := &elbv2.TargetDescription{
-				Id:   aws.String(target.(string)),
-				Port: aws.Int64(int64(d.Get("port").(int))),
+				Id: aws.String(target.(string)),
+			}
+			if v, ok := d.GetOk("port"); ok {
+				targetPortToAdd.Port = aws.Int64(int64(v.(int)))
 			}
 			params.Targets = append(params.Targets, targetPortToAdd)
 		}
@@ -184,7 +260,7 @@ func resourceAwsAlbAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 		return errwrap.Wrapf("Error reading Target Health: {{err}}", err)
 	}
 
-	if len(resp.TargetHealthDescriptions) != 1 {
+	if len(resp.TargetHealthDescriptions) < 1 {
 		log.Printf("[WARN] Target does not exist, removing target attachment %s", d.Id())
 		d.SetId("")
 		return nil
