@@ -52,13 +52,15 @@ func testAccCheckAWSSsmResourceDataSyncDestroy(s *terraform.State) error {
 					found = true
 				}
 			}
-			if found || *resp.NextToken == "" {
+			if resp.NextToken != nil {
+				nextToken = *resp.NextToken
+			}
+			if found || nextToken == "" {
 				break
 			}
-			nextToken = *resp.NextToken
 		}
-		if !found {
-			return fmt.Errorf("No Resource Data Sync found for SyncName: %s", rs.Primary.Attributes["name"])
+		if found {
+			return fmt.Errorf("[DELETE ERROR] Resource Data Sync found for SyncName: %s", rs.Primary.Attributes["name"])
 		}
 	}
 	return nil
@@ -71,7 +73,6 @@ func testAccCheckAWSSsmResourceDataSyncExists(name string) resource.TestCheckFun
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
-
 		return nil
 	}
 }

@@ -105,6 +105,7 @@ func resourceAwsSsmResourceDataSyncCreate(d *schema.ResourceData, meta interface
 			return err
 		}
 	}
+	d.SetId(d.Get("name").(string))
 	return resourceAwsSsmResourceDataSyncRead(d, meta)
 }
 
