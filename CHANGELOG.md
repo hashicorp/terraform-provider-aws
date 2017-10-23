@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_servicecatalog_portfolio` [GH-1694]
+* **New Resource:** `aws_ses_domain_dkim` [GH-1786]
 
 IMPROVEMENTS:
 
