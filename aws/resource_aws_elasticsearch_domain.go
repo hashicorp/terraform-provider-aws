@@ -143,6 +143,12 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"availability_zones": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
+						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -155,20 +161,12 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
+						"vpc_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
-			},
-			"vpc_availability_zones": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
 			},
 			"elasticsearch_version": {
 				Type:     schema.TypeString,
@@ -391,14 +389,6 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	}
 	if ds.VPCOptions != nil {
 		err = d.Set("vpc_options", flattenESVPCDerivedInfo(ds.VPCOptions))
-		if err != nil {
-			return err
-		}
-		err = d.Set("vpc_availability_zones", schema.NewSet(schema.HashString, flattenStringList(ds.VPCOptions.AvailabilityZones)))
-		if err != nil {
-			return err
-		}
-		err = d.Set("vpc_id", *ds.VPCOptions.VPCId)
 		if err != nil {
 			return err
 		}

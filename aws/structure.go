@@ -1017,11 +1017,17 @@ func expandESEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 func flattenESVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) []map[string]interface{} {
 	m := map[string]interface{}{}
 
+	if o.AvailabilityZones != nil {
+		m["availability_zones"] = schema.NewSet(schema.HashString, flattenStringList(o.AvailabilityZones))
+	}
 	if o.SecurityGroupIds != nil {
 		m["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(o.SecurityGroupIds))
 	}
 	if o.SubnetIds != nil {
 		m["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(o.SubnetIds))
+	}
+	if o.VPCId != nil {
+		m["vpc_id"] = *o.VPCId
 	}
 
 	return []map[string]interface{}{m}

@@ -103,8 +103,8 @@ The following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the domain.
 * `domain_id` - Unique identifier for the domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
-* `vpc_availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
-* `vpc_id` - If the domain was created inside a VPC, the ID of the VPC.
+* `vpc_options.0.availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
+* `vpc_options.0.vpc_id` - If the domain was created inside a VPC, the ID of the VPC.
 
 ## Import
 
