@@ -97,11 +97,10 @@ func resourceAwsSecurityGroupRule() *schema.Resource {
 			},
 
 			"self": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				Default:       false,
-				ForceNew:      true,
-				ConflictsWith: []string{"cidr_blocks"},
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
 			},
 
 			"description": {
@@ -732,10 +731,14 @@ func setDescriptionFromIPPerm(d *schema.ResourceData, rule *ec2.IpPermission) {
 
 // Validates that either 'cidr_blocks', 'ipv6_cidr_blocks', 'self', or 'source_security_group_id' is set
 func validateAwsSecurityGroupRule(d *schema.ResourceData) error {
-	_, blocksOk := d.GetOk("cidr_blocks")
+	blocks, blocksOk := d.GetOk("cidr_blocks")
+	self, selfOk := d.GetOk("self")
+	if blocksOk && self.(bool) {
+		return fmt.Errorf("'self': conflicts with 'cidr_blocks' (%#v)", blocks)
+	}
+
 	_, ipv6Ok := d.GetOk("ipv6_cidr_blocks")
 	_, sourceOk := d.GetOk("source_security_group_id")
-	_, selfOk := d.GetOk("self")
 	_, prefixOk := d.GetOk("prefix_list_ids")
 	if !blocksOk && !sourceOk && !selfOk && !prefixOk && !ipv6Ok {
 		return fmt.Errorf(

@@ -34,6 +34,9 @@
 //
 //    * CreateBranch, which creates a new branch in a specified repository
 //
+//    * DeleteBranch, which deletes the specified branch in a repository unless
+//    it is the default branch
+//
 //    * GetBranch, which returns information about a specified branch
 //
 //    * ListBranches, which lists all branches for a specified repository

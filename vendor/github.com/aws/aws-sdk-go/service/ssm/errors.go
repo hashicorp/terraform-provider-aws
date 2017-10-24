@@ -453,6 +453,12 @@ const (
 	// or more parameters and try again.
 	ErrCodeParameterLimitExceeded = "ParameterLimitExceeded"
 
+	// ErrCodeParameterMaxVersionLimitExceeded for service response error code
+	// "ParameterMaxVersionLimitExceeded".
+	//
+	// The parameter exceeded the maximum number of allowed versions.
+	ErrCodeParameterMaxVersionLimitExceeded = "ParameterMaxVersionLimitExceeded"
+
 	// ErrCodeParameterNotFound for service response error code
 	// "ParameterNotFound".
 	//
@@ -464,6 +470,13 @@ const (
 	//
 	// The parameter name is not valid.
 	ErrCodeParameterPatternMismatchException = "ParameterPatternMismatchException"
+
+	// ErrCodeParameterVersionNotFound for service response error code
+	// "ParameterVersionNotFound".
+	//
+	// The specified parameter version was not found. Verify the parameter name
+	// and version, and try again.
+	ErrCodeParameterVersionNotFound = "ParameterVersionNotFound"
 
 	// ErrCodeResourceDataSyncAlreadyExistsException for service response error code
 	// "ResourceDataSyncAlreadyExistsException".

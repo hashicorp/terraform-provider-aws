@@ -45,7 +45,7 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the policy.
-* `policy_type` - (Optional) Defaults to "StepScaling" because it is the only option available.
+* `policy_type` - (Optional) For DynamoDB, only `TargetTrackingScaling` is supported. For any other service, only `StepScaling` is supported. Defaults to `StepScaling`.
 * `resource_id` - (Required) The resource type and unique identifier string for the resource associated with the scaling policy. For Amazon ECS services, this value is the resource type, followed by the cluster name and service name, such as `service/default/sample-webapp`. For Amazon EC2 Spot fleet requests, the resource type is `spot-fleet-request`, and the identifier is the Spot fleet request ID; for example, `spot-fleet-request/sfr-73fbd2ce-aa30-494c-8788-1cee4EXAMPLE`.
 For DynamoDB tables, this value is `table/nameOfTheTable`.
 * `scalable_dimension` - (Required) The scalable dimension of the scalable target. The scalable dimension contains the service namespace,   resource  type, and scaling property, such as `ecs:service:DesiredCount` for the desired task count of an Amazon ECS service, or `ec2:spot-fleet-request:TargetCapacity` for the target capacity of an Amazon EC2 Spot fleet request.

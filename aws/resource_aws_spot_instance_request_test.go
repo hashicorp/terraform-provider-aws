@@ -211,8 +211,9 @@ func testAccCheckAWSSpotInstanceRequestDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		if *s.State == "canceled" {
+		if *s.State == "canceled" || *s.State == "closed" {
 			// Requests stick around for a while, so we make sure it's cancelled
+			// or closed.
 			return nil
 		}
 
