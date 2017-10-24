@@ -22,6 +22,7 @@ BUG FIXES:
 * resource/aws_db_snapshot: Raise creation timeout to 20mins [GH-1905]
 * resource/aws_lb: Allow assigning EIP to network LB [GH-1956]
 * resource/aws_s3_bucket: Retry tagging on OperationAborted [GH-2008]
+* resource/aws_cognito_identity_pool: Fixed refresh of providers [GH-2015]
 
 ## 1.1.0 (October 16, 2017)
 
