@@ -102,10 +102,10 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 	for _, address := range ngw.NatGatewayAddresses {
 		if *address.AllocationId != "" {
-			d.Set("allocated_eip_id", address.AllocationId)
-			d.Set("allocated_eni_id", address.NetworkInterfaceId)
-			d.Set("allocated_private_ip", address.PrivateIp)
-			d.Set("allocated_public_ip", address.PublicIp)
+			d.Set("allocation_id", address.AllocationId)
+			d.Set("network_interface_id", address.NetworkInterfaceId)
+			d.Set("private_ip", address.PrivateIp)
+			d.Set("public_ip", address.PublicIp)
 			break
 		}
 	}
