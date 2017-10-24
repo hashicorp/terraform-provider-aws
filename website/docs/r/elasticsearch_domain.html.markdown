@@ -86,7 +86,7 @@ The following arguments are supported:
 * `automated_snapshot_start_hour` - (Required) Hour during which the service takes an automated daily
 	snapshot of the indices in the domain.
 
-**vpc_options** supports the following attribute:
+**vpc_options** supports the following attributes:
 
 * `subnet_ids` - (Required) List of VPC Subnet IDs
 * `security_group_ids` - (Required) List of Security Group IDs

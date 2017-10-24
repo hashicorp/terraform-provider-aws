@@ -407,7 +407,7 @@ resource "aws_subnet" "foo" {
 }
 
 resource "aws_security_group" "foo" {
-  name = "terraform_acceptance_test_example"
+  name = "tf-es-test-%d"
   description = "Used in the terraform acceptance tests"
   vpc_id = "${aws_vpc.foo.id}"
   ingress {
@@ -422,9 +422,6 @@ resource "aws_security_group" "foo" {
     to_port = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
-	tags {
-		Name = "tf-acc-test"
-	}
 }
 
 resource "aws_elasticsearch_domain" "example" {
@@ -433,12 +430,12 @@ resource "aws_elasticsearch_domain" "example" {
     ebs_enabled = true
     volume_size = 10
   }
-	vpc_options {
-		subnet_ids = ["${aws_subnet.foo.id}"]
-		security_group_ids = ["${aws_security_group.foo.id}"]
-	}
+  vpc_options {
+    subnet_ids = ["${aws_subnet.foo.id}"]
+    security_group_ids = ["${aws_security_group.foo.id}"]
+  }
 }
-`, randInt)
+`, randInt, randInt)
 }
 
 func testAccESDomainConfig_TagUpdate(randInt int) string {
