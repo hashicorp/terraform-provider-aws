@@ -16,6 +16,54 @@ func dataSourceAwsKmsKey() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"arn": {
+				Type: schema.TypeString,
+				Computed: true,
+			},
+			"aws_account_id": {
+				Type: schema.TypeString,
+				Computed: true,
+			},
+			"creation_date": {
+				Type: schema.TypeFloat,
+				Computed: true,
+			},
+			"deletion_date": {
+				Type: schema.TypeFloat,
+				Computed: true,
+			},
+			"description": {
+				Type: schema.TypeString,
+				Computed: true,
+			},
+			"enabled": {
+				Type: schema.TypeBool,
+				Computed: true,
+			},
+			"expiration_model": {
+				Type: schema.TypeString,
+				Computed: true,
+			},
+			"key_manager": {
+				Type: schema.TypeString,
+				Computed: true,
+			},
+			"key_state": {
+				Type: schema.TypeString,
+				Computed: true,
+			},
+			"key_usage": {
+				Type: schema.TypeString,
+				Computed: true,
+			},
+			"origin": {
+				Type: schema.TypeString,
+				Computed: true,
+			},
+			"valid_to": {
+				Type: schema.TypeFloat,
+				Computed: true,
+			},
 		},
 	}
 }

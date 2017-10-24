@@ -199,6 +199,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_kinesis_stream":                   dataSourceAwsKinesisStream(),
 			"aws_kms_alias":                        dataSourceAwsKmsAlias(),
 			"aws_kms_ciphertext":                   dataSourceAwsKmsCiphertext(),
+			"aws_kms_key":                          dataSourceAwsKmsKey(),
 			"aws_kms_secret":                       dataSourceAwsKmsSecret(),
 			"aws_partition":                        dataSourceAwsPartition(),
 			"aws_prefix_list":                      dataSourceAwsPrefixList(),
