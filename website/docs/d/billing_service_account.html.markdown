@@ -32,7 +32,7 @@ resource "aws_s3_bucket" "billing_logs" {
       "Resource": "arn:aws:s3:::my-billing-tf-test-bucket",
       "Principal": {
         "AWS": [
-          "${data.aws_billing_service_account.main.id}"
+          "${data.aws_billing_service_account.main.arn}"
         ]
       }
     },
@@ -44,7 +44,7 @@ resource "aws_s3_bucket" "billing_logs" {
       "Resource": "arn:aws:s3:::my-billing-tf-test-bucket/AWSLogs/*",
       "Principal": {
         "AWS": [
-          "${data.aws_billing_service_account.main.id}"
+          "${data.aws_billing_service_account.main.arn}"
         ]
       }
     }
