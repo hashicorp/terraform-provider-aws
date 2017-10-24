@@ -1651,3 +1651,19 @@ func validateCognitoRoles(v map[string]interface{}, k string) (errors []error) {
 
 	return
 }
+
+func validateKmsKey(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	arnPrefixPattern := `arn:[\w-]+:([a-zA-Z0-9\-])+:([a-z]{2}-(gov-)?[a-z]+-\d{1})?:(\d{12})?:`
+	keyIdPattern := "[A-Za-z0-9-]+"
+	keyArnPattern := arnPrefixPattern + "key/" + keyIdPattern
+	aliasNamePattern := "alias/[a-zA-Z0-9:/_-]+"
+	aliasArnPattern := arnPrefixPattern + aliasNamePattern
+	if !regexp.MustCompile(fmt.Sprintf("^%s$", keyIdPattern)).MatchString(value) &&
+		!regexp.MustCompile(fmt.Sprintf("^%s$", keyArnPattern)).MatchString(value) &&
+		!regexp.MustCompile(fmt.Sprintf("^%s$", aliasNamePattern)).MatchString(value) &&
+		!regexp.MustCompile(fmt.Sprintf("^%s$", aliasArnPattern)).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q must be one of the following patterns: %s, %s, %s or %s", k, keyIdPattern, keyArnPattern, aliasNamePattern, aliasArnPattern))
+	}
+	return
+}
