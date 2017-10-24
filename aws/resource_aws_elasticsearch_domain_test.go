@@ -233,6 +233,8 @@ func TestAccAWSElasticSearchDomain_VPCOptions(t *testing.T) {
 				Config: testAccESDomainConfig_WithVPCOptions(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESNumberOfSubnets(1, &domain),
+					testAccCheckESNumberOfSecurityGroups(1, &domain),
 				),
 			},
 		},
@@ -272,6 +274,32 @@ func testAccLoadESTags(conf *elasticsearch.ElasticsearchDomainStatus, td *elasti
 		}
 		if len(describe.TagList) > 0 {
 			*td = *describe
+		}
+		return nil
+	}
+}
+
+func testAccCheckESNumberOfSubnets(numberOfSubnets int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conf := status.VPCOptions
+		if conf == nil {
+			return fmt.Errorf("No ES VPC Options is set")
+		}
+		if len(conf.SubnetIds) != numberOfSubnets {
+			return fmt.Errorf("Number of subnets differ. Given: %d, Expected: %d", len(conf.SubnetIds), numberOfSubnets)
+		}
+		return nil
+	}
+}
+
+func testAccCheckESNumberOfSecurityGroups(numberOfSGs int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conf := status.VPCOptions
+		if conf == nil {
+			return fmt.Errorf("No ES VPC Options is set")
+		}
+		if len(conf.SecurityGroupIds) != numberOfSGs {
+			return fmt.Errorf("Number of security groups differ. Given: %d, Expected: %d", len(conf.SecurityGroupIds), numberOfSGs)
 		}
 		return nil
 	}
@@ -397,33 +425,6 @@ resource "aws_security_group" "foo" {
 	tags {
 		Name = "tf-acc-test"
 	}
-}
-
-resource "aws_iam_role" "es_role" {
-  name = "es_role"
-  assume_role_policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-	{
-	    "Action": "sts:AssumeRole",
-	    "Effect": "Allow",
-	    "Principal": {
-		"Service": "es.amazonaws.com"
-	    }
-	}
-    ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "es_role" {
-  role       = "${aws_iam_role.es_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/aws-service-role/AmazonElasticsearchServiceRolePolicy"
-}
-resource "aws_iam_instance_profile" "es_role" {
-  name  = "es_role"
-  role = "${aws_iam_role.es_role.name}"
 }
 
 resource "aws_elasticsearch_domain" "example" {
