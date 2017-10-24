@@ -398,12 +398,12 @@ resource "aws_elasticsearch_domain" "example" {
 func testAccESDomainConfig_WithVPCOptions(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-	cidr_block = "10.10.0.0/16"
+  cidr_block = "10.10.0.0/16"
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.10.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
+  cidr_block = "10.10.1.0/24"
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
 resource "aws_security_group" "foo" {
