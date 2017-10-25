@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -186,6 +187,38 @@ func resourceAwsElasticSearchDomainImport(
 	return []*schema.ResourceData{d}, nil
 }
 
+func createAwsElasticsearchIAMServiceRoleIfMissing(meta interface{}) error {
+	serviceRoleName := "AWSServiceRoleForAmazonElasticsearchService"
+	serviceName := "es.amazonaws.com"
+
+	conn := meta.(*AWSClient).iamconn
+
+	getRequest := &iam.GetRoleInput{
+		RoleName: aws.String(serviceRoleName),
+	}
+	_, err := conn.GetRole(getRequest)
+	if err != nil {
+		if iamerr, ok := err.(awserr.Error); ok {
+			switch iamerr.Code() {
+			case iam.ErrCodeNoSuchEntityException:
+				createRequest := &iam.CreateServiceLinkedRoleInput{
+					AWSServiceName: aws.String(serviceName),
+				}
+				_, err := conn.CreateServiceLinkedRole(createRequest)
+				if err != nil {
+					return fmt.Errorf("Error creating IAM Service-Linked Role %s: %s", serviceRoleName, err)
+				}
+				time.Sleep(20 * time.Second) // Give time for new IAM service-linked role to propagate globally
+			default:
+				return fmt.Errorf("Error reading IAM Role %s: %s", serviceRoleName, iamerr.Error())
+			}
+		} else {
+			return fmt.Errorf("Error reading IAM Role %s: %s", serviceRoleName, err)
+		}
+	}
+	return nil
+}
+
 func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).esconn
 
@@ -262,6 +295,11 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("vpc_options"); ok {
+		err = createAwsElasticsearchIAMServiceRoleIfMissing(meta)
+		if err != nil {
+			return err
+		}
+
 		options := v.([]interface{})
 		if options[0] == nil {
 			return fmt.Errorf("At least one field is expected inside vpc_options")
