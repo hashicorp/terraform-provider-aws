@@ -60,6 +60,7 @@ The following arguments are supported:
 * `cluster_config` - (Optional) Cluster configuration of the domain, see below.
 * `snapshot_options` - (Optional) Snapshot related options, see below.
 * `elasticsearch_version` - (Optional) The version of ElasticSearch to deploy. Defaults to `1.5`
+* `vpc_options` - (Optional) VPC endpoint options, see below.
 * `tags` - (Optional) A mapping of tags to assign to the resource
 
 **ebs_options** supports the following attributes:
@@ -85,6 +86,10 @@ The following arguments are supported:
 * `automated_snapshot_start_hour` - (Required) Hour during which the service takes an automated daily
 	snapshot of the indices in the domain.
 
+**vpc_options** supports the following attributes:
+
+* `subnet_ids` - (Required) List of VPC Subnet IDs
+* `security_group_ids` - (Required) List of Security Group IDs
 
 ## Attributes Reference
 

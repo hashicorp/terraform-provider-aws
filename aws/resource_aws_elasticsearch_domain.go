@@ -1,10 +1,13 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
 	"time"
+
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -12,7 +15,6 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"strings"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -143,6 +145,27 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Default:  "1.5",
 				ForceNew: true,
 			},
+			"vpc_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"subnet_ids": &schema.Schema{
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
+						},
+						"security_group_ids": &schema.Schema{
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
+						},
+					},
+				},
+			},
 
 			"tags": tagsSchema(),
 		},
@@ -228,6 +251,15 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 
 			input.SnapshotOptions = &snapshotOptions
 		}
+	}
+
+	if v, ok := d.GetOk("vpc_options"); ok {
+		options := v.([]interface{})
+		option, ok := options[0].(map[string]interface{})
+		if !ok {
+			return errors.New("vpc_options is <nil>")
+		}
+		input.VPCOptions = expandESVPCOptions(option)
 	}
 
 	log.Printf("[DEBUG] Creating ElasticSearch domain: %s", input)
@@ -349,6 +381,10 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 			"automated_snapshot_start_hour": *ds.SnapshotOptions.AutomatedSnapshotStartHour,
 		})
 	}
+	err = d.Set("vpc_options", flattenESVPCOptions(ds.VPCOptions))
+	if err != nil {
+		return err
+	}
 
 	d.Set("arn", ds.ARN)
 
@@ -429,6 +465,15 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 
 			input.SnapshotOptions = &snapshotOptions
 		}
+	}
+
+	if d.HasChange("vpc_options") {
+		options := d.Get("vpc_options").([]interface{})
+		option, ok := options[0].(map[string]interface{})
+		if !ok {
+			return errors.New("vpc_options is <nil>")
+		}
+		input.VPCOptions = expandESVPCOptions(option)
 	}
 
 	_, err := conn.UpdateElasticsearchDomainConfig(&input)
