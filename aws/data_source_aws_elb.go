@@ -17,7 +17,6 @@ func dataSourceAwsElb() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				Computed: true,
 			},
 
 			"access_logs": {
