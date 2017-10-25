@@ -41,7 +41,7 @@ func cloudWatchLoggingOptionsSchema() *schema.Schema {
 	}
 }
 
-func S3ConfigurationSchema() *schema.Schema {
+func s3ConfigurationSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MaxItems: 1,
@@ -203,7 +203,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 				},
 			},
 
-			"s3_configuration": S3ConfigurationSchema(),
+			"s3_configuration": s3ConfigurationSchema(),
 
 			"extended_s3_configuration": {
 				Type:          schema.TypeList,
@@ -299,7 +299,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							},
 						},
 
-						"s3_backup_configuration": S3ConfigurationSchema(),
+						"s3_backup_configuration": s3ConfigurationSchema(),
 
 						"retry_duration": {
 							Type:     schema.TypeInt,
