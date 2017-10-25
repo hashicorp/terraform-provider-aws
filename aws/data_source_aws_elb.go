@@ -57,19 +57,16 @@ func dataSourceAwsElb() *schema.Resource {
 			"connection_draining": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				Default:  false,
 			},
 
 			"connection_draining_timeout": {
 				Type:     schema.TypeInt,
 				Computed: true,
-				Default:  300,
 			},
 
 			"cross_zone_load_balancing": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				Default:  true,
 			},
 
 			"dns_name": {
@@ -114,7 +111,6 @@ func dataSourceAwsElb() *schema.Resource {
 			"idle_timeout": {
 				Type:     schema.TypeInt,
 				Computed: true,
-				Default:  60,
 			},
 
 			"instances": {
