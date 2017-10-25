@@ -71,7 +71,7 @@ Nested `ebs_block_device` blocks have the following structure:
 * `device_name` - (Required) The path at which the device is exposed to created instances.
 * `delete_on_termination` - (Optional) Boolean controlling whether the EBS volumes created to
   support each created instance will be deleted once that instance is terminated.
-* `encrypted` - (Optional) Boolean controlling whether the created EBS volumes will be encrypted.
+* `encrypted` - (Optional) Boolean controlling whether the created EBS volumes will be encrypted. Can't be used with `snapshot_id`.
 * `iops` - (Required only when `volume_type` is "io1") Number of I/O operations per second the
   created volumes will support.
 * `snapshot_id` - (Optional) The id of an EBS snapshot that will be used to initialize the created
