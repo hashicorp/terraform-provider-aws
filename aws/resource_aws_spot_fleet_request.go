@@ -382,10 +382,10 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 		}
 	}
 
-	if v, ok := d["tags"]; ok {
+	if m, ok := d["tags"].(map[string]interface{}); ok && len(m) > 0 {
 		tagsSpec := make([]*ec2.SpotFleetTagSpecification, 0)
 
-		tags := tagsFromMap(v.(map[string]interface{}))
+		tags := tagsFromMap(m)
 
 		spec := &ec2.SpotFleetTagSpecification{
 			ResourceType: aws.String("instance"),
