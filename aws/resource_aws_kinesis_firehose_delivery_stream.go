@@ -41,12 +41,11 @@ func cloudWatchLoggingOptionsSchema() *schema.Schema {
 	}
 }
 
-func S3BackupConfigurationSchema() *schema.Schema {
+func S3ConfigurationSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeSet,
+		Type:     schema.TypeList,
 		MaxItems: 1,
 		Optional: true,
-		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"bucket_arn": {
@@ -204,55 +203,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 				},
 			},
 
-			"s3_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bucket_arn": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"buffer_size": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  5,
-						},
-
-						"buffer_interval": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  300,
-						},
-
-						"compression_format": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "UNCOMPRESSED",
-						},
-
-						"kms_key_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateArn,
-						},
-
-						"role_arn": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
-					},
-				},
-			},
+			"s3_configuration": S3ConfigurationSchema(),
 
 			"extended_s3_configuration": {
 				Type:          schema.TypeList,
@@ -348,7 +299,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							},
 						},
 
-						"s3_backup_configuration": S3BackupConfigurationSchema(),
+						"s3_backup_configuration": S3ConfigurationSchema(),
 
 						"retry_duration": {
 							Type:     schema.TypeInt,
@@ -536,9 +487,8 @@ func createS3Config(d *schema.ResourceData) *firehose.S3DestinationConfiguration
 	return configuration
 }
 
-func createS3BackupConfig(d *schema.ResourceData) *firehose.S3DestinationConfiguration {
-	redshiftConfig := d.Get("redshift_configuration").([]interface{})[0].(map[string]interface{})
-	config := redshiftConfig["s3_backup_configuration"].(*schema.Set).List()
+func expandS3BackupConfig(d map[string]interface{}) *firehose.S3DestinationConfiguration {
+	config := d["s3_backup_configuration"].([]interface{})
 	if len(config) == 0 {
 		return nil
 	}
@@ -613,9 +563,8 @@ func updateS3Config(d *schema.ResourceData) *firehose.S3DestinationUpdate {
 	return configuration
 }
 
-func updateS3BackupConfig(d *schema.ResourceData) *firehose.S3DestinationUpdate {
-	redshiftConfig := d.Get("redshift_configuration").([]interface{})[0].(map[string]interface{})
-	config := redshiftConfig["s3_backup_configuration"].(*schema.Set).List()
+func updateS3BackupConfig(d map[string]interface{}) *firehose.S3DestinationUpdate {
+	config := d["s3_backup_configuration"].([]interface{})
 	if len(config) == 0 {
 		return nil
 	}
@@ -785,7 +734,7 @@ func createRedshiftConfig(d *schema.ResourceData, s3Config *firehose.S3Destinati
 	}
 	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
-		configuration.S3BackupConfiguration = createS3BackupConfig(d)
+		configuration.S3BackupConfiguration = expandS3BackupConfig(d.Get("redshift_configuration").([]interface{})[0].(map[string]interface{}))
 	}
 
 	return configuration, nil
@@ -815,7 +764,7 @@ func updateRedshiftConfig(d *schema.ResourceData, s3Update *firehose.S3Destinati
 	}
 	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
-		configuration.S3BackupUpdate = updateS3BackupConfig(d)
+		configuration.S3BackupUpdate = updateS3BackupConfig(d.Get("redshift_configuration").([]interface{})[0].(map[string]interface{}))
 	}
 
 	return configuration, nil
