@@ -12,6 +12,7 @@ IMPROVEMENTS:
 * resource/aws_cloudfront_distribution: Change the default minimum_protocol_version to TLSv1 [GH-1856]
 * resource/aws_sns_topic: Support SMS in protocols [GH-1813]
 * resource/aws_spot_fleet_request: Add support for `tags` [GH-2042]
+* resource/aws_kinesis_firehose_delivery_stream: Add `s3_backup_mode` option [GH-1830]
 
 BUG FIXES:
 
