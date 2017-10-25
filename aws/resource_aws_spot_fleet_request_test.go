@@ -879,7 +879,7 @@ resource "aws_subnet" "bar" {
 
 resource "aws_spot_fleet_request" "foo" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.025"
+    spot_price = "0.0265"
     target_capacity = 4
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
