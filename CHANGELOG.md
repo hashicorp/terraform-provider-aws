@@ -13,6 +13,7 @@ IMPROVEMENTS:
 * resource/aws_sns_topic: Support SMS in protocols [GH-1813]
 * resource/aws_spot_fleet_request: Add support for `tags` [GH-2042]
 * resource/aws_kinesis_firehose_delivery_stream: Add `s3_backup_mode` option [GH-1830]
+* resource/aws_elasticsearch_domain: Support VPC configuration [GH-1958]
 
 BUG FIXES:
 
