@@ -1,5 +1,9 @@
 ## 1.1.1 (Unreleased)
 
+INTERNAL:
+
+* Remove `id` fields from schema definitions [GH-1626]
+
 FEATURES:
 
 * **New Resource:** `aws_servicecatalog_portfolio` [GH-1694]
