@@ -40,6 +40,12 @@ func dataSourceAwsSubnet() *schema.Resource {
 
 			"filter": ec2CustomFiltersSchema(),
 
+			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"state": {
 				Type:     schema.TypeString,
 				Optional: true,

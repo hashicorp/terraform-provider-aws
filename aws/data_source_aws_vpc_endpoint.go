@@ -15,6 +15,11 @@ func dataSourceAwsVpcEndpoint() *schema.Resource {
 		Read: dataSourceAwsVpcEndpointRead,
 
 		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"state": {
 				Type:     schema.TypeString,
 				Optional: true,

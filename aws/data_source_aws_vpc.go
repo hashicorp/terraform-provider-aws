@@ -34,6 +34,12 @@ func dataSourceAwsVpc() *schema.Resource {
 
 			"filter": ec2CustomFiltersSchema(),
 
+			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"instance_tenancy": {
 				Type:     schema.TypeString,
 				Computed: true,

@@ -14,6 +14,11 @@ func dataSourceAwsVpcPeeringConnection() *schema.Resource {
 		Read: dataSourceAwsVpcPeeringConnectionRead,
 
 		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"status": {
 				Type:     schema.TypeString,
 				Optional: true,
