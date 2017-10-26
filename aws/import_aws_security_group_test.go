@@ -10,9 +10,9 @@ import (
 
 func TestAccAWSSecurityGroup_importBasic(t *testing.T) {
 	checkFn := func(s []*terraform.InstanceState) error {
-		// Expect 3: group, 2 rules
-		if len(s) != 3 {
-			return fmt.Errorf("expected 3 states: %#v", s)
+		// Expect 2: group, 2 rules
+		if len(s) != 2 {
+			return fmt.Errorf("expected 2 states: %#v", s)
 		}
 
 		return nil
@@ -31,7 +31,7 @@ func TestAccAWSSecurityGroup_importBasic(t *testing.T) {
 				ResourceName:            "aws_security_group.web",
 				ImportState:             true,
 				ImportStateCheck:        checkFn,
-				ImportStateVerifyIgnore: []string{"revoke_rules"},
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -79,7 +79,7 @@ func TestAccAWSSecurityGroup_importSelf(t *testing.T) {
 				ResourceName:            "aws_security_group.allow_all",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules"},
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -99,7 +99,7 @@ func TestAccAWSSecurityGroup_importSourceSecurityGroup(t *testing.T) {
 				ResourceName:            "aws_security_group.test_group_1",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules"},
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
