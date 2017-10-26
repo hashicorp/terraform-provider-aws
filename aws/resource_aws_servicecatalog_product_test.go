@@ -35,8 +35,6 @@ func TestAccAWSServiceCatalogProductBasic(t *testing.T) {
 			resource.TestStep{
 				Config: template1.String(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "artifact.description", "ad"),
-					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "artifact.name", "an"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "description", "dsc1"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "distributor", "dst1"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "name", name1),
@@ -50,8 +48,6 @@ func TestAccAWSServiceCatalogProductBasic(t *testing.T) {
 			resource.TestStep{
 				Config: template2.String(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "artifact_description", "ad"),
-					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "artifact_name", "an"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "description", "dsc2"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "distributor", "dst2"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "name", name2),
@@ -65,8 +61,8 @@ func TestAccAWSServiceCatalogProductBasic(t *testing.T) {
 			resource.TestStep{
 				Config: template3.String(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "artifact_description", "ad"),
-					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "artifact_name", "an"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "artifact.description", "ad"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "artifact.name", "an"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "description", "dsc2"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "distributor", "dst2"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "name", name3),

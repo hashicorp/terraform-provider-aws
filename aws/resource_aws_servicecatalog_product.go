@@ -214,11 +214,26 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	d.Set("support_url", pvs.SupportUrl)
 
 	provisioningArtifactSummary := getProvisioningArtifactSummary(resp)
-	d.Set("artifact_description", provisioningArtifactSummary.Description)
-	d.Set("artifact_id", provisioningArtifactSummary.Id)
-	d.Set("artifact_name", provisioningArtifactSummary.Name)
+	d.Set("artifact", provisioningArtifactSummary)
 	return nil
 }
+
+/*
+	//a := getArtifactMap(provisioningArtifactSummary)
+WIP
+func getArtifactMap(p *servicecatalog.ProvisioningArtifactSummary) *schema.Set {
+	//r := map[string]string{}
+	//r["description"] = *p.Description
+	//r["id"] = *p.Id
+	//r["name"] = *p.Name
+	r := map[string]interface{}{}
+	r["description"] = *p.Description
+	r["id"] = *p.Id
+	r["name"] = *p.Name
+	//return r.(map[string]interface{})
+	return r.(schema.Set)
+}
+*/
 
 // Lookup the first artifact, which was the one created on inital build, by comparing created at time
 func getProvisioningArtifactSummary(resp *servicecatalog.DescribeProductAsAdminOutput) *servicecatalog.ProvisioningArtifactSummary {
