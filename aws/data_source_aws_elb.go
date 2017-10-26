@@ -28,7 +28,6 @@ func dataSourceAwsElb() *schema.Resource {
 						"interval": {
 							Type:     schema.TypeInt,
 							Computed: true,
-							Default:  60,
 						},
 						"bucket": {
 							Type:     schema.TypeString,
@@ -41,7 +40,6 @@ func dataSourceAwsElb() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Computed: true,
-							Default:  true,
 						},
 					},
 				},
