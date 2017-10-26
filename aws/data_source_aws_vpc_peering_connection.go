@@ -77,8 +77,8 @@ func dataSourceAwsVpcPeeringConnectionRead(d *schema.ResourceData, meta interfac
 
 	req := &ec2.DescribeVpcPeeringConnectionsInput{}
 
-	if id, ok := d.GetOk("id"); ok {
-		req.VpcPeeringConnectionIds = aws.StringSlice([]string{id.(string)})
+	if id := d.Id(); id != "" {
+		req.VpcPeeringConnectionIds = aws.StringSlice([]string{id})
 	}
 
 	req.Filters = buildEC2AttributeFilterList(
@@ -117,7 +117,6 @@ func dataSourceAwsVpcPeeringConnectionRead(d *schema.ResourceData, meta interfac
 	pcx := resp.VpcPeeringConnections[0]
 
 	d.SetId(aws.StringValue(pcx.VpcPeeringConnectionId))
-	d.Set("id", pcx.VpcPeeringConnectionId)
 	d.Set("status", pcx.Status.Code)
 	d.Set("vpc_id", pcx.RequesterVpcInfo.VpcId)
 	d.Set("owner_id", pcx.RequesterVpcInfo.OwnerId)

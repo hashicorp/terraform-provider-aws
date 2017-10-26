@@ -110,10 +110,8 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 
 	id := *res.ImageId
 	d.SetId(id)
-	d.Partial(true) // make sure we record the id even if the rest of this gets interrupted
-	d.Set("id", id)
+	d.Partial(true)
 	d.Set("manage_ebs_block_devices", false)
-	d.SetPartial("id")
 	d.SetPartial("manage_ebs_block_devices")
 	d.Partial(false)
 
@@ -398,10 +396,6 @@ func resourceAwsAmiCommonSchema(computed bool) map[string]*schema.Schema {
 	}
 
 	return map[string]*schema.Schema{
-		"id": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
 		"image_location": {
 			Type:     schema.TypeString,
 			Optional: !computed,

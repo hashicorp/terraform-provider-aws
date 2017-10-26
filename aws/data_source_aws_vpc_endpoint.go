@@ -61,8 +61,8 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 
 	req := &ec2.DescribeVpcEndpointsInput{}
 
-	if id, ok := d.GetOk("id"); ok {
-		req.VpcEndpointIds = aws.StringSlice([]string{id.(string)})
+	if id := d.Id(); id != "" {
+		req.VpcEndpointIds = aws.StringSlice([]string{id})
 	}
 
 	req.Filters = buildEC2AttributeFilterList(
@@ -115,7 +115,6 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.SetId(aws.StringValue(vpce.VpcEndpointId))
-	d.Set("id", vpce.VpcEndpointId)
 	d.Set("state", vpce.State)
 	d.Set("vpc_id", vpce.VpcId)
 	d.Set("service_name", vpce.ServiceName)
