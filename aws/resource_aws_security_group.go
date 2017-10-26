@@ -27,6 +27,9 @@ func resourceAwsSecurityGroup() *schema.Resource {
 			State: resourceAwsSecurityGroupImportState,
 		},
 
+		SchemaVersion: 1,
+		MigrateState:  resourceAwsSecurityGroupMigrateState,
+
 		Timeouts: &schema.ResourceTimeout{
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
