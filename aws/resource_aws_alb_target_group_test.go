@@ -38,7 +38,7 @@ func TestALBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := albTargetGroupSuffixFromARN(tc.arn)
+		actual := lbTargetGroupSuffixFromARN(tc.arn)
 		if actual != tc.suffix {
 			t.Fatalf("bad suffix: %q\nExpected: %s\n     Got: %s", tc.name, tc.suffix, actual)
 		}
