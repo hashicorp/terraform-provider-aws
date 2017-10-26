@@ -18,6 +18,7 @@ IMPROVEMENTS:
 * resource/aws_spot_fleet_request: Add support for `tags` [GH-2042]
 * resource/aws_kinesis_firehose_delivery_stream: Add `s3_backup_mode` option [GH-1830]
 * resource/aws_elasticsearch_domain: Support VPC configuration [GH-1958]
+* resource/aws_alb_target_group: Add support for `target_type` [GH-1589]
 
 BUG FIXES:
 
