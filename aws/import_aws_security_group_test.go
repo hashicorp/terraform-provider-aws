@@ -28,9 +28,10 @@ func TestAccAWSSecurityGroup_importBasic(t *testing.T) {
 			},
 
 			{
-				ResourceName:     "aws_security_group.web",
-				ImportState:      true,
-				ImportStateCheck: checkFn,
+				ResourceName:            "aws_security_group.web",
+				ImportState:             true,
+				ImportStateCheck:        checkFn,
+				ImportStateVerifyIgnore: []string{"revoke_rules"},
 			},
 		},
 	})
@@ -75,9 +76,10 @@ func TestAccAWSSecurityGroup_importSelf(t *testing.T) {
 			},
 
 			{
-				ResourceName:      "aws_security_group.allow_all",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "aws_security_group.allow_all",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules"},
 			},
 		},
 	})
@@ -94,9 +96,10 @@ func TestAccAWSSecurityGroup_importSourceSecurityGroup(t *testing.T) {
 			},
 
 			{
-				ResourceName:      "aws_security_group.test_group_1",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "aws_security_group.test_group_1",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules"},
 			},
 		},
 	})
