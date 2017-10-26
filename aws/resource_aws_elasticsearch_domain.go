@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"strings"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -187,6 +186,8 @@ func resourceAwsElasticSearchDomainImport(
 	return []*schema.ResourceData{d}, nil
 }
 
+// This would be created automatically if the domain is created via Console
+// see http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-enabling-slr
 func createAwsElasticsearchIAMServiceRoleIfMissing(meta interface{}) error {
 	serviceRoleName := "AWSServiceRoleForAmazonElasticsearchService"
 	serviceName := "es.amazonaws.com"
@@ -198,23 +199,20 @@ func createAwsElasticsearchIAMServiceRoleIfMissing(meta interface{}) error {
 	}
 	_, err := conn.GetRole(getRequest)
 	if err != nil {
-		if iamerr, ok := err.(awserr.Error); ok {
-			switch iamerr.Code() {
-			case iam.ErrCodeNoSuchEntityException:
-				createRequest := &iam.CreateServiceLinkedRoleInput{
-					AWSServiceName: aws.String(serviceName),
-				}
-				_, err := conn.CreateServiceLinkedRole(createRequest)
-				if err != nil {
-					return fmt.Errorf("Error creating IAM Service-Linked Role %s: %s", serviceRoleName, err)
-				}
-				time.Sleep(20 * time.Second) // Give time for new IAM service-linked role to propagate globally
-			default:
-				return fmt.Errorf("Error reading IAM Role %s: %s", serviceRoleName, iamerr.Error())
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "Role not found") {
+			createRequest := &iam.CreateServiceLinkedRoleInput{
+				AWSServiceName: aws.String(serviceName),
 			}
-		} else {
-			return fmt.Errorf("Error reading IAM Role %s: %s", serviceRoleName, err)
+			_, err := conn.CreateServiceLinkedRole(createRequest)
+			if err != nil {
+				if isAWSErr(err, iam.ErrCodeInvalidInputException, "has been taken in this account") {
+					return nil
+				}
+				return fmt.Errorf("Error creating IAM Service-Linked Role %s: %s", serviceRoleName, err)
+			}
+			return nil
 		}
+		return fmt.Errorf("Error reading IAM Role %s: %s", serviceRoleName, err)
 	}
 	return nil
 }
@@ -317,12 +315,14 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		var err error
 		out, err = conn.CreateElasticsearchDomain(&input)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "InvalidTypeException" && strings.Contains(awsErr.Message(), "Error setting policy") {
-					log.Printf("[DEBUG] Retrying creation of ElasticSearch domain %s", *input.DomainName)
-					return resource.RetryableError(err)
-				}
+			if isAWSErr(err, "InvalidTypeException", "Error setting policy") {
+				log.Printf("[DEBUG] Retrying creation of ElasticSearch domain %s", *input.DomainName)
+				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions") {
+				return resource.RetryableError(err)
+			}
+
 			return resource.NonRetryableError(err)
 		}
 		return nil
