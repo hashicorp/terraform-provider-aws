@@ -34,6 +34,7 @@ BUG FIXES:
 * resource/aws_s3_bucket: Retry tagging on OperationAborted [GH-2008]
 * resource/aws_cognito_identity_pool: Fixed refresh of providers [GH-2015]
 * resource/aws_elasticache_replication_group: Raise creation timeout to 50mins [GH-2048]
+* resource/aws_kinesis_firehose_delivery_stream_test: Fixed ExternalId being a random int [GH-2079]
 
 ## 1.1.0 (October 16, 2017)
 
