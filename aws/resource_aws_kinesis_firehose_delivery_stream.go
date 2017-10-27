@@ -168,6 +168,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 		Update: resourceAwsKinesisFirehoseDeliveryStreamUpdate,
 		Delete: resourceAwsKinesisFirehoseDeliveryStreamDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsKinesisFirehoseMigrateState,
 		Schema: map[string]*schema.Schema{
@@ -1094,7 +1098,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 	conn := meta.(*AWSClient).firehoseconn
 
 	resp, err := conn.DescribeDeliveryStream(&firehose.DescribeDeliveryStreamInput{
-		DeliveryStreamName: aws.String(d.Get("name").(string)),
+		DeliveryStreamName: aws.String(d.Id()),
 	})
 
 	if err != nil {
@@ -1103,7 +1107,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("[WARN] Error reading Kinesis Firehose Delivery Stream: \"%s\", code: \"%s\"", awsErr.Message(), awsErr.Code())
+			return fmt.Errorf("[WARN] Error reading Kinesis Firehose Delivery Stream: %s", awsErr.Error())
 		}
 		return err
 	}
@@ -1111,8 +1115,40 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 	s := resp.DeliveryStreamDescription
 	d.Set("version_id", s.VersionId)
 	d.Set("arn", *s.DeliveryStreamARN)
+	d.Set("name", s.DeliveryStreamName)
 	if len(s.Destinations) > 0 {
 		destination := s.Destinations[0]
+		if destination.RedshiftDestinationDescription != nil {
+			d.Set("destination", "redshift")
+
+			//cloudwatchLoggingConfig := map[string]interface{}{
+			//	"enabled":         *destination.RedshiftDestinationDescription.CloudWatchLoggingOptions.Enabled,
+			//	"log_group_name":  *destination.RedshiftDestinationDescription.CloudWatchLoggingOptions.LogGroupName,
+			//	"log_stream_name": *destination.RedshiftDestinationDescription.CloudWatchLoggingOptions.LogStreamName,
+			//}
+
+			redshiftConfiguration := map[string]interface{}{
+				"cluster_jdbcurl":    *destination.RedshiftDestinationDescription.ClusterJDBCURL,
+				"role_arn":           *destination.RedshiftDestinationDescription.RoleARN,
+				"username":           *destination.RedshiftDestinationDescription.Username,
+				"data_table_name":    *destination.RedshiftDestinationDescription.CopyCommand.DataTableName,
+				"copy_options":       *destination.RedshiftDestinationDescription.CopyCommand.CopyOptions,
+				"data_table_columns": *destination.RedshiftDestinationDescription.CopyCommand.DataTableColumns,
+				"s3_backup_mode":     *destination.RedshiftDestinationDescription.S3BackupMode,
+				"retry_duration":     *destination.RedshiftDestinationDescription.RetryOptions.DurationInSeconds,
+				//"cloudwatch_logging_options": cloudwatchLoggingConfig,
+			}
+			redshiftConfList := make([]interface{}, 1)
+			redshiftConfList[0] = redshiftConfiguration
+			d.Set("redshift_configuration", redshiftConfList)
+
+		} else if destination.ElasticsearchDestinationDescription != nil {
+			d.Set("destination", "elasticsearch")
+		} else if destination.ExtendedS3DestinationDescription != nil {
+			d.Set("destination", "extended_s3")
+		} else {
+			d.Set("destination", "s3")
+		}
 		d.Set("destination_id", *destination.DestinationId)
 	}
 
