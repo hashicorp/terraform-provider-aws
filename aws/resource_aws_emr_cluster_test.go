@@ -570,7 +570,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_cts"
+    Name = "emr_test_cts"
   }
 }
 
@@ -579,7 +579,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_cts"
+    Name = "emr_test_cts"
   }
 }
 
@@ -627,7 +627,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -731,7 +731,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -740,7 +740,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -749,7 +749,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -895,7 +895,7 @@ EOT
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
@@ -1039,7 +1039,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -1048,7 +1048,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -1057,7 +1057,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -1203,7 +1203,7 @@ EOT
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
@@ -1402,7 +1402,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -1411,7 +1411,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -1420,7 +1420,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -1566,7 +1566,7 @@ EOT
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
@@ -1709,7 +1709,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -1718,7 +1718,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -1727,7 +1727,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -1873,7 +1873,7 @@ EOT
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
@@ -2016,7 +2016,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -2025,7 +2025,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -2034,7 +2034,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -2180,7 +2180,7 @@ EOT
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
@@ -2322,7 +2322,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -2331,7 +2331,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -2340,7 +2340,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -2486,7 +2486,7 @@ EOT
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
@@ -2630,7 +2630,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -2639,7 +2639,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -2648,7 +2648,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -2794,7 +2794,7 @@ EOT
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
