@@ -41,7 +41,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T)
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_s3KinesisStreamSource,
-		ri, ri, ri, ri, ri, ri, ri, ri, ri)
+		ri, ri, ri, ri, ri, ri, ri, ri)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -672,7 +672,7 @@ resource "aws_iam_role" "kinesis_source" {
       "Action": "sts:AssumeRole",
       "Condition": {
         "StringEquals": {
-          "sts:ExternalId": "%s"
+          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
         }
       }
     }
