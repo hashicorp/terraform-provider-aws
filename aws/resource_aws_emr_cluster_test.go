@@ -112,7 +112,7 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEmrDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrClusterConfig(r),
+				Config: testAccAWSEmrClusterConfigTerminationPolicy(r, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
 					resource.TestCheckResourceAttr(
@@ -120,7 +120,7 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSEmrClusterConfigTerminationPolicyUpdated(r),
+				Config: testAccAWSEmrClusterConfigTerminationPolicy(r, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
 					resource.TestCheckResourceAttr(
@@ -129,9 +129,11 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 			},
 			{
 				//Need to turn off termination_protection to allow the job to be deleted
-				Config: testAccAWSEmrClusterConfig(r),
+				Config: testAccAWSEmrClusterConfigTerminationPolicy(r, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					resource.TestCheckResourceAttr(
+						"aws_emr_cluster.tf-test-cluster", "termination_protection", "false"),
 				),
 			},
 		},
@@ -1637,7 +1639,7 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
 `, r, r, r, r, r, r, r, r, r, r)
 }
 
-func testAccAWSEmrClusterConfigTerminationPolicyUpdated(r int) string {
+func testAccAWSEmrClusterConfigTerminationPolicy(r int, term string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-west-2"
@@ -1667,7 +1669,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = true
+  termination_protection = %s
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -1941,7 +1943,7 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   role       = "${aws_iam_role.emr-autoscaling-role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
-`, r, r, r, r, r, r, r, r, r, r)
+`, r, term, r, r, r, r, r, r, r, r, r)
 }
 
 func testAccAWSEmrClusterConfigVisibleToAllUsersUpdated(r int) string {
