@@ -11,6 +11,7 @@ FEATURES:
 * **New Resource:** `aws_cognito_identity_pool_roles_attachment` [GH-863]
 * **New Data Source:** `aws_nat_gateway` [GH-1294]
 * **New Data Source:** `aws_dynamodb_table` [GH-2062]
+* **New Data Source:** `aws_cloudtrail_service_account` [GH-1774]
 
 IMPROVEMENTS:
 
