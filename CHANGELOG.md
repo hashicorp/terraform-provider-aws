@@ -10,6 +10,7 @@ FEATURES:
 * **New Resource:** `aws_ses_domain_dkim` [GH-1786]
 * **New Resource:** `aws_cognito_identity_pool_roles_attachment` [GH-863]
 * **New Data Source:** `aws_nat_gateway` [GH-1294]
+* **New Data Source:** `aws_dynamodb_table` [GH-2062]
 
 IMPROVEMENTS:
 
