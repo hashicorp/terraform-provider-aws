@@ -94,6 +94,14 @@ Nested `ephemeral_block_device` blocks have the following structure:
 * `virtual_name` - (Required) A name for the ephemeral device, of the form "ephemeralN" where
   *N* is a volume number starting from zero.
 
+### Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+
+* `create` - (Defaults to 40 mins) Used when creating the AMI
+* `update` - (Defaults to 40 mins) Used when updating the AMI
+* `delete` - (Defaults to 90 mins) Used when deregistering the AMI
+
 ## Attributes Reference
 
 The following attributes are exported:
