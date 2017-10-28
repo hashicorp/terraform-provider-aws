@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSAthenaDatabase(t *testing.T) {
+func TestAccAWSAthenaDatabase_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	dbName := acctest.RandString(8)
 	resource.Test(t, resource.TestCase{
@@ -51,7 +51,7 @@ func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 		}()
 
 		input := &athena.StartQueryExecutionInput{
-			QueryString: aws.String(showDatabaseQueryString()),
+			QueryString: aws.String(fmt.Sprint("show databases;")),
 			ResultConfiguration: &athena.ResultConfiguration{
 				OutputLocation: aws.String("s3://" + bucketName),
 			},
@@ -62,7 +62,7 @@ func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 			return err
 		}
 
-		ers, err := queryExecutionResult(*resp.QueryExecutionId, testAccProvider.Meta())
+		ers, err := queryExecutionResult(*resp.QueryExecutionId, athenaconn)
 		if err != nil {
 			return err
 		}
@@ -139,8 +139,6 @@ func testAccAthenaDatabaseConfig(randInt int, dbName string) string {
     resource "aws_athena_database" "hoge" {
       name = "%s"
       bucket = "${aws_s3_bucket.hoge.bucket}"
-
-      depends_on = ["aws_s3_bucket.hoge"]
     }
     `, dbName, randInt, dbName)
 }

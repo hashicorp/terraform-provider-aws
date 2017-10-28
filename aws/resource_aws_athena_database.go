@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -16,7 +15,6 @@ func resourceAwsAthenaDatabase() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAthenaDatabaseCreate,
 		Read:   resourceAwsAthenaDatabaseRead,
-		//Update: resourceAwsAthenaDatabaseUpdate,
 		Delete: resourceAwsAthenaDatabaseDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -35,21 +33,21 @@ func resourceAwsAthenaDatabase() *schema.Resource {
 }
 
 func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
-	athenaconn := meta.(*AWSClient).athenaconn
+	conn := meta.(*AWSClient).athenaconn
 
-	athenainput := &athena.StartQueryExecutionInput{
-		QueryString: aws.String(createDatabaseQueryString(d.Get("name").(string))),
+	input := &athena.StartQueryExecutionInput{
+		QueryString: aws.String(fmt.Sprintf("create database %s;", d.Get("name").(string))),
 		ResultConfiguration: &athena.ResultConfiguration{
 			OutputLocation: aws.String("s3://" + d.Get("bucket").(string)),
 		},
 	}
 
-	athenaresp, err := athenaconn.StartQueryExecution(athenainput)
+	resp, err := conn.StartQueryExecution(input)
 	if err != nil {
 		return err
 	}
 
-	if err := checkCreateDatabaseQueryExecution(*athenaresp.QueryExecutionId, d, meta); err != nil {
+	if err := executeAndExpectNoRowsWhenCreate(*resp.QueryExecutionId, d, conn); err != nil {
 		return err
 	}
 	d.SetId(d.Get("name").(string))
@@ -61,7 +59,7 @@ func resourceAwsAthenaDatabaseRead(d *schema.ResourceData, meta interface{}) err
 
 	bucket := d.Get("bucket").(string)
 	input := &athena.StartQueryExecutionInput{
-		QueryString: aws.String(showDatabaseQueryString()),
+		QueryString: aws.String(fmt.Sprint("show databases;")),
 		ResultConfiguration: &athena.ResultConfiguration{
 			OutputLocation: aws.String("s3://" + bucket),
 		},
@@ -72,13 +70,9 @@ func resourceAwsAthenaDatabaseRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	if err := checkShowDatabaseQueryExecution(*resp.QueryExecutionId, d, meta); err != nil {
+	if err := executeAndExpectMatchingRow(*resp.QueryExecutionId, d, conn); err != nil {
 		return err
 	}
-	return nil
-}
-
-func resourceAwsAthenaDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
@@ -87,7 +81,7 @@ func resourceAwsAthenaDatabaseDelete(d *schema.ResourceData, meta interface{}) e
 
 	bucket := d.Get("bucket").(string)
 	input := &athena.StartQueryExecutionInput{
-		QueryString: aws.String(dropDatabaseQueryString(d.Get("name").(string))),
+		QueryString: aws.String(fmt.Sprintf("drop database %s;", d.Get("name").(string))),
 		ResultConfiguration: &athena.ResultConfiguration{
 			OutputLocation: aws.String("s3://" + bucket),
 		},
@@ -98,18 +92,14 @@ func resourceAwsAthenaDatabaseDelete(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	if err := checkDropDatabaseQueryExecution(*resp.QueryExecutionId, d, meta); err != nil {
+	if err := executeAndExpectNoRowsWhenDrop(*resp.QueryExecutionId, d, conn); err != nil {
 		return err
 	}
 	return nil
 }
 
-func createDatabaseQueryString(databaseName string) string {
-	return fmt.Sprintf("create database %s;", databaseName)
-}
-
-func checkCreateDatabaseQueryExecution(qeid string, d *schema.ResourceData, meta interface{}) error {
-	rs, err := queryExecutionResult(qeid, meta)
+func executeAndExpectNoRowsWhenCreate(qeid string, d *schema.ResourceData, conn *athena.Athena) error {
+	rs, err := queryExecutionResult(qeid, conn)
 	if err != nil {
 		return err
 	}
@@ -119,12 +109,8 @@ func checkCreateDatabaseQueryExecution(qeid string, d *schema.ResourceData, meta
 	return nil
 }
 
-func showDatabaseQueryString() string {
-	return fmt.Sprint("show databases;")
-}
-
-func checkShowDatabaseQueryExecution(qeid string, d *schema.ResourceData, meta interface{}) error {
-	rs, err := queryExecutionResult(qeid, meta)
+func executeAndExpectMatchingRow(qeid string, d *schema.ResourceData, conn *athena.Athena) error {
+	rs, err := queryExecutionResult(qeid, conn)
 	if err != nil {
 		return err
 	}
@@ -143,12 +129,8 @@ func checkShowDatabaseQueryExecution(qeid string, d *schema.ResourceData, meta i
 	return nil
 }
 
-func dropDatabaseQueryString(databaseName string) string {
-	return fmt.Sprintf("drop database %s;", databaseName)
-}
-
-func checkDropDatabaseQueryExecution(qeid string, d *schema.ResourceData, meta interface{}) error {
-	rs, err := queryExecutionResult(qeid, meta)
+func executeAndExpectNoRowsWhenDrop(qeid string, d *schema.ResourceData, conn *athena.Athena) error {
+	rs, err := queryExecutionResult(qeid, conn)
 	if err != nil {
 		return err
 	}
@@ -158,31 +140,16 @@ func checkDropDatabaseQueryExecution(qeid string, d *schema.ResourceData, meta i
 	return nil
 }
 
-func queryExecutionResult(qeid string, meta interface{}) (*athena.ResultSet, error) {
-	conn := meta.(*AWSClient).athenaconn
-
-	input := &athena.GetQueryExecutionInput{
-		QueryExecutionId: aws.String(qeid),
+func queryExecutionResult(qeid string, conn *athena.Athena) (*athena.ResultSet, error) {
+	executionStateConf := &resource.StateChangeConf{
+		Pending:    []string{athena.QueryExecutionStateQueued, athena.QueryExecutionStateRunning},
+		Target:     []string{athena.QueryExecutionStateSucceeded},
+		Refresh:    queryExecutionStateRefreshFunc(qeid, conn),
+		Timeout:    10 * time.Minute,
+		Delay:      3 * time.Second,
+		MinTimeout: 3 * time.Second,
 	}
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		out, err := conn.GetQueryExecution(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		switch *out.QueryExecution.Status.State {
-		case athena.QueryExecutionStateQueued, athena.QueryExecutionStateRunning:
-			log.Printf("[DEBUG] Executing Athena Query...")
-			return resource.RetryableError(nil)
-		case athena.QueryExecutionStateSucceeded:
-			return nil
-		case athena.QueryExecutionStateFailed:
-			return resource.NonRetryableError(fmt.Errorf("[Error] QueryExecution Failed"))
-		case athena.QueryExecutionStateCancelled:
-			return resource.NonRetryableError(fmt.Errorf("[Error] QueryExecution Canceled"))
-		default:
-			return resource.NonRetryableError(fmt.Errorf("[Error] Unexpected QueryExecution State: %s", *out.QueryExecution.Status.State))
-		}
-	})
+	_, err := executionStateConf.WaitForState()
 	if err != nil {
 		return nil, err
 	}
@@ -195,6 +162,28 @@ func queryExecutionResult(qeid string, meta interface{}) (*athena.ResultSet, err
 		return nil, err
 	}
 	return resp.ResultSet, nil
+}
+
+func queryExecutionStateRefreshFunc(qeid string, conn *athena.Athena) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &athena.GetQueryExecutionInput{
+			QueryExecutionId: aws.String(qeid),
+		}
+		out, err := conn.GetQueryExecution(input)
+		if err != nil {
+			return nil, "failed", err
+		}
+		switch *out.QueryExecution.Status.State {
+		case athena.QueryExecutionStateQueued, athena.QueryExecutionStateRunning, athena.QueryExecutionStateSucceeded:
+			return out, *out.QueryExecution.Status.State, nil
+		case athena.QueryExecutionStateFailed:
+			return out, athena.QueryExecutionStateFailed, fmt.Errorf("[Error] QueryExecution Failed")
+		case athena.QueryExecutionStateCancelled:
+			return out, athena.QueryExecutionStateCancelled, fmt.Errorf("[Error] QueryExecution Canceled")
+		default:
+			return out, *out.QueryExecution.Status.State, fmt.Errorf("[Error] Unexpected QueryExecution State: %s", *out.QueryExecution.Status.State)
+		}
+	}
 }
 
 func flattenAthenaResultSet(rs *athena.ResultSet) string {
