@@ -167,16 +167,20 @@ func cloudwatchLoggingOptionsHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%t-", m["enabled"].(bool)))
-	buf.WriteString(fmt.Sprintf("%s-", m["log_group_name"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["log_stream_name"].(string)))
+	if m["enabled"].(bool) {
+		buf.WriteString(fmt.Sprintf("%s-", m["log_group_name"].(string)))
+		buf.WriteString(fmt.Sprintf("%s-", m["log_stream_name"].(string)))
+	}
 	return hashcode.String(buf.String())
 }
 
 func flattenCloudwatchLoggingOptions(clo firehose.CloudWatchLoggingOptions) *schema.Set {
 	cloudwatchLoggingOptions := map[string]interface{}{
-		"enabled":         *clo.Enabled,
-		"log_group_name":  *clo.LogGroupName,
-		"log_stream_name": *clo.LogStreamName,
+		"enabled": *clo.Enabled,
+	}
+	if *clo.Enabled {
+		cloudwatchLoggingOptions["log_group_name"] = *clo.LogGroupName
+		cloudwatchLoggingOptions["log_stream_name"] = *clo.LogStreamName
 	}
 	return schema.NewSet(cloudwatchLoggingOptionsHash, []interface{}{cloudwatchLoggingOptions})
 }
