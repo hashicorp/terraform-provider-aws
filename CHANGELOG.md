@@ -15,6 +15,9 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* resource/aws_ami: Support configurable timeouts [GH-1811]
+* resource/ami_copy: Support configurable timeouts [GH-1811]
+* resource/ami_from_instance: Support configurable timeouts [GH-1811]
 * data-source/aws_security_group: add description [GH-1943]
 * resource/aws_cloudfront_distribution: Change the default minimum_protocol_version to TLSv1 [GH-1856]
 * resource/aws_sns_topic: Support SMS in protocols [GH-1813]
