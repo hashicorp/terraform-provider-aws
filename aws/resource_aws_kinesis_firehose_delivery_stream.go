@@ -204,9 +204,21 @@ func flattenFirehoseS3Configuration(s3 firehose.S3DestinationDescription) []map[
 
 func flattenProcessingConfiguration(pc firehose.ProcessingConfiguration) []map[string]interface{} {
 	processingConfiguration := make([]map[string]interface{}, 1)
+	var processors []map[string]interface{}
+	for i, p := range pc.Processors {
+		processors = append(processors, map[string]interface{}{
+			"type": p.Type,
+		})
+		for _, params := range p.Parameters {
+			processors[i]["parameters"] = map[string]interface{}{
+				"parameter_name":  params.ParameterName,
+				"parameter_value": params.ParameterValue,
+			}
+		}
+	}
 	processingConfiguration[0] = map[string]interface{}{
 		"enabled":    *pc.Enabled,
-		"processors": pc.Processors,
+		"processors": processors,
 	}
 	return processingConfiguration
 }
@@ -256,6 +268,9 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 			elasticsearchConfList[0] = elasticsearchConfiguration
 			d.Set("elasticsearch_configuration", elasticsearchConfList)
 			d.Set("s3_configuration", flattenFirehoseS3Configuration(*destination.ElasticsearchDestinationDescription.S3DestinationDescription))
+		} else if destination.S3DestinationDescription != nil {
+			d.Set("destination", "s3")
+			d.Set("s3_configuration", flattenFirehoseS3Configuration(*destination.S3DestinationDescription))
 		} else if destination.ExtendedS3DestinationDescription != nil {
 			d.Set("destination", "extended_s3")
 
@@ -267,16 +282,17 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 				"compression_format":         *destination.ExtendedS3DestinationDescription.CompressionFormat,
 				"prefix":                     *destination.ExtendedS3DestinationDescription.Prefix,
 				"s3_backup_mode":             *destination.ExtendedS3DestinationDescription.S3BackupMode,
-				"kms_key_arn":                *destination.ExtendedS3DestinationDescription.EncryptionConfiguration.KMSEncryptionConfig,
-				"processing_configuration":   flattenProcessingConfiguration(*destination.ExtendedS3DestinationDescription.ProcessingConfiguration),
 				"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(*destination.ExtendedS3DestinationDescription.CloudWatchLoggingOptions),
+			}
+			if destination.ExtendedS3DestinationDescription.EncryptionConfiguration.KMSEncryptionConfig != nil {
+				extendedS3Configuration["kms_key_arn"] = *destination.ExtendedS3DestinationDescription.EncryptionConfiguration.KMSEncryptionConfig
+			}
+			if destination.ExtendedS3DestinationDescription.ProcessingConfiguration != nil {
+				extendedS3Configuration["processing_configuration"] = flattenProcessingConfiguration(*destination.ExtendedS3DestinationDescription.ProcessingConfiguration)
 			}
 			extendedS3ConfList := make([]map[string]interface{}, 1)
 			extendedS3ConfList[0] = extendedS3Configuration
 			d.Set("extended_s3_configuration", extendedS3ConfList)
-		} else {
-			d.Set("destination", "s3")
-			d.Set("s3_configuration", flattenFirehoseS3Configuration(*destination.S3DestinationDescription))
 		}
 		d.Set("destination_id", *destination.DestinationId)
 	}
@@ -291,7 +307,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 		Delete: resourceAwsKinesisFirehoseDeliveryStreamDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("name", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		SchemaVersion: 1,
@@ -1220,7 +1239,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 	conn := meta.(*AWSClient).firehoseconn
 
 	resp, err := conn.DescribeDeliveryStream(&firehose.DescribeDeliveryStreamInput{
-		DeliveryStreamName: aws.String(d.Id()),
+		DeliveryStreamName: aws.String(d.Get("name").(string)),
 	})
 
 	if err != nil {
