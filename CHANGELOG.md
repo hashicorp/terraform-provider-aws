@@ -29,6 +29,7 @@ IMPROVEMENTS:
 * resource/aws_sqs_queue: Add support for `tags` [GH-1987]
 * resource/aws_security_group: Add `revoke_rules_on_delete` option to force a security group to revoke 
   rules before deleting the grou [GH-2074]
+* resource/aws_cloudwatch_log_metric_filter: Add support for DefaultValue [GH-1578]
 
 BUG FIXES:
 
