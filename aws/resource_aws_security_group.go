@@ -30,10 +30,6 @@ func resourceAwsSecurityGroup() *schema.Resource {
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsSecurityGroupMigrateState,
 
-		Timeouts: &schema.ResourceTimeout{
-			Delete: schema.DefaultTimeout(5 * time.Minute),
-		},
-
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:          schema.TypeString,
@@ -447,9 +443,7 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	dTimeout := d.Timeout(schema.TimeoutDelete)
-
-	return resource.Retry(dTimeout, func() *resource.RetryError {
+	return resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
 			GroupId: aws.String(d.Id()),
 		})

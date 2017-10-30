@@ -90,13 +90,6 @@ Default `false`
 * `vpc_id` - (Optional, Forces new resource) The VPC ID.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
-<a id="timeouts"></a> ## Timeouts
-
-`aws_security_group` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
-
-- `delete` - (Default `5 minutes`) Used for destroying Security Groups
-
 The `ingress` block supports:
 
 * `cidr_blocks` - (Optional) List of CIDR blocks.

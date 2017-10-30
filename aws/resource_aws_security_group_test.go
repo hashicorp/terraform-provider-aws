@@ -1717,10 +1717,6 @@ resource "aws_security_group" "primary" {
 	tags {
 		Name = "tf-acc-revoke-test-primary"
 	}
-
-	timeouts {
-		delete = "5s"
-	}
 }
 
 resource "aws_security_group" "secondary" {
@@ -1730,10 +1726,6 @@ resource "aws_security_group" "secondary" {
 
 	tags {
 		Name = "tf-acc-revoke-test-secondary"
-	}
-
-	timeouts {
-		delete = "5s"
 	}
 }
 `
@@ -1755,10 +1747,6 @@ resource "aws_security_group" "primary" {
 		Name = "tf-acc-revoke-test-primary"
 	}
 
-	timeouts {
-		delete = "5s"
-	}
-
   revoke_rules_on_delete = false
 }
 
@@ -1769,10 +1757,6 @@ resource "aws_security_group" "secondary" {
 
 	tags {
 		Name = "tf-acc-revoke-test-secondary"
-	}
-
-	timeouts {
-		delete = "5s"
 	}
 
   revoke_rules_on_delete = false
@@ -1796,10 +1780,6 @@ resource "aws_security_group" "primary" {
 		Name = "tf-acc-revoke-test-primary"
 	}
 
-	timeouts {
-		delete = "5s"
-	}
-
   revoke_rules_on_delete = true	
 }
 
@@ -1810,10 +1790,6 @@ resource "aws_security_group" "secondary" {
 
 	tags {
 		Name = "tf-acc-revoke-test-secondary"
-	}
-
-	timeouts {
-		delete = "5s"
 	}
 
   revoke_rules_on_delete = true	
