@@ -27,6 +27,8 @@ IMPROVEMENTS:
 * resource/aws_elasticsearch_domain: Support VPC configuration [GH-1958]
 * resource/aws_alb_target_group: Add support for `target_type` [GH-1589]
 * resource/aws_sqs_queue: Add support for `tags` [GH-1987]
+* resource/aws_security_group: Add `revoke_rules_on_delete` option to force a security group to revoke 
+  rules before deleting the grou [GH-2074]
 
 BUG FIXES:
 
