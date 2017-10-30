@@ -62,12 +62,14 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"email_verification_subject": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validateCognitoUserPoolEmailVerificationSubject,
 			},
 
 			"email_verification_message": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validateCognitoUserPoolEmailVerificationMessage,
 			},
 
@@ -118,6 +120,53 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+
+			"verification_message_template": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"default_email_option": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithCode,
+							ValidateFunc: validateCognitoUserPoolTemplateDefaultEmailOption,
+						},
+						"email_message": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateCognitoUserPoolTemplateEmailMessage,
+						},
+						"email_message_by_link": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateCognitoUserPoolTemplateEmailMessageByLink,
+						},
+						"email_subject": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateCognitoUserPoolTemplateEmailSubject,
+						},
+						"email_subject_by_link": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateCognitoUserPoolTemplateEmailSubjectByLink,
+						},
+						"sms_message": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateCognitoUserPoolTemplateSmsMessage,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -197,6 +246,19 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	if v, ok := d.GetOk("verification_message_template"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("verification_message_template is <nil>")
+		}
+
+		if config != nil {
+			params.VerificationMessageTemplate = expandCognitoUserPoolVerificationMessageTemplate(config)
+		}
+	}
+
 	if v, ok := d.GetOk("sms_verification_message"); ok {
 		params.SmsVerificationMessage = aws.String(v.(string))
 	}
@@ -267,6 +329,10 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return errwrap.Wrapf("Failed setting sms_configuration: {{err}}", err)
 	}
 
+	if err := d.Set("verification_message_template", flattenCognitoUserPoolVerificationMessageTemplate(resp.UserPool.VerificationMessageTemplate)); err != nil {
+		return errwrap.Wrapf("Failed setting verification_message_template: {{err}}", err)
+	}
+
 	d.Set("tags", tagsToMapGeneric(resp.UserPool.UserPoolTags))
 
 	return nil
@@ -309,11 +375,19 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if d.HasChange("email_verification_subject") {
-		params.EmailVerificationSubject = aws.String(d.Get("email_verification_subject").(string))
+		v := d.Get("email_verification_subject").(string)
+		if v == "" {
+			return errors.New("email_verification_subject cannot be set to nil")
+		}
+		params.EmailVerificationSubject = aws.String(v)
 	}
 
 	if d.HasChange("email_verification_message") {
-		params.EmailVerificationMessage = aws.String(d.Get("email_verification_message").(string))
+		v := d.Get("email_verification_message").(string)
+		if v == "" {
+			return errors.New("email_verification_message cannot be set to nil")
+		}
+		params.EmailVerificationMessage = aws.String(v)
 	}
 
 	if d.HasChange("mfa_configuration") {
@@ -345,8 +419,25 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	if d.HasChange("verification_message_template") {
+		configs := d.Get("verification_message_template").([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("verification_message_template is <nil>")
+		}
+
+		if config != nil {
+			params.VerificationMessageTemplate = expandCognitoUserPoolVerificationMessageTemplate(config)
+		}
+	}
+
 	if d.HasChange("sms_verification_message") {
-		params.SmsVerificationMessage = aws.String(d.Get("sms_verification_message").(string))
+		v := d.Get("sms_verification_message").(string)
+		if v == "" {
+			return errors.New("sms_verification_message cannot be set to nil")
+		}
+		params.SmsVerificationMessage = aws.String(v)
 	}
 
 	if d.HasChange("tags") {

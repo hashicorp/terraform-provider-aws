@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -145,37 +146,70 @@ func TestAccAWSCognitoUserPool_withTags(t *testing.T) {
 	})
 }
 
-//func TestAccAWSCognitoUserPool_attributes(t *testing.T) {
-//	name := acctest.RandString(5)
-//
-//	resource.Test(t, resource.TestCase{
-//		PreCheck:     func() { testAccPreCheck(t) },
-//		Providers:    testAccProviders,
-//		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
-//		Steps: []resource.TestStep{
-//			{
-//				Config: testAccAWSCognitoUserPoolConfig_attributes(name),
-//				Check: resource.ComposeAggregateTestCheckFunc(
-//					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "1"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.0", "preferred_username"),
-//					resource.TestCheckNoResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#"),
-//				),
-//			},
-//			{
-//				Config: testAccAWSCognitoUserPoolConfig_attributesUpdated(name),
-//				Check: resource.ComposeAggregateTestCheckFunc(
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "2"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.0", "email"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.1", "preferred_username"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#", "2"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.0", "email"),
-//					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.1", "phone_number"),
-//				),
-//			},
-//		},
-//	})
-//}
+func TestAccAWSCognitoUserPool_attributes(t *testing.T) {
+	name := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_attributes(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "1"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.0", "preferred_username"),
+					resource.TestCheckNoResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_attributesUpdated(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "2"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.0", "email"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.1", "preferred_username"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#", "1"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.0", "email"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPool_withVerificationMessageTemplate(t *testing.T) {
+	name := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplate(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.default_email_option", "CONFIRM_WITH_LINK"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_message", "Foo {####} Bar"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_message_by_link", "{##foobar##}"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_subject", "FooBar {####}"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_subject_by_link", "foobar"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.sms_message", "{####} Baz"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplateUpdated(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
+				),
+			},
+			{
+				Config:      testAccAWSCognitoUserPoolConfig_basic(name),
+				ExpectError: regexp.MustCompile(`cannot be set to nil`),
+			},
+		},
+	})
+}
 
 func testAccCheckAWSCognitoUserPoolDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
@@ -243,6 +277,10 @@ resource "aws_cognito_user_pool" "pool" {
 
   email_verification_subject = "%s"
   email_verification_message = "%s"
+
+  verification_message_template {
+    default_email_option  = "CONFIRM_WITH_CODE"
+  }
 }`, name, subject, message)
 }
 
@@ -272,6 +310,7 @@ func testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name string) string 
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
 
+
   email_configuration {
     reply_to_email_address = "foo.bar@baz"
   }
@@ -290,21 +329,59 @@ resource "aws_cognito_user_pool" "pool" {
 }`, name)
 }
 
-//func testAccAWSCognitoUserPoolConfig_attributes(name string) string {
-//	return fmt.Sprintf(`
-//resource "aws_cognito_user_pool" "pool" {
-//  name = "terraform-test-pool-%s"
-//
-//  alias_attributes = ["preferred_username"]
-//}`, name)
-//}
-//
-//func testAccAWSCognitoUserPoolConfig_attributesUpdated(name string) string {
-//	return fmt.Sprintf(`
-//resource "aws_cognito_user_pool" "pool" {
-//  name = "terraform-test-pool-%s"
-//
-//  alias_attributes         = ["email", "preferred_username"]
-//  auto_verified_attributes = ["email", "phone_number"]
-//}`, name)
-//}
+func testAccAWSCognitoUserPoolConfig_attributes(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+  alias_attributes = ["preferred_username"]
+}`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_attributesUpdated(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+  alias_attributes         = ["email", "preferred_username"]
+  auto_verified_attributes = ["email"]
+}`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplate(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+  email_verification_message = "Foo {####} Bar"
+  email_verification_subject = "FooBar {####}"
+  sms_verification_message   = "{####} Baz"
+
+  # Setting Verification template attributes like EmailMessage, EmailSubject or SmsMessage
+  # will implicitely set EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage
+  # attributes.
+  verification_message_template {
+    default_email_option  = "CONFIRM_WITH_LINK"
+    email_message         = "Foo {####} Bar"
+    email_message_by_link = "{##foobar##}"
+    email_subject         = "FooBar {####}"
+    email_subject_by_link = "foobar"
+    sms_message           = "{####} Baz"
+  }
+}`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplateUpdated(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+  email_verification_message = "Foo {####} Bar"
+  email_verification_subject = "FooBar {####}"
+  sms_verification_message   = "{####} Baz"
+
+  verification_message_template {
+    default_email_option = "CONFIRM_WITH_CODE"
+  }
+}`, name)
+}

@@ -2176,6 +2176,70 @@ func flattenCognitoUserPoolSmsConfiguration(s *cognitoidentityprovider.SmsConfig
 	return []map[string]interface{}{m}
 }
 
+func expandCognitoUserPoolVerificationMessageTemplate(config map[string]interface{}) *cognitoidentityprovider.VerificationMessageTemplateType {
+	verificationMessageTemplateType := &cognitoidentityprovider.VerificationMessageTemplateType{}
+
+	if v, ok := config["default_email_option"]; ok && v.(string) != "" {
+		verificationMessageTemplateType.DefaultEmailOption = aws.String(v.(string))
+	}
+
+	if v, ok := config["email_message"]; ok && v.(string) != "" {
+		verificationMessageTemplateType.EmailMessage = aws.String(v.(string))
+	}
+
+	if v, ok := config["email_message_by_link"]; ok && v.(string) != "" {
+		verificationMessageTemplateType.EmailMessageByLink = aws.String(v.(string))
+	}
+
+	if v, ok := config["email_subject"]; ok && v.(string) != "" {
+		verificationMessageTemplateType.EmailSubject = aws.String(v.(string))
+	}
+
+	if v, ok := config["email_subject_by_link"]; ok && v.(string) != "" {
+		verificationMessageTemplateType.EmailSubjectByLink = aws.String(v.(string))
+	}
+
+	if v, ok := config["sms_message"]; ok && v.(string) != "" {
+		verificationMessageTemplateType.SmsMessage = aws.String(v.(string))
+	}
+
+	return verificationMessageTemplateType
+}
+
+func flattenCognitoUserPoolVerificationMessageTemplate(s *cognitoidentityprovider.VerificationMessageTemplateType) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if s == nil {
+		return nil
+	}
+
+	if s.DefaultEmailOption != nil {
+		m["default_email_option"] = *s.DefaultEmailOption
+	}
+
+	if s.EmailMessage != nil {
+		m["email_message"] = *s.EmailMessage
+	}
+
+	if s.EmailMessageByLink != nil {
+		m["email_message_by_link"] = *s.EmailMessageByLink
+	}
+
+	if s.EmailSubject != nil {
+		m["email_subject"] = *s.EmailSubject
+	}
+
+	if s.EmailMessageByLink != nil {
+		m["email_subject_by_link"] = *s.EmailSubjectByLink
+	}
+
+	if s.SmsMessage != nil {
+		m["sms_message"] = *s.SmsMessage
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func buildLambdaInvokeArn(lambdaArn, region string) string {
 	apiVersion := "2015-03-31"
 	return fmt.Sprintf("arn:aws:apigateway:%s:lambda:path/%s/functions/%s/invocations",
