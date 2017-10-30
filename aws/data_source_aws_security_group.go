@@ -51,8 +51,8 @@ func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*AWSClient).ec2conn
 	req := &ec2.DescribeSecurityGroupsInput{}
 
-	if id := d.Id(); id != "" {
-		req.GroupIds = []*string{aws.String(id)}
+	if id, ok := d.GetOk("id"); ok {
+		req.GroupIds = []*string{aws.String(id.(string))}
 	}
 
 	req.Filters = buildEC2AttributeFilterList(

@@ -47,8 +47,8 @@ func dataSourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 	req := &ec2.DescribeVpnGatewaysInput{}
 
-	if id := d.Id(); id != "" {
-		req.VpnGatewayIds = aws.StringSlice([]string{id})
+	if id, ok := d.GetOk("id"); ok {
+		req.VpnGatewayIds = aws.StringSlice([]string{id.(string)})
 	}
 
 	req.Filters = buildEC2AttributeFilterList(

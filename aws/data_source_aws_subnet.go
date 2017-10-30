@@ -83,8 +83,8 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	req := &ec2.DescribeSubnetsInput{}
 
-	if id := d.Id(); id != "" {
-		req.SubnetIds = []*string{aws.String(id)}
+	if id, ok := d.GetOk("id"); ok {
+		req.SubnetIds = []*string{aws.String(id.(string))}
 	}
 
 	// We specify default_for_az as boolean, but EC2 filters want
