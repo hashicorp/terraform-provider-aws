@@ -104,9 +104,6 @@ func testAccDataSourceAwsSecurityGroupCheckDefault(name string) resource.TestChe
 
 func testAccDataSourceAwsSecurityGroupConfig(rInt int) string {
 	return fmt.Sprintf(`
-	provider "aws" {
-		region = "eu-west-1"
-	}
 	resource "aws_vpc" "test" {
 		cidr_block = "172.16.0.0/16"
 
