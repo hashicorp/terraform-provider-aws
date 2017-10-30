@@ -339,6 +339,84 @@ func TestAccAWSElasticacheReplicationGroup_enableSnapshotting(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticacheReplicationGroup_enableAuthTokenTransitEncryption(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupEnableAuthTokenTransitEncryptionConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.bar", &rg),
+					resource.TestCheckResourceAttr(
+						"aws_elasticache_replication_group.bar", "transit_encryption", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheReplicationGroup_enableAtRestEncryption(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupEnableAtRestEncryptionConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.bar", &rg),
+					resource.TestCheckResourceAttr(
+						"aws_elasticache_replication_group.bar", "at_rest_encryption", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestResourceAWSElastiCacheReplicationGroupAuthTokenValidation(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "this-is-valid!#%()^",
+			ErrCount: 0,
+		},
+		{
+			Value:    "this-is-not",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid\"",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid@",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid/",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(129),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateAwsElastiCacheReplicationGroupAuthToken(tc.Value, "aws_elasticache_replication_group_auth_token")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the ElastiCache Replication Group AuthToken to trigger a validation error")
+		}
+	}
+}
+
 func TestResourceAWSElastiCacheReplicationGroupIdValidation(t *testing.T) {
 	cases := []struct {
 		Value    string
@@ -1002,3 +1080,108 @@ resource "aws_elasticache_replication_group" "bar" {
     }
 }`, rInt, rInt, rInt, rInt, rName)
 }
+
+var testAccAWSElasticacheReplicationGroupEnableAtRestEncryptionConfig = fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+    cidr_block = "192.168.0.0/16"
+    tags {
+            Name = "tf-test"
+    }
+}
+
+resource "aws_subnet" "foo" {
+    vpc_id = "${aws_vpc.foo.id}"
+    cidr_block = "192.168.0.0/20"
+    availability_zone = "us-west-2a"
+    tags {
+            Name = "tf-test-%03d"
+    }
+}
+
+resource "aws_elasticache_subnet_group" "bar" {
+    name = "tf-test-cache-subnet-%03d"
+    description = "tf-test-cache-subnet-group-descr"
+    subnet_ids = [
+        "${aws_subnet.foo.id}",
+    ]
+}
+
+resource "aws_security_group" "bar" {
+    name = "tf-test-security-group-%03d"
+    description = "tf-test-security-group-descr"
+    vpc_id = "${aws_vpc.foo.id}"
+    ingress {
+        from_port = -1
+        to_port = -1
+        protocol = "icmp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+}
+
+resource "aws_elasticache_replication_group" "bar" {
+    replication_group_id = "tf-%s"
+    replication_group_description = "test description"
+    node_type = "cache.t2.micro"
+    number_cache_clusters = "1"
+    port = 6379
+    subnet_group_name = "${aws_elasticache_subnet_group.bar.name}"
+    security_group_ids = ["${aws_security_group.bar.id}"]
+    parameter_group_name = "default.redis3.2"
+    availability_zones = ["us-west-2a"]
+    engine_version = "3.2.6"
+		at_rest_encryption = true
+}
+`, acctest.RandInt(), acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
+
+var testAccAWSElasticacheReplicationGroupEnableAuthTokenTransitEncryptionConfig = fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+    cidr_block = "192.168.0.0/16"
+    tags {
+            Name = "tf-test"
+    }
+}
+
+resource "aws_subnet" "foo" {
+    vpc_id = "${aws_vpc.foo.id}"
+    cidr_block = "192.168.0.0/20"
+    availability_zone = "us-west-2a"
+    tags {
+            Name = "tf-test-%03d"
+    }
+}
+
+resource "aws_elasticache_subnet_group" "bar" {
+    name = "tf-test-cache-subnet-%03d"
+    description = "tf-test-cache-subnet-group-descr"
+    subnet_ids = [
+        "${aws_subnet.foo.id}",
+    ]
+}
+
+resource "aws_security_group" "bar" {
+    name = "tf-test-security-group-%03d"
+    description = "tf-test-security-group-descr"
+    vpc_id = "${aws_vpc.foo.id}"
+    ingress {
+        from_port = -1
+        to_port = -1
+        protocol = "icmp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+}
+
+resource "aws_elasticache_replication_group" "bar" {
+    replication_group_id = "tf-%s"
+    replication_group_description = "test description"
+    node_type = "cache.t2.micro"
+    number_cache_clusters = "1"
+    port = 6379
+    subnet_group_name = "${aws_elasticache_subnet_group.bar.name}"
+    security_group_ids = ["${aws_security_group.bar.id}"]
+    parameter_group_name = "default.redis3.2"
+    availability_zones = ["us-west-2a"]
+    engine_version = "3.2.6"
+		transit_encryption = true
+		auth_token = "%s"
+}
+`, acctest.RandInt(), acctest.RandInt(), acctest.RandInt(), acctest.RandString(10), acctest.RandString(16))

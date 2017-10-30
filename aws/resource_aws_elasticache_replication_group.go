@@ -87,6 +87,28 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 	resourceSchema["engine"].Default = "redis"
 	resourceSchema["engine"].ValidateFunc = validateAwsElastiCacheReplicationGroupEngine
 
+	resourceSchema["at_rest_encryption"] = &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		ForceNew: true,
+	}
+
+	resourceSchema["transit_encryption"] = &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		ForceNew: true,
+	}
+
+	resourceSchema["auth_token"] = &schema.Schema{
+		Type:         schema.TypeString,
+		Optional:     true,
+		Sensitive:    true,
+		ForceNew:     true,
+		ValidateFunc: validateAwsElastiCacheReplicationGroupAuthToken,
+	}
+
 	return &schema.Resource{
 		Create: resourceAwsElasticacheReplicationGroupCreate,
 		Read:   resourceAwsElasticacheReplicationGroupRead,
@@ -166,6 +188,18 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("snapshot_name"); ok {
 		params.SnapshotName = aws.String(v.(string))
+	}
+
+	if _, ok := d.GetOk("transit_encryption"); ok {
+		params.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption").(bool))
+	}
+
+	if _, ok := d.GetOk("at_rest_encryption"); ok {
+		params.AtRestEncryptionEnabled = aws.Bool(d.Get("at_rest_encryption").(bool))
+	}
+
+	if v, ok := d.GetOk("auth_token"); ok {
+		params.AuthToken = aws.String(v.(string))
 	}
 
 	clusterMode, clusterModeOk := d.GetOk("cluster_mode")
@@ -313,6 +347,9 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		}
 
 		d.Set("auto_minor_version_upgrade", c.AutoMinorVersionUpgrade)
+		d.Set("at_rest_encryption", c.AtRestEncryptionEnabled)
+		d.Set("transit_encryption", c.TransitEncryptionEnabled)
+		d.Set("auth_token", c.TransitEncryptionEnabled)
 	}
 
 	return nil
@@ -532,6 +569,19 @@ func validateAwsElastiCacheReplicationGroupId(v interface{}, k string) (ws []str
 	if regexp.MustCompile(`-$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot end with a hyphen", k))
+	}
+	return
+}
+
+func validateAwsElastiCacheReplicationGroupAuthToken(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) < 16) || (len(value) > 128) {
+		errors = append(errors, fmt.Errorf(
+			"%q must contain from 16 to 128 alphanumeric characters or symbols (excluding @, \", and /)", k))
+	}
+	if !regexp.MustCompile(`^[^@"\/]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters or symbols (excluding @, \", and /) allowed in %q", k))
 	}
 	return
 }
