@@ -1526,7 +1526,7 @@ func flattenCloudWachLogMetricTransformations(ts []*cloudwatchlogs.MetricTransfo
 	m["value"] = *ts[0].MetricValue
 
 	if ts[0].DefaultValue != nil {
-		m["default_value"] = strconv.FormatFloat(*ts[0].DefaultValue, 'E', -1, 64)
+		m["default_value"] = *ts[0].DefaultValue
 	}
 
 	mts = append(mts, m)
