@@ -176,9 +176,11 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 
 func dataSourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) error {
 	dynamodbconn := meta.(*AWSClient).dynamodbconn
-	log.Printf("[DEBUG] Loading data for DynamoDB table '%s'", d.Id())
+
+	name := d.Get("name").(string)
+	log.Printf("[DEBUG] Loading data for DynamoDB table %q", name)
 	req := &dynamodb.DescribeTableInput{
-		TableName: aws.String(d.Get("name").(string)),
+		TableName: aws.String(name),
 	}
 
 	result, err := dynamodbconn.DescribeTable(req)

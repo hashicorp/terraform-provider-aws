@@ -61,8 +61,8 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 
 	req := &ec2.DescribeVpcEndpointsInput{}
 
-	if id := d.Id(); id != "" {
-		req.VpcEndpointIds = aws.StringSlice([]string{id})
+	if id, ok := d.GetOk("id"); ok {
+		req.VpcEndpointIds = aws.StringSlice([]string{id.(string)})
 	}
 
 	req.Filters = buildEC2AttributeFilterList(

@@ -33,8 +33,8 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 
 	req := &ec2.DescribeAddressesInput{}
 
-	if id := d.Id(); id != "" {
-		req.AllocationIds = []*string{aws.String(id)}
+	if id, ok := d.GetOk("id"); ok {
+		req.AllocationIds = []*string{aws.String(id.(string))}
 	}
 
 	if public_ip := d.Get("public_ip"); public_ip != "" {
