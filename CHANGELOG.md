@@ -30,6 +30,7 @@ IMPROVEMENTS:
 * resource/aws_security_group: Add `revoke_rules_on_delete` option to force a security group to revoke 
   rules before deleting the grou [GH-2074]
 * resource/aws_cloudwatch_log_metric_filter: Add support for DefaultValue [GH-1578]
+* resource/aws_emr_cluster: Expose error on `TERMINATED_WITH_ERRORS` [GH-2081]
 
 BUG FIXES:
 
