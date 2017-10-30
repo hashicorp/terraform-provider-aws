@@ -43,6 +43,7 @@ BUG FIXES:
 * resource/aws_elasticache_replication_group: Raise creation timeout to 50mins [GH-2048]
 * resource/aws_api_gateway_usag_plan: Fixed setting of rate_limit [GH-2076]
 * resource/aws_elastic_beanstalk_application: Expose error leading to failed deletion [GH-2080]
+* resource/aws_s3_bucket: Accept query strings in redirect hosts [GH-2059]
 
 ## 1.1.0 (October 16, 2017)
 
