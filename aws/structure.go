@@ -1513,14 +1513,17 @@ func expandCloudWachLogMetricTransformations(m map[string]interface{}) []*cloudw
 	return []*cloudwatchlogs.MetricTransformation{&transformation}
 }
 
-func flattenCloudWachLogMetricTransformations(ts []*cloudwatchlogs.MetricTransformation) map[string]string {
-	m := make(map[string]string, 0)
+func flattenCloudWachLogMetricTransformations(ts []*cloudwatchlogs.MetricTransformation) []interface{} {
+	mts := make([]interface{}, 0)
+	m := make(map[string]interface{}, 0)
 
 	m["name"] = *ts[0].MetricName
 	m["namespace"] = *ts[0].MetricNamespace
 	m["value"] = *ts[0].MetricValue
 
-	return m
+	mts = append(mts, m)
+
+	return mts
 }
 
 func flattenBeanstalkAsg(list []*elasticbeanstalk.AutoScalingGroup) []string {
