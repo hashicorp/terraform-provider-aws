@@ -1503,14 +1503,18 @@ func expandApiGatewayStageKeyOperations(d *schema.ResourceData) []*apigateway.Pa
 	return operations
 }
 
-func expandCloudWachLogMetricTransformations(m map[string]interface{}) []*cloudwatchlogs.MetricTransformation {
+func expandCloudWachLogMetricTransformations(m map[string]interface{}) ([]*cloudwatchlogs.MetricTransformation, error) {
 	transformation := cloudwatchlogs.MetricTransformation{
 		MetricName:      aws.String(m["name"].(string)),
 		MetricNamespace: aws.String(m["namespace"].(string)),
 		MetricValue:     aws.String(m["value"].(string)),
 	}
 
-	return []*cloudwatchlogs.MetricTransformation{&transformation}
+	if m["default_value"] != "" {
+		transformation.DefaultValue = aws.Float64(m["default_value"].(float64))
+	}
+
+	return []*cloudwatchlogs.MetricTransformation{&transformation}, nil
 }
 
 func flattenCloudWachLogMetricTransformations(ts []*cloudwatchlogs.MetricTransformation) []interface{} {
@@ -1520,6 +1524,10 @@ func flattenCloudWachLogMetricTransformations(ts []*cloudwatchlogs.MetricTransfo
 	m["name"] = *ts[0].MetricName
 	m["namespace"] = *ts[0].MetricNamespace
 	m["value"] = *ts[0].MetricValue
+
+	if ts[0].DefaultValue != nil {
+		m["default_value"] = *ts[0].DefaultValue
+	}
 
 	mts = append(mts, m)
 
