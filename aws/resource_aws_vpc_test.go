@@ -15,9 +15,12 @@ import (
 // add sweeper to delete known test vpcs
 func init() {
 	resource.AddTestSweepers("aws_vpc", &resource.Sweeper{
-		Name:         "aws_vpc",
-		Dependencies: []string{"aws_security_group"},
-		F:            testSweepVPCs,
+		Name: "aws_vpc",
+		Dependencies: []string{
+			"aws_security_group",
+			"aws_subnet",
+		},
+		F: testSweepVPCs,
 	})
 }
 
@@ -31,8 +34,12 @@ func testSweepVPCs(region string) error {
 	req := &ec2.DescribeVpcsInput{
 		Filters: []*ec2.Filter{
 			{
-				Name:   aws.String("tag-value"),
-				Values: []*string{aws.String("tf-acc-revoke*")},
+				Name: aws.String("tag-value"),
+				Values: []*string{
+					aws.String("tf-acc-revoke*"),
+					aws.String("terraform-testacc-vpc-data-source-*"),
+					aws.String("terraform-testacc-subnet-data-source*"),
+				},
 			},
 		},
 	}

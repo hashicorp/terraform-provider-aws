@@ -111,7 +111,7 @@ func testAccDataSourceAwsSecurityGroupConfig(rInt int) string {
 		cidr_block = "172.16.0.0/16"
 
 		tags {
-			Name = "terraform-testacc-subnet-data-source"
+			Name = "terraform-testacc-security-group-data-source"
 		}
 	}
 
