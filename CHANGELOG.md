@@ -1,4 +1,4 @@
-## 1.1.1 (Unreleased)
+## 1.2.0 (Unreleased)
 
 INTERNAL:
 
@@ -42,6 +42,7 @@ BUG FIXES:
 * resource/aws_cognito_identity_pool: Fixed refresh of providers [GH-2015]
 * resource/aws_elasticache_replication_group: Raise creation timeout to 50mins [GH-2048]
 * resource/aws_api_gateway_usag_plan: Fixed setting of rate_limit [GH-2076]
+* resource/aws_elastic_beanstalk_application: Expose error leading to failed deletion [GH-2080]
 
 ## 1.1.0 (October 16, 2017)
 
