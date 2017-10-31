@@ -1,4 +1,9 @@
 ## 1.2.1 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_cloudwatch_log_metric_filter: Fix pattern length check [GH-2107]
+
 ## 1.2.0 (October 31, 2017)
 
 INTERNAL:
