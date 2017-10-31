@@ -19,6 +19,7 @@ func init() {
 		Dependencies: []string{
 			"aws_security_group",
 			"aws_subnet",
+			"aws_vpn_gateway",
 		},
 		F: testSweepVPCs,
 	})
@@ -39,6 +40,7 @@ func testSweepVPCs(region string) error {
 					aws.String("tf-acc-revoke*"),
 					aws.String("terraform-testacc-vpc-data-source-*"),
 					aws.String("terraform-testacc-subnet-data-source*"),
+					aws.String("terraform-testacc-vpn-gateway*"),
 				},
 			},
 		},
