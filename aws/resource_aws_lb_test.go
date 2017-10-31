@@ -541,7 +541,7 @@ func testAccAWSLBConfigWithIpAddressTypeUpdated(lbName string) string {
   enable_deletion_protection = false
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -590,7 +590,7 @@ resource "aws_vpc" "alb_test" {
   assign_generated_ipv6_cidr_block = true
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -606,7 +606,7 @@ resource "aws_subnet" "alb_test_1" {
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -618,7 +618,7 @@ resource "aws_subnet" "alb_test_2" {
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -635,7 +635,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }`, lbName, lbName)
 }
@@ -652,7 +652,7 @@ func testAccAWSLBConfigWithIpAddressType(lbName string) string {
   enable_deletion_protection = false
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -701,7 +701,7 @@ resource "aws_vpc" "alb_test" {
   assign_generated_ipv6_cidr_block = true
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -717,7 +717,7 @@ resource "aws_subnet" "alb_test_1" {
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -729,7 +729,7 @@ resource "aws_subnet" "alb_test_2" {
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -746,7 +746,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }`, lbName, lbName)
 }
@@ -762,7 +762,7 @@ func testAccAWSLBConfig_basic(lbName string) string {
   enable_deletion_protection = false
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -777,7 +777,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -789,7 +789,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -813,7 +813,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }`, lbName)
 }
@@ -831,7 +831,7 @@ func testAccAWSLBConfig_networkLoadbalancer(lbName string) string {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -839,7 +839,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.10.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -850,7 +850,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "us-west-2a"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -920,7 +920,7 @@ func testAccAWSLBConfigBackwardsCompatibility(lbName string) string {
   enable_deletion_protection = false
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -935,7 +935,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -947,7 +947,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -971,7 +971,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }`, lbName)
 }
@@ -987,7 +987,7 @@ func testAccAWSLBConfig_updateSubnets(lbName string) string {
   enable_deletion_protection = false
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1002,7 +1002,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1014,7 +1014,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1038,7 +1038,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }`, lbName)
 }
@@ -1054,7 +1054,7 @@ resource "aws_lb" "lb_test" {
   enable_deletion_protection = false
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1069,7 +1069,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1089,7 +1089,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1113,7 +1113,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }`)
 }
@@ -1130,7 +1130,7 @@ resource "aws_lb" "lb_test" {
   enable_deletion_protection = false
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1145,7 +1145,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1165,7 +1165,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1189,7 +1189,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }`)
 }
@@ -1206,7 +1206,7 @@ resource "aws_lb" "lb_test" {
   enable_deletion_protection = false
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1221,7 +1221,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1233,7 +1233,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1257,7 +1257,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }`)
 }
@@ -1288,7 +1288,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1300,7 +1300,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1324,7 +1324,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }`, lbName)
 }
@@ -1399,7 +1399,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1411,7 +1411,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1435,7 +1435,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }`, lbName, enabled, bucketName)
 }
@@ -1450,7 +1450,7 @@ func testAccAWSLBConfig_nosg(lbName string) string {
   enable_deletion_protection = false
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1465,7 +1465,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1477,7 +1477,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }`, lbName)
 }
@@ -1493,7 +1493,7 @@ func testAccAWSLBConfig_updateSecurityGroups(lbName string) string {
   enable_deletion_protection = false
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1508,7 +1508,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1520,7 +1520,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -1561,7 +1561,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }`, lbName)
 }
