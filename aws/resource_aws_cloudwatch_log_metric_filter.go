@@ -31,7 +31,7 @@ func resourceAwsCloudWatchLogMetricFilter() *schema.Resource {
 			"pattern": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateMaxLength(512),
+				ValidateFunc: validateMaxLength(1024),
 				StateFunc: func(v interface{}) string {
 					s, ok := v.(string)
 					if !ok {
