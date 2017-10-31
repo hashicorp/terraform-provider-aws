@@ -249,6 +249,10 @@ resource "aws_security_group" "bar" {
         protocol = "icmp"
         cidr_blocks = ["0.0.0.0/0"]
     }
+
+		tags {
+			Name = "TestAccAWSElasticacheCluster_basic"
+		}
 }
 
 resource "aws_elasticache_security_group" "bar" {

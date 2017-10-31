@@ -12,7 +12,8 @@
 //
 // Standard queues (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/standard-queues.html)
 // are available in all regions. FIFO queues (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues.html)
-// are available in US West (Oregon) and US East (Ohio).
+// are available in the US East (N. Virginia), US East (Ohio), US West (Oregon),
+// and EU (Ireland) regions.
 //
 // You can use AWS SDKs (http://aws.amazon.com/tools/#sdk) to access Amazon
 // SQS using your favorite programming language. The SDKs perform tasks such
@@ -28,13 +29,13 @@
 //
 //    * Amazon SQS Product Page (http://aws.amazon.com/sqs/)
 //
-//    * Amazon SQS Developer Guide
+//    * Amazon Simple Queue Service Developer Guide
 //
 // Making API Requests (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/MakingRequestsArticle.html)
 //
 // Using Amazon SQS Message Attributes (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-attributes.html)
 //
-// Using Amazon SQS Dead Letter Queues (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
+// Using Amazon SQS Dead-Letter Queues (http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
 //
 //    * Amazon Web Services General Reference
 //

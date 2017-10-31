@@ -168,10 +168,27 @@ func (m *Meta) pluginDirs(includeAutoInstalled bool) []string {
 	return dirs
 }
 
+func (m *Meta) pluginCache() discovery.PluginCache {
+	dir := m.PluginCacheDir
+	if dir == "" {
+		return nil // cache disabled
+	}
+
+	dir = filepath.Join(dir, pluginMachineName)
+
+	return discovery.NewLocalPluginCache(dir)
+}
+
 // providerPluginSet returns the set of valid providers that were discovered in
 // the defined search paths.
 func (m *Meta) providerPluginSet() discovery.PluginMetaSet {
 	plugins := discovery.FindPlugins("provider", m.pluginDirs(true))
+
+	// Add providers defined in the legacy .terraformrc,
+	if m.PluginOverrides != nil {
+		plugins = plugins.OverridePaths(m.PluginOverrides.Providers)
+	}
+
 	plugins, _ = plugins.ValidateVersions()
 
 	for p := range plugins {
@@ -198,6 +215,12 @@ func (m *Meta) providerPluginAutoInstalledSet() discovery.PluginMetaSet {
 // in all locations *except* the auto-install directory.
 func (m *Meta) providerPluginManuallyInstalledSet() discovery.PluginMetaSet {
 	plugins := discovery.FindPlugins("provider", m.pluginDirs(false))
+
+	// Add providers defined in the legacy .terraformrc,
+	if m.PluginOverrides != nil {
+		plugins = plugins.OverridePaths(m.PluginOverrides.Providers)
+	}
+
 	plugins, _ = plugins.ValidateVersions()
 
 	for p := range plugins {

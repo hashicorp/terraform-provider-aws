@@ -233,6 +233,24 @@ func expandIPPerms(
 			}
 		}
 
+		if raw, ok := m["description"]; ok {
+			description := raw.(string)
+			if description != "" {
+				for _, v := range perm.IpRanges {
+					v.Description = aws.String(description)
+				}
+				for _, v := range perm.Ipv6Ranges {
+					v.Description = aws.String(description)
+				}
+				for _, v := range perm.PrefixListIds {
+					v.Description = aws.String(description)
+				}
+				for _, v := range perm.UserIdGroupPairs {
+					v.Description = aws.String(description)
+				}
+			}
+		}
+
 		perms[i] = &perm
 	}
 
@@ -466,9 +484,9 @@ func flattenHealthCheck(check *elb.HealthCheck) []map[string]interface{} {
 	return result
 }
 
-// Flattens an array of UserSecurityGroups into a []*ec2.GroupIdentifier
-func flattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*ec2.GroupIdentifier {
-	result := make([]*ec2.GroupIdentifier, 0, len(list))
+// Flattens an array of UserSecurityGroups into a []*GroupIdentifier
+func flattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*GroupIdentifier {
+	result := make([]*GroupIdentifier, 0, len(list))
 	for _, g := range list {
 		var userId *string
 		if g.UserId != nil && *g.UserId != "" && (ownerId == nil || *ownerId != *g.UserId) {
@@ -492,13 +510,15 @@ func flattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*ec2.
 		}
 
 		if vpc {
-			result = append(result, &ec2.GroupIdentifier{
-				GroupId: id,
+			result = append(result, &GroupIdentifier{
+				GroupId:     id,
+				Description: g.Description,
 			})
 		} else {
-			result = append(result, &ec2.GroupIdentifier{
-				GroupId:   g.GroupId,
-				GroupName: id,
+			result = append(result, &GroupIdentifier{
+				GroupId:     g.GroupId,
+				GroupName:   id,
+				Description: g.Description,
 			})
 		}
 	}
@@ -994,6 +1014,38 @@ func expandESEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 	return &options
 }
 
+func flattenESVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if o.AvailabilityZones != nil {
+		m["availability_zones"] = schema.NewSet(schema.HashString, flattenStringList(o.AvailabilityZones))
+	}
+	if o.SecurityGroupIds != nil {
+		m["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(o.SecurityGroupIds))
+	}
+	if o.SubnetIds != nil {
+		m["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(o.SubnetIds))
+	}
+	if o.VPCId != nil {
+		m["vpc_id"] = *o.VPCId
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandESVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
+	options := elasticsearch.VPCOptions{}
+
+	if v, ok := m["security_group_ids"]; ok {
+		options.SecurityGroupIds = expandStringList(v.(*schema.Set).List())
+	}
+	if v, ok := m["subnet_ids"]; ok {
+		options.SubnetIds = expandStringList(v.(*schema.Set).List())
+	}
+
+	return &options
+}
+
 func expandConfigRecordingGroup(configured []interface{}) *configservice.RecordingGroup {
 	recordingGroup := configservice.RecordingGroup{}
 	group := configured[0].(map[string]interface{})
@@ -1451,24 +1503,35 @@ func expandApiGatewayStageKeyOperations(d *schema.ResourceData) []*apigateway.Pa
 	return operations
 }
 
-func expandCloudWachLogMetricTransformations(m map[string]interface{}) []*cloudwatchlogs.MetricTransformation {
+func expandCloudWachLogMetricTransformations(m map[string]interface{}) ([]*cloudwatchlogs.MetricTransformation, error) {
 	transformation := cloudwatchlogs.MetricTransformation{
 		MetricName:      aws.String(m["name"].(string)),
 		MetricNamespace: aws.String(m["namespace"].(string)),
 		MetricValue:     aws.String(m["value"].(string)),
 	}
 
-	return []*cloudwatchlogs.MetricTransformation{&transformation}
+	if m["default_value"] != "" {
+		transformation.DefaultValue = aws.Float64(m["default_value"].(float64))
+	}
+
+	return []*cloudwatchlogs.MetricTransformation{&transformation}, nil
 }
 
-func flattenCloudWachLogMetricTransformations(ts []*cloudwatchlogs.MetricTransformation) map[string]string {
-	m := make(map[string]string, 0)
+func flattenCloudWachLogMetricTransformations(ts []*cloudwatchlogs.MetricTransformation) []interface{} {
+	mts := make([]interface{}, 0)
+	m := make(map[string]interface{}, 0)
 
 	m["name"] = *ts[0].MetricName
 	m["namespace"] = *ts[0].MetricNamespace
 	m["value"] = *ts[0].MetricValue
 
-	return m
+	if ts[0].DefaultValue != nil {
+		m["default_value"] = *ts[0].DefaultValue
+	}
+
+	mts = append(mts, m)
+
+	return mts
 }
 
 func flattenBeanstalkAsg(list []*elasticbeanstalk.AutoScalingGroup) []string {
@@ -2154,4 +2217,126 @@ func escapeJsonPointer(path string) string {
 	path = strings.Replace(path, "~", "~0", -1)
 	path = strings.Replace(path, "/", "~1", -1)
 	return path
+}
+
+// Like ec2.GroupIdentifier but with additional rule description.
+type GroupIdentifier struct {
+	// The ID of the security group.
+	GroupId *string
+
+	// The name of the security group.
+	GroupName *string
+
+	Description *string
+}
+
+func expandCognitoIdentityPoolRoles(config map[string]interface{}) map[string]*string {
+	m := map[string]*string{}
+	for k, v := range config {
+		s := v.(string)
+		m[k] = &s
+	}
+	return m
+}
+
+func flattenCognitoIdentityPoolRoles(config map[string]*string) map[string]string {
+	m := map[string]string{}
+	for k, v := range config {
+		m[k] = *v
+	}
+	return m
+}
+
+func expandCognitoIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]*cognitoidentity.RoleMapping {
+	values := make(map[string]*cognitoidentity.RoleMapping, 0)
+
+	if len(rms) == 0 {
+		return values
+	}
+
+	for _, v := range rms {
+		rm := v.(map[string]interface{})
+		key := rm["identity_provider"].(string)
+
+		roleMapping := &cognitoidentity.RoleMapping{
+			Type: aws.String(rm["type"].(string)),
+		}
+
+		if sv, ok := rm["ambiguous_role_resolution"].(string); ok {
+			roleMapping.AmbiguousRoleResolution = aws.String(sv)
+		}
+
+		if mr, ok := rm["mapping_rule"].([]interface{}); ok && len(mr) > 0 {
+			rct := &cognitoidentity.RulesConfigurationType{}
+			mappingRules := make([]*cognitoidentity.MappingRule, 0)
+
+			for _, r := range mr {
+				rule := r.(map[string]interface{})
+				mr := &cognitoidentity.MappingRule{
+					Claim:     aws.String(rule["claim"].(string)),
+					MatchType: aws.String(rule["match_type"].(string)),
+					RoleARN:   aws.String(rule["role_arn"].(string)),
+					Value:     aws.String(rule["value"].(string)),
+				}
+
+				mappingRules = append(mappingRules, mr)
+			}
+
+			rct.Rules = mappingRules
+			roleMapping.RulesConfiguration = rct
+		}
+
+		values[key] = roleMapping
+	}
+
+	return values
+}
+
+func flattenCognitoIdentityPoolRoleMappingsAttachment(rms map[string]*cognitoidentity.RoleMapping) []map[string]interface{} {
+	roleMappings := make([]map[string]interface{}, 0)
+
+	if rms == nil {
+		return roleMappings
+	}
+
+	for k, v := range rms {
+		m := make(map[string]interface{})
+
+		if v == nil {
+			return nil
+		}
+
+		if v.Type != nil {
+			m["type"] = *v.Type
+		}
+
+		if v.AmbiguousRoleResolution != nil {
+			m["ambiguous_role_resolution"] = *v.AmbiguousRoleResolution
+		}
+
+		if v.RulesConfiguration != nil && v.RulesConfiguration.Rules != nil {
+			m["mapping_rule"] = flattenCognitoIdentityPoolRolesAttachmentMappingRules(v.RulesConfiguration.Rules)
+		}
+
+		m["identity_provider"] = k
+		roleMappings = append(roleMappings, m)
+	}
+
+	return roleMappings
+}
+
+func flattenCognitoIdentityPoolRolesAttachmentMappingRules(d []*cognitoidentity.MappingRule) []interface{} {
+	rules := make([]interface{}, 0)
+
+	for _, rule := range d {
+		r := make(map[string]interface{})
+		r["claim"] = *rule.Claim
+		r["match_type"] = *rule.MatchType
+		r["role_arn"] = *rule.RoleARN
+		r["value"] = *rule.Value
+
+		rules = append(rules, r)
+	}
+
+	return rules
 }

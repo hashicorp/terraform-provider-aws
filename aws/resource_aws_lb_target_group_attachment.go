@@ -36,6 +36,12 @@ func resourceAwsLbTargetGroupAttachment() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
+
+			"availability_zone": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -49,6 +55,10 @@ func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) err
 
 	if v, ok := d.GetOk("port"); ok {
 		target.Port = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("availability_zone"); ok {
+		target.AvailabilityZone = aws.String(v.(string))
 	}
 
 	params := &elbv2.RegisterTargetsInput{
@@ -80,6 +90,10 @@ func resourceAwsLbAttachmentDelete(d *schema.ResourceData, meta interface{}) err
 		target.Port = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("availability_zone"); ok {
+		target.AvailabilityZone = aws.String(v.(string))
+	}
+
 	params := &elbv2.DeregisterTargetsInput{
 		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
 		Targets:        []*elbv2.TargetDescription{target},
@@ -106,6 +120,10 @@ func resourceAwsLbAttachmentRead(d *schema.ResourceData, meta interface{}) error
 
 	if v, ok := d.GetOk("port"); ok {
 		target.Port = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("availability_zone"); ok {
+		target.AvailabilityZone = aws.String(v.(string))
 	}
 
 	resp, err := elbconn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{

@@ -108,6 +108,8 @@ interpolation.
   for machine images.
 * `root_device_name` - The device name of the root device.
 * `root_device_type` - The type of root device (ie: `ebs` or `instance-store`).
+* `root_snapshot_id` - The snapshot id associated with the root device, if any
+  (only applies to `ebs` root devices).
 * `sriov_net_support` - Specifies whether enhanced networking is enabled.
 * `state` - The current state of the AMI. If the state is `available`, the image
   is successfully registered and can be used to launch an instance.

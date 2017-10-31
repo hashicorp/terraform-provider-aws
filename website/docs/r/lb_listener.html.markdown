@@ -44,7 +44,7 @@ The following arguments are supported:
 
 * `load_balancer_arn` - (Required, Forces New Resource) The ARN of the load balancer.
 * `port` - (Required) The port on which the load balancer is listening.
-* `protocol` - (Optional) The protocol for connections from clients to the load balancer. Valid values are `HTTP` and `HTTPS`. Defaults to `HTTP`.
+* `protocol` - (Optional) The protocol for connections from clients to the load balancer. Valid values are `TCP`, `HTTP` and `HTTPS`. Defaults to `HTTP`.
 * `ssl_policy` - (Optional) The name of the SSL Policy for the listener. Required if `protocol` is `HTTPS`.
 * `certificate_arn` - (Optional) The ARN of the SSL server certificate. Exactly one certificate is required if the protocol is HTTPS.
 * `default_action` - (Required) An Action block. Action blocks are documented below.

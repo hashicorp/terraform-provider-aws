@@ -60,6 +60,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/simpledb"
@@ -144,6 +145,7 @@ type AWSClient struct {
 	appautoscalingconn    *applicationautoscaling.ApplicationAutoScaling
 	autoscalingconn       *autoscaling.AutoScaling
 	s3conn                *s3.S3
+	scconn                *servicecatalog.ServiceCatalog
 	sesConn               *ses.SES
 	simpledbconn          *simpledb.SimpleDB
 	sqsconn               *sqs.SQS
@@ -379,6 +381,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.redshiftconn = redshift.New(sess)
 	client.simpledbconn = simpledb.New(sess)
 	client.s3conn = s3.New(awsS3Sess)
+	client.scconn = servicecatalog.New(sess)
 	client.sesConn = ses.New(sess)
 	client.sfnconn = sfn.New(sess)
 	client.snsconn = sns.New(awsSnsSess)

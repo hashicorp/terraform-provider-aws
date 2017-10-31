@@ -29,6 +29,8 @@ resource "aws_emr_cluster" "emr-test-cluster" {
     emr_managed_slave_security_group  = "${aws_security_group.sg.id}"
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
+  
+  ebs_root_volume_size     = 100
 
   master_instance_type = "m3.xlarge"
   core_instance_type   = "m3.xlarge"
@@ -78,6 +80,7 @@ The following arguments are supported:
 * `keep_job_flow_alive_when_no_steps` - (Optional) Switch on/off run cluster with no steps or when all steps are complete (default is on)
 * `ec2_attributes` - (Optional) Attributes for the EC2 instances running the job
 flow. Defined below
+* `ebs_root_volume_size` - (Optional) Size in GiB of the EBS root device volume of the Linux AMI that is used for each EC2 instance. Available in Amazon EMR version 4.x and later.
 * `bootstrap_action` - (Optional) List of bootstrap actions that will be run before Hadoop is started on
 	the cluster nodes. Defined below
 * `configurations` - (Optional) List of configurations supplied for the EMR cluster you are creating
@@ -101,7 +104,20 @@ Cannot specify the `cc1.4xlarge` instance type for nodes of a job flow launched 
 * `service_access_security_group` - (Optional) Identifier of the Amazon EC2 service-access security group - required when the cluster runs on a private subnet
 * `instance_profile` - (Required) Instance Profile for EC2 instances of the cluster assume this role
 
-~> **NOTE on EMR-Managed security groups:** These security groups will have any missing inbound or outbound access rules added and maintained by AWS, to ensure proper communication between instances in a cluster. Maintenance of the security group rules by AWS may lead Terraform to fail because of a race condition between Terraform and AWS in managing the rules. To avoid this, make the `emr_cluster` dependent on all the required security group rules. See [Amazon EMR-Managed Security Groups](http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-man-sec-groups.html) for more information about the EMR-managed security group rules.
+~> **NOTE on EMR-Managed security groups:** These security groups will have any
+missing inbound or outbound access rules added and maintained by AWS, to ensure
+proper communication between instances in a cluster. The EMR service will
+maintain these rules for groups provided in `emr_managed_master_security_group`
+and `emr_managed_slave_security_group`; attempts to remove the required rules
+may succeed, only for the EMR service to re-add them in a matter of minutes.
+This may cause Terraform to fail to destroy an environment that contains an EMR
+cluster, because the EMR service does not revoke rules added on deletion,
+leaving a cyclic dependency between the security groups that prevents their
+deletion. To avoid this, use the `revoke_rules_on_delete` optional attribute for
+any Security Group used in `emr_managed_master_security_group` and
+`emr_managed_slave_security_group`. See [Amazon EMR-Managed Security
+Groups](http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-man-sec-groups.html)
+for more information about the EMR-managed security group rules.
 
 
 ## instance\_group

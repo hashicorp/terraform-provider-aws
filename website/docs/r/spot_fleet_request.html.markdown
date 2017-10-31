@@ -42,6 +42,10 @@ resource "aws_spot_fleet_request" "cheap_compute" {
       volume_size = "300"
       volume_type = "gp2"
     }
+
+    tags {
+      Name = "spot-fleet-example"
+    }
   }
 }
 ```
@@ -109,6 +113,9 @@ lowestPrice.
   request is decreased below the current size of the Spot fleet.
 * `terminate_instances_with_expiration` - Indicates whether running Spot
   instances should be terminated when the Spot fleet request expires.
+* `instance_interruption_behavior` - (Optional) Indicates whether a Spot
+  instance stops or terminates when it is interrupted. Default is
+  `terminate`.
 * `valid_until` - The end date and time of the request, in UTC ISO8601 format
   (for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance
 requests are placed or enabled to fulfill the request. Defaults to 24 hours.

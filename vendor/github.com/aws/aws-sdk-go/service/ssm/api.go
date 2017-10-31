@@ -56,14 +56,14 @@ func (c *SSM) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *requ
 // AddTagsToResource API operation for Amazon Simple Systems Manager (SSM).
 //
 // Adds or overwrites one or more tags for the specified resource. Tags are
-// metadata that you assign to your managed instances, Maintenance Windows,
-// or Parameter Store parameters. Tags enable you to categorize your resources
-// in different ways, for example, by purpose, owner, or environment. Each tag
-// consists of a key and an optional value, both of which you define. For example,
-// you could define a set of tags for your account's managed instances that
-// helps you track each instance's owner and stack level. For example: Key=Owner
-// and Value=DbAdmin, SysAdmin, or Dev. Or Key=Stack and Value=Production, Pre-Production,
-// or Test.
+// metadata that you can assign to your documents, managed instances, Maintenance
+// Windows, Parameter Store parameters, and patch baselines. Tags enable you
+// to categorize your resources in different ways, for example, by purpose,
+// owner, or environment. Each tag consists of a key and an optional value,
+// both of which you define. For example, you could define a set of tags for
+// your account's managed instances that helps you track each instance's owner
+// and stack level. For example: Key=Owner and Value=DbAdmin, SysAdmin, or Dev.
+// Or Key=Stack and Value=Production, Pre-Production, or Test.
 //
 // Each resource can have a maximum of 10 tags.
 //
@@ -85,8 +85,8 @@ func (c *SSM) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *requ
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidResourceType "InvalidResourceType"
-//   The resource type is not valid. If you are attempting to tag an instance,
-//   the instance must be a registered, managed instance.
+//   The resource type is not valid. For example, if you are attempting to tag
+//   an instance, the instance must be a registered, managed instance.
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
@@ -404,8 +404,9 @@ func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *requ
 //   The output location is not valid or does not exist.
 //
 //   * ErrCodeInvalidParameters "InvalidParameters"
-//   You must specify values for all required parameters in the SSM document.
-//   You can only supply values to parameters defined in the SSM document.
+//   You must specify values for all required parameters in the Systems Manager
+//   document. You can only supply values to parameters defined in the Systems
+//   Manager document.
 //
 //   * ErrCodeInvalidTarget "InvalidTarget"
 //   The target is not valid or does not exist. It might not be configured for
@@ -523,8 +524,9 @@ func (c *SSM) CreateAssociationBatchRequest(input *CreateAssociationBatchInput) 
 //   Stopping. Invalid states are: Shutting-down and Terminated.
 //
 //   * ErrCodeInvalidParameters "InvalidParameters"
-//   You must specify values for all required parameters in the SSM document.
-//   You can only supply values to parameters defined in the SSM document.
+//   You must specify values for all required parameters in the Systems Manager
+//   document. You can only supply values to parameters defined in the Systems
+//   Manager document.
 //
 //   * ErrCodeDuplicateInstanceId "DuplicateInstanceId"
 //   You cannot specify an instance ID in more than one association.
@@ -638,7 +640,7 @@ func (c *SSM) CreateDocumentRequest(input *CreateDocumentInput) (req *request.Re
 //   The content for the document is not valid.
 //
 //   * ErrCodeDocumentLimitExceeded "DocumentLimitExceeded"
-//   You can have at most 200 active SSM documents.
+//   You can have at most 200 active Systems Manager documents.
 //
 //   * ErrCodeInvalidDocumentSchemaVersion "InvalidDocumentSchemaVersion"
 //   The version of the document schema is not supported.
@@ -1005,6 +1007,10 @@ func (c *SSM) DeleteActivationRequest(input *DeleteActivationInput) (req *reques
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
+//
+//   * ErrCodeTooManyUpdates "TooManyUpdates"
+//   There are concurrent updates for a resource that supports one update at a
+//   time.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteActivation
 func (c *SSM) DeleteActivation(input *DeleteActivationInput) (*DeleteActivationOutput, error) {
@@ -2444,7 +2450,7 @@ func (c *SSM) DescribeDocumentRequest(input *DescribeDocumentInput) (req *reques
 
 // DescribeDocument API operation for Amazon Simple Systems Manager (SSM).
 //
-// Describes the specified SSM document.
+// Describes the specified Systems Manager document.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4582,7 +4588,7 @@ func (c *SSM) GetDocumentRequest(input *GetDocumentInput) (req *request.Request,
 
 // GetDocument API operation for Amazon Simple Systems Manager (SSM).
 //
-// Gets the contents of the specified SSM document.
+// Gets the contents of the specified Systems Manager document.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5281,6 +5287,10 @@ func (c *SSM) GetParameterRequest(input *GetParameterInput) (req *request.Reques
 //
 //   * ErrCodeParameterNotFound "ParameterNotFound"
 //   The parameter could not be found. Verify the name and try again.
+//
+//   * ErrCodeParameterVersionNotFound "ParameterVersionNotFound"
+//   The specified parameter version was not found. Verify the parameter name
+//   and version, and try again.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameter
 func (c *SSM) GetParameter(input *GetParameterInput) (*GetParameterOutput, error) {
@@ -6458,8 +6468,8 @@ func (c *SSM) ListComplianceItemsRequest(input *ListComplianceItemsInput) (req *
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidResourceType "InvalidResourceType"
-//   The resource type is not valid. If you are attempting to tag an instance,
-//   the instance must be a registered, managed instance.
+//   The resource type is not valid. For example, if you are attempting to tag
+//   an instance, the instance must be a registered, managed instance.
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
@@ -6720,7 +6730,7 @@ func (c *SSM) ListDocumentsRequest(input *ListDocumentsInput) (req *request.Requ
 
 // ListDocuments API operation for Amazon Simple Systems Manager (SSM).
 //
-// Describes one or more of your SSM documents.
+// Describes one or more of your Systems Manager documents.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7149,8 +7159,8 @@ func (c *SSM) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidResourceType "InvalidResourceType"
-//   The resource type is not valid. If you are attempting to tag an instance,
-//   the instance must be a registered, managed instance.
+//   The resource type is not valid. For example, if you are attempting to tag
+//   an instance, the instance must be a registered, managed instance.
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
@@ -7254,7 +7264,7 @@ func (c *SSM) ModifyDocumentPermissionRequest(input *ModifyDocumentPermissionInp
 //   documents. If you need to increase this limit, contact AWS Support.
 //
 //   * ErrCodeDocumentLimitExceeded "DocumentLimitExceeded"
-//   You can have at most 200 active SSM documents.
+//   You can have at most 200 active Systems Manager documents.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ModifyDocumentPermission
 func (c *SSM) ModifyDocumentPermission(input *ModifyDocumentPermissionInput) (*ModifyDocumentPermissionOutput, error) {
@@ -7353,8 +7363,8 @@ func (c *SSM) PutComplianceItemsRequest(input *PutComplianceItemsInput) (req *re
 //   of 10 different types.
 //
 //   * ErrCodeInvalidResourceType "InvalidResourceType"
-//   The resource type is not valid. If you are attempting to tag an instance,
-//   the instance must be a registered, managed instance.
+//   The resource type is not valid. For example, if you are attempting to tag
+//   an instance, the instance must be a registered, managed instance.
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
@@ -7599,6 +7609,9 @@ func (c *SSM) PutParameterRequest(input *PutParameterInput) (req *request.Reques
 //
 //   * ErrCodeInvalidAllowedPatternException "InvalidAllowedPatternException"
 //   The request does not meet the regular expression requirement.
+//
+//   * ErrCodeParameterMaxVersionLimitExceeded "ParameterMaxVersionLimitExceeded"
+//   The parameter exceeded the maximum number of allowed versions.
 //
 //   * ErrCodeParameterPatternMismatchException "ParameterPatternMismatchException"
 //   The parameter name is not valid.
@@ -8051,8 +8064,8 @@ func (c *SSM) RemoveTagsFromResourceRequest(input *RemoveTagsFromResourceInput) 
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidResourceType "InvalidResourceType"
-//   The resource type is not valid. If you are attempting to tag an instance,
-//   the instance must be a registered, managed instance.
+//   The resource type is not valid. For example, if you are attempting to tag
+//   an instance, the instance must be a registered, managed instance.
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
@@ -8252,8 +8265,9 @@ func (c *SSM) SendCommandRequest(input *SendCommandInput) (req *request.Request,
 //   The S3 bucket does not exist.
 //
 //   * ErrCodeInvalidParameters "InvalidParameters"
-//   You must specify values for all required parameters in the SSM document.
-//   You can only supply values to parameters defined in the SSM document.
+//   You must specify values for all required parameters in the Systems Manager
+//   document. You can only supply values to parameters defined in the Systems
+//   Manager document.
 //
 //   * ErrCodeUnsupportedPlatformType "UnsupportedPlatformType"
 //   The document does not support the platform type of the given instance ID(s).
@@ -8538,8 +8552,9 @@ func (c *SSM) UpdateAssociationRequest(input *UpdateAssociationInput) (req *requ
 //   The schedule is invalid. Verify your cron or rate expression and try again.
 //
 //   * ErrCodeInvalidParameters "InvalidParameters"
-//   You must specify values for all required parameters in the SSM document.
-//   You can only supply values to parameters defined in the SSM document.
+//   You must specify values for all required parameters in the Systems Manager
+//   document. You can only supply values to parameters defined in the Systems
+//   Manager document.
 //
 //   * ErrCodeInvalidOutputLocation "InvalidOutputLocation"
 //   The output location is not valid or does not exist.
@@ -9463,6 +9478,11 @@ type AddTagsToResourceInput struct {
 
 	// The resource ID you want to tag.
 	//
+	// For the ManagedInstance, MaintenanceWindow, and PatchBaseline values, use
+	// the ID of the resource, such as mw-01234361858c9b57b for a Maintenance Window.
+	//
+	// For the Document and Parameter values, use the name of the resource.
+	//
 	// ResourceId is a required field
 	ResourceId *string `type:"string" required:"true"`
 
@@ -9575,7 +9595,7 @@ type Association struct {
 	// The date on which the association was last run.
 	LastExecutionDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 
 	// Information about the association.
@@ -9690,7 +9710,7 @@ type AssociationDescription struct {
 	// The date when the association was last updated.
 	LastUpdateAssociationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 
 	// An Amazon S3 bucket where you want to store the output details of the request.
@@ -10018,7 +10038,8 @@ type AssociationVersionInfo struct {
 	// The date the association version was created.
 	CreatedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// The version of an SSM document used when the association version was created.
+	// The version of a Systems Manager document used when the association version
+	// was created.
 	DocumentVersion *string `type:"string"`
 
 	// The name specified when the association was created.
@@ -13465,7 +13486,7 @@ type DescribeAssociationInput struct {
 	// The instance ID.
 	InstanceId *string `type:"string"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 }
 
@@ -13741,7 +13762,7 @@ type DescribeDocumentInput struct {
 	// or the default version.
 	DocumentVersion *string `type:"string"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
@@ -13786,7 +13807,7 @@ func (s *DescribeDocumentInput) SetName(v string) *DescribeDocumentInput {
 type DescribeDocumentOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the SSM document.
+	// Information about the Systems Manager document.
 	Document *DocumentDescription `type:"structure"`
 }
 
@@ -15855,7 +15876,7 @@ func (s *DocumentDefaultVersionDescription) SetName(v string) *DocumentDefaultVe
 	return s
 }
 
-// Describes an SSM document.
+// Describes a Systems Manager document.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentDescription
 type DocumentDescription struct {
 	_ struct{} `type:"structure"`
@@ -15888,26 +15909,29 @@ type DocumentDescription struct {
 	// The latest version of the document.
 	LatestVersion *string `type:"string"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 
-	// The AWS user account of the person who created the document.
+	// The AWS user account that created the document.
 	Owner *string `type:"string"`
 
 	// A description of the parameters for a document.
 	Parameters []*DocumentParameter `locationNameList:"DocumentParameter" type:"list"`
 
-	// The list of OS platforms compatible with this SSM document.
+	// The list of OS platforms compatible with this Systems Manager document.
 	PlatformTypes []*string `locationNameList:"PlatformType" type:"list"`
 
 	// The schema version.
 	SchemaVersion *string `type:"string"`
 
-	// The SHA1 hash of the document, which you can use for verification purposes.
+	// The SHA1 hash of the document, which you can use for verification.
 	Sha1 *string `type:"string"`
 
-	// The status of the SSM document.
+	// The status of the Systems Manager document.
 	Status *string `type:"string" enum:"DocumentStatus"`
+
+	// The tags, or metadata, that have been applied to the document.
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -16010,6 +16034,12 @@ func (s *DocumentDescription) SetStatus(v string) *DocumentDescription {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *DocumentDescription) SetTags(v []*Tag) *DocumentDescription {
+	s.Tags = v
+	return s
+}
+
 // Describes a filter.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentFilter
 type DocumentFilter struct {
@@ -16067,7 +16097,7 @@ func (s *DocumentFilter) SetValue(v string) *DocumentFilter {
 	return s
 }
 
-// Describes the name of an SSM document.
+// Describes the name of a Systems Manager document.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentIdentifier
 type DocumentIdentifier struct {
 	_ struct{} `type:"structure"`
@@ -16078,10 +16108,10 @@ type DocumentIdentifier struct {
 	// The document version.
 	DocumentVersion *string `type:"string"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 
-	// The AWS user account of the person who created the document.
+	// The AWS user account that created the document.
 	Owner *string `type:"string"`
 
 	// The operating system platform.
@@ -16089,6 +16119,9 @@ type DocumentIdentifier struct {
 
 	// The schema version.
 	SchemaVersion *string `type:"string"`
+
+	// The tags, or metadata, that have been applied to the document.
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -16134,6 +16167,83 @@ func (s *DocumentIdentifier) SetPlatformTypes(v []*string) *DocumentIdentifier {
 // SetSchemaVersion sets the SchemaVersion field's value.
 func (s *DocumentIdentifier) SetSchemaVersion(v string) *DocumentIdentifier {
 	s.SchemaVersion = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *DocumentIdentifier) SetTags(v []*Tag) *DocumentIdentifier {
+	s.Tags = v
+	return s
+}
+
+// One or more filters. Use a filter to return a more specific list of documents.
+//
+// For keys, you can specify one or more tags that have been applied to a document.
+//
+// Other valid values include Owner, Name, PlatformTypes, and DocumentType.
+//
+// Note that only one Owner can be specified in a request. For example: Key=Owner,Values=Self.
+//
+// If you use Name as a key, you can use a name prefix to return a list of documents.
+// For example, in the AWS CLI, to return a list of all documents that begin
+// with Te, run the following command:
+//
+// aws ssm list-documents --filters Key=Name,Values=Te
+//
+// If you specify more than two keys, only documents that are identified by
+// all the tags are returned in the results. If you specify more than two values
+// for a key, documents that are identified by any of the values are returned
+// in the results.
+//
+// To specify a custom key and value pair, use the format Key=tag:[tagName],Values=[valueName].
+//
+// For example, if you created a Key called region and are using the AWS CLI
+// to call the list-documents command:
+//
+// aws ssm list-documents --filters Key=tag:region,Values=east,west Key=Owner,Values=Self
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentKeyValuesFilter
+type DocumentKeyValuesFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the filter key.
+	Key *string `min:"1" type:"string"`
+
+	// The value for the filter key.
+	Values []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s DocumentKeyValuesFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DocumentKeyValuesFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DocumentKeyValuesFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DocumentKeyValuesFilter"}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *DocumentKeyValuesFilter) SetKey(v string) *DocumentKeyValuesFilter {
+	s.Key = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *DocumentKeyValuesFilter) SetValues(v []*string) *DocumentKeyValuesFilter {
+	s.Values = v
 	return s
 }
 
@@ -16906,7 +17016,7 @@ type GetDocumentInput struct {
 	// The document version for which you want information.
 	DocumentVersion *string `type:"string"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
@@ -16951,7 +17061,7 @@ func (s *GetDocumentInput) SetName(v string) *GetDocumentInput {
 type GetDocumentOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The contents of the SSM document.
+	// The contents of the Systems Manager document.
 	Content *string `min:"1" type:"string"`
 
 	// The document type.
@@ -16960,7 +17070,7 @@ type GetDocumentOutput struct {
 	// The document version.
 	DocumentVersion *string `type:"string"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 }
 
@@ -17977,9 +18087,9 @@ type GetMaintenanceWindowTaskOutput struct {
 	Targets []*Target `type:"list"`
 
 	// The resource that the task used during execution. For RUN_COMMAND and AUTOMATION
-	// task types, the TaskArn is the SSM Document name/ARN. For LAMBDA tasks, the
-	// value is the function name/ARN. For STEP_FUNCTION tasks, the value is the
-	// state machine ARN.
+	// task types, the TaskArn is the Systems Manager Document name/ARN. For LAMBDA
+	// tasks, the value is the function name/ARN. For STEP_FUNCTION tasks, the value
+	// is the state machine ARN.
 	TaskArn *string `min:"1" type:"string"`
 
 	// The parameters to pass to the task when it executes.
@@ -20760,6 +20870,9 @@ type ListDocumentsInput struct {
 	// One or more filters. Use a filter to return a more specific list of results.
 	DocumentFilterList []*DocumentFilter `locationNameList:"DocumentFilter" min:"1" type:"list"`
 
+	// One or more filters. Use a filter to return a more specific list of results.
+	Filters []*DocumentKeyValuesFilter `type:"list"`
+
 	// The maximum number of items to return for this call. The call also returns
 	// a token that you can specify in a subsequent call to get the next set of
 	// results.
@@ -20799,6 +20912,16 @@ func (s *ListDocumentsInput) Validate() error {
 			}
 		}
 	}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -20809,6 +20932,12 @@ func (s *ListDocumentsInput) Validate() error {
 // SetDocumentFilterList sets the DocumentFilterList field's value.
 func (s *ListDocumentsInput) SetDocumentFilterList(v []*DocumentFilter) *ListDocumentsInput {
 	s.DocumentFilterList = v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *ListDocumentsInput) SetFilters(v []*DocumentKeyValuesFilter) *ListDocumentsInput {
+	s.Filters = v
 	return s
 }
 
@@ -20828,7 +20957,7 @@ func (s *ListDocumentsInput) SetNextToken(v string) *ListDocumentsInput {
 type ListDocumentsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The names of the SSM documents.
+	// The names of the Systems Manager documents.
 	DocumentIdentifiers []*DocumentIdentifier `locationNameList:"DocumentIdentifier" type:"list"`
 
 	// The token to use when requesting the next set of items. If there are no additional
@@ -22159,9 +22288,9 @@ type MaintenanceWindowTask struct {
 	Targets []*Target `type:"list"`
 
 	// The resource that the task uses during execution. For RUN_COMMAND and AUTOMATION
-	// task types, TaskArn is the SSM document name or ARN. For LAMBDA tasks, it's
-	// the function name or ARN. For STEP_FUNCTION tasks, it's the state machine
-	// ARN.
+	// task types, TaskArn is the Systems Manager document name or ARN. For LAMBDA
+	// tasks, it's the function name or ARN. For STEP_FUNCTION tasks, it's the state
+	// machine ARN.
 	TaskArn *string `min:"1" type:"string"`
 
 	// The parameters that should be passed to the task when it is executed.
@@ -22563,6 +22692,9 @@ type Parameter struct {
 
 	// The parameter value.
 	Value *string `min:"1" type:"string"`
+
+	// The parameter version.
+	Version *int64 `type:"long"`
 }
 
 // String returns the string representation
@@ -22593,6 +22725,12 @@ func (s *Parameter) SetValue(v string) *Parameter {
 	return s
 }
 
+// SetVersion sets the Version field's value.
+func (s *Parameter) SetVersion(v int64) *Parameter {
+	s.Version = &v
+	return s
+}
+
 // Information about parameter usage.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ParameterHistory
 type ParameterHistory struct {
@@ -22604,7 +22742,7 @@ type ParameterHistory struct {
 	AllowedPattern *string `type:"string"`
 
 	// Information about the parameter.
-	Description *string `min:"1" type:"string"`
+	Description *string `type:"string"`
 
 	// The ID of the query key used for this parameter.
 	KeyId *string `min:"1" type:"string"`
@@ -22623,6 +22761,9 @@ type ParameterHistory struct {
 
 	// The parameter value.
 	Value *string `min:"1" type:"string"`
+
+	// The parameter version.
+	Version *int64 `type:"long"`
 }
 
 // String returns the string representation
@@ -22683,6 +22824,12 @@ func (s *ParameterHistory) SetValue(v string) *ParameterHistory {
 	return s
 }
 
+// SetVersion sets the Version field's value.
+func (s *ParameterHistory) SetVersion(v int64) *ParameterHistory {
+	s.Version = &v
+	return s
+}
+
 // Metada includes information like the ARN of the last user and the date/time
 // the parameter was last used.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ParameterMetadata
@@ -22695,7 +22842,7 @@ type ParameterMetadata struct {
 	AllowedPattern *string `type:"string"`
 
 	// Description of the parameter actions.
-	Description *string `min:"1" type:"string"`
+	Description *string `type:"string"`
 
 	// The ID of the query key used for this parameter.
 	KeyId *string `min:"1" type:"string"`
@@ -22712,6 +22859,9 @@ type ParameterMetadata struct {
 	// The type of parameter. Valid parameter types include the following: String,
 	// String list, Secure string.
 	Type *string `type:"string" enum:"ParameterType"`
+
+	// The parameter version.
+	Version *int64 `type:"long"`
 }
 
 // String returns the string representation
@@ -22763,6 +22913,12 @@ func (s *ParameterMetadata) SetName(v string) *ParameterMetadata {
 // SetType sets the Type field's value.
 func (s *ParameterMetadata) SetType(v string) *ParameterMetadata {
 	s.Type = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *ParameterMetadata) SetVersion(v int64) *ParameterMetadata {
+	s.Version = &v
 	return s
 }
 
@@ -23772,7 +23928,7 @@ type PutParameterInput struct {
 	AllowedPattern *string `type:"string"`
 
 	// Information about the parameter that you want to add to the system
-	Description *string `min:"1" type:"string"`
+	Description *string `type:"string"`
 
 	// The KMS Key ID that you want to use to encrypt a parameter when you choose
 	// the SecureString data type. If you don't specify a key ID, the system uses
@@ -23811,9 +23967,6 @@ func (s PutParameterInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *PutParameterInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "PutParameterInput"}
-	if s.Description != nil && len(*s.Description) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("Description", 1))
-	}
 	if s.KeyId != nil && len(*s.KeyId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("KeyId", 1))
 	}
@@ -23884,6 +24037,14 @@ func (s *PutParameterInput) SetValue(v string) *PutParameterInput {
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutParameterResult
 type PutParameterOutput struct {
 	_ struct{} `type:"structure"`
+
+	// The new version number of a parameter. If you edit a parameter value, Parameter
+	// Store automatically creates a new version and assigns this new version a
+	// unique ID. You can reference a parameter version ID in API actions or in
+	// Systems Manager documents (SSM documents). By default, if you don't specify
+	// a specific version, the system returns the latest parameter value when a
+	// parameter is called.
+	Version *int64 `type:"long"`
 }
 
 // String returns the string representation
@@ -23894,6 +24055,12 @@ func (s PutParameterOutput) String() string {
 // GoString returns the string representation
 func (s PutParameterOutput) GoString() string {
 	return s.String()
+}
+
+// SetVersion sets the Version field's value.
+func (s *PutParameterOutput) SetVersion(v int64) *PutParameterOutput {
+	s.Version = &v
+	return s
 }
 
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterDefaultPatchBaselineRequest
@@ -25619,9 +25786,10 @@ func (s StopAutomationExecutionOutput) GoString() string {
 	return s.String()
 }
 
-// Metadata that you assign to your managed instances. Tags enable you to categorize
-// your managed instances in different ways, for example, by purpose, owner,
-// or environment.
+// Metadata that you assign to your AWS resources. Tags enable you to categorize
+// your resources in different ways, for example, by purpose, owner, or environment.
+// In Systems Manager, you can apply tags to documents, managed instances, Maintenance
+// Windows, Parameter Store parameters, and patch baselines.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/Tag
 type Tag struct {
 	_ struct{} `type:"structure"`
@@ -25907,7 +26075,7 @@ type UpdateAssociationStatusInput struct {
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
 
-	// The name of the SSM document.
+	// The name of the Systems Manager document.
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
@@ -27796,6 +27964,9 @@ const (
 )
 
 const (
+	// ResourceTypeForTaggingDocument is a ResourceTypeForTagging enum value
+	ResourceTypeForTaggingDocument = "Document"
+
 	// ResourceTypeForTaggingManagedInstance is a ResourceTypeForTagging enum value
 	ResourceTypeForTaggingManagedInstance = "ManagedInstance"
 
@@ -27804,6 +27975,9 @@ const (
 
 	// ResourceTypeForTaggingParameter is a ResourceTypeForTagging enum value
 	ResourceTypeForTaggingParameter = "Parameter"
+
+	// ResourceTypeForTaggingPatchBaseline is a ResourceTypeForTagging enum value
+	ResourceTypeForTaggingPatchBaseline = "PatchBaseline"
 )
 
 const (

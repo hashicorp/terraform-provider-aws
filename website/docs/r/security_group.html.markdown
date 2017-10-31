@@ -36,6 +36,7 @@ Basic usage
 resource "aws_security_group" "allow_all" {
   name        = "allow_all"
   description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
     from_port   = 0
@@ -92,6 +93,13 @@ assign a random, unique name
 * `egress` - (Optional, VPC only) Can be specified multiple times for each
    egress rule. Each egress block supports fields documented below.
    If no egress blocks are defined, then egress rules will not be managed by this resource.
+* `revoke_rules_on_delete` - (Optional) Instruct Terraform to revoke all of the
+Security Groups attached ingress and egress rules before deleting the rule
+itself. This is normally not needed, however certain AWS services such as
+Elastic Map Reduce may automatically add required rules to security groups used
+with the service, and those rules may contain a cyclic dependency that prevent
+the security groups from being destroyed without removing the dependency first.
+Default `false`
 * `vpc_id` - (Optional, Forces new resource) The VPC ID.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
@@ -107,6 +115,7 @@ The `ingress` block supports:
 * `self` - (Optional) If true, the security group itself will be added as
      a source to this ingress rule.
 * `to_port` - (Required) The end range port (or ICMP code if protocol is "icmp").
+* `description` - (Optional) Description of this ingress rule.
 
 The `egress` block supports:
 
@@ -121,6 +130,7 @@ The `egress` block supports:
 * `self` - (Optional) If true, the security group itself will be added as
      a source to this egress rule.
 * `to_port` - (Required) The end range port (or ICMP code if protocol is "icmp").
+* `description` - (Optional) Description of this egress rule.
 
 ~> **NOTE on Egress rules:** By default, AWS creates an `ALLOW ALL` egress rule when creating a
 new Security Group inside of a VPC. When creating a new Security
