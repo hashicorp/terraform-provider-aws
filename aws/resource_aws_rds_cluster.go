@@ -232,6 +232,11 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Optional: true,
 			},
 
+			"source_region": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"iam_roles": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -365,7 +370,8 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			Engine:                      aws.String(d.Get("engine").(string)),
 			StorageEncrypted:            aws.Bool(d.Get("storage_encrypted").(bool)),
 			ReplicationSourceIdentifier: aws.String(d.Get("replication_source_identifier").(string)),
-			Tags: tags,
+			SourceRegion:                aws.String(d.Get("source_region").(string)),
+			Tags:                        tags,
 		}
 
 		if attr, ok := d.GetOk("port"); ok {
