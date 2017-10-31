@@ -1,6 +1,13 @@
 package aws
 
-import "github.com/hashicorp/terraform/helper/schema"
+import (
+	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/errwrap"
+	"github.com/hashicorp/terraform/helper/schema"
+	"log"
+)
 
 func dataSourceAwsLbListener() *schema.Resource {
 	return &schema.Resource{
@@ -9,11 +16,13 @@ func dataSourceAwsLbListener() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
 
 			"load_balancer_arn": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"port": {
@@ -57,6 +66,35 @@ func dataSourceAwsLbListener() *schema.Resource {
 }
 
 func dataSourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
-	d.SetId(d.Get("arn").(string))
+	listenerArn := d.Get("arn").(string)
+	lbArn := d.Get("load_balancer_arn").(string)
+
+	switch {
+	case listenerArn != "":
+		d.SetId(d.Get("arn").(string))
+	case lbArn != "":
+		elbconn := meta.(*AWSClient).elbv2conn
+
+		resp, err := elbconn.DescribeListeners(&elbv2.DescribeListenersInput{
+			LoadBalancerArn: aws.String(lbArn),
+		})
+
+		if err != nil {
+			if isListenerNotFound(err) {
+				log.Printf("[WARN] DescribeListeners - removing %s from state", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return errwrap.Wrapf("Error retrieving Listener: {{err}}", err)
+		}
+
+		if len(resp.Listeners) != 1 {
+			return fmt.Errorf("Multiple listeners found for load balancer %s. This data source only supports single listener load balancers when searching by load balancer.", lbArn)
+		}
+
+		d.SetId(*resp.Listeners[0].ListenerArn)
+	}
+
 	return resourceAwsLbListenerRead(d, meta)
+
 }
