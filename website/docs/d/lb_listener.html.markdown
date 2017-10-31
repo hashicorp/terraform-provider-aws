@@ -28,11 +28,26 @@ data "aws_lb_listener" "listener" {
 }
 ```
 
+```hcl
+variable "lb_name" {
+  type = "string"
+}
+
+data "aws_lb" "load_balancer" {
+  name = "${var.lb_name}"
+}
+
+data "aws_lb_listener" "listener" {
+  load_balancer_arn = "${data.aws_lb.load_balancer.arn}"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
-* `arn` - (Required) The ARN of the listener.
+* `arn` - (Optional) The ARN of the listener.
+* `load_balancer_arn` - (Optional) The ARN of the load balancer.
 
 ## Attributes Reference
 
