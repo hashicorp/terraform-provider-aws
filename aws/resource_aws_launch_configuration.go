@@ -158,6 +158,12 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"no_device": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+
 						"iops": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -338,8 +344,10 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			ebs := &autoscaling.Ebs{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+			ebs := &autoscaling.Ebs{}
+
+			if v, ok := bd["no_device"].(bool); !ok && v {
+				ebs.DeleteOnTermination = aws.Bool(bd["delete_on_termination"].(bool))
 			}
 
 			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
@@ -368,6 +376,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 
 			blockDevices = append(blockDevices, &autoscaling.BlockDeviceMapping{
 				DeviceName: aws.String(bd["device_name"].(string)),
+				NoDevice:   aws.Bool(bd["no_device"].(bool)),
 				Ebs:        ebs,
 			})
 		}
