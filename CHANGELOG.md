@@ -9,6 +9,7 @@ BUG FIXES:
 * resource/aws_appautoscaling_policy: Retry putting policy on invalid token [GH-2135]
 * resource/aws_batch_compute_environment: `compute_environment_name` allows hyphens [GH-2126]
 * resource/aws_batch_job_definition: `name` allows hyphens [GH-2126]
+* resource/aws_elasticache_parameter_group: Raise timeout for retry on pending changes [GH-2134]
 
 BUG FIXES:
 
