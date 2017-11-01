@@ -27,7 +27,7 @@ data "aws_s3_bucket_object" "bootstrap_script" {
 resource "aws_instance" "example" {
   instance_type = "t2.micro"
   ami           = "ami-2757f631"
-  user_data     = "${aws_s3_bucket_object.bootstrap_script.body}"
+  user_data     = "${data.aws_s3_bucket_object.bootstrap_script.body}"
 }
 ```
 
