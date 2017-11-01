@@ -3,7 +3,11 @@
 IMPROVEMENTS:
 
 * data-source/efs_file_system: Added dns_name [GH-2105]
-* validateBatchName should allow hyphens [GH-2126]
+
+BUG FIXES:
+
+* resource/aws_batch_compute_environment: `compute_environment_name` allows hyphens [GH-2126]
+* resource/aws_batch_job_definition: `name` allows hyphens [GH-2126]
 
 BUG FIXES:
 
