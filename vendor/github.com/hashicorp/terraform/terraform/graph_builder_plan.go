@@ -71,6 +71,9 @@ func (b *PlanGraphBuilder) Steps() []GraphTransformer {
 			Module:   b.Module,
 		},
 
+		// Add the local values
+		&LocalTransformer{Module: b.Module},
+
 		// Add the outputs
 		&OutputTransformer{Module: b.Module},
 
@@ -107,7 +110,9 @@ func (b *PlanGraphBuilder) Steps() []GraphTransformer {
 		),
 
 		// Add module variables
-		&ModuleVariableTransformer{Module: b.Module},
+		&ModuleVariableTransformer{
+			Module: b.Module,
+		},
 
 		// Connect so that the references are ready for targeting. We'll
 		// have to connect again later for providers and so on.

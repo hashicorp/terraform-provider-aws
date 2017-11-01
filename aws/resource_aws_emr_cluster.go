@@ -1006,9 +1006,9 @@ func resourceAwsEMRClusterStateRefreshFunc(d *schema.ResourceData, meta interfac
 		}
 
 		status := emrc.Status
-		if *status.State == "TERMINATING" {
+		if *status.State == "TERMINATING" || *status.State == "TERMINATED_WITH_ERRORS" {
 			reason := *status.StateChangeReason
-			return emrc, *status.State, fmt.Errorf("EMR Cluster is terminating. %s: %s",
+			return emrc, *status.State, fmt.Errorf("%s: %s",
 				*reason.Code, *reason.Message)
 		}
 

@@ -112,7 +112,7 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEmrDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrClusterConfig(r),
+				Config: testAccAWSEmrClusterConfigTerminationPolicy(r, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
 					resource.TestCheckResourceAttr(
@@ -120,7 +120,7 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSEmrClusterConfigTerminationPolicyUpdated(r),
+				Config: testAccAWSEmrClusterConfigTerminationPolicy(r, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
 					resource.TestCheckResourceAttr(
@@ -129,9 +129,11 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 			},
 			{
 				//Need to turn off termination_protection to allow the job to be deleted
-				Config: testAccAWSEmrClusterConfig(r),
+				Config: testAccAWSEmrClusterConfigTerminationPolicy(r, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					resource.TestCheckResourceAttr(
+						"aws_emr_cluster.tf-test-cluster", "termination_protection", "false"),
 				),
 			},
 		},
@@ -570,7 +572,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_cts"
+    Name = "emr_test_cts"
   }
 }
 
@@ -579,7 +581,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_cts"
+    Name = "emr_test_cts"
   }
 }
 
@@ -627,7 +629,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -731,7 +733,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -740,7 +742,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -749,7 +751,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -895,7 +897,7 @@ EOT
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
@@ -1039,7 +1041,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -1048,7 +1050,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -1057,7 +1059,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -1203,7 +1205,7 @@ EOT
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
@@ -1402,7 +1404,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -1411,7 +1413,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -1420,7 +1422,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -1566,7 +1568,7 @@ EOT
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
@@ -1637,7 +1639,7 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
 `, r, r, r, r, r, r, r, r, r, r)
 }
 
-func testAccAWSEmrClusterConfigTerminationPolicyUpdated(r int) string {
+func testAccAWSEmrClusterConfigTerminationPolicy(r int, term string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-west-2"
@@ -1667,7 +1669,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = true
+  termination_protection = %s
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -1709,7 +1711,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -1718,7 +1720,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -1727,7 +1729,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -1873,7 +1875,7 @@ EOT
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
@@ -1941,7 +1943,7 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   role       = "${aws_iam_role.emr-autoscaling-role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
-`, r, r, r, r, r, r, r, r, r, r)
+`, r, term, r, r, r, r, r, r, r, r, r)
 }
 
 func testAccAWSEmrClusterConfigVisibleToAllUsersUpdated(r int) string {
@@ -2016,7 +2018,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -2025,7 +2027,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -2034,7 +2036,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -2180,7 +2182,7 @@ EOT
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
@@ -2322,7 +2324,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -2331,7 +2333,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -2340,7 +2342,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -2486,7 +2488,7 @@ EOT
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
@@ -2630,7 +2632,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -2639,7 +2641,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -2648,7 +2650,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -2794,7 +2796,7 @@ EOT
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
