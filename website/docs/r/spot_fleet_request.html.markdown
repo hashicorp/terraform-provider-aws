@@ -94,8 +94,7 @@ across different markets and instance types.
 
     **Note:** This takes in similar but not
     identical inputs as [`aws_instance`](instance.html).  There are limitations on
-    what you can specify (tags, for example, are not supported). See the
-    list of officially supported inputs in the
+    what you can specify. See the list of officially supported inputs in the
     [reference documentation](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetLaunchSpecification.html). Any normal [`aws_instance`](instance.html) parameter that corresponds to those inputs may be used.
 
 * `spot_price` - (Required) The bid price per unit hour.
