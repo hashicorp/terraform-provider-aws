@@ -1490,8 +1490,8 @@ func validateSsmParameterType(v interface{}, k string) (ws []string, errors []er
 
 func validateBatchName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[A-Za-z0-9_]{1,128}$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q (%q) must be up to 128 letters (uppercase and lowercase), numbers, and underscores.", k, v))
+	if !regexp.MustCompile(`^[0-9a-zA-Z]{1}[0-9a-zA-Z_\-]{0,127}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q (%q) must be up to 128 letters (uppercase and lowercase), numbers, underscores and dashes, and must start with an alphanumeric.", k, v))
 	}
 	return
 }
