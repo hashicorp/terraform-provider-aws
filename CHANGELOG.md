@@ -3,6 +3,7 @@
 IMPROVEMENTS:
 
 * data-source/efs_file_system: Added dns_name [GH-2105]
+* validateBatchName should allow hyphens [GH-2126]
 
 BUG FIXES:
 
