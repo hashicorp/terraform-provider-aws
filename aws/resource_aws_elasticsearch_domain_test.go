@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -33,6 +34,54 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_duplicate(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-%d", ri)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		CheckDestroy: func(s *terraform.State) error {
+			conn := testAccProvider.Meta().(*AWSClient).esconn
+			_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
+				DomainName: aws.String(name),
+			})
+			return err
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					// Create duplicate
+					conn := testAccProvider.Meta().(*AWSClient).esconn
+					_, err := conn.CreateElasticsearchDomain(&elasticsearch.CreateElasticsearchDomainInput{
+						DomainName: aws.String(name),
+						EBSOptions: &elasticsearch.EBSOptions{
+							EBSEnabled: aws.Bool(true),
+							VolumeSize: aws.Int64(10),
+						},
+					})
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					err = waitForElasticSearchDomainCreation(conn, name, name)
+					if err != nil {
+						t.Fatal(err)
+					}
+				},
+				Config: testAccESDomainConfig(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					resource.TestCheckResourceAttr(
+						"aws_elasticsearch_domain.example", "elasticsearch_version", "1.5"),
+				),
+				ExpectError: regexp.MustCompile(`domain "[^"]+" already exists`),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_importBasic(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.example"
 	ri := acctest.RandInt()
@@ -41,7 +90,7 @@ func TestAccAWSElasticSearchDomain_importBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccESDomainConfig(ri),
@@ -94,6 +143,62 @@ func TestAccAWSElasticSearchDomain_complex(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSElasticSearchDomain_vpc(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_vpc(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_vpc_update(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_vpc_update(ri, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESNumberOfSecurityGroups(1, &domain),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_vpc_update(ri, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESNumberOfSecurityGroups(2, &domain),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckESNumberOfSecurityGroups(numberOfSecurityGroups int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		count := len(status.VPCOptions.SecurityGroupIds)
+		if count != numberOfSecurityGroups {
+			return fmt.Errorf("Number of security groups differ. Given: %d, Expected: %d", count, numberOfSecurityGroups)
+		}
+		return nil
+	}
 }
 
 func TestAccAWSElasticSearchDomain_policy(t *testing.T) {
@@ -398,4 +503,127 @@ resource "aws_elasticsearch_domain" "example" {
   elasticsearch_version = "2.3"
 }
 `, randInt)
+}
+
+func testAccESDomainConfig_vpc(randInt int) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc" "elasticsearch_in_vpc" {
+  cidr_block = "192.168.0.0/22"
+}
+
+resource "aws_subnet" "first" {
+  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "192.168.0.0/24"
+}
+
+resource "aws_subnet" "second" {
+  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  cidr_block        = "192.168.1.0/24"
+}
+
+resource "aws_security_group" "first" {
+  vpc_id = "${aws_vpc.elasticsearch_in_vpc.id}"
+}
+
+resource "aws_security_group" "second" {
+  vpc_id = "${aws_vpc.elasticsearch_in_vpc.id}"
+}
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+  ebs_options {
+    ebs_enabled = false
+  }
+
+  cluster_config {
+    instance_count = 2
+    zone_awareness_enabled = true
+    instance_type = "r3.large.elasticsearch"
+  }
+
+  vpc_options {
+    security_group_ids = ["${aws_security_group.first.id}", "${aws_security_group.second.id}"]
+    subnet_ids = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
+  }
+}
+`, randInt)
+}
+
+func testAccESDomainConfig_vpc_update(randInt int, update bool) string {
+	var sg_ids, subnet_string string
+	if update {
+		sg_ids = "${aws_security_group.first.id}\", \"${aws_security_group.second.id}"
+		subnet_string = "second"
+	} else {
+		sg_ids = "${aws_security_group.first.id}"
+		subnet_string = "first"
+	}
+
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc" "elasticsearch_in_vpc" {
+  cidr_block = "192.168.0.0/22"
+}
+
+resource "aws_subnet" "az1_first" {
+  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "192.168.0.0/24"
+}
+
+resource "aws_subnet" "az2_first" {
+  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  cidr_block        = "192.168.1.0/24"
+}
+
+resource "aws_subnet" "az1_second" {
+  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "192.168.2.0/24"
+}
+
+resource "aws_subnet" "az2_second" {
+  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  cidr_block        = "192.168.3.0/24"
+}
+
+resource "aws_security_group" "first" {
+  vpc_id = "${aws_vpc.elasticsearch_in_vpc.id}"
+}
+
+resource "aws_security_group" "second" {
+  vpc_id = "${aws_vpc.elasticsearch_in_vpc.id}"
+}
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+  ebs_options {
+    ebs_enabled = false
+  }
+
+  cluster_config {
+    instance_count = 2
+    zone_awareness_enabled = true
+    instance_type = "r3.large.elasticsearch"
+  }
+
+  vpc_options {
+    security_group_ids = ["%s"]
+    subnet_ids = ["${aws_subnet.az1_%s.id}", "${aws_subnet.az2_%s.id}"]
+  }
+}
+`, randInt, sg_ids, subnet_string, subnet_string)
 }

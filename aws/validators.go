@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -47,6 +48,22 @@ func validateRdsIdentifierPrefix(v interface{}, k string) (ws []string, errors [
 	if regexp.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot contain two consecutive hyphens", k))
+	}
+	return
+}
+
+func validateRdsEngine(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	validTypes := map[string]bool{
+		"aurora":            true,
+		"aurora-postgresql": true,
+	}
+
+	if _, ok := validTypes[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q contains an invalid engine type %q. Valid types are either %q or %q.",
+			k, value, "aurora", "aurora-postgresql"))
 	}
 	return
 }
@@ -100,9 +117,9 @@ func validateTagFilters(v interface{}, k string) (ws []string, errors []error) {
 
 func validateDbParamGroupName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+	if !regexp.MustCompile(`^[0-9a-z-_]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
+			"only lowercase alphanumeric characters, underscores and hyphens allowed in %q", k))
 	}
 	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -111,6 +128,10 @@ func validateDbParamGroupName(v interface{}, k string) (ws []string, errors []er
 	if regexp.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot contain two consecutive hyphens", k))
+	}
+	if regexp.MustCompile(`__`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot contain two consecutive underscores", k))
 	}
 	if regexp.MustCompile(`-$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -741,7 +762,7 @@ func validateSQSFifoQueueName(v interface{}, k string) (errors []error) {
 
 func validateSNSSubscriptionProtocol(v interface{}, k string) (ws []string, errors []error) {
 	value := strings.ToLower(v.(string))
-	forbidden := []string{"email", "sms"}
+	forbidden := []string{"email"}
 	for _, f := range forbidden {
 		if strings.Contains(value, f) {
 			errors = append(
@@ -797,7 +818,7 @@ func validateOnceADayWindowFormat(v interface{}, k string) (ws []string, errors 
 
 func validateRoute53RecordType(v interface{}, k string) (ws []string, errors []error) {
 	// Valid Record types
-	// SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA
+	// SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA, CAA
 	validTypes := map[string]struct{}{
 		"SOA":   {},
 		"A":     {},
@@ -810,12 +831,13 @@ func validateRoute53RecordType(v interface{}, k string) (ws []string, errors []e
 		"SRV":   {},
 		"SPF":   {},
 		"AAAA":  {},
+		"CAA":   {},
 	}
 
 	value := v.(string)
 	if _, ok := validTypes[value]; !ok {
 		errors = append(errors, fmt.Errorf(
-			"%q must be one of [SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA]", k))
+			"%q must be one of [SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA, CAA]", k))
 	}
 	return
 }
@@ -873,6 +895,22 @@ func validateAwsEmrEbsVolumeType(v interface{}, k string) (ws []string, errors [
 	if _, ok := validTypes[value]; !ok {
 		errors = append(errors, fmt.Errorf(
 			"%q must be one of ['gp2', 'io1', 'standard']", k))
+	}
+	return
+}
+
+func validateAwsEmrInstanceGroupRole(v interface{}, k string) (ws []string, errors []error) {
+	validRoles := map[string]struct{}{
+		"MASTER": {},
+		"CORE":   {},
+		"TASK":   {},
+	}
+
+	value := v.(string)
+
+	if _, ok := validRoles[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of ['MASTER', 'CORE', 'TASK']", k))
 	}
 	return
 }
@@ -1005,6 +1043,10 @@ func validateAppautoscalingScalableDimension(v interface{}, k string) (ws []stri
 		"ecs:service:DesiredCount":                     true,
 		"ec2:spot-fleet-request:TargetCapacity":        true,
 		"elasticmapreduce:instancegroup:InstanceCount": true,
+		"dynamodb:table:ReadCapacityUnits":             true,
+		"dynamodb:table:WriteCapacityUnits":            true,
+		"dynamodb:index:ReadCapacityUnits":             true,
+		"dynamodb:index:WriteCapacityUnits":            true,
 	}
 
 	if !dimensions[value] {
@@ -1018,11 +1060,58 @@ func validateAppautoscalingServiceNamespace(v interface{}, k string) (ws []strin
 	namespaces := map[string]bool{
 		"ecs":              true,
 		"ec2":              true,
+		"dynamodb":         true,
 		"elasticmapreduce": true,
 	}
 
 	if !namespaces[value] {
 		errors = append(errors, fmt.Errorf("%q must be a valid service namespace value: %q", k, value))
+	}
+	return
+}
+
+func validateAppautoscalingCustomizedMetricSpecificationStatistic(v interface{}, k string) (ws []string, errors []error) {
+	validStatistic := []string{
+		"Average",
+		"Minimum",
+		"Maximum",
+		"SampleCount",
+		"Sum",
+	}
+	statistic := v.(string)
+	for _, o := range validStatistic {
+		if statistic == o {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid statistic %q. Valid statistic are %q.",
+		k, statistic, validStatistic))
+	return
+}
+
+func validateAppautoscalingPredefinedMetricSpecification(v interface{}, k string) (ws []string, errors []error) {
+	validMetrics := []string{
+		"DynamoDBReadCapacityUtilization",
+		"DynamoDBWriteCapacityUtilization",
+	}
+	metric := v.(string)
+	for _, o := range validMetrics {
+		if metric == o {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid metric %q. Valid metric are %q.",
+		k, metric, validMetrics))
+	return
+}
+
+func validateAppautoscalingPredefinedResourceLabel(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 1023 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 1023 characters", k))
 	}
 	return
 }
@@ -1233,7 +1322,7 @@ func validateDbOptionGroupNamePrefix(v interface{}, k string) (ws []string, erro
 	return
 }
 
-func validateAwsAlbTargetGroupName(v interface{}, k string) (ws []string, errors []error) {
+func validateAwsLbTargetGroupName(v interface{}, k string) (ws []string, errors []error) {
 	name := v.(string)
 	if len(name) > 32 {
 		errors = append(errors, fmt.Errorf("%q (%q) cannot be longer than '32' characters", k, name))
@@ -1241,7 +1330,7 @@ func validateAwsAlbTargetGroupName(v interface{}, k string) (ws []string, errors
 	return
 }
 
-func validateAwsAlbTargetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validateAwsLbTargetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
 	name := v.(string)
 	if len(name) > 32 {
 		errors = append(errors, fmt.Errorf("%q (%q) cannot be longer than '6' characters", k, name))
@@ -1372,6 +1461,19 @@ func validateIamRoleDescription(v interface{}, k string) (ws []string, errors []
 	return
 }
 
+func validateAwsSSMName(v interface{}, k string) (ws []string, errors []error) {
+	// http://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#EC2-CreateDocument-request-Name
+	value := v.(string)
+
+	if !regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"Only alphanumeric characters, hyphens, dots & underscores allowed in %q: %q (Must satisfy regular expression pattern: ^[a-zA-Z0-9_\\-.]{3,128}$)",
+			k, value))
+	}
+
+	return
+}
+
 func validateSsmParameterType(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	types := map[string]bool{
@@ -1383,5 +1485,169 @@ func validateSsmParameterType(v interface{}, k string) (ws []string, errors []er
 	if !types[value] {
 		errors = append(errors, fmt.Errorf("Parameter type %s is invalid. Valid types are String, StringList or SecureString", value))
 	}
+	return
+}
+
+func validateBatchName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[A-Za-z0-9_-]{1,128}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q (%q) must be up to 128 letters (uppercase and lowercase), numbers, hyphens, and underscores.", k, v))
+	}
+	return
+}
+
+func validateSecurityGroupRuleDescription(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 255 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 255 characters: %q", k, value))
+	}
+
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpRange.html
+	pattern := `^[A-Za-z0-9 \.\_\-\:\/\(\)\#\,\@\[\]\+\=\;\{\}\!\$\*]+$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q doesn't comply with restrictions (%q): %q",
+			k, pattern, value))
+	}
+	return
+}
+
+func validateServiceCatalogPortfolioName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) > 20) || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("Service catalog name must be between 1 and 20 characters."))
+	}
+	return
+}
+
+func validateServiceCatalogPortfolioDescription(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 2000 {
+		errors = append(errors, fmt.Errorf("Service catalog description must be less than 2000 characters."))
+	}
+	return
+}
+
+func validateServiceCatalogPortfolioProviderName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) > 20) || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("Service catalog provider name must be between 1 and 20 characters."))
+	}
+	return
+}
+
+func validateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(v map[string]interface{}) (errors []error) {
+	t := v["type"].(string)
+	isRequired := t == cognitoidentity.RoleMappingTypeToken || t == cognitoidentity.RoleMappingTypeRules
+
+	if value, ok := v["ambiguous_role_resolution"]; (!ok || value == "") && isRequired {
+		errors = append(errors, fmt.Errorf("Ambiguous Role Resolution must be defined when \"type\" equals \"Token\" or \"Rules\""))
+	}
+
+	return
+}
+
+func validateCognitoRoleMappingsRulesConfiguration(v map[string]interface{}) (errors []error) {
+	t := v["type"].(string)
+	value, ok := v["mapping_rule"]
+	valLength := len(value.([]interface{}))
+
+	if (!ok || valLength == 0) && t == cognitoidentity.RoleMappingTypeRules {
+		errors = append(errors, fmt.Errorf("mapping_rule is required for Rules"))
+	}
+
+	if (ok || valLength > 0) && t == cognitoidentity.RoleMappingTypeToken {
+		errors = append(errors, fmt.Errorf("mapping_rule must not be set for Token based role mapping"))
+	}
+
+	return
+}
+
+func validateCognitoRoleMappingsAmbiguousRoleResolution(v interface{}, k string) (ws []string, errors []error) {
+	validValues := []string{
+		cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
+		cognitoidentity.AmbiguousRoleResolutionTypeDeny,
+	}
+	value := v.(string)
+	for _, s := range validValues {
+		if value == s {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid value %q. Valid values are %q.",
+		k, value, validValues))
+	return
+}
+
+func validateCognitoRoleMappingsRulesClaim(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if !regexp.MustCompile("^[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+$").MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric caracters, dots, underscores, colons, slashes and hyphens", k))
+	}
+
+	return
+}
+
+func validateCognitoRoleMappingsRulesMatchType(v interface{}, k string) (ws []string, errors []error) {
+	validValues := []string{
+		cognitoidentity.MappingRuleMatchTypeEquals,
+		cognitoidentity.MappingRuleMatchTypeContains,
+		cognitoidentity.MappingRuleMatchTypeStartsWith,
+		cognitoidentity.MappingRuleMatchTypeNotEqual,
+	}
+	value := v.(string)
+	for _, s := range validValues {
+		if value == s {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid value %q. Valid values are %q.",
+		k, value, validValues))
+	return
+}
+
+func validateCognitoRoleMappingsRulesValue(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) < 1 {
+		errors = append(errors, fmt.Errorf("%q cannot be less than 1 caracter", k))
+	}
+
+	if len(value) > 128 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 1 caracters", k))
+	}
+
+	return
+}
+
+func validateCognitoRoleMappingsType(v interface{}, k string) (ws []string, errors []error) {
+	validValues := []string{
+		cognitoidentity.RoleMappingTypeToken,
+		cognitoidentity.RoleMappingTypeRules,
+	}
+	value := v.(string)
+	for _, s := range validValues {
+		if value == s {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid value %q. Valid values are %q.",
+		k, value, validValues))
+	return
+}
+
+// Validates that either authenticated or unauthenticated is defined
+func validateCognitoRoles(v map[string]interface{}, k string) (errors []error) {
+	_, hasAuthenticated := v["authenticated"].(string)
+	_, hasUnauthenticated := v["authenticated"].(string)
+
+	if !hasAuthenticated && !hasUnauthenticated {
+		errors = append(errors, fmt.Errorf("%q: Either \"authenticated\" or \"unauthenticated\" must be defined", k))
+	}
+
 	return
 }

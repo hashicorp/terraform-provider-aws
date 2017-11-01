@@ -52,9 +52,9 @@ EOF
     propagate_at_launch = true
   }
 
-timeouts {
+  timeouts {
     delete = "15m"
-}
+  }
 
   tag {
     key                 = "lorem"

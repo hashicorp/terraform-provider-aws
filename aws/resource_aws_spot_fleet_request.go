@@ -274,7 +274,6 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							},
 							Set: spotFleetTagToHash,
 						},
-
 						"tags": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -301,6 +300,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Optional: true,
 				Default:  "Default",
 				ForceNew: false,
+			},
+			"instance_interruption_behaviour": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "terminate",
+				ForceNew: true,
 			},
 			"spot_price": {
 				Type:     schema.TypeString,
@@ -486,6 +491,21 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 		}
 	}
 
+	if m, ok := d["tags"].(map[string]interface{}); ok && len(m) > 0 {
+		tagsSpec := make([]*ec2.SpotFleetTagSpecification, 0)
+
+		tags := tagsFromMap(m)
+
+		spec := &ec2.SpotFleetTagSpecification{
+			ResourceType: aws.String("instance"),
+			Tags:         tags,
+		}
+
+		tagsSpec = append(tagsSpec, spec)
+
+		opts.TagSpecifications = tagsSpec
+	}
+
 	subnetId, hasSubnetId := d["subnet_id"]
 	if hasSubnetId {
 		opts.SubnetId = aws.String(subnetId.(string))
@@ -667,6 +687,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		ClientToken:                      aws.String(resource.UniqueId()),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
+		InstanceInterruptionBehavior:     aws.String(d.Get("instance_interruption_behaviour").(string)),
 	}
 
 	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok {
@@ -903,6 +924,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("replace_unhealthy_instances", config.ReplaceUnhealthyInstances)
+	d.Set("instance_interruption_behaviour", config.InstanceInterruptionBehavior)
 	d.Set("launch_specification", launchSpecsToSet(config.LaunchSpecifications, conn))
 
 	return nil
@@ -985,6 +1007,15 @@ func launchSpecToMap(l *ec2.SpotFleetLaunchSpecification, rootDevName *string) m
 
 	if l.WeightedCapacity != nil {
 		m["weighted_capacity"] = strconv.FormatFloat(*l.WeightedCapacity, 'f', 0, 64)
+	}
+
+	if l.TagSpecifications != nil {
+		for _, tagSpecs := range l.TagSpecifications {
+			// only "instance" tags are currently supported: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetTagSpecification.html
+			if *(tagSpecs.ResourceType) == "instance" {
+				m["tags"] = tagsToMap(tagSpecs.Tags)
+			}
+		}
 	}
 
 	return m

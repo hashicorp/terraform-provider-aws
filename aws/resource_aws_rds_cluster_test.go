@@ -36,6 +36,10 @@ func TestAccAWSRDSCluster_basic(t *testing.T) {
 						"aws_rds_cluster.default", "reader_endpoint"),
 					resource.TestCheckResourceAttrSet(
 						"aws_rds_cluster.default", "cluster_resource_id"),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster.default", "engine", "aurora"),
+					resource.TestCheckResourceAttrSet(
+						"aws_rds_cluster.default", "engine_version"),
 				),
 			},
 		},
@@ -440,12 +444,18 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
+	tags {
+		Name = "testAccAWSClusterConfig_namePrefix"
+	}
 }
 
 resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
+	tags {
+		Name = "testAccAWSClusterConfig_namePrefix"
+	}
 }
 
 resource "aws_db_subnet_group" "test" {

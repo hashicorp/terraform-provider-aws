@@ -15,30 +15,32 @@ _optionally_ (see below) content of an object stored inside S3 bucket.
 
 ## Example Usage
 
+The following example retrieves a text object (which must have a `Content-Type`
+value starting with `text/`) and uses it as the `user_data` for an EC2 instance:
+
+```hcl
+data "aws_s3_bucket_object" "bootstrap_script" {
+  bucket = "ourcorp-deploy-config"
+  key    = "ec2-bootstrap-script.sh"
+}
+
+resource "aws_instance" "example" {
+  instance_type = "t2.micro"
+  ami           = "ami-2757f631"
+  user_data     = "${data.aws_s3_bucket_object.bootstrap_script.body}"
+}
+```
+
+The following, more-complex example retrieves only the metadata for a zip
+file stored in S3, which is then used to pass the most recent `version_id`
+to AWS Lambda for use as a function implementation. More information about
+Lambda functions is available in the documentation for
+[`aws_lambda_function`](/docs/providers/aws/r/lambda_function.html).
+
 ```hcl
 data "aws_s3_bucket_object" "lambda" {
-  bucket = "my-lambda-functions"
+  bucket = "ourcorp-lambda-functions"
   key    = "hello-world.zip"
-}
-
-resource "aws_iam_role" "iam_for_lambda" {
-  name = "iam_for_lambda"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
 }
 
 resource "aws_lambda_function" "test_lambda" {
@@ -46,7 +48,7 @@ resource "aws_lambda_function" "test_lambda" {
   s3_key            = "${data.aws_s3_bucket_object.lambda.key}"
   s3_object_version = "${data.aws_s3_bucket_object.lambda.version_id}"
   function_name     = "lambda_function_name"
-  role              = "${aws_iam_role.iam_for_lambda.arn}"
+  role              = "${aws_iam_role.iam_for_lambda.arn}" # (not shown)
   handler           = "exports.test"
 }
 ```

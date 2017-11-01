@@ -42,6 +42,10 @@ resource "aws_spot_fleet_request" "cheap_compute" {
       volume_size = "300"
       volume_type = "gp2"
     }
+
+    tags {
+      Name = "spot-fleet-example"
+    }
   }
 }
 ```
@@ -90,8 +94,7 @@ across different markets and instance types.
 
     **Note:** This takes in similar but not
     identical inputs as [`aws_instance`](instance.html).  There are limitations on
-    what you can specify (tags, for example, are not supported). See the
-    list of officially supported inputs in the
+    what you can specify. See the list of officially supported inputs in the
     [reference documentation](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetLaunchSpecification.html). Any normal [`aws_instance`](instance.html) parameter that corresponds to those inputs may be used.
 
 * `spot_price` - (Required) The bid price per unit hour.
@@ -109,6 +112,9 @@ lowestPrice.
   request is decreased below the current size of the Spot fleet.
 * `terminate_instances_with_expiration` - Indicates whether running Spot
   instances should be terminated when the Spot fleet request expires.
+* `instance_interruption_behavior` - (Optional) Indicates whether a Spot
+  instance stops or terminates when it is interrupted. Default is
+  `terminate`.
 * `valid_until` - The end date and time of the request, in UTC ISO8601 format
   (for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance
 requests are placed or enabled to fulfill the request. Defaults to 24 hours.

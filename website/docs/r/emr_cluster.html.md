@@ -29,6 +29,8 @@ resource "aws_emr_cluster" "emr-test-cluster" {
     emr_managed_slave_security_group  = "${aws_security_group.sg.id}"
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
+  
+  ebs_root_volume_size     = 100
 
   master_instance_type = "m3.xlarge"
   core_instance_type   = "m3.xlarge"
@@ -65,18 +67,20 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the job flow
 * `release_label` - (Required) The release label for the Amazon EMR release
-* `master_instance_type` - (Required) The EC2 instance type of the master node
+* `master_instance_type` - (Optional) The EC2 instance type of the master node. Exactly one of `master_instance_type` and `instance_group` must be specified.
 * `service_role` - (Required) IAM role that will be assumed by the Amazon EMR service to access AWS resources
 * `security_configuration` - (Optional) The security configuration name to attach to the EMR cluster. Only valid for EMR clusters with `release_label` 4.8.0 or greater
-* `core_instance_type` - (Optional) The EC2 instance type of the slave nodes
-* `core_instance_count` - (Optional) Number of Amazon EC2 instances used to execute the job flow. EMR will use one node as the cluster's master node and use the remainder of the nodes (`core_instance_count`-1) as core nodes. Default `1`
+* `core_instance_type` - (Optional) The EC2 instance type of the slave nodes. Cannot be specified if `instance_groups` is set
+* `core_instance_count` - (Optional) Number of Amazon EC2 instances used to execute the job flow. EMR will use one node as the cluster's master node and use the remainder of the nodes (`core_instance_count`-1) as core nodes. Cannot be specified if `instance_groups` is set. Default `1`
+* `instance_group` - (Optional) A list of `instance_group` objects for each instance group in the cluster. Exactly one of `master_instance_type` and `instance_group` must be specified. If `instance_group` is set, then it must contain a configuration block for at least the `MASTER` instance group type (as well as any additional instance groups). Defined below
 * `log_uri` - (Optional) S3 bucket to write the log files of the job flow. If a value
 	is not provided, logs are not created
 * `applications` - (Optional) A list of applications for the cluster. Valid values are: `Flink`, `Hadoop`, `Hive`, `Mahout`, `Pig`, and `Spark`. Case insensitive
-* `termination_protection` - (Optional) Switch on/off termination protection (default is off) 
+* `termination_protection` - (Optional) Switch on/off termination protection (default is off)
 * `keep_job_flow_alive_when_no_steps` - (Optional) Switch on/off run cluster with no steps or when all steps are complete (default is on)
 * `ec2_attributes` - (Optional) Attributes for the EC2 instances running the job
 flow. Defined below
+* `ebs_root_volume_size` - (Optional) Size in GiB of the EBS root device volume of the Linux AMI that is used for each EC2 instance. Available in Amazon EMR version 4.x and later.
 * `bootstrap_action` - (Optional) List of bootstrap actions that will be run before Hadoop is started on
 	the cluster nodes. Defined below
 * `configurations` - (Optional) List of configurations supplied for the EMR cluster you are creating
@@ -93,14 +97,49 @@ Attributes for the Amazon EC2 instances running the job flow
 	node as the user called `hadoop`
 * `subnet_id` - (Optional) VPC subnet id where you want the job flow to launch.
 Cannot specify the `cc1.4xlarge` instance type for nodes of a job flow launched in a Amazon VPC
-* `additional_master_security_groups` - (Optional) List of additional Amazon EC2 security group IDs for the master node
-* `additional_slave_security_groups` - (Optional) List of additional Amazon EC2 security group IDs for the slave nodes
+* `additional_master_security_groups` - (Optional) String containing a comma separated list of additional Amazon EC2 security group IDs for the master node
+* `additional_slave_security_groups` - (Optional) String containing a comma separated list of additional Amazon EC2 security group IDs for the slave nodes as a comma separated string
 * `emr_managed_master_security_group` - (Optional) Identifier of the Amazon EC2 EMR-Managed security group for the master node
 * `emr_managed_slave_security_group` - (Optional) Identifier of the Amazon EC2 EMR-Managed security group for the slave nodes
 * `service_access_security_group` - (Optional) Identifier of the Amazon EC2 service-access security group - required when the cluster runs on a private subnet
 * `instance_profile` - (Required) Instance Profile for EC2 instances of the cluster assume this role
 
-~> **NOTE on EMR-Managed security groups:** These security groups will have any missing inbound or outbound access rules added and maintained by AWS, to ensure proper communication between instances in a cluster. Maintenance of the security group rules by AWS may lead Terraform to fail because of a race condition between Terraform and AWS in managing the rules. To avoid this, make the `emr_cluster` dependent on all the required security group rules. See [Amazon EMR-Managed Security Groups](http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-man-sec-groups.html) for more information about the EMR-managed security group rules.
+~> **NOTE on EMR-Managed security groups:** These security groups will have any
+missing inbound or outbound access rules added and maintained by AWS, to ensure
+proper communication between instances in a cluster. The EMR service will
+maintain these rules for groups provided in `emr_managed_master_security_group`
+and `emr_managed_slave_security_group`; attempts to remove the required rules
+may succeed, only for the EMR service to re-add them in a matter of minutes.
+This may cause Terraform to fail to destroy an environment that contains an EMR
+cluster, because the EMR service does not revoke rules added on deletion,
+leaving a cyclic dependency between the security groups that prevents their
+deletion. To avoid this, use the `revoke_rules_on_delete` optional attribute for
+any Security Group used in `emr_managed_master_security_group` and
+`emr_managed_slave_security_group`. See [Amazon EMR-Managed Security
+Groups](http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-man-sec-groups.html)
+for more information about the EMR-managed security group rules.
+
+
+## instance\_group
+
+Attributes for each task instance group in the cluster
+
+* `instance_role` - (Required) The role of the instance group in the cluster. Valid values are: `MASTER`, `CORE`, and `TASK`.
+* `instance_type` - (Required) The EC2 instance type for all instances in the instance group
+* `instance_count` - (Optional) Target number of instances for the instance group
+* `name` - (Optional) Friendly name given to the instance group
+* `bid_price` - (Optional) If set, the bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances. `bid_price` can not be set for the `MASTER` instance group, since that group must always be On-Demand
+* `ebs_config` - (Optional) A list of attributes for the EBS volumes attached to each instance in the instance group. Each `ebs_config` defined will result in additional EBS volumes being attached to _each_ instance in the instance group. Defined below
+
+
+## ebs\_config
+
+Attributes for the EBS volumes attached to each EC2 instance in the `instance_group`
+
+* `size` - (Required) The volume size, in gibibytes (GiB).
+* `type` - (Required) The volume type. Valid options are `gp2`, `io1`, and `standard`.
+* `iops` - (Optional) The number of I/O operations per second (IOPS) that the volume supports
+* `volumes_per_instance` - (Optional) The number of EBS volumes with this configuration to attach to each EC2 instance in the instance group (default is 1)
 
 
 ## bootstrap\_action

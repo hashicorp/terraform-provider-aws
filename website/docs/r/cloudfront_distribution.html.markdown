@@ -175,8 +175,7 @@ of several sub-resources - these resources are laid out below.
     handles query strings, cookies and headers (maximum one).
 
   * `lambda_function_association` (Optional) - A config block that triggers a lambda function with
-  specific actions. Defined below, maximum 4. **Lambda@Edge is in technical
-  Preview, and must be enabled on your AWS account to be used**
+  specific actions. Defined below, maximum 4.
 
   * `max_ttl` (Required) - The maximum amount of time (in seconds) that an
     object is in a CloudFront cache before CloudFront forwards another request
@@ -356,10 +355,14 @@ The arguments of `geo_restriction` are:
     this, `acm_certificate_arn`, or `cloudfront_default_certificate`.
 
   * `minimum_protocol_version` - The minimum version of the SSL protocol that
-    you want CloudFront to use for HTTPS connections. One of `SSLv3` or `TLSv1`.
-    Default: `SSLv3`. **NOTE**: If you are using a custom certificate (specified
-    with `acm_certificate_arn` or `iam_certificate_id`), and have specified
-    `sni-only` in `ssl_support_method`, `TLSv1` must be specified.
+    you want CloudFront to use for HTTPS connections. One of `SSLv3`, `TLSv1`,
+    `TLSv1_2016`, `TLSv1.1_2016` or `TLSv1.2_2018`. Default: `TLSv1`. **NOTE**:
+    If you are using a custom certificate (specified with `acm_certificate_arn`
+    or `iam_certificate_id`), and have specified `sni-only` in
+    `ssl_support_method`, `TLSv1` or later must be specified. If you have
+    specified `vip` in `ssl_support_method`, only `SSLv3` or `TLSv1` can be
+    specified. If you have specified `cloudfront_default_certificate`, `TLSv1`
+    must be specified.
 
   * `ssl_support_method`: Specifies how you want CloudFront to serve HTTPS
     requests. One of `vip` or `sni-only`. Required if you specify

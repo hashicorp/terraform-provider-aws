@@ -32,7 +32,7 @@ $ make build
 
 Using the provider
 ----------------------
-## Fill in for each provider
+If you're building the provider, follow the instructions to [install it as a plugin.](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin) to install it as a plugin. After placing it into your plugins directory,  run `terraform init` to initialize it.
 
 Developing the Provider
 ---------------------------
@@ -49,6 +49,8 @@ $ $GOPATH/bin/terraform-provider-aws
 ```
 
 In order to test the provider, you can simply run `make test`.
+
+*Note:* Make sure no `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY` variables are set, and there's no `[default]` section in the AWS credentials file `~/.aws/credentials`.
 
 ```sh
 $ make test

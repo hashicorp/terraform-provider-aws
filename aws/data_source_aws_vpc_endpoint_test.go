@@ -13,12 +13,30 @@ func TestAccDataSourceAwsVpcEndpoint_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsVpcEndpointConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsVpcEndpointCheckExists("data.aws_vpc_endpoint.s3"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_endpoint.s3", "prefix_list_id"),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsVpcEndpoint_byId(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsVpcEndpointConfigById,
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAwsVpcEndpointCheckExists("data.aws_vpc_endpoint.by_id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_endpoint.by_id", "prefix_list_id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_endpoint.by_id", "id"),
+				),
 			},
 		},
 	})
@@ -29,7 +47,7 @@ func TestAccDataSourceAwsVpcEndpoint_withRouteTable(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsVpcEndpointWithRouteTableConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsVpcEndpointCheckExists("data.aws_vpc_endpoint.s3"),
@@ -69,10 +87,6 @@ func testAccDataSourceAwsVpcEndpointCheckExists(name string) resource.TestCheckF
 }
 
 const testAccDataSourceAwsVpcEndpointConfig = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -95,11 +109,26 @@ data "aws_vpc_endpoint" "s3" {
 }
 `
 
-const testAccDataSourceAwsVpcEndpointWithRouteTableConfig = `
-provider "aws" {
-  region = "us-west-2"
+const testAccDataSourceAwsVpcEndpointConfigById = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+
+  tags {
+	  Name = "terraform-testacc-vpc-endpoint-data-source-foo"
+  }
 }
 
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id = "${aws_vpc.foo.id}"
+  service_name = "com.amazonaws.us-west-2.s3"
+}
+
+data "aws_vpc_endpoint" "by_id" {
+  id = "${aws_vpc_endpoint.s3.id}"
+}
+`
+
+const testAccDataSourceAwsVpcEndpointWithRouteTableConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 

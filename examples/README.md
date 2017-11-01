@@ -11,7 +11,7 @@ For example:
 
 ```
 $ git clone https://github.com/terraform-providers/terraform-provider-aws
-$ cd terraform-provider-aws/examples/aws-two-tier
+$ cd terraform-provider-aws/examples/two-tier
 $ terraform apply
 ...
 ```
