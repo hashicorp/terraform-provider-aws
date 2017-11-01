@@ -1,5 +1,9 @@
 ## 1.2.1 (Unreleased)
 
+IMPROVEMENTS:
+
+* data-source/efs_file_system: Added dns_name [GH-2105]
+
 BUG FIXES:
 
 * resource/aws_cloudwatch_log_metric_filter: Fix pattern length check [GH-2107]
