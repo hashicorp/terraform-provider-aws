@@ -1,5 +1,9 @@
 ## 1.2.1 (Unreleased)
 
+FEATURES:
+
+* **NEW Data Source:** `aws_rds_cluster` [GH-2070]
+
 IMPROVEMENTS:
 
 * data-source/efs_file_system: Added dns_name [GH-2105]
