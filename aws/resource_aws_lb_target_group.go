@@ -79,6 +79,13 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				ValidateFunc: validateAwsLbTargetGroupDeregistrationDelay,
 			},
 
+			"target_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "instance",
+				ForceNew: true,
+			},
+
 			"stickiness": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -191,10 +198,11 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	params := &elbv2.CreateTargetGroupInput{
-		Name:     aws.String(groupName),
-		Port:     aws.Int64(int64(d.Get("port").(int))),
-		Protocol: aws.String(d.Get("protocol").(string)),
-		VpcId:    aws.String(d.Get("vpc_id").(string)),
+		Name:       aws.String(groupName),
+		Port:       aws.Int64(int64(d.Get("port").(int))),
+		Protocol:   aws.String(d.Get("protocol").(string)),
+		VpcId:      aws.String(d.Get("vpc_id").(string)),
+		TargetType: aws.String(d.Get("target_type").(string)),
 	}
 
 	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
@@ -476,6 +484,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	d.Set("port", targetGroup.Port)
 	d.Set("protocol", targetGroup.Protocol)
 	d.Set("vpc_id", targetGroup.VpcId)
+	d.Set("target_type", targetGroup.TargetType)
 
 	healthCheck := make(map[string]interface{})
 	healthCheck["interval"] = *targetGroup.HealthCheckIntervalSeconds

@@ -342,9 +342,9 @@ func testAccCheckAWSSpotInstanceRequest_InstanceAttributes(
 func testAccCheckAWSSpotInstanceRequest_NetworkInterfaceAttributes(
 	sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
-		if sir.LaunchSpecification.NetworkInterfaces == nil || len(sir.LaunchSpecification.NetworkInterfaces) != 1 {
-			return fmt.Errorf("Error with Spot Instance Network Interface count")
+		nis := sir.LaunchSpecification.NetworkInterfaces
+		if nis == nil || len(nis) != 1 {
+			return fmt.Errorf("Expected exactly 1 network interface, found %d", len(nis))
 		}
 
 		return nil
@@ -354,8 +354,15 @@ func testAccCheckAWSSpotInstanceRequest_NetworkInterfaceAttributes(
 func testAccCheckAWSSpotInstanceRequestAttributesVPC(
 	sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if sir.LaunchSpecification.SubnetId == nil {
-			return fmt.Errorf("SubnetID was not passed, but should have been for this instance to belong to a VPC")
+		nis := sir.LaunchSpecification.NetworkInterfaces
+		if nis == nil || len(nis) != 1 {
+			return fmt.Errorf("Expected exactly 1 network interface, found %d", len(nis))
+		}
+
+		ni := nis[0]
+
+		if ni.SubnetId == nil {
+			return fmt.Errorf("Expected SubnetId not be non-empty for %s as the instance belongs to a VPC", *sir.InstanceId)
 		}
 		return nil
 	}

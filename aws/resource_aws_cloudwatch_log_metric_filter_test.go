@@ -51,6 +51,7 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudwatch_log_metric_filter.foobar", "metric_transformation.0.name", "AccessDeniedCount"),
 					resource.TestCheckResourceAttr("aws_cloudwatch_log_metric_filter.foobar", "metric_transformation.0.namespace", "MyNamespace"),
 					resource.TestCheckResourceAttr("aws_cloudwatch_log_metric_filter.foobar", "metric_transformation.0.value", "2"),
+					resource.TestCheckResourceAttr("aws_cloudwatch_log_metric_filter.foobar", "metric_transformation.0.default_value", "1"),
 					testAccCheckCloudWatchLogMetricFilterTransformation(&mf, &cloudwatchlogs.MetricTransformation{
 						MetricName:      aws.String("AccessDeniedCount"),
 						MetricNamespace: aws.String("MyNamespace"),
@@ -181,6 +182,7 @@ PATTERN
   	name = "AccessDeniedCount"
   	namespace = "MyNamespace"
   	value = "2"
+  	default_value = "1"
   }
 }
 

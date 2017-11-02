@@ -29,10 +29,6 @@ func resourceAwsServiceCatalogPortfolio() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,

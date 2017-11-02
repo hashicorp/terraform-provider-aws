@@ -108,6 +108,9 @@ func (b *ApplyGraphBuilder) Steps() []GraphTransformer {
 		// Add root variables
 		&RootVariableTransformer{Module: b.Module},
 
+		// Add the local values
+		&LocalTransformer{Module: b.Module},
+
 		// Add the outputs
 		&OutputTransformer{Module: b.Module},
 
@@ -116,6 +119,13 @@ func (b *ApplyGraphBuilder) Steps() []GraphTransformer {
 
 		// Connect references so ordering is correct
 		&ReferenceTransformer{},
+
+		// Reverse the edges to outputs and locals, so that
+		// interpolations don't fail during destroy.
+		GraphTransformIf(
+			func() bool { return b.Destroy },
+			&DestroyValueReferenceTransformer{},
+		),
 
 		// Add the node to fix the state count boundaries
 		&CountBoundaryTransformer{},

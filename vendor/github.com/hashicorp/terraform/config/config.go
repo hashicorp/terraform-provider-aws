@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/hil"
 	"github.com/hashicorp/hil/ast"
 	"github.com/hashicorp/terraform/helper/hilmapstructure"
 	"github.com/hashicorp/terraform/plugin/discovery"
@@ -34,6 +33,7 @@ type Config struct {
 	ProviderConfigs []*ProviderConfig
 	Resources       []*Resource
 	Variables       []*Variable
+	Locals          []*Local
 	Outputs         []*Output
 
 	// The fields below can be filled in by loaders for validation
@@ -147,12 +147,18 @@ func (p *Provisioner) Copy() *Provisioner {
 	}
 }
 
-// Variable is a variable defined within the configuration.
+// Variable is a module argument defined within the configuration.
 type Variable struct {
 	Name         string
 	DeclaredType string `mapstructure:"type"`
 	Default      interface{}
 	Description  string
+}
+
+// Local is a local value defined within the configuration.
+type Local struct {
+	Name      string
+	RawConfig *RawConfig
 }
 
 // Output is an output defined within the configuration. An output is
@@ -550,6 +556,7 @@ func (c *Config) Validate() error {
 			case *ResourceVariable:
 			case *TerraformVariable:
 			case *UserVariable:
+			case *LocalVariable:
 
 			default:
 				errs = append(errs, fmt.Errorf(
@@ -558,22 +565,7 @@ func (c *Config) Validate() error {
 			}
 		}
 
-		// Interpolate with a fixed number to verify that its a number.
-		r.RawCount.interpolate(func(root ast.Node) (interface{}, error) {
-			// Execute the node but transform the AST so that it returns
-			// a fixed value of "5" for all interpolations.
-			result, err := hil.Eval(
-				hil.FixedValueTransform(
-					root, &ast.LiteralNode{Value: "5", Typex: ast.TypeString}),
-				nil)
-			if err != nil {
-				return "", err
-			}
-
-			return result.Value, nil
-		})
-		_, err := strconv.ParseInt(r.RawCount.Value().(string), 0, 0)
-		if err != nil {
+		if !r.RawCount.couldBeInteger() {
 			errs = append(errs, fmt.Errorf(
 				"%s: resource count must be an integer",
 				n))
@@ -676,6 +668,29 @@ func (c *Config) Validate() error {
 					id,
 					rv.FullKey()))
 				continue
+			}
+		}
+	}
+
+	// Check that all locals are valid
+	{
+		found := make(map[string]struct{})
+		for _, l := range c.Locals {
+			if _, ok := found[l.Name]; ok {
+				errs = append(errs, fmt.Errorf(
+					"%s: duplicate local. local value names must be unique",
+					l.Name,
+				))
+				continue
+			}
+			found[l.Name] = struct{}{}
+
+			for _, v := range l.RawConfig.Variables {
+				if _, ok := v.(*CountVariable); ok {
+					errs = append(errs, fmt.Errorf(
+						"local %s: count variables are only valid within resources", l.Name,
+					))
+				}
 			}
 		}
 	}

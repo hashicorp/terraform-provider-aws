@@ -6864,4 +6864,7 @@ const (
 
 	// ResourceTypeAwsAutoScalingScheduledAction is a ResourceType enum value
 	ResourceTypeAwsAutoScalingScheduledAction = "AWS::AutoScaling::ScheduledAction"
+
+	// ResourceTypeAwsCodeBuildProject is a ResourceType enum value
+	ResourceTypeAwsCodeBuildProject = "AWS::CodeBuild::Project"
 )
