@@ -1651,3 +1651,21 @@ func validateCognitoRoles(v map[string]interface{}, k string) (errors []error) {
 
 	return
 }
+
+func validateDxLagBandWidth(v interface{}, k string) (ws []string, errors []error) {
+	val, ok := v.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+
+	validBandWidth := []string{"1Gbps", "10Gbps"}
+	for _, str := range validBandWidth {
+		if val == str {
+			return
+		}
+	}
+
+	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validBandWidth, val))
+	return
+}
