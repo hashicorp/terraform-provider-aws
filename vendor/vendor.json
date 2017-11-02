@@ -519,12 +519,12 @@
 			"versionExact": "v1.12.19"
 		},
 		{
-			"checksumSHA1": "vJAA3F/3UhmdWX7s3r+5YxEUuUg=",
+			"checksumSHA1": "2139YRKSqXN9N49CFTopzwftCDw=",
 			"path": "github.com/aws/aws-sdk-go/service/directconnect",
-			"revision": "ee1f179877b2daf2aaabf71fa900773bf8842253",
-			"revisionTime": "2017-10-26T21:07:55Z",
-			"version": "v1.12.19",
-			"versionExact": "v1.12.19"
+			"revision": "80dcc100bd75b8742a5ffc6cfc2200efbe5a59d3",
+			"revisionTime": "2017-11-01T17:10:25Z",
+			"version": "v1.12.20",
+			"versionExact": "v1.12.20"
 		},
 		{
 			"checksumSHA1": "1O8BtYGfkXglIqgl/uxunrq3Djs=",
