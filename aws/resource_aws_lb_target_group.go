@@ -427,7 +427,7 @@ func validateAwsLbTargetGroupHealthCheckProtocol(v interface{}, k string) (ws []
 		return
 	}
 
-	errors = append(errors, fmt.Errorf("%q must be either %q or %q", k, "HTTP", "HTTPS", "TCP"))
+	errors = append(errors, fmt.Errorf("%q must be either %q, %q or %q", k, "HTTP", "HTTPS", "TCP"))
 	return
 }
 
@@ -445,7 +445,7 @@ func validateAwsLbTargetGroupProtocol(v interface{}, k string) (ws []string, err
 		return
 	}
 
-	errors = append(errors, fmt.Errorf("%q must be either %q or %q", k, "HTTP", "HTTPS", "TCP"))
+	errors = append(errors, fmt.Errorf("%q must be either %q, %q or %q", k, "HTTP", "HTTPS", "TCP"))
 	return
 }
 
