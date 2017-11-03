@@ -1346,7 +1346,7 @@ func testAccAWSLBConfig_accessLogs(enabled bool, lbName, bucketName string) stri
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic1"
+    Name = "TestAccAWSALB_basic1"
   }
 }
 
