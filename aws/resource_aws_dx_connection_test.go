@@ -44,7 +44,7 @@ func testAccCheckAwsDxConnectionDestroy(s *terraform.State) error {
 			return err
 		}
 		for _, v := range resp.Connections {
-			if *v.ConnectionId == rs.Primary.ID && !(*v.ConnectionState == directconnect.ConnectionStateDeleted || *v.ConnectionState == directconnect.ConnectionStateDeleted) {
+			if *v.ConnectionId == rs.Primary.ID && !(*v.ConnectionState == directconnect.ConnectionStateDeleted || *v.ConnectionState == directconnect.ConnectionStateDeleting) {
 				return fmt.Errorf("[DESTROY ERROR] Dx Connection (%s) not deleted", rs.Primary.ID)
 			}
 		}
