@@ -1,9 +1,9 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_athena_database"
-sidebar_current: "docs-aws-resource-athena-database"
+page_title: "AWS: aws_dx_lag"
+sidebar_current: "docs-aws-resource-dx-lag"
 description: |-  
-  Provides an Athena database.
+  Provides a Direct Connect LAG.
 ---
 
 # aws_dx_lag
