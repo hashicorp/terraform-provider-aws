@@ -647,6 +647,12 @@
 			"versionExact": "v1.12.19"
 		},
 		{
+			"checksumSHA1": "3AcW4E/TxmNXfklpo1szXmY+QzE=",
+			"path": "github.com/aws/aws-sdk-go/service/glue",
+			"revision": "3e9e64d88a3aba2c745efa24d45620400c527f04",
+			"revisionTime": "2017-11-03T19:05:25Z"
+		},
+		{
 			"checksumSHA1": "a+tKLYUEM3ZftY52P2ywtIxlCxE=",
 			"path": "github.com/aws/aws-sdk-go/service/iam",
 			"revision": "ee1f179877b2daf2aaabf71fa900773bf8842253",
