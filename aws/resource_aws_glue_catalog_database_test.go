@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/aws/aws-sdk-go/aws"
 )
 
 func TestAccAWSGlueCatalogDatabase_basic(t *testing.T) {
@@ -17,7 +18,7 @@ func TestAccAWSGlueCatalogDatabase_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckGlueDatabase,
+		CheckDestroy: testAccCheckGlueDatabaseDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccGlueCatalogDatabase_basic(rInt),
@@ -29,7 +30,7 @@ func TestAccAWSGlueCatalogDatabase_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckGlueDatabase(s *terraform.State) error {
+func testAccCheckGlueDatabaseDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).glueconn
 
 	for _, rs := range s.RootModule().Resources {
@@ -38,10 +39,11 @@ func testAccCheckGlueDatabase(s *terraform.State) error {
 		}
 
 		input := &glue.GetDatabaseInput{
+			Name: aws.String(rs.Primary.ID),
 		}
 		if _, err := conn.GetDatabase(input); err != nil {
 			//Verify the error is what we want
-			if ae, ok := err.(awserr.Error); ok && ae.Code() == "" {
+			if ae, ok := err.(awserr.Error); ok && ae.Code() == "EntityNotFoundException" {
 				continue
 			}
 
@@ -73,7 +75,7 @@ func testAccCheckGlueCatalogDatabaseExists(name string) resource.TestCheckFunc {
 
 		glueconn := testAccProvider.Meta().(*AWSClient).glueconn
 		out, err := glueconn.GetDatabase(&glue.GetDatabaseInput{
-
+			Name: aws.String(rs.Primary.ID),
 		})
 
 		if err != nil {
