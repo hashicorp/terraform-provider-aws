@@ -75,6 +75,7 @@ import (
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/aws/aws-sdk-go/service/glue"
 )
 
 type Config struct {
@@ -180,6 +181,7 @@ type AWSClient struct {
 	wafregionalconn       *wafregional.WAFRegional
 	iotconn               *iot.IoT
 	batchconn             *batch.Batch
+	glueconn              *glue.Glue
 }
 
 func (c *AWSClient) S3() *s3.S3 {
