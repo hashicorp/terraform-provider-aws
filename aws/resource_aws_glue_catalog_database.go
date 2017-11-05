@@ -119,18 +119,18 @@ func resourceAwsGlueCatalogDatabaseRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error reading Glue Cataloge Database: %s", err.Error())
 	}
 
+	d.Set("name", d.Id())
 	d.Set("create_time", out.Database.CreateTime)
 	d.Set("description", out.Database.Description)
 	d.Set("location_uri", out.Database.LocationUri)
 
+	dParams := make(map[string]string)
 	if len(out.Database.Parameters) > 0 {
-		dParams := make(map[string]*string, len(out.Database.Parameters))
 		for key, value := range out.Database.Parameters {
-			dParams[key] = value
+			dParams[key] = *value
 		}
-	} else {
-		d.Set("parameters", map[string]*string{})
 	}
+	d.Set("parameters", dParams)
 
 	return nil
 }
