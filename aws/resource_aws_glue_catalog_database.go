@@ -1,10 +1,10 @@
 package aws
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/aws/aws-sdk-go/aws"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/terraform/helper/schema"
 	"log"
 )
 
