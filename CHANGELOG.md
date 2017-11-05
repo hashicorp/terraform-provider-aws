@@ -1,8 +1,8 @@
-## 1.2.1 (Unreleased)
+## 1.3.0 (Unreleased)
 
 FEATURES:
 
-* **NEW Data Source:** `aws_rds_cluster` [GH-2070]
+* **New Data Source:** `aws_rds_cluster` [GH-2070]
 
 IMPROVEMENTS:
 
@@ -14,6 +14,7 @@ BUG FIXES:
 * resource/aws_batch_compute_environment: `compute_environment_name` allows hyphens [GH-2126]
 * resource/aws_batch_job_definition: `name` allows hyphens [GH-2126]
 * resource/aws_elasticache_parameter_group: Raise timeout for retry on pending changes [GH-2134]
+* resource/aws_kms_key: Retry GetKeyRotationStatus on NotFoundException [GH-2133]
 
 BUG FIXES:
 
