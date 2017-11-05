@@ -12,6 +12,7 @@ func resourceAwsGlueCatalogDatabase() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsGlueCatalogDatabaseCreate,
 		Read:   resourceAwsGlueCatalogDatabaseRead,
+		Update: resourceAwsGlueCatalogDatabaseUpdate,
 		Delete: resourceAwsGlueCatalogDatabaseDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -19,20 +20,25 @@ func resourceAwsGlueCatalogDatabase() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"description": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"location_uri": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
+			"parameters": &schema.Schema{
+				Type:     schema.TypeMap,
+				Elem:     schema.TypeString,
+				Optional: true,
+			},
 			"create_time": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"location_uri": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,15 +48,12 @@ func resourceAwsGlueCatalogDatabase() *schema.Resource {
 
 func resourceAwsGlueCatalogDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	glueconn := meta.(*AWSClient).glueconn
+	name := d.Get("name").(string)
 
 	input := &glue.CreateDatabaseInput{
 		DatabaseInput: &glue.DatabaseInput{
-			Name: aws.String(d.Get("name").(string)),
+			Name: aws.String(name),
 		},
-	}
-
-	if description, ok := d.GetOk("description"); ok {
-		input.DatabaseInput.Description = aws.String(description.(string))
 	}
 
 	_, err := glueconn.CreateDatabase(input)
@@ -58,13 +61,48 @@ func resourceAwsGlueCatalogDatabaseCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Error creating Catalogue Database: %s", err)
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(name)
 
 	return resourceAwsGlueCatalogDatabaseUpdate(d, meta)
 }
 
 func resourceAwsGlueCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
-	//glueconn := meta.(*AWSClient).glueconn
+	glueconn := meta.(*AWSClient).glueconn
+	doUpdate := false
+	input := &glue.UpdateDatabaseInput{
+		DatabaseInput: &glue.DatabaseInput{
+			Name: aws.String(d.Id()),
+		},
+		Name: aws.String(d.Id()),
+	}
+
+	if ok := d.HasChange("description"); ok {
+		doUpdate = true
+		input.DatabaseInput.Description = aws.String(
+			d.Get("description").(string),
+		)
+	}
+
+	if ok := d.HasChange("location_uri"); ok {
+		doUpdate = true
+		input.DatabaseInput.LocationUri = aws.String(
+			d.Get("location_uri").(string),
+		)
+	}
+
+	if ok := d.HasChange("parameters"); ok {
+		doUpdate = true
+		input.DatabaseInput.Parameters = make(map[string]*string)
+		for key, value := range d.Get("parameters").(map[string]interface{}) {
+			input.DatabaseInput.Parameters[key] = aws.String(value.(string))
+		}
+	}
+
+	if doUpdate {
+		if _, err := glueconn.UpdateDatabase(input); err != nil {
+			return err
+		}
+	}
 
 	return resourceAwsGlueCatalogDatabaseRead(d, meta)
 }
@@ -84,6 +122,15 @@ func resourceAwsGlueCatalogDatabaseRead(d *schema.ResourceData, meta interface{}
 	d.Set("create_time", out.Database.CreateTime)
 	d.Set("description", out.Database.Description)
 	d.Set("location_uri", out.Database.LocationUri)
+
+	if len(out.Database.Parameters) > 0 {
+		dParams := make(map[string]*string, len(out.Database.Parameters))
+		for key, value := range out.Database.Parameters {
+			dParams[key] = value
+		}
+	} else {
+		d.Set("parameters", map[string]*string{})
+	}
 
 	return nil
 }
