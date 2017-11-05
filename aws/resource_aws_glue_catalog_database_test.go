@@ -24,6 +24,31 @@ func TestAccAWSGlueCatalogDatabase_basic(t *testing.T) {
 				Config: testAccGlueCatalogDatabase_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogDatabaseExists("aws_glue_catalog_database.test"),
+					testAccCheckGlueCatalogDatabaseAttrIs(
+						"aws_glue_catalog_database.test",
+						"description",
+						"A test catalog from terraform",
+					),
+					testAccCheckGlueCatalogDatabaseAttrIs(
+						"aws_glue_catalog_database.test",
+						"location_uri",
+						"my-location",
+					),
+					testAccCheckGlueCatalogDatabaseAttrIs(
+						"aws_glue_catalog_database.test",
+						"parameters.param1",
+						"value1",
+					),
+					testAccCheckGlueCatalogDatabaseAttrIs(
+						"aws_glue_catalog_database.test",
+						"parameters.param2",
+						"1",
+					),
+					testAccCheckGlueCatalogDatabaseAttrIs(
+						"aws_glue_catalog_database.test",
+						"parameters.param3",
+						"50",
+					),
 				),
 			},
 		},
@@ -58,8 +83,35 @@ func testAccGlueCatalogDatabase_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = "my_test_catalog_database_%d"
+  description = "A test catalog from terraform"
+  location_uri = "my-location"
+  parameters {
+	param1 = "value1"
+	param2 = true
+	param3 = 50
+  }
 }
 `, rInt)
+}
+
+func testAccCheckGlueCatalogDatabaseAttrIs(name string, key string, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		if actual, ok := rs.Primary.Attributes[key]; ok {
+			if actual != expected {
+				return fmt.Errorf("Expected '%s', got '%s' in '%s'",
+					expected, actual, name)
+			}
+		} else {
+			return fmt.Errorf("Attribute '%s' not in '%s'", name, key)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckGlueCatalogDatabaseExists(name string) resource.TestCheckFunc {
