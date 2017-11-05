@@ -214,8 +214,6 @@ func dbSnapshotDescriptionAttributes(d *schema.ResourceData, snapshot *rds.DBSna
 	d.Set("vpc_id", snapshot.VpcId)
 	if snapshot.SnapshotCreateTime != nil {
 		d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
-	} else {
-		d.Set("snapshot_create_time", fmt.Sprintf("creating at %s", time.Now().UTC().Format(time.RFC3339)))
 	}
 
 	return nil
