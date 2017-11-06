@@ -96,9 +96,12 @@ resource "aws_lambda_function" "authorizer" {
 
 The following arguments are supported:
 
-* `authorizer_uri` - (Required) The authorizer's Uniform Resource Identifier (URI).
+* `authorizer_uri` - (Optional) The authorizer's Uniform Resource Identifier (URI).
 	For `TOKEN` type, this must be a well-formed Lambda function URI in the form of
 	`arn:aws:apigateway:{region}:lambda:path/{service_api}`. e.g. `arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:012345678912:function:my-function/invocations`
+* `provider_arns` - (Optional) List of Cognito User Pool ARNs associated with the athorizer.
+	For `COGNITO_USER_POOLS` type, this must be a well-formed array of ARN in the form of
+	`arn:aws:cognito-idp:{region}:{account}:userpool/{userpoolId}. e.g. `arn:aws:cognito-idp:us-west-2:012345678912:userpool/us-west-2_ABCDEFGH`
 * `name` - (Required) The name of the authorizer
 * `rest_api_id` - (Required) The ID of the associated REST API
 * `identity_source` - (Optional) The source of the identity in an incoming request.
