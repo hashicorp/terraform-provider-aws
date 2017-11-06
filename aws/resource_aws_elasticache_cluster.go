@@ -176,6 +176,12 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 		Computed: true,
 	}
 
+	resourceSchema["endpoints"] = &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+	}
+
 	resourceSchema["replication_group_id"] = &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
@@ -385,6 +391,10 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 			d.Set("az_mode", "single-az")
 		}
 
+		if err := setEndpointData(d, c); err != nil {
+			return err
+		}
+
 		if err := setCacheNodeData(d, c); err != nil {
 			return err
 		}
@@ -535,6 +545,24 @@ func getCacheNodesToRemove(d *schema.ResourceData, oldNumberOfNodes int, cacheNo
 	}
 
 	return nodesIdsToRemove
+}
+
+func setEndpointData(d *schema.ResourceData, c *elasticache.CacheCluster) error {
+	sortedCacheNodes := make([]*elasticache.CacheNode, len(c.CacheNodes))
+	copy(sortedCacheNodes, c.CacheNodes)
+	sort.Sort(byCacheNodeId(sortedCacheNodes))
+
+	endpointData := []string{}
+
+	for _, node := range sortedCacheNodes {
+		if node.CacheNodeId == nil || node.Endpoint == nil || node.Endpoint.Address == nil || node.Endpoint.Port == nil || node.CustomerAvailabilityZone == nil {
+			return fmt.Errorf("Unexpected nil pointer in: %s", node)
+		}
+		s := fmt.Sprintf("%s:%d", *node.Endpoint.Address, int(*node.Endpoint.Port))
+		endpointData = append(endpointData, s)
+	}
+
+	return d.Set("endpoints", endpointData)
 }
 
 func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error {
