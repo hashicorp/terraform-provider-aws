@@ -50,6 +50,25 @@ func TestAccAWSCloudWatchLogGroup_namePrefix(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchLogGroup_namePrefix_retention(t *testing.T) {
+	var lg cloudwatchlogs.LogGroup
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchLogGroup_namePrefix_retention(acctest.RandString(5)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogGroupExists("aws_cloudwatch_log_group.test", &lg),
+					resource.TestMatchResourceAttr("aws_cloudwatch_log_group.test", "name", regexp.MustCompile("^tf-test-")),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudWatchLogGroup_generatedName(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 
@@ -412,6 +431,15 @@ resource "aws_cloudwatch_log_group" "test" {
     name_prefix = "tf-test-"
 }
 `
+
+func testAccAWSCloudWatchLogGroup_namePrefix_retention(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+		name_prefix = "tf-test-%s"
+		retention_in_days = 7
+}
+		`, rName)
+}
 
 const testAccAWSCloudWatchLogGroup_generatedName = `
 resource "aws_cloudwatch_log_group" "test" {}
