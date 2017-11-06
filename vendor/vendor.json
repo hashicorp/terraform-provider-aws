@@ -651,7 +651,7 @@
 			"path": "github.com/aws/aws-sdk-go/service/glue",
 			"revision": "f2da704aa06ae2df47ad1e86221e6c1abd3b6742",
 			"revisionTime": "2017-11-03T00:05:43Z",
-			"version": "v1.12.21",
+			"version": "=v1.12.21",
 			"versionExact": "v1.12.21"
 		},
 		{
