@@ -2161,6 +2161,62 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 	return []map[string]interface{}{}
 }
 
+func expandCognitoUserPoolPasswordPolicy(config map[string]interface{}) *cognitoidentityprovider.PasswordPolicyType {
+	params := &cognitoidentityprovider.PasswordPolicyType{}
+
+	if v, ok := config["minimum_length"]; ok {
+		params.MinimumLength = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := config["require_lowercase"]; ok {
+		params.RequireLowercase = aws.Bool(v.(bool))
+	}
+
+	if v, ok := config["require_numbers"]; ok {
+		params.RequireNumbers = aws.Bool(v.(bool))
+	}
+
+	if v, ok := config["require_symbols"]; ok {
+		params.RequireSymbols = aws.Bool(v.(bool))
+	}
+
+	if v, ok := config["require_uppercase"]; ok {
+		params.RequireUppercase = aws.Bool(v.(bool))
+	}
+
+	return params
+}
+
+func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPolicyType) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if s == nil {
+		return nil
+	}
+
+	if s.MinimumLength != nil {
+		m["minimum_length"] = *s.MinimumLength
+	}
+
+	if s.RequireLowercase != nil {
+		m["require_lowercase"] = *s.RequireLowercase
+	}
+
+	if s.RequireNumbers != nil {
+		m["require_numbers"] = *s.RequireNumbers
+	}
+
+	if s.RequireSymbols != nil {
+		m["require_symbols"] = *s.RequireSymbols
+	}
+
+	if s.RequireUppercase != nil {
+		m["require_uppercase"] = *s.RequireUppercase
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func flattenCognitoUserPoolSmsConfiguration(s *cognitoidentityprovider.SmsConfigurationType) []map[string]interface{} {
 	m := map[string]interface{}{}
 

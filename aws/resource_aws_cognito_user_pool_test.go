@@ -177,6 +177,41 @@ func TestAccAWSCognitoUserPool_attributes(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPool_withPasswordPolicy(t *testing.T) {
+	name := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withPasswordPolicy(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.#", "1"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.minimum_length", "7"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_lowercase", "true"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_numbers", "false"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_symbols", "true"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_uppercase", "false"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withPasswordPolicyUpdated(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.#", "1"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.minimum_length", "9"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_lowercase", "false"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_numbers", "true"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_symbols", "false"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_uppercase", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPool_withVerificationMessageTemplate(t *testing.T) {
 	name := acctest.RandString(5)
 
@@ -345,6 +380,36 @@ resource "aws_cognito_user_pool" "pool" {
 
   alias_attributes         = ["email", "preferred_username"]
   auto_verified_attributes = ["email"]
+}`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withPasswordPolicy(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+  password_policy {
+    minimum_length    = 7
+    require_lowercase = true
+    require_numbers   = false
+    require_symbols   = true
+    require_uppercase = false
+  }
+}`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withPasswordPolicyUpdated(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+  password_policy {
+    minimum_length    = 9
+    require_lowercase = false
+    require_numbers   = true
+    require_symbols   = false
+    require_uppercase = true
+  }
 }`, name)
 }
 

@@ -86,6 +86,38 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"password_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 0,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"minimum_length": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validateIntegerInRange(6, 99),
+						},
+						"require_lowercase": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"require_numbers": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"require_symbols": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"require_uppercase": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
+
 			"sms_authentication_message": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -221,6 +253,23 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		params.MfaConfiguration = aws.String(v.(string))
 	}
 
+	policies := &cognitoidentityprovider.UserPoolPolicyType{}
+
+	if v, ok := d.GetOk("password_policy"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("password_policy is <nil>")
+		}
+
+		if config != nil {
+			policies.PasswordPolicy = expandCognitoUserPoolPasswordPolicy(config)
+		}
+	}
+
+	params.Policies = policies
+
 	if v, ok := d.GetOk("sms_authentication_message"); ok {
 		params.SmsAuthenticationMessage = aws.String(v.(string))
 	}
@@ -325,6 +374,12 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return errwrap.Wrapf("Failed setting email_configuration: {{err}}", err)
 	}
 
+	if resp.UserPool.Policies != nil && resp.UserPool.Policies.PasswordPolicy != nil {
+		if err := d.Set("password_policy", flattenCognitoUserPoolPasswordPolicy(resp.UserPool.Policies.PasswordPolicy)); err != nil {
+			return errwrap.Wrapf("Failed setting password_policy: {{err}}", err)
+		}
+	}
+
 	if err := d.Set("sms_configuration", flattenCognitoUserPoolSmsConfiguration(resp.UserPool.SmsConfiguration)); err != nil {
 		return errwrap.Wrapf("Failed setting sms_configuration: {{err}}", err)
 	}
@@ -397,6 +452,21 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 	if d.HasChange("sms_authentication_message") {
 		params.SmsAuthenticationMessage = aws.String(d.Get("sms_authentication_message").(string))
 	}
+
+	policies := &cognitoidentityprovider.UserPoolPolicyType{}
+	if d.HasChange("password_policy") {
+		configs := d.Get("password_policy").([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("password_policy is <nil>")
+		}
+
+		if config != nil {
+			policies.PasswordPolicy = expandCognitoUserPoolPasswordPolicy(config)
+		}
+	}
+	params.Policies = policies
 
 	if d.HasChange("sms_configuration") {
 		configs := d.Get("sms_configuration").([]interface{})
