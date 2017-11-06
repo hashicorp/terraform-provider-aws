@@ -386,8 +386,9 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 	}
-
-	if d.HasChange("subnets") {
+        
+	//Note, that you can't change the subnets for a Network Load Balancer
+	if d.Get("load_balancer_type").(string) != "network" && d.HasChange("subnets") {
 		subnets := expandStringList(d.Get("subnets").(*schema.Set).List())
 
 		params := &elbv2.SetSubnetsInput{
