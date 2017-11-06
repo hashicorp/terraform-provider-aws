@@ -649,10 +649,10 @@
 		{
 			"checksumSHA1": "3AcW4E/TxmNXfklpo1szXmY+QzE=",
 			"path": "github.com/aws/aws-sdk-go/service/glue",
-			"revision": "d46843b92a3a8e377d7fe24b4d70fca37f923d00",
-			"revisionTime": "2017-11-03T17:54:03Z",
-			"version": "v1.12.22",
-			"versionExact": "v1.12.22"
+			"revision": "f2da704aa06ae2df47ad1e86221e6c1abd3b6742",
+			"revisionTime": "2017-11-03T00:05:43Z",
+			"version": "v1.12.21",
+			"versionExact": "v1.12.21"
 		},
 		{
 			"checksumSHA1": "a+tKLYUEM3ZftY52P2ywtIxlCxE=",
