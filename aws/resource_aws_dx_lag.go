@@ -75,10 +75,11 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+	if len(resp.Lags) < 1 {
+		d.SetId("")
+		return nil
+	}
 	if len(resp.Lags) != 1 {
-		if len(resp.Lags) < 1 {
-			d.SetId("")
-		}
 		return fmt.Errorf("[ERROR] Number of DX Lag (%s) isn't one, got %d", lagId, len(resp.Lags))
 	}
 	if d.Id() != *resp.Lags[0].LagId {
