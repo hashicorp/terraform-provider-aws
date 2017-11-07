@@ -52,6 +52,7 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 			"master_username": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validateRedshiftClusterMasterUsername,
 			},
 
