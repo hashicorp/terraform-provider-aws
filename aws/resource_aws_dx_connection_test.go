@@ -44,7 +44,7 @@ func testAccCheckAwsDxConnectionDestroy(s *terraform.State) error {
 			return err
 		}
 		for _, v := range resp.Connections {
-			if *v.ConnectionId == rs.Primary.ID && !(*v.ConnectionState == directconnect.ConnectionStateDeleted || *v.ConnectionState == directconnect.ConnectionStateDeleting) {
+			if *v.ConnectionId == rs.Primary.ID && !(*v.ConnectionState == directconnect.ConnectionStateDeleted) {
 				return fmt.Errorf("[DESTROY ERROR] Dx Connection (%s) not deleted", rs.Primary.ID)
 			}
 		}
@@ -67,8 +67,8 @@ func testAccDxConnectionConfig(rName string) string {
 	return fmt.Sprintf(`
     resource "aws_dx_connection" "hoge" {
       name = "tf-dx-%s"
-      band_width = "1Gbps"
-      location = "EqDC2"
+      bandwidth = "1Gbps"
+      location = "EqSe2"
     }
     `, rName)
 }

@@ -22,7 +22,7 @@ func resourceAwsDxConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"band_width": &schema.Schema{
+			"bandwidth": &schema.Schema{
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -41,7 +41,7 @@ func resourceAwsDxConnectionCreate(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*AWSClient).dxconn
 
 	input := &directconnect.CreateConnectionInput{
-		Bandwidth:      aws.String(d.Get("band_width").(string)),
+		Bandwidth:      aws.String(d.Get("bandwidth").(string)),
 		ConnectionName: aws.String(d.Get("name").(string)),
 		Location:       aws.String(d.Get("location").(string)),
 	}
@@ -62,15 +62,16 @@ func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error
 	}
 	resp, err := conn.DescribeConnections(input)
 	if err != nil {
-		d.SetId("")
 		return err
 	}
-	if len(resp.Connections) != 1 {
+	if len(resp.Connections) < 1 {
 		d.SetId("")
+		return nil
+	}
+	if len(resp.Connections) != 1 {
 		return fmt.Errorf("[ERROR] Number of DX Connection (%s) isn't one, got %d", connectionId, len(resp.Connections))
 	}
 	if d.Id() != *resp.Connections[0].ConnectionId {
-		d.SetId("")
 		return fmt.Errorf("[ERROR] DX Connection (%s) not found", connectionId)
 	}
 	return nil
@@ -87,8 +88,8 @@ func resourceAwsDxConnectionDelete(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 	deleteStateConf := &resource.StateChangeConf{
-		Pending:    []string{directconnect.ConnectionStatePending, directconnect.ConnectionStateOrdering, directconnect.ConnectionStateAvailable, directconnect.ConnectionStateRequested},
-		Target:     []string{directconnect.ConnectionStateDeleted, directconnect.ConnectionStateDeleting},
+		Pending:    []string{directconnect.ConnectionStatePending, directconnect.ConnectionStateOrdering, directconnect.ConnectionStateAvailable, directconnect.ConnectionStateRequested, directconnect.ConnectionStateDeleting},
+		Target:     []string{directconnect.ConnectionStateDeleted},
 		Refresh:    dxConnectionRefreshStateFunc(conn, d.Id()),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,

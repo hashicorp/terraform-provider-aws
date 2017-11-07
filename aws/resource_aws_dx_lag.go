@@ -26,7 +26,7 @@ func resourceAwsDxLag() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateDxLagBandWidth,
+				ValidateFunc: validateDxConnectionBandWidth,
 			},
 			"location": &schema.Schema{
 				Type:     schema.TypeString,
