@@ -21,6 +21,7 @@ BUG FIXES:
 
 * resource/aws_cloudwatch_log_metric_filter: Fix pattern length check [GH-2107]
 * resource/cloudwatch_log_group: Use ID as name [GH-2190]
+* resource/aws_elasticsearch_domain: Added ForceNew to vpc_options [GH-2157]
 
 ## 1.2.0 (October 31, 2017)
 
