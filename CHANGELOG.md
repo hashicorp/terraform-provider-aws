@@ -19,6 +19,7 @@ BUG FIXES:
 BUG FIXES:
 
 * resource/aws_cloudwatch_log_metric_filter: Fix pattern length check [GH-2107]
+* resource/cloudwatch_log_group: Use ID as name [GH-2190]
 
 ## 1.2.0 (October 31, 2017)
 
