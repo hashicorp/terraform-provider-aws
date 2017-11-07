@@ -200,7 +200,9 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 	if certs.Certificates != nil && len(certs.Certificates) > 0 {
 		cl := make([]string, 0)
 		for _, cert := range certs.Certificates {
-			cl = append(cl, *cert.CertificateArn)
+			if !*cert.IsDefault {
+				cl = append(cl, *cert.CertificateArn)
+			}
 		}
 		d.Set("additional_certificate_arns", cl)
 	}
