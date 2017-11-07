@@ -162,7 +162,6 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 				_, err := elbconn.AddListenerCertificates(&elbv2.AddListenerCertificatesInput{
 					Certificates: []*elbv2.Certificate{&elbv2.Certificate{
 						CertificateArn: aws.String(carn),
-						IsDefault:      aws.Bool(false),
 					}},
 					ListenerArn: aws.String(larn),
 				})
