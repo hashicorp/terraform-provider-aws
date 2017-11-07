@@ -18,6 +18,9 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 		Read:   resourceAwsEcsTaskDefinitionRead,
 		Delete: resourceAwsEcsTaskDefinitionDelete,
 
+		SchemaVersion: 1,
+		MigrateState:  resourceAwsEcsTaskDefinitionMigrateState,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -36,9 +39,13 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 			},
 
 			"container_definitions": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := normalizeJsonString(v)
+					return json
+				},
 				ValidateFunc: validateAwsEcsTaskDefinitionContainerDefinitions,
 			},
 
