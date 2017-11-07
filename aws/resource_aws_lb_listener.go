@@ -154,7 +154,39 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 		return errors.New("Error creating LB Listener: no listeners returned in response")
 	}
 
-	d.SetId(*resp.Listeners[0].ListenerArn)
+	larn := *resp.Listeners[0].ListenerArn
+
+	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+		if carns, ok := d.GetOk("additional_certificate_arns"); ok {
+			for _, carn := range carns.([]string) {
+				_, err := elbconn.AddListenerCertificates(&elbv2.AddListenerCertificatesInput{
+					Certificates: []*elbv2.Certificate{&elbv2.Certificate{
+						CertificateArn: aws.String(carn),
+						IsDefault:      aws.Bool(false),
+					}},
+					ListenerArn: aws.String(larn),
+				})
+				if awsErr, ok := err.(awserr.Error); ok {
+					if awsErr.Code() == "TooManyCertificates" || awsErr.Code() == "CertificateNotFound" {
+						log.Printf("[WARN] Got an error while trying to add certificate to listener with ARN: %s: %s", lbArn, err)
+						return resource.RetryableError(err)
+					}
+				}
+
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return errwrap.Wrapf("Error adding certificates to LB Listener: {{err}}", err)
+	}
+
+	d.SetId(larn)
 
 	return resourceAwsLbListenerRead(d, meta)
 }
