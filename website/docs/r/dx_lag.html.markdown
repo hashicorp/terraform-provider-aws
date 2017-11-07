@@ -15,9 +15,9 @@ Provides a Direct Connect LAG.
 ```hcl
 resource "aws_dx_lag" "hoge" {
   name = "tf-dx-lag"
-  band_width = "1Gbps"
+  connections_bandwidth = "1Gbps"
   location = "EqDC2"
-  num_connections = 2
+  number_of_connections = 2
   force_destroy = true
 }
 ```
@@ -27,9 +27,9 @@ resource "aws_dx_lag" "hoge" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the LAG.
-* `band_width` - (Required) The bandwidth of the individual physical connections bundled by the LAG. Available values: 1Gbps, 10Gbps. Case sensitive.
+* `connections_bandwidth` - (Required) The bandwidth of the individual physical connections bundled by the LAG. Available values: 1Gbps, 10Gbps. Case sensitive.
 * `location` - (Required) The AWS Direct Connect location in which the LAG should be allocated. See [DescribeLocations](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLocations.html) for the list of AWS Direct Connect locations. Use `locationCode`.
-* `num_connections` - (Required) The number of physical connections initially provisioned and bundled by the LAG.
+* `number_of_connections` - (Required) The number of physical connections initially provisioned and bundled by the LAG.
 * `force_destroy` - (Optional, Default:false) A boolean that indicates all connections associated with the LAG should be deleted so that the LAG can be destroyed without error. These objects are *not* recoverable.
 
 ## Attributes Reference

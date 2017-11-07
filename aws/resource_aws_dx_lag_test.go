@@ -44,7 +44,7 @@ func testAccCheckAwsDxLagDestroy(s *terraform.State) error {
 			return err
 		}
 		for _, v := range resp.Lags {
-			if *v.LagId == rs.Primary.ID && !(*v.LagState == directconnect.LagStateDeleting || *v.LagState == directconnect.LagStateDeleted) {
+			if *v.LagId == rs.Primary.ID && !(*v.LagState == directconnect.LagStateDeleted) {
 				return fmt.Errorf("[DESTROY ERROR] Dx Lag (%s) found", rs.Primary.ID)
 			}
 		}
@@ -68,9 +68,9 @@ func testAccDxLagConfig(rName string) string {
 	return fmt.Sprintf(`
     resource "aws_dx_lag" "hoge" {
       name = "tf-dx-lag-%s"
-      band_width = "1Gbps"
-      location = "EqDC2"
-      num_connections = 2
+      connections_bandwidth = "1Gbps"
+      location = "EqSe2"
+      number_of_connections = 2
       force_destroy = true
     }
     `, rName)

@@ -22,7 +22,7 @@ func resourceAwsDxLag() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"band_width": &schema.Schema{
+			"connections_bandwidth": &schema.Schema{
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -33,7 +33,7 @@ func resourceAwsDxLag() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"num_connections": &schema.Schema{
+			"number_of_connections": &schema.Schema{
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
@@ -51,10 +51,10 @@ func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
 	input := &directconnect.CreateLagInput{
-		ConnectionsBandwidth: aws.String(d.Get("band_width").(string)),
+		ConnectionsBandwidth: aws.String(d.Get("connections_bandwidth").(string)),
 		LagName:              aws.String(d.Get("name").(string)),
 		Location:             aws.String(d.Get("location").(string)),
-		NumberOfConnections:  aws.Int64(int64(d.Get("num_connections").(int))),
+		NumberOfConnections:  aws.Int64(int64(d.Get("number_of_connections").(int))),
 	}
 	resp, err := conn.CreateLag(input)
 	if err != nil {
@@ -73,15 +73,15 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	resp, err := conn.DescribeLags(input)
 	if err != nil {
-		d.SetId("")
 		return err
 	}
 	if len(resp.Lags) != 1 {
-		d.SetId("")
+		if len(resp.Lags) < 1 {
+			d.SetId("")
+		}
 		return fmt.Errorf("[ERROR] Number of DX Lag (%s) isn't one, got %d", lagId, len(resp.Lags))
 	}
 	if d.Id() != *resp.Lags[0].LagId {
-		d.SetId("")
 		return fmt.Errorf("[ERROR] DX Lag (%s) not found", lagId)
 	}
 	return nil
@@ -133,8 +133,8 @@ func resourceAwsDxLagDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	deleteStateConf := &resource.StateChangeConf{
-		Pending:    []string{directconnect.LagStateAvailable, directconnect.LagStateRequested, directconnect.LagStatePending},
-		Target:     []string{directconnect.LagStateDeleted, directconnect.LagStateDeleting},
+		Pending:    []string{directconnect.LagStateAvailable, directconnect.LagStateRequested, directconnect.LagStatePending, directconnect.LagStateDeleting},
+		Target:     []string{directconnect.LagStateDeleted},
 		Refresh:    dxLagRefreshStateFunc(conn, d.Id()),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
