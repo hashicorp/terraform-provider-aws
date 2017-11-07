@@ -309,6 +309,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_dms_replication_subnet_group":             resourceAwsDmsReplicationSubnetGroup(),
 			"aws_dms_replication_task":                     resourceAwsDmsReplicationTask(),
 			"aws_dx_lag":                                   resourceAwsDxLag(),
+			"aws_dx_connection":                            resourceAwsDxConnection(),
 			"aws_dynamodb_table":                           resourceAwsDynamoDbTable(),
 			"aws_ebs_snapshot":                             resourceAwsEbsSnapshot(),
 			"aws_ebs_volume":                               resourceAwsEbsVolume(),

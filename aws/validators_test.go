@@ -2604,16 +2604,16 @@ func TestValidateCognitoRoleMappingsType(t *testing.T) {
 	}
 }
 
-func TestValidateDxLagBandWidth(t *testing.T) {
+func TestValidateDxConnectionBandWidth(t *testing.T) {
 	validValues := []string{
 		"1Gbps",
 		"10Gbps",
 	}
 
 	for _, s := range validValues {
-		_, errors := validateDxLagBandWidth(s, "match_type")
+		_, errors := validateDxConnectionBandWidth(s, "match_type")
 		if len(errors) > 0 {
-			t.Fatalf("%s should be a valid Direct Connect Lag Bandwidth: %v", s, errors)
+			t.Fatalf("%s should be a valid Direct Connect Connection Bandwidth: %v", s, errors)
 		}
 	}
 
@@ -2624,9 +2624,9 @@ func TestValidateDxLagBandWidth(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := validateDxLagBandWidth(s, "match_type")
+		_, errors := validateDxConnectionBandWidth(s, "match_type")
 		if len(errors) == 0 {
-			t.Fatalf("%s should not be a valid Direct Connect Lag Bandwidth: %v", s, errors)
+			t.Fatalf("%s should not be a valid Direct Connect Connection Bandwidth: %v", s, errors)
 		}
 	}
 }

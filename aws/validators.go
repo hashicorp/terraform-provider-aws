@@ -1677,7 +1677,7 @@ func validateCognitoRoles(v map[string]interface{}, k string) (errors []error) {
 	return
 }
 
-func validateDxLagBandWidth(v interface{}, k string) (ws []string, errors []error) {
+func validateDxConnectionBandWidth(v interface{}, k string) (ws []string, errors []error) {
 	val, ok := v.(string)
 	if !ok {
 		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
