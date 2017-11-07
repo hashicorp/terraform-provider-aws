@@ -1537,7 +1537,7 @@ resource "aws_security_group" "alb_test_2" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic_2"
+    Name = "TestAccAWSALB_basic_2"
   }
 }
 
