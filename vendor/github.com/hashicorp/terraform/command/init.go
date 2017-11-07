@@ -9,8 +9,6 @@ import (
 
 	"github.com/posener/complete"
 
-	"github.com/hashicorp/go-getter"
-
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform/backend"
 	"github.com/hashicorp/terraform/config"
@@ -131,7 +129,8 @@ func (c *InitCommand) Run(args []string) int {
 		)))
 		header = true
 
-		if err := c.copyConfigFromModule(path, src, pwd); err != nil {
+		s := module.NewStorage("", c.Services, c.Credentials)
+		if err := s.GetModule(path, src); err != nil {
 			c.Ui.Error(fmt.Sprintf("Error copying source module: %s", err))
 			return 1
 		}
@@ -173,7 +172,7 @@ func (c *InitCommand) Run(args []string) int {
 					"[reset][bold]Upgrading modules...")))
 			} else {
 				c.Ui.Output(c.Colorize().Color(fmt.Sprintf(
-					"[reset][bold]Downloading modules...")))
+					"[reset][bold]Initializing modules...")))
 			}
 
 			if err := getModules(&c.Meta, path, getMode); err != nil {
@@ -272,19 +271,6 @@ func (c *InitCommand) Run(args []string) int {
 	return 0
 }
 
-func (c *InitCommand) copyConfigFromModule(dst, src, pwd string) error {
-	// errors from this function will be prefixed with "Error copying source module: "
-	// when returned to the user.
-	var err error
-
-	src, err = getter.Detect(src, pwd, getter.Detectors)
-	if err != nil {
-		return fmt.Errorf("invalid module source: %s", err)
-	}
-
-	return module.GetCopy(dst, src)
-}
-
 // Load the complete module tree, and fetch any missing providers.
 // This method outputs its own Ui.
 func (c *InitCommand) getProviders(path string, state *terraform.State, upgrade bool) error {
@@ -324,6 +310,7 @@ func (c *InitCommand) getProviders(path string, state *terraform.State, upgrade 
 	))
 
 	missing := c.missingPlugins(available, requirements)
+	internal := c.internalProviders()
 
 	var errs error
 	if c.getPlugins {
@@ -333,6 +320,12 @@ func (c *InitCommand) getProviders(path string, state *terraform.State, upgrade 
 		}
 
 		for provider, reqd := range missing {
+			if _, isInternal := internal[provider]; isInternal {
+				// Ignore internal providers; they are not eligible for
+				// installation.
+				continue
+			}
+
 			_, err := c.providerInstaller.Get(provider, reqd.Versions)
 
 			if err != nil {
@@ -390,7 +383,7 @@ func (c *InitCommand) getProviders(path string, state *terraform.State, upgrade 
 	// again. If anything changes, other commands that use providers will
 	// fail with an error instructing the user to re-run this command.
 	available = c.providerPluginSet() // re-discover to see newly-installed plugins
-	chosen := choosePlugins(available, requirements)
+	chosen := choosePlugins(available, internal, requirements)
 	digests := map[string][]byte{}
 	for name, meta := range chosen {
 		digest, err := meta.SHA256()

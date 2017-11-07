@@ -15,7 +15,6 @@ import (
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/hashicorp/go-getter"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/logutils"
 	"github.com/hashicorp/terraform/config/module"
@@ -373,8 +372,20 @@ func LogOutput(t TestT) (logOutput io.Writer, err error) {
 	}
 
 	logOutput = os.Stderr
+
+	if logPath := os.Getenv(logging.EnvLogFile); logPath != "" {
+		var err error
+		logOutput, err = os.OpenFile(logPath, syscall.O_CREAT|syscall.O_RDWR|syscall.O_APPEND, 0666)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if logPathMask := os.Getenv(EnvLogPathMask); logPathMask != "" {
-		logPath := fmt.Sprintf(logPathMask, t.Name())
+		// Escape special characters which may appear if we have subtests
+		testName := strings.Replace(t.Name(), "/", "__", -1)
+
+		logPath := fmt.Sprintf(logPathMask, testName)
 		var err error
 		logOutput, err = os.OpenFile(logPath, syscall.O_CREAT|syscall.O_RDWR|syscall.O_APPEND, 0666)
 		if err != nil {
@@ -751,10 +762,11 @@ func testModule(
 	}
 
 	// Load the modules
-	modStorage := &getter.FolderStorage{
+	modStorage := &module.Storage{
 		StorageDir: filepath.Join(cfgPath, ".tfmodules"),
+		Mode:       module.GetModeGet,
 	}
-	err = mod.Load(modStorage, module.GetModeGet)
+	err = mod.Load(modStorage)
 	if err != nil {
 		return nil, fmt.Errorf("Error downloading modules: %s", err)
 	}
