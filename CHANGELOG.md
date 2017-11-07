@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_rds_cluster` [GH-2070]
+* **New Resource:** `aws_ses_template` [GH-2003]
 
 IMPROVEMENTS:
 
