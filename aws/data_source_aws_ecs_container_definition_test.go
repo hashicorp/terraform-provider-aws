@@ -20,6 +20,7 @@ func TestAccAWSEcsDataSource_ecsContainerDefinition(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_ecs_container_definition.mongo", "memory_reservation", "64"),
 					resource.TestCheckResourceAttr("data.aws_ecs_container_definition.mongo", "cpu", "128"),
 					resource.TestCheckResourceAttr("data.aws_ecs_container_definition.mongo", "environment.SECRET", "KEY"),
+					resource.TestCheckResourceAttr("data.aws_ecs_container_definition.mongo", "port_mappings.#", "2"),
 				),
 			},
 		},
@@ -45,7 +46,19 @@ resource "aws_ecs_task_definition" "mongo" {
     "image": "mongo:latest",
     "memory": 128,
     "memoryReservation": 64,
-    "name": "mongodb"
+    "name": "mongodb",
+    "portMappings": [
+      {
+        "hostPort": 8080,
+        "containerPort": 8080,
+        "protocol": "udp"
+      },
+      {
+        "hostPort": 8888,
+        "containerPort": 8888,
+        "protocol": "tcp"
+      }
+    ]
   }
 ]
 DEFINITION
