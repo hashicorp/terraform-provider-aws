@@ -190,6 +190,21 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
 	}
 
+	certs, err := elbconn.DescribeListenerCertificates(&elbv2.DescribeListenerCertificatesInput{
+		ListenerArn: aws.String(d.Id()),
+	})
+	if err != nil {
+		return errwrap.Wrapf("Error retrieving ListenerCertficates: {{err}}", err)
+	}
+
+	if certs.Certificates != nil && len(certs.Certificates) > 0 {
+		cl := make([]string, 0)
+		for _, cert := range certs.Certificates {
+			cl = append(cl, *cert.CertificateArn)
+		}
+		d.Set("additional_certificate_arns", cl)
+	}
+
 	defaultActions := make([]map[string]interface{}, 0)
 	if listener.DefaultActions != nil && len(listener.DefaultActions) > 0 {
 		for _, defaultAction := range listener.DefaultActions {
