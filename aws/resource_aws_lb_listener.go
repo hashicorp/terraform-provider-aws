@@ -291,6 +291,62 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 		return errwrap.Wrapf("Error modifying LB Listener: {{err}}", err)
 	}
 
+	var carnList []*string
+	if carns, ok := d.GetOk("additional_certificate_arns"); ok {
+		carnList = expandStringList(carns.(*schema.Set).List())
+	}
+
+	awsCerts, err := elbconn.DescribeListenerCertificates(&elbv2.DescribeListenerCertificatesInput{
+		ListenerArn: aws.String(d.Id()),
+	})
+	if err != nil {
+		return errwrap.Wrapf("Error retrieving ListenerCertficates: {{err}}", err)
+	}
+	var awsCarnList []*string
+	if awsCerts.Certificates != nil {
+		for _, cert := range awsCerts.Certificates {
+			if !*cert.IsDefault {
+				awsCarnList = append(awsCarnList, cert.CertificateArn)
+			}
+		}
+	}
+
+	stringInSlice := func(a *string, list []*string) bool {
+		for _, b := range list {
+			if b == a {
+				return true
+			}
+		}
+		return false
+	}
+
+	for _, carn := range awsCarnList {
+		if !stringInSlice(carn, carnList) {
+			_, err := elbconn.RemoveListenerCertificates(&elbv2.RemoveListenerCertificatesInput{
+				Certificates: []*elbv2.Certificate{&elbv2.Certificate{
+					CertificateArn: carn,
+				}},
+				ListenerArn: aws.String(d.Id()),
+			})
+			if err != nil {
+				return errwrap.Wrapf("Error modifying LB Listener: {{err}}", err)
+			}
+		}
+	}
+	for _, carn := range carnList {
+		if !stringInSlice(carn, awsCarnList) {
+			_, err := elbconn.AddListenerCertificates(&elbv2.AddListenerCertificatesInput{
+				Certificates: []*elbv2.Certificate{&elbv2.Certificate{
+					CertificateArn: carn,
+				}},
+				ListenerArn: aws.String(d.Id()),
+			})
+			if err != nil {
+				return errwrap.Wrapf("Error modifying LB Listener: {{err}}", err)
+			}
+		}
+	}
+
 	return resourceAwsLbListenerRead(d, meta)
 }
 
