@@ -158,10 +158,10 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 
 	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 		if carns, ok := d.GetOk("additional_certificate_arns"); ok {
-			for _, carn := range carns.([]string) {
+			for _, carn := range expandStringList(carns.(*schema.Set).List()) {
 				_, err := elbconn.AddListenerCertificates(&elbv2.AddListenerCertificatesInput{
 					Certificates: []*elbv2.Certificate{&elbv2.Certificate{
-						CertificateArn: aws.String(carn),
+						CertificateArn: carn,
 					}},
 					ListenerArn: aws.String(larn),
 				})
