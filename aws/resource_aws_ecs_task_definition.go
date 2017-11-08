@@ -46,6 +46,10 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 					json, _ := normalizeJsonString(v)
 					return json
 				},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					equal, _ := ecsContainerDefinitionsAreEquivalent(old, new)
+					return equal
+				},
 				ValidateFunc: validateAwsEcsTaskDefinitionContainerDefinitions,
 			},
 
