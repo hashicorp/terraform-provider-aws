@@ -1,8 +1,43 @@
-## 0.11.0-beta1 (Unreleased)
+## 0.11.0-beta1 (November 3, 2017)
+
+BACKWARDS INCOMPATIBILITIES / NOTES:
+
+The following items give an overview of the incompatibilities and other noteworthy changes in this release. For more details on some of these changes, along with information on how to upgrade existing configurations where needed, see [the v0.11 upgrade guide](./website/upgrade-guides/0-11.html.markdown).
+
+* Output interpolation errors are now fatal. Module configs with unused outputs
+  which contained errors will no longer be valid.
+* Module configuration blocks have 2 new reserved attribute names, "providers"
+  and "version". Modules using these as input variables will need to be
+  updated.
+* The module provider inheritance system has been updated. Providers declared
+  with configuration will no longer be merged, and named provider
+  configurations can be explicitly passed between modules. See [the upgrade guide](./website/upgrade-guides/0-11.html.markdown#interactions-between-providers-and-modules) for more details.
+* The command `terraform apply` with no explicit plan argument is now interactive by default. Specifically, it will show the generated plan and wait for confirmation before applying it. The behavior is unchanged when a plan file argument is provided, and the previous behavior can be obtained _without_ a plan file by using the `-auto-approve` option.
+* The `terraform` provider (that is, the provider that contains the `terraform_remote_state` data source) has been re-incorporated as a built-in provider in the Terraform Core executable. In 0.10 it was split into a separate plugin along with all of the other providers, but this provider uses several internal Terraform Core APIs and so in practice it's been confusing to version that separately from Terraform Core. As a consequence, this provider no longer supports version constraints, and so `version` attributes for this provider in configuration must be removed.
+* When remote state is enabled, Terraform will no longer generate a local `terraform.tfstate.backup` file before updating remote state. Previously this file could potentially be used to recover a previous state to help recover after a mistake, but it also caused a potentially-sensitive state file to be generated in an unexpected location that may be inadvertently copied or checked in to version control. With this local backup now removed, we recommend instead relying on versioning or backup mechanisms provided by the backend, such as Amazon S3 versioning or Terraform Enterprise's built-in state history mechanism. (Terraform will still create the local file `errored.tfstate` in the unlikely event that there is an error when writing to the remote backend.)
+
+NEW FEATURES:
+
+* modules: Module configuration blocks now have a "version" attribute, to set a version constraint for modules sourced from a registry. [GH-16466]
+* modules: Module configuration blocks now have a "providers" attribute, to map a provider configuration from the current module into a submodule [GH-16379]
+* backend/gcs: The gcs remote state backend now supports workspaces and locking.
+* backend/manta: The Manta backend now supports workspaces and locking [GH-16296]
 
 IMPROVEMENTS:
 
-* cli: The `terraform versions` command now prints out the version numbers of initialized plugins as well as the version of Terraform core, so that they can be more easily shared when opening GitHub Issues, etc. [GH-16439]
+* cli: The `terraform apply` command now waits for interactive approval of the generated plan before applying it, unless an explicit plan file is provided. [GH-16502]
+* cli: The `terraform version` command now prints out the version numbers of initialized plugins as well as the version of Terraform core, so that they can be more easily shared when opening GitHub Issues, etc. [GH-16439]
+* cli: A new `TF_DATA_DIR` environment variable can be used to override the location where Terraform stores the files normally placed in the `.terraform` directory. [GH-16207]
+* provider/terraform: now built in to Terraform Core so that it will always have the same backend functionality as the Terraform release it corresponds to. [GH-16543]
+
+BUG FIXES:
+
+* config: Provider config in submodules will no longer be overridden by parent providers with the same name. [GH-16379]
+* core: Module outputs can now produce errors, preventing them from silently propagating through the config. [GH-16204]
+* cli: When remote state is enabled, Terraform will no longer generate a local `terraform.tfstate.backup` file before updating remote state. [GH-16464]
+
+PROVIDER FRAMEWORK CHANGES (not user-facing):
+
 * helper/schema: Loosen validation for 'id' field [GH-16456]
 
 ## 0.10.8 (October 25, 2017)

@@ -6,7 +6,7 @@ description: |-
   Provides an ElasticSearch Domain.
 ---
 
-# aws\_elasticsearch\_domain
+# aws_elasticsearch_domain
 
 
 ## Example Usage
@@ -59,7 +59,7 @@ The following arguments are supported:
 * `ebs_options` - (Optional) EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/elasticsearch-service/pricing/). See below.
 * `cluster_config` - (Optional) Cluster configuration of the domain, see below.
 * `snapshot_options` - (Optional) Snapshot related options, see below.
-* `vpc_options` - (Optional) VPC related options, see below.
+* `vpc_options` - (Optional) VPC related options, see below. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-vpc-limitations)).
 * `elasticsearch_version` - (Optional) The version of ElasticSearch to deploy. Defaults to `1.5`
 * `tags` - (Optional) A mapping of tags to assign to the resource
 

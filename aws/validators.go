@@ -1490,8 +1490,8 @@ func validateSsmParameterType(v interface{}, k string) (ws []string, errors []er
 
 func validateBatchName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[A-Za-z0-9_-]{1,128}$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q (%q) must be up to 128 letters (uppercase and lowercase), numbers, hyphens, and underscores.", k, v))
+	if !regexp.MustCompile(`^[0-9a-zA-Z]{1}[0-9a-zA-Z_\-]{0,127}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q (%q) must be up to 128 letters (uppercase and lowercase), numbers, underscores and dashes, and must start with an alphanumeric.", k, v))
 	}
 	return
 }
@@ -1534,6 +1534,31 @@ func validateServiceCatalogPortfolioProviderName(v interface{}, k string) (ws []
 	if (len(value) > 20) || (len(value) == 0) {
 		errors = append(errors, fmt.Errorf("Service catalog provider name must be between 1 and 20 characters."))
 	}
+	return
+}
+
+func validateSesTemplateName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) > 64) || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("SES template name must be between 1 and 64 characters."))
+	}
+	return
+}
+
+func validateSesTemplateHtml(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 512000 {
+		errors = append(errors, fmt.Errorf("SES template must be less than 500KB in size, including both the text and HTML parts."))
+	}
+	return
+}
+
+func validateSesTemplateText(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 512000 {
+		errors = append(errors, fmt.Errorf("SES template must be less than 500KB in size, including both the text and HTML parts."))
+	}
+
 	return
 }
 
@@ -1649,5 +1674,23 @@ func validateCognitoRoles(v map[string]interface{}, k string) (errors []error) {
 		errors = append(errors, fmt.Errorf("%q: Either \"authenticated\" or \"unauthenticated\" must be defined", k))
 	}
 
+	return
+}
+
+func validateDxConnectionBandWidth(v interface{}, k string) (ws []string, errors []error) {
+	val, ok := v.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+
+	validBandWidth := []string{"1Gbps", "10Gbps"}
+	for _, str := range validBandWidth {
+		if val == str {
+			return
+		}
+	}
+
+	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validBandWidth, val))
 	return
 }

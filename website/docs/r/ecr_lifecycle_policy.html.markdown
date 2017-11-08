@@ -52,7 +52,7 @@ resource "aws_ecr_repository" "foo" {
 }
 
 resource "aws_ecr_lifecycle_policy" "foopolicy" {
-  repository = "${aws_ecr_repository.api.name}"
+  repository = "${aws_ecr_repository.foo.name}"
 
   policy = <<EOF
 {

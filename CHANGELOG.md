@@ -1,17 +1,30 @@
-## 1.2.1 (Unreleased)
+## 1.3.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_rds_cluster` [GH-2070]
+* **New Resource:** `aws_ses_template` [GH-2003]
+* **New Resource:** `aws_dx_lag` [GH-2154]
+* **New Resource:** `aws_dx_connection` [GH-2173]
 
 IMPROVEMENTS:
 
 * data-source/efs_file_system: Added dns_name [GH-2105]
+* resource/aws_batch_job_queue: Add validation for `name` [GH-2159]
+* resource/aws_batch_compute_environment: Improve validation for `compute_environment_name` [GH-2159]
 
 BUG FIXES:
 
+* resource/aws_appautoscaling_policy: Retry putting policy on invalid token [GH-2135]
 * resource/aws_batch_compute_environment: `compute_environment_name` allows hyphens [GH-2126]
 * resource/aws_batch_job_definition: `name` allows hyphens [GH-2126]
-
-BUG FIXES:
-
+* resource/aws_elasticache_parameter_group: Raise timeout for retry on pending changes [GH-2134]
+* resource/aws_kms_key: Retry GetKeyRotationStatus on NotFoundException [GH-2133]
+* resource/aws_redshift_cluster: Make master_username ForceNew [GH-2202]
 * resource/aws_cloudwatch_log_metric_filter: Fix pattern length check [GH-2107]
+* resource/aws_cloudwatch_log_group: Use ID as name [GH-2190]
+* resource/aws_elasticsearch_domain: Added ForceNew to vpc_options [GH-2157]
+* resource/aws_redshift_cluster: Make snapshot identifiers `ForceNew` [GH-2212]
 
 ## 1.2.0 (October 31, 2017)
 
