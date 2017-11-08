@@ -20,11 +20,9 @@ BUG FIXES:
 * resource/aws_batch_job_definition: `name` allows hyphens [GH-2126]
 * resource/aws_elasticache_parameter_group: Raise timeout for retry on pending changes [GH-2134]
 * resource/aws_kms_key: Retry GetKeyRotationStatus on NotFoundException [GH-2133]
-
-BUG FIXES:
-
+* resource/aws_redshift_cluster: Make master_username ForceNew [GH-2202]
 * resource/aws_cloudwatch_log_metric_filter: Fix pattern length check [GH-2107]
-* resource/cloudwatch_log_group: Use ID as name [GH-2190]
+* resource/aws_cloudwatch_log_group: Use ID as name [GH-2190]
 * resource/aws_elasticsearch_domain: Added ForceNew to vpc_options [GH-2157]
 
 ## 1.2.0 (October 31, 2017)
