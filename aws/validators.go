@@ -1692,6 +1692,7 @@ func validateDxConnectionBandWidth(v interface{}, k string) (ws []string, errors
 	}
 
 	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validBandWidth, val))
+	return
 }
 
 func validateKmsKey(v interface{}, k string) (ws []string, errors []error) {

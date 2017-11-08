@@ -1,9 +1,10 @@
 package aws
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/aws/aws-sdk-go/service/kms"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func dataSourceAwsKmsKey() *schema.Resource {
@@ -74,16 +75,36 @@ func dataSourceAwsKmsKey() *schema.Resource {
 
 func dataSourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
-	keyId := d.Get("key_id")
+	keyId, keyIdOk := d.GetOk("key_id")
+	if !keyIdOk {
+		return fmt.Errorf("key_id value is missing")
+	}
+	var grantTokens []*string
+	if v, ok := d.GetOk("grant_tokens"); ok {
+		for _, token := range v.([]interface{}) {
+			grantTokens = append(grantTokens, aws.String(token.(string)))
+		}
+	}
 	input := &kms.DescribeKeyInput{
-		KeyId: keyId,
-		GrantTokens: d.Get("grant_tokens"),
+		KeyId:       aws.String(keyId.(string)),
+		GrantTokens: grantTokens,
 	}
 	output, err := conn.DescribeKey(input)
 	if err != nil {
-		return fmt.Errorf("Error while describing key [%s]: %s", keyId, err)
+		return fmt.Errorf("error while describing key [%s]: %s", keyId, err)
 	}
-	d.SetId(keyId)
+	d.SetId(keyId.(string))
 	d.Set("arn", output.KeyMetadata.Arn)
+	d.Set("aws_account_id", output.KeyMetadata.AWSAccountId)
+	d.Set("creation_date", output.KeyMetadata.CreationDate)
+	d.Set("deletion_date", output.KeyMetadata.DeletionDate)
+	d.Set("description", output.KeyMetadata.Description)
+	d.Set("enabled", output.KeyMetadata.Enabled)
+	d.Set("expiration_model", output.KeyMetadata.ExpirationModel)
+	d.Set("key_manager", output.KeyMetadata.KeyManager)
+	d.Set("key_state", output.KeyMetadata.KeyState)
+	d.Set("key_usage", output.KeyMetadata.KeyUsage)
+	d.Set("origin", output.KeyMetadata.Origin)
+	d.Set("valid_to", output.KeyMetadata.ValidTo)
 	return nil
 }
