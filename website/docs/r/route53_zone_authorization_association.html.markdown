@@ -10,7 +10,7 @@ description: |-
 
 Authorizes a VPC in a peer account to associated with a local Route53 Hosted Zone
 
-~> **NOTE:** Currently the route53\_zone\_assocation resource does not work across accounts. If you use this resource you will need to do the association the VPC to the Zone outside of Terraform.
+~> **NOTE:** Currently the route53\_zone\_assocation resource does not work across accounts. If you use this resource you will need to do the association between the VPC and Route53 Zone using another tool.
 
 ## Example Usage
 
