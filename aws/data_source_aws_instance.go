@@ -46,6 +46,15 @@ func dataSourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"get_password_data": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"password_data": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"public_dns": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -266,7 +275,17 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] aws_instance - Single Instance ID found: %s", *instance.InstanceId)
-	return instanceDescriptionAttributes(d, instance, conn)
+	if err := instanceDescriptionAttributes(d, instance, conn); err != nil {
+		return err
+	}
+
+	if d.Get("get_password_data").(bool) {
+		if err := readPasswordData(d, instance, conn); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Populate instance attribute fields with the returned instance
