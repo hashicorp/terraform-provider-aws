@@ -11,7 +11,7 @@ Requirements
 ------------
 
 -	[Terraform](https://www.terraform.io/downloads.html) 0.10.x
--	[Go](https://golang.org/doc/install) 1.8 (to build the provider plugin)
+-	[Go](https://golang.org/doc/install) 1.9 (to build the provider plugin)
 
 Building The Provider
 ---------------------
@@ -32,7 +32,7 @@ $ make build
 
 Using the provider
 ----------------------
-## Fill in for each provider
+If you're building the provider, follow the instructions to [install it as a plugin.](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin) to install it as a plugin. After placing it into your plugins directory,  run `terraform init` to initialize it.
 
 Developing the Provider
 ---------------------------

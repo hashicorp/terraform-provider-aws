@@ -52,6 +52,7 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 			"master_username": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validateRedshiftClusterMasterUsername,
 			},
 
@@ -239,11 +240,13 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 
 			"snapshot_cluster_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 
 			"owner_account": {

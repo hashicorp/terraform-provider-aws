@@ -256,6 +256,11 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
+						"tags": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							ForceNew: true,
+						},
 					},
 				},
 				Set: hashLaunchSpecification,
@@ -375,6 +380,21 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 				securityGroupIds = append(securityGroupIds, aws.String(v.(string)))
 			}
 		}
+	}
+
+	if m, ok := d["tags"].(map[string]interface{}); ok && len(m) > 0 {
+		tagsSpec := make([]*ec2.SpotFleetTagSpecification, 0)
+
+		tags := tagsFromMap(m)
+
+		spec := &ec2.SpotFleetTagSpecification{
+			ResourceType: aws.String("instance"),
+			Tags:         tags,
+		}
+
+		tagsSpec = append(tagsSpec, spec)
+
+		opts.TagSpecifications = tagsSpec
 	}
 
 	subnetId, hasSubnetId := d["subnet_id"]
@@ -878,6 +898,15 @@ func launchSpecToMap(l *ec2.SpotFleetLaunchSpecification, rootDevName *string) m
 
 	if l.WeightedCapacity != nil {
 		m["weighted_capacity"] = strconv.FormatFloat(*l.WeightedCapacity, 'f', 0, 64)
+	}
+
+	if l.TagSpecifications != nil {
+		for _, tagSpecs := range l.TagSpecifications {
+			// only "instance" tags are currently supported: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetTagSpecification.html
+			if *(tagSpecs.ResourceType) == "instance" {
+				m["tags"] = tagsToMap(tagSpecs.Tags)
+			}
+		}
 	}
 
 	return m

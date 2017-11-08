@@ -4143,6 +4143,14 @@ func (c *ElastiCache) RebootCacheClusterRequest(input *RebootCacheClusterInput) 
 //
 // When the reboot is complete, a cache cluster event is created.
 //
+// Rebooting a cluster is currently supported on Memcached and Redis (cluster
+// mode disabled) clusters. Rebooting is not supported on Redis (cluster mode
+// enabled) clusters.
+//
+// If you make changes to parameters that require a Redis (cluster mode enabled)
+// cluster reboot for the changes to be applied, see Rebooting a Cluster (http://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/Clusters.Rebooting.htm)
+// for an alternate process.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -4789,6 +4797,20 @@ func (s *AvailabilityZone) SetName(v string) *AvailabilityZone {
 type CacheCluster struct {
 	_ struct{} `type:"structure"`
 
+	// A flag that enables encryption at-rest when set to true.
+	//
+	// You cannot modify the value of AtRestEncryptionEnabled after the cluster
+	// is created. To enable at-rest encryption on a cluster you must set AtRestEncryptionEnabled
+	// to true when you create a cluster.
+	//
+	// Default: false
+	AtRestEncryptionEnabled *bool `type:"boolean"`
+
+	// A flag that enables using an AuthToken (password) when issuing Redis commands.
+	//
+	// Default: false
+	AuthTokenEnabled *bool `type:"boolean"`
+
 	// This parameter is currently disabled.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
@@ -4806,37 +4828,60 @@ type CacheCluster struct {
 
 	// The name of the compute and memory capacity node type for the cache cluster.
 	//
-	// Valid node types are as follows:
+	// The following node types are supported by ElastiCache. Generally speaking,
+	// the current generation types provide more memory and computational power
+	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
 	//    * General purpose:
 	//
-	// Current generation: cache.t2.micro, cache.t2.small, cache.t2.medium, cache.m3.medium,
-	//    cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge, cache.m4.large, cache.m4.xlarge,
-	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge
+	// Current generation:
 	//
-	// Previous generation: cache.t1.micro, cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge
+	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
 	//
-	//    * Compute optimized: cache.c1.xlarge
+	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
+	//
+	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
+	//    cache.m4.10xlarge
+	//
+	// Previous generation: (not recommended)
+	//
+	// T1 node types:cache.t1.micro
+	//
+	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//
+	//    * Compute optimized:
+	//
+	// Previous generation: (not recommended)
+	//
+	// C1 node types:cache.c1.xlarge
 	//
 	//    * Memory optimized:
 	//
-	// Current generation: cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
+	// Current generation:
+	//
+	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
 	//    cache.r3.8xlarge
 	//
-	// Previous generation: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	// Previous generation: (not recommended)
+	//
+	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
 	//    * All T2 instances are created in an Amazon Virtual Private Cloud (Amazon
 	//    VPC).
 	//
-	//    * Redis backup/restore is not supported for Redis (cluster mode disabled)
-	//    T1 and T2 instances. Backup/restore is supported on Redis (cluster mode
-	//    enabled) T2 instances.
+	//    * Redis (cluster mode disabled): Redis backup/restore is not supported
+	//    on T1 and T2 instances.
+	//
+	//    * Redis (cluster mode enabled): Backup/restore is not supported on T1
+	//    instances.
 	//
 	//    * Redis Append-only files (AOF) functionality is not supported for T1
 	//    or T2 instances.
+	//
+	// Supported node types are available in all regions except as noted in the
+	// following table.
 	//
 	// For a complete listing of node types and specifications, see Amazon ElastiCache
 	// Product Features and Details (http://aws.amazon.com/elasticache/details)
@@ -4937,6 +4982,15 @@ type CacheCluster struct {
 	//
 	// Example: 05:00-09:00
 	SnapshotWindow *string `type:"string"`
+
+	// A flag that enables in-transit encryption when set to true.
+	//
+	// You cannot modify the value of TransitEncryptionEnabled after the cluster
+	// is created. To enable in-transit encryption on a cluster you must set TransitEncryptionEnabled
+	// to true when you create a cluster.
+	//
+	// Default: false
+	TransitEncryptionEnabled *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -4947,6 +5001,18 @@ func (s CacheCluster) String() string {
 // GoString returns the string representation
 func (s CacheCluster) GoString() string {
 	return s.String()
+}
+
+// SetAtRestEncryptionEnabled sets the AtRestEncryptionEnabled field's value.
+func (s *CacheCluster) SetAtRestEncryptionEnabled(v bool) *CacheCluster {
+	s.AtRestEncryptionEnabled = &v
+	return s
+}
+
+// SetAuthTokenEnabled sets the AuthTokenEnabled field's value.
+func (s *CacheCluster) SetAuthTokenEnabled(v bool) *CacheCluster {
+	s.AuthTokenEnabled = &v
+	return s
 }
 
 // SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
@@ -5081,6 +5147,12 @@ func (s *CacheCluster) SetSnapshotWindow(v string) *CacheCluster {
 	return s
 }
 
+// SetTransitEncryptionEnabled sets the TransitEncryptionEnabled field's value.
+func (s *CacheCluster) SetTransitEncryptionEnabled(v bool) *CacheCluster {
+	s.TransitEncryptionEnabled = &v
+	return s
+}
+
 // Provides all of the details about a particular cache engine version.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/CacheEngineVersion
 type CacheEngineVersion struct {
@@ -5148,37 +5220,60 @@ func (s *CacheEngineVersion) SetEngineVersion(v string) *CacheEngineVersion {
 // runs its own instance of the cluster's protocol-compliant caching software
 // - either Memcached or Redis.
 //
-// Valid node types are as follows:
+// The following node types are supported by ElastiCache. Generally speaking,
+// the current generation types provide more memory and computational power
+// at lower cost when compared to their equivalent previous generation counterparts.
 //
 //    * General purpose:
 //
-// Current generation: cache.t2.micro, cache.t2.small, cache.t2.medium, cache.m3.medium,
-//    cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge, cache.m4.large, cache.m4.xlarge,
-//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge
+// Current generation:
 //
-// Previous generation: cache.t1.micro, cache.m1.small, cache.m1.medium, cache.m1.large,
-//    cache.m1.xlarge
+// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
 //
-//    * Compute optimized: cache.c1.xlarge
+// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
+//
+// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
+//    cache.m4.10xlarge
+//
+// Previous generation: (not recommended)
+//
+// T1 node types:cache.t1.micro
+//
+// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+//
+//    * Compute optimized:
+//
+// Previous generation: (not recommended)
+//
+// C1 node types:cache.c1.xlarge
 //
 //    * Memory optimized:
 //
-// Current generation: cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
+// Current generation:
+//
+// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
 //    cache.r3.8xlarge
 //
-// Previous generation: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+// Previous generation: (not recommended)
+//
+// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 //
 // Notes:
 //
 //    * All T2 instances are created in an Amazon Virtual Private Cloud (Amazon
 //    VPC).
 //
-//    * Redis backup/restore is not supported for Redis (cluster mode disabled)
-//    T1 and T2 instances. Backup/restore is supported on Redis (cluster mode
-//    enabled) T2 instances.
+//    * Redis (cluster mode disabled): Redis backup/restore is not supported
+//    on T1 and T2 instances.
+//
+//    * Redis (cluster mode enabled): Backup/restore is not supported on T1
+//    instances.
 //
 //    * Redis Append-only files (AOF) functionality is not supported for T1
 //    or T2 instances.
+//
+// Supported node types are available in all regions except as noted in the
+// following table.
 //
 // For a complete listing of node types and specifications, see Amazon ElastiCache
 // Product Features and Details (http://aws.amazon.com/elasticache/details)
@@ -5797,10 +5892,10 @@ type CreateCacheClusterInput struct {
 	//
 	//    * Must be at least 16 characters and no more than 128 characters in length.
 	//
-	//    * Cannot contain any of the following characters: '/', '"', or "@".
+	//    * Cannot contain any of the following characters: '/', '"', or '@'.
 	//
 	// For more information, see AUTH password (http://redis.io/commands/AUTH) at
-	// Redis.
+	// http://redis.io/commands/AUTH.
 	AuthToken *string `type:"string"`
 
 	// This parameter is currently disabled.
@@ -5822,37 +5917,60 @@ type CreateCacheClusterInput struct {
 
 	// The compute and memory capacity of the nodes in the node group (shard).
 	//
-	// Valid node types are as follows:
+	// The following node types are supported by ElastiCache. Generally speaking,
+	// the current generation types provide more memory and computational power
+	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
 	//    * General purpose:
 	//
-	// Current generation: cache.t2.micro, cache.t2.small, cache.t2.medium, cache.m3.medium,
-	//    cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge, cache.m4.large, cache.m4.xlarge,
-	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge
+	// Current generation:
 	//
-	// Previous generation: cache.t1.micro, cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge
+	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
 	//
-	//    * Compute optimized: cache.c1.xlarge
+	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
+	//
+	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
+	//    cache.m4.10xlarge
+	//
+	// Previous generation: (not recommended)
+	//
+	// T1 node types:cache.t1.micro
+	//
+	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//
+	//    * Compute optimized:
+	//
+	// Previous generation: (not recommended)
+	//
+	// C1 node types:cache.c1.xlarge
 	//
 	//    * Memory optimized:
 	//
-	// Current generation: cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
+	// Current generation:
+	//
+	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
 	//    cache.r3.8xlarge
 	//
-	// Previous generation: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	// Previous generation: (not recommended)
+	//
+	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
 	//    * All T2 instances are created in an Amazon Virtual Private Cloud (Amazon
 	//    VPC).
 	//
-	//    * Redis backup/restore is not supported for Redis (cluster mode disabled)
-	//    T1 and T2 instances. Backup/restore is supported on Redis (cluster mode
-	//    enabled) T2 instances.
+	//    * Redis (cluster mode disabled): Redis backup/restore is not supported
+	//    on T1 and T2 instances.
+	//
+	//    * Redis (cluster mode enabled): Backup/restore is not supported on T1
+	//    instances.
 	//
 	//    * Redis Append-only files (AOF) functionality is not supported for T1
 	//    or T2 instances.
+	//
+	// Supported node types are available in all regions except as noted in the
+	// following table.
 	//
 	// For a complete listing of node types and specifications, see Amazon ElastiCache
 	// Product Features and Details (http://aws.amazon.com/elasticache/details)
@@ -6027,11 +6145,10 @@ type CreateCacheClusterInput struct {
 	// If you do not specify this parameter, ElastiCache automatically chooses an
 	// appropriate time range.
 	//
-	// Note: This parameter is only valid if the Engine parameter is redis.
+	// This parameter is only valid if the Engine parameter is redis.
 	SnapshotWindow *string `type:"string"`
 
-	// A list of cost allocation tags to be added to this resource. A tag is a key-value
-	// pair. A tag key must be accompanied by a tag value.
+	// A list of cost allocation tags to be added to this resource.
 	Tags []*Tag `locationNameList:"Tag" type:"list"`
 }
 
@@ -6510,7 +6627,27 @@ func (s *CreateCacheSubnetGroupOutput) SetCacheSubnetGroup(v *CacheSubnetGroup) 
 type CreateReplicationGroupInput struct {
 	_ struct{} `type:"structure"`
 
+	// A flag that enables encryption at rest when set to true.
+	//
+	// You cannot modify the value of AtRestEncryptionEnabled after the replication
+	// group is created. To enable encryption at rest on a replication group you
+	// must set AtRestEncryptionEnabled to true when you create the replication
+	// group.
+	//
+	// This parameter is valid only if the Engine parameter is redis and the cluster
+	// is being created in an Amazon VPC.
+	//
+	// Default: false
+	AtRestEncryptionEnabled *bool `type:"boolean"`
+
 	// Reserved parameter. The password used to access a password protected server.
+	//
+	// This parameter is valid only if:
+	//
+	//    * The parameter TransitEncryptionEnabled was set to true when the cluster
+	//    was created.
+	//
+	//    * The line requirepass was added to the database configuration file.
 	//
 	// Password constraints:
 	//
@@ -6518,10 +6655,10 @@ type CreateReplicationGroupInput struct {
 	//
 	//    * Must be at least 16 characters and no more than 128 characters in length.
 	//
-	//    * Cannot contain any of the following characters: '/', '"', or "@".
+	//    * Cannot contain any of the following characters: '/', '"', or '@'.
 	//
 	// For more information, see AUTH password (http://redis.io/commands/AUTH) at
-	// Redis.
+	// http://redis.io/commands/AUTH.
 	AuthToken *string `type:"string"`
 
 	// This parameter is currently disabled.
@@ -6538,48 +6675,72 @@ type CreateReplicationGroupInput struct {
 	//
 	// Default: false
 	//
-	// ElastiCache Multi-AZ replication groups is not supported on:
+	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
+	// on:
 	//
-	// Redis versions earlier than 2.8.6.
+	//    * Redis versions earlier than 2.8.6.
 	//
-	// Redis (cluster mode disabled): T1 and T2 node types.
+	//    * Redis (cluster mode disabled): T1 and T2 cache node types.
 	//
-	// Redis (cluster mode enabled): T2 node types.
+	//    * Redis (cluster mode enabled): T1 node types.
 	AutomaticFailoverEnabled *bool `type:"boolean"`
 
 	// The compute and memory capacity of the nodes in the node group (shard).
 	//
-	// Valid node types are as follows:
+	// The following node types are supported by ElastiCache. Generally speaking,
+	// the current generation types provide more memory and computational power
+	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
 	//    * General purpose:
 	//
-	// Current generation: cache.t2.micro, cache.t2.small, cache.t2.medium, cache.m3.medium,
-	//    cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge, cache.m4.large, cache.m4.xlarge,
-	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge
+	// Current generation:
 	//
-	// Previous generation: cache.t1.micro, cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge
+	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
 	//
-	//    * Compute optimized: cache.c1.xlarge
+	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
+	//
+	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
+	//    cache.m4.10xlarge
+	//
+	// Previous generation: (not recommended)
+	//
+	// T1 node types:cache.t1.micro
+	//
+	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//
+	//    * Compute optimized:
+	//
+	// Previous generation: (not recommended)
+	//
+	// C1 node types:cache.c1.xlarge
 	//
 	//    * Memory optimized:
 	//
-	// Current generation: cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
+	// Current generation:
+	//
+	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
 	//    cache.r3.8xlarge
 	//
-	// Previous generation: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	// Previous generation: (not recommended)
+	//
+	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
 	//    * All T2 instances are created in an Amazon Virtual Private Cloud (Amazon
 	//    VPC).
 	//
-	//    * Redis backup/restore is not supported for Redis (cluster mode disabled)
-	//    T1 and T2 instances. Backup/restore is supported on Redis (cluster mode
-	//    enabled) T2 instances.
+	//    * Redis (cluster mode disabled): Redis backup/restore is not supported
+	//    on T1 and T2 instances.
+	//
+	//    * Redis (cluster mode enabled): Backup/restore is not supported on T1
+	//    instances.
 	//
 	//    * Redis Append-only files (AOF) functionality is not supported for T1
 	//    or T2 instances.
+	//
+	// Supported node types are available in all regions except as noted in the
+	// following table.
 	//
 	// For a complete listing of node types and specifications, see Amazon ElastiCache
 	// Product Features and Details (http://aws.amazon.com/elasticache/details)
@@ -6753,23 +6914,17 @@ type CreateReplicationGroupInput struct {
 	// of node groups configured by NodeGroupConfiguration regardless of the number
 	// of ARNs specified here.
 	//
-	// This parameter is only valid if the Engine parameter is redis.
-	//
 	// Example of an Amazon S3 ARN: arn:aws:s3:::my_bucket/snapshot1.rdb
 	SnapshotArns []*string `locationNameList:"SnapshotArn" type:"list"`
 
 	// The name of a snapshot from which to restore data into the new replication
 	// group. The snapshot status changes to restoring while the new replication
 	// group is being created.
-	//
-	// This parameter is only valid if the Engine parameter is redis.
 	SnapshotName *string `type:"string"`
 
 	// The number of days for which ElastiCache retains automatic snapshots before
 	// deleting them. For example, if you set SnapshotRetentionLimit to 5, a snapshot
 	// that was taken today is retained for 5 days before being deleted.
-	//
-	// This parameter is only valid if the Engine parameter is redis.
 	//
 	// Default: 0 (i.e., automatic backups are disabled for this cache cluster).
 	SnapshotRetentionLimit *int64 `type:"integer"`
@@ -6781,13 +6936,26 @@ type CreateReplicationGroupInput struct {
 	//
 	// If you do not specify this parameter, ElastiCache automatically chooses an
 	// appropriate time range.
-	//
-	// This parameter is only valid if the Engine parameter is redis.
 	SnapshotWindow *string `type:"string"`
 
 	// A list of cost allocation tags to be added to this resource. A tag is a key-value
-	// pair. A tag key must be accompanied by a tag value.
+	// pair.
 	Tags []*Tag `locationNameList:"Tag" type:"list"`
+
+	// A flag that enables in-transit encryption when set to true.
+	//
+	// You cannot modify the value of TransitEncryptionEnabled after the cluster
+	// is created. To enable in-transit encryption on a cluster you must set TransitEncryptionEnabled
+	// to true when you create a cluster.
+	//
+	// This parameter is valid only if the Engine parameter is redis, the EngineVersion
+	// parameter is 3.2.4 or later, and the cluster is being created in an Amazon
+	// VPC.
+	//
+	// If you enable in-transit encryption, you must also specify a value for CacheSubnetGroup.
+	//
+	// Default: false
+	TransitEncryptionEnabled *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -6814,6 +6982,12 @@ func (s *CreateReplicationGroupInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAtRestEncryptionEnabled sets the AtRestEncryptionEnabled field's value.
+func (s *CreateReplicationGroupInput) SetAtRestEncryptionEnabled(v bool) *CreateReplicationGroupInput {
+	s.AtRestEncryptionEnabled = &v
+	return s
 }
 
 // SetAuthToken sets the AuthToken field's value.
@@ -6969,6 +7143,12 @@ func (s *CreateReplicationGroupInput) SetSnapshotWindow(v string) *CreateReplica
 // SetTags sets the Tags field's value.
 func (s *CreateReplicationGroupInput) SetTags(v []*Tag) *CreateReplicationGroupInput {
 	s.Tags = v
+	return s
+}
+
+// SetTransitEncryptionEnabled sets the TransitEncryptionEnabled field's value.
+func (s *CreateReplicationGroupInput) SetTransitEncryptionEnabled(v bool) *CreateReplicationGroupInput {
+	s.TransitEncryptionEnabled = &v
 	return s
 }
 
@@ -8415,37 +8595,60 @@ type DescribeReservedCacheNodesInput struct {
 	// The cache node type filter value. Use this parameter to show only those reservations
 	// matching the specified cache node type.
 	//
-	// Valid node types are as follows:
+	// The following node types are supported by ElastiCache. Generally speaking,
+	// the current generation types provide more memory and computational power
+	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
 	//    * General purpose:
 	//
-	// Current generation: cache.t2.micro, cache.t2.small, cache.t2.medium, cache.m3.medium,
-	//    cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge, cache.m4.large, cache.m4.xlarge,
-	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge
+	// Current generation:
 	//
-	// Previous generation: cache.t1.micro, cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge
+	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
 	//
-	//    * Compute optimized: cache.c1.xlarge
+	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
+	//
+	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
+	//    cache.m4.10xlarge
+	//
+	// Previous generation: (not recommended)
+	//
+	// T1 node types:cache.t1.micro
+	//
+	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//
+	//    * Compute optimized:
+	//
+	// Previous generation: (not recommended)
+	//
+	// C1 node types:cache.c1.xlarge
 	//
 	//    * Memory optimized:
 	//
-	// Current generation: cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
+	// Current generation:
+	//
+	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
 	//    cache.r3.8xlarge
 	//
-	// Previous generation: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	// Previous generation: (not recommended)
+	//
+	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
 	//    * All T2 instances are created in an Amazon Virtual Private Cloud (Amazon
 	//    VPC).
 	//
-	//    * Redis backup/restore is not supported for Redis (cluster mode disabled)
-	//    T1 and T2 instances. Backup/restore is supported on Redis (cluster mode
-	//    enabled) T2 instances.
+	//    * Redis (cluster mode disabled): Redis backup/restore is not supported
+	//    on T1 and T2 instances.
+	//
+	//    * Redis (cluster mode enabled): Backup/restore is not supported on T1
+	//    instances.
 	//
 	//    * Redis Append-only files (AOF) functionality is not supported for T1
 	//    or T2 instances.
+	//
+	// Supported node types are available in all regions except as noted in the
+	// following table.
 	//
 	// For a complete listing of node types and specifications, see Amazon ElastiCache
 	// Product Features and Details (http://aws.amazon.com/elasticache/details)
@@ -8558,37 +8761,60 @@ type DescribeReservedCacheNodesOfferingsInput struct {
 	// The cache node type filter value. Use this parameter to show only the available
 	// offerings matching the specified cache node type.
 	//
-	// Valid node types are as follows:
+	// The following node types are supported by ElastiCache. Generally speaking,
+	// the current generation types provide more memory and computational power
+	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
 	//    * General purpose:
 	//
-	// Current generation: cache.t2.micro, cache.t2.small, cache.t2.medium, cache.m3.medium,
-	//    cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge, cache.m4.large, cache.m4.xlarge,
-	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge
+	// Current generation:
 	//
-	// Previous generation: cache.t1.micro, cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge
+	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
 	//
-	//    * Compute optimized: cache.c1.xlarge
+	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
+	//
+	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
+	//    cache.m4.10xlarge
+	//
+	// Previous generation: (not recommended)
+	//
+	// T1 node types:cache.t1.micro
+	//
+	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//
+	//    * Compute optimized:
+	//
+	// Previous generation: (not recommended)
+	//
+	// C1 node types:cache.c1.xlarge
 	//
 	//    * Memory optimized:
 	//
-	// Current generation: cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
+	// Current generation:
+	//
+	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
 	//    cache.r3.8xlarge
 	//
-	// Previous generation: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	// Previous generation: (not recommended)
+	//
+	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
 	//    * All T2 instances are created in an Amazon Virtual Private Cloud (Amazon
 	//    VPC).
 	//
-	//    * Redis backup/restore is not supported for Redis (cluster mode disabled)
-	//    T1 and T2 instances. Backup/restore is supported on Redis (cluster mode
-	//    enabled) T2 instances.
+	//    * Redis (cluster mode disabled): Redis backup/restore is not supported
+	//    on T1 and T2 instances.
+	//
+	//    * Redis (cluster mode enabled): Backup/restore is not supported on T1
+	//    instances.
 	//
 	//    * Redis Append-only files (AOF) functionality is not supported for T1
 	//    or T2 instances.
+	//
+	// Supported node types are available in all regions except as noted in the
+	// following table.
 	//
 	// For a complete listing of node types and specifications, see Amazon ElastiCache
 	// Product Features and Details (http://aws.amazon.com/elasticache/details)
@@ -9250,8 +9476,8 @@ type ModifyCacheClusterInput struct {
 	// and the value of NumCacheNodes in the request.
 	//
 	// For example: If you have 3 active cache nodes, 7 pending cache nodes, and
-	// the number of cache nodes in this ModifyCacheCluser call is 5, you must list
-	// 2 (7 - 5) cache node IDs to remove.
+	// the number of cache nodes in this ModifyCacheCluster call is 5, you must
+	// list 2 (7 - 5) cache node IDs to remove.
 	CacheNodeIdsToRemove []*string `locationNameList:"CacheNodeId" type:"list"`
 
 	// A valid cache node type that you want to scale this cache cluster up to.
@@ -9763,13 +9989,14 @@ type ModifyReplicationGroupInput struct {
 	//
 	// Valid values: true | false
 	//
-	// ElastiCache Multi-AZ replication groups are not supported on:
+	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
+	// on:
 	//
-	// Redis versions earlier than 2.8.6.
+	//    * Redis versions earlier than 2.8.6.
 	//
-	// Redis (cluster mode disabled):T1 and T2 cache node types.
+	//    * Redis (cluster mode disabled): T1 and T2 cache node types.
 	//
-	// Redis (cluster mode enabled): T1 node types.
+	//    * Redis (cluster mode enabled): T1 node types.
 	AutomaticFailoverEnabled *bool `type:"boolean"`
 
 	// A valid cache node type that you want to scale this replication group to.
@@ -10811,15 +11038,31 @@ func (s *RemoveTagsFromResourceInput) SetTagKeys(v []*string) *RemoveTagsFromRes
 type ReplicationGroup struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates the status of Multi-AZ for this replication group.
+	// A flag that enables encryption at-rest when set to true.
 	//
-	// ElastiCache Multi-AZ replication groups are not supported on:
+	// You cannot modify the value of AtRestEncryptionEnabled after the cluster
+	// is created. To enable encryption at-rest on a cluster you must set AtRestEncryptionEnabled
+	// to true when you create a cluster.
 	//
-	// Redis versions earlier than 2.8.6.
+	// Default: false
+	AtRestEncryptionEnabled *bool `type:"boolean"`
+
+	// A flag that enables using an AuthToken (password) when issuing Redis commands.
 	//
-	// Redis (cluster mode disabled):T1 and T2 cache node types.
+	// Default: false
+	AuthTokenEnabled *bool `type:"boolean"`
+
+	// Indicates the status of Multi-AZ with automatic failover for this Redis replication
+	// group.
 	//
-	// Redis (cluster mode enabled): T1 node types.
+	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
+	// on:
+	//
+	//    * Redis versions earlier than 2.8.6.
+	//
+	//    * Redis (cluster mode disabled): T1 and T2 cache node types.
+	//
+	//    * Redis (cluster mode enabled): T1 node types.
 	AutomaticFailover *string `type:"string" enum:"AutomaticFailoverStatus"`
 
 	// The name of the compute and memory capacity node type for each node in the
@@ -10871,7 +11114,7 @@ type ReplicationGroup struct {
 	// If you do not specify this parameter, ElastiCache automatically chooses an
 	// appropriate time range.
 	//
-	// Note: This parameter is only valid if the Engine parameter is redis.
+	// This parameter is only valid if the Engine parameter is redis.
 	SnapshotWindow *string `type:"string"`
 
 	// The cache cluster ID that is used as the daily snapshot source for the replication
@@ -10881,6 +11124,15 @@ type ReplicationGroup struct {
 	// The current state of this replication group - creating, available, modifying,
 	// deleting, create-failed, snapshotting.
 	Status *string `type:"string"`
+
+	// A flag that enables in-transit encryption when set to true.
+	//
+	// You cannot modify the value of TransitEncryptionEnabled after the cluster
+	// is created. To enable in-transit encryption on a cluster you must set TransitEncryptionEnabled
+	// to true when you create a cluster.
+	//
+	// Default: false
+	TransitEncryptionEnabled *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -10891,6 +11143,18 @@ func (s ReplicationGroup) String() string {
 // GoString returns the string representation
 func (s ReplicationGroup) GoString() string {
 	return s.String()
+}
+
+// SetAtRestEncryptionEnabled sets the AtRestEncryptionEnabled field's value.
+func (s *ReplicationGroup) SetAtRestEncryptionEnabled(v bool) *ReplicationGroup {
+	s.AtRestEncryptionEnabled = &v
+	return s
+}
+
+// SetAuthTokenEnabled sets the AuthTokenEnabled field's value.
+func (s *ReplicationGroup) SetAuthTokenEnabled(v bool) *ReplicationGroup {
+	s.AuthTokenEnabled = &v
+	return s
 }
 
 // SetAutomaticFailover sets the AutomaticFailover field's value.
@@ -10971,21 +11235,29 @@ func (s *ReplicationGroup) SetStatus(v string) *ReplicationGroup {
 	return s
 }
 
+// SetTransitEncryptionEnabled sets the TransitEncryptionEnabled field's value.
+func (s *ReplicationGroup) SetTransitEncryptionEnabled(v bool) *ReplicationGroup {
+	s.TransitEncryptionEnabled = &v
+	return s
+}
+
 // The settings to be applied to the Redis replication group, either immediately
 // or during the next maintenance window.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/ReplicationGroupPendingModifiedValues
 type ReplicationGroupPendingModifiedValues struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates the status of Multi-AZ for this Redis replication group.
+	// Indicates the status of Multi-AZ with automatic failover for this Redis replication
+	// group.
 	//
-	// ElastiCache Multi-AZ replication groups are not supported on:
+	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
+	// on:
 	//
-	// Redis versions earlier than 2.8.6.
+	//    * Redis versions earlier than 2.8.6.
 	//
-	// Redis (cluster mode disabled):T1 and T2 cache node types.
+	//    * Redis (cluster mode disabled): T1 and T2 cache node types.
 	//
-	// Redis (cluster mode enabled): T1 node types.
+	//    * Redis (cluster mode enabled): T1 node types.
 	AutomaticFailoverStatus *string `type:"string" enum:"PendingAutomaticFailoverStatus"`
 
 	// The primary cluster ID that is applied immediately (if --apply-immediately
@@ -11025,37 +11297,60 @@ type ReservedCacheNode struct {
 
 	// The cache node type for the reserved cache nodes.
 	//
-	// Valid node types are as follows:
+	// The following node types are supported by ElastiCache. Generally speaking,
+	// the current generation types provide more memory and computational power
+	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
 	//    * General purpose:
 	//
-	// Current generation: cache.t2.micro, cache.t2.small, cache.t2.medium, cache.m3.medium,
-	//    cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge, cache.m4.large, cache.m4.xlarge,
-	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge
+	// Current generation:
 	//
-	// Previous generation: cache.t1.micro, cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge
+	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
 	//
-	//    * Compute optimized: cache.c1.xlarge
+	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
+	//
+	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
+	//    cache.m4.10xlarge
+	//
+	// Previous generation: (not recommended)
+	//
+	// T1 node types:cache.t1.micro
+	//
+	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//
+	//    * Compute optimized:
+	//
+	// Previous generation: (not recommended)
+	//
+	// C1 node types:cache.c1.xlarge
 	//
 	//    * Memory optimized:
 	//
-	// Current generation: cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
+	// Current generation:
+	//
+	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
 	//    cache.r3.8xlarge
 	//
-	// Previous generation: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	// Previous generation: (not recommended)
+	//
+	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
 	//    * All T2 instances are created in an Amazon Virtual Private Cloud (Amazon
 	//    VPC).
 	//
-	//    * Redis backup/restore is not supported for Redis (cluster mode disabled)
-	//    T1 and T2 instances. Backup/restore is supported on Redis (cluster mode
-	//    enabled) T2 instances.
+	//    * Redis (cluster mode disabled): Redis backup/restore is not supported
+	//    on T1 and T2 instances.
+	//
+	//    * Redis (cluster mode enabled): Backup/restore is not supported on T1
+	//    instances.
 	//
 	//    * Redis Append-only files (AOF) functionality is not supported for T1
 	//    or T2 instances.
+	//
+	// Supported node types are available in all regions except as noted in the
+	// following table.
 	//
 	// For a complete listing of node types and specifications, see Amazon ElastiCache
 	// Product Features and Details (http://aws.amazon.com/elasticache/details)
@@ -11183,37 +11478,60 @@ type ReservedCacheNodesOffering struct {
 
 	// The cache node type for the reserved cache node.
 	//
-	// Valid node types are as follows:
+	// The following node types are supported by ElastiCache. Generally speaking,
+	// the current generation types provide more memory and computational power
+	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
 	//    * General purpose:
 	//
-	// Current generation: cache.t2.micro, cache.t2.small, cache.t2.medium, cache.m3.medium,
-	//    cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge, cache.m4.large, cache.m4.xlarge,
-	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge
+	// Current generation:
 	//
-	// Previous generation: cache.t1.micro, cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge
+	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
 	//
-	//    * Compute optimized: cache.c1.xlarge
+	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
+	//
+	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
+	//    cache.m4.10xlarge
+	//
+	// Previous generation: (not recommended)
+	//
+	// T1 node types:cache.t1.micro
+	//
+	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//
+	//    * Compute optimized:
+	//
+	// Previous generation: (not recommended)
+	//
+	// C1 node types:cache.c1.xlarge
 	//
 	//    * Memory optimized:
 	//
-	// Current generation: cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
+	// Current generation:
+	//
+	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
 	//    cache.r3.8xlarge
 	//
-	// Previous generation: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	// Previous generation: (not recommended)
+	//
+	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
 	//    * All T2 instances are created in an Amazon Virtual Private Cloud (Amazon
 	//    VPC).
 	//
-	//    * Redis backup/restore is not supported for Redis (cluster mode disabled)
-	//    T1 and T2 instances. Backup/restore is supported on Redis (cluster mode
-	//    enabled) T2 instances.
+	//    * Redis (cluster mode disabled): Redis backup/restore is not supported
+	//    on T1 and T2 instances.
+	//
+	//    * Redis (cluster mode enabled): Backup/restore is not supported on T1
+	//    instances.
 	//
 	//    * Redis Append-only files (AOF) functionality is not supported for T1
 	//    or T2 instances.
+	//
+	// Supported node types are available in all regions except as noted in the
+	// following table.
 	//
 	// For a complete listing of node types and specifications, see Amazon ElastiCache
 	// Product Features and Details (http://aws.amazon.com/elasticache/details)
@@ -11510,15 +11828,17 @@ type Snapshot struct {
 	// This parameter is currently disabled.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
-	// Indicates the status of Multi-AZ for the source replication group.
+	// Indicates the status of Multi-AZ with automatic failover for the source Redis
+	// replication group.
 	//
-	// ElastiCache Multi-AZ replication groups are not supported on:
+	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
+	// on:
 	//
-	// Redis versions earlier than 2.8.6.
+	//    * Redis versions earlier than 2.8.6.
 	//
-	// Redis (cluster mode disabled):T1 and T2 cache node types.
+	//    * Redis (cluster mode disabled): T1 and T2 cache node types.
 	//
-	// Redis (cluster mode enabled): T1 node types.
+	//    * Redis (cluster mode enabled): T1 node types.
 	AutomaticFailover *string `type:"string" enum:"AutomaticFailoverStatus"`
 
 	// The date and time when the source cache cluster was created.
@@ -11530,37 +11850,60 @@ type Snapshot struct {
 	// The name of the compute and memory capacity node type for the source cache
 	// cluster.
 	//
-	// Valid node types are as follows:
+	// The following node types are supported by ElastiCache. Generally speaking,
+	// the current generation types provide more memory and computational power
+	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
 	//    * General purpose:
 	//
-	// Current generation: cache.t2.micro, cache.t2.small, cache.t2.medium, cache.m3.medium,
-	//    cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge, cache.m4.large, cache.m4.xlarge,
-	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge
+	// Current generation:
 	//
-	// Previous generation: cache.t1.micro, cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge
+	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
 	//
-	//    * Compute optimized: cache.c1.xlarge
+	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
+	//
+	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
+	//    cache.m4.10xlarge
+	//
+	// Previous generation: (not recommended)
+	//
+	// T1 node types:cache.t1.micro
+	//
+	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//
+	//    * Compute optimized:
+	//
+	// Previous generation: (not recommended)
+	//
+	// C1 node types:cache.c1.xlarge
 	//
 	//    * Memory optimized:
 	//
-	// Current generation: cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
+	// Current generation:
+	//
+	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
 	//    cache.r3.8xlarge
 	//
-	// Previous generation: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	// Previous generation: (not recommended)
+	//
+	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
 	//    * All T2 instances are created in an Amazon Virtual Private Cloud (Amazon
 	//    VPC).
 	//
-	//    * Redis backup/restore is not supported for Redis (cluster mode disabled)
-	//    T1 and T2 instances. Backup/restore is supported on Redis (cluster mode
-	//    enabled) T2 instances.
+	//    * Redis (cluster mode disabled): Redis backup/restore is not supported
+	//    on T1 and T2 instances.
+	//
+	//    * Redis (cluster mode enabled): Backup/restore is not supported on T1
+	//    instances.
 	//
 	//    * Redis Append-only files (AOF) functionality is not supported for T1
 	//    or T2 instances.
+	//
+	// Supported node types are available in all regions except as noted in the
+	// following table.
 	//
 	// For a complete listing of node types and specifications, see Amazon ElastiCache
 	// Product Features and Details (http://aws.amazon.com/elasticache/details)

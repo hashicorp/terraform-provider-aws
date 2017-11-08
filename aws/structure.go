@@ -1014,6 +1014,38 @@ func expandESEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 	return &options
 }
 
+func flattenESVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if o.AvailabilityZones != nil {
+		m["availability_zones"] = schema.NewSet(schema.HashString, flattenStringList(o.AvailabilityZones))
+	}
+	if o.SecurityGroupIds != nil {
+		m["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(o.SecurityGroupIds))
+	}
+	if o.SubnetIds != nil {
+		m["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(o.SubnetIds))
+	}
+	if o.VPCId != nil {
+		m["vpc_id"] = *o.VPCId
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandESVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
+	options := elasticsearch.VPCOptions{}
+
+	if v, ok := m["security_group_ids"]; ok {
+		options.SecurityGroupIds = expandStringList(v.(*schema.Set).List())
+	}
+	if v, ok := m["subnet_ids"]; ok {
+		options.SubnetIds = expandStringList(v.(*schema.Set).List())
+	}
+
+	return &options
+}
+
 func expandConfigRecordingGroup(configured []interface{}) *configservice.RecordingGroup {
 	recordingGroup := configservice.RecordingGroup{}
 	group := configured[0].(map[string]interface{})
@@ -1471,24 +1503,35 @@ func expandApiGatewayStageKeyOperations(d *schema.ResourceData) []*apigateway.Pa
 	return operations
 }
 
-func expandCloudWachLogMetricTransformations(m map[string]interface{}) []*cloudwatchlogs.MetricTransformation {
+func expandCloudWachLogMetricTransformations(m map[string]interface{}) ([]*cloudwatchlogs.MetricTransformation, error) {
 	transformation := cloudwatchlogs.MetricTransformation{
 		MetricName:      aws.String(m["name"].(string)),
 		MetricNamespace: aws.String(m["namespace"].(string)),
 		MetricValue:     aws.String(m["value"].(string)),
 	}
 
-	return []*cloudwatchlogs.MetricTransformation{&transformation}
+	if m["default_value"] != "" {
+		transformation.DefaultValue = aws.Float64(m["default_value"].(float64))
+	}
+
+	return []*cloudwatchlogs.MetricTransformation{&transformation}, nil
 }
 
-func flattenCloudWachLogMetricTransformations(ts []*cloudwatchlogs.MetricTransformation) map[string]string {
-	m := make(map[string]string, 0)
+func flattenCloudWachLogMetricTransformations(ts []*cloudwatchlogs.MetricTransformation) []interface{} {
+	mts := make([]interface{}, 0)
+	m := make(map[string]interface{}, 0)
 
 	m["name"] = *ts[0].MetricName
 	m["namespace"] = *ts[0].MetricNamespace
 	m["value"] = *ts[0].MetricValue
 
-	return m
+	if ts[0].DefaultValue != nil {
+		m["default_value"] = *ts[0].DefaultValue
+	}
+
+	mts = append(mts, m)
+
+	return mts
 }
 
 func flattenBeanstalkAsg(list []*elasticbeanstalk.AutoScalingGroup) []string {

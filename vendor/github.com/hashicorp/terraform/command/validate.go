@@ -17,7 +17,7 @@ type ValidateCommand struct {
 const defaultPath = "."
 
 func (c *ValidateCommand) Run(args []string) int {
-	args, err := c.Meta.process(args, false)
+	args, err := c.Meta.process(args, true)
 	if err != nil {
 		return 1
 	}
@@ -44,6 +44,12 @@ func (c *ValidateCommand) Run(args []string) int {
 	if err != nil {
 		c.Ui.Error(fmt.Sprintf(
 			"Unable to locate directory %v\n", err.Error()))
+	}
+
+	// Check for user-supplied plugin path
+	if c.pluginPath, err = c.loadPluginPath(); err != nil {
+		c.Ui.Error(fmt.Sprintf("Error loading plugin path: %s", err))
+		return 1
 	}
 
 	rtnCode := c.validate(dir, checkVars)
@@ -91,21 +97,19 @@ Options:
 func (c *ValidateCommand) validate(dir string, checkVars bool) int {
 	cfg, err := config.LoadDir(dir)
 	if err != nil {
-		c.Ui.Error(fmt.Sprintf(
-			"Error loading files %v\n", err.Error()))
+		c.showDiagnostics(err)
 		return 1
 	}
 	err = cfg.Validate()
 	if err != nil {
-		c.Ui.Error(fmt.Sprintf(
-			"Error validating: %v\n", err.Error()))
+		c.showDiagnostics(err)
 		return 1
 	}
 
 	if checkVars {
 		mod, err := c.Module(dir)
 		if err != nil {
-			c.Ui.Error(fmt.Sprintf("Failed to load root config module: %s", err))
+			c.showDiagnostics(err)
 			return 1
 		}
 
@@ -114,7 +118,7 @@ func (c *ValidateCommand) validate(dir string, checkVars bool) int {
 
 		tfCtx, err := terraform.NewContext(opts)
 		if err != nil {
-			c.Ui.Error(fmt.Sprintf("Error: %v\n", err.Error()))
+			c.showDiagnostics(err)
 			return 1
 		}
 

@@ -53,11 +53,17 @@
                         <li<%= sidebar_current("docs-aws-datasource-cloudformation-stack") %>>
                             <a href="/docs/providers/aws/d/cloudformation_stack.html">aws_cloudformation_stack</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-cloudtrail-service-account") %>>
+                            <a href="/docs/providers/aws/d/cloudtrail_service_account.html">aws_cloudtrail_service_account</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-db-instance") %>>
                             <a href="/docs/providers/aws/d/db_instance.html">aws_db_instance</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-db-snapshot") %>>
                           <a href="/docs/providers/aws/d/db_snapshot.html">aws_db_snapshot</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-dynamodb-table") %>>
+                          <a href="/docs/providers/aws/d/dynamodb_table.html">aws_dynamodb_table</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-ebs-snapshot") %>>
                           <a href="/docs/providers/aws/d/ebs_snapshot.html">aws_ebs_snapshot</a>
@@ -143,6 +149,8 @@
                         <li<%= sidebar_current("docs-aws-datasource-kms-secret") %>>
                             <a href="/docs/providers/aws/d/kms_secret.html">aws_kms_secret</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-nat-gateway") %>>
+                           <a href="/docs/providers/aws/d/nat_gateway.html">aws_nat_gateway</a>
                         <li<%= sidebar_current("docs-aws-datasource-lb-x") %>>
                             <a href="/docs/providers/aws/d/lb.html">aws_lb</a>
                         </li>
@@ -157,6 +165,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-prefix-list") %>>
                             <a href="/docs/providers/aws/d/prefix_list.html">aws_prefix_list</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-rds-cluster") %>>
+                            <a href="/docs/providers/aws/d/rds_cluster.html">aws_rds_cluster</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-redshift-service-account") %>>
                             <a href="/docs/providers/aws/d/redshift_service_account.html">aws_redshift_service_account</a>
@@ -515,6 +526,17 @@
                     </ul>
                 </li>
 
+                <li<%= sidebar_current("docs-aws-resource-dx") %>>
+                    <a href="#">Direct Connect Resources</a>
+                    <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-aws-resource-dx-connection") %>>
+                            <a href="/docs/providers/aws/r/dx_connection.html">aws_dx_connection</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-dx-lag") %>>
+                            <a href="/docs/providers/aws/r/dx_lag.html">aws_dx_lag</a>
+                        </li>
+                    </ul>
+                </li>
 
                 <li<%= sidebar_current("docs-aws-resource-dynamodb") %>>
                     <a href="#">DynamoDB Resources</a>
@@ -709,6 +731,10 @@
                 <li<%= sidebar_current("docs-aws-resource-(ecs|ecr)") %>>
                     <a href="#">ECS Resources</a>
                     <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-resource-ecr-lifecycle-policy") %>>
+                            <a href="/docs/providers/aws/r/ecr_lifecycle_policy.html">aws_ecr_lifecycle_policy</a>
+                        </li>
 
                         <li<%= sidebar_current("docs-aws-resource-ecr-repository") %>>
                             <a href="/docs/providers/aws/r/ecr_repository.html">aws_ecr_repository</a>
@@ -1343,6 +1369,10 @@
 
                         <li<%= sidebar_current("docs-aws-resource-ses-event-destination") %>>
                             <a href="/docs/providers/aws/r/ses_event_destination.html">aws_ses_event_destination</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-ses-template") %>>
+                            <a href="/docs/providers/aws/r/ses_template.html">aws_ses_template</a>
                         </li>
 
                     </ul>
