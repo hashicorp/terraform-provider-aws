@@ -44,6 +44,7 @@ const (
 // Service identifiers
 const (
 	AcmServiceID                          = "acm"                          // Acm.
+	ApiPricingServiceID                   = "api.pricing"                  // ApiPricing.
 	ApigatewayServiceID                   = "apigateway"                   // Apigateway.
 	ApplicationAutoscalingServiceID       = "application-autoscaling"      // ApplicationAutoscaling.
 	Appstream2ServiceID                   = "appstream2"                   // Appstream2.
@@ -254,6 +255,16 @@ var awsPartition = partition{
 				"us-east-2":      endpoint{},
 				"us-west-1":      endpoint{},
 				"us-west-2":      endpoint{},
+			},
+		},
+		"api.pricing": service{
+			Defaults: endpoint{
+				CredentialScope: credentialScope{
+					Service: "pricing",
+				},
+			},
+			Endpoints: endpoints{
+				"us-east-1": endpoint{},
 			},
 		},
 		"apigateway": service{
@@ -1359,10 +1370,11 @@ var awsPartition = partition{
 		"polly": service{
 
 			Endpoints: endpoints{
-				"eu-west-1": endpoint{},
-				"us-east-1": endpoint{},
-				"us-east-2": endpoint{},
-				"us-west-2": endpoint{},
+				"ap-northeast-1": endpoint{},
+				"eu-west-1":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-east-2":      endpoint{},
+				"us-west-2":      endpoint{},
 			},
 		},
 		"rds": service{
@@ -1523,14 +1535,17 @@ var awsPartition = partition{
 			Endpoints: endpoints{
 				"ap-northeast-1": endpoint{},
 				"ap-northeast-2": endpoint{},
+				"ap-south-1":     endpoint{},
 				"ap-southeast-1": endpoint{},
 				"ap-southeast-2": endpoint{},
 				"ca-central-1":   endpoint{},
 				"eu-central-1":   endpoint{},
 				"eu-west-1":      endpoint{},
 				"eu-west-2":      endpoint{},
+				"sa-east-1":      endpoint{},
 				"us-east-1":      endpoint{},
 				"us-east-2":      endpoint{},
+				"us-west-1":      endpoint{},
 				"us-west-2":      endpoint{},
 			},
 		},
@@ -1928,6 +1943,12 @@ var awscnPartition = partition{
 			},
 		},
 		"codedeploy": service{
+
+			Endpoints: endpoints{
+				"cn-north-1": endpoint{},
+			},
+		},
+		"cognito-identity": service{
 
 			Endpoints: endpoints{
 				"cn-north-1": endpoint{},

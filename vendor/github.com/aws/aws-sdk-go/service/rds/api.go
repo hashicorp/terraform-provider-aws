@@ -609,10 +609,10 @@ func (c *RDS) CopyDBClusterSnapshotRequest(input *CopyDBClusterSnapshotInput) (r
 //
 //    * PreSignedUrl - A URL that contains a Signature Version 4 signed request
 //    for the CopyDBClusterSnapshot action to be called in the source AWS Region
-//    where the DB cluster snapshot will be copied from. The pre-signed URL
-//    must be a valid request for the CopyDBClusterSnapshot API action that
-//    can be executed in the source AWS Region that contains the encrypted DB
-//    cluster snapshot to be copied.
+//    where the DB cluster snapshot is copied from. The pre-signed URL must
+//    be a valid request for the CopyDBClusterSnapshot API action that can be
+//    executed in the source AWS Region that contains the encrypted DB cluster
+//    snapshot to be copied.
 //
 // The pre-signed URL request must contain the following parameter values:
 //
@@ -2037,12 +2037,12 @@ func (c *RDS) CreateEventSubscriptionRequest(input *CreateEventSubscriptionInput
 // mydbinstance2 and EventCategories = Availability, Backup.
 //
 // If you specify both the SourceType and SourceIds, such as SourceType = db-instance
-// and SourceIdentifier = myDBInstance1, you will be notified of all the db-instance
+// and SourceIdentifier = myDBInstance1, you are notified of all the db-instance
 // events for the specified source. If you specify a SourceType but do not specify
-// a SourceIdentifier, you will receive notice of the events for that source
-// type for all your RDS sources. If you do not specify either the SourceType
-// nor the SourceIdentifier, you will be notified of events generated from all
-// RDS sources belonging to your customer account.
+// a SourceIdentifier, you receive notice of the events for that source type
+// for all your RDS sources. If you do not specify either the SourceType nor
+// the SourceIdentifier, you are notified of events generated from all RDS sources
+// belonging to your customer account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7946,8 +7946,8 @@ func (c *RDS) RebootDBInstanceRequest(input *RebootDBInstanceInput) (req *reques
 // group that were pending. Rebooting a DB instance results in a momentary outage
 // of the instance, during which the DB instance status is set to rebooting.
 // If the RDS instance is configured for MultiAZ, it is possible that the reboot
-// will be conducted through a failover. An Amazon RDS event is created when
-// the reboot is completed.
+// is conducted through a failover. An Amazon RDS event is created when the
+// reboot is completed.
 //
 // If your DB instance is deployed in multiple Availability Zones, you can force
 // a failover from one AZ to the other during the reboot. You might force a
@@ -9686,7 +9686,7 @@ func (s *AddSourceIdentifierToSubscriptionOutput) SetEventSubscription(v *EventS
 type AddTagsToResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon RDS resource the tags will be added to. This value is an Amazon
+	// The Amazon RDS resource that the tags are added to. This value is an Amazon
 	// Resource Name (ARN). For information about creating an ARN, see  Constructing
 	// an RDS Amazon Resource Name (ARN) (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Tagging.ARN.html#USER_Tagging.ARN.Constructing).
 	//
@@ -10635,9 +10635,9 @@ type CopyDBSnapshotInput struct {
 	// DB snapshot to be copied. The presigned URL request must contain the following
 	// parameter values:
 	//
-	//    * DestinationRegion - The AWS Region that the encrypted DB snapshot will
-	//    be copied to. This AWS Region is the same one where the CopyDBSnapshot
-	//    action is called that contains this presigned URL.
+	//    * DestinationRegion - The AWS Region that the encrypted DB snapshot is
+	//    copied to. This AWS Region is the same one where the CopyDBSnapshot action
+	//    is called that contains this presigned URL.
 	//
 	// For example, if you copy an encrypted DB snapshot from the us-west-2 region
 	//    to the us-east-1 region, then you call the CopyDBSnapshot action in the
@@ -10986,7 +10986,7 @@ type CreateDBClusterInput struct {
 	DBClusterIdentifier *string `type:"string" required:"true"`
 
 	// The name of the DB cluster parameter group to associate with this DB cluster.
-	// If this argument is omitted, default.aurora5.6 will be used.
+	// If this argument is omitted, default.aurora5.6 is used.
 	//
 	// Constraints:
 	//
@@ -11083,9 +11083,9 @@ type CreateDBClusterInput struct {
 	Port *int64 `type:"integer"`
 
 	// A URL that contains a Signature Version 4 signed request for the CreateDBCluster
-	// action to be called in the source AWS Region where the DB cluster will be
-	// replicated from. You only need to specify PreSignedUrl when you are performing
-	// cross-region replication from an encrypted DB cluster.
+	// action to be called in the source AWS Region where the DB cluster is replicated
+	// from. You only need to specify PreSignedUrl when you are performing cross-region
+	// replication from an encrypted DB cluster.
 	//
 	// The pre-signed URL must be a valid request for the CreateDBCluster API action
 	// that can be executed in the source AWS Region that contains the encrypted
@@ -11677,15 +11677,14 @@ type CreateDBInstanceInput struct {
 	// Web and Express editions: Must be an integer from 20 to 1024.
 	AllocatedStorage *int64 `type:"integer"`
 
-	// Indicates that minor engine upgrades will be applied automatically to the
-	// DB instance during the maintenance window.
+	// Indicates that minor engine upgrades are applied automatically to the DB
+	// instance during the maintenance window.
 	//
 	// Default: true
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
-	// The EC2 Availability Zone that the database instance will be created in.
-	// For information on regions and Availability Zones, see Regions and Availability
-	// Zones (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html).
+	// The EC2 Availability Zone that the database instance is created in. For information
+	// on regions and Availability Zones, see Regions and Availability Zones (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html).
 	//
 	// Default: A random, system-chosen Availability Zone in the endpoint's AWS
 	// Region.
@@ -11735,15 +11734,11 @@ type CreateDBInstanceInput struct {
 	// Type: String
 	DBClusterIdentifier *string `type:"string"`
 
-	// The compute and memory capacity of the DB instance. Note that not all instance
-	// classes are available in all regions for all DB engines.
-	//
-	// Valid Values: db.t1.micro | db.m1.small | db.m1.medium | db.m1.large | db.m1.xlarge
-	// | db.m2.xlarge |db.m2.2xlarge | db.m2.4xlarge | db.m3.medium | db.m3.large
-	// | db.m3.xlarge | db.m3.2xlarge | db.m4.large | db.m4.xlarge | db.m4.2xlarge
-	// | db.m4.4xlarge | db.m4.10xlarge | db.r3.large | db.r3.xlarge | db.r3.2xlarge
-	// | db.r3.4xlarge | db.r3.8xlarge | db.t2.micro | db.t2.small | db.t2.medium
-	// | db.t2.large
+	// The compute and memory capacity of the DB instance, for example, db.m4.large.
+	// Not all DB instance classes are available in all regions, or for all database
+	// engines. For the full list of DB instance classes, and availability for your
+	// engine, see DB Instance Class (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
+	// in the Amazon RDS User Guide.
 	//
 	// DBInstanceClass is a required field
 	DBInstanceClass *string `type:"string" required:"true"`
@@ -11836,7 +11831,7 @@ type CreateDBInstanceInput struct {
 
 	// The name of the DB parameter group to associate with this DB instance. If
 	// this argument is omitted, the default DBParameterGroup for the specified
-	// engine will be used.
+	// engine is used.
 	//
 	// Constraints:
 	//
@@ -11883,6 +11878,7 @@ type CreateDBInstanceInput struct {
 	// Default: false
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
+	// True to enable Performance Insights for the DB instance; otherwise false.
 	EnablePerformanceInsights *bool `type:"boolean"`
 
 	// The name of the database engine to be used for this instance.
@@ -11985,11 +11981,15 @@ type CreateDBInstanceInput struct {
 	//
 	// MySQL
 	//
-	// 5.7.17 (supported in all AWS regions)
+	// 5.7.19 (supported in all AWS regions)
+	//
+	//    * 5.7.17 (supported in all AWS regions)
 	//
 	//    * 5.7.16 (supported in all AWS regions)
 	//
 	//    * 5.7.11 (supported in all AWS regions)
+	//
+	//    * 5.6.37 (supported in all AWS regions)
 	//
 	//    * 5.6.35 (supported in all AWS regions)
 	//
@@ -11999,6 +11999,8 @@ type CreateDBInstanceInput struct {
 	//
 	//    * 5.6.27 (supported in all regions except us-east-2, ca-central-1, eu-west-2)
 	//
+	// 5.5.57(supported in all AWS regions)
+	//
 	// 5.5.54(supported in all AWS regions)
 	//
 	// 5.5.53(supported in all AWS regions)
@@ -12006,6 +12008,8 @@ type CreateDBInstanceInput struct {
 	// 5.5.46(supported in all AWS regions)
 	//
 	// Oracle 12c
+	//
+	// 12.1.0.2.v9(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
 	//
 	// 12.1.0.2.v8(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
 	//
@@ -12024,6 +12028,8 @@ type CreateDBInstanceInput struct {
 	// 12.1.0.2.v1(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
 	//
 	// Oracle 11g
+	//
+	// 11.2.0.4.v13(supported for EE, SE1, and SE, in all AWS regions)
 	//
 	// 11.2.0.4.v12(supported for EE, SE1, and SE, in all AWS regions)
 	//
@@ -12049,13 +12055,13 @@ type CreateDBInstanceInput struct {
 	//
 	// PostgreSQL
 	//
-	// Version 9.6.x: 9.6.1 | 9.6.2 | 9.6.3
+	// Version 9.6.x: 9.6.5 | 9.6.3 | 9.6.2 | 9.6.1
 	//
-	// Version 9.5.x:9.5.6 | 9.5.4 | 9.5.2
+	// Version 9.5.x: 9.5.9 | 9.5.7 | 9.5.6 | 9.5.4 | 9.5.2
 	//
-	// Version 9.4.x:9.4.11 | 9.4.9 | 9.4.7
+	// Version 9.4.x: 9.4.14 | 9.4.12 | 9.4.11 | 9.4.9 | 9.4.7
 	//
-	// Version 9.3.x:9.3.16 | 9.3.14 | 9.3.12
+	// Version 9.3.x: 9.3.19 | 9.3.17 | 9.3.16 | 9.3.14 | 9.3.12
 	EngineVersion *string `type:"string"`
 
 	// The amount of Provisioned IOPS (input/output operations per second) to be
@@ -12216,6 +12222,9 @@ type CreateDBInstanceInput struct {
 	// from a DB instance once it is associated with a DB instance
 	OptionGroupName *string `type:"string"`
 
+	// The KMS key identifier for encryption of Performance Insights data. The KMS
+	// key ID is the Amazon Resource Name (ARN), KMS key identifier, or the KMS
+	// key alias for the KMS encryption key.
 	PerformanceInsightsKMSKeyId *string `type:"string"`
 
 	// The port number on which the database accepts connections.
@@ -12328,9 +12337,9 @@ type CreateDBInstanceInput struct {
 	//    * VPC: false
 	//
 	// If no DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance will be publicly accessible. If a
-	// specific DB subnet group has been specified as part of the request and the
-	// PubliclyAccessible value has not been set, the DB instance will be private.
+	// value has not been set, the DB instance is publicly accessible. If a specific
+	// DB subnet group has been specified as part of the request and the PubliclyAccessible
+	// value has not been set, the DB instance is private.
 	PubliclyAccessible *bool `type:"boolean"`
 
 	// Specifies whether the DB instance is encrypted.
@@ -12692,13 +12701,13 @@ func (s *CreateDBInstanceOutput) SetDBInstance(v *DBInstance) *CreateDBInstanceO
 type CreateDBInstanceReadReplicaInput struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates that minor engine upgrades will be applied automatically to the
-	// Read Replica during the maintenance window.
+	// Indicates that minor engine upgrades are applied automatically to the Read
+	// Replica during the maintenance window.
 	//
 	// Default: Inherits from the source DB instance
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
-	// The Amazon EC2 Availability Zone that the Read Replica will be created in.
+	// The Amazon EC2 Availability Zone that the Read Replica is created in.
 	//
 	// Default: A random, system-chosen Availability Zone in the endpoint's AWS
 	// Region.
@@ -12710,14 +12719,11 @@ type CreateDBInstanceReadReplicaInput struct {
 	// otherwise false. The default is false.
 	CopyTagsToSnapshot *bool `type:"boolean"`
 
-	// The compute and memory capacity of the Read Replica. Note that not all instance
-	// classes are available in all regions for all DB engines.
-	//
-	// Valid Values: db.m1.small | db.m1.medium | db.m1.large | db.m1.xlarge | db.m2.xlarge
-	// |db.m2.2xlarge | db.m2.4xlarge | db.m3.medium | db.m3.large | db.m3.xlarge
-	// | db.m3.2xlarge | db.m4.large | db.m4.xlarge | db.m4.2xlarge | db.m4.4xlarge
-	// | db.m4.10xlarge | db.r3.large | db.r3.xlarge | db.r3.2xlarge | db.r3.4xlarge
-	// | db.r3.8xlarge | db.t2.micro | db.t2.small | db.t2.medium | db.t2.large
+	// The compute and memory capacity of the Read Replica, for example, db.m4.large.
+	// Not all DB instance classes are available in all regions, or for all database
+	// engines. For the full list of DB instance classes, and availability for your
+	// engine, see DB Instance Class (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
+	// in the Amazon RDS User Guide.
 	//
 	// Default: Inherits from the source DB instance.
 	DBInstanceClass *string `type:"string"`
@@ -12729,9 +12735,9 @@ type CreateDBInstanceReadReplicaInput struct {
 	// DBInstanceIdentifier is a required field
 	DBInstanceIdentifier *string `type:"string" required:"true"`
 
-	// Specifies a DB subnet group for the DB instance. The new DB instance will
-	// be created in the VPC associated with the DB subnet group. If no DB subnet
-	// group is specified, then the new DB instance is not created in a VPC.
+	// Specifies a DB subnet group for the DB instance. The new DB instance is created
+	// in the VPC associated with the DB subnet group. If no DB subnet group is
+	// specified, then the new DB instance is not created in a VPC.
 	//
 	// Constraints:
 	//
@@ -12746,10 +12752,10 @@ type CreateDBInstanceReadReplicaInput struct {
 	//    * All Read Replicas in one AWS Region that are created from the same source
 	//    DB instance must either:>
 	//
-	// Specify DB subnet groups from the same VPC. All these Read Replicas will
-	//    be created in the same VPC.
+	// Specify DB subnet groups from the same VPC. All these Read Replicas are created
+	//    in the same VPC.
 	//
-	// Not specify a DB subnet group. All these Read Replicas will be created outside
+	// Not specify a DB subnet group. All these Read Replicas are created outside
 	//    of any VPC.
 	//
 	// Example: mySubnetgroup
@@ -12772,6 +12778,7 @@ type CreateDBInstanceReadReplicaInput struct {
 	// Default: false
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
+	// True to enable Performance Insights for the read replica; otherwise false.
 	EnablePerformanceInsights *bool `type:"boolean"`
 
 	// The amount of Provisioned IOPS (input/output operations per second) to be
@@ -12814,10 +12821,13 @@ type CreateDBInstanceReadReplicaInput struct {
 	// a MonitoringRoleArn value.
 	MonitoringRoleArn *string `type:"string"`
 
-	// The option group the DB instance will be associated with. If omitted, the
-	// default option group for the engine specified will be used.
+	// The option group the DB instance is associated with. If omitted, the default
+	// option group for the engine specified is used.
 	OptionGroupName *string `type:"string"`
 
+	// The KMS key identifier for encryption of Performance Insights data. The KMS
+	// key ID is the Amazon Resource Name (ARN), KMS key identifier, or the KMS
+	// key alias for the KMS encryption key.
 	PerformanceInsightsKMSKeyId *string `type:"string"`
 
 	// The port number that the DB instance uses for connections.
@@ -12840,8 +12850,8 @@ type CreateDBInstanceReadReplicaInput struct {
 	// encrypted source DB instance. The presigned URL request must contain the
 	// following parameter values:
 	//
-	//    * DestinationRegion - The AWS Region that the encrypted Read Replica will
-	//    be created in. This AWS Region is the same one where the CreateDBInstanceReadReplica
+	//    * DestinationRegion - The AWS Region that the encrypted Read Replica is
+	//    created in. This AWS Region is the same one where the CreateDBInstanceReadReplica
 	//    action is called that contains this presigned URL.
 	//
 	// For example, if you create an encrypted DB instance in the us-west-1 region,
@@ -12883,9 +12893,9 @@ type CreateDBInstanceReadReplicaInput struct {
 	//    * VPC:false
 	//
 	// If no DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance will be publicly accessible. If a
-	// specific DB subnet group has been specified as part of the request and the
-	// PubliclyAccessible value has not been set, the DB instance will be private.
+	// value has not been set, the DB instance is publicly accessible. If a specific
+	// DB subnet group has been specified as part of the request and the PubliclyAccessible
+	// value has not been set, the DB instance is private.
 	PubliclyAccessible *bool `type:"boolean"`
 
 	// The identifier of the DB instance that will act as the source for the Read
@@ -13600,7 +13610,7 @@ type CreateEventSubscriptionInput struct {
 	// SnsTopicArn is a required field
 	SnsTopicArn *string `type:"string" required:"true"`
 
-	// The list of identifiers of the event sources for which events will be returned.
+	// The list of identifiers of the event sources for which events are returned.
 	// If not specified, then all sources are included in the response. An identifier
 	// must begin with a letter and must contain only ASCII letters, digits, and
 	// hyphens; it cannot end with a hyphen or contain two consecutive hyphens.
@@ -13622,10 +13632,9 @@ type CreateEventSubscriptionInput struct {
 	//    supplied.
 	SourceIds []*string `locationNameList:"SourceId" type:"list"`
 
-	// The type of source that will be generating the events. For example, if you
-	// want to be notified of events generated by a DB instance, you would set this
-	// parameter to db-instance. if this value is not specified, all events are
-	// returned.
+	// The type of source that is generating the events. For example, if you want
+	// to be notified of events generated by a DB instance, you would set this parameter
+	// to db-instance. if this value is not specified, all events are returned.
 	//
 	// Valid values: db-instance | db-cluster | db-parameter-group | db-security-group
 	// | db-snapshot | db-cluster-snapshot
@@ -13999,9 +14008,9 @@ type DBCluster struct {
 	// multiple Aurora Replicas in your DB cluster.
 	//
 	// If a failover occurs, and the Aurora Replica that you are connected to is
-	// promoted to be the primary instance, your connection will be dropped. To
-	// continue sending your read workload to other Aurora Replicas in the cluster,
-	// you can then reconnect to the reader endpoint.
+	// promoted to be the primary instance, your connection is dropped. To continue
+	// sending your read workload to other Aurora Replicas in the cluster, you can
+	// then reconnect to the reader endpoint.
 	ReaderEndpoint *string `type:"string"`
 
 	// Contains the identifier of the source DB cluster if this DB cluster is a
@@ -15031,8 +15040,12 @@ type DBInstance struct {
 	// included when changes are pending. Specific changes are identified by subelements.
 	PendingModifiedValues *PendingModifiedValues `type:"structure"`
 
+	// True if Performance Insights is enabled for the DB instance; otherwise false.
 	PerformanceInsightsEnabled *bool `type:"boolean"`
 
+	// The KMS key identifier for encryption of Performance Insights data. The KMS
+	// key ID is the Amazon Resource Name (ARN), KMS key identifier, or the KMS
+	// key alias for the KMS encryption key.
 	PerformanceInsightsKMSKeyId *string `type:"string"`
 
 	// Specifies the daily time range during which automated backups are created
@@ -15061,9 +15074,9 @@ type DBInstance struct {
 	//    * VPC:false
 	//
 	// If no DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance will be publicly accessible. If a
-	// specific DB subnet group has been specified as part of the request and the
-	// PubliclyAccessible value has not been set, the DB instance will be private.
+	// value has not been set, the DB instance is publicly accessible. If a specific
+	// DB subnet group has been specified as part of the request and the PubliclyAccessible
+	// value has not been set, the DB instance is private.
 	PubliclyAccessible *bool `type:"boolean"`
 
 	// Contains one or more identifiers of Aurora DB clusters that are Read Replicas
@@ -15083,7 +15096,7 @@ type DBInstance struct {
 	SecondaryAvailabilityZone *string `type:"string"`
 
 	// The status of a Read Replica. If the instance is not a Read Replica, this
-	// will be blank.
+	// is blank.
 	StatusInfos []*DBInstanceStatusInfo `locationNameList:"DBInstanceStatusInfo" type:"list"`
 
 	// Specifies whether the DB instance is encrypted.
@@ -19223,7 +19236,7 @@ type DescribeEventCategoriesInput struct {
 	// This parameter is not currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
-	// The type of source that will be generating the events.
+	// The type of source that is generating the events.
 	//
 	// Valid values: db-instance | db-parameter-group | db-security-group | db-snapshot
 	SourceType *string `type:"string"`
@@ -19448,8 +19461,8 @@ type DescribeEventsInput struct {
 	// Constraints: Minimum 20, maximum 100.
 	MaxRecords *int64 `type:"integer"`
 
-	// The identifier of the event source for which events will be returned. If
-	// not specified, then all sources are included in the response.
+	// The identifier of the event source for which events are returned. If not
+	// specified, then all sources are included in the response.
 	//
 	// Constraints:
 	//
@@ -19605,8 +19618,7 @@ func (s *DescribeEventsOutput) SetMarker(v string) *DescribeEventsOutput {
 type DescribeOptionGroupOptionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// A required parameter. Options available for the given engine name will be
-	// described.
+	// A required parameter. Options available for the given engine name are described.
 	//
 	// EngineName is a required field
 	EngineName *string `type:"string" required:"true"`
@@ -20809,7 +20821,7 @@ type DownloadDBLogFilePortionInput struct {
 	Marker *string `type:"string"`
 
 	// The number of lines to download. If the number of lines specified results
-	// in a file over 1 MB in size, the file will be truncated at 1 MB in size.
+	// in a file over 1 MB in size, the file is truncated at 1 MB in size.
 	//
 	// If the NumberOfLines parameter is specified, then the block of lines returned
 	// can be from the beginning or the end of the log file, depending on the value
@@ -22052,12 +22064,11 @@ type ModifyDBInstanceInput struct {
 	// or Provisioned IOPS), amount of IOPS provisioned (if any), and the number
 	// of prior scale storage operations. Typical migration times are under 24 hours,
 	// but the process can take up to several days in some cases. During the migration,
-	// the DB instance will be available for use, but might experience performance
-	// degradation. While the migration takes place, nightly backups for the instance
-	// will be suspended. No other Amazon RDS operations can take place for the
-	// instance, including modifying the instance, rebooting the instance, deleting
-	// the instance, creating a Read Replica for the instance, and creating a DB
-	// snapshot of the instance.
+	// the DB instance is available for use, but might experience performance degradation.
+	// While the migration takes place, nightly backups for the instance are suspended.
+	// No other Amazon RDS operations can take place for the instance, including
+	// modifying the instance, rebooting the instance, deleting the instance, creating
+	// a Read Replica for the instance, and creating a DB snapshot of the instance.
 	AllocatedStorage *int64 `type:"integer"`
 
 	// Indicates that major version upgrades are allowed. Changing this parameter
@@ -22075,17 +22086,17 @@ type ModifyDBInstanceInput struct {
 	//
 	// If this parameter is set to false, changes to the DB instance are applied
 	// during the next maintenance window. Some parameter changes can cause an outage
-	// and will be applied on the next call to RebootDBInstance, or the next failure
+	// and are applied on the next call to RebootDBInstance, or the next failure
 	// reboot. Review the table of parameters in Modifying a DB Instance and Using
 	// the Apply Immediately Parameter (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html)
 	// to see the impact that setting ApplyImmediately to true or false has for
-	// each modified parameter and to determine when the changes will be applied.
+	// each modified parameter and to determine when the changes are applied.
 	//
 	// Default: false
 	ApplyImmediately *bool `type:"boolean"`
 
-	// Indicates that minor version upgrades will be applied automatically to the
-	// DB instance during the maintenance window. Changing this parameter does not
+	// Indicates that minor version upgrades are applied automatically to the DB
+	// instance during the maintenance window. Changing this parameter does not
 	// result in an outage except in the following case and the change is asynchronously
 	// applied as soon as possible. An outage will result if this parameter is set
 	// to true during the maintenance window, and a newer minor version is available,
@@ -22130,23 +22141,17 @@ type ModifyDBInstanceInput struct {
 	// otherwise false. The default is false.
 	CopyTagsToSnapshot *bool `type:"boolean"`
 
-	// The new compute and memory capacity of the DB instance. To determine the
-	// instance classes that are available for a particular DB engine, use the DescribeOrderableDBInstanceOptions
-	// action. Note that not all instance classes are available in all regions for
-	// all DB engines.
+	// The new compute and memory capacity of the DB instance, for example, db.m4.large.
+	// Not all DB instance classes are available in all regions, or for all database
+	// engines. For the full list of DB instance classes, and availability for your
+	// engine, see DB Instance Class (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
+	// in the Amazon RDS User Guide.
 	//
-	// Passing a value for this setting causes an outage during the change and is
-	// applied during the next maintenance window, unless ApplyImmediately is specified
-	// as true for this request.
+	// If you modify the DB instance class, an outage occurs during the change.
+	// The change is applied during the next maintenance window, unless ApplyImmediately
+	// is specified as true for this request.
 	//
 	// Default: Uses existing setting
-	//
-	// Valid Values: db.t1.micro | db.m1.small | db.m1.medium | db.m1.large | db.m1.xlarge
-	// | db.m2.xlarge | db.m2.2xlarge | db.m2.4xlarge | db.m3.medium | db.m3.large
-	// | db.m3.xlarge | db.m3.2xlarge | db.m4.large | db.m4.xlarge | db.m4.2xlarge
-	// | db.m4.4xlarge | db.m4.10xlarge | db.r3.large | db.r3.xlarge | db.r3.2xlarge
-	// | db.r3.4xlarge | db.r3.8xlarge | db.t2.micro | db.t2.small | db.t2.medium
-	// | db.t2.large
 	DBInstanceClass *string `type:"string"`
 
 	// The DB instance identifier. This value is stored as a lowercase string.
@@ -22270,6 +22275,7 @@ type ModifyDBInstanceInput struct {
 	// Default: false
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
+	// True to enable Performance Insights for the DB instance; otherwise false.
 	EnablePerformanceInsights *bool `type:"boolean"`
 
 	// The version number of the database engine to upgrade to. Changing this parameter
@@ -22311,12 +22317,11 @@ type ModifyDBInstanceInput struct {
 	// or Provisioned IOPS), amount of IOPS provisioned (if any), and the number
 	// of prior scale storage operations. Typical migration times are under 24 hours,
 	// but the process can take up to several days in some cases. During the migration,
-	// the DB instance will be available for use, but might experience performance
-	// degradation. While the migration takes place, nightly backups for the instance
-	// will be suspended. No other Amazon RDS operations can take place for the
-	// instance, including modifying the instance, rebooting the instance, deleting
-	// the instance, creating a Read Replica for the instance, and creating a DB
-	// snapshot of the instance.
+	// the DB instance is available for use, but might experience performance degradation.
+	// While the migration takes place, nightly backups for the instance are suspended.
+	// No other Amazon RDS operations can take place for the instance, including
+	// modifying the instance, rebooting the instance, deleting the instance, creating
+	// a Read Replica for the instance, and creating a DB snapshot of the instance.
 	Iops *int64 `type:"integer"`
 
 	// The license model for the DB instance.
@@ -22420,6 +22425,9 @@ type ModifyDBInstanceInput struct {
 	// from a DB instance once it is associated with a DB instance
 	OptionGroupName *string `type:"string"`
 
+	// The KMS key identifier for encryption of Performance Insights data. The KMS
+	// key ID is the Amazon Resource Name (ARN), KMS key identifier, or the KMS
+	// key alias for the KMS encryption key.
 	PerformanceInsightsKMSKeyId *string `type:"string"`
 
 	// The daily time range during which automated backups are created if automated
@@ -23196,10 +23204,9 @@ type ModifyEventSubscriptionInput struct {
 	// it.
 	SnsTopicArn *string `type:"string"`
 
-	// The type of source that will be generating the events. For example, if you
-	// want to be notified of events generated by a DB instance, you would set this
-	// parameter to db-instance. if this value is not specified, all events are
-	// returned.
+	// The type of source that is generating the events. For example, if you want
+	// to be notified of events generated by a DB instance, you would set this parameter
+	// to db-instance. if this value is not specified, all events are returned.
 	//
 	// Valid values: db-instance | db-parameter-group | db-security-group | db-snapshot
 	SourceType *string `type:"string"`
@@ -24084,7 +24091,7 @@ func (s *OptionVersion) SetVersion(v string) *OptionVersion {
 	return s
 }
 
-// Contains a list of available options for a DB instance
+// Contains a list of available options for a DB instance.
 //
 // This data type is used as a response element in the DescribeOrderableDBInstanceOptions
 // action.
@@ -24092,46 +24099,65 @@ func (s *OptionVersion) SetVersion(v string) *OptionVersion {
 type OrderableDBInstanceOption struct {
 	_ struct{} `type:"structure"`
 
-	// A list of Availability Zones for the orderable DB instance.
+	// A list of Availability Zones for a DB instance.
 	AvailabilityZones []*AvailabilityZone `locationNameList:"AvailabilityZone" type:"list"`
 
-	// The DB instance class for the orderable DB instance.
+	// The DB instance class for a DB instance.
 	DBInstanceClass *string `type:"string"`
 
-	// The engine type of the orderable DB instance.
+	// The engine type of a DB instance.
 	Engine *string `type:"string"`
 
-	// The engine version of the orderable DB instance.
+	// The engine version of a DB instance.
 	EngineVersion *string `type:"string"`
 
-	// The license model for the orderable DB instance.
+	// The license model for a DB instance.
 	LicenseModel *string `type:"string"`
 
-	// Indicates whether this orderable DB instance is multi-AZ capable.
+	// Maximum total provisioned IOPS for a DB instance.
+	MaxIopsPerDbInstance *int64 `type:"integer"`
+
+	// Maximum provisioned IOPS per GiB for a DB instance.
+	MaxIopsPerGib *float64 `type:"double"`
+
+	// Maximum storage size for a DB instance.
+	MaxStorageSize *int64 `type:"integer"`
+
+	// Minimum total provisioned IOPS for a DB instance.
+	MinIopsPerDbInstance *int64 `type:"integer"`
+
+	// Minimum provisioned IOPS per GiB for a DB instance.
+	MinIopsPerGib *float64 `type:"double"`
+
+	// Minimum storage size for a DB instance.
+	MinStorageSize *int64 `type:"integer"`
+
+	// Indicates whether a DB instance is Multi-AZ capable.
 	MultiAZCapable *bool `type:"boolean"`
 
-	// Indicates whether this orderable DB instance can have a Read Replica.
+	// Indicates whether a DB instance can have a Read Replica.
 	ReadReplicaCapable *bool `type:"boolean"`
 
-	// Indicates the storage type for this orderable DB instance.
+	// Indicates the storage type for a DB instance.
 	StorageType *string `type:"string"`
 
-	// Indicates whether the DB instance supports enhanced monitoring at intervals
+	// Indicates whether a DB instance supports Enhanced Monitoring at intervals
 	// from 1 to 60 seconds.
 	SupportsEnhancedMonitoring *bool `type:"boolean"`
 
-	// Indicates whether this orderable DB instance supports IAM database authentication.
+	// Indicates whether a DB instance supports IAM database authentication.
 	SupportsIAMDatabaseAuthentication *bool `type:"boolean"`
 
-	// Indicates whether this orderable DB instance supports provisioned IOPS.
+	// Indicates whether a DB instance supports provisioned IOPS.
 	SupportsIops *bool `type:"boolean"`
 
+	// True if a DB instance supports Performance Insights, otherwise false.
 	SupportsPerformanceInsights *bool `type:"boolean"`
 
-	// Indicates whether this orderable DB instance supports encrypted storage.
+	// Indicates whether a DB instance supports encrypted storage.
 	SupportsStorageEncryption *bool `type:"boolean"`
 
-	// Indicates whether this is a VPC orderable DB instance.
+	// Indicates whether a DB instance is in a VPC.
 	Vpc *bool `type:"boolean"`
 }
 
@@ -24172,6 +24198,42 @@ func (s *OrderableDBInstanceOption) SetEngineVersion(v string) *OrderableDBInsta
 // SetLicenseModel sets the LicenseModel field's value.
 func (s *OrderableDBInstanceOption) SetLicenseModel(v string) *OrderableDBInstanceOption {
 	s.LicenseModel = &v
+	return s
+}
+
+// SetMaxIopsPerDbInstance sets the MaxIopsPerDbInstance field's value.
+func (s *OrderableDBInstanceOption) SetMaxIopsPerDbInstance(v int64) *OrderableDBInstanceOption {
+	s.MaxIopsPerDbInstance = &v
+	return s
+}
+
+// SetMaxIopsPerGib sets the MaxIopsPerGib field's value.
+func (s *OrderableDBInstanceOption) SetMaxIopsPerGib(v float64) *OrderableDBInstanceOption {
+	s.MaxIopsPerGib = &v
+	return s
+}
+
+// SetMaxStorageSize sets the MaxStorageSize field's value.
+func (s *OrderableDBInstanceOption) SetMaxStorageSize(v int64) *OrderableDBInstanceOption {
+	s.MaxStorageSize = &v
+	return s
+}
+
+// SetMinIopsPerDbInstance sets the MinIopsPerDbInstance field's value.
+func (s *OrderableDBInstanceOption) SetMinIopsPerDbInstance(v int64) *OrderableDBInstanceOption {
+	s.MinIopsPerDbInstance = &v
+	return s
+}
+
+// SetMinIopsPerGib sets the MinIopsPerGib field's value.
+func (s *OrderableDBInstanceOption) SetMinIopsPerGib(v float64) *OrderableDBInstanceOption {
+	s.MinIopsPerGib = &v
+	return s
+}
+
+// SetMinStorageSize sets the MinStorageSize field's value.
+func (s *OrderableDBInstanceOption) SetMinStorageSize(v int64) *OrderableDBInstanceOption {
+	s.MinStorageSize = &v
 	return s
 }
 
@@ -24349,24 +24411,24 @@ type PendingMaintenanceAction struct {
 	// The type of pending maintenance action that is available for the resource.
 	Action *string `type:"string"`
 
-	// The date of the maintenance window when the action will be applied. The maintenance
-	// action will be applied to the resource during its first maintenance window
-	// after this date. If this date is specified, any next-maintenance opt-in requests
+	// The date of the maintenance window when the action is applied. The maintenance
+	// action is applied to the resource during its first maintenance window after
+	// this date. If this date is specified, any next-maintenance opt-in requests
 	// are ignored.
 	AutoAppliedAfterDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
-	// The effective date when the pending maintenance action will be applied to
-	// the resource. This date takes into account opt-in requests received from
-	// the ApplyPendingMaintenanceAction API, the AutoAppliedAfterDate, and the
-	// ForcedApplyDate. This value is blank if an opt-in request has not been received
-	// and nothing has been specified as AutoAppliedAfterDate or ForcedApplyDate.
+	// The effective date when the pending maintenance action is applied to the
+	// resource. This date takes into account opt-in requests received from the
+	// ApplyPendingMaintenanceAction API, the AutoAppliedAfterDate, and the ForcedApplyDate.
+	// This value is blank if an opt-in request has not been received and nothing
+	// has been specified as AutoAppliedAfterDate or ForcedApplyDate.
 	CurrentApplyDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// A description providing more detail about the maintenance action.
 	Description *string `type:"string"`
 
-	// The date when the maintenance action will be automatically applied. The maintenance
-	// action will be applied to the resource on this date regardless of the maintenance
+	// The date when the maintenance action is automatically applied. The maintenance
+	// action is applied to the resource on this date regardless of the maintenance
 	// window for the resource. If this date is specified, any immediate opt-in
 	// requests are ignored.
 	ForcedApplyDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
@@ -24427,7 +24489,7 @@ type PendingModifiedValues struct {
 	_ struct{} `type:"structure"`
 
 	// Contains the new AllocatedStorage size for the DB instance that will be applied
-	// or is in progress.
+	// or is currently being applied.
 	AllocatedStorage *int64 `type:"integer"`
 
 	// Specifies the pending number of days for which automated backups are retained.
@@ -24437,11 +24499,11 @@ type PendingModifiedValues struct {
 	CACertificateIdentifier *string `type:"string"`
 
 	// Contains the new DBInstanceClass for the DB instance that will be applied
-	// or is in progress.
+	// or is currently being applied.
 	DBInstanceClass *string `type:"string"`
 
 	// Contains the new DBInstanceIdentifier for the DB instance that will be applied
-	// or is in progress.
+	// or is currently being applied.
 	DBInstanceIdentifier *string `type:"string"`
 
 	// The new DB subnet group for the DB instance.
@@ -24451,7 +24513,7 @@ type PendingModifiedValues struct {
 	EngineVersion *string `type:"string"`
 
 	// Specifies the new Provisioned IOPS value for the DB instance that will be
-	// applied or is being applied.
+	// applied or is currently being applied.
 	Iops *int64 `type:"integer"`
 
 	// The license model for the DB instance.
@@ -24459,8 +24521,8 @@ type PendingModifiedValues struct {
 	// Valid values: license-included | bring-your-own-license | general-public-license
 	LicenseModel *string `type:"string"`
 
-	// Contains the pending or in-progress change of the master credentials for
-	// the DB instance.
+	// Contains the pending or currently-in-progress change of the master credentials
+	// for the DB instance.
 	MasterUserPassword *string `type:"string"`
 
 	// Indicates that the Single-AZ DB instance is to change to a Multi-AZ deployment.
@@ -24924,7 +24986,7 @@ type RebootDBInstanceInput struct {
 	// DBInstanceIdentifier is a required field
 	DBInstanceIdentifier *string `type:"string" required:"true"`
 
-	// When true, the reboot will be conducted through a MultiAZ failover.
+	// When true, the reboot is conducted through a MultiAZ failover.
 	//
 	// Constraint: You cannot specify true if the instance is not configured for
 	// MultiAZ.
@@ -25190,8 +25252,8 @@ func (s *RemoveSourceIdentifierFromSubscriptionOutput) SetEventSubscription(v *E
 type RemoveTagsFromResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon RDS resource the tags will be removed from. This value is an Amazon
-	// Resource Name (ARN). For information about creating an ARN, see  Constructing
+	// The Amazon RDS resource that the tags are removed from. This value is an
+	// Amazon Resource Name (ARN). For information about creating an ARN, see  Constructing
 	// an RDS Amazon Resource Name (ARN) (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Tagging.ARN.html#USER_Tagging.ARN.Constructing).
 	//
 	// ResourceName is a required field
@@ -25737,7 +25799,7 @@ type RestoreDBClusterFromS3Input struct {
 	DBClusterIdentifier *string `type:"string" required:"true"`
 
 	// The name of the DB cluster parameter group to associate with the restored
-	// DB cluster. If this argument is omitted, default.aurora5.6 will be used.
+	// DB cluster. If this argument is omitted, default.aurora5.6 is used.
 	//
 	// Constraints:
 	//
@@ -26419,8 +26481,8 @@ type RestoreDBClusterToPointInTimeInput struct {
 	//
 	// You can restore to a new DB cluster and encrypt the new DB cluster with a
 	// KMS key that is different than the KMS key used to encrypt the source DB
-	// cluster. The new DB cluster will be encrypted with the KMS key identified
-	// by the KmsKeyId parameter.
+	// cluster. The new DB cluster is encrypted with the KMS key identified by the
+	// KmsKeyId parameter.
 	//
 	// If you do not specify a value for the KmsKeyId parameter, then the following
 	// will occur:
@@ -26642,11 +26704,11 @@ func (s *RestoreDBClusterToPointInTimeOutput) SetDBCluster(v *DBCluster) *Restor
 type RestoreDBInstanceFromDBSnapshotInput struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates that minor version upgrades will be applied automatically to the
-	// DB instance during the maintenance window.
+	// Indicates that minor version upgrades are applied automatically to the DB
+	// instance during the maintenance window.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
-	// The EC2 Availability Zone that the database instance will be created in.
+	// The EC2 Availability Zone that the database instance is created in.
 	//
 	// Default: A random, system-chosen Availability Zone.
 	//
@@ -26660,13 +26722,13 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	// instance; otherwise false. The default is false.
 	CopyTagsToSnapshot *bool `type:"boolean"`
 
-	// The compute and memory capacity of the Amazon RDS DB instance.
+	// The compute and memory capacity of the Amazon RDS DB instance, for example,
+	// db.m4.large. Not all DB instance classes are available in all regions, or
+	// for all database engines. For the full list of DB instance classes, and availability
+	// for your engine, see DB Instance Class (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
+	// in the Amazon RDS User Guide.
 	//
-	// Valid Values: db.t1.micro | db.m1.small | db.m1.medium | db.m1.large | db.m1.xlarge
-	// | db.m2.2xlarge | db.m2.4xlarge | db.m3.medium | db.m3.large | db.m3.xlarge
-	// | db.m3.2xlarge | db.m4.large | db.m4.xlarge | db.m4.2xlarge | db.m4.4xlarge
-	// | db.m4.10xlarge | db.r3.large | db.r3.xlarge | db.r3.2xlarge | db.r3.4xlarge
-	// | db.r3.8xlarge | db.t2.micro | db.t2.small | db.t2.medium | db.t2.large
+	// Default: The same DBInstanceClass as the original DB instance.
 	DBInstanceClass *string `type:"string"`
 
 	// Name of the DB instance to create from the DB snapshot. This parameter isn't
@@ -26766,16 +26828,16 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 
 	// Specifies the amount of provisioned IOPS for the DB instance, expressed in
 	// I/O operations per second. If this parameter is not specified, the IOPS value
-	// will be taken from the backup. If this parameter is set to 0, the new instance
-	// will be converted to a non-PIOPS instance, which will take additional time,
-	// though your DB instance will be available for connections before the conversion
+	// is taken from the backup. If this parameter is set to 0, the new instance
+	// is converted to a non-PIOPS instance. The conversion takes additional time,
+	// though your DB instance is available for connections before the conversion
 	// starts.
 	//
+	// The provisioned IOPS value must follow the requirements for your database
+	// engine. For more information, see Amazon RDS Provisioned IOPS Storage to
+	// Improve Performance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS).
+	//
 	// Constraints: Must be an integer greater than 1000.
-	//
-	// SQL Server
-	//
-	// Setting the IOPS value for the SQL Server database engine is not supported.
 	Iops *int64 `type:"integer"`
 
 	// License model information for the restored DB instance.
@@ -26818,9 +26880,9 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	//    * VPC: false
 	//
 	// If no DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance will be publicly accessible. If a
-	// specific DB subnet group has been specified as part of the request and the
-	// PubliclyAccessible value has not been set, the DB instance will be private.
+	// value has not been set, the DB instance is publicly accessible. If a specific
+	// DB subnet group has been specified as part of the request and the PubliclyAccessible
+	// value has not been set, the DB instance is private.
 	PubliclyAccessible *bool `type:"boolean"`
 
 	// Specifies the storage type to be associated with the DB instance.
@@ -27041,11 +27103,11 @@ func (s *RestoreDBInstanceFromDBSnapshotOutput) SetDBInstance(v *DBInstance) *Re
 type RestoreDBInstanceToPointInTimeInput struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates that minor version upgrades will be applied automatically to the
-	// DB instance during the maintenance window.
+	// Indicates that minor version upgrades are applied automatically to the DB
+	// instance during the maintenance window.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
-	// The EC2 Availability Zone that the database instance will be created in.
+	// The EC2 Availability Zone that the database instance is created in.
 	//
 	// Default: A random, system-chosen Availability Zone.
 	//
@@ -27059,13 +27121,11 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	// instance; otherwise false. The default is false.
 	CopyTagsToSnapshot *bool `type:"boolean"`
 
-	// The compute and memory capacity of the Amazon RDS DB instance.
-	//
-	// Valid Values: db.t1.micro | db.m1.small | db.m1.medium | db.m1.large | db.m1.xlarge
-	// | db.m2.2xlarge | db.m2.4xlarge | db.m3.medium | db.m3.large | db.m3.xlarge
-	// | db.m3.2xlarge | db.m4.large | db.m4.xlarge | db.m4.2xlarge | db.m4.4xlarge
-	// | db.m4.10xlarge | db.r3.large | db.r3.xlarge | db.r3.2xlarge | db.r3.4xlarge
-	// | db.r3.8xlarge | db.t2.micro | db.t2.small | db.t2.medium | db.t2.large
+	// The compute and memory capacity of the Amazon RDS DB instance, for example,
+	// db.m4.large. Not all DB instance classes are available in all regions, or
+	// for all database engines. For the full list of DB instance classes, and availability
+	// for your engine, see DB Instance Class (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
+	// in the Amazon RDS User Guide.
 	//
 	// Default: The same DBInstanceClass as the original DB instance.
 	DBInstanceClass *string `type:"string"`
@@ -27186,9 +27246,9 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	//    * VPC:false
 	//
 	// If no DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance will be publicly accessible. If a
-	// specific DB subnet group has been specified as part of the request and the
-	// PubliclyAccessible value has not been set, the DB instance will be private.
+	// value has not been set, the DB instance is publicly accessible. If a specific
+	// DB subnet group has been specified as part of the request and the PubliclyAccessible
+	// value has not been set, the DB instance is private.
 	PubliclyAccessible *bool `type:"boolean"`
 
 	// The date and time to restore from.
@@ -27904,8 +27964,8 @@ func (s *Timezone) SetTimezoneName(v string) *Timezone {
 type UpgradeTarget struct {
 	_ struct{} `type:"structure"`
 
-	// A value that indicates whether the target version will be applied to any
-	// source DB instances that have AutoMinorVersionUpgrade set to true.
+	// A value that indicates whether the target version is applied to any source
+	// DB instances that have AutoMinorVersionUpgrade set to true.
 	AutoUpgrade *bool `type:"boolean"`
 
 	// The version of the database engine that a DB instance can be upgraded to.
@@ -27917,8 +27977,7 @@ type UpgradeTarget struct {
 	// The version number of the upgrade target database engine.
 	EngineVersion *string `type:"string"`
 
-	// A value that indicates whether a database engine will be upgraded to a major
-	// version.
+	// A value that indicates whether a database engine is upgraded to a major version.
 	IsMajorVersionUpgrade *bool `type:"boolean"`
 }
 
