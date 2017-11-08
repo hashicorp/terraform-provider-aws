@@ -219,7 +219,16 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
 	d.Set("family", taskDefinition.Family)
 	d.Set("revision", taskDefinition.Revision)
-	d.Set("container_definitions", taskDefinition.ContainerDefinitions)
+
+	defs, err := flattenEcsContainerDefinitions(taskDefinition.ContainerDefinitions)
+	if err != nil {
+		return err
+	}
+	err = d.Set("container_definitions", defs)
+	if err != nil {
+		return err
+	}
+
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
 	d.Set("network_mode", taskDefinition.NetworkMode)
 	d.Set("volumes", flattenEcsVolumes(taskDefinition.Volumes))
