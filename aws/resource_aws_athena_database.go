@@ -70,7 +70,7 @@ func resourceAwsAthenaDatabaseRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	if err := executeAndExpectMatchingRow(*resp.QueryExecutionId, d, conn); err != nil {
+	if err := executeAndExpectMatchingRow(*resp.QueryExecutionId, d.Get("name").(string), conn); err != nil {
 		return err
 	}
 	return nil
@@ -109,24 +109,19 @@ func executeAndExpectNoRowsWhenCreate(qeid string, d *schema.ResourceData, conn 
 	return nil
 }
 
-func executeAndExpectMatchingRow(qeid string, d *schema.ResourceData, conn *athena.Athena) error {
+func executeAndExpectMatchingRow(qeid string, dbName string, conn *athena.Athena) error {
 	rs, err := queryExecutionResult(qeid, conn)
 	if err != nil {
 		return err
 	}
-	found := false
-	dbName := d.Get("name").(string)
 	for _, row := range rs.Rows {
 		for _, datum := range row.Data {
 			if *datum.VarCharValue == dbName {
-				found = true
+				return nil
 			}
 		}
 	}
-	if !found {
-		return fmt.Errorf("[ERROR] Athena not found database: %s, query result: %s", dbName, flattenAthenaResultSet(rs))
-	}
-	return nil
+	return fmt.Errorf("[ERROR] Athena not found database: %s, query result: %s", dbName, flattenAthenaResultSet(rs))
 }
 
 func executeAndExpectNoRowsWhenDrop(qeid string, d *schema.ResourceData, conn *athena.Athena) error {
@@ -173,16 +168,7 @@ func queryExecutionStateRefreshFunc(qeid string, conn *athena.Athena) resource.S
 		if err != nil {
 			return nil, "failed", err
 		}
-		switch *out.QueryExecution.Status.State {
-		case athena.QueryExecutionStateQueued, athena.QueryExecutionStateRunning, athena.QueryExecutionStateSucceeded:
-			return out, *out.QueryExecution.Status.State, nil
-		case athena.QueryExecutionStateFailed:
-			return out, athena.QueryExecutionStateFailed, fmt.Errorf("[Error] QueryExecution Failed")
-		case athena.QueryExecutionStateCancelled:
-			return out, athena.QueryExecutionStateCancelled, fmt.Errorf("[Error] QueryExecution Canceled")
-		default:
-			return out, *out.QueryExecution.Status.State, fmt.Errorf("[Error] Unexpected QueryExecution State: %s", *out.QueryExecution.Status.State)
-		}
+		return out, *out.QueryExecution.Status.State, nil
 	}
 }
 
