@@ -2,6 +2,8 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,6 +13,77 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/jen20/awspolicyequivalence"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_kms_key", &resource.Sweeper{
+		Name: "aws_kms_key",
+		F:    testSweepKmsKeys,
+	})
+}
+
+func testSweepKmsKeys(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).kmsconn
+
+	err = conn.ListKeysPages(&kms.ListKeysInput{Limit: aws.Int64(int64(1000))}, func(out *kms.ListKeysOutput, lastPage bool) bool {
+		for _, k := range out.Keys {
+			kOut, err := conn.DescribeKey(&kms.DescribeKeyInput{
+				KeyId: k.KeyId,
+			})
+			if err != nil {
+				log.Printf("Error: Failed to describe key %q: %s", *k.KeyId, err)
+				return false
+			}
+			if *kOut.KeyMetadata.KeyManager == kms.KeyManagerTypeAws {
+				// Skip (default) keys which are managed by AWS
+				continue
+			}
+			if *kOut.KeyMetadata.KeyState == kms.KeyStatePendingDeletion {
+				// Skip keys which are already scheduled for deletion
+				continue
+			}
+
+			tOut, err := conn.ListResourceTags(&kms.ListResourceTagsInput{
+				KeyId: k.KeyId,
+			})
+			if err != nil {
+				log.Printf("Error: Failed to get tags for key %q: %s", *k.KeyId, err)
+				return false
+			}
+			if !kmsTagHasPrefix(tOut.Tags, "Name", "tf-acc-test-kms-key-") {
+				// Skip keys which don't have designated tag
+				continue
+			}
+
+			_, err = conn.ScheduleKeyDeletion(&kms.ScheduleKeyDeletionInput{
+				KeyId:               k.KeyId,
+				PendingWindowInDays: aws.Int64(int64(7)),
+			})
+			if err != nil {
+				log.Printf("Error: Failed to schedule key %q for deletion: %s", *k.KeyId, err)
+				return false
+			}
+		}
+		return !lastPage
+	})
+	if err != nil {
+		return fmt.Errorf("Error describing KMS keys: %s", err)
+	}
+
+	return nil
+}
+
+func kmsTagHasPrefix(tags []*kms.Tag, key, prefix string) bool {
+	for _, t := range tags {
+		if *t.TagKey == key && strings.HasPrefix(*t.TagValue, prefix) {
+			return true
+		}
+	}
+	return false
+}
 
 func TestAccAWSKmsKey_basic(t *testing.T) {
 	var keyBefore, keyAfter kms.KeyMetadata
@@ -135,7 +208,7 @@ func TestAccAWSKmsKey_tags(t *testing.T) {
 				Config: testAccAWSKmsKey_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists("aws_kms_key.foo", &keyBefore),
-					resource.TestCheckResourceAttr("aws_kms_key.foo", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_kms_key.foo", "tags.%", "3"),
 				),
 			},
 		},
