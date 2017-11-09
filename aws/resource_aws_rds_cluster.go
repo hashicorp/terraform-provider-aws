@@ -233,8 +233,10 @@ func resourceAwsRDSCluster() *schema.Resource {
 			},
 
 			"source_region": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:     	  	schema.TypeString,
+				Optional: 			true,
+				ForceNew: 			true,
+				ConflictsWith: 	[]string{"snapshot_identifier"},
 			},
 
 			"iam_roles": {
