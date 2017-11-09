@@ -74,3 +74,11 @@ The following attributes are exported:
 * `description` - (Required) The description of the parameter.
 * `type` - (Required) The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - (Required) The value of the parameter.
+
+## Import
+
+SSM Parameters can be imported using the `parameter store name`, e.g.
+
+```
+$ terraform import aws_ssm_parameter.my_param /my_path/my_paramname
+```

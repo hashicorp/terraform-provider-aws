@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -17,6 +18,9 @@ func resourceAwsSsmParameter() *schema.Resource {
 		Update: resourceAwsSsmParameterPut,
 		Delete: resourceAwsSsmParameterDelete,
 		Exists: resourceAwsSmmParameterExists,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -58,10 +62,10 @@ func resourceAwsSsmParameter() *schema.Resource {
 }
 
 func resourceAwsSmmParameterExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	conn := meta.(*AWSClient).ssmconn
+	ssmconn := meta.(*AWSClient).ssmconn
 
-	resp, err := conn.GetParameters(&ssm.GetParametersInput{
-		Names:          []*string{aws.String(d.Get("name").(string))},
+	resp, err := ssmconn.GetParameters(&ssm.GetParametersInput{
+		Names:          []*string{aws.String(d.Id())},
 		WithDecryption: aws.Bool(true),
 	})
 
@@ -72,12 +76,12 @@ func resourceAwsSmmParameterExists(d *schema.ResourceData, meta interface{}) (bo
 }
 
 func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	ssmconn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[DEBUG] Reading SSM Parameter: %s", d.Id())
 
-	resp, err := conn.GetParameters(&ssm.GetParametersInput{
-		Names:          []*string{aws.String(d.Get("name").(string))},
+	resp, err := ssmconn.GetParameters(&ssm.GetParametersInput{
+		Names:          []*string{aws.String(d.Id())},
 		WithDecryption: aws.Bool(true),
 	})
 	if err != nil {
@@ -89,7 +93,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("type", param.Type)
 	d.Set("value", param.Value)
 
-	respDetailed, err := conn.DescribeParameters(&ssm.DescribeParametersInput{
+	respDetailed, err := ssmconn.DescribeParameters(&ssm.DescribeParametersInput{
 		Filters: []*ssm.ParametersFilter{
 			&ssm.ParametersFilter{
 				Key:    aws.String("Name"),
@@ -116,7 +120,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("description", detail.Description)
 	d.Set("allowed_pattern", detail.AllowedPattern)
 
-	if tagList, err := conn.ListTagsForResource(&ssm.ListTagsForResourceInput{
+	if tagList, err := ssmconn.ListTagsForResource(&ssm.ListTagsForResourceInput{
 		ResourceId:   aws.String(d.Get("name").(string)),
 		ResourceType: aws.String("Parameter"),
 	}); err != nil {
@@ -129,11 +133,11 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	ssmconn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[INFO] Deleting SSM Parameter: %s", d.Id())
 
-	_, err := conn.DeleteParameter(&ssm.DeleteParameterInput{
+	_, err := ssmconn.DeleteParameter(&ssm.DeleteParameterInput{
 		Name: aws.String(d.Get("name").(string)),
 	})
 	if err != nil {
@@ -145,7 +149,7 @@ func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	ssmconn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[INFO] Creating SSM Parameter: %s", d.Get("name").(string))
 
@@ -171,11 +175,11 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] Waiting for SSM Parameter %v to be updated", d.Get("name"))
-	if _, err := conn.PutParameter(paramInput); err != nil {
+	if _, err := ssmconn.PutParameter(paramInput); err != nil {
 		return errwrap.Wrapf("[ERROR] Error creating SSM parameter: {{err}}", err)
 	}
 
-	if err := setTagsSSM(conn, d, d.Get("name").(string), "Parameter"); err != nil {
+	if err := setTagsSSM(ssmconn, d, d.Get("name").(string), "Parameter"); err != nil {
 		return errwrap.Wrapf("[ERROR] Error creating SSM parameter tags: {{err}}", err)
 	}
 
