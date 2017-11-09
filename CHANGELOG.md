@@ -17,6 +17,7 @@ IMPROVEMENTS:
 * data-source/efs_file_system: Added dns_name [GH-2105]
 * resource/aws_batch_job_queue: Add validation for `name` [GH-2159]
 * resource/aws_batch_compute_environment: Improve validation for `compute_environment_name` [GH-2159]
+* resource/aws_ssm_parameter: Add support for import [GH-2234]
 
 BUG FIXES:
 
