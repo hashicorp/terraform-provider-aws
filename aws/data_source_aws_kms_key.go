@@ -93,7 +93,7 @@ func dataSourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error while describing key [%s]: %s", keyId, err)
 	}
-	d.SetId(keyId.(string))
+	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
 	d.Set("arn", output.KeyMetadata.Arn)
 	d.Set("aws_account_id", output.KeyMetadata.AWSAccountId)
 	d.Set("creation_date", output.KeyMetadata.CreationDate)
