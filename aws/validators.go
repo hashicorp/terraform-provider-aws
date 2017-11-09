@@ -1891,7 +1891,7 @@ func validateCognitoRoleMappingsRulesConfiguration(v map[string]interface{}) (er
 		errors = append(errors, fmt.Errorf("mapping_rule is required for Rules"))
 	}
 
-	if (ok || valLength > 0) && t == cognitoidentity.RoleMappingTypeToken {
+	if (!ok || valLength > 0) && t == cognitoidentity.RoleMappingTypeToken {
 		errors = append(errors, fmt.Errorf("mapping_rule must not be set for Token based role mapping"))
 	}
 
