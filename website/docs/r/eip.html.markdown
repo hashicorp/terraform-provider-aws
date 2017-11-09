@@ -10,6 +10,8 @@ description: |-
 
 Provides an Elastic IP resource.
 
+~> **Note:** EIP may require IGW to exist prior to association. Use `depends_on` to set an explicit dependency on the IGW.
+
 ## Example Usage
 
 Single EIP associated with an instance:
@@ -76,6 +78,7 @@ resource "aws_eip" "bar" {
 
   instance                  = "${aws_instance.foo.id}"
   associate_with_private_ip = "10.0.0.12"
+  depends_on                = ["${aws_internet_gateway.gw}"]
 }
 ```
 

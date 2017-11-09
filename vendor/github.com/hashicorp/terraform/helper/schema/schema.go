@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/mitchellh/copystructure"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -116,12 +117,16 @@ type Schema struct {
 	ForceNew  bool
 	StateFunc SchemaStateFunc
 
-	// The following fields are only set for a TypeList or TypeSet Type.
+	// The following fields are only set for a TypeList, TypeSet, or TypeMap.
 	//
-	// Elem must be either a *Schema or a *Resource only if the Type is
-	// TypeList, and represents what the element type is. If it is *Schema,
-	// the element type is just a simple value. If it is *Resource, the
-	// element type is a complex structure, potentially with its own lifecycle.
+	// Elem represents the element type. For a TypeMap, it must be a *Schema
+	// with a Type of TypeString, otherwise it may be either a *Schema or a
+	// *Resource. If it is *Schema, the element type is just a simple value.
+	// If it is *Resource, the element type is a complex structure,
+	// potentially with its own lifecycle.
+	Elem interface{}
+
+	// The following fields are only set for a TypeList or TypeSet.
 	//
 	// MaxItems defines a maximum amount of items that can exist within a
 	// TypeSet or TypeList. Specific use cases would be if a TypeSet is being
@@ -138,7 +143,6 @@ type Schema struct {
 	// ["foo"] automatically. This is primarily for legacy reasons and the
 	// ambiguity is not recommended for new usage. Promotion is only allowed
 	// for primitive element types.
-	Elem          interface{}
 	MaxItems      int
 	MinItems      int
 	PromoteSingle bool
@@ -330,7 +334,7 @@ func (s *Schema) finalizeDiff(
 		return d
 	}
 
-	if s.Computed {
+	if s.Computed && !d.NewComputed {
 		if d.Old != "" && d.New == "" {
 			// This is a computed value with an old value set already,
 			// just let it go.
@@ -367,11 +371,23 @@ func (m schemaMap) Data(
 	}, nil
 }
 
+// DeepCopy returns a copy of this schemaMap. The copy can be safely modified
+// without affecting the original.
+func (m *schemaMap) DeepCopy() schemaMap {
+	copy, err := copystructure.Config{Lock: true}.Copy(m)
+	if err != nil {
+		panic(err)
+	}
+	return copy.(schemaMap)
+}
+
 // Diff returns the diff for a resource given the schema map,
 // state, and configuration.
 func (m schemaMap) Diff(
 	s *terraform.InstanceState,
-	c *terraform.ResourceConfig) (*terraform.InstanceDiff, error) {
+	c *terraform.ResourceConfig,
+	customizeDiff CustomizeDiffFunc,
+	meta interface{}) (*terraform.InstanceDiff, error) {
 	result := new(terraform.InstanceDiff)
 	result.Attributes = make(map[string]*terraform.ResourceAttrDiff)
 
@@ -390,6 +406,22 @@ func (m schemaMap) Diff(
 		err := m.diff(k, schema, result, d, false)
 		if err != nil {
 			return nil, err
+		}
+	}
+
+	// If this is a non-destroy diff, call any custom diff logic that has been
+	// defined.
+	if !result.DestroyTainted && customizeDiff != nil {
+		mc := m.DeepCopy()
+		rd := newResourceDiff(mc, c, s, result)
+		if err := customizeDiff(rd, meta); err != nil {
+			return nil, err
+		}
+		for _, k := range rd.UpdatedKeys() {
+			err := m.diff(k, mc[k], result, rd, false)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -415,6 +447,21 @@ func (m schemaMap) Diff(
 			err := m.diff(k, schema, result2, d, false)
 			if err != nil {
 				return nil, err
+			}
+		}
+
+		// Re-run customization
+		if !result2.DestroyTainted && customizeDiff != nil {
+			mc := m.DeepCopy()
+			rd := newResourceDiff(mc, c, d.state, result2)
+			if err := customizeDiff(rd, meta); err != nil {
+				return nil, err
+			}
+			for _, k := range rd.UpdatedKeys() {
+				err := m.diff(k, mc[k], result2, rd, false)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 
@@ -681,11 +728,23 @@ func isValidFieldName(name string) bool {
 	return re.MatchString(name)
 }
 
+// resourceDiffer is an interface that is used by the private diff functions.
+// This helps facilitate diff logic for both ResourceData and ResoureDiff with
+// minimal divergence in code.
+type resourceDiffer interface {
+	diffChange(string) (interface{}, interface{}, bool, bool)
+	Get(string) interface{}
+	GetChange(string) (interface{}, interface{})
+	GetOk(string) (interface{}, bool)
+	HasChange(string) bool
+	Id() string
+}
+
 func (m schemaMap) diff(
 	k string,
 	schema *Schema,
 	diff *terraform.InstanceDiff,
-	d *ResourceData,
+	d resourceDiffer,
 	all bool) error {
 
 	unsupressedDiff := new(terraform.InstanceDiff)
@@ -706,12 +765,14 @@ func (m schemaMap) diff(
 	}
 
 	for attrK, attrV := range unsupressedDiff.Attributes {
-		if schema.DiffSuppressFunc != nil &&
-			attrV != nil &&
-			schema.DiffSuppressFunc(attrK, attrV.Old, attrV.New, d) {
-			continue
+		switch rd := d.(type) {
+		case *ResourceData:
+			if schema.DiffSuppressFunc != nil &&
+				attrV != nil &&
+				schema.DiffSuppressFunc(attrK, attrV.Old, attrV.New, rd) {
+				continue
+			}
 		}
-
 		diff.Attributes[attrK] = attrV
 	}
 
@@ -722,7 +783,7 @@ func (m schemaMap) diffList(
 	k string,
 	schema *Schema,
 	diff *terraform.InstanceDiff,
-	d *ResourceData,
+	d resourceDiffer,
 	all bool) error {
 	o, n, _, computedList := d.diffChange(k)
 	if computedList {
@@ -841,7 +902,7 @@ func (m schemaMap) diffMap(
 	k string,
 	schema *Schema,
 	diff *terraform.InstanceDiff,
-	d *ResourceData,
+	d resourceDiffer,
 	all bool) error {
 	prefix := k + "."
 
@@ -935,7 +996,7 @@ func (m schemaMap) diffSet(
 	k string,
 	schema *Schema,
 	diff *terraform.InstanceDiff,
-	d *ResourceData,
+	d resourceDiffer,
 	all bool) error {
 
 	o, n, _, computedSet := d.diffChange(k)
@@ -1056,7 +1117,7 @@ func (m schemaMap) diffString(
 	k string,
 	schema *Schema,
 	diff *terraform.InstanceDiff,
-	d *ResourceData,
+	d resourceDiffer,
 	all bool) error {
 	var originalN interface{}
 	var os, ns string
@@ -1090,7 +1151,7 @@ func (m schemaMap) diffString(
 	}
 
 	removed := false
-	if o != nil && n == nil {
+	if o != nil && n == nil && !computed {
 		removed = true
 	}
 	if removed && schema.Computed {

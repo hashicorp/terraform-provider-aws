@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-getter"
 	"github.com/hashicorp/terraform/backend"
 	"github.com/hashicorp/terraform/config"
@@ -46,7 +47,7 @@ func (c *ApplyCommand) Run(args []string) int {
 	}
 	cmdFlags.BoolVar(&refresh, "refresh", true, "refresh")
 	if !c.Destroy {
-		cmdFlags.BoolVar(&autoApprove, "auto-approve", true, "skip interactive approval of plan before applying")
+		cmdFlags.BoolVar(&autoApprove, "auto-approve", false, "skip interactive approval of plan before applying")
 	}
 	cmdFlags.IntVar(
 		&c.Meta.parallelism, "parallelism", DefaultParallelism, "parallelism")
@@ -118,11 +119,6 @@ func (c *ApplyCommand) Run(args []string) int {
 	if plan != nil {
 		// Reset the config path for backend loading
 		configPath = ""
-
-		if !autoApprove {
-			c.Ui.Error("Cannot combine -auto-approve=false with a plan file.")
-			return 1
-		}
 	}
 
 	// Load the module if we don't have one yet (not running from plan)
@@ -130,7 +126,8 @@ func (c *ApplyCommand) Run(args []string) int {
 	if plan == nil {
 		mod, err = c.Module(configPath)
 		if err != nil {
-			c.Ui.Error(fmt.Sprintf("Failed to load root config module: %s", err))
+			err = errwrap.Wrapf("Failed to load root config module: {{err}}", err)
+			c.showDiagnostics(err)
 			return 1
 		}
 	}
@@ -203,7 +200,7 @@ func (c *ApplyCommand) Run(args []string) int {
 		}
 	case <-op.Done():
 		if err := op.Err; err != nil {
-			c.Ui.Error(err.Error())
+			c.showDiagnostics(err)
 			return 1
 		}
 	}
@@ -251,12 +248,6 @@ Usage: terraform apply [options] [DIR-OR-PLAN]
   configuration or an execution plan can be provided. Execution plans can be
   used to only execute a pre-determined set of actions.
 
-  DIR can also be a SOURCE as given to the "init" command. In this case,
-  apply behaves as though "init" was called followed by "apply". This only
-  works for sources that aren't files, and only if the current working
-  directory is empty of Terraform files. This is a shortcut for getting
-  started.
-
 Options:
 
   -backup=path           Path to backup the existing state file before
@@ -267,9 +258,7 @@ Options:
 
   -lock-timeout=0s       Duration to retry a state lock.
 
-  -auto-approve=true     Skip interactive approval of plan before applying. In a
-                         future version of Terraform, this flag's default value
-                         will change to false.
+  -auto-approve          Skip interactive approval of plan before applying.
 
   -input=true            Ask for input for variables if not directly set.
 

@@ -212,7 +212,9 @@ func dbSnapshotDescriptionAttributes(d *schema.ResourceData, snapshot *rds.DBSna
 	d.Set("source_region", snapshot.SourceRegion)
 	d.Set("status", snapshot.Status)
 	d.Set("vpc_id", snapshot.VpcId)
-	d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
+	if snapshot.SnapshotCreateTime != nil {
+		d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
+	}
 
 	return nil
 }

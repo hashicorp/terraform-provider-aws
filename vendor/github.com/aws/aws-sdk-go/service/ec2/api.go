@@ -35224,6 +35224,14 @@ type DescribeSecurityGroupsInput struct {
 	//
 	// Default: Describes all your security groups.
 	GroupNames []*string `locationName:"GroupName" locationNameList:"GroupName" type:"list"`
+
+	// The maximum number of results to return in a single call. To retrieve the
+	// remaining results, make another request with the returned NextToken value.
+	// This value can be between 5 and 1000.
+	MaxResults *int64 `type:"integer"`
+
+	// The token to request the next page of results.
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -35260,10 +35268,26 @@ func (s *DescribeSecurityGroupsInput) SetGroupNames(v []*string) *DescribeSecuri
 	return s
 }
 
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeSecurityGroupsInput) SetMaxResults(v int64) *DescribeSecurityGroupsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeSecurityGroupsInput) SetNextToken(v string) *DescribeSecurityGroupsInput {
+	s.NextToken = &v
+	return s
+}
+
 // Contains the output of DescribeSecurityGroups.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeSecurityGroupsResult
 type DescribeSecurityGroupsOutput struct {
 	_ struct{} `type:"structure"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// Information about one or more security groups.
 	SecurityGroups []*SecurityGroup `locationName:"securityGroupInfo" locationNameList:"item" type:"list"`
@@ -35277,6 +35301,12 @@ func (s DescribeSecurityGroupsOutput) String() string {
 // GoString returns the string representation
 func (s DescribeSecurityGroupsOutput) GoString() string {
 	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeSecurityGroupsOutput) SetNextToken(v string) *DescribeSecurityGroupsOutput {
+	s.NextToken = &v
+	return s
 }
 
 // SetSecurityGroups sets the SecurityGroups field's value.
@@ -45303,9 +45333,6 @@ type LaunchSpecification struct {
 	AddressingType *string `locationName:"addressingType" type:"string"`
 
 	// One or more block device mapping entries.
-	//
-	// Although you can specify encrypted EBS volumes in this block device mapping
-	// for your Spot Instances, these volumes are not encrypted.
 	BlockDeviceMappings []*BlockDeviceMapping `locationName:"blockDeviceMapping" locationNameList:"item" type:"list"`
 
 	// Indicates whether the instance is optimized for EBS I/O. This optimization
@@ -51486,9 +51513,6 @@ type RequestSpotLaunchSpecification struct {
 	AddressingType *string `locationName:"addressingType" type:"string"`
 
 	// One or more block device mapping entries.
-	//
-	// Although you can specify encrypted EBS volumes in this block device mapping
-	// for your Spot Instances, these volumes are not encrypted.
 	BlockDeviceMappings []*BlockDeviceMapping `locationName:"blockDeviceMapping" locationNameList:"item" type:"list"`
 
 	// Indicates whether the instance is optimized for EBS I/O. This optimization
@@ -60900,6 +60924,15 @@ const (
 
 	// InstanceTypeP216xlarge is a InstanceType enum value
 	InstanceTypeP216xlarge = "p2.16xlarge"
+
+	// InstanceTypeP32xlarge is a InstanceType enum value
+	InstanceTypeP32xlarge = "p3.2xlarge"
+
+	// InstanceTypeP38xlarge is a InstanceType enum value
+	InstanceTypeP38xlarge = "p3.8xlarge"
+
+	// InstanceTypeP316xlarge is a InstanceType enum value
+	InstanceTypeP316xlarge = "p3.16xlarge"
 
 	// InstanceTypeD2Xlarge is a InstanceType enum value
 	InstanceTypeD2Xlarge = "d2.xlarge"

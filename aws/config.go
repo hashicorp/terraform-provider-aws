@@ -34,6 +34,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
+	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -182,6 +183,7 @@ type AWSClient struct {
 	iotconn               *iot.IoT
 	batchconn             *batch.Batch
 	athenaconn            *athena.Athena
+	dxconn                *directconnect.DirectConnect
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -393,6 +395,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.wafregionalconn = wafregional.New(sess)
 	client.batchconn = batch.New(sess)
 	client.athenaconn = athena.New(sess)
+	client.dxconn = directconnect.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
