@@ -4,7 +4,7 @@
 // requests to Application Auto Scaling.
 //
 // With Application Auto Scaling, you can automatically scale your AWS resources.
-// The experience similar to that of Auto Scaling (https://aws.amazon.com/autoscaling/).
+// The experience is similar to that of Auto Scaling (https://aws.amazon.com/autoscaling/).
 // You can use Application Auto Scaling to accomplish the following tasks:
 //
 //    * Define scaling policies to automatically scale your AWS resources
