@@ -10,6 +10,7 @@ FEATURES:
 * **New Resource:** `aws_ses_template` [GH-2003]
 * **New Resource:** `aws_dx_lag` [GH-2154]
 * **New Resource:** `aws_dx_connection` [GH-2173]
+* **New Resource:** `aws_athena_database` [GH-1922]
 
 IMPROVEMENTS:
 
