@@ -56,6 +56,8 @@ func TestAccDataSourceAwsElasticacheReplicationGroup_ClusterMode(t *testing.T) {
 
 func testAccDataSourceAwsElasticacheReplicationGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
 resource "aws_elasticache_replication_group" "bar" {
 	replication_group_id = "tf-%s"
 	replication_group_description = "test description"
@@ -63,7 +65,7 @@ resource "aws_elasticache_replication_group" "bar" {
 	number_cache_clusters = 2
 	port = 6379
 	parameter_group_name = "default.redis3.2"
-	availability_zones = ["us-east-1a", "us-east-1b"]
+	availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}"]
 	automatic_failover_enabled = true
 	snapshot_window = "01:00-02:00"
 }

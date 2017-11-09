@@ -69,7 +69,7 @@ func dataSourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta i
 
 	resp, err := conn.DescribeReplicationGroups(input)
 	if err != nil {
-		return errwrap.Wrapf("Error retrieving Elasticache Replication Group: {{err}}", err)
+		return err
 	}
 
 	var rg *elasticache.ReplicationGroup
@@ -79,7 +79,7 @@ func dataSourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta i
 		}
 	}
 	if rg == nil {
-		return fmt.Errorf("[ERROR] Elasticache Replication Group (%s) not found", d.Get("replication_group_id").(string))
+		return fmt.Errorf("Elasticache Replication Group (%s) not found", d.Get("replication_group_id").(string))
 	}
 
 	d.SetId(*rg.ReplicationGroupId)
@@ -99,7 +99,7 @@ func dataSourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta i
 	} else {
 		if rg.NodeGroups == nil {
 			d.SetId("")
-			return fmt.Errorf("[ERROR] Elasticache Replication Group (%s) doesn't have node groups.", d.Get("replication_group_id").(string))
+			return fmt.Errorf("Elasticache Replication Group (%s) doesn't have node groups.", d.Get("replication_group_id").(string))
 		}
 		d.Set("port", rg.NodeGroups[0].PrimaryEndpoint.Port)
 		d.Set("primary_endpoint_address", rg.NodeGroups[0].PrimaryEndpoint.Address)
