@@ -671,6 +671,14 @@
 		{
 			"checksumSHA1": "+gED8OQZsY/taXgjkGbBJlx1hnY=",
 			"path": "github.com/aws/aws-sdk-go/service/glacier",
+			"revision": "ee1f179877b2daf2aaabf71fa900773bf8842253",
+			"revisionTime": "2017-10-26T21:07:55Z",
+			"version": "v1.12.19",
+			"versionExact": "v1.12.19"
+		},
+		{
+			"checksumSHA1": "3AcW4E/TxmNXfklpo1szXmY+QzE=",
+			"path": "github.com/aws/aws-sdk-go/service/glue",
 			"revision": "f2da704aa06ae2df47ad1e86221e6c1abd3b6742",
 			"revisionTime": "2017-11-03T00:05:43Z",
 			"version": "=v1.12.21",
