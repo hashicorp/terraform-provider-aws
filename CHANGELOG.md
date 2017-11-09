@@ -1,5 +1,9 @@
 ## 1.3.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_redshift_cluster: Field `enable_logging`, `bucket_name` and `s3_key_prefix` were deprecated in favour of a new `logging` block [GH-2230]
+
 FEATURES:
 
 * **New Data Source:** `aws_rds_cluster` [GH-2070]
