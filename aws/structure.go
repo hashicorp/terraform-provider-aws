@@ -2340,3 +2340,19 @@ func flattenCognitoIdentityPoolRolesAttachmentMappingRules(d []*cognitoidentity.
 
 	return rules
 }
+
+func flattenRedshiftLogging(ls *redshift.LoggingStatus) []interface{} {
+	if ls == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{}, 0)
+	cfg["enabled"] = *ls.LoggingEnabled
+	if ls.BucketName != nil {
+		cfg["bucket_name"] = *ls.BucketName
+	}
+	if ls.S3KeyPrefix != nil {
+		cfg["s3_key_prefix"] = *ls.S3KeyPrefix
+	}
+	return []interface{}{cfg}
+}

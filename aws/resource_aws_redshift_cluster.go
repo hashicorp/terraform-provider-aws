@@ -219,22 +219,54 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"enable_logging": {
-				Type:     schema.TypeBool,
+			"logging": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
-				Default:  false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enable": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+
+						"bucket_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+
+						"s3_key_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+
+			"enable_logging": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true,
+				Deprecated:    "Use enable in the 'logging' block instead",
+				ConflictsWith: []string{"logging"},
 			},
 
 			"bucket_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				Deprecated:    "Use bucket_name in the 'logging' block instead",
+				ConflictsWith: []string{"logging"},
 			},
 
 			"s3_key_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				Deprecated:    "Use s3_key_prefix in the 'logging' block instead",
+				ConflictsWith: []string{"logging"},
 			},
 
 			"snapshot_identifier": {
@@ -439,8 +471,9 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("[WARN] Error waiting for Redshift Cluster state to be \"available\": %s", err)
 	}
 
-	if _, ok := d.GetOk("enable_logging"); ok {
-
+	logging, ok := d.GetOk("logging.0.enable")
+	_, deprecatedOk := d.GetOk("enable_logging")
+	if (ok && logging.(bool)) || deprecatedOk {
 		loggingErr := enableRedshiftClusterLogging(d, conn)
 		if loggingErr != nil {
 			log.Printf("[ERROR] Error Enabling Logging on Redshift Cluster: %s", err)
@@ -553,9 +586,12 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
 	d.Set("tags", tagsToMapRedshift(rsc.Tags))
 
+	// TODO: Deprecated fields - remove in next major version
 	d.Set("bucket_name", loggingStatus.BucketName)
 	d.Set("enable_logging", loggingStatus.LoggingEnabled)
 	d.Set("s3_key_prefix", loggingStatus.S3KeyPrefix)
+
+	d.Set("logging", flattenRedshiftLogging(loggingStatus))
 
 	return nil
 }
@@ -711,17 +747,20 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if d.HasChange("enable_logging") || d.HasChange("bucket_name") || d.HasChange("s3_key_prefix") {
+	deprecatedHasChange := (d.HasChange("enable_logging") || d.HasChange("bucket_name") || d.HasChange("s3_key_prefix"))
+	if d.HasChange("logging") || deprecatedHasChange {
 		var loggingErr error
-		if _, ok := d.GetOk("enable_logging"); ok {
 
+		logging, ok := d.GetOk("logging.0.enable")
+		_, deprecatedOk := d.GetOk("enable_logging")
+
+		if (ok && logging.(bool)) || deprecatedOk {
 			log.Printf("[INFO] Enabling Logging for Redshift Cluster %q", d.Id())
 			loggingErr = enableRedshiftClusterLogging(d, conn)
 			if loggingErr != nil {
 				return loggingErr
 			}
 		} else {
-
 			log.Printf("[INFO] Disabling Logging for Redshift Cluster %q", d.Id())
 			_, loggingErr = conn.DisableLogging(&redshift.DisableLoggingInput{
 				ClusterIdentifier: aws.String(d.Id()),
@@ -732,6 +771,7 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		d.SetPartial("enable_logging")
+		d.SetPartial("logging")
 	}
 
 	d.Partial(false)
@@ -740,17 +780,30 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func enableRedshiftClusterLogging(d *schema.ResourceData, conn *redshift.Redshift) error {
-	if _, ok := d.GetOk("bucket_name"); !ok {
+	var bucketName, v interface{}
+	var deprecatedOk, ok bool
+	bucketName, deprecatedOk = d.GetOk("bucket_name")
+	v, ok = d.GetOk("logging.0.bucket_name")
+	if ok {
+		bucketName = v
+	}
+	if !ok && !deprecatedOk {
 		return fmt.Errorf("bucket_name must be set when enabling logging for Redshift Clusters")
 	}
 
 	params := &redshift.EnableLoggingInput{
 		ClusterIdentifier: aws.String(d.Id()),
-		BucketName:        aws.String(d.Get("bucket_name").(string)),
+		BucketName:        aws.String(bucketName.(string)),
 	}
 
-	if v, ok := d.GetOk("s3_key_prefix"); ok {
-		params.S3KeyPrefix = aws.String(v.(string))
+	var s3KeyPrefix interface{}
+	s3KeyPrefix, deprecatedOk = d.GetOk("s3_key_prefix")
+	v, ok = d.GetOk("logging.0.s3_key_prefix")
+	if ok {
+		s3KeyPrefix = v
+	}
+	if ok || deprecatedOk {
+		params.S3KeyPrefix = aws.String(s3KeyPrefix.(string))
 	}
 
 	_, loggingErr := conn.EnableLogging(params)
