@@ -24,7 +24,7 @@ func resourceAwsEcsService() *schema.Resource {
 		Read:   resourceAwsEcsServiceRead,
 		Update: resourceAwsEcsServiceUpdate,
 		Delete: resourceAwsEcsServiceDelete,
-		
+
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsEcsServiceMigrateState,
 
