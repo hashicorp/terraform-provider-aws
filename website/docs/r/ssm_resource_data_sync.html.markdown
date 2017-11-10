@@ -54,8 +54,8 @@ resource "aws_s3_bucket_policy" "hoge" {
 
 resource "aws_ssm_resource_data_sync" "foo" {
   name = "foo"
-  destination = {
-    bucket = "${aws_s3_bucket.hoge.bucket}"
+  s3_destination = {
+    bucket_name = "${aws_s3_bucket.hoge.bucket}"
     region = "${aws_s3_bucket.hoge.region}"
   }
 }
@@ -66,13 +66,14 @@ resource "aws_ssm_resource_data_sync" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) Name for the configuration.
-* `destination` - (Required) Amazon S3 configuration details for the sync.
+* `s3_destination` - (Required) Amazon S3 configuration details for the sync.
 
-## destination
+## s3_destination
 
-`destination` supports the following:
+`s3_destination` supports the following:
 
-* `bucket` - (Required) Name of S3 bucket where the aggregated data is stored.
+* `bucket_name` - (Required) Name of S3 bucket where the aggregated data is stored.
 * `region` - (Required) Region with the bucket targeted by the Resource Data Sync.
-* `key` - (Optional) ARN of an encryption key for a destination in Amazon S3.
+* `kms_key_arn` - (Optional) ARN of an encryption key for a destination in Amazon S3.
 * `prefix` - (Optional) Prefix for the bucket.
+* `sync_format` - (Optional) A supported sync format. Only JsonSerDe is currently supported. Defaults to JsonSerDe.

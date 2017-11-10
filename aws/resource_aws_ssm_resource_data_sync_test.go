@@ -5,22 +5,20 @@ import (
 	"log"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSSsmResourceDataSync(t *testing.T) {
-	rInt := acctest.RandInt()
+func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSsmResourceDataSyncDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSsmResourceDataSyncConfig(rInt),
+				Config: testAccSsmResourceDataSyncConfig(acctest.RandInt(), acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSsmResourceDataSyncExists("aws_ssm_resource_data_sync.foo"),
 				),
@@ -36,31 +34,15 @@ func testAccCheckAWSSsmResourceDataSyncDestroy(s *terraform.State) error {
 		if rs.Type != "aws_ssm_resource_data_sync" {
 			continue
 		}
-		nextToken := ""
-		found := false
-		for {
-			input := &ssm.ListResourceDataSyncInput{}
-			if nextToken != "" {
-				input.NextToken = aws.String(nextToken)
-			}
-			resp, err := conn.ListResourceDataSync(input)
-			if err != nil {
+		_, err := findResourceDataSyncItem(conn, rs.Primary.Attributes["name"])
+		if err != nil {
+			if _, ok := err.(awserr.Error); ok {
 				return err
+			} else {
+				return nil
 			}
-			for _, v := range resp.ResourceDataSyncItems {
-				if *v.SyncName == rs.Primary.Attributes["name"] {
-					found = true
-				}
-			}
-			if resp.NextToken != nil {
-				nextToken = *resp.NextToken
-			}
-			if found || nextToken == "" {
-				break
-			}
-		}
-		if found {
-			return fmt.Errorf("[DELETE ERROR] Resource Data Sync found for SyncName: %s", rs.Primary.Attributes["name"])
+		} else {
+			return fmt.Errorf("Resource Data Sync (%s) found", rs.Primary.Attributes["name"])
 		}
 	}
 	return nil
@@ -77,7 +59,7 @@ func testAccCheckAWSSsmResourceDataSyncExists(name string) resource.TestCheckFun
 	}
 }
 
-func testAccSsmResourceDataSyncConfig(randInt int) string {
+func testAccSsmResourceDataSyncConfig(rInt int, rName string) string {
 	return fmt.Sprintf(`
     resource "aws_s3_bucket" "hoge" {
       bucket = "tf-test-bucket-%d"
@@ -120,11 +102,11 @@ func testAccSsmResourceDataSyncConfig(randInt int) string {
     }
 
     resource "aws_ssm_resource_data_sync" "foo" {
-      name = "foo"
-      destination = {
-        bucket = "${aws_s3_bucket.hoge.bucket}"
+      name = "tf-test-ssm-%s"
+      s3_destination = {
+        bucket_name = "${aws_s3_bucket.hoge.bucket}"
         region = "${aws_s3_bucket.hoge.region}"
       }
     }
-    `, randInt, randInt, randInt)
+    `, rInt, rInt, rInt, rName)
 }
