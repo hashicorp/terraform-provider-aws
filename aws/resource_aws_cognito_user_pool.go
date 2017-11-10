@@ -18,7 +18,51 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 		Update: resourceAwsCognitoUserPoolUpdate,
 		Delete: resourceAwsCognitoUserPoolDelete,
 
+		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPool.html
 		Schema: map[string]*schema.Schema{
+			"admin_create_user_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 0,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"allow_admin_create_user_only": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"invite_message_template": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"email_message": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateCognitoUserPoolTemplateEmailMessage,
+									},
+									"email_subject": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateCognitoUserPoolTemplateEmailSubject,
+									},
+									"sms_message": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateCognitoUserPoolTemplateSmsMessage,
+									},
+								},
+							},
+						},
+						"unused_account_validity_days": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      7,
+							ValidateFunc: validateIntegerInRange(0, 90),
+						},
+					},
+				},
+			},
 			"alias_attributes": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -340,6 +384,19 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		PoolName: aws.String(d.Get("name").(string)),
 	}
 
+	if v, ok := d.GetOk("admin_create_user_config"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("admin_create_user_config is <nil>")
+		}
+
+		if config != nil {
+			params.AdminCreateUserConfig = expandCognitoUserPoolAdminCreateUserConfig(config)
+		}
+	}
+
 	if v, ok := d.GetOk("alias_attributes"); ok {
 		params.AliasAttributes = expandStringList(v.([]interface{}))
 	}
@@ -504,6 +561,10 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
+	if err := d.Set("admin_create_user_config", flattenCognitoUserPoolAdminCreateUserConfig(resp.UserPool.LambdaConfig)); err != nil {
+		return errwrap.Wrapf("Failed setting admin_create_user_config: {{err}}", err)
+	}
+
 	if resp.UserPool.AliasAttributes != nil {
 		d.Set("alias_attributes", flattenStringList(resp.UserPool.AliasAttributes))
 	}
@@ -558,6 +619,19 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 	params := &cognitoidentityprovider.UpdateUserPoolInput{
 		UserPoolId: aws.String(d.Id()),
+	}
+
+	if d.HasChange("admin_create_user_config") {
+		configs := d.Get("admin_create_user_config").([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("admin_create_user_config is <nil>")
+		}
+
+		if config != nil {
+			params.AdminCreateUserConfig = expandCognitoUserPoolAdminCreateUserConfig(config)
+		}
 	}
 
 	// TODO - Handle update of AliasAttributes

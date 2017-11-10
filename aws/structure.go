@@ -2161,6 +2161,73 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 	return []map[string]interface{}{}
 }
 
+func expandCognitoUserPoolLambdaConfig(config map[string]interface{}) *cognitoidentityprovider.AdminCreateUserConfigType {
+	configs := &cognitoidentityprovider.LambdaConfigType{}
+
+	if v, ok := config["allow_admin_create_user_only"]; ok {
+		configs.AllowAdminCreateUserOnly = aws.Bool(v.(bool))
+	}
+
+	if v, ok := config["invite_message_template"]; ok {
+		subconfig := v.(map[string]interface{})
+		imt := &cognitoidentityprovider.InviteMessageTemplateType{}
+
+		if v, ok := imt["email_message"]; ok {
+			imt.EmailMessage = aws.String(v.(string))
+		}
+
+		if v, ok := imt["email_subject"]; ok {
+			imt.EmailSibject = aws.String(v.(string))
+		}
+
+		if v, ok := imt["sms_message"]; ok {
+			imt.SmsMessage = aws.String(v.(string))
+		}
+
+		configs.InviteMessageTemplate = imt
+	}
+
+	configs.UnusedAccountValidityDays = aws.Int64(int64(config["unused_account_validity_days"].(int)))
+
+	return configs
+}
+
+func flattenCognitoUserPoolLambdaConfig(s *cognitoidentityprovider.AdminCreateUserConfigType) []map[string]interface{} {
+	config := map[string]interface{}{}
+
+	if s == nil {
+		return nil
+	}
+
+	if s.AllowAdminCreateUserOnly != nil {
+		config["allow_admin_create_user_only"] = *s.AllowAdminCreateUserOnly
+	}
+
+	if s.InviteMessageTemplate != nil {
+		subconfig := map[string]interface{}{}
+
+		if s.InviteMessageTemplate.EmailMessage != nil {
+			subconfig["email_message"] = *s.InviteMessageTemplate.EmailMessage
+		}
+
+		if s.InviteMessageTemplate.EmailSubject != nil {
+			subconfig["email_subject"] = *s.InviteMessageTemplate.EmailSubject
+		}
+
+		if s.InviteMessageTemplate.SMSMessage != nil {
+			subconfig["sms_message"] = *s.InviteMessageTemplate.SMSMessage
+		}
+
+		if len(subconfig) > 0 {
+			config["invite_message_template"] = subconfig
+		}
+	}
+
+	config["unused_account_validity_days"] = *s.UnusedAccountValidityDays
+
+	return []map[string]interface{}{config}
+}
+
 func expandCognitoUserPoolLambdaConfig(config map[string]interface{}) *cognitoidentityprovider.LambdaConfigType {
 	configs := &cognitoidentityprovider.LambdaConfigType{}
 
