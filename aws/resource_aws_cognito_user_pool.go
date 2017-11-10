@@ -118,6 +118,80 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				},
 			},
 
+			"schema": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				MaxItems: 50,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"attribute_data_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								cognitoidentityprovider.AttributeDataTypeString,
+								cognitoidentityprovider.AttributeDataTypeNumber,
+								cognitoidentityprovider.AttributeDataTypeDateTime,
+								cognitoidentityprovider.AttributeDataTypeBoolean,
+							}, false),
+						},
+						"developer_only_attribute": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"mutable": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"name": {
+							Type:         schema.TypeBool,
+							Optional:     true,
+							ValidateFunc: validateCognitoUserPoolSchemaName,
+						},
+						"number_attribute_constraints": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 0,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"min_value": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"max_value": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"required": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"string_attribute_constraints": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 0,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"min_length": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"max_length": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			"sms_authentication_message": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -269,6 +343,19 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	params.Policies = policies
+
+	if v, ok := d.GetOk("schema"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("schema is <nil>")
+		}
+
+		if config != nil {
+			params.Schema = expandCognitoUserPoolSchema(config)
+		}
+	}
 
 	if v, ok := d.GetOk("sms_authentication_message"); ok {
 		params.SmsAuthenticationMessage = aws.String(v.(string))

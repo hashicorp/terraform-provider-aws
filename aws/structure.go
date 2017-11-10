@@ -2162,29 +2162,29 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 }
 
 func expandCognitoUserPoolPasswordPolicy(config map[string]interface{}) *cognitoidentityprovider.PasswordPolicyType {
-	params := &cognitoidentityprovider.PasswordPolicyType{}
+	configs := &cognitoidentityprovider.PasswordPolicyType{}
 
 	if v, ok := config["minimum_length"]; ok {
-		params.MinimumLength = aws.Int64(int64(v.(int)))
+		configs.MinimumLength = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := config["require_lowercase"]; ok {
-		params.RequireLowercase = aws.Bool(v.(bool))
+		configs.RequireLowercase = aws.Bool(v.(bool))
 	}
 
 	if v, ok := config["require_numbers"]; ok {
-		params.RequireNumbers = aws.Bool(v.(bool))
+		configs.RequireNumbers = aws.Bool(v.(bool))
 	}
 
 	if v, ok := config["require_symbols"]; ok {
-		params.RequireSymbols = aws.Bool(v.(bool))
+		configs.RequireSymbols = aws.Bool(v.(bool))
 	}
 
 	if v, ok := config["require_uppercase"]; ok {
-		params.RequireUppercase = aws.Bool(v.(bool))
+		configs.RequireUppercase = aws.Bool(v.(bool))
 	}
 
-	return params
+	return configs
 }
 
 func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPolicyType) []map[string]interface{} {
@@ -2215,6 +2215,152 @@ func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPol
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func expandCognitoUserPoolSchema(config map[string]interface{}) []*cognitoidentityprovider.SchemaAttributeType {
+	configs := make([]*cognitoidentityprovider.SchemaAttributeType, 0)
+
+	for _, v := range s.List() {
+		param := v.(map[string]interface{})
+
+		if v, ok := config["attribute_data_type"]; ok {
+			param.AttributeDataType = aws.String(v.(string))
+		}
+
+		if v, ok := config["developer_only_attribute"]; ok {
+			param.DeveloperOnlyAttribute = aws.Bool(v.(bool))
+		}
+
+		if v, ok := config["mutable"]; ok {
+			param.Mutable = aws.Bool(v.(bool))
+		}
+
+		if v, ok := config["name"]; ok {
+			param.Name = aws.String(v.(string))
+		}
+
+		if v, ok := config["required"]; ok {
+			param.Required = aws.Bool(v.(bool))
+		}
+
+		if v, ok := config["number_attribute_constraints"]; ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if !ok {
+				return errors.New("number_attribute_constraints is <nil>")
+			}
+
+			if config != nil {
+				numberAttributeConstraintsType := &cognitoidentityprovider.NumberAttributeConstraintsType{}
+
+				if v, ok := config["min_value"]; ok && v.(string) != "" {
+					numberAttributeConstraintsType.MinValue = aws.String(v.(string))
+				}
+
+				if v, ok := config["max_value"]; ok && v.(string) != "" {
+					numberAttributeConstraintsType.MaxValue = aws.String(v.(string))
+				}
+
+				if len(numberAttributeConstraintsType) > 0 {
+					params.NumberAttributeConstraints = numberAttributeConstraintsType
+				}
+			}
+		}
+
+		if v, ok := config["string_attribute_constraints"]; ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if !ok {
+				return errors.New("string_attribute_constraints is <nil>")
+			}
+
+			if config != nil {
+				stringAttributeConstraintsType := &cognitoidentityprovider.StringAttributeConstraintsType{}
+
+				if v, ok := config["min_length"]; ok && v.(string) != "" {
+					stringAttributeConstraintsType.MinValue = aws.String(v.(string))
+				}
+
+				if v, ok := config["max_length"]; ok && v.(string) != "" {
+					stringAttributeConstraintsType.MaxValue = aws.String(v.(string))
+				}
+
+				if len(stringAttributeConstraintsType) > 0 {
+					params.StringAttributeConstraints = stringAttributeConstraintsType
+				}
+			}
+		}
+
+		configs = append(configs, param)
+	}
+
+	return configs
+}
+
+func flattenCognitoUserPoolSchema(s []*cognitoidentityprovider.SchemaAttributeType) []map[string]interface{} {
+	values := make([]map[string]interface{}, 0)
+
+	for _, v := range ips {
+		value := make(map[string]interface{})
+
+		if v == nil {
+			return nil
+		}
+
+		if v.AttributeDataType != nil {
+			value["attribute_data_type"] = *v.AttributeDataType
+		}
+
+		if v.DeveloperOnlyAttribute != nil {
+			value["developer_only_attribute"] = *v.DeveloperOnlyAttribute
+		}
+
+		if v.Mutable != nil {
+			value["mutable"] = *v.Mutable
+		}
+
+		if v.Name != nil {
+			value["name"] = *v.Name
+		}
+
+		if v.NumberAttributeConstraints != nil {
+			subvalue := make(map[string]interface{})
+
+			if v.NumberAttributeConstraints.MinValue != nil {
+				subvalue["min_value"] = v.NumberAttributeConstraints.MinValue
+			}
+
+			if v.NumberAttributeConstraints.MaxValue != nil {
+				subvalue["max_value"] = v.NumberAttributeConstraints.MaxValue
+			}
+
+			value["number_attribute_constraints"] = subvalue
+		}
+
+		if v.Required != nil {
+			value["required"] = *v.Required
+		}
+
+		if v.StringAttributeConstraints != nil {
+			subvalue := make(map[string]interface{})
+
+			if v.StringAttributeConstraints.MinLength != nil {
+				subvalue["min_length"] = v.StringAttributeConstraints.MinLength
+			}
+
+			if v.StringAttributeConstraints.MaxLength != nil {
+				subvalue["max_length"] = v.StringAttributeConstraints.MaxLength
+			}
+
+			value["string_attribute_constraints"] = subvalue
+		}
+
+		values = append(values, value)
+	}
+
+	return values
 }
 
 func flattenCognitoUserPoolSmsConfiguration(s *cognitoidentityprovider.SmsConfigurationType) []map[string]interface{} {

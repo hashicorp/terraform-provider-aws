@@ -1648,6 +1648,33 @@ func validateCognitoUserPoolTemplateSmsMessage(v interface{}, k string) (ws []st
 	return
 }
 
+func validateCognitoUserPoolReplyEmailAddress(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+@[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+",
+			k, value))
+	}
+	return
+}
+
+func validateCognitoUserPoolSchemaName(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 1 {
+		es = append(es, fmt.Errorf("%q cannot be less than 1 character", k))
+	}
+
+	if len(value) > 20 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 20 character", k))
+	}
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+", k))
+	}
+	return
+}
+
 func validateWafMetricName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9A-Za-z]+$`).MatchString(value) {
