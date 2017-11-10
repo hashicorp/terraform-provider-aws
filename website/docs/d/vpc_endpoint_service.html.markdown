@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific AWS service that can be specified when creating a VPC endpoint.
 ---
 
-# aws\_vpc\_endpoint\_service
+# aws_vpc_endpoint_service
 
 The VPC Endpoint Service data source allows access to a specific AWS
 service that can be specified when creating a VPC endpoint within the region
@@ -44,3 +44,9 @@ The given filters must match exactly one VPC endpoint service whose data will be
 The following attributes are exported:
 
 * `service_name` - The service name of the AWS service that can be specified when creating a VPC endpoint.
+* `service_type` - The service type, `Gateway` or `Interface`.
+* `owner` - The AWS account ID of the service owner or `amazon`.
+* `vpc_endpoint_policy_supported` - Whether or not the service supports endpoint policies - `true` or `false`.
+* `availability_zones` - The Availability Zones in which the service is available.
+* `private_dns_name` - The private DNS name for the service. Applicable for services of type `Interface`.
+* `base_endpoint_dns_names` - The DNS names for the service.
