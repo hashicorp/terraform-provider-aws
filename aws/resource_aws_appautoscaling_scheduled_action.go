@@ -2,10 +2,16 @@ package aws
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/hashicorp/terraform/helper/schema"
 )
+
+const awsAppautoscalingScheduleTimeLayout = "2006-01-02T15:04:05Z"
 
 func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 	return &schema.Resource{
@@ -60,9 +66,10 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 				},
 			},
 			"scalable_target_action": &schema.Schema{
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"max_capacity": &schema.Schema{
@@ -93,6 +100,10 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"arn": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -100,34 +111,92 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 func resourceAwsAppautoscalingScheduledActionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appautoscalingconn
 
-	input := applicationautoscaling.PutScheduledActionInput{
+	input := &applicationautoscaling.PutScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),
+		ServiceNamespace:    aws.String(d.Get("service_namespace").(string)),
+		ResourceId:          aws.String(d.Get("resource_id").(string)),
+	}
+	if v, ok := d.GetOk("scalable_dimension"); ok {
+		input.ScalableDimension = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("schedule"); ok {
+		input.Schedule = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("scalable_target_action"); ok {
+		raw := v.([]interface{})[0].(map[string]interface{})
+		if max, ok := raw["max_capacity"]; ok {
+			input.ScalableTargetAction.MaxCapacity = aws.Int64(int64(max.(int)))
+		}
+		if min, ok := raw["min_capacity"]; ok {
+			input.ScalableTargetAction.MaxCapacity = aws.Int64(int64(min.(int)))
+		}
+	}
+	if v, ok := d.GetOk("start_time"); ok {
+		t, err := time.Parse(awsAppautoscalingScheduleTimeLayout, v.(string))
+		if err != nil {
+			return fmt.Errorf("Error Parsing Appautoscaling Scheduled Action Start Time: %s", err.Error())
+		}
+		input.StartTime = aws.Time(t)
+	}
+	if v, ok := d.GetOk("end_time"); ok {
+		t, err := time.Parse(awsAppautoscalingScheduleTimeLayout, v.(string))
+		if err != nil {
+			return fmt.Errorf("Error Parsing Appautoscaling Scheduled Action End Time: %s", err.Error())
+		}
+		input.EndTime = aws.Time(t)
 	}
 	_, err := conn.PutScheduledAction(input)
 	if err != nil {
 		return err
 	}
-	return errors.New("error")
+	d.SetId(d.Get("name").(string))
+	return resourceAwsAppautoscalingScheduledActionRead(d, meta)
 }
 
 func resourceAwsAppautoscalingScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appautoscalingconn
 
-	input := applicationautoscaling.DescribeScheduledActionsInput{}
-	_, err := conn.DescribeScheduledActions(input)
+	saName := d.Id()
+	input := &applicationautoscaling.DescribeScheduledActionsInput{
+		ScheduledActionNames: []*string{aws.String(saName)},
+	}
+	resp, err := conn.DescribeScheduledActions(input)
 	if err != nil {
 		return err
 	}
+	if len(resp.ScheduledActions) < 1 {
+		d.SetId("")
+		return nil
+	}
+	if len(resp.ScheduledActions) != 1 {
+		return fmt.Errorf("Number of Scheduled Action (%s) isn't one, got %d", saName, len(resp.ScheduledActions))
+	}
+	if *resp.ScheduledActions[0].ScheduledActionName != saName {
+		return fmt.Errorf("Scheduled Action (%s) not found", saName)
+	}
+	d.Set("arn", resp.ScheduledActions[0].ScheduledActionARN)
 	return errors.New("error")
 }
 
 func resourceAwsAppautoscalingScheduledActionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appautoscalingconn
 
-	input := applicationautoscaling.DeleteScheduledActionInput{}
+	input := &applicationautoscaling.DeleteScheduledActionInput{
+		ScheduledActionName: aws.String(d.Get("name").(string)),
+		ServiceNamespace:    aws.String(d.Get("service_namespace").(string)),
+		ResourceId:          aws.String(d.Get("resource_id").(string)),
+	}
+	if v, ok := d.GetOk("scalable_dimension"); ok {
+		input.ScalableDimension = aws.String(v.(string))
+	}
 	_, err := conn.DeleteScheduledAction(input)
 	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == applicationautoscaling.ErrCodeObjectNotFoundException {
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
-	return errors.New("error")
+	d.SetId("")
+	return nil
 }
