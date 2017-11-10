@@ -212,6 +212,47 @@ func TestAccAWSCognitoUserPool_withPasswordPolicy(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
+	name := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withLambdaConfig(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.main"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "lambda_config.#", "1"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.create_auth_challenge"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.custom_message"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.define_auth_challenge"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.post_authentication"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.post_confirmation"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_authentication"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_sign_up"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.verify_auth_challenge_response"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withLambdaConfigUpdated(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "lambda_config.#", "1"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.create_auth_challenge"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.custom_message"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.define_auth_challenge"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.post_authentication"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.post_confirmation"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_authentication"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_sign_up"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.verify_auth_challenge_response"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPool_withVerificationMessageTemplate(t *testing.T) {
 	name := acctest.RandString(5)
 
@@ -409,6 +450,104 @@ resource "aws_cognito_user_pool" "pool" {
     require_numbers   = true
     require_symbols   = false
     require_uppercase = true
+  }
+}`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withLambdaConfig(name string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "main" {
+  name = "%s"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lambda_function" "main" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%[1]s"
+  role          = "${aws_iam_role.main.arn}"
+  handler       = "exports.example"
+  runtime       = "nodejs4.3"
+}
+
+resource "aws_cognito_user_pool" "main" {
+  name = "%[1]s"
+
+  lambda_config {
+    create_auth_challenge          = "${aws_lambda_function.main.arn}"
+    custom_message                 = "${aws_lambda_function.main.arn}"
+    define_auth_challenge          = "${aws_lambda_function.main.arn}"
+    post_authentication            = "${aws_lambda_function.main.arn}"
+    post_confirmation              = "${aws_lambda_function.main.arn}"
+    pre_authentication             = "${aws_lambda_function.main.arn}"
+    pre_sign_up                    = "${aws_lambda_function.main.arn}"
+    verify_auth_challenge_response = "${aws_lambda_function.main.arn}"
+  }
+}`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withLambdaConfigUpdated(name string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "main" {
+  name = "%s"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lambda_function" "main" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%[1]s"
+  role          = "${aws_iam_role.main.arn}"
+  handler       = "exports.example"
+  runtime       = "nodejs4.3"
+}
+
+resource "aws_lambda_function" "second" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%[1]s_second"
+  role          = "${aws_iam_role.main.arn}"
+  handler       = "exports.example"
+  runtime       = "nodejs4.3"
+}
+
+resource "aws_cognito_user_pool" "main" {
+  name = "%[1]s"
+
+  lambda_config {
+    create_auth_challenge          = "${aws_lambda_function.second.arn}"
+    custom_message                 = "${aws_lambda_function.second.arn}"
+    define_auth_challenge          = "${aws_lambda_function.second.arn}"
+    post_authentication            = "${aws_lambda_function.second.arn}"
+    post_confirmation              = "${aws_lambda_function.second.arn}"
+    pre_authentication             = "${aws_lambda_function.second.arn}"
+    pre_sign_up                    = "${aws_lambda_function.second.arn}"
+    verify_auth_challenge_response = "${aws_lambda_function.second.arn}"
   }
 }`, name)
 }
