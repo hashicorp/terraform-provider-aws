@@ -61,8 +61,9 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			},
 
 			"metadata": &schema.Schema{
-				Type:     schema.TypeMap,
-				Optional: true,
+				Type:         schema.TypeMap,
+				ValidateFunc: validateMetadataIsLowerCase,
+				Optional:     true,
 			},
 
 			"content_type": {
@@ -273,7 +274,15 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("content_encoding", resp.ContentEncoding)
 	d.Set("content_language", resp.ContentLanguage)
 	d.Set("content_type", resp.ContentType)
-	d.Set("metadata", pointersMapToStringList(resp.Metadata))
+	metadata := pointersMapToStringList(resp.Metadata)
+
+	// AWS Go SDK capitalizes metadata, this is a workaround. https://github.com/aws/aws-sdk-go/issues/445
+	for k, v := range metadata {
+		delete(metadata, k)
+		metadata[strings.ToLower(k)] = v
+	}
+
+	d.Set("metadata", metadata)
 	d.Set("version_id", resp.VersionId)
 	d.Set("server_side_encryption", resp.ServerSideEncryption)
 	d.Set("website_redirect", resp.WebsiteRedirectLocation)
@@ -428,6 +437,18 @@ func validateS3BucketObjectServerSideEncryption(v interface{}, k string) (ws []s
 		errors = append(errors, fmt.Errorf(
 			"%q contains an invalid Server Side Encryption value %q. Valid values are %q and %q",
 			k, value, s3.ServerSideEncryptionAes256, s3.ServerSideEncryptionAwsKms))
+	}
+	return
+}
+
+func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(map[string]interface{})
+
+	for k := range value {
+		if k != strings.ToLower(k) {
+			errors = append(errors, fmt.Errorf(
+				"Metadata must be lowercase only. Offending key: %q", k))
+		}
 	}
 	return
 }
