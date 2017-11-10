@@ -82,5 +82,6 @@ func resourceAwsAthenaNamedQueryDelete(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return err
 	}
+	d.SetId("")
 	return nil
 }

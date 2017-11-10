@@ -10,16 +10,22 @@ description: |-
 
 Provides an Athena Named Query resource.
 
-~> **NOTE on Athena Named Query**: AWS CLI for Athena haven't provided a feature to create database yet while named query api requires database name. So you have to create database in advance.
-[the AWS Docs](https://docs.aws.amazon.com/ja_jp/athena/latest/APIReference/API_CreateNamedQuery.html).
-
 ## Example Usage
 
 ```hcl
+resource "aws_s3_bucket" "hoge" {
+	bucket = "tf-test"
+}
+
+resource "aws_athena_database" "hoge" {
+	name = "users"
+	bucket = "${aws_s3_bucket.hoge.bucket}"
+}
+
 resource "aws_athena_named_query" "foo" {
   name = "bar"
-	database = "users"
-	query = "SELECT * FROM users limit 10;"
+	database = "${aws_athena_database.hoge.name}"
+	query = "SELECT * FROM ${aws_athena_database.hoge.name} limit 10;"
 }
 ```
 
