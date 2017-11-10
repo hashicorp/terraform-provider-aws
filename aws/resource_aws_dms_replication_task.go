@@ -224,7 +224,7 @@ func resourceAwsDmsReplicationTaskUpdate(d *schema.ResourceData, meta interface{
 			return err
 		}
 
-		_, err := conn.ModifyReplicationTask(request)
+		_, err = conn.ModifyReplicationTask(request)
 		if err != nil {
 			return err
 		}
@@ -335,7 +335,8 @@ func resourceAwsDmsReplicationTaskStateRefreshFunc(
 	}
 }
 
-func resourceAwsDmsReplicationTaskStop(d *schema.ResourceData, meta interface{}) {
+func resourceAwsDmsReplicationTaskStop(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).dmsconn
 
 	request := &dms.StopReplicationTaskInput{
 		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
@@ -364,4 +365,6 @@ func resourceAwsDmsReplicationTaskStop(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return err
 	}
+
+	return nil
 }
