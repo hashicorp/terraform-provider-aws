@@ -1,8 +1,11 @@
 package aws
 
 import (
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -56,15 +59,25 @@ func resourceAwsSsmResourceDataSync() *schema.Resource {
 func resourceAwsSsmResourceDataSyncCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ssmconn
 
-	input := &ssm.CreateResourceDataSyncInput{
-		S3Destination: expandSsmResourceDataSyncS3Destination(d),
-		SyncName:      aws.String(d.Get("name").(string)),
-	}
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		input := &ssm.CreateResourceDataSyncInput{
+			S3Destination: expandSsmResourceDataSyncS3Destination(d),
+			SyncName:      aws.String(d.Get("name").(string)),
+		}
+		_, err := conn.CreateResourceDataSync(input)
+		if err != nil {
+			if isAWSErr(err, ssm.ErrCodeResourceDataSyncInvalidConfigurationException, "S3 write failed for bucket") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 
-	_, err := conn.CreateResourceDataSync(input)
 	if err != nil {
 		return err
 	}
+
 	d.SetId(d.Get("name").(string))
 	return resourceAwsSsmResourceDataSyncRead(d, meta)
 }
