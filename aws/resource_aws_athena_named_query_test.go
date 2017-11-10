@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -41,13 +40,8 @@ func testAccCheckAWSAthenaNamedQueryDestroy(s *terraform.State) error {
 
 		resp, err := conn.GetNamedQuery(input)
 		if err != nil {
-			if aerr, ok := err.(awserr.Error); ok {
-				switch aerr.Code() {
-				case athena.ErrCodeInvalidRequestException:
-					return nil
-				default:
-					return err
-				}
+			if isAWSErr(err, athena.ErrCodeInvalidRequestException, "does not exist") {
+				return nil
 			}
 			return err
 		}
