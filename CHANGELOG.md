@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_rds_cluster` [GH-2070]
+* **New Data Source:** `aws_elasticache_replication_group` [GH-2124]
 * **New Resource:** `aws_ses_template` [GH-2003]
 * **New Resource:** `aws_dx_lag` [GH-2154]
 * **New Resource:** `aws_dx_connection` [GH-2173]
