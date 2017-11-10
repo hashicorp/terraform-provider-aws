@@ -2356,3 +2356,22 @@ func flattenRedshiftLogging(ls *redshift.LoggingStatus) []interface{} {
 	}
 	return []interface{}{cfg}
 }
+
+func flattenRedshiftSnapshotCopy(scs *redshift.ClusterSnapshotCopyStatus) []interface{} {
+	if scs == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{}, 0)
+	if scs.DestinationRegion != nil {
+		cfg["destination_region"] = *scs.DestinationRegion
+	}
+	if scs.RetentionPeriod != nil {
+		cfg["retention_period"] = *scs.RetentionPeriod
+	}
+	if scs.SnapshotCopyGrantName != nil {
+		cfg["grant_name"] = *scs.SnapshotCopyGrantName
+	}
+
+	return []interface{}{cfg}
+}

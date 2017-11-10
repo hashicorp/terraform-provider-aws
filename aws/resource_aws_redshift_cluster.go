@@ -219,6 +219,29 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
+			"snapshot_copy": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination_region": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"retention_period": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  7,
+						},
+						"grant_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+
 			"logging": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -471,6 +494,13 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("[WARN] Error waiting for Redshift Cluster state to be \"available\": %s", err)
 	}
 
+	if v, ok := d.GetOk("snapshot_copy"); ok {
+		err := enableRedshiftSnapshotCopy(d.Id(), v.([]interface{}), conn)
+		if err != nil {
+			return err
+		}
+	}
+
 	logging, ok := d.GetOk("logging.0.enable")
 	_, deprecatedOk := d.GetOk("enable_logging")
 	if (ok && logging.(bool)) || deprecatedOk {
@@ -479,7 +509,6 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 			log.Printf("[ERROR] Error Enabling Logging on Redshift Cluster: %s", err)
 			return loggingErr
 		}
-
 	}
 
 	return resourceAwsRedshiftClusterRead(d, meta)
@@ -585,6 +614,8 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
 	d.Set("tags", tagsToMapRedshift(rsc.Tags))
+
+	d.Set("snapshot_copy", flattenRedshiftSnapshotCopy(rsc.ClusterSnapshotCopyStatus))
 
 	// TODO: Deprecated fields - remove in next major version
 	d.Set("bucket_name", loggingStatus.BucketName)
@@ -747,6 +778,22 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	if d.HasChange("snapshot_copy") {
+		if v, ok := d.GetOk("snapshot_copy"); ok {
+			err := enableRedshiftSnapshotCopy(d.Id(), v.([]interface{}), conn)
+			if err != nil {
+				return err
+			}
+		} else {
+			_, err := conn.DisableSnapshotCopy(&redshift.DisableSnapshotCopyInput{
+				ClusterIdentifier: aws.String(d.Id()),
+			})
+			if err != nil {
+				return fmt.Errorf("Failed to disable snapshot copy: %s", err)
+			}
+		}
+	}
+
 	deprecatedHasChange := (d.HasChange("enable_logging") || d.HasChange("bucket_name") || d.HasChange("s3_key_prefix"))
 	if d.HasChange("logging") || deprecatedHasChange {
 		var loggingErr error
@@ -810,6 +857,27 @@ func enableRedshiftClusterLogging(d *schema.ResourceData, conn *redshift.Redshif
 	if loggingErr != nil {
 		log.Printf("[ERROR] Error Enabling Logging on Redshift Cluster: %s", loggingErr)
 		return loggingErr
+	}
+	return nil
+}
+
+func enableRedshiftSnapshotCopy(id string, scList []interface{}, conn *redshift.Redshift) error {
+	sc := scList[0].(map[string]interface{})
+
+	input := redshift.EnableSnapshotCopyInput{
+		ClusterIdentifier: aws.String(id),
+		DestinationRegion: aws.String(sc["destination_region"].(string)),
+	}
+	if rp, ok := sc["retention_period"]; ok {
+		input.RetentionPeriod = aws.Int64(int64(rp.(int)))
+	}
+	if gn, ok := sc["grant_name"]; ok {
+		input.SnapshotCopyGrantName = aws.String(gn.(string))
+	}
+
+	_, err := conn.EnableSnapshotCopy(&input)
+	if err != nil {
+		return fmt.Errorf("Failed to enable snapshot copy: %s", err)
 	}
 	return nil
 }
