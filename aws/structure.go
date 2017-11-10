@@ -2161,8 +2161,8 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 	return []map[string]interface{}{}
 }
 
-func expandCognitoUserPoolLambdaConfig(config map[string]interface{}) *cognitoidentityprovider.AdminCreateUserConfigType {
-	configs := &cognitoidentityprovider.LambdaConfigType{}
+func expandCognitoUserPoolAdminCreateUserConfig(config map[string]interface{}) *cognitoidentityprovider.AdminCreateUserConfigType {
+	configs := &cognitoidentityprovider.AdminCreateUserConfigType{}
 
 	if v, ok := config["allow_admin_create_user_only"]; ok {
 		configs.AllowAdminCreateUserOnly = aws.Bool(v.(bool))
@@ -2170,18 +2170,18 @@ func expandCognitoUserPoolLambdaConfig(config map[string]interface{}) *cognitoid
 
 	if v, ok := config["invite_message_template"]; ok {
 		subconfig := v.(map[string]interface{})
-		imt := &cognitoidentityprovider.InviteMessageTemplateType{}
+		imt := &cognitoidentityprovider.MessageTemplateType{}
 
-		if v, ok := imt["email_message"]; ok {
+		if v, ok := subconfig["email_message"]; ok {
 			imt.EmailMessage = aws.String(v.(string))
 		}
 
-		if v, ok := imt["email_subject"]; ok {
-			imt.EmailSibject = aws.String(v.(string))
+		if v, ok := subconfig["email_subject"]; ok {
+			imt.EmailSubject = aws.String(v.(string))
 		}
 
-		if v, ok := imt["sms_message"]; ok {
-			imt.SmsMessage = aws.String(v.(string))
+		if v, ok := subconfig["sms_message"]; ok {
+			imt.SMSMessage = aws.String(v.(string))
 		}
 
 		configs.InviteMessageTemplate = imt
@@ -2192,7 +2192,7 @@ func expandCognitoUserPoolLambdaConfig(config map[string]interface{}) *cognitoid
 	return configs
 }
 
-func flattenCognitoUserPoolLambdaConfig(s *cognitoidentityprovider.AdminCreateUserConfigType) []map[string]interface{} {
+func flattenCognitoUserPoolAdminCreateUserConfig(s *cognitoidentityprovider.AdminCreateUserConfigType) []map[string]interface{} {
 	config := map[string]interface{}{}
 
 	if s == nil {
@@ -2259,10 +2259,6 @@ func expandCognitoUserPoolLambdaConfig(config map[string]interface{}) *cognitoid
 		configs.PreSignUp = aws.String(v.(string))
 	}
 
-	if v, ok := config["pre_token_generation"]; ok {
-		configs.PreTokenGeneration = aws.String(v.(string))
-	}
-
 	if v, ok := config["verify_auth_challenge_response"]; ok {
 		configs.VerifyAuthChallengeResponse = aws.String(v.(string))
 	}
@@ -2303,10 +2299,6 @@ func flattenCognitoUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigT
 
 	if s.PreSignUp != nil {
 		m["pre_sign_up"] = *s.PreSignUp
-	}
-
-	if s.PreTokenGeneration != nil {
-		m["pre_token_generation"] = *s.PreTokenGeneration
 	}
 
 	if s.VerifyAuthChallengeResponse != nil {
@@ -2372,141 +2364,130 @@ func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPol
 	return []map[string]interface{}{m}
 }
 
-func expandCognitoUserPoolSchema(config map[string]interface{}) []*cognitoidentityprovider.SchemaAttributeType {
+func expandCognitoUserPoolSchema(inputs []interface{}) []*cognitoidentityprovider.SchemaAttributeType {
 	configs := make([]*cognitoidentityprovider.SchemaAttributeType, 0)
 
-	for _, v := range s.List() {
-		param := v.(map[string]interface{})
+	for _, input := range inputs {
+		param := input.(map[string]interface{})
+		config := &cognitoidentityprovider.SchemaAttributeType{}
 
-		if v, ok := config["attribute_data_type"]; ok {
-			param.AttributeDataType = aws.String(v.(string))
+		if v, ok := param["attribute_data_type"]; ok {
+			config.AttributeDataType = aws.String(v.(string))
 		}
 
-		if v, ok := config["developer_only_attribute"]; ok {
-			param.DeveloperOnlyAttribute = aws.Bool(v.(bool))
+		if v, ok := param["developer_only_attribute"]; ok {
+			config.DeveloperOnlyAttribute = aws.Bool(v.(bool))
 		}
 
-		if v, ok := config["mutable"]; ok {
-			param.Mutable = aws.Bool(v.(bool))
+		if v, ok := param["mutable"]; ok {
+			config.Mutable = aws.Bool(v.(bool))
 		}
 
-		if v, ok := config["name"]; ok {
-			param.Name = aws.String(v.(string))
+		if v, ok := param["name"]; ok {
+			config.Name = aws.String(v.(string))
 		}
 
-		if v, ok := config["required"]; ok {
-			param.Required = aws.Bool(v.(bool))
+		if v, ok := param["required"]; ok {
+			config.Required = aws.Bool(v.(bool))
 		}
 
-		if v, ok := config["number_attribute_constraints"]; ok {
-			configs := v.([]interface{})
-			config, ok := configs[0].(map[string]interface{})
+		if v, ok := param["number_attribute_constraints"]; ok {
+			params := v.([]interface{})
+			param, ok := params[0].(map[string]interface{})
 
-			if !ok {
-				return errors.New("number_attribute_constraints is <nil>")
-			}
-
-			if config != nil {
+			if ok && param != nil {
 				numberAttributeConstraintsType := &cognitoidentityprovider.NumberAttributeConstraintsType{}
 
-				if v, ok := config["min_value"]; ok && v.(string) != "" {
+				if v, ok := param["min_value"]; ok && v.(string) != "" {
 					numberAttributeConstraintsType.MinValue = aws.String(v.(string))
 				}
 
-				if v, ok := config["max_value"]; ok && v.(string) != "" {
+				if v, ok := param["max_value"]; ok && v.(string) != "" {
 					numberAttributeConstraintsType.MaxValue = aws.String(v.(string))
 				}
 
-				if len(numberAttributeConstraintsType) > 0 {
-					params.NumberAttributeConstraints = numberAttributeConstraintsType
-				}
+				config.NumberAttributeConstraints = numberAttributeConstraintsType
 			}
 		}
 
-		if v, ok := config["string_attribute_constraints"]; ok {
-			configs := v.([]interface{})
-			config, ok := configs[0].(map[string]interface{})
+		if v, ok := param["string_attribute_constraints"]; ok {
+			params := v.([]interface{})
+			param, ok := params[0].(map[string]interface{})
 
-			if !ok {
-				return errors.New("string_attribute_constraints is <nil>")
-			}
-
-			if config != nil {
+			if ok && param != nil {
 				stringAttributeConstraintsType := &cognitoidentityprovider.StringAttributeConstraintsType{}
 
-				if v, ok := config["min_length"]; ok && v.(string) != "" {
-					stringAttributeConstraintsType.MinValue = aws.String(v.(string))
+				if v, ok := param["min_length"]; ok && v.(string) != "" {
+					stringAttributeConstraintsType.MinLength = aws.String(v.(string))
 				}
 
-				if v, ok := config["max_length"]; ok && v.(string) != "" {
-					stringAttributeConstraintsType.MaxValue = aws.String(v.(string))
+				if v, ok := param["max_length"]; ok && v.(string) != "" {
+					stringAttributeConstraintsType.MaxLength = aws.String(v.(string))
 				}
 
-				if len(stringAttributeConstraintsType) > 0 {
-					params.StringAttributeConstraints = stringAttributeConstraintsType
-				}
+				config.StringAttributeConstraints = stringAttributeConstraintsType
 			}
 		}
 
-		configs = append(configs, param)
+		configs = append(configs, config)
 	}
 
 	return configs
 }
 
-func flattenCognitoUserPoolSchema(s []*cognitoidentityprovider.SchemaAttributeType) []map[string]interface{} {
+func flattenCognitoUserPoolSchema(inputs []*cognitoidentityprovider.SchemaAttributeType) []map[string]interface{} {
 	values := make([]map[string]interface{}, 0)
 
-	for _, v := range ips {
+	for _, input := range inputs {
 		value := make(map[string]interface{})
 
-		if v == nil {
+		if input == nil {
 			return nil
 		}
 
-		if v.AttributeDataType != nil {
-			value["attribute_data_type"] = *v.AttributeDataType
+		if input.AttributeDataType != nil {
+			value["attribute_data_type"] = *input.AttributeDataType
 		}
 
-		if v.DeveloperOnlyAttribute != nil {
-			value["developer_only_attribute"] = *v.DeveloperOnlyAttribute
+		if input.DeveloperOnlyAttribute != nil {
+			value["developer_only_attribute"] = *input.DeveloperOnlyAttribute
 		}
 
-		if v.Mutable != nil {
-			value["mutable"] = *v.Mutable
+		if input.Mutable != nil {
+			value["mutable"] = *input.Mutable
 		}
 
-		if v.Name != nil {
-			value["name"] = *v.Name
+		if input.Name != nil {
+			value["name"] = *input.Name
 		}
 
-		if v.NumberAttributeConstraints != nil {
+		if input.NumberAttributeConstraints != nil {
 			subvalue := make(map[string]interface{})
 
-			if v.NumberAttributeConstraints.MinValue != nil {
-				subvalue["min_value"] = v.NumberAttributeConstraints.MinValue
+			if input.NumberAttributeConstraints.MinValue != nil {
+				subvalue["min_value"] = input.NumberAttributeConstraints.MinValue
 			}
 
-			if v.NumberAttributeConstraints.MaxValue != nil {
-				subvalue["max_value"] = v.NumberAttributeConstraints.MaxValue
+			if input.NumberAttributeConstraints.MaxValue != nil {
+				subvalue["max_value"] = input.NumberAttributeConstraints.MaxValue
 			}
 
 			value["number_attribute_constraints"] = subvalue
 		}
 
-		if v.Required != nil {
-			value["required"] = *v.Required
+		if input.Required != nil {
+			value["required"] = *input.Required
 		}
 
-		if v.StringAttributeConstraints != nil {
+		if input.StringAttributeConstraints != nil {
 			subvalue := make(map[string]interface{})
 
-			if v.StringAttributeConstraints.MinLength != nil {
-				subvalue["min_length"] = v.StringAttributeConstraints.MinLength
+			if input.StringAttributeConstraints.MinLength != nil {
+				subvalue["min_length"] = input.StringAttributeConstraints.MinLength
 			}
 
-			if v.StringAttributeConstraints.MaxLength != nil {
-				subvalue["max_length"] = v.StringAttributeConstraints.MaxLength
+			if input.StringAttributeConstraints.MaxLength != nil {
+				subvalue["max_length"] = input.StringAttributeConstraints.MaxLength
 			}
 
 			value["string_attribute_constraints"] = subvalue

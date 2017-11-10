@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/pkg/errors"
 )
 
@@ -23,6 +24,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"admin_create_user_config": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -120,6 +122,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"lambda_config": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -159,11 +162,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validateArn,
 						},
-						"pre_token_generation": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateArn,
-						},
 						"verify_auth_challenge_response": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -189,6 +187,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"password_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -219,8 +218,9 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"schema": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
+				ForceNew: true,
 				MinItems: 1,
 				MaxItems: 50,
 				Elem: &schema.Resource{
@@ -471,16 +471,8 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	params.Policies = policies
 
 	if v, ok := d.GetOk("schema"); ok {
-		configs := v.([]interface{})
-		config, ok := configs[0].(map[string]interface{})
-
-		if !ok {
-			return errors.New("schema is <nil>")
-		}
-
-		if config != nil {
-			params.Schema = expandCognitoUserPoolSchema(config)
-		}
+		configs := v.(*schema.Set).List()
+		params.Schema = expandCognitoUserPoolSchema(configs)
 	}
 
 	if v, ok := d.GetOk("sms_authentication_message"); ok {
@@ -561,10 +553,9 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	if err := d.Set("admin_create_user_config", flattenCognitoUserPoolAdminCreateUserConfig(resp.UserPool.LambdaConfig)); err != nil {
+	if err := d.Set("admin_create_user_config", flattenCognitoUserPoolAdminCreateUserConfig(resp.UserPool.AdminCreateUserConfig)); err != nil {
 		return errwrap.Wrapf("Failed setting admin_create_user_config: {{err}}", err)
 	}
-
 	if resp.UserPool.AliasAttributes != nil {
 		d.Set("alias_attributes", flattenStringList(resp.UserPool.AliasAttributes))
 	}
@@ -576,6 +567,9 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	}
 	if resp.UserPool.EmailVerificationMessage != nil {
 		d.Set("email_verification_message", *resp.UserPool.EmailVerificationMessage)
+	}
+	if err := d.Set("lambda_config", flattenCognitoUserPoolLambdaConfig(resp.UserPool.LambdaConfig)); err != nil {
+		return errwrap.Wrapf("Failed setting lambda_config: {{err}}", err)
 	}
 	if resp.UserPool.MfaConfiguration != nil {
 		d.Set("mfa_configuration", *resp.UserPool.MfaConfiguration)
@@ -589,10 +583,6 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 
 	if err := d.Set("email_configuration", flattenCognitoUserPoolEmailConfiguration(resp.UserPool.EmailConfiguration)); err != nil {
 		return errwrap.Wrapf("Failed setting email_configuration: {{err}}", err)
-	}
-
-	if err := d.Set("lambda_config", flattenCognitoUserPoolLambdaConfig(resp.UserPool.LambdaConfig)); err != nil {
-		return errwrap.Wrapf("Failed setting lambda_config: {{err}}", err)
 	}
 
 	if resp.UserPool.Policies != nil && resp.UserPool.Policies.PasswordPolicy != nil {

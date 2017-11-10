@@ -1933,14 +1933,3 @@ func validateDxConnectionBandWidth(v interface{}, k string) (ws []string, errors
 	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validBandWidth, val))
 	return
 }
-
-func validateCognitoUserPoolReplyEmailAddress(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+@[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+",
-			k, value))
-	}
-	return
-}
