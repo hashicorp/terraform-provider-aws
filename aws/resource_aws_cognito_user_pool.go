@@ -73,6 +73,62 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				ValidateFunc: validateCognitoUserPoolEmailVerificationMessage,
 			},
 
+			"lambda_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 0,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"create_auth_challenge": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+						"custom_message": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+						"define_auth_challenge": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+						"post_authentication": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+						"post_confirmation": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+						"pre_authentication": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+						"pre_sign_up": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+						"pre_token_generation": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+						"verify_auth_challenge_response": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
+
 			"mfa_configuration": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -323,6 +379,19 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		params.EmailVerificationMessage = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("lambda_config"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("lambda_config is <nil>")
+		}
+
+		if config != nil {
+			params.LambdaConfig = expandCognitoUserPoolLambdaConfig(config)
+		}
+	}
+
 	if v, ok := d.GetOk("mfa_configuration"); ok {
 		params.MfaConfiguration = aws.String(v.(string))
 	}
@@ -461,6 +530,10 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return errwrap.Wrapf("Failed setting email_configuration: {{err}}", err)
 	}
 
+	if err := d.Set("lambda_config", flattenCognitoUserPoolLambdaConfig(resp.UserPool.LambdaConfig)); err != nil {
+		return errwrap.Wrapf("Failed setting lambda_config: {{err}}", err)
+	}
+
 	if resp.UserPool.Policies != nil && resp.UserPool.Policies.PasswordPolicy != nil {
 		if err := d.Set("password_policy", flattenCognitoUserPoolPasswordPolicy(resp.UserPool.Policies.PasswordPolicy)); err != nil {
 			return errwrap.Wrapf("Failed setting password_policy: {{err}}", err)
@@ -530,6 +603,19 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 			return errors.New("email_verification_message cannot be set to nil")
 		}
 		params.EmailVerificationMessage = aws.String(v)
+	}
+
+	if d.HasChange("lambda_config") {
+		configs := d.Get("lambda_config").([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("lambda_config is <nil>")
+		}
+
+		if config != nil {
+			params.LambdaConfig = expandCognitoUserPoolLambdaConfig(config)
+		}
 	}
 
 	if d.HasChange("mfa_configuration") {

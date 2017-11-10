@@ -2161,6 +2161,94 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 	return []map[string]interface{}{}
 }
 
+func expandCognitoUserPoolLambdaConfig(config map[string]interface{}) *cognitoidentityprovider.LambdaConfigType {
+	configs := &cognitoidentityprovider.LambdaConfigType{}
+
+	if v, ok := config["create_auth_challenge"]; ok {
+		configs.CreateAuthChallenge = aws.String(v.(string))
+	}
+
+	if v, ok := config["custom_message"]; ok {
+		configs.CustomMessage = aws.String(v.(string))
+	}
+
+	if v, ok := config["define_auth_challenge"]; ok {
+		configs.DefineAuthChallenge = aws.String(v.(string))
+	}
+
+	if v, ok := config["post_authentication"]; ok {
+		configs.PostAuthentication = aws.String(v.(string))
+	}
+
+	if v, ok := config["post_confirmation"]; ok {
+		configs.PostConfirmation = aws.String(v.(string))
+	}
+
+	if v, ok := config["pre_authentication"]; ok {
+		configs.PreAuthentication = aws.String(v.(string))
+	}
+
+	if v, ok := config["pre_sign_up"]; ok {
+		configs.PreSignUp = aws.String(v.(string))
+	}
+
+	if v, ok := config["pre_token_generation"]; ok {
+		configs.PreTokenGeneration = aws.String(v.(string))
+	}
+
+	if v, ok := config["verify_auth_challenge_response"]; ok {
+		configs.VerifyAuthChallengeResponse = aws.String(v.(string))
+	}
+
+	return configs
+}
+
+func flattenCognitoUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigType) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if s == nil {
+		return nil
+	}
+
+	if s.CreateAuthChallenge != nil {
+		m["create_auth_challenge"] = *s.CreateAuthChallenge
+	}
+
+	if s.CustomMessage != nil {
+		m["custom_message"] = *s.CustomMessage
+	}
+
+	if s.DefineAuthChallenge != nil {
+		m["define_auth_challenge"] = *s.DefineAuthChallenge
+	}
+
+	if s.PostAuthentication != nil {
+		m["post_authentication"] = *s.PostAuthentication
+	}
+
+	if s.PostConfirmation != nil {
+		m["post_confirmation"] = *s.PostConfirmation
+	}
+
+	if s.PreAuthentication != nil {
+		m["pre_authentication"] = *s.PreAuthentication
+	}
+
+	if s.PreSignUp != nil {
+		m["pre_sign_up"] = *s.PreSignUp
+	}
+
+	if s.PreTokenGeneration != nil {
+		m["pre_token_generation"] = *s.PreTokenGeneration
+	}
+
+	if s.VerifyAuthChallengeResponse != nil {
+		m["verify_auth_challenge_response"] = *s.VerifyAuthChallengeResponse
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func expandCognitoUserPoolPasswordPolicy(config map[string]interface{}) *cognitoidentityprovider.PasswordPolicyType {
 	configs := &cognitoidentityprovider.PasswordPolicyType{}
 
