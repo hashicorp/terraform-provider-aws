@@ -1,10 +1,7 @@
 package aws
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform/helper/schema"
 )
