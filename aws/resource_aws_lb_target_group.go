@@ -505,7 +505,9 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		healthCheck["matcher"] = *targetGroup.Matcher.HttpCode
 	}
 
-	d.Set("health_check", []interface{}{healthCheck})
+	if err := d.Set("health_check", []interface{}{healthCheck}); err != nil {
+		log.Printf("[WARN] Error setting health check: %s", err)
+	}
 
 	attrResp, err := elbconn.DescribeTargetGroupAttributes(&elbv2.DescribeTargetGroupAttributesInput{
 		TargetGroupArn: aws.String(d.Id()),
