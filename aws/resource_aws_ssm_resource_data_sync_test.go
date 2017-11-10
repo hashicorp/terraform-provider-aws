@@ -34,14 +34,11 @@ func testAccCheckAWSSsmResourceDataSyncDestroy(s *terraform.State) error {
 		if rs.Type != "aws_ssm_resource_data_sync" {
 			continue
 		}
-		_, err := findResourceDataSyncItem(conn, rs.Primary.Attributes["name"])
+		syncItem, err := findResourceDataSyncItem(conn, rs.Primary.Attributes["name"])
 		if err != nil {
-			if _, ok := err.(awserr.Error); ok {
-				return err
-			} else {
-				return nil
-			}
-		} else {
+			return err
+		}
+		if syncItem != nil {
 			return fmt.Errorf("Resource Data Sync (%s) found", rs.Primary.Attributes["name"])
 		}
 	}
@@ -63,7 +60,7 @@ func testAccSsmResourceDataSyncConfig(rInt int, rName string) string {
 	return fmt.Sprintf(`
     resource "aws_s3_bucket" "hoge" {
       bucket = "tf-test-bucket-%d"
-      region = "us-east-1"
+      region = "us-west-2"
       force_destroy = true
     }
 

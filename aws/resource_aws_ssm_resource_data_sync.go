@@ -77,12 +77,11 @@ func resourceAwsSsmResourceDataSyncRead(d *schema.ResourceData, meta interface{}
 
 	syncItem, err := findResourceDataSyncItem(conn, d.Get("name").(string))
 	if err != nil {
-		if _, ok := err.(awserr.Error); ok {
-			return err
-		} else {
-			d.SetId("")
-			return nil
-		}
+		return err
+	}
+	if syncItem == nil {
+		d.SetId("")
+		return nil
 	}
 	d.Set("s3_destination", flattenSsmResourceDataSyncS3Destination(syncItem.S3Destination))
 	return nil
@@ -126,7 +125,7 @@ func findResourceDataSyncItem(conn *ssm.SSM, name string) (*ssm.ResourceDataSync
 		}
 		nextToken = *resp.NextToken
 	}
-	return nil, fmt.Errorf("Resource Data Sync (%s) not found", name)
+	return nil, nil
 }
 
 func flattenSsmResourceDataSyncS3Destination(dest *ssm.ResourceDataSyncS3Destination) []interface{} {
