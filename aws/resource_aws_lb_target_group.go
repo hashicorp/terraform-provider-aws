@@ -410,11 +410,11 @@ func validateAwsLbTargetGroupHealthCheckTimeout(v interface{}, k string) (ws []s
 
 func validateAwsLbTargetGroupHealthCheckProtocol(v interface{}, k string) (ws []string, errors []error) {
 	value := strings.ToLower(v.(string))
-	if value == "http" || value == "https" {
+	if value == "http" || value == "https" || value == "tcp" {
 		return
 	}
 
-	errors = append(errors, fmt.Errorf("%q must be either %q or %q", k, "HTTP", "HTTPS"))
+	errors = append(errors, fmt.Errorf("%q must be either %q, %q or %q", k, "HTTP", "HTTPS", "TCP"))
 	return
 }
 
@@ -428,11 +428,11 @@ func validateAwsLbTargetGroupPort(v interface{}, k string) (ws []string, errors 
 
 func validateAwsLbTargetGroupProtocol(v interface{}, k string) (ws []string, errors []error) {
 	protocol := strings.ToLower(v.(string))
-	if protocol == "http" || protocol == "https" {
+	if protocol == "http" || protocol == "https" || protocol == "tcp" {
 		return
 	}
 
-	errors = append(errors, fmt.Errorf("%q must be either %q or %q", k, "HTTP", "HTTPS"))
+	errors = append(errors, fmt.Errorf("%q must be either %q, %q or %q", k, "HTTP", "HTTPS", "TCP"))
 	return
 }
 
