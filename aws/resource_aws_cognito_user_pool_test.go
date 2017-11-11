@@ -146,7 +146,7 @@ func TestAccAWSCognitoUserPool_withTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_attributes(t *testing.T) {
+func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
 	name := acctest.RandString(5)
 
 	resource.Test(t, resource.TestCase{
@@ -155,7 +155,7 @@ func TestAccAWSCognitoUserPool_attributes(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolConfig_attributes(name),
+				Config: testAccAWSCognitoUserPoolConfig_withAliasAttributes(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "1"),
@@ -164,7 +164,7 @@ func TestAccAWSCognitoUserPool_attributes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCognitoUserPoolConfig_attributesUpdated(name),
+				Config: testAccAWSCognitoUserPoolConfig_withAliasAttributesUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "2"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.0", "email"),
@@ -405,7 +405,7 @@ resource "aws_cognito_user_pool" "pool" {
 }`, name)
 }
 
-func testAccAWSCognitoUserPoolConfig_attributes(name string) string {
+func testAccAWSCognitoUserPoolConfig_withAliasAttributes(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
@@ -414,7 +414,7 @@ resource "aws_cognito_user_pool" "pool" {
 }`, name)
 }
 
-func testAccAWSCognitoUserPoolConfig_attributesUpdated(name string) string {
+func testAccAWSCognitoUserPoolConfig_withAliasAttributesUpdated(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"

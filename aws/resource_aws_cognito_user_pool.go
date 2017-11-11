@@ -65,6 +65,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					},
 				},
 			},
+
 			"alias_attributes": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -73,6 +74,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validateCognitoUserPoolAliasAttribute,
 				},
+				ConflictsWith: []string{"username_attributes"},
 			},
 
 			"auto_verified_attributes": {
@@ -327,6 +329,20 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 
 			"tags": tagsSchema(),
 
+			"username_attributes": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						cognitoidentityprovider.UsernameAttributeTypeEmail,
+						cognitoidentityprovider.UsernameAttributeTypePhoneNumber,
+					}, false),
+				},
+				ConflictsWith: []string{"alias_attributes"},
+			},
+
 			"verification_message_template": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -500,6 +516,10 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	if v, ok := d.GetOk("username_attributes"); ok {
+		params.UsernameAttributes = expandStringList(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("verification_message_template"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -593,6 +613,10 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 
 	if err := d.Set("sms_configuration", flattenCognitoUserPoolSmsConfiguration(resp.UserPool.SmsConfiguration)); err != nil {
 		return errwrap.Wrapf("Failed setting sms_configuration: {{err}}", err)
+	}
+
+	if resp.UserPool.UsernameAttributes != nil {
+		d.Set("username_attributes", flattenStringList(resp.UserPool.UsernameAttributes))
 	}
 
 	if err := d.Set("verification_message_template", flattenCognitoUserPoolVerificationMessageTemplate(resp.UserPool.VerificationMessageTemplate)); err != nil {
