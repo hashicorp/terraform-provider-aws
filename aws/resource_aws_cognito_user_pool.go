@@ -246,7 +246,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Optional: true,
 						},
 						"name": {
-							Type:         schema.TypeBool,
+							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validateCognitoUserPoolSchemaName,
 						},

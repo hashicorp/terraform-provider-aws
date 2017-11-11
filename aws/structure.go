@@ -2392,17 +2392,17 @@ func expandCognitoUserPoolSchema(inputs []interface{}) []*cognitoidentityprovide
 		}
 
 		if v, ok := param["number_attribute_constraints"]; ok {
-			params := v.([]interface{})
-			param, ok := params[0].(map[string]interface{})
+			data := v.([]interface{})
 
-			if ok && param != nil {
+			if len(data) > 0 {
+				m, _ := data[0].(map[string]interface{})
 				numberAttributeConstraintsType := &cognitoidentityprovider.NumberAttributeConstraintsType{}
 
-				if v, ok := param["min_value"]; ok && v.(string) != "" {
+				if v, ok := m["min_value"]; ok && v.(string) != "" {
 					numberAttributeConstraintsType.MinValue = aws.String(v.(string))
 				}
 
-				if v, ok := param["max_value"]; ok && v.(string) != "" {
+				if v, ok := m["max_value"]; ok && v.(string) != "" {
 					numberAttributeConstraintsType.MaxValue = aws.String(v.(string))
 				}
 
@@ -2411,18 +2411,18 @@ func expandCognitoUserPoolSchema(inputs []interface{}) []*cognitoidentityprovide
 		}
 
 		if v, ok := param["string_attribute_constraints"]; ok {
-			params := v.([]interface{})
-			param, ok := params[0].(map[string]interface{})
+			data := v.([]interface{})
 
-			if ok && param != nil {
+			if len(data) > 0 {
+				m, _ := data[0].(map[string]interface{})
 				stringAttributeConstraintsType := &cognitoidentityprovider.StringAttributeConstraintsType{}
 
-				if v, ok := param["min_length"]; ok && v.(string) != "" {
-					stringAttributeConstraintsType.MinLength = aws.String(v.(string))
+				if l, ok := m["min_length"]; ok && l.(string) != "" {
+					stringAttributeConstraintsType.MinLength = aws.String(l.(string))
 				}
 
-				if v, ok := param["max_length"]; ok && v.(string) != "" {
-					stringAttributeConstraintsType.MaxLength = aws.String(v.(string))
+				if l, ok := m["max_length"]; ok && l.(string) != "" {
+					stringAttributeConstraintsType.MaxLength = aws.String(l.(string))
 				}
 
 				config.StringAttributeConstraints = stringAttributeConstraintsType
