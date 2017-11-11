@@ -2649,6 +2649,84 @@ func (c *EC2) CreateCustomerGatewayWithContext(ctx aws.Context, input *CreateCus
 	return out, req.Send()
 }
 
+const opCreateDefaultSubnet = "CreateDefaultSubnet"
+
+// CreateDefaultSubnetRequest generates a "aws/request.Request" representing the
+// client's request for the CreateDefaultSubnet operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateDefaultSubnet for more information on using the CreateDefaultSubnet
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateDefaultSubnetRequest method.
+//    req, resp := client.CreateDefaultSubnetRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateDefaultSubnet
+func (c *EC2) CreateDefaultSubnetRequest(input *CreateDefaultSubnetInput) (req *request.Request, output *CreateDefaultSubnetOutput) {
+	op := &request.Operation{
+		Name:       opCreateDefaultSubnet,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateDefaultSubnetInput{}
+	}
+
+	output = &CreateDefaultSubnetOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateDefaultSubnet API operation for Amazon Elastic Compute Cloud.
+//
+// Creates a default subnet with a size /20 IPv4 CIDR block in the specified
+// Availability Zone in your default VPC. You can have only one default subnet
+// per Availability Zone. For more information, see Creating a Default Subnet
+// (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html#create-default-subnet)
+// in the Amazon Virtual Private Cloud User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation CreateDefaultSubnet for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateDefaultSubnet
+func (c *EC2) CreateDefaultSubnet(input *CreateDefaultSubnetInput) (*CreateDefaultSubnetOutput, error) {
+	req, out := c.CreateDefaultSubnetRequest(input)
+	return out, req.Send()
+}
+
+// CreateDefaultSubnetWithContext is the same as CreateDefaultSubnet with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateDefaultSubnet for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) CreateDefaultSubnetWithContext(ctx aws.Context, input *CreateDefaultSubnetInput, opts ...request.Option) (*CreateDefaultSubnetOutput, error) {
+	req, out := c.CreateDefaultSubnetRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateDefaultVpc = "CreateDefaultVpc"
 
 // CreateDefaultVpcRequest generates a "aws/request.Request" representing the
@@ -22010,7 +22088,7 @@ func (s *AttachNetworkInterfaceOutput) SetAttachmentId(v string) *AttachNetworkI
 type AttachVolumeInput struct {
 	_ struct{} `type:"structure"`
 
-	// The device name to expose to the instance (for example, /dev/sdh or xvdh).
+	// The device name (for example, /dev/sdh or xvdh).
 	//
 	// Device is a required field
 	Device *string `type:"string" required:"true"`
@@ -22650,7 +22728,7 @@ func (s *BlobAttributeValue) SetValue(v []byte) *BlobAttributeValue {
 type BlockDeviceMapping struct {
 	_ struct{} `type:"structure"`
 
-	// The device name exposed to the instance (for example, /dev/sdh or xvdh).
+	// The device name (for example, /dev/sdh or xvdh).
 	DeviceName *string `locationName:"deviceName" type:"string"`
 
 	// Parameters used to automatically set up EBS volumes when the instance is
@@ -23739,6 +23817,100 @@ func (s *ClassicLinkInstance) SetVpcId(v string) *ClassicLinkInstance {
 	return s
 }
 
+// Describes a Classic Load Balancer.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ClassicLoadBalancer
+type ClassicLoadBalancer struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the load balancer.
+	//
+	// Name is a required field
+	Name *string `locationName:"name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ClassicLoadBalancer) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClassicLoadBalancer) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ClassicLoadBalancer) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ClassicLoadBalancer"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *ClassicLoadBalancer) SetName(v string) *ClassicLoadBalancer {
+	s.Name = &v
+	return s
+}
+
+// Describes the Classic Load Balancers to attach to a Spot fleet. Spot fleet
+// registers the running Spot instances with these Classic Load Balancers.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ClassicLoadBalancersConfig
+type ClassicLoadBalancersConfig struct {
+	_ struct{} `type:"structure"`
+
+	// One or more Classic Load Balancers.
+	//
+	// ClassicLoadBalancers is a required field
+	ClassicLoadBalancers []*ClassicLoadBalancer `locationName:"classicLoadBalancers" locationNameList:"item" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s ClassicLoadBalancersConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClassicLoadBalancersConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ClassicLoadBalancersConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ClassicLoadBalancersConfig"}
+	if s.ClassicLoadBalancers == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClassicLoadBalancers"))
+	}
+	if s.ClassicLoadBalancers != nil && len(s.ClassicLoadBalancers) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClassicLoadBalancers", 1))
+	}
+	if s.ClassicLoadBalancers != nil {
+		for i, v := range s.ClassicLoadBalancers {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ClassicLoadBalancers", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClassicLoadBalancers sets the ClassicLoadBalancers field's value.
+func (s *ClassicLoadBalancersConfig) SetClassicLoadBalancers(v []*ClassicLoadBalancer) *ClassicLoadBalancersConfig {
+	s.ClassicLoadBalancers = v
+	return s
+}
+
 // Describes the client-specific data.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ClientData
 type ClientData struct {
@@ -24522,6 +24694,81 @@ func (s CreateCustomerGatewayOutput) GoString() string {
 // SetCustomerGateway sets the CustomerGateway field's value.
 func (s *CreateCustomerGatewayOutput) SetCustomerGateway(v *CustomerGateway) *CreateCustomerGatewayOutput {
 	s.CustomerGateway = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateDefaultSubnetRequest
+type CreateDefaultSubnetInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Availability Zone in which to create the default subnet.
+	//
+	// AvailabilityZone is a required field
+	AvailabilityZone *string `type:"string" required:"true"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s CreateDefaultSubnetInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateDefaultSubnetInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateDefaultSubnetInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateDefaultSubnetInput"}
+	if s.AvailabilityZone == nil {
+		invalidParams.Add(request.NewErrParamRequired("AvailabilityZone"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAvailabilityZone sets the AvailabilityZone field's value.
+func (s *CreateDefaultSubnetInput) SetAvailabilityZone(v string) *CreateDefaultSubnetInput {
+	s.AvailabilityZone = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *CreateDefaultSubnetInput) SetDryRun(v bool) *CreateDefaultSubnetInput {
+	s.DryRun = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateDefaultSubnetResult
+type CreateDefaultSubnetOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the subnet.
+	Subnet *Subnet `locationName:"subnet" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateDefaultSubnetOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateDefaultSubnetOutput) GoString() string {
+	return s.String()
+}
+
+// SetSubnet sets the Subnet field's value.
+func (s *CreateDefaultSubnetOutput) SetSubnet(v *Subnet) *CreateDefaultSubnetOutput {
+	s.Subnet = v
 	return s
 }
 
@@ -31874,8 +32121,8 @@ type DescribeImagesInput struct {
 	//    * block-device-mapping.delete-on-termination - A Boolean value that indicates
 	//    whether the Amazon EBS volume is deleted on instance termination.
 	//
-	//    * block-device-mapping.device-name - The device name for the EBS volume
-	//    (for example, /dev/sdh).
+	//    * block-device-mapping.device-name - The device name specified in the
+	//    block device mapping (for example, /dev/sdh or xvdh).
 	//
 	//    * block-device-mapping.snapshot-id - The ID of the snapshot used for the
 	//    EBS volume.
@@ -31919,7 +32166,7 @@ type DescribeImagesInput struct {
 	//
 	//    * ramdisk-id - The RAM disk ID.
 	//
-	//    * root-device-name - The name of the root device volume (for example,
+	//    * root-device-name - The device name of the root device volume (for example,
 	//    /dev/sda1).
 	//
 	//    * root-device-type - The type of the root device volume (ebs | instance-store).
@@ -32340,7 +32587,7 @@ type DescribeInstanceAttributeOutput struct {
 	// The RAM disk ID.
 	RamdiskId *AttributeValue `locationName:"ramdisk" type:"structure"`
 
-	// The name of the root device (for example, /dev/sda1 or /dev/xvda).
+	// The device name of the root device volume (for example, /dev/sda1).
 	RootDeviceName *AttributeValue `locationName:"rootDeviceName" type:"structure"`
 
 	// Indicates whether source/destination checking is enabled. A value of true
@@ -32634,8 +32881,8 @@ type DescribeInstancesInput struct {
 	//    * block-device-mapping.delete-on-termination - A Boolean that indicates
 	//    whether the EBS volume is deleted on instance termination.
 	//
-	//    * block-device-mapping.device-name - The device name for the EBS volume
-	//    (for example, /dev/sdh or xvdh).
+	//    * block-device-mapping.device-name - The device name specified in the
+	//    block device mapping (for example, /dev/sdh or xvdh).
 	//
 	//    * block-device-mapping.status - The status for the EBS volume (attaching
 	//    | attached | detaching | detached).
@@ -32818,11 +33065,10 @@ type DescribeInstancesInput struct {
 	//    one reservation ID. If you launch ten instances using the same launch
 	//    request, you also get one reservation ID.
 	//
-	//    * root-device-name - The name of the root device for the instance (for
-	//    example, /dev/sda1 or /dev/xvda).
+	//    * root-device-name - The device name of the root device volume (for example,
+	//    /dev/sda1).
 	//
-	//    * root-device-type - The type of root device that the instance uses (ebs
-	//    | instance-store).
+	//    * root-device-type - The type of the root device volume (ebs | instance-store).
 	//
 	//    * source-dest-check - Indicates whether the instance performs source/destination
 	//    checking. A value of true means that checking is enabled, and false means
@@ -36148,20 +36394,20 @@ type DescribeSpotInstanceRequestsInput struct {
 	//    * launch-group - The Spot instance launch group.
 	//
 	//    * launch.block-device-mapping.delete-on-termination - Indicates whether
-	//    the Amazon EBS volume is deleted on instance termination.
+	//    the EBS volume is deleted on instance termination.
 	//
-	//    * launch.block-device-mapping.device-name - The device name for the Amazon
-	//    EBS volume (for example, /dev/sdh).
+	//    * launch.block-device-mapping.device-name - The device name for the volume
+	//    in the block device mapping (for example, /dev/sdh or xvdh).
 	//
-	//    * launch.block-device-mapping.snapshot-id - The ID of the snapshot used
-	//    for the Amazon EBS volume.
+	//    * launch.block-device-mapping.snapshot-id - The ID of the snapshot for
+	//    the EBS volume.
 	//
-	//    * launch.block-device-mapping.volume-size - The size of the Amazon EBS
-	//    volume, in GiB.
+	//    * launch.block-device-mapping.volume-size - The size of the EBS volume,
+	//    in GiB.
 	//
-	//    * launch.block-device-mapping.volume-type - The type of the Amazon EBS
-	//    volume: gp2 for General Purpose SSD, io1 for Provisioned IOPS SSD, st1
-	//    for Throughput Optimized HDD, sc1for Cold HDD, or standard for Magnetic.
+	//    * launch.block-device-mapping.volume-type - The type of EBS volume: gp2
+	//    for General Purpose SSD, io1 for Provisioned IOPS SSD, st1 for Throughput
+	//    Optimized HDD, sc1for Cold HDD, or standard for Magnetic.
 	//
 	//    * launch.group-id - The security group for the instance.
 	//
@@ -37053,7 +37299,7 @@ type DescribeVolumesInput struct {
 	//    * attachment.delete-on-termination - Whether the volume is deleted on
 	//    instance termination.
 	//
-	//    * attachment.device - The device name that is exposed to the instance
+	//    * attachment.device - The device name specified in the block device mapping
 	//    (for example, /dev/sda1).
 	//
 	//    * attachment.instance-id - The ID of the instance the volume is attached
@@ -40262,7 +40508,7 @@ type EventInformation struct {
 
 	// The event.
 	//
-	// The following are the error events.
+	// The following are the error events:
 	//
 	//    * iamFleetRoleInvalid - The Spot fleet did not have the required permissions
 	//    either to launch or terminate an instance.
@@ -40277,7 +40523,7 @@ type EventInformation struct {
 	//    * spotInstanceCountLimitExceeded - You've reached the limit on the number
 	//    of Spot instances that you can launch.
 	//
-	// The following are the fleetRequestChange events.
+	// The following are the fleetRequestChange events:
 	//
 	//    * active - The Spot fleet has been validated and Amazon EC2 is attempting
 	//    to maintain the target number of running Spot instances.
@@ -40307,11 +40553,21 @@ type EventInformation struct {
 	//    * submitted - The Spot fleet request is being evaluated and Amazon EC2
 	//    is preparing to launch the target number of Spot instances.
 	//
-	// The following are the instanceChange events.
+	// The following are the instanceChange events:
 	//
 	//    * launched - A bid was fulfilled and a new instance was launched.
 	//
 	//    * terminated - An instance was terminated by the user.
+	//
+	// The following are the Information events:
+	//
+	//    * launchSpecUnusable - The bid price of a launch specification is not
+	//    valid because it is below the market price or the market price is above
+	//    the On-Demand price.
+	//
+	//    * fleetProgressHalted - The bid price of every launch specification is
+	//    not valid. A launch specification might become valid if the market price
+	//    changes.
 	EventSubType *string `locationName:"eventSubType" type:"string"`
 
 	// The ID of the instance. This information is available only for instanceChange
@@ -41520,12 +41776,14 @@ type HistoryRecord struct {
 
 	// The event type.
 	//
-	//    * error - Indicates an error with the Spot fleet request.
+	//    * error - An error with the Spot fleet request.
 	//
-	//    * fleetRequestChange - Indicates a change in the status or configuration
-	//    of the Spot fleet request.
+	//    * fleetRequestChange - A change in the status or configuration of the
+	//    Spot fleet request.
 	//
-	//    * instanceChange - Indicates that an instance was launched or terminated.
+	//    * instanceChange - An instance was launched or terminated.
+	//
+	//    * Information - An informational event.
 	//
 	// EventType is a required field
 	EventType *string `locationName:"eventType" type:"string" required:"true" enum:"EventType"`
@@ -42236,7 +42494,7 @@ type Image struct {
 	// images.
 	RamdiskId *string `locationName:"ramdiskId" type:"string"`
 
-	// The device name of the root device (for example, /dev/sda1 or /dev/xvda).
+	// The device name of the root device volume (for example, /dev/sda1).
 	RootDeviceName *string `locationName:"rootDeviceName" type:"string"`
 
 	// The type of root device used by the AMI. The AMI can use an EBS volume or
@@ -43774,7 +44032,7 @@ type Instance struct {
 	// The RAM disk associated with this instance, if applicable.
 	RamdiskId *string `locationName:"ramdiskId" type:"string"`
 
-	// The root device name (for example, /dev/sda1 or /dev/xvda).
+	// The device name of the root device volume (for example, /dev/sda1).
 	RootDeviceName *string `locationName:"rootDeviceName" type:"string"`
 
 	// The root device type used by the AMI. The AMI can use an EBS volume or an
@@ -44070,7 +44328,7 @@ func (s *Instance) SetVpcId(v string) *Instance {
 type InstanceBlockDeviceMapping struct {
 	_ struct{} `type:"structure"`
 
-	// The device name exposed to the instance (for example, /dev/sdh or xvdh).
+	// The device name (for example, /dev/sdh or xvdh).
 	DeviceName *string `locationName:"deviceName" type:"string"`
 
 	// Parameters used to automatically set up EBS volumes when the instance is
@@ -44105,7 +44363,7 @@ func (s *InstanceBlockDeviceMapping) SetEbs(v *EbsInstanceBlockDevice) *Instance
 type InstanceBlockDeviceMappingSpecification struct {
 	_ struct{} `type:"structure"`
 
-	// The device name exposed to the instance (for example, /dev/sdh or xvdh).
+	// The device name (for example, /dev/sdh or xvdh).
 	DeviceName *string `locationName:"deviceName" type:"string"`
 
 	// Parameters used to automatically set up EBS volumes when the instance is
@@ -45639,6 +45897,61 @@ func (s *LaunchSpecification) SetSubnetId(v string) *LaunchSpecification {
 // SetUserData sets the UserData field's value.
 func (s *LaunchSpecification) SetUserData(v string) *LaunchSpecification {
 	s.UserData = &v
+	return s
+}
+
+// Describes the Classic Load Balancers and target groups to attach to a Spot
+// fleet request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/LoadBalancersConfig
+type LoadBalancersConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The Classic Load Balancers.
+	ClassicLoadBalancersConfig *ClassicLoadBalancersConfig `locationName:"classicLoadBalancersConfig" type:"structure"`
+
+	// The target groups.
+	TargetGroupsConfig *TargetGroupsConfig `locationName:"targetGroupsConfig" type:"structure"`
+}
+
+// String returns the string representation
+func (s LoadBalancersConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LoadBalancersConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LoadBalancersConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LoadBalancersConfig"}
+	if s.ClassicLoadBalancersConfig != nil {
+		if err := s.ClassicLoadBalancersConfig.Validate(); err != nil {
+			invalidParams.AddNested("ClassicLoadBalancersConfig", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.TargetGroupsConfig != nil {
+		if err := s.TargetGroupsConfig.Validate(); err != nil {
+			invalidParams.AddNested("TargetGroupsConfig", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClassicLoadBalancersConfig sets the ClassicLoadBalancersConfig field's value.
+func (s *LoadBalancersConfig) SetClassicLoadBalancersConfig(v *ClassicLoadBalancersConfig) *LoadBalancersConfig {
+	s.ClassicLoadBalancersConfig = v
+	return s
+}
+
+// SetTargetGroupsConfig sets the TargetGroupsConfig field's value.
+func (s *LoadBalancersConfig) SetTargetGroupsConfig(v *TargetGroupsConfig) *LoadBalancersConfig {
+	s.TargetGroupsConfig = v
 	return s
 }
 
@@ -50331,7 +50644,7 @@ type RegisterImageInput struct {
 	// The ID of the RAM disk.
 	RamdiskId *string `locationName:"ramdiskId" type:"string"`
 
-	// The name of the root device (for example, /dev/sda1, or /dev/xvda).
+	// The device name of the root device volume (for example, /dev/sda1).
 	RootDeviceName *string `locationName:"rootDeviceName" type:"string"`
 
 	// Set to simple to enable enhanced networking with the Intel 82599 Virtual
@@ -54817,7 +55130,7 @@ func (s *ScheduledInstanceRecurrenceRequest) SetOccurrenceUnit(v string) *Schedu
 type ScheduledInstancesBlockDeviceMapping struct {
 	_ struct{} `type:"structure"`
 
-	// The device name exposed to the instance (for example, /dev/sdh or xvdh).
+	// The device name (for example, /dev/sdh or xvdh).
 	DeviceName *string `type:"string"`
 
 	// Parameters used to set up EBS volumes automatically when the instance is
@@ -54830,7 +55143,7 @@ type ScheduledInstancesBlockDeviceMapping struct {
 
 	// The virtual device name (ephemeralN). Instance store volumes are numbered
 	// starting from 0. An instance type with two available instance store volumes
-	// can specify mappings for ephemeral0 and ephemeral1.The number of available
+	// can specify mappings for ephemeral0 and ephemeral1. The number of available
 	// instance store volumes depends on the instance type. After you connect to
 	// the instance, you must mount the volume.
 	//
@@ -56624,6 +56937,15 @@ type SpotFleetRequestConfigData struct {
 	// LaunchSpecifications is a required field
 	LaunchSpecifications []*SpotFleetLaunchSpecification `locationName:"launchSpecifications" locationNameList:"item" min:"1" type:"list" required:"true"`
 
+	// One or more Classic Load Balancers and target groups to attach to the Spot
+	// fleet request. Spot fleet registers the running Spot instances with the specified
+	// Classic Load Balancers and target groups.
+	//
+	// With Network Load Balancers, Spot fleet cannot register instances that have
+	// the following instance types: C1, CC1, CC2, CG1, CG2, CR1, CS1, G1, G2, HI1,
+	// HS1, M1, M2, M3, and T1.
+	LoadBalancersConfig *LoadBalancersConfig `locationName:"loadBalancersConfig" type:"structure"`
+
 	// Indicates whether Spot fleet should replace unhealthy instances.
 	ReplaceUnhealthyInstances *bool `locationName:"replaceUnhealthyInstances" type:"boolean"`
 
@@ -56701,6 +57023,11 @@ func (s *SpotFleetRequestConfigData) Validate() error {
 			}
 		}
 	}
+	if s.LoadBalancersConfig != nil {
+		if err := s.LoadBalancersConfig.Validate(); err != nil {
+			invalidParams.AddNested("LoadBalancersConfig", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -56747,6 +57074,12 @@ func (s *SpotFleetRequestConfigData) SetInstanceInterruptionBehavior(v string) *
 // SetLaunchSpecifications sets the LaunchSpecifications field's value.
 func (s *SpotFleetRequestConfigData) SetLaunchSpecifications(v []*SpotFleetLaunchSpecification) *SpotFleetRequestConfigData {
 	s.LaunchSpecifications = v
+	return s
+}
+
+// SetLoadBalancersConfig sets the LoadBalancersConfig field's value.
+func (s *SpotFleetRequestConfigData) SetLoadBalancersConfig(v *LoadBalancersConfig) *SpotFleetRequestConfigData {
+	s.LoadBalancersConfig = v
 	return s
 }
 
@@ -58067,6 +58400,100 @@ func (s *TargetConfigurationRequest) SetInstanceCount(v int64) *TargetConfigurat
 // SetOfferingId sets the OfferingId field's value.
 func (s *TargetConfigurationRequest) SetOfferingId(v string) *TargetConfigurationRequest {
 	s.OfferingId = &v
+	return s
+}
+
+// Describes a load balancer target group.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/TargetGroup
+type TargetGroup struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the target group.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TargetGroup) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TargetGroup) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TargetGroup) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TargetGroup"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *TargetGroup) SetArn(v string) *TargetGroup {
+	s.Arn = &v
+	return s
+}
+
+// Describes the target groups to attach to a Spot fleet. Spot fleet registers
+// the running Spot instances with these target groups.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/TargetGroupsConfig
+type TargetGroupsConfig struct {
+	_ struct{} `type:"structure"`
+
+	// One or more target groups.
+	//
+	// TargetGroups is a required field
+	TargetGroups []*TargetGroup `locationName:"targetGroups" locationNameList:"item" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TargetGroupsConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TargetGroupsConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TargetGroupsConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TargetGroupsConfig"}
+	if s.TargetGroups == nil {
+		invalidParams.Add(request.NewErrParamRequired("TargetGroups"))
+	}
+	if s.TargetGroups != nil && len(s.TargetGroups) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TargetGroups", 1))
+	}
+	if s.TargetGroups != nil {
+		for i, v := range s.TargetGroups {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "TargetGroups", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTargetGroups sets the TargetGroups field's value.
+func (s *TargetGroupsConfig) SetTargetGroups(v []*TargetGroup) *TargetGroupsConfig {
+	s.TargetGroups = v
 	return s
 }
 

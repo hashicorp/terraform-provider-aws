@@ -2077,6 +2077,12 @@ var awscnPartition = partition{
 				"cn-north-1": endpoint{},
 			},
 		},
+		"lambda": service{
+
+			Endpoints: endpoints{
+				"cn-north-1": endpoint{},
+			},
+		},
 		"logs": service{
 
 			Endpoints: endpoints{
