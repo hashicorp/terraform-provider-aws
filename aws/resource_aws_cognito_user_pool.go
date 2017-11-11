@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,7 +10,6 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
-	"github.com/pkg/errors"
 )
 
 func resourceAwsCognitoUserPool() *schema.Resource {
