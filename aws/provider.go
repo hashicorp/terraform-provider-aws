@@ -398,6 +398,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_load_balancer_listener_policy":            resourceAwsLoadBalancerListenerPolicies(),
 			"aws_lb_ssl_negotiation_policy":                resourceAwsLBSSLNegotiationPolicy(),
 			"aws_main_route_table_association":             resourceAwsMainRouteTableAssociation(),
+			"aws_mq_configuration":                         resourceAwsMqConfiguration(),
 			"aws_nat_gateway":                              resourceAwsNatGateway(),
 			"aws_network_acl":                              resourceAwsNetworkAcl(),
 			"aws_default_network_acl":                      resourceAwsDefaultNetworkAcl(),
