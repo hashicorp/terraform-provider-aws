@@ -183,12 +183,9 @@ type AWSClient struct {
 	wafregionalconn       *wafregional.WAFRegional
 	iotconn               *iot.IoT
 	batchconn             *batch.Batch
-<<<<<<< HEAD
 	glueconn              *glue.Glue
-=======
 	athenaconn            *athena.Athena
 	dxconn                *directconnect.DirectConnect
->>>>>>> master
 }
 
 func (c *AWSClient) S3() *s3.S3 {
