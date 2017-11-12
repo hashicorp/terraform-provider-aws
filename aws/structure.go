@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -10,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -615,13 +615,12 @@ func flattenEcsLoadBalancers(list []*ecs.LoadBalancer) []map[string]interface{} 
 
 // Encodes an array of ecs.ContainerDefinitions into a JSON string
 func flattenEcsContainerDefinitions(definitions []*ecs.ContainerDefinition) (string, error) {
-	byteArray, err := json.Marshal(definitions)
+	b, err := jsonutil.BuildJSON(definitions)
 	if err != nil {
-		return "", fmt.Errorf("Error encoding to JSON: %s", err)
+		return "", err
 	}
 
-	n := bytes.Index(byteArray, []byte{0})
-	return string(byteArray[:n]), nil
+	return string(b), nil
 }
 
 // Flattens an array of Options into a []map[string]interface{}
@@ -2339,4 +2338,39 @@ func flattenCognitoIdentityPoolRolesAttachmentMappingRules(d []*cognitoidentity.
 	}
 
 	return rules
+}
+
+func flattenRedshiftLogging(ls *redshift.LoggingStatus) []interface{} {
+	if ls == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{}, 0)
+	cfg["enabled"] = *ls.LoggingEnabled
+	if ls.BucketName != nil {
+		cfg["bucket_name"] = *ls.BucketName
+	}
+	if ls.S3KeyPrefix != nil {
+		cfg["s3_key_prefix"] = *ls.S3KeyPrefix
+	}
+	return []interface{}{cfg}
+}
+
+func flattenRedshiftSnapshotCopy(scs *redshift.ClusterSnapshotCopyStatus) []interface{} {
+	if scs == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{}, 0)
+	if scs.DestinationRegion != nil {
+		cfg["destination_region"] = *scs.DestinationRegion
+	}
+	if scs.RetentionPeriod != nil {
+		cfg["retention_period"] = *scs.RetentionPeriod
+	}
+	if scs.SnapshotCopyGrantName != nil {
+		cfg["grant_name"] = *scs.SnapshotCopyGrantName
+	}
+
+	return []interface{}{cfg}
 }

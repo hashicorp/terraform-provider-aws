@@ -191,6 +191,31 @@ func TestAccAWSElasticSearchDomain_vpc_update(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_internetToVpcEndpoint(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_internetToVpcEndpoint(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckESNumberOfSecurityGroups(numberOfSecurityGroups int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		count := len(status.VPCOptions.SecurityGroupIds)
@@ -626,4 +651,56 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt, sg_ids, subnet_string, subnet_string)
+}
+
+func testAccESDomainConfig_internetToVpcEndpoint(randInt int) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc" "elasticsearch_in_vpc" {
+  cidr_block = "192.168.0.0/22"
+}
+
+resource "aws_subnet" "first" {
+  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "192.168.0.0/24"
+}
+
+resource "aws_subnet" "second" {
+  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  cidr_block        = "192.168.1.0/24"
+}
+
+resource "aws_security_group" "first" {
+  vpc_id = "${aws_vpc.elasticsearch_in_vpc.id}"
+}
+
+resource "aws_security_group" "second" {
+  vpc_id = "${aws_vpc.elasticsearch_in_vpc.id}"
+}
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  cluster_config {
+    instance_count = 2
+    zone_awareness_enabled = true
+    instance_type = "r3.large.elasticsearch"
+  }
+
+  vpc_options {
+    security_group_ids = ["${aws_security_group.first.id}", "${aws_security_group.second.id}"]
+    subnet_ids = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
+  }
+}
+`, randInt)
 }

@@ -643,7 +643,10 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 	if len(respTags.TagDescriptions) > 0 {
 		et = respTags.TagDescriptions[0].Tags
 	}
-	d.Set("tags", tagsToMapELBv2(et))
+
+	if err := d.Set("tags", tagsToMapELBv2(et)); err != nil {
+		log.Printf("[WARN] Error setting tags for AWS LB (%s): %s", d.Id(), err)
+	}
 
 	attributesResp, err := elbconn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(d.Id()),

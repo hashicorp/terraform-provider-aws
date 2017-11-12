@@ -16,11 +16,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-getter"
 	"github.com/hashicorp/terraform/backend"
 	"github.com/hashicorp/terraform/backend/local"
 	"github.com/hashicorp/terraform/command/format"
 	"github.com/hashicorp/terraform/config"
+	"github.com/hashicorp/terraform/config/module"
 	"github.com/hashicorp/terraform/helper/experiment"
 	"github.com/hashicorp/terraform/helper/variables"
 	"github.com/hashicorp/terraform/helper/wrappedstreams"
@@ -70,6 +70,11 @@ type Meta struct {
 	// PluginCacheDir, if non-empty, enables caching of downloaded plugins
 	// into the given directory.
 	PluginCacheDir string
+
+	// OverrideDataDir, if non-empty, overrides the return value of the
+	// DataDir method for situations where the local .terraform/ directory
+	// is not suitable, e.g. because of a read-only filesystem.
+	OverrideDataDir string
 
 	//----------------------------------------------------------
 	// Protected: commands can set these
@@ -202,14 +207,12 @@ func (m *Meta) Colorize() *colorstring.Colorize {
 }
 
 // DataDir returns the directory where local data will be stored.
-// Defaults to DefaultsDataDir in the current working directory.
+// Defaults to DefaultDataDir in the current working directory.
 func (m *Meta) DataDir() string {
-	dataDir := DefaultDataDir
-	if m.dataDir != "" {
-		dataDir = m.dataDir
+	if m.OverrideDataDir != "" {
+		return m.OverrideDataDir
 	}
-
-	return dataDir
+	return DefaultDataDir
 }
 
 const (
@@ -368,13 +371,11 @@ func (m *Meta) flagSet(n string) *flag.FlagSet {
 
 // moduleStorage returns the module.Storage implementation used to store
 // modules for commands.
-func (m *Meta) moduleStorage(root string) getter.Storage {
-	return &uiModuleStorage{
-		Storage: &getter.FolderStorage{
-			StorageDir: filepath.Join(root, "modules"),
-		},
-		Ui: m.Ui,
-	}
+func (m *Meta) moduleStorage(root string, mode module.GetMode) *module.Storage {
+	s := module.NewStorage(filepath.Join(root, "modules"), m.Services, m.Credentials)
+	s.Ui = m.Ui
+	s.Mode = mode
+	return s
 }
 
 // process will process the meta-parameters out of the arguments. This
