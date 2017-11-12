@@ -24,6 +24,7 @@ func TestAccAWSCloudTrail(t *testing.T) {
 			"logValidation": testAccAWSCloudTrail_logValidation,
 			"kmsKey":        testAccAWSCloudTrail_kmsKey,
 			"tags":          testAccAWSCloudTrail_tags,
+			"eventSelector": testAccAWSCloudTrail_event_selector,
 		},
 	}
 
@@ -302,6 +303,33 @@ func TestAccAWSCloudTrail_include_global_service_events(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists("aws_cloudtrail.foobar", &trail),
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "include_global_service_events", "false"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSCloudTrail_event_selector(t *testing.T) {
+	cloudTrailRandInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudTrailConfig_eventSelector(cloudTrailRandInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.#", "1"),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.0.data_resource.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSCloudTrailConfig_eventSelectorModified(cloudTrailRandInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.#", "2"),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.0.data_resource.#", "1"),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.1.data_resource.#", "2"),
 				),
 			},
 		},
@@ -1028,4 +1056,139 @@ func testAccAWSCloudTrailConfig_tagsModified(cloudTrailRandInt int) string {
 func testAccAWSCloudTrailConfig_tagsModifiedAgain(cloudTrailRandInt int) string {
 	return fmt.Sprintf(testAccAWSCloudTrailConfig_tags_tpl,
 		cloudTrailRandInt, "", cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
+}
+
+func testAccAWSCloudTrailConfig_eventSelector(cloudTrailRandInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudtrail" "foobar" {
+    name = "tf-trail-foobar-%d"
+    s3_bucket_name = "${aws_s3_bucket.foo.id}"
+
+	event_selector {
+		read_write_type = "ReadOnly"
+		include_management_events = false
+
+		data_resource {
+			type = "AWS::S3::Object"
+			values = [
+				"${aws_s3_bucket.bar.arn}/foobar",
+				"${aws_s3_bucket.bar.arn}/baz",
+			]
+		}
+	}
+}
+
+resource "aws_s3_bucket" "foo" {
+	bucket = "tf-test-trail-%d"
+	force_destroy = true
+	policy = <<POLICY
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "AWSCloudTrailAclCheck",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:GetBucketAcl",
+			"Resource": "arn:aws:s3:::tf-test-trail-%d"
+		},
+		{
+			"Sid": "AWSCloudTrailWrite",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:PutObject",
+			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+			"Condition": {
+				"StringEquals": {
+					"s3:x-amz-acl": "bucket-owner-full-control"
+				}
+			}
+		}
+	]
+}
+POLICY
+}
+
+resource "aws_s3_bucket" "bar" {
+	bucket = "tf-test-trail-event-select-%d"
+	force_destroy = true
+}
+`, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
+}
+
+func testAccAWSCloudTrailConfig_eventSelectorModified(cloudTrailRandInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudtrail" "foobar" {
+    name = "tf-trail-foobar-%d"
+    s3_bucket_name = "${aws_s3_bucket.foo.id}"
+
+	event_selector {
+		read_write_type = "ReadOnly"
+		include_management_events = true
+
+		data_resource {
+			type = "AWS::S3::Object"
+			values = [
+				"${aws_s3_bucket.bar.arn}/foobar",
+				"${aws_s3_bucket.bar.arn}/baz",
+			]
+		}
+	}
+
+	event_selector {
+		read_write_type = "All"
+		include_management_events = false
+
+		data_resource {
+			type = "AWS::S3::Object"
+			values = [
+				"${aws_s3_bucket.bar.arn}/tf1",
+			]
+		}
+
+		data_resource {
+			type = "AWS::S3::Object"
+			values = [
+				"${aws_s3_bucket.bar.arn}/tf2",
+			]
+		}
+	}
+}
+
+resource "aws_s3_bucket" "foo" {
+	bucket = "tf-test-trail-%d"
+	force_destroy = true
+	policy = <<POLICY
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "AWSCloudTrailAclCheck",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:GetBucketAcl",
+			"Resource": "arn:aws:s3:::tf-test-trail-%d"
+		},
+		{
+			"Sid": "AWSCloudTrailWrite",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:PutObject",
+			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+			"Condition": {
+				"StringEquals": {
+					"s3:x-amz-acl": "bucket-owner-full-control"
+				}
+			}
+		}
+	]
+}
+POLICY
+}
+
+resource "aws_s3_bucket" "bar" {
+	bucket = "tf-test-trail-event-select-%d"
+	force_destroy = true
+}
+`, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
