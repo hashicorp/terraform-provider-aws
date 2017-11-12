@@ -7,24 +7,25 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAWSKmsKey_importBasic(t *testing.T) {
-	resourceName := "aws_kms_key.foo"
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+func TestAccAWSSSMParameter_importBasic(t *testing.T) {
+	resourceName := "aws_ssm_parameter.foo"
+	randName := acctest.RandString(5)
+	randValue := acctest.RandString(5)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccAWSKmsKey(rName),
+			{
+				Config: testAccAWSSSMParameterBasicConfig(randName, randValue),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
+				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 		},
 	})

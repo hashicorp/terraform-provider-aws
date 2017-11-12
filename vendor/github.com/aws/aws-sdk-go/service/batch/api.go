@@ -54,10 +54,10 @@ func (c *Batch) CancelJobRequest(input *CancelJobInput) (req *request.Request, o
 
 // CancelJob API operation for AWS Batch.
 //
-// Cancels jobs in an AWS Batch job queue. Jobs that are in the SUBMITTED, PENDING,
-// or RUNNABLE state are cancelled. Jobs that have progressed to STARTING or
-// RUNNING are not cancelled (but the API operation still succeeds, even if
-// no jobs are cancelled); these jobs must be terminated with the TerminateJob
+// Cancels a job in an AWS Batch job queue. Jobs that are in the SUBMITTED,
+// PENDING, or RUNNABLE state are cancelled. Jobs that have progressed to STARTING
+// or RUNNING are not cancelled (but the API operation still succeeds, even
+// if no job is cancelled); these jobs must be terminated with the TerminateJob
 // operation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1196,7 +1196,7 @@ func (c *Batch) TerminateJobRequest(input *TerminateJobInput) (req *request.Requ
 
 // TerminateJob API operation for AWS Batch.
 //
-// Terminates jobs in a job queue. Jobs that are in the STARTING or RUNNING
+// Terminates a job in a job queue. Jobs that are in the STARTING or RUNNING
 // state are terminated, which causes them to transition to FAILED. Jobs that
 // have not progressed to the STARTING state are cancelled.
 //
@@ -1428,7 +1428,8 @@ type AttemptContainerDetail struct {
 	Reason *string `locationName:"reason" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the Amazon ECS task that is associated
-	// with the job attempt.
+	// with the job attempt. Each container attempt receives a task ARN when they
+	// reach the STARTING status.
 	TaskArn *string `locationName:"taskArn" type:"string"`
 }
 
@@ -1531,7 +1532,7 @@ func (s *AttemptDetail) SetStoppedAt(v int64) *AttemptDetail {
 type CancelJobInput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of up to 100 job IDs to cancel.
+	// The AWS Batch job ID of the job to cancel.
 	//
 	// JobId is a required field
 	JobId *string `locationName:"jobId" type:"string" required:"true"`
@@ -1792,7 +1793,11 @@ type ComputeResource struct {
 	// InstanceRole is a required field
 	InstanceRole *string `locationName:"instanceRole" type:"string" required:"true"`
 
-	// The instances types that may launched.
+	// The instances types that may be launched. You can specify instance families
+	// to launch any instance type within those families (for example, c4 or p3),
+	// or you can specify specific sizes within a family (such as c4.8xlarge). You
+	// can also choose optimal to pick instance types (from the latest C, M, and
+	// R instance families) on the fly that match the demand of your job queues.
 	//
 	// InstanceTypes is a required field
 	InstanceTypes []*string `locationName:"instanceTypes" type:"list" required:"true"`
@@ -2008,6 +2013,9 @@ type ContainerDetail struct {
 	ContainerInstanceArn *string `locationName:"containerInstanceArn" type:"string"`
 
 	// The environment variables to pass to a container.
+	//
+	// Environment variables must not start with AWS_BATCH; this naming convention
+	// is reserved for variables that are set by the AWS Batch service.
 	Environment []*KeyValuePair `locationName:"environment" type:"list"`
 
 	// The exit code to return upon completion.
@@ -2043,7 +2051,8 @@ type ContainerDetail struct {
 	Reason *string `locationName:"reason" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the Amazon ECS task that is associated
-	// with the container job.
+	// with the container job. Each container attempt receives a task ARN when they
+	// reach the STARTING status.
 	TaskArn *string `locationName:"taskArn" type:"string"`
 
 	// A list of ulimit values to set in the container.
@@ -2183,6 +2192,9 @@ type ContainerOverrides struct {
 	// The environment variables to send to the container. You can add new environment
 	// variables, which are added to the container at launch, or you can override
 	// the existing environment variables from the Docker image or the job definition.
+	//
+	// Environment variables must not start with AWS_BATCH; this naming convention
+	// is reserved for variables that are set by the AWS Batch service.
 	Environment []*KeyValuePair `locationName:"environment" type:"list"`
 
 	// The number of MiB of memory reserved for the job. This value overrides the
@@ -2249,6 +2261,9 @@ type ContainerProperties struct {
 	//
 	// We do not recommend using plain text environment variables for sensitive
 	// information, such as credential data.
+	//
+	// Environment variables must not start with AWS_BATCH; this naming convention
+	// is reserved for variables that are set by the AWS Batch service.
 	Environment []*KeyValuePair `locationName:"environment" type:"list"`
 
 	// The image used to start a container. This string is passed directly to the
@@ -2452,7 +2467,7 @@ type CreateComputeEnvironmentInput struct {
 	_ struct{} `type:"structure"`
 
 	// The name for your compute environment. Up to 128 letters (uppercase and lowercase),
-	// numbers, and underscores are allowed.
+	// numbers, hyphens, and underscores are allowed.
 	//
 	// ComputeEnvironmentName is a required field
 	ComputeEnvironmentName *string `locationName:"computeEnvironmentName" type:"string" required:"true"`
@@ -4214,7 +4229,7 @@ func (s *SubmitJobOutput) SetJobName(v string) *SubmitJobOutput {
 type TerminateJobInput struct {
 	_ struct{} `type:"structure"`
 
-	// Job IDs to be terminated. Up to 100 jobs can be specified.
+	// The AWS Batch job ID of the job to terminate.
 	//
 	// JobId is a required field
 	JobId *string `locationName:"jobId" type:"string" required:"true"`

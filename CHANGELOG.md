@@ -1,17 +1,27 @@
 ## 1.3.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_redshift_cluster: Field `enable_logging`, `bucket_name` and `s3_key_prefix` were deprecated in favour of a new `logging` block [GH-2230]
+
 FEATURES:
 
 * **New Data Source:** `aws_rds_cluster` [GH-2070]
+* **New Data Source:** `aws_elasticache_replication_group` [GH-2124]
 * **New Resource:** `aws_ses_template` [GH-2003]
 * **New Resource:** `aws_dx_lag` [GH-2154]
 * **New Resource:** `aws_dx_connection` [GH-2173]
+* **New Resource:** `aws_athena_database` [GH-1922]
+* **New Resource:** `aws_athena_named_query` [GH-1893]
+* **New Resource:** `aws_ssm_resource_data_sync` [GH-1895]
 
 IMPROVEMENTS:
 
 * data-source/efs_file_system: Added dns_name [GH-2105]
 * resource/aws_batch_job_queue: Add validation for `name` [GH-2159]
 * resource/aws_batch_compute_environment: Improve validation for `compute_environment_name` [GH-2159]
+* resource/aws_ssm_parameter: Add support for import [GH-2234]
+* resource/aws_redshift_cluster: Add support for `snapshot_copy` [GH-2238]
 
 BUG FIXES:
 
