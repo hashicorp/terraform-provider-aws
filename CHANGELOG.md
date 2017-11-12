@@ -22,6 +22,7 @@ IMPROVEMENTS:
 * resource/aws_batch_compute_environment: Improve validation for `compute_environment_name` [GH-2159]
 * resource/aws_ssm_parameter: Add support for import [GH-2234]
 * resource/aws_redshift_cluster: Add support for `snapshot_copy` [GH-2238]
+* resource/aws_ecs_task_definition: Print `container_definitions` as JSON instead of checksum [GH-1195]
 
 BUG FIXES:
 
