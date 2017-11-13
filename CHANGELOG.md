@@ -22,6 +22,7 @@ IMPROVEMENTS:
 * resource/aws_batch_compute_environment: Improve validation for `compute_environment_name` [GH-2159]
 * resource/aws_ssm_parameter: Add support for import [GH-2234]
 * resource/aws_redshift_cluster: Add support for `snapshot_copy` [GH-2238]
+* resource/aws_ecs_task_definition: Print `container_definitions` as JSON instead of checksum [GH-1195]
 
 BUG FIXES:
 
@@ -35,6 +36,7 @@ BUG FIXES:
 * resource/aws_cloudwatch_log_group: Use ID as name [GH-2190]
 * resource/aws_elasticsearch_domain: Added ForceNew to vpc_options [GH-2157]
 * resource/aws_redshift_cluster: Make snapshot identifiers `ForceNew` [GH-2212]
+* resource/aws_elasticsearch_domain_policy: Fix typo in err code [GH-2249]
 
 ## 1.2.0 (October 31, 2017)
 
