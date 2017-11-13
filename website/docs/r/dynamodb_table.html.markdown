@@ -74,7 +74,7 @@ The following arguments are supported:
   attribute must also be defined as an attribute record
 * `range_key` - (Optional, Forces new resource) The attribute to use as the range key (must
   also be defined)
-* `attribute` - Define an attribute, has two properties:
+* `attribute` - (Required) Define an attribute, has two properties:
   * `name` - The name of the attribute
   * `type` - One of: S, N, or B for (S)tring, (N)umber or (B)inary data
 * `stream_enabled` - (Optional) Indicates whether Streams are to be enabled (true) or disabled (false).
