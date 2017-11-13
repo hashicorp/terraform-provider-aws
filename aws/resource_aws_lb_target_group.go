@@ -490,8 +490,11 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	healthCheck["timeout"] = *targetGroup.HealthCheckTimeoutSeconds
 	healthCheck["healthy_threshold"] = *targetGroup.HealthyThresholdCount
 	healthCheck["unhealthy_threshold"] = *targetGroup.UnhealthyThresholdCount
-	if *targetGroup.Protocol != "TCP" {
+
+	if targetGroup.HealthCheckPath != nil {
 		healthCheck["path"] = *targetGroup.HealthCheckPath
+	}
+	if targetGroup.Matcher.HttpCode != nil {
 		healthCheck["matcher"] = *targetGroup.Matcher.HttpCode
 	}
 
