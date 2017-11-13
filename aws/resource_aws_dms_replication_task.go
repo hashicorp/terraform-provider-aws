@@ -432,7 +432,7 @@ func resourceAwsDmsReplicationTaskStart(d *schema.ResourceData, meta interface{}
 		request.CdcStartTime = aws.Time(time.Unix(seconds, 0))
 	}
 
-	result, err := conn.StartReplicationTask(request)
+	_, err := conn.StartReplicationTask(request)
 	if err != nil {
 		if dmserr, ok := err.(awserr.Error); ok {
 			if dmserr.Code() == "ResourceNotFoundFault" {
