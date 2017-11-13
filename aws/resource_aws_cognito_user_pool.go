@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -84,6 +85,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validateCognitoUserPoolAutoVerifiedAttribute,
 				},
+			},
+
+			"creation_date": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"email_configuration": {
@@ -171,6 +177,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						},
 					},
 				},
+			},
+
+			"last_modified_date": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"mfa_configuration": {
@@ -582,6 +593,9 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	if resp.UserPool.AutoVerifiedAttributes != nil {
 		d.Set("auto_verified_attributes", flattenStringList(resp.UserPool.AutoVerifiedAttributes))
 	}
+	if err := d.Set("creation_date", resp.UserPool.CreationDate.Format(time.RFC3339)); err != nil {
+		log.Printf("[DEBUG] Error setting creation_date: %s", err)
+	}
 	if resp.UserPool.EmailVerificationSubject != nil {
 		d.Set("email_verification_subject", *resp.UserPool.EmailVerificationSubject)
 	}
@@ -605,6 +619,10 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return errwrap.Wrapf("Failed setting email_configuration: {{err}}", err)
 	}
 
+	if err := d.Set("last_modified_date", resp.UserPool.LastModifiedDate.Format(time.RFC3339)); err != nil {
+		log.Printf("[DEBUG] Error setting last_modified_date: %s", err)
+	}
+
 	if resp.UserPool.Policies != nil && resp.UserPool.Policies.PasswordPolicy != nil {
 		if err := d.Set("password_policy", flattenCognitoUserPoolPasswordPolicy(resp.UserPool.Policies.PasswordPolicy)); err != nil {
 			return errwrap.Wrapf("Failed setting password_policy: {{err}}", err)
@@ -622,7 +640,6 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	if err := d.Set("verification_message_template", flattenCognitoUserPoolVerificationMessageTemplate(resp.UserPool.VerificationMessageTemplate)); err != nil {
 		return errwrap.Wrapf("Failed setting verification_message_template: {{err}}", err)
 	}
-
 	d.Set("tags", tagsToMapGeneric(resp.UserPool.UserPoolTags))
 
 	return nil

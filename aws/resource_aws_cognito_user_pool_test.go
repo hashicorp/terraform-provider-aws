@@ -27,6 +27,8 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "name", "terraform-test-pool-"+name),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "creation_date"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "last_modified_date"),
 				),
 			},
 		},
