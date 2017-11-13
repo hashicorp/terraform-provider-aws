@@ -1,19 +1,17 @@
 package aws
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
+	"bytes"
+	"fmt"
+	"testing"
+	"text/template"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-
-	"fmt"
-	"testing"
-
-	"bytes"
-	"text/template"
 )
 
 func TestAccAWSServiceCatalogProductBasic(t *testing.T) {
@@ -243,7 +241,6 @@ resource "aws_servicecatalog_product" "test" {
     description = "ad"
     name = "an"
     load_template_from_url = "https://s3-${var.region}.amazonaws.com/${aws_s3_bucket.bucket.id}/${aws_s3_bucket_object.template.key}"
-    type = "CLOUD_FORMATION_TEMPLATE"
   }
 }
 `
