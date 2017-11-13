@@ -254,10 +254,8 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			_, err := ec2conn.AssociateAddress(assocOpts)
 			if err != nil {
-				if awsErr, ok := err.(awserr.Error); ok {
-					if awsErr.Code() == "InvalidAllocationID.NotFound" {
-						return resource.RetryableError(awsErr)
-					}
+				if isAWSErr(err, "InvalidAllocationID.NotFound", "") {
+					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}

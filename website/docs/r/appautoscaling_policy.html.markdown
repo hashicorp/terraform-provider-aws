@@ -6,11 +6,42 @@ description: |-
   Provides an Application AutoScaling Policy resource.
 ---
 
-# aws\_appautoscaling\_policy
+# aws_appautoscaling_policy
 
 Provides an Application AutoScaling Policy resource.
 
 ## Example Usage
+
+### DynamoDB Table Autoscaling
+
+```hcl
+resource "aws_appautoscaling_target" "dynamodb_table_read_target" {
+  max_capacity       = 100
+  min_capacity       = 5
+  resource_id        = "table/tableName"
+  role_arn           = "${data.aws_iam_role.DynamoDBAutoscaleRole.arn}"
+  scalable_dimension = "dynamodb:table:ReadCapacityUnits"
+  service_namespace  = "dynamodb"
+}
+
+resource "aws_appautoscaling_policy" "dynamodb_table_read_policy" {
+  name               = "DynamoDBReadCapacityUtilization:${aws_appautoscaling_target.dynamodb_table_read_target.resource_id}"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = "${aws_appautoscaling_target.dynamodb_table_read_target.resource_id}"
+  scalable_dimension = "${aws_appautoscaling_target.dynamodb_table_read_target.scalable_dimension}"
+  service_namespace  = "${aws_appautoscaling_target.dynamodb_table_read_target.service_namespace}"
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "DynamoDBReadCapacityUtilization"
+    }
+
+    target_value = 70
+  }
+}
+```
+
+### ECS Service Autoscaling
 
 ```hcl
 resource "aws_appautoscaling_target" "ecs_target" {
@@ -23,17 +54,20 @@ resource "aws_appautoscaling_target" "ecs_target" {
 }
 
 resource "aws_appautoscaling_policy" "ecs_policy" {
-  adjustment_type         = "ChangeInCapacity"
-  cooldown                = 60
-  metric_aggregation_type = "Maximum"
   name                    = "scale-down"
   resource_id             = "service/clusterName/serviceName"
   scalable_dimension      = "ecs:service:DesiredCount"
   service_namespace       = "ecs"
 
-  step_adjustment {
-    metric_interval_upper_bound = 0
-    scaling_adjustment          = -1
+  step_scaling_policy_configuration {
+    adjustment_type         = "ChangeInCapacity"
+    cooldown                = 60
+    metric_aggregation_type = "Maximum"
+
+    step_adjustment {
+      metric_interval_upper_bound = 0
+      scaling_adjustment          = -1
+    }
   }
 
   depends_on = ["aws_appautoscaling_target.ecs_target"]
@@ -45,11 +79,10 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the policy.
-* `policy_type` - (Optional) Defaults to "StepScaling" because it is the only option available.
-* `resource_id` - (Required) The resource type and unique identifier string for the resource associated with the scaling policy. For Amazon ECS services, this value is the resource type, followed by the cluster name and service name, such as `service/default/sample-webapp`. For Amazon EC2 Spot fleet requests, the resource type is `spot-fleet-request`, and the identifier is the Spot fleet request ID; for example, `spot-fleet-request/sfr-73fbd2ce-aa30-494c-8788-1cee4EXAMPLE`.
-For DynamoDB tables, this value is `table/nameOfTheTable`.
-* `scalable_dimension` - (Required) The scalable dimension of the scalable target. The scalable dimension contains the service namespace,   resource  type, and scaling property, such as `ecs:service:DesiredCount` for the desired task count of an Amazon ECS service, or `ec2:spot-fleet-request:TargetCapacity` for the target capacity of an Amazon EC2 Spot fleet request.
-* `service_namespace` - (Required) The AWS service namespace of the scalable target. Valid values are `ecs` for Amazon ECS services, `ec2` for Amazon EC2 Spot fleet requests and `dynamodb` for DynamoDB tables.
+* `policy_type` - (Optional) For DynamoDB, only `TargetTrackingScaling` is supported. For any other service, only `StepScaling` is supported. Defaults to `StepScaling`.
+* `resource_id` - (Required) The resource type and unique identifier string for the resource associated with the scaling policy. Documentation can be found in the `ResourceId` parameter at: [AWS Application Auto Scaling API Reference](http://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
+* `scalable_dimension` - (Required) The scalable dimension of the scalable target. Documentation can be found in the `ScalableDimension` parameter at: [AWS Application Auto Scaling API Reference](http://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
+* `service_namespace` - (Required) The AWS service namespace of the scalable target. Documentation can be found in the `ServiceNamespace` parameter at: [AWS Application Auto Scaling API Reference](http://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
 * `step_scaling_policy_configuration` - (Optional) Step scaling policy configuration, requires `policy_type = "StepScaling"` (default). See supported fields below.
 * `target_tracking_scaling_policy_configuration` - (Optional) A target tracking policy, requires `policy_type = "TargetTrackingScaling"`. See supported fields below.
 

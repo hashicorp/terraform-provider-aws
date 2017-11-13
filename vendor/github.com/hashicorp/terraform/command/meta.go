@@ -16,14 +16,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-getter"
 	"github.com/hashicorp/terraform/backend"
 	"github.com/hashicorp/terraform/backend/local"
+	"github.com/hashicorp/terraform/command/format"
 	"github.com/hashicorp/terraform/config"
+	"github.com/hashicorp/terraform/config/module"
 	"github.com/hashicorp/terraform/helper/experiment"
 	"github.com/hashicorp/terraform/helper/variables"
 	"github.com/hashicorp/terraform/helper/wrappedstreams"
+	"github.com/hashicorp/terraform/svchost/auth"
+	"github.com/hashicorp/terraform/svchost/disco"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform/tfdiags"
 	"github.com/mitchellh/cli"
 	"github.com/mitchellh/colorstring"
 )
@@ -41,6 +45,36 @@ type Meta struct {
 
 	// ExtraHooks are extra hooks to add to the context.
 	ExtraHooks []terraform.Hook
+
+	// Services provides access to remote endpoint information for
+	// "terraform-native' services running at a specific user-facing hostname.
+	Services *disco.Disco
+
+	// Credentials provides access to credentials for "terraform-native"
+	// services, which are accessed by a service hostname.
+	Credentials auth.CredentialsSource
+
+	// RunningInAutomation indicates that commands are being run by an
+	// automated system rather than directly at a command prompt.
+	//
+	// This is a hint to various command routines that it may be confusing
+	// to print out messages that suggest running specific follow-up
+	// commands, since the user consuming the output will not be
+	// in a position to run such commands.
+	//
+	// The intended use-case of this flag is when Terraform is running in
+	// some sort of workflow orchestration tool which is abstracting away
+	// the specific commands being run.
+	RunningInAutomation bool
+
+	// PluginCacheDir, if non-empty, enables caching of downloaded plugins
+	// into the given directory.
+	PluginCacheDir string
+
+	// OverrideDataDir, if non-empty, overrides the return value of the
+	// DataDir method for situations where the local .terraform/ directory
+	// is not suitable, e.g. because of a read-only filesystem.
+	OverrideDataDir string
 
 	//----------------------------------------------------------
 	// Protected: commands can set these
@@ -129,6 +163,9 @@ type Meta struct {
 	errWriter *io.PipeWriter
 	// done chan to wait for the scanner goroutine
 	errScannerDone chan struct{}
+
+	// Used with the import command to allow import of state when no matching config exists.
+	allowMissingConfig bool
 }
 
 type PluginOverrides struct {
@@ -170,14 +207,12 @@ func (m *Meta) Colorize() *colorstring.Colorize {
 }
 
 // DataDir returns the directory where local data will be stored.
-// Defaults to DefaultsDataDir in the current working directory.
+// Defaults to DefaultDataDir in the current working directory.
 func (m *Meta) DataDir() string {
-	dataDir := DefaultDataDir
-	if m.dataDir != "" {
-		dataDir = m.dataDir
+	if m.OverrideDataDir != "" {
+		return m.OverrideDataDir
 	}
-
-	return dataDir
+	return DefaultDataDir
 }
 
 const (
@@ -336,13 +371,11 @@ func (m *Meta) flagSet(n string) *flag.FlagSet {
 
 // moduleStorage returns the module.Storage implementation used to store
 // modules for commands.
-func (m *Meta) moduleStorage(root string) getter.Storage {
-	return &uiModuleStorage{
-		Storage: &getter.FolderStorage{
-			StorageDir: filepath.Join(root, "modules"),
-		},
-		Ui: m.Ui,
-	}
+func (m *Meta) moduleStorage(root string, mode module.GetMode) *module.Storage {
+	s := module.NewStorage(filepath.Join(root, "modules"), m.Services, m.Credentials)
+	s.Ui = m.Ui
+	s.Mode = mode
+	return s
 }
 
 // process will process the meta-parameters out of the arguments. This
@@ -452,6 +485,36 @@ func (m *Meta) confirm(opts *terraform.InputOpts) (bool, error) {
 			return false, nil
 		case "yes":
 			return true, nil
+		}
+	}
+}
+
+// showDiagnostics displays error and warning messages in the UI.
+//
+// "Diagnostics" here means the Diagnostics type from the tfdiag package,
+// though as a convenience this function accepts anything that could be
+// passed to the "Append" method on that type, converting it to Diagnostics
+// before displaying it.
+//
+// Internally this function uses Diagnostics.Append, and so it will panic
+// if given unsupported value types, just as Append does.
+func (m *Meta) showDiagnostics(vals ...interface{}) {
+	var diags tfdiags.Diagnostics
+	diags = diags.Append(vals...)
+
+	for _, diag := range diags {
+		// TODO: Actually measure the terminal width and pass it here.
+		// For now, we don't have easy access to the writer that
+		// ui.Error (etc) are writing to and thus can't interrogate
+		// to see if it's a terminal and what size it is.
+		msg := format.Diagnostic(diag, m.Colorize(), 78)
+		switch diag.Severity() {
+		case tfdiags.Error:
+			m.Ui.Error(msg)
+		case tfdiags.Warning:
+			m.Ui.Warn(msg)
+		default:
+			m.Ui.Output(msg)
 		}
 	}
 }

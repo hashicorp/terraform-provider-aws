@@ -1,9 +1,100 @@
-## 1.0.1 (Unreleased)
+## 1.3.0 (Unreleased)
+
+NOTES:
+
+* resource/aws_redshift_cluster: Field `enable_logging`, `bucket_name` and `s3_key_prefix` were deprecated in favour of a new `logging` block [GH-2230]
+
+FEATURES:
+
+* **New Data Source:** `aws_rds_cluster` [GH-2070]
+* **New Data Source:** `aws_elasticache_replication_group` [GH-2124]
+* **New Resource:** `aws_ses_template` [GH-2003]
+* **New Resource:** `aws_dx_lag` [GH-2154]
+* **New Resource:** `aws_dx_connection` [GH-2173]
+* **New Resource:** `aws_athena_database` [GH-1922]
+* **New Resource:** `aws_athena_named_query` [GH-1893]
+* **New Resource:** `aws_ssm_resource_data_sync` [GH-1895]
+
+IMPROVEMENTS:
+
+* data-source/efs_file_system: Added dns_name [GH-2105]
+* resource/aws_batch_job_queue: Add validation for `name` [GH-2159]
+* resource/aws_batch_compute_environment: Improve validation for `compute_environment_name` [GH-2159]
+* resource/aws_ssm_parameter: Add support for import [GH-2234]
+* resource/aws_redshift_cluster: Add support for `snapshot_copy` [GH-2238]
+* resource/aws_ecs_task_definition: Print `container_definitions` as JSON instead of checksum [GH-1195]
+
+BUG FIXES:
+
+* resource/aws_appautoscaling_policy: Retry putting policy on invalid token [GH-2135]
+* resource/aws_batch_compute_environment: `compute_environment_name` allows hyphens [GH-2126]
+* resource/aws_batch_job_definition: `name` allows hyphens [GH-2126]
+* resource/aws_elasticache_parameter_group: Raise timeout for retry on pending changes [GH-2134]
+* resource/aws_kms_key: Retry GetKeyRotationStatus on NotFoundException [GH-2133]
+* resource/aws_redshift_cluster: Make master_username ForceNew [GH-2202]
+* resource/aws_cloudwatch_log_metric_filter: Fix pattern length check [GH-2107]
+* resource/aws_cloudwatch_log_group: Use ID as name [GH-2190]
+* resource/aws_elasticsearch_domain: Added ForceNew to vpc_options [GH-2157]
+* resource/aws_redshift_cluster: Make snapshot identifiers `ForceNew` [GH-2212]
+* resource/aws_elasticsearch_domain_policy: Fix typo in err code [GH-2249]
+
+## 1.2.0 (October 31, 2017)
+
+INTERNAL:
+
+* Remove `id` fields from schema definitions ([#1626](https://github.com/terraform-providers/terraform-provider-aws/issues/1626))
+
+FEATURES:
+
+* **New Resource:** `aws_servicecatalog_portfolio` ([#1694](https://github.com/terraform-providers/terraform-provider-aws/issues/1694))
+* **New Resource:** `aws_ses_domain_dkim` ([#1786](https://github.com/terraform-providers/terraform-provider-aws/issues/1786))
+* **New Resource:** `aws_cognito_identity_pool_roles_attachment` ([#863](https://github.com/terraform-providers/terraform-provider-aws/issues/863))
+* **New Resource:** `aws_ecr_lifecycle_policy` ([#2096](https://github.com/terraform-providers/terraform-provider-aws/issues/2096))
+* **New Data Source:** `aws_nat_gateway` ([#1294](https://github.com/terraform-providers/terraform-provider-aws/issues/1294))
+* **New Data Source:** `aws_dynamodb_table` ([#2062](https://github.com/terraform-providers/terraform-provider-aws/issues/2062))
+* **New Data Source:** `aws_cloudtrail_service_account` ([#1774](https://github.com/terraform-providers/terraform-provider-aws/issues/1774))
+
+IMPROVEMENTS:
+
+* resource/aws_ami: Support configurable timeouts ([#1811](https://github.com/terraform-providers/terraform-provider-aws/issues/1811))
+* resource/ami_copy: Support configurable timeouts ([#1811](https://github.com/terraform-providers/terraform-provider-aws/issues/1811))
+* resource/ami_from_instance: Support configurable timeouts ([#1811](https://github.com/terraform-providers/terraform-provider-aws/issues/1811))
+* data-source/aws_security_group: add description ([#1943](https://github.com/terraform-providers/terraform-provider-aws/issues/1943))
+* resource/aws_cloudfront_distribution: Change the default minimum_protocol_version to TLSv1 ([#1856](https://github.com/terraform-providers/terraform-provider-aws/issues/1856))
+* resource/aws_sns_topic: Support SMS in protocols ([#1813](https://github.com/terraform-providers/terraform-provider-aws/issues/1813))
+* resource/aws_spot_fleet_request: Add support for `tags` ([#2042](https://github.com/terraform-providers/terraform-provider-aws/issues/2042))
+* resource/aws_kinesis_firehose_delivery_stream: Add `s3_backup_mode` option ([#1830](https://github.com/terraform-providers/terraform-provider-aws/issues/1830))
+* resource/aws_elasticsearch_domain: Support VPC configuration ([#1958](https://github.com/terraform-providers/terraform-provider-aws/issues/1958))
+* resource/aws_alb_target_group: Add support for `target_type` ([#1589](https://github.com/terraform-providers/terraform-provider-aws/issues/1589))
+* resource/aws_sqs_queue: Add support for `tags` ([#1987](https://github.com/terraform-providers/terraform-provider-aws/issues/1987))
+* resource/aws_security_group: Add `revoke_rules_on_delete` option to force a security group to revoke 
+  rules before deleting the grou ([#2074](https://github.com/terraform-providers/terraform-provider-aws/issues/2074))
+* resource/aws_cloudwatch_log_metric_filter: Add support for DefaultValue ([#1578](https://github.com/terraform-providers/terraform-provider-aws/issues/1578))
+* resource/aws_emr_cluster: Expose error on `TERMINATED_WITH_ERRORS` ([#2081](https://github.com/terraform-providers/terraform-provider-aws/issues/2081))
+
+BUG FIXES:
+
+* resource/aws_elasticache_parameter_group: Add missing return to retry logic ([#1891](https://github.com/terraform-providers/terraform-provider-aws/issues/1891))
+* resource/aws_batch_job_queue: Wait for update completion when disabling ([#1892](https://github.com/terraform-providers/terraform-provider-aws/issues/1892))
+* resource/aws_snapshot_create_volume_permission: Raise creation timeout to 10mins ([#1894](https://github.com/terraform-providers/terraform-provider-aws/issues/1894))
+* resource/aws_snapshot_create_volume_permission: Raise creation timeout to 20mins ([#2049](https://github.com/terraform-providers/terraform-provider-aws/issues/2049))
+* resource/aws_kms_alias: Retry creation on `NotFoundException` ([#1896](https://github.com/terraform-providers/terraform-provider-aws/issues/1896))
+* resource/aws_kms_key: Retry reading tags on `NotFoundException` ([#1900](https://github.com/terraform-providers/terraform-provider-aws/issues/1900))
+* resource/aws_db_snapshot: Raise creation timeout to 20mins ([#1905](https://github.com/terraform-providers/terraform-provider-aws/issues/1905))
+* resource/aws_lb: Allow assigning EIP to network LB ([#1956](https://github.com/terraform-providers/terraform-provider-aws/issues/1956))
+* resource/aws_s3_bucket: Retry tagging on OperationAborted ([#2008](https://github.com/terraform-providers/terraform-provider-aws/issues/2008))
+* resource/aws_cognito_identity_pool: Fixed refresh of providers ([#2015](https://github.com/terraform-providers/terraform-provider-aws/issues/2015))
+* resource/aws_elasticache_replication_group: Raise creation timeout to 50mins ([#2048](https://github.com/terraform-providers/terraform-provider-aws/issues/2048))
+* resource/aws_api_gateway_usag_plan: Fixed setting of rate_limit ([#2076](https://github.com/terraform-providers/terraform-provider-aws/issues/2076))
+* resource/aws_elastic_beanstalk_application: Expose error leading to failed deletion ([#2080](https://github.com/terraform-providers/terraform-provider-aws/issues/2080))
+* resource/aws_s3_bucket: Accept query strings in redirect hosts ([#2059](https://github.com/terraform-providers/terraform-provider-aws/issues/2059))
+
+## 1.1.0 (October 16, 2017)
 
 NOTES:
 
 * resource/aws_alb_* & data-source/aws_alb_*: In order to support network LBs, ALBs were renamed to `aws_lb_*` due to the way APIs "new" (non-Classic) load balancers are structured in AWS. All existing ALB functionality remains untouched and new resources work the same way. `aws_alb_*` resources are still in place as "aliases", but documentation will only mention `aws_lb_*`.
-`aws_alb_*` aliases will be removed in future major version. [GH-1806]
+`aws_alb_*` aliases will be removed in future major version. ([#1806](https://github.com/terraform-providers/terraform-provider-aws/issues/1806))
 * Deprecated:
   * data-source/aws_alb
   * data-source/aws_alb_listener
@@ -16,58 +107,67 @@ NOTES:
 
 FEATURES:
 
-* **New Resource:** `aws_batch_job_definition` [GH-1710]
-* **New Resource:** `aws_batch_job_queue` [GH-1710]
-* **New Resource:** `aws_lb` [GH-1806]
-* **New Resource:** `aws_lb_listener` [GH-1806]
-* **New Resource:** `aws_lb_listener_rule` [GH-1806]
-* **New Resource:** `aws_lb_target_group` [GH-1806]
-* **New Resource:** `aws_lb_target_group_attachment` [GH-1806]
-* **New Data Source:** `aws_lb` [GH-1806]
-* **New Data Source:** `aws_lb_listener` [GH-1806]
-* **New Data Source:** `aws_lb_target_group` [GH-1806]
-* **New Data Source:** `aws_iam_user` [GH-1805]
-* **New Data Source:** `aws_s3_bucket` [GH-1505]
+* **New Resource:** `aws_batch_job_definition` ([#1710](https://github.com/terraform-providers/terraform-provider-aws/issues/1710))
+* **New Resource:** `aws_batch_job_queue` ([#1710](https://github.com/terraform-providers/terraform-provider-aws/issues/1710))
+* **New Resource:** `aws_lb` ([#1806](https://github.com/terraform-providers/terraform-provider-aws/issues/1806))
+* **New Resource:** `aws_lb_listener` ([#1806](https://github.com/terraform-providers/terraform-provider-aws/issues/1806))
+* **New Resource:** `aws_lb_listener_rule` ([#1806](https://github.com/terraform-providers/terraform-provider-aws/issues/1806))
+* **New Resource:** `aws_lb_target_group` ([#1806](https://github.com/terraform-providers/terraform-provider-aws/issues/1806))
+* **New Resource:** `aws_lb_target_group_attachment` ([#1806](https://github.com/terraform-providers/terraform-provider-aws/issues/1806))
+* **New Data Source:** `aws_lb` ([#1806](https://github.com/terraform-providers/terraform-provider-aws/issues/1806))
+* **New Data Source:** `aws_lb_listener` ([#1806](https://github.com/terraform-providers/terraform-provider-aws/issues/1806))
+* **New Data Source:** `aws_lb_target_group` ([#1806](https://github.com/terraform-providers/terraform-provider-aws/issues/1806))
+* **New Data Source:** `aws_iam_user` ([#1805](https://github.com/terraform-providers/terraform-provider-aws/issues/1805))
+* **New Data Source:** `aws_s3_bucket` ([#1505](https://github.com/terraform-providers/terraform-provider-aws/issues/1505))
 
 IMPROVEMENTS:
 
-* data-source/aws_redshift_service_account: Add `arn` attribute [GH-1775]
-* data-source/aws_vpc_endpoint: Expose `prefix_list_id` [GH-1733]
-* resource/aws_kinesis_stream: Add support for encryption [GH-1139]
-* resource/aws_cloudwatch_log_group: Add support for encryption via `kms_key_id` [GH-1751]
-* resource/aws_spot_instance_request: Add support for `instance_interruption_behaviour` [GH-1735]
-* resource/aws_ses_event_destination: Add support for `open` & `click` event types [GH-1773]
-* resource/aws_efs_file_system: Expose `dns_name` [GH-1825]
-* resource/aws_security_group+aws_security_group_rule: Add support for rule description [GH-1587]
-* resource/aws_emr_cluster: enable configuration of ebs root volume size [GH-1375]
-* resource/aws_aws_ami: Add `root_snapshot_id` attribute [GH-1572]
-* resource/aws_vpn_connection: Mark preshared keys as sensitive [GH-1850]
-* resource/aws_codedeploy_deployment_group: Support blue/green and in-place deployments with traffic control [GH-1162]
-* resource/aws_elb: Update ELB idle timeout to 4000s [GH-1861]
-* resource/aws_spot_fleet_request: Add support for instance_interruption_behaviour [GH-1847]
-* resource/aws_kinesis_firehose_delivery_stream: Specify kinesis stream as the source of a aws_kinesis_firehose_delivery_stream [GH-1605]
+* data-source/aws_redshift_service_account: Add `arn` attribute ([#1775](https://github.com/terraform-providers/terraform-provider-aws/issues/1775))
+* data-source/aws_vpc_endpoint: Expose `prefix_list_id` ([#1733](https://github.com/terraform-providers/terraform-provider-aws/issues/1733))
+* resource/aws_kinesis_stream: Add support for encryption ([#1139](https://github.com/terraform-providers/terraform-provider-aws/issues/1139))
+* resource/aws_cloudwatch_log_group: Add support for encryption via `kms_key_id` ([#1751](https://github.com/terraform-providers/terraform-provider-aws/issues/1751))
+* resource/aws_spot_instance_request: Add support for `instance_interruption_behaviour` ([#1735](https://github.com/terraform-providers/terraform-provider-aws/issues/1735))
+* resource/aws_ses_event_destination: Add support for `open` & `click` event types ([#1773](https://github.com/terraform-providers/terraform-provider-aws/issues/1773))
+* resource/aws_efs_file_system: Expose `dns_name` ([#1825](https://github.com/terraform-providers/terraform-provider-aws/issues/1825))
+* resource/aws_security_group+aws_security_group_rule: Add support for rule description ([#1587](https://github.com/terraform-providers/terraform-provider-aws/issues/1587))
+* resource/aws_emr_cluster: enable configuration of ebs root volume size ([#1375](https://github.com/terraform-providers/terraform-provider-aws/issues/1375))
+* resource/aws_ami: Add `root_snapshot_id` attribute ([#1572](https://github.com/terraform-providers/terraform-provider-aws/issues/1572))
+* resource/aws_vpn_connection: Mark preshared keys as sensitive ([#1850](https://github.com/terraform-providers/terraform-provider-aws/issues/1850))
+* resource/aws_codedeploy_deployment_group: Support blue/green and in-place deployments with traffic control ([#1162](https://github.com/terraform-providers/terraform-provider-aws/issues/1162))
+* resource/aws_elb: Update ELB idle timeout to 4000s ([#1861](https://github.com/terraform-providers/terraform-provider-aws/issues/1861))
+* resource/aws_spot_fleet_request: Add support for instance_interruption_behaviour ([#1847](https://github.com/terraform-providers/terraform-provider-aws/issues/1847))
+* resource/aws_kinesis_firehose_delivery_stream: Specify kinesis stream as the source of a aws_kinesis_firehose_delivery_stream ([#1605](https://github.com/terraform-providers/terraform-provider-aws/issues/1605))
+* resource/aws_kinesis_firehose_delivery_stream: Output complete error when creation fails ([#1881](https://github.com/terraform-providers/terraform-provider-aws/issues/1881))
 
 BUG FIXES:
 
-* data-source/aws_db_instance: Make `db_instance_arn` expose ARN instead of identifier (use `db_cluster_identifier` for identifier) [GH-1766]
-* data-source/aws_db_snapshot: Expose `storage_type` (was not exposed) [GH-1833]
-* resource/aws_cloudtrail: Raise update retry timeout [GH-1820]
-* resource/aws_elasticache_parameter_group: Retry resetting group on pending changes [GH-1821]
-* resource/aws_kms_key: Retry getting rotation status [GH-1818]
-* resource/aws_kms_key: Retry getting key policy [GH-1854]
-* resource/aws_vpn_connection: Raise timeout to 40mins [GH-1819]
-* resource/aws_kinesis_firehose_delivery_stream: Fix crash caused by missing `processing_configuration` [GH-1738]
-* resource/aws_rds_cluster_instance: Treat `configuring-enhanced-monitoring` as pending state [GH-1744]
-* resource/aws_rds_cluster_instance: Treat more states as pending [GH-1790]
-* resource/aws_route_table: Increase number of not-found checks/retries after creation [GH-1791]
-* resource/aws_batch_compute_environment: Fix ARN attribute name/value (`ecc_cluster_arn` -> `ecs_cluster_arn`) [GH-1809]
-* resource/aws_kinesis_stream: Retry creation of the stream on `LimitExceededException` (handle throttling) [GH-1339]
-* resource/aws_vpn_connection_route: Treat route in state `deleted` as deleted [GH-1848]
-* resource/aws_eip: Avoid disassociating if there's no association [GH-1683]
-* resource/aws_elasticache_cluster: Allow scaling up cluster by modifying `az_mode` (avoid recreation) [GH-1758]
-* resource/aws_lambda_function: Fix Lambda Function Updates When Published [GH-1797]
-* resource/aws_appautoscaling_*: Use dimension to uniquely identify target/policy [GH-1808]
-* Updated the Data Source Tags structure [GH-1706]
+* data-source/aws_db_instance: Make `db_instance_arn` expose ARN instead of identifier (use `db_cluster_identifier` for identifier) ([#1766](https://github.com/terraform-providers/terraform-provider-aws/issues/1766))
+* data-source/aws_db_snapshot: Expose `storage_type` (was not exposed) ([#1833](https://github.com/terraform-providers/terraform-provider-aws/issues/1833))
+* data-source/aws_ami: Update the `tags` structure for easier referencing ([#1706](https://github.com/terraform-providers/terraform-provider-aws/issues/1706))
+* data-source/aws_ebs_snapshot: Update the `tags` structure for easier referencing ([#1706](https://github.com/terraform-providers/terraform-provider-aws/issues/1706))
+* data-source/aws_ebs_volume: Update the `tags` structure for easier referencing ([#1706](https://github.com/terraform-providers/terraform-provider-aws/issues/1706))
+* data-source/aws_instance: Update the `tags` structure for easier referencing ([#1706](https://github.com/terraform-providers/terraform-provider-aws/issues/1706))
+* resource/aws_spot_instance_request: Handle `closed` request correctly ([#1903](https://github.com/terraform-providers/terraform-provider-aws/issues/1903))
+* resource/aws_cloudtrail: Raise update retry timeout ([#1820](https://github.com/terraform-providers/terraform-provider-aws/issues/1820))
+* resource/aws_elasticache_parameter_group: Retry resetting group on pending changes ([#1821](https://github.com/terraform-providers/terraform-provider-aws/issues/1821))
+* resource/aws_kms_key: Retry getting rotation status ([#1818](https://github.com/terraform-providers/terraform-provider-aws/issues/1818))
+* resource/aws_kms_key: Retry getting key policy ([#1854](https://github.com/terraform-providers/terraform-provider-aws/issues/1854))
+* resource/aws_vpn_connection: Raise timeout to 40mins ([#1819](https://github.com/terraform-providers/terraform-provider-aws/issues/1819))
+* resource/aws_kinesis_firehose_delivery_stream: Fix crash caused by missing `processing_configuration` ([#1738](https://github.com/terraform-providers/terraform-provider-aws/issues/1738))
+* resource/aws_rds_cluster_instance: Treat `configuring-enhanced-monitoring` as pending state ([#1744](https://github.com/terraform-providers/terraform-provider-aws/issues/1744))
+* resource/aws_rds_cluster_instance: Treat more states as pending ([#1790](https://github.com/terraform-providers/terraform-provider-aws/issues/1790))
+* resource/aws_route_table: Increase number of not-found checks/retries after creation ([#1791](https://github.com/terraform-providers/terraform-provider-aws/issues/1791))
+* resource/aws_batch_compute_environment: Fix ARN attribute name/value (`ecc_cluster_arn` -> `ecs_cluster_arn`) ([#1809](https://github.com/terraform-providers/terraform-provider-aws/issues/1809))
+* resource/aws_kinesis_stream: Retry creation of the stream on `LimitExceededException` (handle throttling) ([#1339](https://github.com/terraform-providers/terraform-provider-aws/issues/1339))
+* resource/aws_vpn_connection_route: Treat route in state `deleted` as deleted ([#1848](https://github.com/terraform-providers/terraform-provider-aws/issues/1848))
+* resource/aws_eip: Avoid disassociating if there's no association ([#1683](https://github.com/terraform-providers/terraform-provider-aws/issues/1683))
+* resource/aws_elasticache_cluster: Allow scaling up cluster by modifying `az_mode` (avoid recreation) ([#1758](https://github.com/terraform-providers/terraform-provider-aws/issues/1758))
+* resource/aws_lambda_function: Fix Lambda Function Updates When Published ([#1797](https://github.com/terraform-providers/terraform-provider-aws/issues/1797))
+* resource/aws_appautoscaling_*: Use dimension to uniquely identify target/policy ([#1808](https://github.com/terraform-providers/terraform-provider-aws/issues/1808))
+* resource/aws_vpn_connection_route: Wait until route is available/deleted ([#1849](https://github.com/terraform-providers/terraform-provider-aws/issues/1849))
+* resource/aws_cloudfront_distribution: Ignore `minimum_protocol_version` if default certificate is used ([#1785](https://github.com/terraform-providers/terraform-provider-aws/issues/1785))
+* resource/aws_security_group: Using `self = false` with `cidr_blocks` should be allowed ([#1839](https://github.com/terraform-providers/terraform-provider-aws/issues/1839))
+* resource/aws_instance: Check VPC array size to avoid crashes on Eucalyptus Cloud ([#1882](https://github.com/terraform-providers/terraform-provider-aws/issues/1882))
 
 ## 1.0.0 (September 27, 2017)
 

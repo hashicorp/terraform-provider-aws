@@ -5222,12 +5222,18 @@ type Blueprint struct {
 	// The end-user license agreement URL for the image or blueprint.
 	LicenseUrl *string `locationName:"licenseUrl" type:"string"`
 
-	// The minimum machine size required to run this blueprint. 0 indicates that
-	// the blueprint runs on all instances.
+	// The minimum bundle power required to run this blueprint. For example, you
+	// need a bundle with a power value of 500 or more to create an instance that
+	// uses a blueprint with a minimum power value of 500. 0 indicates that the
+	// blueprint runs on all instance sizes.
 	MinPower *int64 `locationName:"minPower" type:"integer"`
 
 	// The friendly name of the blueprint (e.g., Amazon Linux).
 	Name *string `locationName:"name" type:"string"`
+
+	// The operating system platform (either Linux/Unix-based or Windows Server-based)
+	// of the blueprint.
+	Platform *string `locationName:"platform" type:"string" enum:"InstancePlatform"`
 
 	// The product URL to learn more about the image or blueprint.
 	ProductUrl *string `locationName:"productUrl" type:"string"`
@@ -5295,6 +5301,12 @@ func (s *Blueprint) SetName(v string) *Blueprint {
 	return s
 }
 
+// SetPlatform sets the Platform field's value.
+func (s *Blueprint) SetPlatform(v string) *Blueprint {
+	s.Platform = &v
+	return s
+}
+
 // SetProductUrl sets the ProductUrl field's value.
 func (s *Blueprint) SetProductUrl(v string) *Blueprint {
 	s.ProductUrl = &v
@@ -5343,7 +5355,11 @@ type Bundle struct {
 	// A friendly name for the bundle (e.g., Micro).
 	Name *string `locationName:"name" type:"string"`
 
-	// The power of the bundle (e.g., 500).
+	// A numeric value that represents the power of the bundle (e.g., 500). You
+	// can use the bundle's power value in conjunction with a blueprint's minimum
+	// power value to determine whether the blueprint will run on the bundle. For
+	// example, you need a bundle with a power value of 500 or more to create an
+	// instance that uses a blueprint with a minimum power value of 500.
 	Power *int64 `locationName:"power" type:"integer"`
 
 	// The price in US dollars (e.g., 5.0).
@@ -5351,6 +5367,12 @@ type Bundle struct {
 
 	// The amount of RAM in GB (e.g., 2.0).
 	RamSizeInGb *float64 `locationName:"ramSizeInGb" type:"float"`
+
+	// The operating system platform (Linux/Unix-based or Windows Server-based)
+	// that the bundle supports. You can only launch a WINDOWS bundle on a blueprint
+	// that supports the WINDOWS platform. LINUX_UNIX blueprints require a LINUX_UNIX
+	// bundle.
+	SupportedPlatforms []*string `locationName:"supportedPlatforms" type:"list"`
 
 	// The data transfer rate per month in GB (e.g., 2000).
 	TransferPerMonthInGb *int64 `locationName:"transferPerMonthInGb" type:"integer"`
@@ -5417,6 +5439,12 @@ func (s *Bundle) SetPrice(v float64) *Bundle {
 // SetRamSizeInGb sets the RamSizeInGb field's value.
 func (s *Bundle) SetRamSizeInGb(v float64) *Bundle {
 	s.RamSizeInGb = &v
+	return s
+}
+
+// SetSupportedPlatforms sets the SupportedPlatforms field's value.
+func (s *Bundle) SetSupportedPlatforms(v []*string) *Bundle {
+	s.SupportedPlatforms = v
 	return s
 }
 
@@ -5913,7 +5941,7 @@ type CreateInstancesInput struct {
 	// Depending on the machine image you choose, the command to get software on
 	// your instance varies. Amazon Linux and CentOS use yum, Debian and Ubuntu
 	// use apt-get, and FreeBSD uses pkg. For a complete list, see the Dev Guide
-	// (http://lightsail.aws.amazon.com/ls/docs/getting-started/articles/pre-installed-apps).
+	// (https://lightsail.aws.amazon.com/ls/docs/getting-started/article/compare-options-choose-lightsail-instance-image).
 	UserData *string `locationName:"userData" type:"string"`
 }
 
@@ -8562,8 +8590,25 @@ type InstanceAccessDetails struct {
 	// The public IP address of the Amazon Lightsail instance.
 	IpAddress *string `locationName:"ipAddress" type:"string"`
 
-	// For RDP access, the temporary password of the Amazon EC2 instance.
+	// For RDP access, the password for your Amazon Lightsail instance. Password
+	// will be an empty string if the password for your new instance is not ready
+	// yet. When you create an instance, it can take up to 15 minutes for the instance
+	// to be ready.
+	//
+	// If you create an instance using any key pair other than the default (LightsailDefaultKeyPair),
+	// password will always be an empty string.
+	//
+	// If you change the Administrator password on the instance, Lightsail will
+	// continue to return the original password value. When accessing the instance
+	// using RDP, you need to manually enter the Administrator password after changing
+	// it from the default.
 	Password *string `locationName:"password" type:"string"`
+
+	// For a Windows Server-based instance, an object with the data you can use
+	// to retrieve your password. This is only needed if password is empty and the
+	// instance is not new (and therefore the password is not ready yet). When you
+	// create an instance, it can take up to 15 minutes for the instance to be ready.
+	PasswordData *PasswordData `locationName:"passwordData" type:"structure"`
 
 	// For SSH access, the temporary private key. For OpenSSH clients (e.g., command
 	// line SSH), you should save this value to tempkey).
@@ -8613,6 +8658,12 @@ func (s *InstanceAccessDetails) SetIpAddress(v string) *InstanceAccessDetails {
 // SetPassword sets the Password field's value.
 func (s *InstanceAccessDetails) SetPassword(v string) *InstanceAccessDetails {
 	s.Password = &v
+	return s
+}
+
+// SetPasswordData sets the PasswordData field's value.
+func (s *InstanceAccessDetails) SetPasswordData(v *PasswordData) *InstanceAccessDetails {
+	s.PasswordData = v
 	return s
 }
 
@@ -9475,6 +9526,59 @@ func (s *Operation) SetStatusChangedAt(v time.Time) *Operation {
 	return s
 }
 
+// The password data for the Windows Server-based instance, including the ciphertext
+// and the key pair name.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/PasswordData
+type PasswordData struct {
+	_ struct{} `type:"structure"`
+
+	// The encrypted password. Ciphertext will be an empty string if access to your
+	// new instance is not ready yet. When you create an instance, it can take up
+	// to 15 minutes for the instance to be ready.
+	//
+	// If you use the default key pair (LightsailDefaultKeyPair), the decrypted
+	// password will be available in the password field.
+	//
+	// If you are using a custom key pair, you need to use your own means of decryption.
+	//
+	// If you change the Administrator password on the instance, Lightsail will
+	// continue to return the original ciphertext value. When accessing the instance
+	// using RDP, you need to manually enter the Administrator password after changing
+	// it from the default.
+	Ciphertext *string `locationName:"ciphertext" type:"string"`
+
+	// The name of the key pair that you used when creating your instance. If no
+	// key pair name was specified when creating the instance, Lightsail uses the
+	// default key pair (LightsailDefaultKeyPair).
+	//
+	// If you are using a custom key pair, you need to use your own means of decrypting
+	// your password using the ciphertext. Lightsail creates the ciphertext by encrypting
+	// your password with the public key part of this key pair.
+	KeyPairName *string `locationName:"keyPairName" type:"string"`
+}
+
+// String returns the string representation
+func (s PasswordData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PasswordData) GoString() string {
+	return s.String()
+}
+
+// SetCiphertext sets the Ciphertext field's value.
+func (s *PasswordData) SetCiphertext(v string) *PasswordData {
+	s.Ciphertext = &v
+	return s
+}
+
+// SetKeyPairName sets the KeyPairName field's value.
+func (s *PasswordData) SetKeyPairName(v string) *PasswordData {
+	s.KeyPairName = &v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/PeerVpcRequest
 type PeerVpcInput struct {
 	_ struct{} `type:"structure"`
@@ -10240,6 +10344,14 @@ const (
 
 	// InstanceMetricNameStatusCheckFailedSystem is a InstanceMetricName enum value
 	InstanceMetricNameStatusCheckFailedSystem = "StatusCheckFailed_System"
+)
+
+const (
+	// InstancePlatformLinuxUnix is a InstancePlatform enum value
+	InstancePlatformLinuxUnix = "LINUX_UNIX"
+
+	// InstancePlatformWindows is a InstancePlatform enum value
+	InstancePlatformWindows = "WINDOWS"
 )
 
 const (

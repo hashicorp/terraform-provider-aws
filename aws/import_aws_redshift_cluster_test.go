@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -10,7 +9,7 @@ import (
 
 func TestAccAWSRedshiftCluster_importBasic(t *testing.T) {
 	resourceName := "aws_redshift_cluster.default"
-	config := fmt.Sprintf(testAccAWSRedshiftClusterConfig_basic, acctest.RandInt())
+	config := testAccAWSRedshiftClusterConfig_basic(acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -33,6 +34,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
+	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -60,6 +62,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/simpledb"
@@ -144,6 +147,7 @@ type AWSClient struct {
 	appautoscalingconn    *applicationautoscaling.ApplicationAutoScaling
 	autoscalingconn       *autoscaling.AutoScaling
 	s3conn                *s3.S3
+	scconn                *servicecatalog.ServiceCatalog
 	sesConn               *ses.SES
 	simpledbconn          *simpledb.SimpleDB
 	sqsconn               *sqs.SQS
@@ -178,6 +182,8 @@ type AWSClient struct {
 	wafregionalconn       *wafregional.WAFRegional
 	iotconn               *iot.IoT
 	batchconn             *batch.Batch
+	athenaconn            *athena.Athena
+	dxconn                *directconnect.DirectConnect
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -379,6 +385,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.redshiftconn = redshift.New(sess)
 	client.simpledbconn = simpledb.New(sess)
 	client.s3conn = s3.New(awsS3Sess)
+	client.scconn = servicecatalog.New(sess)
 	client.sesConn = ses.New(sess)
 	client.sfnconn = sfn.New(sess)
 	client.snsconn = sns.New(awsSnsSess)
@@ -387,6 +394,8 @@ func (c *Config) Client() (interface{}, error) {
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
 	client.batchconn = batch.New(sess)
+	client.athenaconn = athena.New(sess)
+	client.dxconn = directconnect.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {

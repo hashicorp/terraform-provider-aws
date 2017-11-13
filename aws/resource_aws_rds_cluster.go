@@ -555,6 +555,12 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	return flattenAwsRdsClusterResource(d, meta, dbc)
+}
+
+func flattenAwsRdsClusterResource(d *schema.ResourceData, meta interface{}, dbc *rds.DBCluster) error {
+	conn := meta.(*AWSClient).rdsconn
+
 	if err := d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones)); err != nil {
 		return fmt.Errorf("[DEBUG] Error saving AvailabilityZones to state for RDS Cluster (%s): %s", d.Id(), err)
 	}
