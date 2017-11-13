@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"time"
@@ -10,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -81,38 +79,33 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						"description": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"load_template_from_url": {
 							Type:     schema.TypeString,
 							Required: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if d.IsNewResource() {
+									return true
+								}
+								return false
+							},
 						},
-						"type": {
+						"name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 					},
 				},
-				Set: resourceProductArtifactHash,
 			},
 		},
 	}
-}
-
-func resourceProductArtifactHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%d-", m["name"].(string)))
-	buf.WriteString(fmt.Sprintf("%d-", m["description"].(string)))
-	buf.WriteString(fmt.Sprintf("%d-", m["load_template_from_url"].(string)))
-	buf.WriteString(fmt.Sprintf("%d-", m["type"].(string)))
-	return hashcode.String(buf.String())
 }
 
 func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interface{}) error {
@@ -157,14 +150,13 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 		input.SupportUrl = aws.String(v.(string))
 	}
 
-	artifactSettings := d.Get("artifact").(*schema.Set).List()[0]
-	artifactSettings2 := artifactSettings.(map[string]interface{})
-
+	artifactSettings := d.Get("artifact").(*schema.Set).List()[0].(map[string]interface{})
 	artifactProperties := servicecatalog.ProvisioningArtifactProperties{}
-	artifactProperties.Description = aws.String(artifactSettings2["description"].(string))
-	artifactProperties.Name = aws.String(artifactSettings2["name"].(string))
-	artifactProperties.Type = aws.String(artifactSettings2["type"].(string))
-	url := aws.String(artifactSettings2["load_template_from_url"].(string))
+	artifactProperties.Description = aws.String(artifactSettings["description"].(string))
+	artifactProperties.Name = aws.String(artifactSettings["name"].(string))
+	artifactProperties.Type = aws.String("CLOUD_FORMATION_TEMPLATE")
+
+	url := aws.String(artifactSettings["load_template_from_url"].(string))
 	info := map[string]*string{
 		"LoadTemplateFromURL": url,
 	}
@@ -177,6 +169,8 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Creating ServiceCatalog product failed: %s", err.Error())
 	}
 	d.SetId(*resp.ProductViewDetail.ProductViewSummary.ProductId)
+	// Debuging
+	// fmt.Printf("Resp: %#v", resp)
 
 	return resourceAwsServiceCatalogProductRead(d, meta)
 }
@@ -214,26 +208,18 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	d.Set("support_url", pvs.SupportUrl)
 
 	provisioningArtifactSummary := getProvisioningArtifactSummary(resp)
-	d.Set("artifact", provisioningArtifactSummary)
+	a := make([]map[string]interface{}, 0, 1)
+	artifact := make(map[string]interface{})
+	artifact["description"] = *provisioningArtifactSummary.Description
+	artifact["id"] = *provisioningArtifactSummary.Id
+	artifact["name"] = *provisioningArtifactSummary.Name
+	a = append(a, artifact)
+	if err := d.Set("artifact", a); err != nil {
+		return err
+	}
+
 	return nil
 }
-
-/*
-	//a := getArtifactMap(provisioningArtifactSummary)
-WIP
-func getArtifactMap(p *servicecatalog.ProvisioningArtifactSummary) *schema.Set {
-	//r := map[string]string{}
-	//r["description"] = *p.Description
-	//r["id"] = *p.Id
-	//r["name"] = *p.Name
-	r := map[string]interface{}{}
-	r["description"] = *p.Description
-	r["id"] = *p.Id
-	r["name"] = *p.Name
-	//return r.(map[string]interface{})
-	return r.(schema.Set)
-}
-*/
 
 // Lookup the first artifact, which was the one created on inital build, by comparing created at time
 func getProvisioningArtifactSummary(resp *servicecatalog.DescribeProductAsAdminOutput) *servicecatalog.ProvisioningArtifactSummary {
