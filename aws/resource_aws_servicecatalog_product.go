@@ -91,7 +91,8 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if d.IsNewResource() {
+								// Only check for a diff on initial create.
+								if d.Id() != "" {
 									return true
 								}
 								return false
@@ -169,8 +170,6 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Creating ServiceCatalog product failed: %s", err.Error())
 	}
 	d.SetId(*resp.ProductViewDetail.ProductViewSummary.ProductId)
-	// Debuging
-	// fmt.Printf("Resp: %#v", resp)
 
 	return resourceAwsServiceCatalogProductRead(d, meta)
 }
@@ -194,10 +193,9 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	if err := d.Set("created_time", resp.ProductViewDetail.CreatedTime.Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Error setting created_time: %s", err)
 	}
-
 	d.Set("product_arn", resp.ProductViewDetail.ProductARN)
-	pvs := resp.ProductViewDetail.ProductViewSummary
 
+	pvs := resp.ProductViewDetail.ProductViewSummary
 	d.Set("description", pvs.ShortDescription)
 	d.Set("distributor", pvs.Distributor)
 	d.Set("name", pvs.Name)
@@ -208,16 +206,17 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	d.Set("support_url", pvs.SupportUrl)
 
 	provisioningArtifactSummary := getProvisioningArtifactSummary(resp)
-	a := make([]map[string]interface{}, 0, 1)
+	var a []map[string]interface{}
 	artifact := make(map[string]interface{})
 	artifact["description"] = *provisioningArtifactSummary.Description
 	artifact["id"] = *provisioningArtifactSummary.Id
+	artifact["load_template_from_url"] = "only_used_on_initial_create"
 	artifact["name"] = *provisioningArtifactSummary.Name
 	a = append(a, artifact)
+
 	if err := d.Set("artifact", a); err != nil {
 		return err
 	}
-
 	return nil
 }
 
