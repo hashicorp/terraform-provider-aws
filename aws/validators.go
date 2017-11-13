@@ -1595,7 +1595,7 @@ func validateCognitoUserPoolTemplateEmailMessageByLink(v interface{}, k string) 
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{##[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*##\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s*]*\\{##[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s*]*##\\}[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s*]*", k))
 	}
 	return
 }
@@ -1611,7 +1611,7 @@ func validateCognitoUserPoolTemplateEmailSubject(v interface{}, k string) (ws []
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s]+", k))
 	}
 	return
 }
@@ -1627,7 +1627,7 @@ func validateCognitoUserPoolTemplateEmailSubjectByLink(v interface{}, k string) 
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s]+", k))
 	}
 	return
 }
