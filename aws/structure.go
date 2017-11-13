@@ -2228,6 +2228,38 @@ func flattenCognitoUserPoolAdminCreateUserConfig(s *cognitoidentityprovider.Admi
 	return []map[string]interface{}{config}
 }
 
+func expandCognitoUserPoolDeviceConfiguration(config map[string]interface{}) *cognitoidentityprovider.DeviceConfigurationType {
+	configs := &cognitoidentityprovider.DeviceConfigurationType{}
+
+	if v, ok := config["challenge_required_on_new_device"]; ok {
+		configs.ChallengeRequiredOnNewDevice = aws.Bool(v.(bool))
+	}
+
+	if v, ok := config["device_only_remembered_on_user_prompt"]; ok {
+		configs.DeviceOnlyRememberedOnUserPrompt = aws.Bool(v.(bool))
+	}
+
+	return configs
+}
+
+func flattenCognitoUserPoolDeviceConfiguration(s *cognitoidentityprovider.DeviceConfigurationType) []map[string]interface{} {
+	config := map[string]interface{}{}
+
+	if s == nil {
+		return nil
+	}
+
+	if s.ChallengeRequiredOnNewDevice != nil {
+		config["challenge_required_on_new_device"] = *s.ChallengeRequiredOnNewDevice
+	}
+
+	if s.DeviceOnlyRememberedOnUserPrompt != nil {
+		config["device_only_remembered_on_user_prompt"] = *s.DeviceOnlyRememberedOnUserPrompt
+	}
+
+	return []map[string]interface{}{config}
+}
+
 func expandCognitoUserPoolLambdaConfig(config map[string]interface{}) *cognitoidentityprovider.LambdaConfigType {
 	configs := &cognitoidentityprovider.LambdaConfigType{}
 

@@ -90,6 +90,7 @@ The following arguments are supported:
 * `admin_create_user_config` (Optional) - The configuration for [AdminCreateUser](#admin-create-user-config) requests.
 * `alias_attributes` - (Optional) Attributes supported as an alias for this user pool. Possible values: phone_number, email, or preferred_username. Conflicts with `username_attributes`.
 * `auto_verified_attributes` - (Optional) The attributes to be auto-verified. Possible values: email, phone_number.
+* `device_configuration` (Optional) - The configuration for the [user pool's device tracking](#device-configuration).
 * `email_configuration` (Optional) - The [Email Configuration](#email-configuration).
 * `name` - (Required) The name of the user pool.
 * `email_verification_subject` - (Optional) A string representing the email verification subject.
@@ -116,6 +117,11 @@ The following arguments are supported:
   * `email_message` (Optional) - The message template for email messages.
   * `email_subject` (Optional) - The subject line for email messages.
   * `sms_message` (Optional) - The message template for SMS messages.
+
+#### Device Configuration
+
+  * `challenge_required_on_new_device` (Optional) - Indicates whether a challenge is required on a new device. Only applicable to a new device.
+  * `device_only_remembered_on_user_prompt` (Optional) - If true, a device is only remembered on user prompt.
 
 #### Email Configuration
 

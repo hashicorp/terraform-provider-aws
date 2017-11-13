@@ -92,6 +92,25 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				Computed: true,
 			},
 
+			"device_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 0,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"challenge_required_on_new_device": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"device_only_remembered_on_user_prompt": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
+
 			"email_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -455,6 +474,19 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	if v, ok := d.GetOk("device_configuration"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("device_configuration is <nil>")
+		}
+
+		if config != nil {
+			params.DeviceConfiguration = expandCognitoUserPoolDeviceConfiguration(config)
+		}
+	}
+
 	if v, ok := d.GetOk("email_verification_subject"); ok {
 		params.EmailVerificationSubject = aws.String(v.(string))
 	}
@@ -615,6 +647,10 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("sms_authentication_message", *resp.UserPool.SmsAuthenticationMessage)
 	}
 
+	if err := d.Set("device_configuration", flattenCognitoUserPoolDeviceConfiguration(resp.UserPool.DeviceConfiguration)); err != nil {
+		return errwrap.Wrapf("Failed setting device_configuration: {{err}}", err)
+	}
+
 	if err := d.Set("email_configuration", flattenCognitoUserPoolEmailConfiguration(resp.UserPool.EmailConfiguration)); err != nil {
 		return errwrap.Wrapf("Failed setting email_configuration: {{err}}", err)
 	}
@@ -669,6 +705,19 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("auto_verified_attributes") {
 		params.AutoVerifiedAttributes = expandStringList(d.Get("auto_verified_attributes").([]interface{}))
+	}
+
+	if d.HasChange("device_configuration") {
+		configs := d.Get("device_configuration").([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("device_configuration is <nil>")
+		}
+
+		if config != nil {
+			params.DeviceConfiguration = expandCognitoUserPoolDeviceConfiguration(config)
+		}
 	}
 
 	if d.HasChange("email_configuration") {

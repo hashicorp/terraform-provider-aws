@@ -35,6 +35,33 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPool_withDeviceConfiguration(t *testing.T) {
+	name := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withDeviceConfiguration(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "device_configuration.0.challenge_required_on_new_device", "true"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "device_configuration.0.device_only_remembered_on_user_prompt", "false"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withDeviceConfigurationUpdated(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "device_configuration.0.challenge_required_on_new_device", "false"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "device_configuration.0.device_only_remembered_on_user_prompt", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPool_withEmailVerificationMessage(t *testing.T) {
 	name := acctest.RandString(5)
 	subject := acctest.RandString(10)
@@ -405,6 +432,32 @@ func testAccAWSCognitoUserPoolConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
+}`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withDeviceConfiguration(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+
+  device_configuration {
+    challenge_required_on_new_device      = true
+    device_only_remembered_on_user_prompt = false
+  }
+}`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withDeviceConfigurationUpdated(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+
+  device_configuration {
+    challenge_required_on_new_device      = false
+    device_only_remembered_on_user_prompt = true
+  }
 }`, name)
 }
 
