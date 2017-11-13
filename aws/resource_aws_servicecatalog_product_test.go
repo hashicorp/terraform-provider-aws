@@ -119,7 +119,6 @@ func TestAccAWSServiceCatalogProductImport(t *testing.T) {
 			resource.TestStep{
 				Config: template1.String(),
 			},
-
 			resource.TestStep{
 				ResourceName:      resourceName,
 				ImportState:       true,
