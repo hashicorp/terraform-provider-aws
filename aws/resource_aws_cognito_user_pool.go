@@ -20,6 +20,10 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 		Update: resourceAwsCognitoUserPoolUpdate,
 		Delete: resourceAwsCognitoUserPoolDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPool.html
 		Schema: map[string]*schema.Schema{
 			"admin_create_user_config": {
@@ -676,6 +680,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	if err := d.Set("verification_message_template", flattenCognitoUserPoolVerificationMessageTemplate(resp.UserPool.VerificationMessageTemplate)); err != nil {
 		return errwrap.Wrapf("Failed setting verification_message_template: {{err}}", err)
 	}
+	d.Set("name", resp.UserPool.Name)
 	d.Set("tags", tagsToMapGeneric(resp.UserPool.UserPoolTags))
 
 	return nil
