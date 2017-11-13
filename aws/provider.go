@@ -198,6 +198,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_iam_user":                         dataSourceAwsIAMUser(),
 			"aws_internet_gateway":                 dataSourceAwsInternetGateway(),
 			"aws_instance":                         dataSourceAwsInstance(),
+			"aws_instances":                        dataSourceAwsInstances(),
 			"aws_ip_ranges":                        dataSourceAwsIPRanges(),
 			"aws_kinesis_stream":                   dataSourceAwsKinesisStream(),
 			"aws_kms_alias":                        dataSourceAwsKmsAlias(),
