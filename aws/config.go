@@ -105,6 +105,7 @@ type Config struct {
 	IamEndpoint              string
 	KinesisEndpoint          string
 	KmsEndpoint              string
+	OpsworksRegion           string
 	RdsEndpoint              string
 	S3Endpoint               string
 	SnsEndpoint              string
@@ -298,6 +299,11 @@ func (c *Config) Client() (interface{}, error) {
 	awsSqsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.SqsEndpoint)})
 	awsDeviceFarmSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.DeviceFarmEndpoint)})
 
+	awsOpsworksSess := sess
+	if c.OpsworksRegion != "" {
+		awsOpsworksSess = sess.Copy(&aws.Config{Region: aws.String(c.OpsworksRegion)})
+	}
+
 	log.Println("[INFO] Initializing DeviceFarm SDK connection")
 	client.devicefarmconn = devicefarm.New(awsDeviceFarmSess)
 
@@ -375,7 +381,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.kmsconn = kms.New(awsKmsSess)
 	client.lambdaconn = lambda.New(sess)
 	client.lightsailconn = lightsail.New(sess)
-	client.opsworksconn = opsworks.New(sess)
+	client.opsworksconn = opsworks.New(awsOpsworksSess)
 	client.r53conn = route53.New(r53Sess)
 	client.rdsconn = rds.New(awsRdsSess)
 	client.redshiftconn = redshift.New(sess)
