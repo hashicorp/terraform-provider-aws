@@ -23,7 +23,7 @@ IMPROVEMENTS:
 * resource/aws_ssm_parameter: Add support for import [GH-2234]
 * resource/aws_redshift_cluster: Add support for `snapshot_copy` [GH-2238]
 * resource/aws_ecs_task_definition: Print `container_definitions` as JSON instead of checksum [GH-1195]
-* Add support in TF file configuration for assuming roles via profiles defined in ~/.aws/config [GH-1608]
+* provider: Add support for assuming roles via profiles defined in `~/.aws/config` [GH-1608]
 
 BUG FIXES:
 
