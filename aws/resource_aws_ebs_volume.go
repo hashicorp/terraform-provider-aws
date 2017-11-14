@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
@@ -25,6 +26,11 @@ func resourceAwsEbsVolume() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -238,7 +244,7 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error reading EC2 volume %s: %s", d.Id(), err)
 	}
 
-	return readVolume(d, response.Volumes[0])
+	return readVolume(d, meta, response.Volumes[0])
 }
 
 func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error {
@@ -267,8 +273,17 @@ func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error 
 
 }
 
-func readVolume(d *schema.ResourceData, volume *ec2.Volume) error {
+func readVolume(d *schema.ResourceData, meta interface{}, volume *ec2.Volume) error {
 	d.SetId(*volume.VolumeId)
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "ec2",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("volume/%s", d.Id()),
+	}
+	d.Set("arn", arn.String())
 
 	d.Set("availability_zone", *volume.AvailabilityZone)
 	if volume.Encrypted != nil {
