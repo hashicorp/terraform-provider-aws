@@ -178,8 +178,9 @@ func resourceAwsElb() *schema.Resource {
 						},
 
 						"ssl_certificate_id": &schema.Schema{
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
