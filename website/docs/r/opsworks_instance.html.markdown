@@ -21,6 +21,7 @@ resource "aws_opsworks_instance" "my-instance" {
   ]
 
   instance_type = "t2.micro"
+  root_device_type = "ebs" # see https://github.com/hashicorp/terraform/issues/13691
   os            = "Amazon Linux 2015.09"
   state         = "stopped"
 }
