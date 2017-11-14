@@ -30,6 +30,25 @@ func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticacheSecurityGroup_Import(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSElasticacheSecurityGroupConfig,
+			},
+
+			resource.TestStep{
+				ResourceName:      "aws_elasticache_security_group.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSElasticacheSecurityGroupDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
 
