@@ -389,9 +389,14 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	}
 
-	if d.HasChange("subnets") {
+	if d.HasChange("subnets") && !d.IsNewResource() {
+		// subnets are assigned at Create; the 'change' here is an empty map for old
+		// and current subnets for new, so this change is redundant when the
+		// resource is just created.
 		if d.Get("load_balancer_type").(string) == "network" {
-			return fmt.Errorf("Unable to update subnets for loadbalancer %s, updating subnets is not supported for type network", d.Id())
+			// Load Balancers of type 'network' cannot update their subnets at this
+			// time.
+			return fmt.Errorf("Unable to update subnets for loadbalancer %s, updating subnets is not supported for type network. Please use the 'taint' command to force a recreation of this resource", d.Id())
 		}
 
 		subnets := expandStringList(d.Get("subnets").(*schema.Set).List())
