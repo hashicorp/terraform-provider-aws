@@ -21,6 +21,11 @@ phase because a modification has not yet taken place. You can use the
 brief downtime as the server reboots. See the AWS Docs on
 [Modifying an ElastiCache Cache Cluster][2] for more information.
 
+~> **Note:** when creating an ElastiCache Cache Cluster, you must either provide a `replication_group_id`
+to an existing ElastiCache Replication Group or all of the `engine`, `port`, `node_type`, and 
+`num_cache_nodes` arguments.  When providing a replication_group_id, the new Cache Cluster inherits all 
+of the properties of the Replication Group; no other options may be specified in your resource config.
+
 ## Example Usage
 
 ```hcl
@@ -34,6 +39,15 @@ resource "aws_elasticache_cluster" "bar" {
 }
 ```
 
+or
+
+```hcl
+resource "aws_elasticache_cluster" "bar" {
+  cluster_id           = "cluster-example"
+  replication_group_id = "cluster-repl-group"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -41,7 +55,7 @@ The following arguments are supported:
 * `cluster_id` – (Required) Group identifier. ElastiCache converts
   this name to lowercase
 
-* `engine` – (Required) Name of the cache engine to be used for this cache cluster.
+* `engine` – (Conditional, if no replication_group_id is provided) Name of the cache engine to be used for this cache cluster.
  Valid values for this parameter are `memcached` or `redis`
 
 * `engine_version` – (Optional) Version number of the cache engine to be used.
@@ -52,19 +66,19 @@ in the AWS Documentation center for supported versions
 on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC).
 The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09:00`
 
-* `node_type` – (Required) The compute and memory capacity of the nodes. See
+* `node_type` – (Conditional, if no replication_group_id is provided) The compute and memory capacity of the nodes. See
 [Available Cache Node Types](https://aws.amazon.com/elasticache/details#Available_Cache_Node_Types) for
 supported node types
 
-* `num_cache_nodes` – (Required) The initial number of cache nodes that the
+* `num_cache_nodes` – (Conditional, if no replication_group_id is provided) The initial number of cache nodes that the
 cache cluster will have. For Redis, this value must be 1. For Memcache, this
 value must be between 1 and 20. If this number is reduced on subsequent runs,
 the highest numbered nodes will be removed.
 
-* `parameter_group_name` – (Required) Name of the parameter group to associate
+* `parameter_group_name` – (Conditional, if no replication_group_id is provided) Name of the parameter group to associate
 with this cache cluster
 
-* `port` – (Required) The port number on which each of the cache nodes will
+* `port` – (Conditional, if no replication_group_id is provided) The port number on which each of the cache nodes will
 accept connections. For Memcache the default is 11211, and for Redis the default port is 6379.
 
 * `subnet_group_name` – (Optional, VPC only) Name of the subnet group to be used
