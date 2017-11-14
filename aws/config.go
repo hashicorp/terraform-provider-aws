@@ -250,17 +250,16 @@ func (c *Config) Client() (interface{}, error) {
 	cp, err := creds.Get()
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
-			// If a profile wasn't specifed then error out
+			// If a profile wasn't specified then error out
 			if c.Profile == "" {
 				return nil, errors.New(`No valid credential sources found for AWS Provider.
   Please see https://terraform.io/docs/providers/aws/index.html for more information on
   providing credentials for the AWS Provider`)
-			} else {
-				// add the profile and enable share config file usage
-				log.Printf("[INFO] AWS Auth using Profile: %q", c.Profile)
-				opt.Profile = c.Profile
-				opt.SharedConfigState = session.SharedConfigEnable
 			}
+			// add the profile and enable share config file usage
+			log.Printf("[INFO] AWS Auth using Profile: %q", c.Profile)
+			opt.Profile = c.Profile
+			opt.SharedConfigState = session.SharedConfigEnable
 		} else {
 			return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)
 		}
@@ -290,7 +289,7 @@ func (c *Config) Client() (interface{}, error) {
   Please see https://terraform.io/docs/providers/aws/index.html for more information on
   providing credentials for the AWS Provider`)
 		}
-		return nil, errwrap.Wrapf("MM: Error creating AWS session: {{err}}", err)
+		return nil, errwrap.Wrapf("Error creating AWS session: {{err}}", err)
 	}
 
 	sess.Handlers.Build.PushBackNamed(addTerraformVersionToUserAgent)
