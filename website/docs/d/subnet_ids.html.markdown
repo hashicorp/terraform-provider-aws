@@ -60,4 +60,4 @@ resource "aws_instance" "app" {
 
 ## Attributes Reference
 
-* `ids` - Is a list of all the subnet ids found. If none found. This data source will fail out.
+* `ids` - A list of all the subnet ids found. This data source will fail if none are found.

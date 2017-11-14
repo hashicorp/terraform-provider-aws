@@ -25,7 +25,7 @@ The following arguments are supported:
 
 * `description` - (Optional) The description of the key as viewed in AWS console.
 * `key_usage` - (Optional) Specifies the intended use of the key.
-	Defaults to ENCRYPT/DECRYPT, and only symmetric encryption and decryption are supported.
+	Defaults to ENCRYPT_DECRYPT, and only symmetric encryption and decryption are supported.
 * `policy` - (Optional) A valid policy JSON document.
 * `deletion_window_in_days` - (Optional) Duration in days after which the key is deleted
 	after destruction of the resource, must be between 7 and 30 days. Defaults to 30 days.

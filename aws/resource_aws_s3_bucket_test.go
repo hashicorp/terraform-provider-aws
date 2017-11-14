@@ -338,7 +338,7 @@ func TestAccAWSS3Bucket_WebsiteRedirect(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
 					testAccCheckAWSS3BucketWebsite(
-						"aws_s3_bucket.bucket", "", "", "", "hashicorp.com"),
+						"aws_s3_bucket.bucket", "", "", "", "hashicorp.com?my=query"),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "website_endpoint", testAccWebsiteEndpoint(rInt)),
 				),
@@ -348,7 +348,7 @@ func TestAccAWSS3Bucket_WebsiteRedirect(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
 					testAccCheckAWSS3BucketWebsite(
-						"aws_s3_bucket.bucket", "", "", "https", "hashicorp.com"),
+						"aws_s3_bucket.bucket", "", "", "https", "hashicorp.com?my=query"),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "website_endpoint", testAccWebsiteEndpoint(rInt)),
 				),
@@ -1307,7 +1307,7 @@ resource "aws_s3_bucket" "bucket" {
 	acl = "public-read"
 
 	website {
-		redirect_all_requests_to = "hashicorp.com"
+		redirect_all_requests_to = "hashicorp.com?my=query"
 	}
 }
 `, randInt)
@@ -1320,7 +1320,7 @@ resource "aws_s3_bucket" "bucket" {
 	acl = "public-read"
 
 	website {
-		redirect_all_requests_to = "https://hashicorp.com"
+		redirect_all_requests_to = "https://hashicorp.com?my=query"
 	}
 }
 `, randInt)

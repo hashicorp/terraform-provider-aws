@@ -3,11 +3,13 @@ package aws
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccAWSKmsKey_importBasic(t *testing.T) {
 	resourceName := "aws_kms_key.foo"
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -15,7 +17,7 @@ func TestAccAWSKmsKey_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSKmsKey,
+				Config: testAccAWSKmsKey(rName),
 			},
 
 			resource.TestStep{

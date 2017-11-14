@@ -9,11 +9,12 @@
 # scripts/docker-release/Dockerfile-release.
 
 FROM golang:alpine
-MAINTAINER "HashiCorp Terraform Team <terraform@hashicorp.com>"
+LABEL maintainer="HashiCorp Terraform Team <terraform@hashicorp.com>"
 
 RUN apk add --update git bash openssh
 
 ENV TF_DEV=true
+ENV TF_RELEASE=1
 
 WORKDIR $GOPATH/src/github.com/hashicorp/terraform
 COPY . .

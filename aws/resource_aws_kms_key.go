@@ -388,12 +388,17 @@ func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
 		Refresh: func() (interface{}, string, error) {
 			log.Printf("[DEBUG] Checking if KMS key %s rotation status is %t",
 				d.Id(), shouldEnableRotation)
-			resp, err := conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
-				KeyId: aws.String(d.Id()),
+
+			out, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
+				return conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
+					KeyId: aws.String(d.Id()),
+				})
 			})
 			if err != nil {
-				return resp, "FAILED", err
+				return 42, "", err
 			}
+			resp, _ := out.(*kms.GetKeyRotationStatusOutput)
+
 			status := fmt.Sprintf("%t", *resp.KeyRotationEnabled)
 			log.Printf("[DEBUG] KMS key %s rotation status received: %s, retrying", d.Id(), status)
 

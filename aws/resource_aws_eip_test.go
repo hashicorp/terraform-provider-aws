@@ -640,12 +640,14 @@ resource "aws_eip" "one" {
   vpc                       = "true"
   network_interface         = "${aws_network_interface.bar.id}"
   associate_with_private_ip = "10.0.0.10"
+  depends_on                = ["aws_internet_gateway.bar"]
 }
 
 resource "aws_eip" "two" {
   vpc                       = "true"
   network_interface         = "${aws_network_interface.bar.id}"
   associate_with_private_ip = "10.0.0.11"
+  depends_on                = ["aws_internet_gateway.bar"]
 }
 `
 
