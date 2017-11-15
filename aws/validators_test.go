@@ -296,7 +296,7 @@ func TestValidateCIDRNetworkAddress(t *testing.T) {
 		{"10.0.1.0/16", `must contain a valid network CIDR`},
 		{"10.0.1.0/24", ``},
 		{"2001:DB8::/32", ``},
-                {"2001:DB8::FFFF/32", ``},
+		{"2001:DB8::FFFF/32", ``},
 	}
 
 	for i, tc := range cases {
