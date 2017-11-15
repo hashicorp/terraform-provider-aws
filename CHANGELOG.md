@@ -42,6 +42,7 @@ BUG FIXES:
 * resource/aws_elasticsearch_domain: Added ForceNew to vpc_options [GH-2157]
 * resource/aws_redshift_cluster: Make snapshot identifiers `ForceNew` [GH-2212]
 * resource/aws_elasticsearch_domain_policy: Fix typo in err code [GH-2249]
+* resource/aws_appautoscaling_policy: Retry PutScalingPolicy on rate exceeded message [GH-2275]
 
 ## 1.2.0 (October 31, 2017)
 
