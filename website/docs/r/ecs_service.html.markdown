@@ -60,6 +60,7 @@ into consideration during task placement. The maximum number of
 * `load_balancer` - (Optional) A load balancer block. Load balancers documented below.
 * `placement_constraints` - (Optional) rules that are taken into consideration during task placement. Maximum number of
 `placement_constraints` is `10`. Defined below.
+* `network_configuration` - (Optional) The network configuration for the service. This parameter is required for task definitions that use the awsvpc network mode to receive their own Elastic Network Interface, and it is not supported for other network modes.
 
 -> **Note:** As a result of an AWS limitation, a single `load_balancer` can be attached to the ECS service at most. See [related docs](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-load-balancing.html#load-balancing-concepts).
 
@@ -93,7 +94,12 @@ For more information, see [Cluster Query Language in the Amazon EC2 Container
 Service Developer
 Guide](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html).
 
+## network_configuration
 
+`network_configuration` support the following:
+* `subnets` - (Required) The subnets associated with the task or service.
+* `security_groups` - (Optional) The security groups associated with the task or service. If you do not specify a security group, the default security group for the VPC is used.
+For more information, see [Task Networking](http://docs.aws.amazon.com/AmazonECS/latest/developerguidetask-networking.html)
 
 ## Attributes Reference
 

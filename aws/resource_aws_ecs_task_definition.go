@@ -118,6 +118,7 @@ func validateAwsEcsTaskDefinitionNetworkMode(v interface{}, k string) (ws []stri
 	validTypes := map[string]struct{}{
 		"bridge": {},
 		"host":   {},
+		"awsvpc": {},
 		"none":   {},
 	}
 
