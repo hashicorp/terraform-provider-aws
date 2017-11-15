@@ -103,7 +103,7 @@ func dataSourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] aws_ebs_volume - Single Volume found: %s", *volume.VolumeId)
-	return volumeDescriptionAttributes(d, meta, volume)
+	return volumeDescriptionAttributes(d, meta.(*AWSClient), volume)
 }
 
 type volumeSort []*ec2.Volume
@@ -122,15 +122,15 @@ func mostRecentVolume(volumes []*ec2.Volume) *ec2.Volume {
 	return sortedVolumes[len(sortedVolumes)-1]
 }
 
-func volumeDescriptionAttributes(d *schema.ResourceData, meta interface{}, volume *ec2.Volume) error {
+func volumeDescriptionAttributes(d *schema.ResourceData, client *AWSClient, volume *ec2.Volume) error {
 	d.SetId(*volume.VolumeId)
 	d.Set("volume_id", volume.VolumeId)
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: client.partition,
+		Region:    client.region,
 		Service:   "ec2",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: client.accountid,
 		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
