@@ -41,7 +41,7 @@ resource "aws_ses_domain_dkim" "example" {
 }
 
 resource "aws_route53_record" "example_amazonses_verification_record" {
-  count   = 3
+  count   = "${length(aws_ses_domain_dkim.example.dkim_tokens)}"
   zone_id = "ABCDEFGHIJ123"
   name    = "${element(aws_ses_domain_dkim.example.dkim_tokens, count.index)}._domainkey.example.com"
   type    = "CNAME"
