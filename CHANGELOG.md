@@ -27,6 +27,7 @@ IMPROVEMENTS:
 * resource/aws_ecs_task_definition: Print `container_definitions` as JSON instead of checksum [GH-1195]
 * resource/aws_ssm_parameter: Add `arn` attribute [GH-2273]
 * resource/aws_elb: Add listener `ssl_certificate_id` ARN validation [GH-2276]
+* resource/aws_cloudformation_stack: Support updating `tags` [GH-2262]
 
 BUG FIXES:
 
