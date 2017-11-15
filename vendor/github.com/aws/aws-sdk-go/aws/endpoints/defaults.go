@@ -264,7 +264,8 @@ var awsPartition = partition{
 				},
 			},
 			Endpoints: endpoints{
-				"us-east-1": endpoint{},
+				"ap-south-1": endpoint{},
+				"us-east-1":  endpoint{},
 			},
 		},
 		"apigateway": service{
@@ -1910,6 +1911,12 @@ var awscnPartition = partition{
 		},
 	},
 	Services: services{
+		"apigateway": service{
+
+			Endpoints: endpoints{
+				"cn-north-1": endpoint{},
+			},
+		},
 		"application-autoscaling": service{
 			Defaults: endpoint{
 				Hostname:  "autoscaling.{region}.amazonaws.com",
@@ -2271,6 +2278,12 @@ var awsusgovPartition = partition{
 
 			Endpoints: endpoints{
 				"us-gov-west-1": endpoint{},
+				"us-gov-west-1-fips": endpoint{
+					Hostname: "dynamodb.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
 			},
 		},
 		"ec2": service{
@@ -2291,6 +2304,12 @@ var awsusgovPartition = partition{
 			},
 		},
 		"elasticache": service{
+
+			Endpoints: endpoints{
+				"us-gov-west-1": endpoint{},
+			},
+		},
+		"elasticbeanstalk": service{
 
 			Endpoints: endpoints{
 				"us-gov-west-1": endpoint{},
@@ -2447,6 +2466,12 @@ var awsusgovPartition = partition{
 			},
 			Endpoints: endpoints{
 				"us-gov-west-1": endpoint{},
+				"us-gov-west-1-fips": endpoint{
+					Hostname: "dynamodb.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
 			},
 		},
 		"sts": service{
