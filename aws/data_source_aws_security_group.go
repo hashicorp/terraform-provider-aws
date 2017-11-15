@@ -91,8 +91,8 @@ func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("description", sg.Description)
 	d.Set("vpc_id", sg.VpcId)
 	d.Set("tags", tagsToMap(sg.Tags))
-	d.Set("arn", fmt.Sprintf("arn:%s:ec2:%s:%s:security-group/%s",
-		meta.(*AWSClient).partition, meta.(*AWSClient).region, *sg.OwnerId, *sg.GroupId))
+	d.Set("arn", securityGroupArnString(
+		meta.(*AWSClient).partition, meta.(*AWSClient).region, aws.StringValue(sg.OwnerId), aws.StringValue(sg.GroupId)))
 
 	return nil
 }

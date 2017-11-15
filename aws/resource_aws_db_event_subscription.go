@@ -377,9 +377,5 @@ func resourceAwsDbEventSubscriptionRefreshFunc(
 }
 
 func buildRDSEventSubscriptionARN(customerAwsId, subscriptionId, partition, region string) (string, error) {
-	if partition == "" {
-		return "", fmt.Errorf("Unable to construct RDS ARN because of missing AWS partition")
-	}
-	arn := fmt.Sprintf("arn:%s:rds:%s:%s:es:%s", partition, region, customerAwsId, subscriptionId)
-	return arn, nil
+	return buildRdsArnString(subscriptionId, partition, customerAwsId, region, rdsEventSubscriptionArnString)
 }

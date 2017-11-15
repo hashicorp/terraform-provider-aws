@@ -80,7 +80,7 @@ func resourceAwsSesDomainIdentityRead(d *schema.ResourceData, meta interface{}) 
 		return nil
 	}
 
-	d.Set("arn", fmt.Sprintf("arn:%s:ses:%s:%s:identity/%s", meta.(*AWSClient).partition, meta.(*AWSClient).region, meta.(*AWSClient).accountid, d.Id()))
+	d.Set("arn", sesArnString(meta.(*AWSClient).partition, meta.(*AWSClient).region, meta.(*AWSClient).accountid, "identity/"+d.Id()))
 	d.Set("verification_token", verificationAttrs.VerificationToken)
 	return nil
 }

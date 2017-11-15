@@ -1154,12 +1154,5 @@ func resourceAwsDbInstanceStateRefreshFunc(
 }
 
 func buildRDSARN(identifier, partition, accountid, region string) (string, error) {
-	if partition == "" {
-		return "", fmt.Errorf("Unable to construct RDS ARN because of missing AWS partition")
-	}
-	if accountid == "" {
-		return "", fmt.Errorf("Unable to construct RDS ARN because of missing AWS Account ID")
-	}
-	arn := fmt.Sprintf("arn:%s:rds:%s:%s:db:%s", partition, region, accountid, identifier)
-	return arn, nil
+	return buildRdsArnString(identifier, partition, accountid, region, rdsDbInstanceArnString)
 }
