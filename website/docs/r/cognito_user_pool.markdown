@@ -10,10 +10,56 @@ Provides a Cognito User Pool resource.
 
 ## Example Usage
 
-### Create a basic user pool
-
 ```hcl
 ...
+
+resource "aws_iam_role" "main" {
+  name = "test-role"
+  path = "/service-role/"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cognito-idp.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "12345"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "main" {
+  name = "test-role-policy"
+  role = "${aws_iam_role.main.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sns:publish"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+}
 
 resource "aws_cognito_user_pool" "pool" {
   name = "pool"
@@ -74,6 +120,11 @@ resource "aws_cognito_user_pool" "pool" {
       min_value = 2
       max_value = 6
     }
+  }
+
+  sms_configuration {
+    external_id    = "12345"
+    sns_caller_arn = "${aws_iam_role.main.arn}"
   }
 
   tags {
@@ -169,8 +220,8 @@ The following arguments are supported:
 
 #### SMS Configuration
 
-  * `external_id` (Optional) - The external ID.
-  * `source_arn` (Optional) - The ARN of the Amazon SNS caller.
+  * `external_id` (Required) - The external ID used in IAM role trust relationships. For more information about using external IDs, see [How to Use an External ID When Granting Access to Your AWS Resources to a Third Party](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html).
+  * `source_arn` (Required) - The ARN of the Amazon SNS caller.
 
 #### Verification Message Template
 

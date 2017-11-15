@@ -1648,6 +1648,46 @@ func validateCognitoUserPoolTemplateSmsMessage(v interface{}, k string) (ws []st
 	return
 }
 
+func validateCognitoUserPoolInviteTemplateEmailMessage(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 6 {
+		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
+	}
+
+	if len(value) > 20000 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 20000 characters", k))
+	}
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+	}
+
+	if !regexp.MustCompile(`.*\{username\}.*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {username}", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolInviteTemplateSmsMessage(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 6 {
+		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
+	}
+
+	if len(value) > 140 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 140 characters", k))
+	}
+
+	if !regexp.MustCompile(`.*\{####\}.*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+	}
+
+	if !regexp.MustCompile(`.*\{username\}.*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {username}", k))
+	}
+	return
+}
+
 func validateCognitoUserPoolReplyEmailAddress(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 

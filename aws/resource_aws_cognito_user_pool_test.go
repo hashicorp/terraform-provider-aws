@@ -35,6 +35,39 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
+	name := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfiguration(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.unused_account_validity_days", "6"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.allow_admin_create_user_only", "true"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and temporary password is {####}. "),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_subject", "FooBar {####}"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and temporary password is {####}."),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfigurationUpdated(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.unused_account_validity_days", "7"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.allow_admin_create_user_only", "false"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and constant password is {####}. "),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_subject", "Foo{####}BaBaz"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and constant password is {####}."),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPool_withDeviceConfiguration(t *testing.T) {
 	name := acctest.RandString(5)
 
@@ -143,6 +176,56 @@ func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_configuration.#", "1"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_configuration.0.reply_to_email_address", "foo.bar@baz"),
+				),
+			},
+		},
+	})
+}
+
+// Ensure we can create a User Pool, handling IAM role propagation,
+// taking some time.
+func TestAccAWSCognitoUserPool_withSmsConfiguration(t *testing.T) {
+	name := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withSmsConfiguration(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "sms_configuration.0.external_id"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "sms_configuration.0.sns_caller_arn"),
+				),
+			},
+		},
+	})
+}
+
+// Ensure we can update a User Pool, handling IAM role propagation.
+func TestAccAWSCognitoUserPool_withSmsConfigurationUpdated(t *testing.T) {
+	name := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_basic(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_configuration.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withSmsConfiguration(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "sms_configuration.0.external_id"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "sms_configuration.0.sns_caller_arn"),
 				),
 			},
 		},
@@ -435,6 +518,42 @@ resource "aws_cognito_user_pool" "pool" {
 }`, name)
 }
 
+func testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfiguration(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+  admin_create_user_config {
+    allow_admin_create_user_only = true
+    unused_account_validity_days = 6
+
+    invite_message_template {
+      email_message = "Your username is {username} and temporary password is {####}. "
+      email_subject = "FooBar {####}"
+      sms_message   = "Your username is {username} and temporary password is {####}."
+    }
+  }
+}`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfigurationUpdated(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+  admin_create_user_config {
+    allow_admin_create_user_only = false
+    unused_account_validity_days = 7
+
+    invite_message_template {
+      email_message = "Your username is {username} and constant password is {####}. "
+      email_subject = "Foo{####}BaBaz"
+      sms_message   = "Your username is {username} and constant password is {####}."
+    }
+  }
+}`, name)
+}
+
 func testAccAWSCognitoUserPoolConfig_withDeviceConfiguration(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "pool" {
@@ -504,6 +623,68 @@ resource "aws_cognito_user_pool" "pool" {
 
   email_configuration {
     reply_to_email_address = "foo.bar@baz"
+  }
+}`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withSmsConfiguration(name string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role" "main" {
+  name = "test-role-%[1]s"
+  path = "/service-role/"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cognito-idp.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "main" {
+  name = "test-role-policy-%[1]s"
+  role = "${aws_iam_role.main.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sns:publish"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%[1]s"
+
+  sms_configuration {
+    external_id    = "${data.aws_caller_identity.current.account_id}"
+    sns_caller_arn = "${aws_iam_role.main.arn}"
   }
 }`, name)
 }

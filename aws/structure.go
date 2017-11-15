@@ -2169,22 +2169,26 @@ func expandCognitoUserPoolAdminCreateUserConfig(config map[string]interface{}) *
 	}
 
 	if v, ok := config["invite_message_template"]; ok {
-		subconfig := v.(map[string]interface{})
-		imt := &cognitoidentityprovider.MessageTemplateType{}
+		data := v.([]interface{})
 
-		if v, ok := subconfig["email_message"]; ok {
-			imt.EmailMessage = aws.String(v.(string))
+		if len(data) > 0 {
+			m, _ := data[0].(map[string]interface{})
+			imt := &cognitoidentityprovider.MessageTemplateType{}
+
+			if v, ok := m["email_message"]; ok {
+				imt.EmailMessage = aws.String(v.(string))
+			}
+
+			if v, ok := m["email_subject"]; ok {
+				imt.EmailSubject = aws.String(v.(string))
+			}
+
+			if v, ok := m["sms_message"]; ok {
+				imt.SMSMessage = aws.String(v.(string))
+			}
+
+			configs.InviteMessageTemplate = imt
 		}
-
-		if v, ok := subconfig["email_subject"]; ok {
-			imt.EmailSubject = aws.String(v.(string))
-		}
-
-		if v, ok := subconfig["sms_message"]; ok {
-			imt.SMSMessage = aws.String(v.(string))
-		}
-
-		configs.InviteMessageTemplate = imt
 	}
 
 	configs.UnusedAccountValidityDays = aws.Int64(int64(config["unused_account_validity_days"].(int)))
@@ -2219,7 +2223,7 @@ func flattenCognitoUserPoolAdminCreateUserConfig(s *cognitoidentityprovider.Admi
 		}
 
 		if len(subconfig) > 0 {
-			config["invite_message_template"] = subconfig
+			config["invite_message_template"] = []map[string]interface{}{subconfig}
 		}
 	}
 

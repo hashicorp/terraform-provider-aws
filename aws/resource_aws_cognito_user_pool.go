@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/errwrap"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -39,14 +40,16 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Optional: true,
 						},
 						"invite_message_template": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeList,
 							Optional: true,
+							MinItems: 0,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"email_message": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateCognitoUserPoolTemplateEmailMessage,
+										ValidateFunc: validateCognitoUserPoolInviteTemplateEmailMessage,
 									},
 									"email_subject": {
 										Type:         schema.TypeString,
@@ -56,7 +59,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 									"sms_message": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateCognitoUserPoolTemplateSmsMessage,
+										ValidateFunc: validateCognitoUserPoolInviteTemplateSmsMessage,
 									},
 								},
 							},
@@ -342,9 +345,8 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateArn,
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"sns_caller_arn": {
 							Type:         schema.TypeString,
@@ -478,6 +480,19 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	if v, ok := d.GetOk("admin_create_user_config"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("admin_create_user_config is <nil>")
+		}
+
+		if config != nil {
+			params.AdminCreateUserConfig = expandCognitoUserPoolAdminCreateUserConfig(config)
+		}
+	}
+
 	if v, ok := d.GetOk("device_configuration"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -589,8 +604,23 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	}
 	log.Printf("[DEBUG] Creating Cognito User Pool: %s", params)
 
-	resp, err := conn.CreateUserPool(params)
+	// IAM roles & policies can take some time to propagate and be attached
+	// to the User Pool
+	var resp *cognitoidentityprovider.CreateUserPoolOutput
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
+		resp, err = conn.CreateUserPool(params)
+		if isAWSErr(err, "InvalidSmsRoleTrustRelationshipException", "Role does not have a trust relationship allowing Cognito to assume the role") {
+			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
+			return resource.RetryableError(err)
+		}
+		if isAWSErr(err, "InvalidSmsRoleAccessPolicyException", "Role does not have permission to publish with SNS") {
+			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
+			return resource.RetryableError(err)
+		}
 
+		return resource.NonRetryableError(err)
+	})
 	if err != nil {
 		return errwrap.Wrapf("Error creating Cognito User Pool: {{err}}", err)
 	}
@@ -848,7 +878,22 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
 
-	_, err := conn.UpdateUserPool(params)
+	// IAM roles & policies can take some time to propagate and be attached
+	// to the User Pool.
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
+		_, err = conn.UpdateUserPool(params)
+		if isAWSErr(err, "InvalidSmsRoleTrustRelationshipException", "Role does not have a trust relationship allowing Cognito to assume the role") {
+			log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
+			return resource.RetryableError(err)
+		}
+		if isAWSErr(err, "InvalidSmsRoleAccessPolicyException", "Role does not have permission to publish with SNS") {
+			log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
+			return resource.RetryableError(err)
+		}
+
+		return resource.NonRetryableError(err)
+	})
 	if err != nil {
 		return errwrap.Wrapf("Error updating Cognito User pool: {{err}}", err)
 	}
