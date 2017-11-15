@@ -46,6 +46,23 @@ func TestAccAWSSSMAssociation_withTargets(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMAssociation_withMultipleTargets(t *testing.T) {
+	name := acctest.RandString(10)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMAssociationBasicConfigWithMultipleTargets(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMAssociation_withParameters(t *testing.T) {
 	name := acctest.RandString(10)
 	resource.Test(t, resource.TestCase{
@@ -360,6 +377,45 @@ resource "aws_ssm_association" "foo" {
   name = "${aws_ssm_document.foo_document.name}",
   targets {
     key = "tag:Name"
+    values = ["acceptanceTest"]
+  }
+}`, rName)
+}
+
+func testAccAWSSSMAssociationBasicConfigWithMultipleTargets(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "foo_document" {
+  name = "test_document_association-%s",
+  document_type = "Command"
+  content = <<DOC
+  {
+    "schemaVersion": "1.2",
+    "description": "Check ip configuration of a Linux instance.",
+    "parameters": {
+
+    },
+    "runtimeConfig": {
+      "aws:runShellScript": {
+        "properties": [
+          {
+            "id": "0.aws:runShellScript",
+            "runCommand": ["ifconfig"]
+          }
+        ]
+      }
+    }
+  }
+DOC
+}
+
+resource "aws_ssm_association" "foo" {
+  name = "${aws_ssm_document.foo_document.name}",
+  targets {
+    key = "tag:Name"
+    values = ["acceptanceTest"]
+  }
+  targets {
+    key = "tag:Environment"
     values = ["acceptanceTest"]
   }
 }`, rName)
