@@ -26,6 +26,7 @@ IMPROVEMENTS:
 * resource/aws_redshift_cluster: Add support for `snapshot_copy` [GH-2238]
 * resource/aws_ecs_task_definition: Print `container_definitions` as JSON instead of checksum [GH-1195]
 * resource/aws_ssm_parameter: Add `arn` attribute [GH-2273]
+* resource/aws_elb: Add listener `ssl_certificate_id` ARN validation [GH-2276]
 
 BUG FIXES:
 
