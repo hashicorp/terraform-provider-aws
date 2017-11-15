@@ -28,6 +28,7 @@ IMPROVEMENTS:
 * resource/aws_ssm_parameter: Add `arn` attribute [GH-2273]
 * resource/aws_elb: Add listener `ssl_certificate_id` ARN validation [GH-2276]
 * resource/aws_cloudformation_stack: Support updating `tags` [GH-2262]
+* resource/aws_elb: Add `arn` attribute [GH-2272]
 
 BUG FIXES:
 
