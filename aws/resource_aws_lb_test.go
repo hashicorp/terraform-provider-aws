@@ -881,20 +881,20 @@ resource "aws_subnet" "alb_test_1" {
   }
 }
 
-resource "aws_subnet" "alb_test_3" {
+resource "aws_subnet" "alb_test_2" {
   vpc_id            = "${aws_vpc.alb_test.id}"
-  cidr_block        = "10.0.3.0/24"
-  availability_zone = "us-west-2c"
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "us-west-2b"
 
   tags {
     Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
   }
 }
 
-resource "aws_subnet" "alb_test_2" {
+resource "aws_subnet" "alb_test_3" {
   vpc_id            = "${aws_vpc.alb_test.id}"
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-west-2b"
+  cidr_block        = "10.0.3.0/24"
+  availability_zone = "us-west-2c"
 
   tags {
     Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
