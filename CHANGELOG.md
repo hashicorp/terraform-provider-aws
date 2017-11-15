@@ -17,13 +17,15 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* provider: Add support for assuming roles via profiles defined in `~/.aws/config` [GH-1608]
 * data-source/efs_file_system: Added dns_name [GH-2105]
+* data-source/aws_ssm_parameter: Add `arn` attribute [GH-2273]
 * resource/aws_batch_job_queue: Add validation for `name` [GH-2159]
 * resource/aws_batch_compute_environment: Improve validation for `compute_environment_name` [GH-2159]
 * resource/aws_ssm_parameter: Add support for import [GH-2234]
 * resource/aws_redshift_cluster: Add support for `snapshot_copy` [GH-2238]
 * resource/aws_ecs_task_definition: Print `container_definitions` as JSON instead of checksum [GH-1195]
-* provider: Add support for assuming roles via profiles defined in `~/.aws/config` [GH-1608]
+* resource/aws_ssm_parameter: Add `arn` attribute [GH-2273]
 
 BUG FIXES:
 
