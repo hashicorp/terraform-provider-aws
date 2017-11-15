@@ -566,15 +566,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if config != nil {
-			smsConfigurationType := &cognitoidentityprovider.SmsConfigurationType{
-				SnsCallerArn: aws.String(config["sns_caller_arn"].(string)),
-			}
-
-			if v, ok := config["external_id"]; ok && v.(string) != "" {
-				smsConfigurationType.ExternalId = aws.String(v.(string))
-			}
-
-			params.SmsConfiguration = smsConfigurationType
+			params.SmsConfiguration = expandCognitoUserPoolSmsConfiguration(config)
 		}
 	}
 
@@ -736,8 +728,6 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	// TODO - Handle update of AliasAttributes
-
 	if d.HasChange("auto_verified_attributes") {
 		params.AutoVerifiedAttributes = expandStringList(d.Get("auto_verified_attributes").([]interface{}))
 	}
@@ -811,10 +801,6 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		params.MfaConfiguration = aws.String(d.Get("mfa_configuration").(string))
 	}
 
-	if d.HasChange("sms_authentication_message") {
-		params.SmsAuthenticationMessage = aws.String(d.Get("sms_authentication_message").(string))
-	}
-
 	policies := &cognitoidentityprovider.UserPoolPolicyType{}
 	if d.HasChange("password_policy") {
 		configs := d.Get("password_policy").([]interface{})
@@ -830,6 +816,10 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	params.Policies = policies
 
+	if d.HasChange("sms_authentication_message") {
+		params.SmsAuthenticationMessage = aws.String(d.Get("sms_authentication_message").(string))
+	}
+
 	if d.HasChange("sms_configuration") {
 		configs := d.Get("sms_configuration").([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -839,15 +829,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if config != nil {
-			smsConfigurationType := &cognitoidentityprovider.SmsConfigurationType{
-				SnsCallerArn: aws.String(config["sns_caller_arn"].(string)),
-			}
-
-			if v, ok := config["external_id"]; ok && v.(string) != "" {
-				smsConfigurationType.ExternalId = aws.String(v.(string))
-			}
-
-			params.SmsConfiguration = smsConfigurationType
+			params.SmsConfiguration = expandCognitoUserPoolSmsConfiguration(config)
 		}
 	}
 
