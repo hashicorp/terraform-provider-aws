@@ -23,6 +23,7 @@ IMPROVEMENTS:
 * resource/aws_ssm_parameter: Add support for import [GH-2234]
 * resource/aws_redshift_cluster: Add support for `snapshot_copy` [GH-2238]
 * resource/aws_ecs_task_definition: Print `container_definitions` as JSON instead of checksum [GH-1195]
+* provider: Add support for assuming roles via profiles defined in `~/.aws/config` [GH-1608]
 
 BUG FIXES:
 
@@ -31,6 +32,8 @@ BUG FIXES:
 * resource/aws_batch_job_definition: `name` allows hyphens [GH-2126]
 * resource/aws_elasticache_parameter_group: Raise timeout for retry on pending changes [GH-2134]
 * resource/aws_kms_key: Retry GetKeyRotationStatus on NotFoundException [GH-2133]
+* resource/aws_lb_target_group: Fix issue that prevented using `aws_lb_target_group` with 
+  Network type load balancers [GH-2251]
 * resource/aws_redshift_cluster: Make master_username ForceNew [GH-2202]
 * resource/aws_cloudwatch_log_metric_filter: Fix pattern length check [GH-2107]
 * resource/aws_cloudwatch_log_group: Use ID as name [GH-2190]
