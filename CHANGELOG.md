@@ -45,6 +45,7 @@ BUG FIXES:
 * resource/aws_redshift_cluster: Make snapshot identifiers `ForceNew` [GH-2212]
 * resource/aws_elasticsearch_domain_policy: Fix typo in err code [GH-2249]
 * resource/aws_appautoscaling_policy: Retry PutScalingPolicy on rate exceeded message [GH-2275]
+* resource/aws_dynamodb_table: Retry creation on `LimitExceededException` w/ different error message [GH-2274]
 
 ## 1.2.0 (October 31, 2017)
 
