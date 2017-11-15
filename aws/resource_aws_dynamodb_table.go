@@ -335,7 +335,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 					// Subscriber limit exceeded: There is a limit of 256 tables per subscriber
 					// Do not error out on this similar throttling message:
 					// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
-					if strings.Contains(awsErr.Message(), "Subscriber limit exceeded:") && !strings.Contains(awsErr.Message(), "simultaneously") {
+					if strings.Contains(awsErr.Message(), "Subscriber limit exceeded:") && !strings.Contains(awsErr.Message(), "can be created, updated, or deleted simultaneously") {
 						return fmt.Errorf("AWS Error creating DynamoDB table: %s", err)
 					}
 					log.Printf("[DEBUG] Limit on concurrent table creations hit, sleeping for a bit")
