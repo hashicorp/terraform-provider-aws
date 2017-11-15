@@ -47,7 +47,6 @@ func resourceAwsElb() *schema.Resource {
 
 			"arn": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
