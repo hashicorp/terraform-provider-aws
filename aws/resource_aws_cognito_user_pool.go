@@ -31,7 +31,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
-				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -42,7 +41,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"invite_message_template": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MinItems: 0,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -102,7 +100,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"device_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -121,7 +118,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"email_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -157,7 +153,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
-				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -227,7 +222,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
-				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -290,7 +284,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"number_attribute_constraints": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MinItems: 0,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -312,7 +305,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"string_attribute_constraints": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MinItems: 0,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -340,7 +332,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"sms_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -419,7 +410,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"sms_message": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
 							ValidateFunc: validateCognitoUserPoolTemplateSmsMessage,
 						},
 					},
@@ -531,8 +521,6 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		params.MfaConfiguration = aws.String(v.(string))
 	}
 
-	policies := &cognitoidentityprovider.UserPoolPolicyType{}
-
 	if v, ok := d.GetOk("password_policy"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -542,11 +530,11 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if config != nil {
+			policies := &cognitoidentityprovider.UserPoolPolicyType{}
 			policies.PasswordPolicy = expandCognitoUserPoolPasswordPolicy(config)
+			params.Policies = policies
 		}
 	}
-
-	params.Policies = policies
 
 	if v, ok := d.GetOk("schema"); ok {
 		configs := v.(*schema.Set).List()
@@ -745,8 +733,8 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if d.HasChange("email_configuration") {
-		configs := d.Get("email_configuration").([]interface{})
+	if v, ok := d.GetOk("email_configuration"); ok {
+		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
 		if !ok {
@@ -784,8 +772,8 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		params.EmailVerificationMessage = aws.String(v)
 	}
 
-	if d.HasChange("lambda_config") {
-		configs := d.Get("lambda_config").([]interface{})
+	if v, ok := d.GetOk("lambda_config"); ok {
+		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
 		if !ok {
@@ -801,9 +789,8 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		params.MfaConfiguration = aws.String(d.Get("mfa_configuration").(string))
 	}
 
-	policies := &cognitoidentityprovider.UserPoolPolicyType{}
-	if d.HasChange("password_policy") {
-		configs := d.Get("password_policy").([]interface{})
+	if v, ok := d.GetOk("password_policy"); ok {
+		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
 		if !ok {
@@ -811,10 +798,11 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if config != nil {
+			policies := &cognitoidentityprovider.UserPoolPolicyType{}
 			policies.PasswordPolicy = expandCognitoUserPoolPasswordPolicy(config)
+			params.Policies = policies
 		}
 	}
-	params.Policies = policies
 
 	if d.HasChange("sms_authentication_message") {
 		params.SmsAuthenticationMessage = aws.String(d.Get("sms_authentication_message").(string))
@@ -854,8 +842,8 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		params.SmsVerificationMessage = aws.String(v)
 	}
 
-	if d.HasChange("tags") {
-		params.UserPoolTags = tagsFromMapGeneric(d.Get("tags").(map[string]interface{}))
+	if v, ok := d.GetOk("tags"); ok {
+		params.UserPoolTags = tagsFromMapGeneric(v.(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)

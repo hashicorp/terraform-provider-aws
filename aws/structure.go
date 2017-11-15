@@ -2341,7 +2341,11 @@ func flattenCognitoUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigT
 		m["verify_auth_challenge_response"] = *s.VerifyAuthChallengeResponse
 	}
 
-	return []map[string]interface{}{m}
+	if len(m) > 0 {
+		return []map[string]interface{}{m}
+	}
+
+	return []map[string]interface{}{}
 }
 
 func expandCognitoUserPoolPasswordPolicy(config map[string]interface{}) *cognitoidentityprovider.PasswordPolicyType {
