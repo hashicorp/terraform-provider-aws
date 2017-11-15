@@ -19,29 +19,29 @@ func dataSourceAwsS3Bucket() *schema.Resource {
 				Required: true,
 			},
 			"server_side_encryption_configuration": {
-				Type: schema.TypeSet,
+				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema {
-						"rule" : {
-							Type: schema.TypeSet,
+					Schema: map[string]*schema.Schema{
+						"rule": {
+							Type:     schema.TypeSet,
 							MaxItems: 1,
 							Computed: true,
 							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema {
+								Schema: map[string]*schema.Schema{
 									"apply_server_side_encryption_by_default": {
-										Type: schema.TypeSet,
+										Type:     schema.TypeSet,
 										MaxItems: 1,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"kms_master_key_id": {
-													Type: schema.TypeString,
+													Type:     schema.TypeString,
 													Computed: true,
 												},
 												"sse_algorithm": {
-													Type: schema.TypeString,
+													Type:     schema.TypeString,
 													Computed: true,
 												},
 											},
@@ -119,7 +119,7 @@ func bucketEncryption(data *schema.ResourceData, bucket string, conn *s3.S3) err
 	output, err := conn.GetBucketEncryption(input)
 	if err != nil {
 		if isAWSErr(err, "ServerSideEncryptionConfigurationNotFoundError", "encryption configuration was not found") {
-			
+
 		} else {
 			return err
 		}
