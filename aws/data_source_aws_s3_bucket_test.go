@@ -56,6 +56,27 @@ func TestAccDataSourceS3Bucket_website(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceS3Bucket_whenDefaultEncryptionNotEnabled(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDataSourceS3BucketConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("data.aws_s3_bucket.bucket"),
+					resource.TestCheckResourceAttr(
+						"data.aws_s3_bucket.bucket", "server_side_encryption_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(
+						"data.aws_s3_bucket.bucket", "server_side_encryption_configuration.0.rule.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSDataSourceS3BucketConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
