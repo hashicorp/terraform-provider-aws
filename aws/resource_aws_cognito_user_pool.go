@@ -74,7 +74,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"alias_attributes": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
@@ -85,7 +85,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"auto_verified_attributes": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -437,11 +437,11 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("alias_attributes"); ok {
-		params.AliasAttributes = expandStringList(v.([]interface{}))
+		params.AliasAttributes = expandStringList(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("auto_verified_attributes"); ok {
-		params.AutoVerifiedAttributes = expandStringList(v.([]interface{}))
+		params.AutoVerifiedAttributes = expandStringList(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("email_configuration"); ok {
@@ -678,7 +678,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if d.HasChange("auto_verified_attributes") {
-		params.AutoVerifiedAttributes = expandStringList(d.Get("auto_verified_attributes").([]interface{}))
+		params.AutoVerifiedAttributes = expandStringList(d.Get("auto_verified_attributes").(*schema.Set).List())
 	}
 
 	if d.HasChange("device_configuration") {

@@ -271,7 +271,7 @@ func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.0", "preferred_username"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.1888159429", "preferred_username"),
 					resource.TestCheckNoResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#"),
 				),
 			},
@@ -279,10 +279,10 @@ func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolConfig_withAliasAttributesUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "2"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.0", "email"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.1", "preferred_username"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.881205744", "email"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.1888159429", "preferred_username"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.0", "email"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.881205744", "email"),
 				),
 			},
 		},
