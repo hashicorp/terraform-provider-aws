@@ -276,6 +276,22 @@ func resourceAwsRouteSetResourceData(d *schema.ResourceData, route *ec2.Route) {
 
 func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	replaceOpts, err := prepareRouteUpdate(d)
+	if err != nil {
+		return err
+	}
+	log.Printf("[DEBUG] Route replace config: %s", replaceOpts)
+
+	// Replace the route
+	_, err = conn.ReplaceRoute(replaceOpts)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func prepareRouteUpdate(d *schema.ResourceData) (*ec2.ReplaceRouteInput, error) {
 	var numTargets int
 	var setTarget string
 
@@ -287,7 +303,6 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		"instance_id",
 		"vpc_peering_connection_id",
 	}
-	replaceOpts := &ec2.ReplaceRouteInput{}
 
 	// Check if more than 1 target is specified
 	for _, target := range allowedTargets {
@@ -303,14 +318,15 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	//existing network_interface_id
 	case "instance_id":
 		if numTargets > 2 || (numTargets == 2 && len(d.Get("network_interface_id").(string)) == 0) {
-			return routeTargetValidationError
+			return nil, routeTargetValidationError
 		}
 	default:
 		if numTargets > 1 {
-			return routeTargetValidationError
+			return nil, routeTargetValidationError
 		}
 	}
 
+	var replaceOpts *ec2.ReplaceRouteInput
 	// Formulate ReplaceRouteInput based on the target type
 	switch setTarget {
 	case "gateway_id":
@@ -350,17 +366,10 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 			VpcPeeringConnectionId: aws.String(d.Get("vpc_peering_connection_id").(string)),
 		}
 	default:
-		return fmt.Errorf("An invalid target type specified: %s", setTarget)
-	}
-	log.Printf("[DEBUG] Route replace config: %s", replaceOpts)
-
-	// Replace the route
-	_, err := conn.ReplaceRoute(replaceOpts)
-	if err != nil {
-		return err
+		return nil, fmt.Errorf("An invalid target type specified: %s", setTarget)
 	}
 
-	return nil
+	return replaceOpts, nil
 }
 
 func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {

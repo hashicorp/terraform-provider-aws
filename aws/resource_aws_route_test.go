@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
 
@@ -251,6 +252,29 @@ func TestAccAWSRoute_doesNotCrashWithVPCEndpoint(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAWSRoute_instanceIdChange(t *testing.T) {
+	r := resourceAwsRoute()
+
+	state := map[string]string{
+		"instance_id":          "i-1",
+		"network_interface_id": "eni-1",
+	}
+	raw := map[string]interface{}{
+		"instance_id": "i-2",
+	}
+	d := schema.TestResourceDataStateRaw(t, r.Schema, state, raw)
+	replaceOpts, err := prepareRouteUpdate(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if replaceOpts.NetworkInterfaceId != nil {
+		t.Error("NetworkInterfaceId changed", replaceOpts)
+	}
+	if replaceOpts.InstanceId == nil || *replaceOpts.InstanceId != "i-2" {
+		t.Error("InstanceId unchanged", replaceOpts)
+	}
 }
 
 func testAccCheckAWSRouteExists(n string, res *ec2.Route) resource.TestCheckFunc {
