@@ -22,6 +22,9 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 		Read:   resourceAwsLbTargetGroupRead,
 		Update: resourceAwsLbTargetGroupUpdate,
 		Delete: resourceAwsLbTargetGroupDelete,
+
+		// Health Check Interval is not updatable for TCP-based Target Groups
+		CustomizeDiff: resourceAwsLbTargetGroupCustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -210,6 +213,7 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		params.HealthCheckPort = aws.String(healthCheck["port"].(string))
 		params.HealthCheckProtocol = aws.String(healthCheck["protocol"].(string))
 		params.HealthyThresholdCount = aws.Int64(int64(healthCheck["healthy_threshold"].(int)))
+		params.UnhealthyThresholdCount = aws.Int64(int64(healthCheck["unhealthy_threshold"].(int)))
 
 		if *params.Protocol != "TCP" {
 			params.HealthCheckTimeoutSeconds = aws.Int64(int64(healthCheck["timeout"].(int)))
@@ -217,7 +221,6 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 			params.Matcher = &elbv2.Matcher{
 				HttpCode: aws.String(healthCheck["matcher"].(string)),
 			}
-			params.UnhealthyThresholdCount = aws.Int64(int64(healthCheck["unhealthy_threshold"].(int)))
 		}
 	}
 
@@ -273,10 +276,11 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			healthCheck := healthChecks[0].(map[string]interface{})
 
 			params = &elbv2.ModifyTargetGroupInput{
-				TargetGroupArn:        aws.String(d.Id()),
-				HealthCheckPort:       aws.String(healthCheck["port"].(string)),
-				HealthCheckProtocol:   aws.String(healthCheck["protocol"].(string)),
-				HealthyThresholdCount: aws.Int64(int64(healthCheck["healthy_threshold"].(int))),
+				TargetGroupArn:          aws.String(d.Id()),
+				HealthCheckPort:         aws.String(healthCheck["port"].(string)),
+				HealthCheckProtocol:     aws.String(healthCheck["protocol"].(string)),
+				HealthyThresholdCount:   aws.Int64(int64(healthCheck["healthy_threshold"].(int))),
+				UnhealthyThresholdCount: aws.Int64(int64(healthCheck["unhealthy_threshold"].(int))),
 			}
 
 			healthCheckProtocol := strings.ToLower(healthCheck["protocol"].(string))
@@ -287,7 +291,6 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 				}
 				params.HealthCheckPath = aws.String(healthCheck["path"].(string))
 				params.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
-				params.UnhealthyThresholdCount = aws.Int64(int64(healthCheck["unhealthy_threshold"].(int)))
 				params.HealthCheckTimeoutSeconds = aws.Int64(int64(healthCheck["timeout"].(int)))
 			}
 		} else {
@@ -562,5 +565,24 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		}
 	}
 
+	return nil
+}
+
+func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
+	protocol := diff.Get("protocol").(string)
+	if protocol != "TCP" {
+		return nil
+	}
+
+	if diff.Id() == "" {
+		return nil
+	}
+
+	if diff.HasChange("health_check.0.interval") {
+		old, new := diff.GetChange("health_check.0.interval")
+		return fmt.Errorf("Health check interval cannot be updated from %d to %d for TCP based Target Group %s,"+
+			" use 'terraform taint' to recreate the resource if you wish",
+			old, new, diff.Id())
+	}
 	return nil
 }
