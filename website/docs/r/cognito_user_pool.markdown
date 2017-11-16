@@ -10,6 +10,16 @@ Provides a Cognito User Pool resource.
 
 ## Example Usage
 
+### Basic configuration
+
+```hcl
+resource "aws_cognito_user_pool" "pool" {
+  name = "mypool"
+}
+```
+
+### Detailed configuration
+
 ```hcl
 ...
 

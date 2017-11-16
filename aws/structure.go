@@ -2401,13 +2401,17 @@ func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPol
 		m["require_uppercase"] = *s.RequireUppercase
 	}
 
-	return []map[string]interface{}{m}
+	if len(m) > 0 {
+		return []map[string]interface{}{m}
+	}
+
+	return []map[string]interface{}{}
 }
 
 func expandCognitoUserPoolSchema(inputs []interface{}) []*cognitoidentityprovider.SchemaAttributeType {
-	configs := make([]*cognitoidentityprovider.SchemaAttributeType, 0)
+	configs := make([]*cognitoidentityprovider.SchemaAttributeType, len(inputs), len(inputs))
 
-	for _, input := range inputs {
+	for i, input := range inputs {
 		param := input.(map[string]interface{})
 		config := &cognitoidentityprovider.SchemaAttributeType{}
 
@@ -2469,16 +2473,16 @@ func expandCognitoUserPoolSchema(inputs []interface{}) []*cognitoidentityprovide
 			}
 		}
 
-		configs = append(configs, config)
+		configs[i] = config
 	}
 
 	return configs
 }
 
 func flattenCognitoUserPoolSchema(inputs []*cognitoidentityprovider.SchemaAttributeType) []map[string]interface{} {
-	values := make([]map[string]interface{}, 0)
+	values := make([]map[string]interface{}, len(inputs), len(inputs))
 
-	for _, input := range inputs {
+	for i, input := range inputs {
 		value := make(map[string]interface{})
 
 		if input == nil {
@@ -2533,7 +2537,7 @@ func flattenCognitoUserPoolSchema(inputs []*cognitoidentityprovider.SchemaAttrib
 			value["string_attribute_constraints"] = subvalue
 		}
 
-		values = append(values, value)
+		values[i] = value
 	}
 
 	return values
@@ -2627,7 +2631,11 @@ func flattenCognitoUserPoolVerificationMessageTemplate(s *cognitoidentityprovide
 		m["sms_message"] = *s.SmsMessage
 	}
 
-	return []map[string]interface{}{m}
+	if len(m) > 0 {
+		return []map[string]interface{}{m}
+	}
+
+	return []map[string]interface{}{}
 }
 
 func buildLambdaInvokeArn(lambdaArn, region string) string {
