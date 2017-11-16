@@ -2439,18 +2439,20 @@ func expandCognitoUserPoolSchema(inputs []interface{}) []*cognitoidentityprovide
 			data := v.([]interface{})
 
 			if len(data) > 0 {
-				m, _ := data[0].(map[string]interface{})
-				numberAttributeConstraintsType := &cognitoidentityprovider.NumberAttributeConstraintsType{}
+				m, ok := data[0].(map[string]interface{})
+				if ok {
+					numberAttributeConstraintsType := &cognitoidentityprovider.NumberAttributeConstraintsType{}
 
-				if v, ok := m["min_value"]; ok && v.(string) != "" {
-					numberAttributeConstraintsType.MinValue = aws.String(v.(string))
+					if v, ok := m["min_value"]; ok && v.(string) != "" {
+						numberAttributeConstraintsType.MinValue = aws.String(v.(string))
+					}
+
+					if v, ok := m["max_value"]; ok && v.(string) != "" {
+						numberAttributeConstraintsType.MaxValue = aws.String(v.(string))
+					}
+
+					config.NumberAttributeConstraints = numberAttributeConstraintsType
 				}
-
-				if v, ok := m["max_value"]; ok && v.(string) != "" {
-					numberAttributeConstraintsType.MaxValue = aws.String(v.(string))
-				}
-
-				config.NumberAttributeConstraints = numberAttributeConstraintsType
 			}
 		}
 
@@ -2459,17 +2461,19 @@ func expandCognitoUserPoolSchema(inputs []interface{}) []*cognitoidentityprovide
 
 			if len(data) > 0 {
 				m, _ := data[0].(map[string]interface{})
-				stringAttributeConstraintsType := &cognitoidentityprovider.StringAttributeConstraintsType{}
+				if ok {
+					stringAttributeConstraintsType := &cognitoidentityprovider.StringAttributeConstraintsType{}
 
-				if l, ok := m["min_length"]; ok && l.(string) != "" {
-					stringAttributeConstraintsType.MinLength = aws.String(l.(string))
+					if l, ok := m["min_length"]; ok && l.(string) != "" {
+						stringAttributeConstraintsType.MinLength = aws.String(l.(string))
+					}
+
+					if l, ok := m["max_length"]; ok && l.(string) != "" {
+						stringAttributeConstraintsType.MaxLength = aws.String(l.(string))
+					}
+
+					config.StringAttributeConstraints = stringAttributeConstraintsType
 				}
-
-				if l, ok := m["max_length"]; ok && l.(string) != "" {
-					stringAttributeConstraintsType.MaxLength = aws.String(l.(string))
-				}
-
-				config.StringAttributeConstraints = stringAttributeConstraintsType
 			}
 		}
 
