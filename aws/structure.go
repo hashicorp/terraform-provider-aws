@@ -797,6 +797,34 @@ func flattenAttachment(a *ec2.NetworkInterfaceAttachment) map[string]interface{}
 	return att
 }
 
+func flattenEc2NetworkInterfaceAssociation(a *ec2.NetworkInterfaceAssociation) []map[string]interface{} {
+	att := make(map[string]interface{})
+	if a.AllocationId != nil {
+		att["allocation_id"] = *a.AllocationId
+	}
+	if a.AssociationId != nil {
+		att["association_id"] = *a.AssociationId
+	}
+	if a.IpOwnerId != nil {
+		att["ip_owner_id"] = *a.IpOwnerId
+	}
+	if a.PublicDnsName != nil {
+		att["public_dns_name"] = *a.PublicDnsName
+	}
+	if a.PublicIp != nil {
+		att["public_ip"] = *a.PublicIp
+	}
+	return []map[string]interface{}{att}
+}
+
+func flattenEc2NetworkInterfaceIpv6Address(niia []*ec2.NetworkInterfaceIpv6Address) []string {
+	ips := make([]string, 0, len(niia))
+	for _, v := range niia {
+		ips = append(ips, *v.Ipv6Address)
+	}
+	return ips
+}
+
 func flattenElastiCacheSecurityGroupNames(securityGroups []*elasticache.CacheSecurityGroupMembership) []string {
 	result := make([]string, 0, len(securityGroups))
 	for _, sg := range securityGroups {
