@@ -341,6 +341,10 @@ func expandOptionConfiguration(configured []interface{}) ([]*rds.OptionConfigura
 			o.OptionSettings = expandOptionSetting(raw.(*schema.Set).List())
 		}
 
+		if raw, ok := data["version"]; ok && raw.(string) != "" {
+			o.OptionVersion = aws.String(raw.(string))
+		}
+
 		option = append(option, o)
 	}
 
@@ -634,6 +638,10 @@ func flattenOptions(list []*rds.Option) []map[string]interface{} {
 			r["port"] = ""
 			if i.Port != nil {
 				r["port"] = int(*i.Port)
+			}
+			r["version"] = ""
+			if i.OptionVersion != nil {
+				r["version"] = strings.ToLower(*i.OptionVersion)
 			}
 			if i.VpcSecurityGroupMemberships != nil {
 				vpcs := make([]string, 0, len(i.VpcSecurityGroupMemberships))
