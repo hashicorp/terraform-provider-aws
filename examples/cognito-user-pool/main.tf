@@ -18,7 +18,7 @@ EOF
 }
 
 resource "aws_lambda_function" "main" {
-  filename      = "lambda_function.zip"
+  filename      = "lambda.zip"
   function_name = "terraform-example"
   role          = "${aws_iam_role.main.arn}"
   handler       = "exports.example"
@@ -53,7 +53,7 @@ POLICY
 
 resource "aws_iam_role_policy" "main" {
   name = "terraform-example-cognito-idp"
-  role = "${aws_iam_role.main2.id}"
+  role = "${aws_iam_role.cidp.id}"
 
   policy = <<EOF
 {
@@ -136,7 +136,7 @@ resource "aws_cognito_user_pool" "pool" {
 
   sms_configuration {
     external_id    = "12345"
-    sns_caller_arn = "${aws_iam_role.main2.arn}"
+    sns_caller_arn = "${aws_iam_role.cidp.arn}"
   }
 
   tags {
