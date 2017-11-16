@@ -34,6 +34,26 @@ func dataSourceAwsNatGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"allocation_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"network_interface_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"private_ip": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"public_ip": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"tags": tagsSchemaComputed(),
 
 			"filter": ec2CustomFiltersSchema(),
