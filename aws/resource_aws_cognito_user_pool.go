@@ -2,6 +2,7 @@ package aws
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -430,11 +431,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("admin_create_user_config is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			params.AdminCreateUserConfig = expandCognitoUserPoolAdminCreateUserConfig(config)
 		}
 	}
@@ -451,11 +448,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("email_configuration is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			emailConfigurationType := &cognitoidentityprovider.EmailConfigurationType{}
 
 			if v, ok := config["reply_to_email_address"]; ok && v.(string) != "" {
@@ -474,11 +467,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("admin_create_user_config is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			params.AdminCreateUserConfig = expandCognitoUserPoolAdminCreateUserConfig(config)
 		}
 	}
@@ -487,11 +476,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("device_configuration is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			params.DeviceConfiguration = expandCognitoUserPoolDeviceConfiguration(config)
 		}
 	}
@@ -508,11 +493,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("lambda_config is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			params.LambdaConfig = expandCognitoUserPoolLambdaConfig(config)
 		}
 	}
@@ -525,11 +506,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("password_policy is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			policies := &cognitoidentityprovider.UserPoolPolicyType{}
 			policies.PasswordPolicy = expandCognitoUserPoolPasswordPolicy(config)
 			params.Policies = policies
@@ -549,11 +526,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("sms_configuration is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			params.SmsConfiguration = expandCognitoUserPoolSmsConfiguration(config)
 		}
 	}
@@ -566,11 +539,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("verification_message_template is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			params.VerificationMessageTemplate = expandCognitoUserPoolVerificationMessageTemplate(config)
 		}
 	}
@@ -631,16 +600,13 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err := d.Set("admin_create_user_config", flattenCognitoUserPoolAdminCreateUserConfig(resp.UserPool.AdminCreateUserConfig)); err != nil {
-		return errwrap.Wrapf("Failed setting admin_create_user_config: {{err}}", err)
+		return fmt.Errorf("Failed setting admin_create_user_config: %s", err)
 	}
 	if resp.UserPool.AliasAttributes != nil {
 		d.Set("alias_attributes", flattenStringList(resp.UserPool.AliasAttributes))
 	}
 	if resp.UserPool.AutoVerifiedAttributes != nil {
 		d.Set("auto_verified_attributes", flattenStringList(resp.UserPool.AutoVerifiedAttributes))
-	}
-	if err := d.Set("creation_date", resp.UserPool.CreationDate.Format(time.RFC3339)); err != nil {
-		log.Printf("[DEBUG] Error setting creation_date: %s", err)
 	}
 	if resp.UserPool.EmailVerificationSubject != nil {
 		d.Set("email_verification_subject", *resp.UserPool.EmailVerificationSubject)
@@ -649,7 +615,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("email_verification_message", *resp.UserPool.EmailVerificationMessage)
 	}
 	if err := d.Set("lambda_config", flattenCognitoUserPoolLambdaConfig(resp.UserPool.LambdaConfig)); err != nil {
-		return errwrap.Wrapf("Failed setting lambda_config: {{err}}", err)
+		return fmt.Errorf("Failed setting lambda_config: %s", err)
 	}
 	if resp.UserPool.MfaConfiguration != nil {
 		d.Set("mfa_configuration", *resp.UserPool.MfaConfiguration)
@@ -662,25 +628,21 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err := d.Set("device_configuration", flattenCognitoUserPoolDeviceConfiguration(resp.UserPool.DeviceConfiguration)); err != nil {
-		return errwrap.Wrapf("Failed setting device_configuration: {{err}}", err)
+		return fmt.Errorf("Failed setting device_configuration: %s", err)
 	}
 
 	if err := d.Set("email_configuration", flattenCognitoUserPoolEmailConfiguration(resp.UserPool.EmailConfiguration)); err != nil {
-		return errwrap.Wrapf("Failed setting email_configuration: {{err}}", err)
-	}
-
-	if err := d.Set("last_modified_date", resp.UserPool.LastModifiedDate.Format(time.RFC3339)); err != nil {
-		log.Printf("[DEBUG] Error setting last_modified_date: %s", err)
+		return fmt.Errorf("Failed setting email_configuration: %s", err)
 	}
 
 	if resp.UserPool.Policies != nil && resp.UserPool.Policies.PasswordPolicy != nil {
 		if err := d.Set("password_policy", flattenCognitoUserPoolPasswordPolicy(resp.UserPool.Policies.PasswordPolicy)); err != nil {
-			return errwrap.Wrapf("Failed setting password_policy: {{err}}", err)
+			return fmt.Errorf("Failed setting password_policy: %s", err)
 		}
 	}
 
 	if err := d.Set("sms_configuration", flattenCognitoUserPoolSmsConfiguration(resp.UserPool.SmsConfiguration)); err != nil {
-		return errwrap.Wrapf("Failed setting sms_configuration: {{err}}", err)
+		return fmt.Errorf("Failed setting sms_configuration: %s", err)
 	}
 
 	if resp.UserPool.UsernameAttributes != nil {
@@ -688,8 +650,11 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err := d.Set("verification_message_template", flattenCognitoUserPoolVerificationMessageTemplate(resp.UserPool.VerificationMessageTemplate)); err != nil {
-		return errwrap.Wrapf("Failed setting verification_message_template: {{err}}", err)
+		return fmt.Errorf("Failed setting verification_message_template: %s", err)
 	}
+
+	d.Set("creation_date", resp.UserPool.CreationDate.Format(time.RFC3339))
+	d.Set("last_modified_date", resp.UserPool.LastModifiedDate.Format(time.RFC3339))
 	d.Set("name", resp.UserPool.Name)
 	d.Set("tags", tagsToMapGeneric(resp.UserPool.UserPoolTags))
 
@@ -707,11 +672,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		configs := d.Get("admin_create_user_config").([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("admin_create_user_config is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			params.AdminCreateUserConfig = expandCognitoUserPoolAdminCreateUserConfig(config)
 		}
 	}
@@ -724,11 +685,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		configs := d.Get("device_configuration").([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("device_configuration is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			params.DeviceConfiguration = expandCognitoUserPoolDeviceConfiguration(config)
 		}
 	}
@@ -737,11 +694,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("email_configuration is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			emailConfigurationType := &cognitoidentityprovider.EmailConfigurationType{}
 
 			if v, ok := config["reply_to_email_address"]; ok && v.(string) != "" {
@@ -776,11 +729,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("lambda_config is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			params.LambdaConfig = expandCognitoUserPoolLambdaConfig(config)
 		}
 	}
@@ -793,11 +742,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("password_policy is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			policies := &cognitoidentityprovider.UserPoolPolicyType{}
 			policies.PasswordPolicy = expandCognitoUserPoolPasswordPolicy(config)
 			params.Policies = policies
@@ -812,11 +757,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		configs := d.Get("sms_configuration").([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("sms_configuration is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			params.SmsConfiguration = expandCognitoUserPoolSmsConfiguration(config)
 		}
 	}
@@ -825,11 +766,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		configs := d.Get("verification_message_template").([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("verification_message_template is <nil>")
-		}
-
-		if config != nil {
+		if ok && config != nil {
 			params.VerificationMessageTemplate = expandCognitoUserPoolVerificationMessageTemplate(config)
 		}
 	}
