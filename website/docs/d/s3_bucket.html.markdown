@@ -70,3 +70,9 @@ The following attributes are exported:
 * `region` - The AWS region this bucket resides in.
 * `website_endpoint` - The website endpoint, if the bucket is configured with a website. If not, this will be an empty string.
 * `website_domain` - The domain of the website endpoint, if the bucket is configured with a website. If not, this will be an empty string. This is used to create Route 53 alias records.
+* `server_side_encryption_configuration` - The encryption configuration for the bucket
+  * `enabled` - True if default encryption is enabled, false otherwise
+  * `rule` - Only available if `enabled` is true
+     * `apply_server_side_encryption_by_default` - Details about the default encryption
+        * `kms_master_key_id` - AWS KMS Key Id that is used to encrypt in server side
+        * `sse_algorithm` - Encryption algorithm used. Possible values are `AES256` and `aws:kms`
