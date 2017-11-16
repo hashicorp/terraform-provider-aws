@@ -15,6 +15,7 @@ FEATURES:
 * **New Resource:** `aws_athena_database` [GH-1922]
 * **New Resource:** `aws_athena_named_query` [GH-1893]
 * **New Resource:** `aws_ssm_resource_data_sync` [GH-1895]
+* **New Resource:** `aws_cognito_user_pool` [GH-1419]
 
 IMPROVEMENTS:
 
