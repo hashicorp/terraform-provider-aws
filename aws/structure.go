@@ -2172,22 +2172,25 @@ func expandCognitoUserPoolAdminCreateUserConfig(config map[string]interface{}) *
 		data := v.([]interface{})
 
 		if len(data) > 0 {
-			m, _ := data[0].(map[string]interface{})
-			imt := &cognitoidentityprovider.MessageTemplateType{}
+			m, ok := data[0].(map[string]interface{})
 
-			if v, ok := m["email_message"]; ok {
-				imt.EmailMessage = aws.String(v.(string))
+			if ok {
+				imt := &cognitoidentityprovider.MessageTemplateType{}
+
+				if v, ok := m["email_message"]; ok {
+					imt.EmailMessage = aws.String(v.(string))
+				}
+
+				if v, ok := m["email_subject"]; ok {
+					imt.EmailSubject = aws.String(v.(string))
+				}
+
+				if v, ok := m["sms_message"]; ok {
+					imt.SMSMessage = aws.String(v.(string))
+				}
+
+				configs.InviteMessageTemplate = imt
 			}
-
-			if v, ok := m["email_subject"]; ok {
-				imt.EmailSubject = aws.String(v.(string))
-			}
-
-			if v, ok := m["sms_message"]; ok {
-				imt.SMSMessage = aws.String(v.(string))
-			}
-
-			configs.InviteMessageTemplate = imt
 		}
 	}
 
