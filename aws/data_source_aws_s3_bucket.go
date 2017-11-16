@@ -19,19 +19,23 @@ func dataSourceAwsS3Bucket() *schema.Resource {
 				Required: true,
 			},
 			"server_side_encryption_configuration": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"rule": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							MaxItems: 1,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"apply_server_side_encryption_by_default": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										MaxItems: 1,
 										Computed: true,
 										Elem: &schema.Resource{
@@ -119,7 +123,13 @@ func bucketEncryption(data *schema.ResourceData, bucket string, conn *s3.S3) err
 	output, err := conn.GetBucketEncryption(input)
 	if err != nil {
 		if isAWSErr(err, "ServerSideEncryptionConfigurationNotFoundError", "encryption configuration was not found") {
-
+			log.Printf("[DEBUG] Default encryption is not enabled for %s", bucket)
+			data.Set("server_side_encryption_configuration", []map[string]interface{}{
+				{
+					"enabled": false,
+				},
+			})
+			return nil
 		} else {
 			return err
 		}
@@ -133,6 +143,7 @@ func bucketEncryption(data *schema.ResourceData, bucket string, conn *s3.S3) err
 	defaultRule[0]["sse_algorithm"] = aws.StringValue(defaultRuleConfiguration.SSEAlgorithm)
 
 	encryptionConfiguration := make([]map[string]interface{}, 1)
+	encryptionConfiguration[0]["enabled"] = true
 	encryptionConfiguration[0]["rule"] = make([]map[string]interface{}, 1)
 	encryptionConfiguration[0]["rule"].(map[string]interface{})["apply_server_side_encryption_by_default"] = defaultRule
 
