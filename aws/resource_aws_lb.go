@@ -52,6 +52,12 @@ func resourceAwsLb() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateElbName,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if new == "" {
+						return true
+					}
+					return false
+				},
 			},
 
 			"name_prefix": {
