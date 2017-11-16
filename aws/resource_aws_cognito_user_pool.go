@@ -712,6 +712,8 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("email_verification_subject") {
 		v := d.Get("email_verification_subject").(string)
+
+		// This is to prevent removing default message since the API disallows it
 		if v == "" {
 			return errors.New("email_verification_subject cannot be set to nil")
 		}
@@ -720,6 +722,8 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("email_verification_message") {
 		v := d.Get("email_verification_message").(string)
+
+		// This is to prevent removing default message since the API disallows it
 		if v == "" {
 			return errors.New("email_verification_message cannot be set to nil")
 		}
@@ -774,6 +778,8 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("sms_verification_message") {
 		v := d.Get("sms_verification_message").(string)
+
+		// This is to prevent removing default message since the API disallows it
 		if v == "" {
 			return errors.New("sms_verification_message cannot be set to nil")
 		}
