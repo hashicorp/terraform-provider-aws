@@ -14,18 +14,18 @@ Provides an Athena Named Query resource.
 
 ```hcl
 resource "aws_s3_bucket" "hoge" {
-	bucket = "tf-test"
+  bucket = "tf-test"
 }
 
 resource "aws_athena_database" "hoge" {
-	name = "users"
-	bucket = "${aws_s3_bucket.hoge.bucket}"
+  name = "users"
+  bucket = "${aws_s3_bucket.hoge.bucket}"
 }
 
 resource "aws_athena_named_query" "foo" {
   name = "bar"
-	database = "${aws_athena_database.hoge.name}"
-	query = "SELECT * FROM ${aws_athena_database.hoge.name} limit 10;"
+  database = "${aws_athena_database.hoge.name}"
+  query = "SELECT * FROM ${aws_athena_database.hoge.name} limit 10;"
 }
 ```
 
