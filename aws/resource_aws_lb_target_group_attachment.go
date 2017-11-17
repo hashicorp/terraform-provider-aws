@@ -137,10 +137,6 @@ func resourceAwsLbAttachmentUpdate(d *schema.ResourceData, meta interface{}) err
 func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 
-	if v, ok := d.GetOk("availability_zone"); ok {
-		target.AvailabilityZone = aws.String(v.(string))
-	}
-
 	params := &elbv2.RegisterTargetsInput{
 		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
 	}
@@ -151,6 +147,9 @@ func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) err
 		}
 		if v, ok := d.GetOk("port"); ok {
 			targetPortToAdd.Port = aws.Int64(int64(v.(int)))
+		}
+		if v, ok := d.GetOk("availability_zone"); ok {
+			targetPortToAdd.AvailabilityZone = aws.String(v.(string))
 		}
 
 		params.Targets = append(params.Targets, targetPortToAdd)
@@ -166,6 +165,10 @@ func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) err
 			if v, ok := d.GetOk("port"); ok {
 				targetPortToAdd.Port = aws.Int64(int64(v.(int)))
 			}
+			if v, ok := d.GetOk("availability_zone"); ok {
+				targetPortToAdd.AvailabilityZone = aws.String(v.(string))
+			}
+
 			params.Targets = append(params.Targets, targetPortToAdd)
 		}
 	}
