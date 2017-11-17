@@ -14,10 +14,10 @@ import (
 
 func resourceAwsLbTargetGroupAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAlbAttachmentCreate,
-		Read:   resourceAwsAlbAttachmentRead,
-		Delete: resourceAwsAlbAttachmentDelete,
-		Update: resourceAwsAlbAttachmentUpdate,
+		Create: resourceAwsLbAttachmentCreate,
+		Read:   resourceAwsLbAttachmentRead,
+		Delete: resourceAwsLbAttachmentDelete,
+		Update: resourceAwsLbAttachmentUpdate,
 
 		Schema: map[string]*schema.Schema{
 			"target_group_arn": {
@@ -134,7 +134,7 @@ func resourceAwsLbAttachmentUpdate(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsAlbAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 
 	if v, ok := d.GetOk("availability_zone"); ok {
