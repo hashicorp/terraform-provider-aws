@@ -277,6 +277,29 @@ func TestAWSRoute_instanceIdChange(t *testing.T) {
 	}
 }
 
+func TestAWSRoute_networkInterfaceIdChange(t *testing.T) {
+	r := resourceAwsRoute()
+
+	state := map[string]string{
+		"instance_id":          "i-1",
+		"network_interface_id": "eni-1",
+	}
+	raw := map[string]interface{}{
+		"network_interface_id": "eni-2",
+	}
+	d := schema.TestResourceDataStateRaw(t, r.Schema, state, raw)
+	replaceOpts, err := prepareRouteUpdate(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if replaceOpts.InstanceId != nil {
+		t.Error("InstanceId changed", replaceOpts)
+	}
+	if replaceOpts.NetworkInterfaceId == nil || *replaceOpts.NetworkInterfaceId != "eni-2" {
+		t.Error("NetworkInterfaceId unchanged", replaceOpts)
+	}
+}
+
 func testAccCheckAWSRouteExists(n string, res *ec2.Route) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -299,8 +299,8 @@ func prepareRouteUpdate(d *schema.ResourceData) (*ec2.ReplaceRouteInput, error) 
 		"egress_only_gateway_id",
 		"gateway_id",
 		"nat_gateway_id",
-		"network_interface_id",
 		"instance_id",
+		"network_interface_id",
 		"vpc_peering_connection_id",
 	}
 
@@ -312,16 +312,23 @@ func prepareRouteUpdate(d *schema.ResourceData) (*ec2.ReplaceRouteInput, error) 
 		}
 	}
 
-	switch setTarget {
-	//instance_id is a special case due to the fact that AWS will "discover" the network_interace_id
-	//when it creates the route and return that data.  In the case of an update, we should ignore the
-	//existing network_interface_id
-	case "instance_id":
-		if numTargets > 2 || (numTargets == 2 && len(d.Get("network_interface_id").(string)) == 0) {
-			return nil, routeTargetValidationError
-		}
-	default:
-		if numTargets > 1 {
+	if numTargets > 1 {
+		if setTarget == "network_interface_id" && numTargets == 2 {
+			// instance_id and network_interface_id are both computed from each
+			// other. Specifying either in config will cause the other to be
+			// computed by resourceAwsRouteSetResourceData, so they will both show up
+			// as targets.
+			if len(d.Get("instance_id").(string)) == 0 {
+				return nil, routeTargetValidationError
+			}
+			// We check network_interface_id after instance_id in allowedTargets, so
+			// we will always prefer network_interface_id. If instance_id is the one
+			// that has changed from the instance state, we should update that
+			// instead.
+			if d.HasChange("instance_id") && !d.HasChange("network_interface_id") {
+				setTarget = "instance_id"
+			}
+		} else {
 			return nil, routeTargetValidationError
 		}
 	}
