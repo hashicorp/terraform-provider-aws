@@ -1,4 +1,9 @@
 ## 1.3.1 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_batch_job_queue: Return errors correctly if deletion fails [GH-2322]
+
 ## 1.3.0 (November 16, 2017)
 
 NOTES:
