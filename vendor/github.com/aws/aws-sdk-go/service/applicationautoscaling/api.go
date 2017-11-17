@@ -1368,6 +1368,9 @@ type DeleteScalingPolicyInput struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -1396,6 +1399,9 @@ type DeleteScalingPolicyInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -1510,6 +1516,9 @@ type DeleteScheduledActionInput struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -1538,6 +1547,9 @@ type DeleteScheduledActionInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The name of the scheduled action.
@@ -1652,6 +1664,9 @@ type DeregisterScalableTargetInput struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -1680,6 +1695,9 @@ type DeregisterScalableTargetInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -1794,6 +1812,9 @@ type DescribeScalableTargetsInput struct {
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
 	ResourceIds []*string `type:"list"`
 
 	// The scalable dimension associated with the scalable target. This string consists
@@ -1822,6 +1843,9 @@ type DescribeScalableTargetsInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The namespace of the AWS service. For more information, see AWS Service Namespaces
@@ -1956,6 +1980,9 @@ type DescribeScalingActivitiesInput struct {
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -1984,6 +2011,9 @@ type DescribeScalingActivitiesInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The namespace of the AWS service. For more information, see AWS Service Namespaces
@@ -2124,6 +2154,9 @@ type DescribeScalingPoliciesInput struct {
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2152,6 +2185,9 @@ type DescribeScalingPoliciesInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The namespace of the AWS service. For more information, see AWS Service Namespaces
@@ -2262,7 +2298,7 @@ func (s *DescribeScalingPoliciesOutput) SetScalingPolicies(v []*ScalingPolicy) *
 type DescribeScheduledActionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of scalable target results. This value can be between
+	// The maximum number of scheduled action results. This value can be between
 	// 1 and 50. The default value is 50.
 	//
 	// If this parameter is used, the operation returns up to MaxResults results
@@ -2295,6 +2331,9 @@ type DescribeScheduledActionsInput struct {
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2323,6 +2362,9 @@ type DescribeScheduledActionsInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The names of the scheduled actions to describe.
@@ -2575,6 +2617,9 @@ type PutScalingPolicyInput struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -2603,6 +2648,9 @@ type PutScalingPolicyInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -2780,6 +2828,9 @@ type PutScheduledActionInput struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -2808,6 +2859,9 @@ type PutScheduledActionInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The new minimum and maximum capacity. You can set both values or just one.
@@ -2985,12 +3039,22 @@ type RegisterScalableTargetInput struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
 	// The ARN of an IAM role that allows Application Auto Scaling to modify the
-	// scalable target on your behalf. This parameter is required when you register
-	// a scalable target and optional when you update one.
+	// scalable target on your behalf.
+	//
+	// With Amazon RDS resources, permissions are granted using a service-linked
+	// role. For more information, see Service-Linked Roles for Application Auto
+	// Scaling (http://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/application-autoscaling-service-linked-roles.html).
+	//
+	// For resources that are not supported using a service-linked role, this parameter
+	// is required when you register a scalable target and optional when you update
+	// one.
 	RoleARN *string `min:"1" type:"string"`
 
 	// The scalable dimension associated with the scalable target. This string consists
@@ -3018,6 +3082,9 @@ type RegisterScalableTargetInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3157,6 +3224,9 @@ type ScalableTarget struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -3191,6 +3261,9 @@ type ScalableTarget struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3336,6 +3409,9 @@ type ScalingActivity struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -3364,6 +3440,9 @@ type ScalingActivity struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3514,6 +3593,9 @@ type ScalingPolicy struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -3542,6 +3624,9 @@ type ScalingPolicy struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3664,6 +3749,9 @@ type ScheduledAction struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -3692,6 +3780,9 @@ type ScheduledAction struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The new minimum and maximum capacity. You can set both values or just one.
@@ -4172,6 +4263,12 @@ const (
 
 	// MetricTypeDynamoDbwriteCapacityUtilization is a MetricType enum value
 	MetricTypeDynamoDbwriteCapacityUtilization = "DynamoDBWriteCapacityUtilization"
+
+	// MetricTypeRdsreaderAverageCpuutilization is a MetricType enum value
+	MetricTypeRdsreaderAverageCpuutilization = "RDSReaderAverageCPUUtilization"
+
+	// MetricTypeRdsreaderAverageDatabaseConnections is a MetricType enum value
+	MetricTypeRdsreaderAverageDatabaseConnections = "RDSReaderAverageDatabaseConnections"
 )
 
 const (
@@ -4206,6 +4303,9 @@ const (
 
 	// ScalableDimensionDynamodbIndexWriteCapacityUnits is a ScalableDimension enum value
 	ScalableDimensionDynamodbIndexWriteCapacityUnits = "dynamodb:index:WriteCapacityUnits"
+
+	// ScalableDimensionRdsClusterReadReplicaCount is a ScalableDimension enum value
+	ScalableDimensionRdsClusterReadReplicaCount = "rds:cluster:ReadReplicaCount"
 )
 
 const (
@@ -4243,4 +4343,7 @@ const (
 
 	// ServiceNamespaceDynamodb is a ServiceNamespace enum value
 	ServiceNamespaceDynamodb = "dynamodb"
+
+	// ServiceNamespaceRds is a ServiceNamespace enum value
+	ServiceNamespaceRds = "rds"
 )
