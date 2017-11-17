@@ -193,6 +193,11 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
 					},
 				},
 			},
@@ -340,7 +345,10 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		options := v.(*schema.Set).List()
 		for _, vv := range options {
 			lo := vv.(map[string]interface{})
-			input.LogPublishingOptions[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{CloudWatchLogsLogGroupArn: aws.String(lo["cloud_watch_logs_log_group_arn"].(string)), Enabled: aws.Bool(true)}
+			input.LogPublishingOptions[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{
+				CloudWatchLogsLogGroupArn: aws.String(lo["cloud_watch_logs_log_group_arn"].(string)),
+				Enabled:                   aws.Bool(lo["enabled"].(bool)),
+			}
 		}
 	}
 
@@ -587,7 +595,10 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		options := d.Get("log_publishing_options").(*schema.Set).List()
 		for _, vv := range options {
 			lo := vv.(map[string]interface{})
-			input.LogPublishingOptions[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{CloudWatchLogsLogGroupArn: aws.String(lo["cloud_watch_logs_log_group_arn"].(string))}
+			input.LogPublishingOptions[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{
+				CloudWatchLogsLogGroupArn: aws.String(lo["cloud_watch_logs_log_group_arn"].(string)),
+				Enabled:                   aws.Bool(lo["enabled"].(bool)),
+			}
 		}
 	}
 
