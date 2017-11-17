@@ -1714,6 +1714,15 @@ func validateCognitoUserPoolSchemaName(v interface{}, k string) (ws []string, es
 	return
 }
 
+func validateCognitoUserPoolDomain(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+
+	if !regexp.MustCompile(`^[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?$`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: ^[a-z0-9](?:[a-z0-9\\-]{0,61}[a-z0-9])?$", k))
+	}
+	return
+}
+
 func validateWafMetricName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9A-Za-z]+$`).MatchString(value) {

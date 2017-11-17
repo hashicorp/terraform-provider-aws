@@ -288,6 +288,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_cognito_identity_pool":                    resourceAwsCognitoIdentityPool(),
 			"aws_cognito_identity_pool_roles_attachment":   resourceAwsCognitoIdentityPoolRolesAttachment(),
 			"aws_cognito_user_pool":                        resourceAwsCognitoUserPool(),
+			"aws_cognito_user_pool_domain":                 resourceAwsCognitoUserPoolDomain(),
 			"aws_autoscaling_lifecycle_hook":               resourceAwsAutoscalingLifecycleHook(),
 			"aws_cloudwatch_metric_alarm":                  resourceAwsCloudWatchMetricAlarm(),
 			"aws_cloudwatch_dashboard":                     resourceAwsCloudWatchDashboard(),
