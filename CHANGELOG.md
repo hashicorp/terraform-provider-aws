@@ -2,6 +2,7 @@
 
 BUG FIXES:
 
+* resource/aws_ecs_task_definition: Fix equivalency comparator [GH-2339]
 * resource/aws_batch_job_queue: Return errors correctly if deletion fails [GH-2322]
 * resource/aws_security_group_rule: Parse `description` correctly [GH-1959]
 
