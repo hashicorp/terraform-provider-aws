@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"regexp"
 	"strings"
@@ -15,6 +16,80 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+// add sweeper to delete known test sgs
+func init() {
+	resource.AddTestSweepers("aws_security_group", &resource.Sweeper{
+		Name: "aws_security_group",
+		F:    testSweepSecurityGroups,
+	})
+}
+
+func testSweepSecurityGroups(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	req := &ec2.DescribeSecurityGroupsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("tag-value"),
+				Values: []*string{aws.String("tf-acc-revoke*")},
+			},
+		},
+	}
+	resp, err := conn.DescribeSecurityGroups(req)
+
+	if len(resp.SecurityGroups) == 0 {
+		log.Print("[DEBUG] No aws security groups to sweep")
+		return nil
+	}
+
+	for _, sg := range resp.SecurityGroups {
+		// revoke the rules
+		if sg.IpPermissions != nil {
+			req := &ec2.RevokeSecurityGroupIngressInput{
+				GroupId:       sg.GroupId,
+				IpPermissions: sg.IpPermissions,
+			}
+
+			if _, err = conn.RevokeSecurityGroupIngress(req); err != nil {
+				return fmt.Errorf(
+					"Error revoking default egress rule for Security Group (%s): %s",
+					*sg.GroupId, err)
+			}
+		}
+
+		if sg.IpPermissionsEgress != nil {
+			req := &ec2.RevokeSecurityGroupEgressInput{
+				GroupId:       sg.GroupId,
+				IpPermissions: sg.IpPermissionsEgress,
+			}
+
+			if _, err = conn.RevokeSecurityGroupEgress(req); err != nil {
+				return fmt.Errorf(
+					"Error revoking default egress rule for Security Group (%s): %s",
+					*sg.GroupId, err)
+			}
+		}
+	}
+
+	for _, sg := range resp.SecurityGroups {
+		// delete the group
+		_, err := conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
+			GroupId: sg.GroupId,
+		})
+		if err != nil {
+			return fmt.Errorf(
+				"Error deleting Security Group (%s): %s",
+				*sg.GroupId, err)
+		}
+	}
+
+	return nil
+}
 
 func TestProtocolStateFunc(t *testing.T) {
 	cases := []struct {
@@ -142,7 +217,8 @@ func TestResourceAwsSecurityGroupIPPermGather(t *testing.T) {
 			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
 				{
-					GroupId: aws.String("sg-11111"),
+					GroupId:     aws.String("sg-11111"),
+					Description: aws.String("desc"),
 				},
 			},
 		},
@@ -176,10 +252,15 @@ func TestResourceAwsSecurityGroupIPPermGather(t *testing.T) {
 			},
 		},
 		{
-			IpProtocol:    aws.String("-1"),
-			FromPort:      aws.Int64(int64(0)),
-			ToPort:        aws.Int64(int64(0)),
-			PrefixListIds: []*ec2.PrefixListId{{PrefixListId: aws.String("pl-12345678")}},
+			IpProtocol: aws.String("-1"),
+			FromPort:   aws.Int64(int64(0)),
+			ToPort:     aws.Int64(int64(0)),
+			PrefixListIds: []*ec2.PrefixListId{
+				{
+					PrefixListId: aws.String("pl-12345678"),
+					Description:  aws.String("desc"),
+				},
+			},
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
 				// VPC
 				{
@@ -196,6 +277,7 @@ func TestResourceAwsSecurityGroupIPPermGather(t *testing.T) {
 			"to_port":     int64(-1),
 			"cidr_blocks": []string{"0.0.0.0/0"},
 			"self":        true,
+			"description": "desc",
 		},
 		{
 			"protocol":  "tcp",
@@ -222,6 +304,7 @@ func TestResourceAwsSecurityGroupIPPermGather(t *testing.T) {
 			"security_groups": schema.NewSet(schema.HashString, []interface{}{
 				"sg-22222",
 			}),
+			"description": "desc",
 		},
 	}
 
@@ -282,6 +365,277 @@ func TestAccAWSSecurityGroup_basic(t *testing.T) {
 						"aws_security_group.web", "ingress.3629188364.cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_security_group.web", "ingress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
+				),
+			},
+		},
+	})
+}
+
+// cycleIpPermForGroup returns an IpPermission struct with a configured
+// UserIdGroupPair for the groupid given. Used in
+// TestAccAWSSecurityGroup_forceRevokeRules_should_fail to create a cyclic rule
+// between 2 security groups
+func cycleIpPermForGroup(groupId string) *ec2.IpPermission {
+	var perm ec2.IpPermission
+	perm.FromPort = aws.Int64(0)
+	perm.ToPort = aws.Int64(0)
+	perm.IpProtocol = aws.String("icmp")
+	perm.UserIdGroupPairs = make([]*ec2.UserIdGroupPair, 1)
+	perm.UserIdGroupPairs[0] = &ec2.UserIdGroupPair{
+		GroupId: aws.String(groupId),
+	}
+	return &perm
+}
+
+// testAddRuleCycle returns a TestCheckFunc to use at the end of a test, such
+// that a Security Group Rule cyclic dependency will be created between the two
+// Security Groups. A companion function, testRemoveRuleCycle, will undo this.
+func testAddRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if primary.GroupId == nil {
+			return fmt.Errorf("Primary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
+		}
+		if secondary.GroupId == nil {
+			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		// cycle from primary to secondary
+		perm1 := cycleIpPermForGroup(*secondary.GroupId)
+		// cycle from secondary to primary
+		perm2 := cycleIpPermForGroup(*primary.GroupId)
+
+		req1 := &ec2.AuthorizeSecurityGroupEgressInput{
+			GroupId:       primary.GroupId,
+			IpPermissions: []*ec2.IpPermission{perm1},
+		}
+		req2 := &ec2.AuthorizeSecurityGroupEgressInput{
+			GroupId:       secondary.GroupId,
+			IpPermissions: []*ec2.IpPermission{perm2},
+		}
+
+		var err error
+		_, err = conn.AuthorizeSecurityGroupEgress(req1)
+		if err != nil {
+			return fmt.Errorf(
+				"Error authorizing primary security group %s rules: %s", *primary.GroupId,
+				err)
+		}
+		_, err = conn.AuthorizeSecurityGroupEgress(req2)
+		if err != nil {
+			return fmt.Errorf(
+				"Error authorizing secondary security group %s rules: %s", *secondary.GroupId,
+				err)
+		}
+		return nil
+	}
+}
+
+// testRemoveRuleCycle removes the cyclic dependency between two security groups
+// that was added in testAddRuleCycle
+func testRemoveRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if primary.GroupId == nil {
+			return fmt.Errorf("Primary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
+		}
+		if secondary.GroupId == nil {
+			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		for _, sg := range []*ec2.SecurityGroup{primary, secondary} {
+			var err error
+			if sg.IpPermissions != nil {
+				req := &ec2.RevokeSecurityGroupIngressInput{
+					GroupId:       sg.GroupId,
+					IpPermissions: sg.IpPermissions,
+				}
+
+				if _, err = conn.RevokeSecurityGroupIngress(req); err != nil {
+					return fmt.Errorf(
+						"Error revoking default ingress rule for Security Group in testRemoveCycle (%s): %s",
+						*primary.GroupId, err)
+				}
+			}
+
+			if sg.IpPermissionsEgress != nil {
+				req := &ec2.RevokeSecurityGroupEgressInput{
+					GroupId:       sg.GroupId,
+					IpPermissions: sg.IpPermissionsEgress,
+				}
+
+				if _, err = conn.RevokeSecurityGroupEgress(req); err != nil {
+					return fmt.Errorf(
+						"Error revoking default egress rule for Security Group in testRemoveCycle (%s): %s",
+						*sg.GroupId, err)
+				}
+			}
+		}
+		return nil
+	}
+}
+
+// This test should fail to destroy the Security Groups and VPC, due to a
+// dependency cycle added outside of terraform's managment. There is a sweeper
+// 'aws_vpc' and 'aws_security_group' that cleans these up, however, the test is
+// written to allow Terraform to clean it up because we do go and revoke the
+// cyclic rules that were added.
+func TestAccAWSSecurityGroup_forceRevokeRules_true(t *testing.T) {
+	var primary ec2.SecurityGroup
+	var secondary ec2.SecurityGroup
+
+	// Add rules to create a cycle between primary and secondary. This prevents
+	// Terraform/AWS from being able to destroy the groups
+	testAddCycle := testAddRuleCycle(&primary, &secondary)
+	// Remove the rules that created the cycle; Terraform/AWS can now destroy them
+	testRemoveCycle := testRemoveRuleCycle(&primary, &secondary)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			// create the configuration with 2 security groups, then create a
+			// dependency cycle such that they cannot be deleted
+			{
+				Config: testAccAWSSecurityGroupConfig_revoke_base,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.primary", &primary),
+					testAccCheckAWSSecurityGroupExists("aws_security_group.secondary", &secondary),
+					testAddCycle,
+				),
+			},
+			// Verify the DependencyViolation error by using a configration with the
+			// groups removed. Terraform tries to destroy them but cannot. Expect a
+			// DependencyViolation error
+			{
+				Config:      testAccAWSSecurityGroupConfig_revoke_base_removed,
+				ExpectError: regexp.MustCompile("DependencyViolation"),
+			},
+			// Restore the config (a no-op plan) but also remove the dependencies
+			// between the groups with testRemoveCycle
+			{
+				Config: testAccAWSSecurityGroupConfig_revoke_base,
+				// ExpectError: regexp.MustCompile("DependencyViolation"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.primary", &primary),
+					testAccCheckAWSSecurityGroupExists("aws_security_group.secondary", &secondary),
+					testRemoveCycle,
+				),
+			},
+			// Again try to apply the config with the sgs removed; it should work
+			{
+				Config: testAccAWSSecurityGroupConfig_revoke_base_removed,
+			},
+			////
+			// now test with revoke_rules_on_delete
+			////
+			// create the configuration with 2 security groups, then create a
+			// dependency cycle such that they cannot be deleted. In this
+			// configuration, each Security Group has `revoke_rules_on_delete`
+			// specified, and should delete with no issue
+			{
+				Config: testAccAWSSecurityGroupConfig_revoke_true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.primary", &primary),
+					testAccCheckAWSSecurityGroupExists("aws_security_group.secondary", &secondary),
+					testAddCycle,
+				),
+			},
+			// Again try to apply the config with the sgs removed; it should work,
+			// because we've told the SGs to forecfully revoke their rules first
+			{
+				Config: testAccAWSSecurityGroupConfig_revoke_base_removed,
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_forceRevokeRules_false(t *testing.T) {
+	var primary ec2.SecurityGroup
+	var secondary ec2.SecurityGroup
+
+	// Add rules to create a cycle between primary and secondary. This prevents
+	// Terraform/AWS from being able to destroy the groups
+	testAddCycle := testAddRuleCycle(&primary, &secondary)
+	// Remove the rules that created the cycle; Terraform/AWS can now destroy them
+	testRemoveCycle := testRemoveRuleCycle(&primary, &secondary)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			// create the configuration with 2 security groups, then create a
+			// dependency cycle such that they cannot be deleted. These Security
+			// Groups are configured to explicitly not revoke rules on delete,
+			// `revoke_rules_on_delete = false`
+			{
+				Config: testAccAWSSecurityGroupConfig_revoke_false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.primary", &primary),
+					testAccCheckAWSSecurityGroupExists("aws_security_group.secondary", &secondary),
+					testAddCycle,
+				),
+			},
+			// Verify the DependencyViolation error by using a configration with the
+			// groups removed, and the Groups not configured to revoke their ruls.
+			// Terraform tries to destroy them but cannot. Expect a
+			// DependencyViolation error
+			{
+				Config:      testAccAWSSecurityGroupConfig_revoke_base_removed,
+				ExpectError: regexp.MustCompile("DependencyViolation"),
+			},
+			// Restore the config (a no-op plan) but also remove the dependencies
+			// between the groups with testRemoveCycle
+			{
+				Config: testAccAWSSecurityGroupConfig_revoke_false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.primary", &primary),
+					testAccCheckAWSSecurityGroupExists("aws_security_group.secondary", &secondary),
+					testRemoveCycle,
+				),
+			},
+			// Again try to apply the config with the sgs removed; it should work
+			{
+				Config: testAccAWSSecurityGroupConfig_revoke_base_removed,
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_basicRuleDescription(t *testing.T) {
+	var group ec2.SecurityGroup
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_security_group.web",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigRuleDescription,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.web", &group),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "name", "terraform_acceptance_test_example"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "description", "Used in the terraform acceptance tests"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "ingress.1147649399.protocol", "tcp"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "ingress.1147649399.from_port", "80"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "ingress.1147649399.to_port", "8000"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "ingress.1147649399.cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "ingress.1147649399.cidr_blocks.0", "10.0.0.0/8"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "ingress.1147649399.description", "Ingress description"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "egress.2129912301.description", "Egress description"),
 				),
 			},
 		},
@@ -584,6 +938,62 @@ func TestAccAWSSecurityGroup_Change(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists("aws_security_group.web", &group),
 					testAccCheckAWSSecurityGroupAttributesChanged(&group),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_ChangeRuleDescription(t *testing.T) {
+	var group ec2.SecurityGroup
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_security_group.web",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigRuleDescription,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.web", &group),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "ingress.1147649399.description", "Ingress description"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "egress.2129912301.description", "Egress description"),
+				),
+			},
+			// Change just the rule descriptions.
+			{
+				Config: testAccAWSSecurityGroupConfigChangeRuleDescription,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.web", &group),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "ingress.1341057959.description", "New ingress description"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "egress.746197026.description", "New egress description"),
+				),
+			},
+			// Remove just the rule descriptions.
+			{
+				Config: testAccAWSSecurityGroupConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.web", &group),
+					testAccCheckAWSSecurityGroupAttributes(&group),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "name", "terraform_acceptance_test_example"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "description", "Used in the terraform acceptance tests"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "ingress.3629188364.protocol", "tcp"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "ingress.3629188364.from_port", "80"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "ingress.3629188364.to_port", "8000"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "ingress.3629188364.cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "ingress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
 				),
 			},
 		},
@@ -1260,6 +1670,9 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "tf-acc-revoke-test"
+	}
 }
 
 resource "aws_security_group" "web" {
@@ -1274,16 +1687,112 @@ resource "aws_security_group" "web" {
     cidr_blocks = ["10.0.0.0/8"]
   }
 
-  egress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
-    cidr_blocks = ["10.0.0.0/8"]
-  }
+	tags {
+		Name = "tf-acc-revoke-test"
+	}
+}
+`
+
+const testAccAWSSecurityGroupConfig_revoke_base_removed = `
+resource "aws_vpc" "sg-race-revoke" {
+  cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "tf-acc-revoke-test"
+	}
+}
+`
+const testAccAWSSecurityGroupConfig_revoke_base = `
+resource "aws_vpc" "sg-race-revoke" {
+  cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "tf-acc-revoke-test"
+	}
+}
+
+resource "aws_security_group" "primary" {
+  name = "tf-acc-sg-race-revoke-primary"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.sg-race-revoke.id}"
 
 	tags {
-		Name = "tf-acc-test"
+		Name = "tf-acc-revoke-test-primary"
 	}
+}
+
+resource "aws_security_group" "secondary" {
+  name = "tf-acc-sg-race-revoke-secondary"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.sg-race-revoke.id}"
+
+	tags {
+		Name = "tf-acc-revoke-test-secondary"
+	}
+}
+`
+
+const testAccAWSSecurityGroupConfig_revoke_false = `
+resource "aws_vpc" "sg-race-revoke" {
+  cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "tf-acc-revoke-test"
+	}
+}
+
+resource "aws_security_group" "primary" {
+  name = "tf-acc-sg-race-revoke-primary"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.sg-race-revoke.id}"
+
+	tags {
+		Name = "tf-acc-revoke-test-primary"
+	}
+
+  revoke_rules_on_delete = false
+}
+
+resource "aws_security_group" "secondary" {
+  name = "tf-acc-sg-race-revoke-secondary"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.sg-race-revoke.id}"
+
+	tags {
+		Name = "tf-acc-revoke-test-secondary"
+	}
+
+  revoke_rules_on_delete = false
+}
+`
+
+const testAccAWSSecurityGroupConfig_revoke_true = `
+resource "aws_vpc" "sg-race-revoke" {
+  cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "tf-acc-revoke-test"
+	}
+}
+
+resource "aws_security_group" "primary" {
+  name = "tf-acc-sg-race-revoke-primary"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.sg-race-revoke.id}"
+
+	tags {
+		Name = "tf-acc-revoke-test-primary"
+	}
+
+  revoke_rules_on_delete = true	
+}
+
+resource "aws_security_group" "secondary" {
+  name = "tf-acc-sg-race-revoke-secondary"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.sg-race-revoke.id}"
+
+	tags {
+		Name = "tf-acc-revoke-test-secondary"
+	}
+
+  revoke_rules_on_delete = true	
 }
 `
 
@@ -1317,6 +1826,70 @@ resource "aws_security_group" "web" {
     to_port = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
+}
+`
+
+const testAccAWSSecurityGroupConfigRuleDescription = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_security_group" "web" {
+  name = "terraform_acceptance_test_example"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.foo.id}"
+
+  ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+		cidr_blocks = ["10.0.0.0/8"]
+		description = "Ingress description"
+  }
+
+  egress {
+    protocol = "tcp"
+    from_port = 80
+    to_port = 8000
+		cidr_blocks = ["10.0.0.0/8"]
+		description = "Egress description"
+  }
+
+	tags {
+		Name = "tf-acc-test"
+	}
+}
+`
+
+const testAccAWSSecurityGroupConfigChangeRuleDescription = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_security_group" "web" {
+  name = "terraform_acceptance_test_example"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.foo.id}"
+
+  ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+		cidr_blocks = ["10.0.0.0/8"]
+		description = "New ingress description"
+  }
+
+  egress {
+    protocol = "tcp"
+    from_port = 80
+    to_port = 8000
+		cidr_blocks = ["10.0.0.0/8"]
+		description = "New egress description"
+  }
+
+	tags {
+		Name = "tf-acc-test"
+	}
 }
 `
 

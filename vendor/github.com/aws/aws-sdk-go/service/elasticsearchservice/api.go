@@ -299,6 +299,97 @@ func (c *ElasticsearchService) DeleteElasticsearchDomainWithContext(ctx aws.Cont
 	return out, req.Send()
 }
 
+const opDeleteElasticsearchServiceRole = "DeleteElasticsearchServiceRole"
+
+// DeleteElasticsearchServiceRoleRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteElasticsearchServiceRole operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteElasticsearchServiceRole for more information on using the DeleteElasticsearchServiceRole
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteElasticsearchServiceRoleRequest method.
+//    req, resp := client.DeleteElasticsearchServiceRoleRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) DeleteElasticsearchServiceRoleRequest(input *DeleteElasticsearchServiceRoleInput) (req *request.Request, output *DeleteElasticsearchServiceRoleOutput) {
+	op := &request.Operation{
+		Name:       opDeleteElasticsearchServiceRole,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/2015-01-01/es/role",
+	}
+
+	if input == nil {
+		input = &DeleteElasticsearchServiceRoleInput{}
+	}
+
+	output = &DeleteElasticsearchServiceRoleOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteElasticsearchServiceRole API operation for Amazon Elasticsearch Service.
+//
+// Deletes the service-linked role that Elasticsearch Service uses to manage
+// and maintain VPC domains. Role deletion will fail if any existing VPC domains
+// use the role. You must delete any such Elasticsearch domains before deleting
+// the role. See Deleting Elasticsearch Service Role (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-enabling-slr)
+// in VPC Endpoints for Amazon Elasticsearch Service Domains.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation DeleteElasticsearchServiceRole for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBaseException "BaseException"
+//   An error occurred while processing the request.
+//
+//   * ErrCodeInternalException "InternalException"
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+//   * ErrCodeValidationException "ValidationException"
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+func (c *ElasticsearchService) DeleteElasticsearchServiceRole(input *DeleteElasticsearchServiceRoleInput) (*DeleteElasticsearchServiceRoleOutput, error) {
+	req, out := c.DeleteElasticsearchServiceRoleRequest(input)
+	return out, req.Send()
+}
+
+// DeleteElasticsearchServiceRoleWithContext is the same as DeleteElasticsearchServiceRole with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteElasticsearchServiceRole for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DeleteElasticsearchServiceRoleWithContext(ctx aws.Context, input *DeleteElasticsearchServiceRoleInput, opts ...request.Option) (*DeleteElasticsearchServiceRoleOutput, error) {
+	req, out := c.DeleteElasticsearchServiceRoleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeElasticsearchDomain = "DescribeElasticsearchDomain"
 
 // DescribeElasticsearchDomainRequest generates a "aws/request.Request" representing the
@@ -1550,9 +1641,18 @@ type CreateElasticsearchDomainInput struct {
 	// in the Amazon Elasticsearch Service Developer Guide.
 	ElasticsearchVersion *string `type:"string"`
 
+	// Map of LogType and LogPublishingOption, each containing options to publish
+	// a given type of Elasticsearch log.
+	LogPublishingOptions map[string]*LogPublishingOption `type:"map"`
+
 	// Option to set time, in UTC format, of the daily automated snapshot. Default
 	// value is 0 hours.
 	SnapshotOptions *SnapshotOptions `type:"structure"`
+
+	// Options to specify the subnets and security groups for VPC endpoint. For
+	// more information, see Creating a VPC (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-creating-vpc)
+	// in VPC Endpoints for Amazon Elasticsearch Service Domains
+	VPCOptions *VPCOptions `type:"structure"`
 }
 
 // String returns the string representation
@@ -1617,9 +1717,21 @@ func (s *CreateElasticsearchDomainInput) SetElasticsearchVersion(v string) *Crea
 	return s
 }
 
+// SetLogPublishingOptions sets the LogPublishingOptions field's value.
+func (s *CreateElasticsearchDomainInput) SetLogPublishingOptions(v map[string]*LogPublishingOption) *CreateElasticsearchDomainInput {
+	s.LogPublishingOptions = v
+	return s
+}
+
 // SetSnapshotOptions sets the SnapshotOptions field's value.
 func (s *CreateElasticsearchDomainInput) SetSnapshotOptions(v *SnapshotOptions) *CreateElasticsearchDomainInput {
 	s.SnapshotOptions = v
+	return s
+}
+
+// SetVPCOptions sets the VPCOptions field's value.
+func (s *CreateElasticsearchDomainInput) SetVPCOptions(v *VPCOptions) *CreateElasticsearchDomainInput {
+	s.VPCOptions = v
 	return s
 }
 
@@ -1715,6 +1827,34 @@ func (s DeleteElasticsearchDomainOutput) GoString() string {
 func (s *DeleteElasticsearchDomainOutput) SetDomainStatus(v *ElasticsearchDomainStatus) *DeleteElasticsearchDomainOutput {
 	s.DomainStatus = v
 	return s
+}
+
+type DeleteElasticsearchServiceRoleInput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteElasticsearchServiceRoleInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteElasticsearchServiceRoleInput) GoString() string {
+	return s.String()
+}
+
+type DeleteElasticsearchServiceRoleOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteElasticsearchServiceRoleOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteElasticsearchServiceRoleOutput) GoString() string {
+	return s.String()
 }
 
 // Container for the parameters to the DescribeElasticsearchDomainConfig operation.
@@ -2265,8 +2405,15 @@ type ElasticsearchDomainConfig struct {
 	// String of format X.Y to specify version for the Elasticsearch domain.
 	ElasticsearchVersion *ElasticsearchVersionStatus `type:"structure"`
 
+	// Log publishing options for the given domain.
+	LogPublishingOptions *LogPublishingOptionsStatus `type:"structure"`
+
 	// Specifies the SnapshotOptions for the Elasticsearch domain.
 	SnapshotOptions *SnapshotOptionsStatus `type:"structure"`
+
+	// The VPCOptions for the specified domain. For more information, see VPC Endpoints
+	// for Amazon Elasticsearch Service Domains (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html).
+	VPCOptions *VPCDerivedInfoStatus `type:"structure"`
 }
 
 // String returns the string representation
@@ -2309,9 +2456,21 @@ func (s *ElasticsearchDomainConfig) SetElasticsearchVersion(v *ElasticsearchVers
 	return s
 }
 
+// SetLogPublishingOptions sets the LogPublishingOptions field's value.
+func (s *ElasticsearchDomainConfig) SetLogPublishingOptions(v *LogPublishingOptionsStatus) *ElasticsearchDomainConfig {
+	s.LogPublishingOptions = v
+	return s
+}
+
 // SetSnapshotOptions sets the SnapshotOptions field's value.
 func (s *ElasticsearchDomainConfig) SetSnapshotOptions(v *SnapshotOptionsStatus) *ElasticsearchDomainConfig {
 	s.SnapshotOptions = v
+	return s
+}
+
+// SetVPCOptions sets the VPCOptions field's value.
+func (s *ElasticsearchDomainConfig) SetVPCOptions(v *VPCDerivedInfoStatus) *ElasticsearchDomainConfig {
+	s.VPCOptions = v
 	return s
 }
 
@@ -2371,6 +2530,13 @@ type ElasticsearchDomainStatus struct {
 	// requests.
 	Endpoint *string `type:"string"`
 
+	// Map containing the Elasticsearch domain endpoints used to submit index and
+	// search requests. Example key, value: 'vpc','vpc-endpoint-h2dsd34efgyghrtguk5gt6j2foh4.us-east-1.es.amazonaws.com'.
+	Endpoints map[string]*string `type:"map"`
+
+	// Log publishing options for the given domain.
+	LogPublishingOptions map[string]*LogPublishingOption `type:"map"`
+
 	// The status of the Elasticsearch domain configuration. True if Amazon Elasticsearch
 	// Service is processing configuration changes. False if the configuration is
 	// active.
@@ -2378,6 +2544,10 @@ type ElasticsearchDomainStatus struct {
 
 	// Specifies the status of the SnapshotOptions
 	SnapshotOptions *SnapshotOptions `type:"structure"`
+
+	// The VPCOptions for the specified domain. For more information, see VPC Endpoints
+	// for Amazon Elasticsearch Service Domains (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html).
+	VPCOptions *VPCDerivedInfo `type:"structure"`
 }
 
 // String returns the string representation
@@ -2456,6 +2626,18 @@ func (s *ElasticsearchDomainStatus) SetEndpoint(v string) *ElasticsearchDomainSt
 	return s
 }
 
+// SetEndpoints sets the Endpoints field's value.
+func (s *ElasticsearchDomainStatus) SetEndpoints(v map[string]*string) *ElasticsearchDomainStatus {
+	s.Endpoints = v
+	return s
+}
+
+// SetLogPublishingOptions sets the LogPublishingOptions field's value.
+func (s *ElasticsearchDomainStatus) SetLogPublishingOptions(v map[string]*LogPublishingOption) *ElasticsearchDomainStatus {
+	s.LogPublishingOptions = v
+	return s
+}
+
 // SetProcessing sets the Processing field's value.
 func (s *ElasticsearchDomainStatus) SetProcessing(v bool) *ElasticsearchDomainStatus {
 	s.Processing = &v
@@ -2465,6 +2647,12 @@ func (s *ElasticsearchDomainStatus) SetProcessing(v bool) *ElasticsearchDomainSt
 // SetSnapshotOptions sets the SnapshotOptions field's value.
 func (s *ElasticsearchDomainStatus) SetSnapshotOptions(v *SnapshotOptions) *ElasticsearchDomainStatus {
 	s.SnapshotOptions = v
+	return s
+}
+
+// SetVPCOptions sets the VPCOptions field's value.
+func (s *ElasticsearchDomainStatus) SetVPCOptions(v *VPCDerivedInfo) *ElasticsearchDomainStatus {
+	s.VPCOptions = v
 	return s
 }
 
@@ -2905,6 +3093,75 @@ func (s *ListTagsOutput) SetTagList(v []*Tag) *ListTagsOutput {
 	return s
 }
 
+// Log Publishing option that is set for given domain. Attributes and their details: CloudWatchLogsLogGroupArn: ARN of the Cloudwatch
+// log group to which log needs to be published.
+// Enabled: Whether the log publishing for given log type is enabled or not
+type LogPublishingOption struct {
+	_ struct{} `type:"structure"`
+
+	// ARN of the Cloudwatch log group to which log needs to be published.
+	CloudWatchLogsLogGroupArn *string `type:"string"`
+
+	// Specifies whether given log publishing option is enabled or not.
+	Enabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s LogPublishingOption) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LogPublishingOption) GoString() string {
+	return s.String()
+}
+
+// SetCloudWatchLogsLogGroupArn sets the CloudWatchLogsLogGroupArn field's value.
+func (s *LogPublishingOption) SetCloudWatchLogsLogGroupArn(v string) *LogPublishingOption {
+	s.CloudWatchLogsLogGroupArn = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *LogPublishingOption) SetEnabled(v bool) *LogPublishingOption {
+	s.Enabled = &v
+	return s
+}
+
+// The configured log publishing options for the domain and their current status.
+type LogPublishingOptionsStatus struct {
+	_ struct{} `type:"structure"`
+
+	// The log publishing options configured for the Elasticsearch domain.
+	Options map[string]*LogPublishingOption `type:"map"`
+
+	// The status of the log publishing options for the Elasticsearch domain. See
+	// OptionStatus for the status information that's included.
+	Status *OptionStatus `type:"structure"`
+}
+
+// String returns the string representation
+func (s LogPublishingOptionsStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LogPublishingOptionsStatus) GoString() string {
+	return s.String()
+}
+
+// SetOptions sets the Options field's value.
+func (s *LogPublishingOptionsStatus) SetOptions(v map[string]*LogPublishingOption) *LogPublishingOptionsStatus {
+	s.Options = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *LogPublishingOptionsStatus) SetStatus(v *OptionStatus) *LogPublishingOptionsStatus {
+	s.Status = v
+	return s
+}
+
 // Provides the current status of the entity.
 type OptionStatus struct {
 	_ struct{} `type:"structure"`
@@ -3282,9 +3539,18 @@ type UpdateElasticsearchDomainConfigInput struct {
 	// The type and number of instances to instantiate for the domain cluster.
 	ElasticsearchClusterConfig *ElasticsearchClusterConfig `type:"structure"`
 
+	// Map of LogType and LogPublishingOption, each containing options to publish
+	// a given type of Elasticsearch log.
+	LogPublishingOptions map[string]*LogPublishingOption `type:"map"`
+
 	// Option to set the time, in UTC format, for the daily automated snapshot.
 	// Default value is 0 hours.
 	SnapshotOptions *SnapshotOptions `type:"structure"`
+
+	// Options to specify the subnets and security groups for VPC endpoint. For
+	// more information, see Creating a VPC (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-creating-vpc)
+	// in VPC Endpoints for Amazon Elasticsearch Service Domains
+	VPCOptions *VPCOptions `type:"structure"`
 }
 
 // String returns the string representation
@@ -3343,9 +3609,21 @@ func (s *UpdateElasticsearchDomainConfigInput) SetElasticsearchClusterConfig(v *
 	return s
 }
 
+// SetLogPublishingOptions sets the LogPublishingOptions field's value.
+func (s *UpdateElasticsearchDomainConfigInput) SetLogPublishingOptions(v map[string]*LogPublishingOption) *UpdateElasticsearchDomainConfigInput {
+	s.LogPublishingOptions = v
+	return s
+}
+
 // SetSnapshotOptions sets the SnapshotOptions field's value.
 func (s *UpdateElasticsearchDomainConfigInput) SetSnapshotOptions(v *SnapshotOptions) *UpdateElasticsearchDomainConfigInput {
 	s.SnapshotOptions = v
+	return s
+}
+
+// SetVPCOptions sets the VPCOptions field's value.
+func (s *UpdateElasticsearchDomainConfigInput) SetVPCOptions(v *VPCOptions) *UpdateElasticsearchDomainConfigInput {
+	s.VPCOptions = v
 	return s
 }
 
@@ -3373,6 +3651,133 @@ func (s UpdateElasticsearchDomainConfigOutput) GoString() string {
 // SetDomainConfig sets the DomainConfig field's value.
 func (s *UpdateElasticsearchDomainConfigOutput) SetDomainConfig(v *ElasticsearchDomainConfig) *UpdateElasticsearchDomainConfigOutput {
 	s.DomainConfig = v
+	return s
+}
+
+// Options to specify the subnets and security groups for VPC endpoint. For
+// more information, see  VPC Endpoints for Amazon Elasticsearch Service Domains
+// (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html).
+type VPCDerivedInfo struct {
+	_ struct{} `type:"structure"`
+
+	// The availability zones for the Elasticsearch domain. Exists only if the domain
+	// was created with VPCOptions.
+	AvailabilityZones []*string `type:"list"`
+
+	// Specifies the security groups for VPC endpoint.
+	SecurityGroupIds []*string `type:"list"`
+
+	// Specifies the subnets for VPC endpoint.
+	SubnetIds []*string `type:"list"`
+
+	// The VPC Id for the Elasticsearch domain. Exists only if the domain was created
+	// with VPCOptions.
+	VPCId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s VPCDerivedInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VPCDerivedInfo) GoString() string {
+	return s.String()
+}
+
+// SetAvailabilityZones sets the AvailabilityZones field's value.
+func (s *VPCDerivedInfo) SetAvailabilityZones(v []*string) *VPCDerivedInfo {
+	s.AvailabilityZones = v
+	return s
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *VPCDerivedInfo) SetSecurityGroupIds(v []*string) *VPCDerivedInfo {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnetIds sets the SubnetIds field's value.
+func (s *VPCDerivedInfo) SetSubnetIds(v []*string) *VPCDerivedInfo {
+	s.SubnetIds = v
+	return s
+}
+
+// SetVPCId sets the VPCId field's value.
+func (s *VPCDerivedInfo) SetVPCId(v string) *VPCDerivedInfo {
+	s.VPCId = &v
+	return s
+}
+
+// Status of the VPC options for the specified Elasticsearch domain.
+type VPCDerivedInfoStatus struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the VPC options for the specified Elasticsearch domain.
+	//
+	// Options is a required field
+	Options *VPCDerivedInfo `type:"structure" required:"true"`
+
+	// Specifies the status of the VPC options for the specified Elasticsearch domain.
+	//
+	// Status is a required field
+	Status *OptionStatus `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s VPCDerivedInfoStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VPCDerivedInfoStatus) GoString() string {
+	return s.String()
+}
+
+// SetOptions sets the Options field's value.
+func (s *VPCDerivedInfoStatus) SetOptions(v *VPCDerivedInfo) *VPCDerivedInfoStatus {
+	s.Options = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *VPCDerivedInfoStatus) SetStatus(v *OptionStatus) *VPCDerivedInfoStatus {
+	s.Status = v
+	return s
+}
+
+// Options to specify the subnets and security groups for VPC endpoint. For
+// more information, see  VPC Endpoints for Amazon Elasticsearch Service Domains
+// (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html).
+type VPCOptions struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the security groups for VPC endpoint.
+	SecurityGroupIds []*string `type:"list"`
+
+	// Specifies the subnets for VPC endpoint.
+	SubnetIds []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s VPCOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VPCOptions) GoString() string {
+	return s.String()
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *VPCOptions) SetSecurityGroupIds(v []*string) *VPCOptions {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnetIds sets the SubnetIds field's value.
+func (s *VPCOptions) SetSubnetIds(v []*string) *VPCOptions {
+	s.SubnetIds = v
 	return s
 }
 
@@ -3478,6 +3883,37 @@ const (
 
 	// ESPartitionInstanceTypeR416xlargeElasticsearch is a ESPartitionInstanceType enum value
 	ESPartitionInstanceTypeR416xlargeElasticsearch = "r4.16xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeI3LargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeI3LargeElasticsearch = "i3.large.elasticsearch"
+
+	// ESPartitionInstanceTypeI3XlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeI3XlargeElasticsearch = "i3.xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeI32xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeI32xlargeElasticsearch = "i3.2xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeI34xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeI34xlargeElasticsearch = "i3.4xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeI38xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeI38xlargeElasticsearch = "i3.8xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeI316xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeI316xlargeElasticsearch = "i3.16xlarge.elasticsearch"
+)
+
+// Type of Log File, it can be one of the following: INDEX_SLOW_LOGS: Index
+// slow logs contains insert requests that took more time than configured index
+// query log threshold to execute.
+// SEARCH_SLOW_LOGS: Search slow logs contains search queries that took more
+// time than configured search query log threshold to execute.
+const (
+	// LogTypeIndexSlowLogs is a LogType enum value
+	LogTypeIndexSlowLogs = "INDEX_SLOW_LOGS"
+
+	// LogTypeSearchSlowLogs is a LogType enum value
+	LogTypeSearchSlowLogs = "SEARCH_SLOW_LOGS"
 )
 
 // The state of a requested change. One of the following:

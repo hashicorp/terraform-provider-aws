@@ -15,12 +15,14 @@ func TestAccAWSRedshiftServiceAccount_basic(t *testing.T) {
 				Config: testAccCheckAwsRedshiftServiceAccountConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_redshift_service_account.main", "id", "902366379725"),
+					resource.TestCheckResourceAttr("data.aws_redshift_service_account.main", "arn", "arn:aws:iam::902366379725:user/logs"),
 				),
 			},
 			resource.TestStep{
 				Config: testAccCheckAwsRedshiftServiceAccountExplicitRegionConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_redshift_service_account.regional", "id", "307160386991"),
+					resource.TestCheckResourceAttr("data.aws_redshift_service_account.regional", "arn", "arn:aws:iam::307160386991:user/logs"),
 				),
 			},
 		},

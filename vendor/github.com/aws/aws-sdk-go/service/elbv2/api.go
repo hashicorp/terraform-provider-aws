@@ -11,6 +11,97 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 )
 
+const opAddListenerCertificates = "AddListenerCertificates"
+
+// AddListenerCertificatesRequest generates a "aws/request.Request" representing the
+// client's request for the AddListenerCertificates operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AddListenerCertificates for more information on using the AddListenerCertificates
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AddListenerCertificatesRequest method.
+//    req, resp := client.AddListenerCertificatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/AddListenerCertificates
+func (c *ELBV2) AddListenerCertificatesRequest(input *AddListenerCertificatesInput) (req *request.Request, output *AddListenerCertificatesOutput) {
+	op := &request.Operation{
+		Name:       opAddListenerCertificates,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AddListenerCertificatesInput{}
+	}
+
+	output = &AddListenerCertificatesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AddListenerCertificates API operation for Elastic Load Balancing.
+//
+// Adds the specified certificate to the specified secure listener.
+//
+// If the certificate was already added, the call is successful but the certificate
+// is not added again.
+//
+// To list the certificates for your listener, use DescribeListenerCertificates.
+// To remove certificates from your listener, use RemoveListenerCertificates.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Elastic Load Balancing's
+// API operation AddListenerCertificates for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeListenerNotFoundException "ListenerNotFound"
+//   The specified listener does not exist.
+//
+//   * ErrCodeTooManyCertificatesException "TooManyCertificates"
+//   You've reached the limit on the number of certificates per load balancer.
+//
+//   * ErrCodeCertificateNotFoundException "CertificateNotFound"
+//   The specified certificate does not exist.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/AddListenerCertificates
+func (c *ELBV2) AddListenerCertificates(input *AddListenerCertificatesInput) (*AddListenerCertificatesOutput, error) {
+	req, out := c.AddListenerCertificatesRequest(input)
+	return out, req.Send()
+}
+
+// AddListenerCertificatesWithContext is the same as AddListenerCertificates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AddListenerCertificates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ELBV2) AddListenerCertificatesWithContext(ctx aws.Context, input *AddListenerCertificatesInput, opts ...request.Option) (*AddListenerCertificatesOutput, error) {
+	req, out := c.AddListenerCertificatesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opAddTags = "AddTags"
 
 // AddTagsRequest generates a "aws/request.Request" representing the
@@ -154,11 +245,13 @@ func (c *ELBV2) CreateListenerRequest(input *CreateListenerInput) (req *request.
 // Creates a listener for the specified Application Load Balancer or Network
 // Load Balancer.
 //
-// You can create up to 10 listeners per load balancer.
-//
 // To update a listener, use ModifyListener. When you are finished with a listener,
 // you can delete it using DeleteListener. If you are finished with both the
 // listener and the load balancer, you can delete them both using DeleteLoadBalancer.
+//
+// This operation is idempotent, which means that it completes at most one time.
+// If you attempt to create multiple listeners with the same settings, each
+// call succeeds.
 //
 // For more information, see Listeners for Your Application Load Balancers (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-listeners.html)
 // in the Application Load Balancers Guide and Listeners for Your Network Load
@@ -180,7 +273,7 @@ func (c *ELBV2) CreateListenerRequest(input *CreateListenerInput) (req *request.
 //   You've reached the limit on the number of listeners per load balancer.
 //
 //   * ErrCodeTooManyCertificatesException "TooManyCertificates"
-//   You've reached the limit on the number of certificates per listener.
+//   You've reached the limit on the number of certificates per load balancer.
 //
 //   * ErrCodeLoadBalancerNotFoundException "LoadBalancerNotFound"
 //   The specified load balancer does not exist.
@@ -289,12 +382,14 @@ func (c *ELBV2) CreateLoadBalancerRequest(input *CreateLoadBalancerInput) (req *
 // your current load balancers, see DescribeLoadBalancers. When you are finished
 // with a load balancer, you can delete it using DeleteLoadBalancer.
 //
-// You can create up to 20 load balancers per region per account. You can request
-// an increase for the number of load balancers for your account. For more information,
-// see Limits for Your Application Load Balancer (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html)
+// For limit information, see Limits for Your Application Load Balancer (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html)
 // in the Application Load Balancers Guide and Limits for Your Network Load
 // Balancer (http://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-limits.html)
 // in the Network Load Balancers Guide.
+//
+// This operation is idempotent, which means that it completes at most one time.
+// If you attempt to create multiple load balancers with the same settings,
+// each call succeeds.
 //
 // For more information, see Application Load Balancers (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html)
 // in the Application Load Balancers Guide and Network Load Balancers (http://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html)
@@ -538,6 +633,10 @@ func (c *ELBV2) CreateTargetGroupRequest(input *CreateTargetGroupInput) (req *re
 // in an action using CreateListener or CreateRule.
 //
 // To delete a target group, use DeleteTargetGroup.
+//
+// This operation is idempotent, which means that it completes at most one time.
+// If you attempt to create multiple target groups with the same settings, each
+// call succeeds.
 //
 // For more information, see Target Groups for Your Application Load Balancers
 // (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html)
@@ -981,8 +1080,8 @@ func (c *ELBV2) DeregisterTargetsRequest(input *DeregisterTargetsInput) (req *re
 //   The specified target group does not exist.
 //
 //   * ErrCodeInvalidTargetException "InvalidTarget"
-//   The specified target does not exist or is not in the same VPC as the target
-//   group.
+//   The specified target does not exist, is not in the same VPC as the target
+//   group, or has an unsupported instance type.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/DeregisterTargets
 func (c *ELBV2) DeregisterTargets(input *DeregisterTargetsInput) (*DeregisterTargetsOutput, error) {
@@ -1081,6 +1180,85 @@ func (c *ELBV2) DescribeAccountLimits(input *DescribeAccountLimitsInput) (*Descr
 // for more information on using Contexts.
 func (c *ELBV2) DescribeAccountLimitsWithContext(ctx aws.Context, input *DescribeAccountLimitsInput, opts ...request.Option) (*DescribeAccountLimitsOutput, error) {
 	req, out := c.DescribeAccountLimitsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeListenerCertificates = "DescribeListenerCertificates"
+
+// DescribeListenerCertificatesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeListenerCertificates operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeListenerCertificates for more information on using the DescribeListenerCertificates
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeListenerCertificatesRequest method.
+//    req, resp := client.DescribeListenerCertificatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/DescribeListenerCertificates
+func (c *ELBV2) DescribeListenerCertificatesRequest(input *DescribeListenerCertificatesInput) (req *request.Request, output *DescribeListenerCertificatesOutput) {
+	op := &request.Operation{
+		Name:       opDescribeListenerCertificates,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeListenerCertificatesInput{}
+	}
+
+	output = &DescribeListenerCertificatesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeListenerCertificates API operation for Elastic Load Balancing.
+//
+// Describes the certificates for the specified secure listener.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Elastic Load Balancing's
+// API operation DescribeListenerCertificates for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeListenerNotFoundException "ListenerNotFound"
+//   The specified listener does not exist.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/DescribeListenerCertificates
+func (c *ELBV2) DescribeListenerCertificates(input *DescribeListenerCertificatesInput) (*DescribeListenerCertificatesOutput, error) {
+	req, out := c.DescribeListenerCertificatesRequest(input)
+	return out, req.Send()
+}
+
+// DescribeListenerCertificatesWithContext is the same as DescribeListenerCertificates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeListenerCertificates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ELBV2) DescribeListenerCertificatesWithContext(ctx aws.Context, input *DescribeListenerCertificatesInput, opts ...request.Option) (*DescribeListenerCertificatesOutput, error) {
+	req, out := c.DescribeListenerCertificatesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1977,8 +2155,8 @@ func (c *ELBV2) DescribeTargetHealthRequest(input *DescribeTargetHealthInput) (r
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidTargetException "InvalidTarget"
-//   The specified target does not exist or is not in the same VPC as the target
-//   group.
+//   The specified target does not exist, is not in the same VPC as the target
+//   group, or has an unsupported instance type.
 //
 //   * ErrCodeTargetGroupNotFoundException "TargetGroupNotFound"
 //   The specified target group does not exist.
@@ -2075,7 +2253,7 @@ func (c *ELBV2) ModifyListenerRequest(input *ModifyListenerInput) (req *request.
 //   You've reached the limit on the number of listeners per load balancer.
 //
 //   * ErrCodeTooManyCertificatesException "TooManyCertificates"
-//   You've reached the limit on the number of certificates per listener.
+//   You've reached the limit on the number of certificates per load balancer.
 //
 //   * ErrCodeListenerNotFoundException "ListenerNotFound"
 //   The specified listener does not exist.
@@ -2532,16 +2710,18 @@ func (c *ELBV2) RegisterTargetsRequest(input *RegisterTargetsInput) (req *reques
 //
 // Registers the specified targets with the specified target group.
 //
+// You can register targets by instance ID or by IP address. If the target is
+// an EC2 instance, it must be in the running state when you register it.
+//
 // By default, the load balancer routes requests to registered targets using
-// the protocol and port number for the target group. Alternatively, you can
-// override the port for a target when you register it.
+// the protocol and port for the target group. Alternatively, you can override
+// the port for a target when you register it. You can register each EC2 instance
+// or IP address with the same target group multiple times using different ports.
 //
-// The target must be in the virtual private cloud (VPC) that you specified
-// for the target group. If the target is an EC2 instance, it must be in the
-// running state when you register it.
-//
-// Network Load Balancers do not support the following instance types as targets:
-// C1, CC1, CC2, CG1, CG2, CR1, CS1, G1, G2, HI1, HS1, M1, M2, M3, and T1.
+// With a Network Load Balancer, you cannot register instances by instance ID
+// if they have the following instance types: C1, CC1, CC2, CG1, CG2, CR1, CS1,
+// G1, G2, HI1, HS1, M1, M2, M3, and T1. You can register instances of these
+// types by IP address.
 //
 // To remove a target from a target group, use DeregisterTargets.
 //
@@ -2560,8 +2740,8 @@ func (c *ELBV2) RegisterTargetsRequest(input *RegisterTargetsInput) (req *reques
 //   You've reached the limit on the number of targets.
 //
 //   * ErrCodeInvalidTargetException "InvalidTarget"
-//   The specified target does not exist or is not in the same VPC as the target
-//   group.
+//   The specified target does not exist, is not in the same VPC as the target
+//   group, or has an unsupported instance type.
 //
 //   * ErrCodeTooManyRegistrationsForTargetIdException "TooManyRegistrationsForTargetId"
 //   You've reached the limit on the number of times a target can be registered
@@ -2584,6 +2764,93 @@ func (c *ELBV2) RegisterTargets(input *RegisterTargetsInput) (*RegisterTargetsOu
 // for more information on using Contexts.
 func (c *ELBV2) RegisterTargetsWithContext(ctx aws.Context, input *RegisterTargetsInput, opts ...request.Option) (*RegisterTargetsOutput, error) {
 	req, out := c.RegisterTargetsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opRemoveListenerCertificates = "RemoveListenerCertificates"
+
+// RemoveListenerCertificatesRequest generates a "aws/request.Request" representing the
+// client's request for the RemoveListenerCertificates operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RemoveListenerCertificates for more information on using the RemoveListenerCertificates
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RemoveListenerCertificatesRequest method.
+//    req, resp := client.RemoveListenerCertificatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/RemoveListenerCertificates
+func (c *ELBV2) RemoveListenerCertificatesRequest(input *RemoveListenerCertificatesInput) (req *request.Request, output *RemoveListenerCertificatesOutput) {
+	op := &request.Operation{
+		Name:       opRemoveListenerCertificates,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &RemoveListenerCertificatesInput{}
+	}
+
+	output = &RemoveListenerCertificatesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// RemoveListenerCertificates API operation for Elastic Load Balancing.
+//
+// Removes the specified certificate from the specified secure listener.
+//
+// You can't remove the default certificate for a listener. To replace the default
+// certificate, call ModifyListener.
+//
+// To list the certificates for your listener, use DescribeListenerCertificates.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Elastic Load Balancing's
+// API operation RemoveListenerCertificates for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeListenerNotFoundException "ListenerNotFound"
+//   The specified listener does not exist.
+//
+//   * ErrCodeOperationNotPermittedException "OperationNotPermitted"
+//   This operation is not allowed.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/RemoveListenerCertificates
+func (c *ELBV2) RemoveListenerCertificates(input *RemoveListenerCertificatesInput) (*RemoveListenerCertificatesOutput, error) {
+	req, out := c.RemoveListenerCertificatesRequest(input)
+	return out, req.Send()
+}
+
+// RemoveListenerCertificatesWithContext is the same as RemoveListenerCertificates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RemoveListenerCertificates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ELBV2) RemoveListenerCertificatesWithContext(ctx aws.Context, input *RemoveListenerCertificatesInput, opts ...request.Option) (*RemoveListenerCertificatesOutput, error) {
+	req, out := c.RemoveListenerCertificatesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3100,6 +3367,83 @@ func (s *Action) SetType(v string) *Action {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/AddListenerCertificatesInput
+type AddListenerCertificatesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The certificate to add. You can specify one certificate per call.
+	//
+	// Certificates is a required field
+	Certificates []*Certificate `type:"list" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the listener.
+	//
+	// ListenerArn is a required field
+	ListenerArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AddListenerCertificatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AddListenerCertificatesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AddListenerCertificatesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AddListenerCertificatesInput"}
+	if s.Certificates == nil {
+		invalidParams.Add(request.NewErrParamRequired("Certificates"))
+	}
+	if s.ListenerArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ListenerArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificates sets the Certificates field's value.
+func (s *AddListenerCertificatesInput) SetCertificates(v []*Certificate) *AddListenerCertificatesInput {
+	s.Certificates = v
+	return s
+}
+
+// SetListenerArn sets the ListenerArn field's value.
+func (s *AddListenerCertificatesInput) SetListenerArn(v string) *AddListenerCertificatesInput {
+	s.ListenerArn = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/AddListenerCertificatesOutput
+type AddListenerCertificatesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the certificates.
+	Certificates []*Certificate `type:"list"`
+}
+
+// String returns the string representation
+func (s AddListenerCertificatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AddListenerCertificatesOutput) GoString() string {
+	return s.String()
+}
+
+// SetCertificates sets the Certificates field's value.
+func (s *AddListenerCertificatesOutput) SetCertificates(v []*Certificate) *AddListenerCertificatesOutput {
+	s.Certificates = v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/AddTagsInput
 type AddTagsInput struct {
 	_ struct{} `type:"structure"`
@@ -3224,13 +3568,16 @@ func (s *AvailabilityZone) SetZoneName(v string) *AvailabilityZone {
 	return s
 }
 
-// Information about an SSL server certificate deployed on a load balancer.
+// Information about an SSL server certificate.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/Certificate
 type Certificate struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the certificate.
 	CertificateArn *string `type:"string"`
+
+	// Indicates whether the certificate is the default certificate.
+	IsDefault *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -3246,6 +3593,12 @@ func (s Certificate) GoString() string {
 // SetCertificateArn sets the CertificateArn field's value.
 func (s *Certificate) SetCertificateArn(v string) *Certificate {
 	s.CertificateArn = &v
+	return s
+}
+
+// SetIsDefault sets the IsDefault field's value.
+func (s *Certificate) SetIsDefault(v bool) *Certificate {
+	s.IsDefault = &v
 	return s
 }
 
@@ -3465,10 +3818,11 @@ type CreateLoadBalancerInput struct {
 	// one subnet per Availability Zone. You must specify either subnets or subnet
 	// mappings.
 	//
-	// [Network Load Balancers] You can specify one Elastic IP address per subnet.
+	// [Application Load Balancers] You must specify subnets from at least two Availability
+	// Zones. You cannot specify Elastic IP addresses for your subnets.
 	//
-	// [Application Load Balancers] You cannot specify Elastic IP addresses for
-	// your subnets.
+	// [Network Load Balancers] You can specify subnets from one or more Availability
+	// Zones. You can specify one Elastic IP address per subnet.
 	SubnetMappings []*SubnetMapping `type:"list"`
 
 	// The IDs of the subnets to attach to the load balancer. You can specify only
@@ -3476,6 +3830,9 @@ type CreateLoadBalancerInput struct {
 	// mappings.
 	//
 	// [Application Load Balancers] You must specify subnets from at least two Availability
+	// Zones.
+	//
+	// [Network Load Balancers] You can specify subnets from one or more Availability
 	// Zones.
 	Subnets []*string `type:"list"`
 
@@ -4361,6 +4718,101 @@ func (s *DescribeAccountLimitsOutput) SetNextMarker(v string) *DescribeAccountLi
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/DescribeListenerCertificatesInput
+type DescribeListenerCertificatesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Names (ARN) of the listener.
+	//
+	// ListenerArn is a required field
+	ListenerArn *string `type:"string" required:"true"`
+
+	// The marker for the next set of results. (You received this marker from a
+	// previous call.)
+	Marker *string `type:"string"`
+
+	// The maximum number of results to return with this call.
+	PageSize *int64 `min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s DescribeListenerCertificatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeListenerCertificatesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeListenerCertificatesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeListenerCertificatesInput"}
+	if s.ListenerArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ListenerArn"))
+	}
+	if s.PageSize != nil && *s.PageSize < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("PageSize", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetListenerArn sets the ListenerArn field's value.
+func (s *DescribeListenerCertificatesInput) SetListenerArn(v string) *DescribeListenerCertificatesInput {
+	s.ListenerArn = &v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeListenerCertificatesInput) SetMarker(v string) *DescribeListenerCertificatesInput {
+	s.Marker = &v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *DescribeListenerCertificatesInput) SetPageSize(v int64) *DescribeListenerCertificatesInput {
+	s.PageSize = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/DescribeListenerCertificatesOutput
+type DescribeListenerCertificatesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the certificates.
+	Certificates []*Certificate `type:"list"`
+
+	// The marker to use when requesting the next set of results. If there are no
+	// additional results, the string is empty.
+	NextMarker *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeListenerCertificatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeListenerCertificatesOutput) GoString() string {
+	return s.String()
+}
+
+// SetCertificates sets the Certificates field's value.
+func (s *DescribeListenerCertificatesOutput) SetCertificates(v []*Certificate) *DescribeListenerCertificatesOutput {
+	s.Certificates = v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *DescribeListenerCertificatesOutput) SetNextMarker(v string) *DescribeListenerCertificatesOutput {
+	s.NextMarker = &v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/DescribeListenersInput
 type DescribeListenersInput struct {
 	_ struct{} `type:"structure"`
@@ -5151,6 +5603,10 @@ type Limit struct {
 	//    * target-groups
 	//
 	//    * targets-per-application-load-balancer
+	//
+	//    * targets-per-availability-zone-per-network-load-balancer
+	//
+	//    * targets-per-network-load-balancer
 	Name *string `type:"string"`
 }
 
@@ -5565,7 +6021,7 @@ func (s *Matcher) SetHttpCode(v string) *Matcher {
 type ModifyListenerInput struct {
 	_ struct{} `type:"structure"`
 
-	// The SSL server certificate.
+	// The default SSL server certificate.
 	Certificates []*Certificate `type:"list"`
 
 	// The default action. For Application Load Balancers, the protocol of the specified
@@ -6107,9 +6563,7 @@ type RegisterTargetsInput struct {
 	// TargetGroupArn is a required field
 	TargetGroupArn *string `type:"string" required:"true"`
 
-	// The targets. The default port for a target is the port for the target group.
-	// You can specify a port override. If a target is already registered, you can
-	// register it again using a different port.
+	// The targets.
 	//
 	// Targets is a required field
 	Targets []*TargetDescription `type:"list" required:"true"`
@@ -6175,6 +6629,74 @@ func (s RegisterTargetsOutput) String() string {
 
 // GoString returns the string representation
 func (s RegisterTargetsOutput) GoString() string {
+	return s.String()
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/RemoveListenerCertificatesInput
+type RemoveListenerCertificatesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The certificate to remove. You can specify one certificate per call.
+	//
+	// Certificates is a required field
+	Certificates []*Certificate `type:"list" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the listener.
+	//
+	// ListenerArn is a required field
+	ListenerArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RemoveListenerCertificatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RemoveListenerCertificatesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RemoveListenerCertificatesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RemoveListenerCertificatesInput"}
+	if s.Certificates == nil {
+		invalidParams.Add(request.NewErrParamRequired("Certificates"))
+	}
+	if s.ListenerArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ListenerArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificates sets the Certificates field's value.
+func (s *RemoveListenerCertificatesInput) SetCertificates(v []*Certificate) *RemoveListenerCertificatesInput {
+	s.Certificates = v
+	return s
+}
+
+// SetListenerArn sets the ListenerArn field's value.
+func (s *RemoveListenerCertificatesInput) SetListenerArn(v string) *RemoveListenerCertificatesInput {
+	s.ListenerArn = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/RemoveListenerCertificatesOutput
+type RemoveListenerCertificatesOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s RemoveListenerCertificatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RemoveListenerCertificatesOutput) GoString() string {
 	return s.String()
 }
 
@@ -6658,8 +7180,7 @@ type SetSubnetsInput struct {
 	// Zones. You can specify only one subnet per Availability Zone. You must specify
 	// either subnets or subnet mappings.
 	//
-	// The load balancer is allocated one static IP address per subnet. You cannot
-	// specify your own Elastic IP addresses.
+	// You cannot specify Elastic IP addresses for your subnets.
 	SubnetMappings []*SubnetMapping `type:"list"`
 
 	// The IDs of the subnets. You must specify subnets from at least two Availability
@@ -6906,15 +7427,17 @@ func (s *TagDescription) SetTags(v []*Tag) *TagDescription {
 type TargetDescription struct {
 	_ struct{} `type:"structure"`
 
-	// The Availability Zone where the IP address is to be registered. Specify all
-	// to register an IP address outside the target group VPC with all Availability
-	// Zones that are enabled for the load balancer.
-	//
-	// If the IP address is in a subnet of the VPC for the target group, the Availability
-	// Zone is automatically detected and this parameter is optional.
+	// An Availability Zone or all. This determines whether the target receives
+	// traffic from the load balancer nodes in the specified Availability Zone or
+	// from all enabled Availability Zones for the load balancer.
 	//
 	// This parameter is not supported if the target type of the target group is
-	// instance.
+	// instance. If the IP address is in a subnet of the VPC for the target group,
+	// the Availability Zone is automatically detected and this parameter is optional.
+	// If the IP address is outside the VPC, this parameter is required.
+	//
+	// With an Application Load Balancer, if the IP address is outside the VPC for
+	// the target group, the only supported value is all.
 	AvailabilityZone *string `type:"string"`
 
 	// The ID of the target. If the target type of the target group is instance,

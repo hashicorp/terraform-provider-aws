@@ -17,11 +17,23 @@ func TestAccDataSourceAwsVpcPeeringConnection_basic(t *testing.T) {
 				Config: testAccDataSourceAwsVpcPeeringConnectionConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_requester_vpc_id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_vpc_id", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_vpc_id", "cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_accepter_vpc_id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_vpc_id", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_vpc_id", "cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_requester_cidr_block"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_cidr_block", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_cidr_block", "cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_accepter_cidr_block"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_cidr_block", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_cidr_block", "cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_owner_ids"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_owner_ids", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_owner_ids", "cidr_block"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -56,10 +68,6 @@ func testAccDataSourceAwsVpcPeeringConnectionCheck(name string) resource.TestChe
 }
 
 const testAccDataSourceAwsVpcPeeringConnectionConfig = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 

@@ -1,9 +1,11 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -15,6 +17,9 @@ func resourceAwsSsmParameter() *schema.Resource {
 		Read:   resourceAwsSsmParameterRead,
 		Update: resourceAwsSsmParameterPut,
 		Delete: resourceAwsSsmParameterDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -32,6 +37,11 @@ func resourceAwsSsmParameter() *schema.Resource {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"key_id": {
 				Type:     schema.TypeString,
@@ -54,7 +64,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 
 	paramInput := &ssm.GetParametersInput{
 		Names: []*string{
-			aws.String(d.Get("name").(string)),
+			aws.String(d.Id()),
 		},
 		WithDecryption: aws.Bool(true),
 	}
@@ -75,6 +85,15 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("name", param.Name)
 	d.Set("type", param.Type)
 	d.Set("value", param.Value)
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "ssm",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("parameter/%s", d.Id()),
+	}
+	d.Set("arn", arn.String())
 
 	return nil
 }

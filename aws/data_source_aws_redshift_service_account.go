@@ -33,6 +33,10 @@ func dataSourceAwsRedshiftServiceAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -45,6 +49,7 @@ func dataSourceAwsRedshiftServiceAccountRead(d *schema.ResourceData, meta interf
 
 	if accid, ok := redshiftServiceAccountPerRegionMap[region]; ok {
 		d.SetId(accid)
+		d.Set("arn", iamArnString(meta.(*AWSClient).partition, accid, "user/logs"))
 		return nil
 	}
 

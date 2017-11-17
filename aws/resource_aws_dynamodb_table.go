@@ -331,8 +331,11 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 					time.Sleep(DYNAMODB_THROTTLE_SLEEP)
 					attemptCount += 1
 				case "LimitExceededException":
-					// If we're at resource capacity, error out without retry
-					if strings.Contains(awsErr.Message(), "Subscriber limit exceeded:") {
+					// If we're at resource capacity, error out without retry. e.g.
+					// Subscriber limit exceeded: There is a limit of 256 tables per subscriber
+					// Do not error out on this similar throttling message:
+					// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
+					if strings.Contains(awsErr.Message(), "Subscriber limit exceeded:") && !strings.Contains(awsErr.Message(), "can be created, updated, or deleted simultaneously") {
 						return fmt.Errorf("AWS Error creating DynamoDB table: %s", err)
 					}
 					log.Printf("[DEBUG] Limit on concurrent table creations hit, sleeping for a bit")
@@ -703,7 +706,11 @@ func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	table := result.Table
+	return flattenAwsDynamoDbTableResource(d, meta, result.Table)
+}
+
+func flattenAwsDynamoDbTableResource(d *schema.ResourceData, meta interface{}, table *dynamodb.TableDescription) error {
+	dynamodbconn := meta.(*AWSClient).dynamodbconn
 
 	d.Set("write_capacity", table.ProvisionedThroughput.WriteCapacityUnits)
 	d.Set("read_capacity", table.ProvisionedThroughput.ReadCapacityUnits)
@@ -753,7 +760,7 @@ func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) erro
 		lsiList = append(lsiList, lsi)
 	}
 
-	err = d.Set("local_secondary_index", lsiList)
+	err := d.Set("local_secondary_index", lsiList)
 	if err != nil {
 		return err
 	}
