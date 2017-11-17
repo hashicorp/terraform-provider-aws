@@ -676,6 +676,31 @@ func TestAccAWSSecurityGroupRule_EgressDescription_updates(t *testing.T) {
 	})
 }
 
+func TestAccAWSSecurityGroupRule_whenDescriptionWithCount(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupRuleDescriptionWithCount(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_security_group_rule.arbitrary.0", "description", "Description0"),
+					resource.TestCheckResourceAttr("aws_security_group_rule.arbitrary.1", "description", "Description1"),
+					resource.TestCheckResourceAttr("aws_security_group_rule.arbitrary.2", "description", "Description2"),
+				),
+			},
+			{
+				Config:             testAccAWSSecurityGroupRuleDescriptionWithCount(rInt),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSecurityGroupRuleDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -957,6 +982,28 @@ func testAccAWSSecurityGroupRuleIngressClassicConfig(rInt int) string {
 		cidr_blocks = ["10.0.0.0/8"]
 
 		security_group_id = "${aws_security_group.web.id}"
+	}`, rInt)
+}
+
+func testAccAWSSecurityGroupRuleDescriptionWithCount(rInt int) string {
+	return fmt.Sprintf(`
+	resource "aws_security_group" "web" {
+	  name = "terraform_test_%d"
+	  description = "Used in the terraform acceptance tests"
+	  tags {
+		Name = "tf-acc-test"
+	  }
+	}
+
+	resource "aws_security_group_rule" "arbitrary" {
+	  count = 3
+	  type = "ingress"
+	  protocol = "tcp"
+	  from_port = 80
+	  to_port = 8080
+	  cidr_blocks = ["${element(list("10.0.0.0/8", "11.0.0.0/8", "12.0.0.0/8"), count.index)}"]
+	  security_group_id = "${aws_security_group.web.id}"
+	  description = "Description${count.index}"
 	}`, rInt)
 }
 
