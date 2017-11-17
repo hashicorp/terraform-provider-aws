@@ -43,9 +43,12 @@ func ecsContainerDefinitionsAreEquivalent(def1, def2 string) (bool, error) {
 		return false, err
 	}
 
-	log.Printf("[DEBUG] Comparing canonical definitions,\nFirst: %s\nSecond: %s\n",
-		canonicalJson1, canonicalJson2)
-	return bytes.Compare(canonicalJson1, canonicalJson2) == 0, nil
+	equal := bytes.Compare(canonicalJson1, canonicalJson2) == 0
+	if !equal {
+		log.Printf("[DEBUG] Canonical definitions are not equal.\nFirst: %s\nSecond: %s\n",
+			canonicalJson1, canonicalJson2)
+	}
+	return equal, nil
 }
 
 type containerDefinitions []*ecs.ContainerDefinition
