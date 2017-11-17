@@ -2321,6 +2321,122 @@ func TestValidateCognitoIdentityProvidersProviderName(t *testing.T) {
 	}
 }
 
+func TestValidateCognitoUserPoolEmailVerificationMessage(t *testing.T) {
+	validValues := []string{
+		"{####}",
+		"Foo {####}",
+		"{####} Bar",
+		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
+		"{####}" + strings.Repeat("W", 1994), // = 2000
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoUserPoolEmailVerificationMessage(s, "email_verification_message")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool email verification message: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"Foo",
+		"{###}",
+		"{####}" + strings.Repeat("W", 1995), // > 2000
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoUserPoolEmailVerificationMessage(s, "email_verification_message")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool email verification message: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateCognitoUserPoolEmailVerificationSubject(t *testing.T) {
+	validValues := []string{
+		"FooBar",
+		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\" '(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
+		"Foo Bar", // special whitespace character
+		strings.Repeat("W", 140),
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoUserPoolEmailVerificationSubject(s, "email_verification_subject")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool email verification subject: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"Foo",
+		strings.Repeat("W", 141),
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoUserPoolEmailVerificationSubject(s, "email_verification_subject")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool email verification subject: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateCognitoUserPoolSmsAuthenticationMessage(t *testing.T) {
+	validValues := []string{
+		"{####}",
+		"Foo {####}",
+		"{####} Bar",
+		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
+		"{####}" + strings.Repeat("W", 134), // = 140
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoUserPoolSmsAuthenticationMessage(s, "sms_authentication_message")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool sms authentication message: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"Foo",
+		"{####}" + strings.Repeat("W", 135),
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoUserPoolSmsAuthenticationMessage(s, "sms_authentication_message")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool sms authentication message: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateCognitoUserPoolSmsVerificationMessage(t *testing.T) {
+	validValues := []string{
+		"{####}",
+		"Foo {####}",
+		"{####} Bar",
+		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
+		"{####}" + strings.Repeat("W", 134), // = 140
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoUserPoolSmsVerificationMessage(s, "sms_verification_message")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool sms authentication message: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"Foo",
+		"{####}" + strings.Repeat("W", 135),
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoUserPoolSmsVerificationMessage(s, "sms_verification_message")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool sms authentication message: %v", s, errors)
+		}
+	}
+}
+
 func TestValidateWafMetricName(t *testing.T) {
 	validNames := []string{
 		"testrule",
@@ -2627,6 +2743,32 @@ func TestValidateDxConnectionBandWidth(t *testing.T) {
 		_, errors := validateDxConnectionBandWidth(s, "match_type")
 		if len(errors) == 0 {
 			t.Fatalf("%s should not be a valid Direct Connect Connection Bandwidth: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateCognitoUserPoolReplyEmailAddress(t *testing.T) {
+	validTypes := []string{
+		"foo@gmail.com",
+		"foo@bar",
+		"foo bar@gmail.com",
+		"foo+bar.baz@gmail.com",
+	}
+	for _, v := range validTypes {
+		_, errors := validateCognitoUserPoolReplyEmailAddress(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool Reply Email Address: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"foo",
+		"@bar.baz",
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateCognitoUserPoolReplyEmailAddress(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Cognito User Pool Reply Email Address", v)
 		}
 	}
 }

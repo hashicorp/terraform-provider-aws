@@ -23,6 +23,7 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 				Config: testAccAWSSSMParameterBasicConfig(name, "bar"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.foo", &param),
+					resource.TestCheckResourceAttrSet("aws_ssm_parameter.foo", "arn"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "value", "bar"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "type", "String"),
 				),

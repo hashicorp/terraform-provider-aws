@@ -104,7 +104,6 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 			"tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				ForceNew: true,
 			},
 			"iam_role_arn": {
 				Type:     schema.TypeString,
@@ -384,6 +383,10 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 	// Parameters must be present whether they are changed or not
 	if v, ok := d.GetOk("parameters"); ok {
 		input.Parameters = expandCloudFormationParameters(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = expandCloudFormationTags(v.(map[string]interface{}))
 	}
 
 	if d.HasChange("policy_body") {

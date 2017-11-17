@@ -59,6 +59,14 @@ func (c *ECS) CreateClusterRequest(input *CreateClusterInput) (req *request.Requ
 // cluster when you launch your first container instance. However, you can create
 // your own cluster with a unique name with the CreateCluster action.
 //
+// When you call the CreateCluster API operation, Amazon ECS attempts to create
+// the service-linked role for your account so that required resources in other
+// AWS services can be managed on your behalf. However, if the IAM user that
+// makes the call does not have permissions to create the service-linked role,
+// it is not created. For more information, see Using Service-Linked Roles for
+// Amazon ECS (http://docs.aws.amazon.com/AmazonECS/latest/developerguideusing-service-linked-roles.html)
+// in the Amazon EC2 Container Service Developer Guide.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -3357,8 +3365,8 @@ func (c *ECS) UpdateServiceRequest(input *UpdateServiceInput) (req *request.Requ
 
 // UpdateService API operation for Amazon EC2 Container Service.
 //
-// Modifies the desired count, deployment configuration, or task definition
-// used in a service.
+// Modifies the desired count, deployment configuration, network configuration,
+// or task definition used in a service.
 //
 // You can add to or subtract from the number of instantiations of a task definition
 // in a service by specifying the cluster that the service is running in and
@@ -3480,6 +3488,115 @@ func (c *ECS) UpdateServiceWithContext(ctx aws.Context, input *UpdateServiceInpu
 	return out, req.Send()
 }
 
+// An object representing a container instance or task attachment.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/Attachment
+type Attachment struct {
+	_ struct{} `type:"structure"`
+
+	// Details of the attachment. For Elastic Network Interfaces, this includes
+	// the network interface ID, the MAC address, the subnet ID, and the private
+	// IPv4 address.
+	Details []*KeyValuePair `locationName:"details" type:"list"`
+
+	// The unique identifier for the attachment.
+	Id *string `locationName:"id" type:"string"`
+
+	// The status of the attachment. Valid values are PRECREATED, CREATED, ATTACHING,
+	// ATTACHED, DETACHING, DETACHED, and DELETED.
+	Status *string `locationName:"status" type:"string"`
+
+	// The type of the attachment, such as an ElasticNetworkInterface.
+	Type *string `locationName:"type" type:"string"`
+}
+
+// String returns the string representation
+func (s Attachment) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Attachment) GoString() string {
+	return s.String()
+}
+
+// SetDetails sets the Details field's value.
+func (s *Attachment) SetDetails(v []*KeyValuePair) *Attachment {
+	s.Details = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *Attachment) SetId(v string) *Attachment {
+	s.Id = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *Attachment) SetStatus(v string) *Attachment {
+	s.Status = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *Attachment) SetType(v string) *Attachment {
+	s.Type = &v
+	return s
+}
+
+// An object representing a change in state for a task attachment.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/AttachmentStateChange
+type AttachmentStateChange struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the attachment.
+	//
+	// AttachmentArn is a required field
+	AttachmentArn *string `locationName:"attachmentArn" type:"string" required:"true"`
+
+	// The status of the attachment.
+	//
+	// Status is a required field
+	Status *string `locationName:"status" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AttachmentStateChange) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AttachmentStateChange) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AttachmentStateChange) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AttachmentStateChange"}
+	if s.AttachmentArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AttachmentArn"))
+	}
+	if s.Status == nil {
+		invalidParams.Add(request.NewErrParamRequired("Status"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAttachmentArn sets the AttachmentArn field's value.
+func (s *AttachmentStateChange) SetAttachmentArn(v string) *AttachmentStateChange {
+	s.AttachmentArn = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AttachmentStateChange) SetStatus(v string) *AttachmentStateChange {
+	s.Status = &v
+	return s
+}
+
 // An attribute is a name-value pair associated with an Amazon ECS object. Attributes
 // enable you to extend the Amazon ECS data model by adding custom metadata
 // to your resources. For more information, see Attributes (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html#attributes)
@@ -3553,6 +3670,56 @@ func (s *Attribute) SetTargetType(v string) *Attribute {
 // SetValue sets the Value field's value.
 func (s *Attribute) SetValue(v string) *Attribute {
 	s.Value = &v
+	return s
+}
+
+// An object representing the subnets and security groups for a task or service.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/AwsVpcConfiguration
+type AwsVpcConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The security groups associated with the task or service. If you do not specify
+	// a security group, the default security group for the VPC is used.
+	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
+
+	// The subnets associated with the task or service.
+	//
+	// Subnets is a required field
+	Subnets []*string `locationName:"subnets" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AwsVpcConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsVpcConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsVpcConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsVpcConfiguration"}
+	if s.Subnets == nil {
+		invalidParams.Add(request.NewErrParamRequired("Subnets"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSecurityGroups sets the SecurityGroups field's value.
+func (s *AwsVpcConfiguration) SetSecurityGroups(v []*string) *AwsVpcConfiguration {
+	s.SecurityGroups = v
+	return s
+}
+
+// SetSubnets sets the Subnets field's value.
+func (s *AwsVpcConfiguration) SetSubnets(v []*string) *AwsVpcConfiguration {
+	s.Subnets = v
 	return s
 }
 
@@ -3664,6 +3831,9 @@ type Container struct {
 	// The network bindings associated with the container.
 	NetworkBindings []*NetworkBinding `locationName:"networkBindings" type:"list"`
 
+	// The network interfaces associated with the container.
+	NetworkInterfaces []*NetworkInterface `locationName:"networkInterfaces" type:"list"`
+
 	// A short (255 max characters) human-readable string to provide additional
 	// details about a running or stopped container.
 	Reason *string `locationName:"reason" type:"string"`
@@ -3709,6 +3879,12 @@ func (s *Container) SetName(v string) *Container {
 // SetNetworkBindings sets the NetworkBindings field's value.
 func (s *Container) SetNetworkBindings(v []*NetworkBinding) *Container {
 	s.NetworkBindings = v
+	return s
+}
+
+// SetNetworkInterfaces sets the NetworkInterfaces field's value.
+func (s *Container) SetNetworkInterfaces(v []*NetworkInterface) *Container {
+	s.NetworkInterfaces = v
 	return s
 }
 
@@ -4288,6 +4464,9 @@ type ContainerInstance struct {
 	// this value is NULL.
 	AgentUpdateStatus *string `locationName:"agentUpdateStatus" type:"string" enum:"AgentUpdateStatus"`
 
+	// The Elastic Network Interfaces associated with the container instance.
+	Attachments []*Attachment `locationName:"attachments" type:"list"`
+
 	// The attributes set for the container instance, either by the Amazon ECS container
 	// agent at instance registration or manually with the PutAttributes operation.
 	Attributes []*Attribute `locationName:"attributes" type:"list"`
@@ -4365,6 +4544,12 @@ func (s *ContainerInstance) SetAgentConnected(v bool) *ContainerInstance {
 // SetAgentUpdateStatus sets the AgentUpdateStatus field's value.
 func (s *ContainerInstance) SetAgentUpdateStatus(v string) *ContainerInstance {
 	s.AgentUpdateStatus = &v
+	return s
+}
+
+// SetAttachments sets the Attachments field's value.
+func (s *ContainerInstance) SetAttachments(v []*Attachment) *ContainerInstance {
+	s.Attachments = v
 	return s
 }
 
@@ -4516,6 +4701,68 @@ func (s *ContainerOverride) SetName(v string) *ContainerOverride {
 	return s
 }
 
+// An object representing a change in state for a container.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/ContainerStateChange
+type ContainerStateChange struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container.
+	ContainerName *string `locationName:"containerName" type:"string"`
+
+	// The exit code for the container, if the state change is a result of the container
+	// exiting.
+	ExitCode *int64 `locationName:"exitCode" type:"integer"`
+
+	// Any network bindings associated with the container.
+	NetworkBindings []*NetworkBinding `locationName:"networkBindings" type:"list"`
+
+	// The reason for the state change.
+	Reason *string `locationName:"reason" type:"string"`
+
+	// The status of the container.
+	Status *string `locationName:"status" type:"string"`
+}
+
+// String returns the string representation
+func (s ContainerStateChange) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ContainerStateChange) GoString() string {
+	return s.String()
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *ContainerStateChange) SetContainerName(v string) *ContainerStateChange {
+	s.ContainerName = &v
+	return s
+}
+
+// SetExitCode sets the ExitCode field's value.
+func (s *ContainerStateChange) SetExitCode(v int64) *ContainerStateChange {
+	s.ExitCode = &v
+	return s
+}
+
+// SetNetworkBindings sets the NetworkBindings field's value.
+func (s *ContainerStateChange) SetNetworkBindings(v []*NetworkBinding) *ContainerStateChange {
+	s.NetworkBindings = v
+	return s
+}
+
+// SetReason sets the Reason field's value.
+func (s *ContainerStateChange) SetReason(v string) *ContainerStateChange {
+	s.Reason = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ContainerStateChange) SetStatus(v string) *ContainerStateChange {
+	s.Status = &v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/CreateClusterRequest
 type CreateClusterInput struct {
 	_ struct{} `type:"structure"`
@@ -4608,6 +4855,13 @@ type CreateServiceInput struct {
 	// the target group specified here.
 	LoadBalancers []*LoadBalancer `locationName:"loadBalancers" type:"list"`
 
+	// The network configuration for the service. This parameter is required for
+	// task definitions that use the awsvpc network mode to receive their own Elastic
+	// Network Interface, and it is not supported for other network modes. For more
+	// information, see Task Networking (http://docs.aws.amazon.com/AmazonECS/latest/developerguidetask-networking.html)
+	// in the Amazon EC2 Container Service Developer Guide.
+	NetworkConfiguration *NetworkConfiguration `locationName:"networkConfiguration" type:"structure"`
+
 	// An array of placement constraint objects to use for tasks in your service.
 	// You can specify a maximum of 10 constraints per task (this limit includes
 	// constraints in the task definition and those specified at run time).
@@ -4619,9 +4873,17 @@ type CreateServiceInput struct {
 
 	// The name or full Amazon Resource Name (ARN) of the IAM role that allows Amazon
 	// ECS to make calls to your load balancer on your behalf. This parameter is
-	// required if you are using a load balancer with your service. If you specify
-	// the role parameter, you must also specify a load balancer object with the
-	// loadBalancers parameter.
+	// only permitted if you are using a load balancer with your service and your
+	// task definition does not use the awsvpc network mode. If you specify the
+	// role parameter, you must also specify a load balancer object with the loadBalancers
+	// parameter.
+	//
+	// If your account has already created the Amazon ECS service-linked role, that
+	// role is used by default for your service unless you specify a role here.
+	// The service-linked role is required if your task definition uses the awsvpc
+	// network mode, in which case you should not specify a role here. For more
+	// information, see Using Service-Linked Roles for Amazon ECS (http://docs.aws.amazon.com/AmazonECS/latest/developerguideusing-service-linked-roles.html)
+	// in the Amazon EC2 Container Service Developer Guide.
 	//
 	// If your specified role has a path other than /, then you must either specify
 	// the full role ARN (this is recommended) or prefix the role name with the
@@ -4669,6 +4931,11 @@ func (s *CreateServiceInput) Validate() error {
 	if s.TaskDefinition == nil {
 		invalidParams.Add(request.NewErrParamRequired("TaskDefinition"))
 	}
+	if s.NetworkConfiguration != nil {
+		if err := s.NetworkConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("NetworkConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4703,6 +4970,12 @@ func (s *CreateServiceInput) SetDesiredCount(v int64) *CreateServiceInput {
 // SetLoadBalancers sets the LoadBalancers field's value.
 func (s *CreateServiceInput) SetLoadBalancers(v []*LoadBalancer) *CreateServiceInput {
 	s.LoadBalancers = v
+	return s
+}
+
+// SetNetworkConfiguration sets the NetworkConfiguration field's value.
+func (s *CreateServiceInput) SetNetworkConfiguration(v *NetworkConfiguration) *CreateServiceInput {
+	s.NetworkConfiguration = v
 	return s
 }
 
@@ -4999,6 +5272,10 @@ type Deployment struct {
 	// The ID of the deployment.
 	Id *string `locationName:"id" type:"string"`
 
+	// The VPC subnet and security group configuration for tasks that receive their
+	// own Elastic Network Interface by using the awsvpc networking mode.
+	NetworkConfiguration *NetworkConfiguration `locationName:"networkConfiguration" type:"structure"`
+
 	// The number of tasks in the deployment that are in the PENDING status.
 	PendingCount *int64 `locationName:"pendingCount" type:"integer"`
 
@@ -5043,6 +5320,12 @@ func (s *Deployment) SetDesiredCount(v int64) *Deployment {
 // SetId sets the Id field's value.
 func (s *Deployment) SetId(v string) *Deployment {
 	s.Id = &v
+	return s
+}
+
+// SetNetworkConfiguration sets the NetworkConfiguration field's value.
+func (s *Deployment) SetNetworkConfiguration(v *NetworkConfiguration) *Deployment {
+	s.NetworkConfiguration = v
 	return s
 }
 
@@ -7112,6 +7395,90 @@ func (s *NetworkBinding) SetProtocol(v string) *NetworkBinding {
 	return s
 }
 
+// An object representing the network configuration for a task or service.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/NetworkConfiguration
+type NetworkConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The VPC subnets and security groups associated with a task.
+	AwsvpcConfiguration *AwsVpcConfiguration `locationName:"awsvpcConfiguration" type:"structure"`
+}
+
+// String returns the string representation
+func (s NetworkConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NetworkConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *NetworkConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "NetworkConfiguration"}
+	if s.AwsvpcConfiguration != nil {
+		if err := s.AwsvpcConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("AwsvpcConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsvpcConfiguration sets the AwsvpcConfiguration field's value.
+func (s *NetworkConfiguration) SetAwsvpcConfiguration(v *AwsVpcConfiguration) *NetworkConfiguration {
+	s.AwsvpcConfiguration = v
+	return s
+}
+
+// An object representing the Elastic Network Interface for tasks that use the
+// awsvpc network mode.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/NetworkInterface
+type NetworkInterface struct {
+	_ struct{} `type:"structure"`
+
+	// The attachment ID for the network interface.
+	AttachmentId *string `locationName:"attachmentId" type:"string"`
+
+	// The private IPv6 address for the network interface.
+	Ipv6Address *string `locationName:"ipv6Address" type:"string"`
+
+	// The private IPv4 address for the network interface.
+	PrivateIpv4Address *string `locationName:"privateIpv4Address" type:"string"`
+}
+
+// String returns the string representation
+func (s NetworkInterface) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NetworkInterface) GoString() string {
+	return s.String()
+}
+
+// SetAttachmentId sets the AttachmentId field's value.
+func (s *NetworkInterface) SetAttachmentId(v string) *NetworkInterface {
+	s.AttachmentId = &v
+	return s
+}
+
+// SetIpv6Address sets the Ipv6Address field's value.
+func (s *NetworkInterface) SetIpv6Address(v string) *NetworkInterface {
+	s.Ipv6Address = &v
+	return s
+}
+
+// SetPrivateIpv4Address sets the PrivateIpv4Address field's value.
+func (s *NetworkInterface) SetPrivateIpv4Address(v string) *NetworkInterface {
+	s.PrivateIpv4Address = &v
+	return s
+}
+
 // An object representing a constraint on task placement. For more information,
 // see Task Placement Constraints (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html)
 // in the Amazon EC2 Container Service Developer Guide.
@@ -7511,17 +7878,26 @@ type RegisterTaskDefinitionInput struct {
 	Family *string `locationName:"family" type:"string" required:"true"`
 
 	// The Docker networking mode to use for the containers in the task. The valid
-	// values are none, bridge, and host.
+	// values are none, bridge, awsvpc, and host. The default Docker network mode
+	// is bridge. If the network mode is set to none, you cannot specify port mappings
+	// in your container definitions, and the task's containers do not have external
+	// connectivity. The host and awsvpc network modes offer the highest networking
+	// performance for containers because they use the EC2 network stack instead
+	// of the virtualized network stack provided by the bridge mode.
 	//
-	// The default Docker network mode is bridge. If the network mode is set to
-	// none, you cannot specify port mappings in your container definitions, and
-	// the task's containers do not have external connectivity. The host network
-	// mode offers the highest networking performance for containers because they
-	// use the host network stack instead of the virtualized network stack provided
-	// by the bridge mode; however, exposed container ports are mapped directly
-	// to the corresponding host port, so you cannot take advantage of dynamic host
-	// port mappings or run multiple instantiations of the same task on a single
-	// container instance if port mappings are used.
+	// With the host and awsvpc network modes, exposed container ports are mapped
+	// directly to the corresponding host port (for the host network mode) or the
+	// attached ENI port (for the awsvpc network mode), so you cannot take advantage
+	// of dynamic host port mappings.
+	//
+	// If the network mode is awsvpc, the task is allocated an Elastic Network Interface,
+	// and you must specify a NetworkConfiguration when you create a service or
+	// run a task with the task definition. For more information, see Task Networking
+	// (http://docs.aws.amazon.com/AmazonECS/latest/developerguidetask-networking.html)
+	// in the Amazon EC2 Container Service Developer Guide.
+	//
+	// If the network mode is host, you can not run multiple instantiations of the
+	// same task on a single container instance when port mappings are used.
 	//
 	// For more information, see Network settings (https://docs.docker.com/engine/reference/run/#network-settings)
 	// in the Docker run reference.
@@ -7730,6 +8106,13 @@ type RunTaskInput struct {
 	// is the family name of the task definition (for example, family:my-family-name).
 	Group *string `locationName:"group" type:"string"`
 
+	// The network configuration for the task. This parameter is required for task
+	// definitions that use the awsvpc network mode to receive their own Elastic
+	// Network Interface, and it is not supported for other network modes. For more
+	// information, see Task Networking (http://docs.aws.amazon.com/AmazonECS/latest/developerguidetask-networking.html)
+	// in the Amazon EC2 Container Service Developer Guide.
+	NetworkConfiguration *NetworkConfiguration `locationName:"networkConfiguration" type:"structure"`
+
 	// A list of container overrides in JSON format that specify the name of a container
 	// in the specified task definition and the overrides it should receive. You
 	// can override the default command for a container (that is specified in the
@@ -7786,6 +8169,11 @@ func (s *RunTaskInput) Validate() error {
 	if s.TaskDefinition == nil {
 		invalidParams.Add(request.NewErrParamRequired("TaskDefinition"))
 	}
+	if s.NetworkConfiguration != nil {
+		if err := s.NetworkConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("NetworkConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -7808,6 +8196,12 @@ func (s *RunTaskInput) SetCount(v int64) *RunTaskInput {
 // SetGroup sets the Group field's value.
 func (s *RunTaskInput) SetGroup(v string) *RunTaskInput {
 	s.Group = &v
+	return s
+}
+
+// SetNetworkConfiguration sets the NetworkConfiguration field's value.
+func (s *RunTaskInput) SetNetworkConfiguration(v *NetworkConfiguration) *RunTaskInput {
+	s.NetworkConfiguration = v
 	return s
 }
 
@@ -7907,6 +8301,10 @@ type Service struct {
 	// and the container port to access from the load balancer.
 	LoadBalancers []*LoadBalancer `locationName:"loadBalancers" type:"list"`
 
+	// The VPC subnet and security group configuration for tasks that receive their
+	// own Elastic Network Interface by using the awsvpc networking mode.
+	NetworkConfiguration *NetworkConfiguration `locationName:"networkConfiguration" type:"structure"`
+
 	// The number of tasks in the cluster that are in the PENDING state.
 	PendingCount *int64 `locationName:"pendingCount" type:"integer"`
 
@@ -7994,6 +8392,12 @@ func (s *Service) SetEvents(v []*ServiceEvent) *Service {
 // SetLoadBalancers sets the LoadBalancers field's value.
 func (s *Service) SetLoadBalancers(v []*LoadBalancer) *Service {
 	s.LoadBalancers = v
+	return s
+}
+
+// SetNetworkConfiguration sets the NetworkConfiguration field's value.
+func (s *Service) SetNetworkConfiguration(v *NetworkConfiguration) *Service {
+	s.NetworkConfiguration = v
 	return s
 }
 
@@ -8114,6 +8518,10 @@ type StartTaskInput struct {
 	// is the family name of the task definition (for example, family:my-family-name).
 	Group *string `locationName:"group" type:"string"`
 
+	// The VPC subnet and security group configuration for tasks that receive their
+	// own Elastic Network Interface by using the awsvpc networking mode.
+	NetworkConfiguration *NetworkConfiguration `locationName:"networkConfiguration" type:"structure"`
+
 	// A list of container overrides in JSON format that specify the name of a container
 	// in the specified task definition and the overrides it should receive. You
 	// can override the default command for a container (that is specified in the
@@ -8164,6 +8572,11 @@ func (s *StartTaskInput) Validate() error {
 	if s.TaskDefinition == nil {
 		invalidParams.Add(request.NewErrParamRequired("TaskDefinition"))
 	}
+	if s.NetworkConfiguration != nil {
+		if err := s.NetworkConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("NetworkConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8186,6 +8599,12 @@ func (s *StartTaskInput) SetContainerInstances(v []*string) *StartTaskInput {
 // SetGroup sets the Group field's value.
 func (s *StartTaskInput) SetGroup(v string) *StartTaskInput {
 	s.Group = &v
+	return s
+}
+
+// SetNetworkConfiguration sets the NetworkConfiguration field's value.
+func (s *StartTaskInput) SetNetworkConfiguration(v *NetworkConfiguration) *StartTaskInput {
+	s.NetworkConfiguration = v
 	return s
 }
 
@@ -8435,9 +8854,15 @@ func (s *SubmitContainerStateChangeOutput) SetAcknowledgment(v string) *SubmitCo
 type SubmitTaskStateChangeInput struct {
 	_ struct{} `type:"structure"`
 
+	// Any attachments associated with the state change request.
+	Attachments []*AttachmentStateChange `locationName:"attachments" type:"list"`
+
 	// The short name or full Amazon Resource Name (ARN) of the cluster that hosts
 	// the task.
 	Cluster *string `locationName:"cluster" type:"string"`
+
+	// Any containers associated with the state change request.
+	Containers []*ContainerStateChange `locationName:"containers" type:"list"`
 
 	// The reason for the state change request.
 	Reason *string `locationName:"reason" type:"string"`
@@ -8460,9 +8885,41 @@ func (s SubmitTaskStateChangeInput) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SubmitTaskStateChangeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SubmitTaskStateChangeInput"}
+	if s.Attachments != nil {
+		for i, v := range s.Attachments {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Attachments", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAttachments sets the Attachments field's value.
+func (s *SubmitTaskStateChangeInput) SetAttachments(v []*AttachmentStateChange) *SubmitTaskStateChangeInput {
+	s.Attachments = v
+	return s
+}
+
 // SetCluster sets the Cluster field's value.
 func (s *SubmitTaskStateChangeInput) SetCluster(v string) *SubmitTaskStateChangeInput {
 	s.Cluster = &v
+	return s
+}
+
+// SetContainers sets the Containers field's value.
+func (s *SubmitTaskStateChangeInput) SetContainers(v []*ContainerStateChange) *SubmitTaskStateChangeInput {
+	s.Containers = v
 	return s
 }
 
@@ -8512,6 +8969,10 @@ func (s *SubmitTaskStateChangeOutput) SetAcknowledgment(v string) *SubmitTaskSta
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/Task
 type Task struct {
 	_ struct{} `type:"structure"`
+
+	// The Elastic Network Adapter associated with the task if the task uses the
+	// awsvpc network mode.
+	Attachments []*Attachment `locationName:"attachments" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the cluster that hosts the task.
 	ClusterArn *string `locationName:"clusterArn" type:"string"`
@@ -8577,6 +9038,12 @@ func (s Task) String() string {
 // GoString returns the string representation
 func (s Task) GoString() string {
 	return s.String()
+}
+
+// SetAttachments sets the Attachments field's value.
+func (s *Task) SetAttachments(v []*Attachment) *Task {
+	s.Attachments = v
+	return s
 }
 
 // SetClusterArn sets the ClusterArn field's value.
@@ -8684,12 +9151,14 @@ type TaskDefinition struct {
 	Family *string `locationName:"family" type:"string"`
 
 	// The Docker networking mode to use for the containers in the task. The valid
-	// values are none, bridge, and host.
+	// values are none, bridge, awsvpc, and host.
 	//
 	// If the network mode is none, the containers do not have external connectivity.
-	// The default Docker network mode is bridge. The host network mode offers the
-	// highest networking performance for containers because it uses the host network
-	// stack instead of the virtualized network stack provided by the bridge mode.
+	// The default Docker network mode is bridge. If the network mode is awsvpc,
+	// the task is allocated an Elastic Network Interface. The host and awsvpc network
+	// modes offer the highest networking performance for containers because they
+	// use the EC2 network stack instead of the virtualized network stack provided
+	// by the bridge mode.
 	//
 	// For more information, see Network settings (https://docs.docker.com/engine/reference/run/#network-settings)
 	// in the Docker run reference.
@@ -9129,6 +9598,18 @@ type UpdateServiceInput struct {
 	// service.
 	DesiredCount *int64 `locationName:"desiredCount" type:"integer"`
 
+	// The network configuration for the service. This parameter is required for
+	// task definitions that use the awsvpc network mode to receive their own Elastic
+	// Network Interface, and it is not supported for other network modes. For more
+	// information, see Task Networking (http://docs.aws.amazon.com/AmazonECS/latest/developerguidetask-networking.html)
+	// in the Amazon EC2 Container Service Developer Guide.
+	//
+	// Updating a service to add a subnet to a list of existing subnets does not
+	// trigger a service deployment. For example, if your network configuration
+	// change is to keep the existing subnets and simply add another subnet to the
+	// network configuration, this does not trigger a new service deployment.
+	NetworkConfiguration *NetworkConfiguration `locationName:"networkConfiguration" type:"structure"`
+
 	// The name of the service to update.
 	//
 	// Service is a required field
@@ -9158,6 +9639,11 @@ func (s *UpdateServiceInput) Validate() error {
 	if s.Service == nil {
 		invalidParams.Add(request.NewErrParamRequired("Service"))
 	}
+	if s.NetworkConfiguration != nil {
+		if err := s.NetworkConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("NetworkConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9180,6 +9666,12 @@ func (s *UpdateServiceInput) SetDeploymentConfiguration(v *DeploymentConfigurati
 // SetDesiredCount sets the DesiredCount field's value.
 func (s *UpdateServiceInput) SetDesiredCount(v int64) *UpdateServiceInput {
 	s.DesiredCount = &v
+	return s
+}
+
+// SetNetworkConfiguration sets the NetworkConfiguration field's value.
+func (s *UpdateServiceInput) SetNetworkConfiguration(v *NetworkConfiguration) *UpdateServiceInput {
+	s.NetworkConfiguration = v
 	return s
 }
 
@@ -9420,6 +9912,9 @@ const (
 
 	// NetworkModeHost is a NetworkMode enum value
 	NetworkModeHost = "host"
+
+	// NetworkModeAwsvpc is a NetworkMode enum value
+	NetworkModeAwsvpc = "awsvpc"
 
 	// NetworkModeNone is a NetworkMode enum value
 	NetworkModeNone = "none"

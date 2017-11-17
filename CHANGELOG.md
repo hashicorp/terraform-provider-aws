@@ -1,42 +1,57 @@
-## 1.3.0 (Unreleased)
+## 1.3.0 (November 16, 2017)
 
 NOTES:
 
-* resource/aws_redshift_cluster: Field `enable_logging`, `bucket_name` and `s3_key_prefix` were deprecated in favour of a new `logging` block [GH-2230]
+* resource/aws_redshift_cluster: Field `enable_logging`, `bucket_name` and `s3_key_prefix` were deprecated in favour of a new `logging` block ([#2230](https://github.com/terraform-providers/terraform-provider-aws/issues/2230))
 
 FEATURES:
 
-* **New Data Source:** `aws_rds_cluster` [GH-2070]
-* **New Data Source:** `aws_elasticache_replication_group` [GH-2124]
-* **New Resource:** `aws_ses_template` [GH-2003]
-* **New Resource:** `aws_dx_lag` [GH-2154]
-* **New Resource:** `aws_dx_connection` [GH-2173]
-* **New Resource:** `aws_athena_database` [GH-1922]
-* **New Resource:** `aws_athena_named_query` [GH-1893]
-* **New Resource:** `aws_ssm_resource_data_sync` [GH-1895]
+* **New Data Source:** `aws_rds_cluster` ([#2070](https://github.com/terraform-providers/terraform-provider-aws/issues/2070))
+* **New Data Source:** `aws_elasticache_replication_group` ([#2124](https://github.com/terraform-providers/terraform-provider-aws/issues/2124))
+* **New Data Source:** `aws_instances` ([#2266](https://github.com/terraform-providers/terraform-provider-aws/issues/2266))
+* **New Resource:** `aws_ses_template` ([#2003](https://github.com/terraform-providers/terraform-provider-aws/issues/2003))
+* **New Resource:** `aws_dx_lag` ([#2154](https://github.com/terraform-providers/terraform-provider-aws/issues/2154))
+* **New Resource:** `aws_dx_connection` ([#2173](https://github.com/terraform-providers/terraform-provider-aws/issues/2173))
+* **New Resource:** `aws_athena_database` ([#1922](https://github.com/terraform-providers/terraform-provider-aws/issues/1922))
+* **New Resource:** `aws_athena_named_query` ([#1893](https://github.com/terraform-providers/terraform-provider-aws/issues/1893))
+* **New Resource:** `aws_ssm_resource_data_sync` ([#1895](https://github.com/terraform-providers/terraform-provider-aws/issues/1895))
+* **New Resource:** `aws_cognito_user_pool` ([#1419](https://github.com/terraform-providers/terraform-provider-aws/issues/1419))
 
 IMPROVEMENTS:
 
-* data-source/efs_file_system: Added dns_name [GH-2105]
-* resource/aws_batch_job_queue: Add validation for `name` [GH-2159]
-* resource/aws_batch_compute_environment: Improve validation for `compute_environment_name` [GH-2159]
-* resource/aws_ssm_parameter: Add support for import [GH-2234]
-* resource/aws_redshift_cluster: Add support for `snapshot_copy` [GH-2238]
-* resource/aws_ecs_task_definition: Print `container_definitions` as JSON instead of checksum [GH-1195]
+* provider: Add support for assuming roles via profiles defined in `~/.aws/config` ([#1608](https://github.com/terraform-providers/terraform-provider-aws/issues/1608))
+* data-source/efs_file_system: Added dns_name ([#2105](https://github.com/terraform-providers/terraform-provider-aws/issues/2105))
+* data-source/aws_ssm_parameter: Add `arn` attribute ([#2273](https://github.com/terraform-providers/terraform-provider-aws/issues/2273))
+* data-source/aws_ebs_volume: Add `arn` attribute ([#2271](https://github.com/terraform-providers/terraform-provider-aws/issues/2271))
+* resource/aws_batch_job_queue: Add validation for `name` ([#2159](https://github.com/terraform-providers/terraform-provider-aws/issues/2159))
+* resource/aws_batch_compute_environment: Improve validation for `compute_environment_name` ([#2159](https://github.com/terraform-providers/terraform-provider-aws/issues/2159))
+* resource/aws_ssm_parameter: Add support for import ([#2234](https://github.com/terraform-providers/terraform-provider-aws/issues/2234))
+* resource/aws_redshift_cluster: Add support for `snapshot_copy` ([#2238](https://github.com/terraform-providers/terraform-provider-aws/issues/2238))
+* resource/aws_ecs_task_definition: Print `container_definitions` as JSON instead of checksum ([#1195](https://github.com/terraform-providers/terraform-provider-aws/issues/1195))
+* resource/aws_ssm_parameter: Add `arn` attribute ([#2273](https://github.com/terraform-providers/terraform-provider-aws/issues/2273))
+* resource/aws_elb: Add listener `ssl_certificate_id` ARN validation ([#2276](https://github.com/terraform-providers/terraform-provider-aws/issues/2276))
+* resource/aws_cloudformation_stack: Support updating `tags` ([#2262](https://github.com/terraform-providers/terraform-provider-aws/issues/2262))
+* resource/aws_elb: Add `arn` attribute ([#2272](https://github.com/terraform-providers/terraform-provider-aws/issues/2272))
+* resource/aws_ebs_volume: Add `arn` attribute ([#2271](https://github.com/terraform-providers/terraform-provider-aws/issues/2271))
 
 BUG FIXES:
 
-* resource/aws_appautoscaling_policy: Retry putting policy on invalid token [GH-2135]
-* resource/aws_batch_compute_environment: `compute_environment_name` allows hyphens [GH-2126]
-* resource/aws_batch_job_definition: `name` allows hyphens [GH-2126]
-* resource/aws_elasticache_parameter_group: Raise timeout for retry on pending changes [GH-2134]
-* resource/aws_kms_key: Retry GetKeyRotationStatus on NotFoundException [GH-2133]
-* resource/aws_redshift_cluster: Make master_username ForceNew [GH-2202]
-* resource/aws_cloudwatch_log_metric_filter: Fix pattern length check [GH-2107]
-* resource/aws_cloudwatch_log_group: Use ID as name [GH-2190]
-* resource/aws_elasticsearch_domain: Added ForceNew to vpc_options [GH-2157]
-* resource/aws_redshift_cluster: Make snapshot identifiers `ForceNew` [GH-2212]
-* resource/aws_elasticsearch_domain_policy: Fix typo in err code [GH-2249]
+* resource/aws_appautoscaling_policy: Retry putting policy on invalid token ([#2135](https://github.com/terraform-providers/terraform-provider-aws/issues/2135))
+* resource/aws_batch_compute_environment: `compute_environment_name` allows hyphens ([#2126](https://github.com/terraform-providers/terraform-provider-aws/issues/2126))
+* resource/aws_batch_job_definition: `name` allows hyphens ([#2126](https://github.com/terraform-providers/terraform-provider-aws/issues/2126))
+* resource/aws_elasticache_parameter_group: Raise timeout for retry on pending changes ([#2134](https://github.com/terraform-providers/terraform-provider-aws/issues/2134))
+* resource/aws_kms_key: Retry GetKeyRotationStatus on NotFoundException ([#2133](https://github.com/terraform-providers/terraform-provider-aws/issues/2133))
+* resource/aws_lb_target_group: Fix issue that prevented using `aws_lb_target_group` with 
+  Network type load balancers ([#2251](https://github.com/terraform-providers/terraform-provider-aws/issues/2251))
+* resource/aws_lb: mark subnets as `ForceNew` for network load balancers ([#2310](https://github.com/terraform-providers/terraform-provider-aws/issues/2310))
+* resource/aws_redshift_cluster: Make master_username ForceNew ([#2202](https://github.com/terraform-providers/terraform-provider-aws/issues/2202))
+* resource/aws_cloudwatch_log_metric_filter: Fix pattern length check ([#2107](https://github.com/terraform-providers/terraform-provider-aws/issues/2107))
+* resource/aws_cloudwatch_log_group: Use ID as name ([#2190](https://github.com/terraform-providers/terraform-provider-aws/issues/2190))
+* resource/aws_elasticsearch_domain: Added ForceNew to vpc_options ([#2157](https://github.com/terraform-providers/terraform-provider-aws/issues/2157))
+* resource/aws_redshift_cluster: Make snapshot identifiers `ForceNew` ([#2212](https://github.com/terraform-providers/terraform-provider-aws/issues/2212))
+* resource/aws_elasticsearch_domain_policy: Fix typo in err code ([#2249](https://github.com/terraform-providers/terraform-provider-aws/issues/2249))
+* resource/aws_appautoscaling_policy: Retry PutScalingPolicy on rate exceeded message ([#2275](https://github.com/terraform-providers/terraform-provider-aws/issues/2275))
+* resource/aws_dynamodb_table: Retry creation on `LimitExceededException` w/ different error message ([#2274](https://github.com/terraform-providers/terraform-provider-aws/issues/2274))
 
 ## 1.2.0 (October 31, 2017)
 

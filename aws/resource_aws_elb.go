@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
@@ -36,12 +37,27 @@ func resourceAwsElb() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateElbName,
+				// This is to work around an unexpected schema behaviour returning diff
+				// for an empty field when it has a pre-computed value from previous run
+				// (e.g. from name_prefix)
+				// TODO: Revisit after we find the real root cause
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if new == "" {
+						return true
+					}
+					return false
+				},
 			},
 			"name_prefix": &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validateElbNamePrefix,
+			},
+
+			"arn": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"internal": &schema.Schema{
@@ -178,8 +194,9 @@ func resourceAwsElb() *schema.Resource {
 						},
 
 						"ssl_certificate_id": &schema.Schema{
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -328,6 +345,15 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbconn
 	elbName := d.Id()
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "elasticloadbalancing",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("loadbalancer/%s", d.Id()),
+	}
+	d.Set("arn", arn.String())
 
 	// Retrieve the ELB properties for updating the state
 	describeElbOpts := &elb.DescribeLoadBalancersInput{
