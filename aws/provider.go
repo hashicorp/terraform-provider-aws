@@ -279,6 +279,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_cloudwatch_log_destination_policy":        resourceAwsCloudWatchLogDestinationPolicy(),
 			"aws_cloudwatch_log_group":                     resourceAwsCloudWatchLogGroup(),
 			"aws_cloudwatch_log_metric_filter":             resourceAwsCloudWatchLogMetricFilter(),
+			"aws_cloudwatch_log_resource_policy":           resourceAwsCloudWatchLogResourcePolicy(),
 			"aws_cloudwatch_log_stream":                    resourceAwsCloudWatchLogStream(),
 			"aws_cloudwatch_log_subscription_filter":       resourceAwsCloudwatchLogSubscriptionFilter(),
 			"aws_config_config_rule":                       resourceAwsConfigConfigRule(),
