@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
 )
 
 func resourceAwsAthenaDatabase() *schema.Resource {
