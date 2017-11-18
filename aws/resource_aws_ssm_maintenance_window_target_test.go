@@ -29,6 +29,23 @@ func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMMaintenanceWindowTarget_targets(t *testing.T) {
+	name := acctest.RandString(10)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowTargetConfig_targets(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowTargetExists("aws_ssm_maintenance_window_target.target"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSSMMaintenanceWindowTargetExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -113,9 +130,29 @@ resource "aws_ssm_maintenance_window" "foo" {
 resource "aws_ssm_maintenance_window_target" "target" {
   window_id = "${aws_ssm_maintenance_window.foo.id}"
   resource_type = "INSTANCE"
+}
+`, rName)
+}
+
+func testAccAWSSSMMaintenanceWindowTargetConfig_targets(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_maintenance_window" "foo" {
+  name = "maintenance-window-%s"
+  schedule = "cron(0 16 ? * TUE *)"
+  duration = 3
+  cutoff = 1
+}
+
+resource "aws_ssm_maintenance_window_target" "target" {
+  window_id = "${aws_ssm_maintenance_window.foo.id}"
+  resource_type = "INSTANCE"
   targets {
     key = "tag:Name"
     values = ["acceptance_test"]
+  }
+  targets {
+    key = "tag:Name2"
+    values = ["acceptance_test", "acceptance_test2"]
   }
 }
 `, rName)

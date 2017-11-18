@@ -30,9 +30,9 @@ func resourceAwsSsmMaintenanceWindowTarget() *schema.Resource {
 
 			"targets": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
-				MaxItems: 1,
+				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"key": {
