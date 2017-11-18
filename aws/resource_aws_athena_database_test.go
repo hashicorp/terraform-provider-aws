@@ -31,7 +31,7 @@ func TestAccAWSAthenaDatabase_basic(t *testing.T) {
 }
 
 // StartQueryExecution requires OutputLocation but terraform destroy deleted S3 bucket as well.
-// So temporary S3 bucket as OutputLocation is created to confirm whether the database is acctually deleted.
+// So temporary S3 bucket as OutputLocation is created to confirm whether the database is actually deleted.
 func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 	athenaconn := testAccProvider.Meta().(*AWSClient).athenaconn
 	s3conn := testAccProvider.Meta().(*AWSClient).s3conn
