@@ -110,7 +110,14 @@ func (c *Route53) AssociateVPCWithHostedZoneRequest(input *AssociateVPCWithHoste
 //      for the hosted zones for example.com and test.example.com.
 //
 //   * ErrCodeLimitsExceeded "LimitsExceeded"
-//   The limits specified for a resource have been exceeded.
+//   This operation can't be completed either because the current account has
+//   reached the limit on reusable delegation sets that it can create or because
+//   you've reached the limit on the number of Amazon VPCs that you can associate
+//   with a private hosted zone. To get the current limit on the number of reusable
+//   delegation sets, see GetAccountLimit. To get the current limit on the number
+//   of Amazon VPCs that you can associate with a private hosted zone, see GetHostedZoneLimit.
+//   To request a higher limit, create a case (http://aws.amazon.com/route53-request)
+//   with the AWS Support Center.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/AssociateVPCWithHostedZone
 func (c *Route53) AssociateVPCWithHostedZone(input *AssociateVPCWithHostedZoneInput) (*AssociateVPCWithHostedZoneOutput, error) {
@@ -495,8 +502,18 @@ func (c *Route53) CreateHealthCheckRequest(input *CreateHealthCheckInput) (req *
 //
 // Returned Error Codes:
 //   * ErrCodeTooManyHealthChecks "TooManyHealthChecks"
+//   This health check can't be created because the current account has reached
+//   the limit on the number of active health checks.
+//
+//   For information about default limits, see Limits (http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
+//   in the Amazon Route 53 Developer Guide.
+//
+//   For information about how to get the current limit for an account, see GetAccountLimit.
+//   To request a higher limit, create a case (http://aws.amazon.com/route53-request)
+//   with the AWS Support Center.
+//
 //   You have reached the maximum number of active health checks for an AWS account.
-//   The default limit is 100. To request a higher limit, create a case (http://aws.amazon.com/route53-request)
+//   To request a higher limit, create a case (http://aws.amazon.com/route53-request)
 //   with the AWS Support Center.
 //
 //   * ErrCodeHealthCheckAlreadyExists "HealthCheckAlreadyExists"
@@ -632,9 +649,22 @@ func (c *Route53) CreateHostedZoneRequest(input *CreateHostedZoneInput) (req *re
 //   CallerReference.
 //
 //   * ErrCodeTooManyHostedZones "TooManyHostedZones"
-//   This hosted zone can't be created because the hosted zone limit is exceeded.
-//   To request a limit increase, go to the Amazon Route 53 Contact Us (http://aws.amazon.com/route53-request/)
-//   page.
+//   This operation can't be completed either because the current account has
+//   reached the limit on the number of hosted zones or because you've reached
+//   the limit on the number of hosted zones that can be associated with a reusable
+//   delegation set.
+//
+//   For information about default limits, see Limits (http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
+//   in the Amazon Route 53 Developer Guide.
+//
+//   To get the current limit on hosted zones that can be created by an account,
+//   see GetAccountLimit.
+//
+//   To get the current limit on hosted zones that can be associated with a reusable
+//   delegation set, see GetReusableDelegationSetLimit.
+//
+//   To request a higher limit, create a case (http://aws.amazon.com/route53-request)
+//   with the AWS Support Center.
 //
 //   * ErrCodeInvalidVPCId "InvalidVPCId"
 //   The VPC ID that you specified either isn't a valid ID or the current account
@@ -962,7 +992,14 @@ func (c *Route53) CreateReusableDelegationSetRequest(input *CreateReusableDelega
 //   already been created.
 //
 //   * ErrCodeLimitsExceeded "LimitsExceeded"
-//   The limits specified for a resource have been exceeded.
+//   This operation can't be completed either because the current account has
+//   reached the limit on reusable delegation sets that it can create or because
+//   you've reached the limit on the number of Amazon VPCs that you can associate
+//   with a private hosted zone. To get the current limit on the number of reusable
+//   delegation sets, see GetAccountLimit. To get the current limit on the number
+//   of Amazon VPCs that you can associate with a private hosted zone, see GetHostedZoneLimit.
+//   To request a higher limit, create a case (http://aws.amazon.com/route53-request)
+//   with the AWS Support Center.
 //
 //   * ErrCodeHostedZoneNotFound "HostedZoneNotFound"
 //   The specified HostedZone can't be found.
@@ -1065,9 +1102,16 @@ func (c *Route53) CreateTrafficPolicyRequest(input *CreateTrafficPolicyInput) (r
 //   The input is not valid.
 //
 //   * ErrCodeTooManyTrafficPolicies "TooManyTrafficPolicies"
-//   You've created the maximum number of traffic policies that can be created
-//   for the current AWS account. You can request an increase to the limit on
-//   the Contact Us (http://aws.amazon.com/route53-request/) page.
+//   This traffic policy can't be created because the current account has reached
+//   the limit on the number of traffic policies.
+//
+//   For information about default limits, see Limits (http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
+//   in the Amazon Route 53 Developer Guide.
+//
+//   To get the current limit for an account, see GetAccountLimit.
+//
+//   To request a higher limit, create a case (http://aws.amazon.com/route53-request)
+//   with the AWS Support Center.
 //
 //   * ErrCodeTrafficPolicyAlreadyExists "TrafficPolicyAlreadyExists"
 //   A traffic policy that has the same value for Name already exists.
@@ -1164,9 +1208,16 @@ func (c *Route53) CreateTrafficPolicyInstanceRequest(input *CreateTrafficPolicyI
 //   The input is not valid.
 //
 //   * ErrCodeTooManyTrafficPolicyInstances "TooManyTrafficPolicyInstances"
-//   You've created the maximum number of traffic policy instances that can be
-//   created for the current AWS account. You can request an increase to the limit
-//   on the Contact Us (http://aws.amazon.com/route53-request/) page.
+//   This traffic policy instance can't be created because the current account
+//   has reached the limit on the number of traffic policy instances.
+//
+//   For information about default limits, see Limits (http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
+//   in the Amazon Route 53 Developer Guide.
+//
+//   For information about how to get the current limit for an account, see GetAccountLimit.
+//
+//   To request a higher limit, create a case (http://aws.amazon.com/route53-request)
+//   with the AWS Support Center.
 //
 //   * ErrCodeNoSuchTrafficPolicy "NoSuchTrafficPolicy"
 //   No traffic policy exists with the specified ID.
@@ -2189,6 +2240,90 @@ func (c *Route53) DisassociateVPCFromHostedZoneWithContext(ctx aws.Context, inpu
 	return out, req.Send()
 }
 
+const opGetAccountLimit = "GetAccountLimit"
+
+// GetAccountLimitRequest generates a "aws/request.Request" representing the
+// client's request for the GetAccountLimit operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetAccountLimit for more information on using the GetAccountLimit
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetAccountLimitRequest method.
+//    req, resp := client.GetAccountLimitRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/GetAccountLimit
+func (c *Route53) GetAccountLimitRequest(input *GetAccountLimitInput) (req *request.Request, output *GetAccountLimitOutput) {
+	op := &request.Operation{
+		Name:       opGetAccountLimit,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2013-04-01/accountlimit/{Type}",
+	}
+
+	if input == nil {
+		input = &GetAccountLimitInput{}
+	}
+
+	output = &GetAccountLimitOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetAccountLimit API operation for Amazon Route 53.
+//
+// Gets the specified limit for the current account, for example, the maximum
+// number of health checks that you can create using the account.
+//
+// For the default limit, see Limits (http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
+// in the Amazon Route 53 Developer Guide. To request a higher limit, open a
+// case (https://console.aws.amazon.com/support/home#/case/create?issueType=service-limit-increase&limitType=service-code-route53).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Route 53's
+// API operation GetAccountLimit for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInput "InvalidInput"
+//   The input is not valid.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/GetAccountLimit
+func (c *Route53) GetAccountLimit(input *GetAccountLimitInput) (*GetAccountLimitOutput, error) {
+	req, out := c.GetAccountLimitRequest(input)
+	return out, req.Send()
+}
+
+// GetAccountLimitWithContext is the same as GetAccountLimit with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetAccountLimit for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Route53) GetAccountLimitWithContext(ctx aws.Context, input *GetAccountLimitInput, opts ...request.Option) (*GetAccountLimitOutput, error) {
+	req, out := c.GetAccountLimitRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetChange = "GetChange"
 
 // GetChangeRequest generates a "aws/request.Request" representing the
@@ -2946,6 +3081,96 @@ func (c *Route53) GetHostedZoneCountWithContext(ctx aws.Context, input *GetHoste
 	return out, req.Send()
 }
 
+const opGetHostedZoneLimit = "GetHostedZoneLimit"
+
+// GetHostedZoneLimitRequest generates a "aws/request.Request" representing the
+// client's request for the GetHostedZoneLimit operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetHostedZoneLimit for more information on using the GetHostedZoneLimit
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetHostedZoneLimitRequest method.
+//    req, resp := client.GetHostedZoneLimitRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/GetHostedZoneLimit
+func (c *Route53) GetHostedZoneLimitRequest(input *GetHostedZoneLimitInput) (req *request.Request, output *GetHostedZoneLimitOutput) {
+	op := &request.Operation{
+		Name:       opGetHostedZoneLimit,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2013-04-01/hostedzonelimit/{Id}/{Type}",
+	}
+
+	if input == nil {
+		input = &GetHostedZoneLimitInput{}
+	}
+
+	output = &GetHostedZoneLimitOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetHostedZoneLimit API operation for Amazon Route 53.
+//
+// Gets the specified limit for a specified hosted zone, for example, the maximum
+// number of records that you can create in the hosted zone.
+//
+// For the default limit, see Limits (http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
+// in the Amazon Route 53 Developer Guide. To request a higher limit, open a
+// case (https://console.aws.amazon.com/support/home#/case/create?issueType=service-limit-increase&limitType=service-code-route53).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Route 53's
+// API operation GetHostedZoneLimit for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchHostedZone "NoSuchHostedZone"
+//   No hosted zone exists with the ID that you specified.
+//
+//   * ErrCodeInvalidInput "InvalidInput"
+//   The input is not valid.
+//
+//   * ErrCodeHostedZoneNotPrivate "HostedZoneNotPrivate"
+//   The specified hosted zone is a public hosted zone, not a private hosted zone.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/GetHostedZoneLimit
+func (c *Route53) GetHostedZoneLimit(input *GetHostedZoneLimitInput) (*GetHostedZoneLimitOutput, error) {
+	req, out := c.GetHostedZoneLimitRequest(input)
+	return out, req.Send()
+}
+
+// GetHostedZoneLimitWithContext is the same as GetHostedZoneLimit with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetHostedZoneLimit for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Route53) GetHostedZoneLimitWithContext(ctx aws.Context, input *GetHostedZoneLimitInput, opts ...request.Option) (*GetHostedZoneLimitOutput, error) {
+	req, out := c.GetHostedZoneLimitRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetQueryLoggingConfig = "GetQueryLoggingConfig"
 
 // GetQueryLoggingConfigRequest generates a "aws/request.Request" representing the
@@ -3112,6 +3337,93 @@ func (c *Route53) GetReusableDelegationSet(input *GetReusableDelegationSetInput)
 // for more information on using Contexts.
 func (c *Route53) GetReusableDelegationSetWithContext(ctx aws.Context, input *GetReusableDelegationSetInput, opts ...request.Option) (*GetReusableDelegationSetOutput, error) {
 	req, out := c.GetReusableDelegationSetRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetReusableDelegationSetLimit = "GetReusableDelegationSetLimit"
+
+// GetReusableDelegationSetLimitRequest generates a "aws/request.Request" representing the
+// client's request for the GetReusableDelegationSetLimit operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetReusableDelegationSetLimit for more information on using the GetReusableDelegationSetLimit
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetReusableDelegationSetLimitRequest method.
+//    req, resp := client.GetReusableDelegationSetLimitRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/GetReusableDelegationSetLimit
+func (c *Route53) GetReusableDelegationSetLimitRequest(input *GetReusableDelegationSetLimitInput) (req *request.Request, output *GetReusableDelegationSetLimitOutput) {
+	op := &request.Operation{
+		Name:       opGetReusableDelegationSetLimit,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2013-04-01/reusabledelegationsetlimit/{Id}/{Type}",
+	}
+
+	if input == nil {
+		input = &GetReusableDelegationSetLimitInput{}
+	}
+
+	output = &GetReusableDelegationSetLimitOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetReusableDelegationSetLimit API operation for Amazon Route 53.
+//
+// Gets the maximum number of hosted zones that you can associate with the specified
+// reusable delegation set.
+//
+// For the default limit, see Limits (http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
+// in the Amazon Route 53 Developer Guide. To request a higher limit, open a
+// case (https://console.aws.amazon.com/support/home#/case/create?issueType=service-limit-increase&limitType=service-code-route53).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Route 53's
+// API operation GetReusableDelegationSetLimit for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInput "InvalidInput"
+//   The input is not valid.
+//
+//   * ErrCodeNoSuchDelegationSet "NoSuchDelegationSet"
+//   A reusable delegation set with the specified ID does not exist.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/GetReusableDelegationSetLimit
+func (c *Route53) GetReusableDelegationSetLimit(input *GetReusableDelegationSetLimitInput) (*GetReusableDelegationSetLimitOutput, error) {
+	req, out := c.GetReusableDelegationSetLimitRequest(input)
+	return out, req.Send()
+}
+
+// GetReusableDelegationSetLimitWithContext is the same as GetReusableDelegationSetLimit with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetReusableDelegationSetLimit for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Route53) GetReusableDelegationSetLimitWithContext(ctx aws.Context, input *GetReusableDelegationSetLimitInput, opts ...request.Option) (*GetReusableDelegationSetLimitOutput, error) {
+	req, out := c.GetReusableDelegationSetLimitRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5411,6 +5723,62 @@ func (c *Route53) UpdateTrafficPolicyInstanceWithContext(ctx aws.Context, input 
 	return out, req.Send()
 }
 
+// A complex type that contains the type of limit that you specified in the
+// request and the current value for that limit.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/AccountLimit
+type AccountLimit struct {
+	_ struct{} `type:"structure"`
+
+	// The limit that you requested. Valid values include the following:
+	//
+	//    * MAX_HEALTH_CHECKS_BY_OWNER: The maximum number of health checks that
+	//    you can create using the current account.
+	//
+	//    * MAX_HOSTED_ZONES_BY_OWNER: The maximum number of hosted zones that you
+	//    can create using the current account.
+	//
+	//    * MAX_REUSABLE_DELEGATION_SETS_BY_OWNER: The maximum number of reusable
+	//    delegation sets that you can create using the current account.
+	//
+	//    * MAX_TRAFFIC_POLICIES_BY_OWNER: The maximum number of traffic policies
+	//    that you can create using the current account.
+	//
+	//    * MAX_TRAFFIC_POLICY_INSTANCES_BY_OWNER: The maximum number of traffic
+	//    policy instances that you can create using the current account. (Traffic
+	//    policy instances are referred to as traffic flow policy records in the
+	//    Amazon Route 53 console.)
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true" enum:"AccountLimitType"`
+
+	// The current value for the limit that is specified by AccountLimit$Type.
+	//
+	// Value is a required field
+	Value *int64 `min:"1" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s AccountLimit) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccountLimit) GoString() string {
+	return s.String()
+}
+
+// SetType sets the Type field's value.
+func (s *AccountLimit) SetType(v string) *AccountLimit {
+	s.Type = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *AccountLimit) SetValue(v int64) *AccountLimit {
+	s.Value = &v
+	return s
+}
+
 // A complex type that identifies the CloudWatch alarm that you want Amazon
 // Route 53 health checkers to use to determine whether this health check is
 // healthy.
@@ -5646,20 +6014,23 @@ type AliasTarget struct {
 	// in the navigation pane, select the load balancer, and get the value of the
 	// Hosted zone field on the Description tab.
 	//
-	// Elastic Load Balancing API: Use DescribeLoadBalancers to get the value of
-	// CanonicalHostedZoneNameId. For more information, see the applicable guide:
+	// Elastic Load Balancing API: Use DescribeLoadBalancers to get the applicable
+	// value. For more information, see the applicable guide:
 	//
-	// Classic Load Balancers: DescribeLoadBalancers (http://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_DescribeLoadBalancers.html)
+	// Classic Load Balancers: Use DescribeLoadBalancers (http://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_DescribeLoadBalancers.html)
+	// to get the value of CanonicalHostedZoneNameId.
 	//
-	// Application and Network Load Balancers: DescribeLoadBalancers (http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeLoadBalancers.html)
+	// Application and Network Load Balancers: Use DescribeLoadBalancers (http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeLoadBalancers.html)
+	// to get the value of CanonicalHostedZoneId.
 	//
-	// AWS CLI: Use describe-load-balancers to get the value of CanonicalHostedZoneNameID
-	// (for Classic Load Balancers) or CanonicalHostedZoneNameID (for Application
-	// and Network Load Balancers). For more information, see the applicable guide:
+	// AWS CLI: Use describe-load-balancers to get the applicable value. For more
+	// information, see the applicable guide:
 	//
-	// Classic Load Balancers: describe-load-balancers (http://docs.aws.amazon.com/cli/latest/reference/elb/describe-load-balancers.html)
+	// Classic Load Balancers: Use describe-load-balancers (http://docs.aws.amazon.com/cli/latest/reference/elb/describe-load-balancers.html)
+	// to get the value of CanonicalHostedZoneNameId.
 	//
-	// Application and Network Load Balancers: describe-load-balancers (http://docs.aws.amazon.com/cli/latest/reference/elbv2/describe-load-balancers.html)
+	// Application and Network Load Balancers: Use describe-load-balancers (http://docs.aws.amazon.com/cli/latest/reference/elbv2/describe-load-balancers.html)
+	// to get the value of CanonicalHostedZoneId.
 	//
 	// An Amazon S3 bucket configured as a static websiteSpecify the hosted zone
 	// ID for the region that you created the bucket in. For more information about
@@ -5845,41 +6216,6 @@ type Change struct {
 	//    * UPSERT: If a resource record set doesn't already exist, Amazon Route
 	//    53 creates it. If a resource record set does exist, Amazon Route 53 updates
 	//    it with the values in the request.
-	//
-	// The values that you need to include in the request depend on the type of
-	// resource record set that you're creating, deleting, or updating:
-	//
-	// Basic resource record sets (excluding alias, failover, geolocation, latency,
-	// and weighted resource record sets)
-	//
-	//    * Name
-	//
-	//    * Type
-	//
-	//    * TTL
-	//
-	// Failover, geolocation, latency, or weighted resource record sets (excluding
-	// alias resource record sets)
-	//
-	//    * Name
-	//
-	//    * Type
-	//
-	//    * TTL
-	//
-	//    * SetIdentifier
-	//
-	// Alias resource record sets (including failover alias, geolocation alias,
-	// latency alias, and weighted alias resource record sets)
-	//
-	//    * Name
-	//
-	//    * Type
-	//
-	//    * AliasTarget (includes DNSName, EvaluateTargetHealth, and HostedZoneId)
-	//
-	//    * SetIdentifier (for failover, geolocation, latency, and weighted resource
-	//    record sets)
 	//
 	// Action is a required field
 	Action *string `type:"string" required:"true" enum:"ChangeAction"`
@@ -8121,6 +8457,108 @@ func (s *GeoLocationDetails) SetSubdivisionName(v string) *GeoLocationDetails {
 	return s
 }
 
+// A complex type that contains information about the request to create a hosted
+// zone.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/GetAccountLimitRequest
+type GetAccountLimitInput struct {
+	_ struct{} `type:"structure"`
+
+	// The limit that you want to get. Valid values include the following:
+	//
+	//    * MAX_HEALTH_CHECKS_BY_OWNER: The maximum number of health checks that
+	//    you can create using the current account.
+	//
+	//    * MAX_HOSTED_ZONES_BY_OWNER: The maximum number of hosted zones that you
+	//    can create using the current account.
+	//
+	//    * MAX_REUSABLE_DELEGATION_SETS_BY_OWNER: The maximum number of reusable
+	//    delegation sets that you can create using the current account.
+	//
+	//    * MAX_TRAFFIC_POLICIES_BY_OWNER: The maximum number of traffic policies
+	//    that you can create using the current account.
+	//
+	//    * MAX_TRAFFIC_POLICY_INSTANCES_BY_OWNER: The maximum number of traffic
+	//    policy instances that you can create using the current account. (Traffic
+	//    policy instances are referred to as traffic flow policy records in the
+	//    Amazon Route 53 console.)
+	//
+	// Type is a required field
+	Type *string `location:"uri" locationName:"Type" type:"string" required:"true" enum:"AccountLimitType"`
+}
+
+// String returns the string representation
+func (s GetAccountLimitInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetAccountLimitInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetAccountLimitInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetAccountLimitInput"}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetType sets the Type field's value.
+func (s *GetAccountLimitInput) SetType(v string) *GetAccountLimitInput {
+	s.Type = &v
+	return s
+}
+
+// A complex type that contains the requested limit.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/GetAccountLimitResponse
+type GetAccountLimitOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The current number of entities that you have created of the specified type.
+	// For example, if you specified MAX_HEALTH_CHECKS_BY_OWNER for the value of
+	// Type in the request, the value of Count is the current number of health checks
+	// that you have created using the current account.
+	//
+	// Count is a required field
+	Count *int64 `type:"long" required:"true"`
+
+	// The current setting for the specified limit. For example, if you specified
+	// MAX_HEALTH_CHECKS_BY_OWNER for the value of Type in the request, the value
+	// of Limit is the maximum number of health checks that you can create using
+	// the current account.
+	//
+	// Limit is a required field
+	Limit *AccountLimit `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetAccountLimitOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetAccountLimitOutput) GoString() string {
+	return s.String()
+}
+
+// SetCount sets the Count field's value.
+func (s *GetAccountLimitOutput) SetCount(v int64) *GetAccountLimitOutput {
+	s.Count = &v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *GetAccountLimitOutput) SetLimit(v *AccountLimit) *GetAccountLimitOutput {
+	s.Limit = v
+	return s
+}
+
 // The input for a GetChange request.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/GetChangeRequest
 type GetChangeInput struct {
@@ -8684,6 +9122,111 @@ func (s *GetHostedZoneInput) SetId(v string) *GetHostedZoneInput {
 	return s
 }
 
+// A complex type that contains information about the request to create a hosted
+// zone.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/GetHostedZoneLimitRequest
+type GetHostedZoneLimitInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the hosted zone that you want to get a limit for.
+	//
+	// HostedZoneId is a required field
+	HostedZoneId *string `location:"uri" locationName:"Id" type:"string" required:"true"`
+
+	// The limit that you want to get. Valid values include the following:
+	//
+	//    * MAX_RRSETS_BY_ZONE: The maximum number of records that you can create
+	//    in the specified hosted zone.
+	//
+	//    * MAX_VPCS_ASSOCIATED_BY_TYPE: The maximum number of Amazon VPCs that
+	//    you can associate with the specified private hosted zone.
+	//
+	// Type is a required field
+	Type *string `location:"uri" locationName:"Type" type:"string" required:"true" enum:"HostedZoneLimitType"`
+}
+
+// String returns the string representation
+func (s GetHostedZoneLimitInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetHostedZoneLimitInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetHostedZoneLimitInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetHostedZoneLimitInput"}
+	if s.HostedZoneId == nil {
+		invalidParams.Add(request.NewErrParamRequired("HostedZoneId"))
+	}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHostedZoneId sets the HostedZoneId field's value.
+func (s *GetHostedZoneLimitInput) SetHostedZoneId(v string) *GetHostedZoneLimitInput {
+	s.HostedZoneId = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *GetHostedZoneLimitInput) SetType(v string) *GetHostedZoneLimitInput {
+	s.Type = &v
+	return s
+}
+
+// A complex type that contains the requested limit.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/GetHostedZoneLimitResponse
+type GetHostedZoneLimitOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The current number of entities that you have created of the specified type.
+	// For example, if you specified MAX_RRSETS_BY_ZONE for the value of Type in
+	// the request, the value of Count is the current number of records that you
+	// have created in the specified hosted zone.
+	//
+	// Count is a required field
+	Count *int64 `type:"long" required:"true"`
+
+	// The current setting for the specified limit. For example, if you specified
+	// MAX_RRSETS_BY_ZONE for the value of Type in the request, the value of Limit
+	// is the maximum number of records that you can create in the specified hosted
+	// zone.
+	//
+	// Limit is a required field
+	Limit *HostedZoneLimit `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetHostedZoneLimitOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetHostedZoneLimitOutput) GoString() string {
+	return s.String()
+}
+
+// SetCount sets the Count field's value.
+func (s *GetHostedZoneLimitOutput) SetCount(v int64) *GetHostedZoneLimitOutput {
+	s.Count = &v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *GetHostedZoneLimitOutput) SetLimit(v *HostedZoneLimit) *GetHostedZoneLimitOutput {
+	s.Limit = v
+	return s
+}
+
 // A complex type that contain the response to a GetHostedZone request.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/GetHostedZoneResponse
 type GetHostedZoneOutput struct {
@@ -8840,6 +9383,103 @@ func (s *GetReusableDelegationSetInput) Validate() error {
 // SetId sets the Id field's value.
 func (s *GetReusableDelegationSetInput) SetId(v string) *GetReusableDelegationSetInput {
 	s.Id = &v
+	return s
+}
+
+// A complex type that contains information about the request to create a hosted
+// zone.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/GetReusableDelegationSetLimitRequest
+type GetReusableDelegationSetLimitInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the delegation set that you want to get the limit for.
+	//
+	// DelegationSetId is a required field
+	DelegationSetId *string `location:"uri" locationName:"Id" type:"string" required:"true"`
+
+	// Specify MAX_ZONES_BY_REUSABLE_DELEGATION_SET to get the maximum number of
+	// hosted zones that you can associate with the specified reusable delegation
+	// set.
+	//
+	// Type is a required field
+	Type *string `location:"uri" locationName:"Type" type:"string" required:"true" enum:"ReusableDelegationSetLimitType"`
+}
+
+// String returns the string representation
+func (s GetReusableDelegationSetLimitInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetReusableDelegationSetLimitInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetReusableDelegationSetLimitInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetReusableDelegationSetLimitInput"}
+	if s.DelegationSetId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DelegationSetId"))
+	}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDelegationSetId sets the DelegationSetId field's value.
+func (s *GetReusableDelegationSetLimitInput) SetDelegationSetId(v string) *GetReusableDelegationSetLimitInput {
+	s.DelegationSetId = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *GetReusableDelegationSetLimitInput) SetType(v string) *GetReusableDelegationSetLimitInput {
+	s.Type = &v
+	return s
+}
+
+// A complex type that contains the requested limit.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/GetReusableDelegationSetLimitResponse
+type GetReusableDelegationSetLimitOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The current number of hosted zones that you can associate with the specified
+	// reusable delegation set.
+	//
+	// Count is a required field
+	Count *int64 `type:"long" required:"true"`
+
+	// The current setting for the limit on hosted zones that you can associate
+	// with the specified reusable delegation set.
+	//
+	// Limit is a required field
+	Limit *ReusableDelegationSetLimit `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetReusableDelegationSetLimitOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetReusableDelegationSetLimitOutput) GoString() string {
+	return s.String()
+}
+
+// SetCount sets the Count field's value.
+func (s *GetReusableDelegationSetLimitOutput) SetCount(v int64) *GetReusableDelegationSetLimitOutput {
+	s.Count = &v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *GetReusableDelegationSetLimitOutput) SetLimit(v *ReusableDelegationSetLimit) *GetReusableDelegationSetLimitOutput {
+	s.Limit = v
 	return s
 }
 
@@ -9740,6 +10380,51 @@ func (s *HostedZoneConfig) SetComment(v string) *HostedZoneConfig {
 // SetPrivateZone sets the PrivateZone field's value.
 func (s *HostedZoneConfig) SetPrivateZone(v bool) *HostedZoneConfig {
 	s.PrivateZone = &v
+	return s
+}
+
+// A complex type that contains the type of limit that you specified in the
+// request and the current value for that limit.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/HostedZoneLimit
+type HostedZoneLimit struct {
+	_ struct{} `type:"structure"`
+
+	// The limit that you requested. Valid values include the following:
+	//
+	//    * MAX_RRSETS_BY_ZONE: The maximum number of records that you can create
+	//    in the specified hosted zone.
+	//
+	//    * MAX_VPCS_ASSOCIATED_BY_TYPE: The maximum number of Amazon VPCs that
+	//    you can associate with the specified private hosted zone.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true" enum:"HostedZoneLimitType"`
+
+	// The current value for the limit that is specified by Type.
+	//
+	// Value is a required field
+	Value *int64 `min:"1" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s HostedZoneLimit) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HostedZoneLimit) GoString() string {
+	return s.String()
+}
+
+// SetType sets the Type field's value.
+func (s *HostedZoneLimit) SetType(v string) *HostedZoneLimit {
+	s.Type = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *HostedZoneLimit) SetValue(v int64) *HostedZoneLimit {
+	s.Value = &v
 	return s
 }
 
@@ -12613,6 +13298,47 @@ func (s *ResourceTagSet) SetTags(v []*Tag) *ResourceTagSet {
 	return s
 }
 
+// A complex type that contains the type of limit that you specified in the
+// request and the current value for that limit.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/ReusableDelegationSetLimit
+type ReusableDelegationSetLimit struct {
+	_ struct{} `type:"structure"`
+
+	// The limit that you requested: MAX_ZONES_BY_REUSABLE_DELEGATION_SET, the maximum
+	// number of hosted zones that you can associate with the specified reusable
+	// delegation set.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true" enum:"ReusableDelegationSetLimitType"`
+
+	// The current value for the MAX_ZONES_BY_REUSABLE_DELEGATION_SET limit.
+	//
+	// Value is a required field
+	Value *int64 `min:"1" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s ReusableDelegationSetLimit) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReusableDelegationSetLimit) GoString() string {
+	return s.String()
+}
+
+// SetType sets the Type field's value.
+func (s *ReusableDelegationSetLimit) SetType(v string) *ReusableDelegationSetLimit {
+	s.Type = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *ReusableDelegationSetLimit) SetValue(v int64) *ReusableDelegationSetLimit {
+	s.Value = &v
+	return s
+}
+
 // A complex type that contains the status that one Amazon Route 53 health checker
 // reports and the time of the health check.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/route53-2013-04-01/StatusReport
@@ -13965,6 +14691,23 @@ func (s *VPC) SetVPCRegion(v string) *VPC {
 }
 
 const (
+	// AccountLimitTypeMaxHealthChecksByOwner is a AccountLimitType enum value
+	AccountLimitTypeMaxHealthChecksByOwner = "MAX_HEALTH_CHECKS_BY_OWNER"
+
+	// AccountLimitTypeMaxHostedZonesByOwner is a AccountLimitType enum value
+	AccountLimitTypeMaxHostedZonesByOwner = "MAX_HOSTED_ZONES_BY_OWNER"
+
+	// AccountLimitTypeMaxTrafficPolicyInstancesByOwner is a AccountLimitType enum value
+	AccountLimitTypeMaxTrafficPolicyInstancesByOwner = "MAX_TRAFFIC_POLICY_INSTANCES_BY_OWNER"
+
+	// AccountLimitTypeMaxReusableDelegationSetsByOwner is a AccountLimitType enum value
+	AccountLimitTypeMaxReusableDelegationSetsByOwner = "MAX_REUSABLE_DELEGATION_SETS_BY_OWNER"
+
+	// AccountLimitTypeMaxTrafficPoliciesByOwner is a AccountLimitType enum value
+	AccountLimitTypeMaxTrafficPoliciesByOwner = "MAX_TRAFFIC_POLICIES_BY_OWNER"
+)
+
+const (
 	// ChangeActionCreate is a ChangeAction enum value
 	ChangeActionCreate = "CREATE"
 
@@ -14091,6 +14834,14 @@ const (
 )
 
 const (
+	// HostedZoneLimitTypeMaxRrsetsByZone is a HostedZoneLimitType enum value
+	HostedZoneLimitTypeMaxRrsetsByZone = "MAX_RRSETS_BY_ZONE"
+
+	// HostedZoneLimitTypeMaxVpcsAssociatedByZone is a HostedZoneLimitType enum value
+	HostedZoneLimitTypeMaxVpcsAssociatedByZone = "MAX_VPCS_ASSOCIATED_BY_ZONE"
+)
+
+const (
 	// InsufficientDataHealthStatusHealthy is a InsufficientDataHealthStatus enum value
 	InsufficientDataHealthStatusHealthy = "Healthy"
 
@@ -14206,6 +14957,11 @@ const (
 
 	// ResourceRecordSetRegionApSouth1 is a ResourceRecordSetRegion enum value
 	ResourceRecordSetRegionApSouth1 = "ap-south-1"
+)
+
+const (
+	// ReusableDelegationSetLimitTypeMaxZonesByReusableDelegationSet is a ReusableDelegationSetLimitType enum value
+	ReusableDelegationSetLimitTypeMaxZonesByReusableDelegationSet = "MAX_ZONES_BY_REUSABLE_DELEGATION_SET"
 )
 
 const (
