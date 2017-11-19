@@ -51,6 +51,7 @@ func resourceAwsDefaultSubnet() *schema.Resource {
 
 func resourceAwsDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+
 	req := &ec2.DescribeSubnetsInput{
 		Filters: []*ec2.Filter{
 			&ec2.Filter{
@@ -64,16 +65,28 @@ func resourceAwsDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) er
 		},
 	}
 
-	resp, err := conn.DescribeSubnets(req)
+	var subnetId string
+	describeResp, err := conn.DescribeSubnets(req)
 	if err != nil {
 		return err
 	}
 
-	if len(resp.Subnets) != 1 || resp.Subnets[0] == nil {
-		return fmt.Errorf("Default subnet not found")
+	if len(describeResp.Subnets) != 1 || describeResp.Subnets[0] == nil {
+		log.Printf("[INFO] No default subnet found in the specified AZ, creating")
+
+		createResp, err := conn.CreateDefaultSubnet(&ec2.CreateDefaultSubnetInput{
+			AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
+		})
+		if err != nil {
+			return fmt.Errorf("Error creating default subnet: %s", err)
+		}
+
+		subnetId = aws.StringValue(createResp.Subnet.SubnetId)
+	} else {
+		subnetId = aws.StringValue(describeResp.Subnets[0].SubnetId)
 	}
 
-	d.SetId(aws.StringValue(resp.Subnets[0].SubnetId))
+	d.SetId(subnetId)
 
 	return resourceAwsSubnetUpdate(d, meta)
 }
