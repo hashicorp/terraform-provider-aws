@@ -387,6 +387,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
 			Tags:                       tags,
 		}
+
+		if arnParts := strings.Split(d.Get("replicate_source_db").(string), ":"); len(arnParts) >= 4 {
+			opts.SourceRegion = aws.String(arnParts[3])
+		}
+
 		if attr, ok := d.GetOk("iops"); ok {
 			opts.Iops = aws.Int64(int64(attr.(int)))
 		}
@@ -409,9 +414,6 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("kms_key_id"); ok {
 			opts.KmsKeyId = aws.String(attr.(string))
-			if arnParts := strings.Split(v.(string), ":"); len(arnParts) >= 4 {
-				opts.SourceRegion = aws.String(arnParts[3])
-			}
 		}
 
 		if attr, ok := d.GetOk("monitoring_role_arn"); ok {
