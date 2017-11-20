@@ -1,12 +1,12 @@
-## 1.3.1 (Unreleased)
+## 1.3.1 (November 20, 2017)
 
 BUG FIXES:
 
-* resource/aws_ecs_task_definition: Fix equivalency comparator [GH-2339]
-* resource/aws_batch_job_queue: Return errors correctly if deletion fails [GH-2322]
-* resource/aws_security_group_rule: Parse `description` correctly [GH-1959]
-* Fixed Cognito Lambda Config Validation for optional ARN configurations [GH-2370]
-* resource/aws_cognito_identity_pool_roles_attachment: Fix typo "authenticated" -> "unauthenticated" [GH-2358]
+* resource/aws_ecs_task_definition: Fix equivalency comparator ([#2339](https://github.com/terraform-providers/terraform-provider-aws/issues/2339))
+* resource/aws_batch_job_queue: Return errors correctly if deletion fails ([#2322](https://github.com/terraform-providers/terraform-provider-aws/issues/2322))
+* resource/aws_security_group_rule: Parse `description` correctly ([#1959](https://github.com/terraform-providers/terraform-provider-aws/issues/1959))
+* Fixed Cognito Lambda Config Validation for optional ARN configurations ([#2370](https://github.com/terraform-providers/terraform-provider-aws/issues/2370))
+* resource/aws_cognito_identity_pool_roles_attachment: Fix typo "authenticated" -> "unauthenticated" ([#2358](https://github.com/terraform-providers/terraform-provider-aws/issues/2358))
 
 ## 1.3.0 (November 16, 2017)
 
