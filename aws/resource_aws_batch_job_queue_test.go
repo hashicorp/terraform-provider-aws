@@ -61,6 +61,34 @@ func TestAccAWSBatchJobQueue_update(t *testing.T) {
 	})
 }
 
+func TestAccAWSBatchJobQueue_updateComputeEnvironment(t *testing.T) {
+	var jq batch.JobQueueDetail
+	ri := acctest.RandInt()
+	config := fmt.Sprintf(testAccBatchJobQueueBasic, ri)
+	updateConfig := fmt.Sprintf(testAccBatchJobQueueUpdateComputeEnvironment, ri)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchJobQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchJobQueueExists("aws_batch_job_queue.test_queue", &jq),
+					testAccCheckBatchJobQueueAttributes(&jq),
+				),
+			},
+			{
+				Config: updateConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchJobQueueExists("aws_batch_job_queue.test_queue", &jq),
+					testAccCheckBatchJobQueueAttributes(&jq),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBatchJobQueueExists(n string, jq *batch.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -203,8 +231,9 @@ resource "aws_vpc" "test_acc" {
 resource "aws_subnet" "test_acc" {
   vpc_id = "${aws_vpc.test_acc.id}"
   cidr_block = "10.1.1.0/24"
-}
+}`
 
+var testAccBatchJobQueueBasic = testAccBatchJobQueueBaseConfig + `
 resource "aws_batch_compute_environment" "test_environment" {
   compute_environment_name = "tf_acctest_batch_compute_environment_%[1]d"
   compute_resources = {
@@ -219,9 +248,8 @@ resource "aws_batch_compute_environment" "test_environment" {
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
   type = "MANAGED"
   depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
-}`
+}
 
-var testAccBatchJobQueueBasic = testAccBatchJobQueueBaseConfig + `
 resource "aws_batch_job_queue" "test_queue" {
   name = "tf_acctest_batch_job_queue_%[1]d"
   state = "ENABLED"
@@ -230,9 +258,53 @@ resource "aws_batch_job_queue" "test_queue" {
 }`
 
 var testAccBatchJobQueueUpdate = testAccBatchJobQueueBaseConfig + `
+resource "aws_batch_compute_environment" "test_environment" {
+  compute_environment_name = "tf_acctest_batch_compute_environment_%[1]d"
+  compute_resources = {
+    instance_role = "${aws_iam_role.aws_batch_service_role.arn}"
+    instance_type = ["m3.medium"]
+    max_vcpus = 1
+    min_vcpus = 0
+    security_group_ids = ["${aws_security_group.test_acc.id}"]
+    subnets = ["${aws_subnet.test_acc.id}"]
+    type = "EC2"
+  }
+  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
+  type = "MANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+}
+
 resource "aws_batch_job_queue" "test_queue" {
   name = "tf_acctest_batch_job_queue_%[1]d"
   state = "DISABLED"
   priority = 2
+  compute_environments = ["${aws_batch_compute_environment.test_environment.arn}"]
+}`
+
+var testAccBatchJobQueueUpdateComputeEnvironment = testAccBatchJobQueueBaseConfig + `
+resource "aws_security_group" "test_acc_2" {
+  name = "aws_batch_compute_environment_security_group_2_%[1]d"
+}
+
+resource "aws_batch_compute_environment" "test_environment" {
+  compute_environment_name = "tf_acctest_batch_compute_environment_%[1]d"
+  compute_resources = {
+    instance_role = "${aws_iam_role.aws_batch_service_role.arn}"
+    instance_type = ["m3.medium"]
+    max_vcpus = 1
+    min_vcpus = 0
+    security_group_ids = ["${aws_security_group.test_acc.id}", "${aws_security_group.test_acc_2.id}"]
+    subnets = ["${aws_subnet.test_acc.id}"]
+    type = "EC2"
+  }
+  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
+  type = "MANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+}
+
+resource "aws_batch_job_queue" "test_queue" {
+  name = "tf_acctest_batch_job_queue_%[1]d"
+  state = "ENABLED"
+  priority = 1
   compute_environments = ["${aws_batch_compute_environment.test_environment.arn}"]
 }`
