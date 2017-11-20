@@ -273,7 +273,40 @@ func TestAccAWSDBInstance_replica(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBInstance_noSnapshot(t *testing.T) {
+func TestAccAWSDBInstanceReplicaCrossRegion(t *testing.T) {
+	var s, r rds.DBInstance
+	var id int
+
+	region := "us-east-1"
+	id = rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicaInstanceCrossRegionConfig(
+					id,
+					fmt.Sprintf("arn:aws:rds:%s:%s:db:foobarbaz-test-terraform-%v",
+						region,
+						"123456789012",
+						id,
+					),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &s),
+					testAccCheckAWSDBInstanceExists("aws_db_instance.replica", &r),
+					testAccCheckAWSDBInstanceReplicaAttributes(&s, &r),
+					resource.TestCheckResourceAttr(
+						"aws_db_instance.replica", "source_region", region),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstanceNoSnapshot(t *testing.T) {
 	var snap rds.DBInstance
 
 	resource.Test(t, resource.TestCase{
@@ -929,6 +962,45 @@ func testAccReplicaInstanceConfig(val int) string {
 		}
 	}
 	`, val, val)
+}
+
+func testAccReplicaInstanceCrossRegionConfig(val int, arn string) string {
+	return fmt.Sprintf(`
+	resource "aws_db_instance" "bar" {
+		identifier = "%s"
+
+		allocated_storage = 5
+		engine = "mysql"
+		engine_version = "5.6.35"
+		instance_class = "db.t2.micro"
+		name = "baz"
+		password = "barbarbarbar"
+		username = "foo"
+		availability_zone = "us-east-1a"
+
+		backup_retention_period = 1
+		skip_final_snapshot = true
+
+		parameter_group_name = "default.mysql5.6"
+	}
+
+	resource "aws_db_instance" "replica" {
+		identifier = "tf-replica-db-%d"
+		backup_retention_period = 0
+		availability_zone = "us-east-2a"
+		replicate_source_db = "${aws_db_instance.bar.identifier}"
+		allocated_storage = "${aws_db_instance.bar.allocated_storage}"
+		engine = "${aws_db_instance.bar.engine}"
+		engine_version = "${aws_db_instance.bar.engine_version}"
+		instance_class = "${aws_db_instance.bar.instance_class}"
+		password = "${aws_db_instance.bar.password}"
+		username = "${aws_db_instance.bar.username}"
+		skip_final_snapshot = true
+		tags {
+			Name = "tf-replica-db"
+		}
+	}
+	`, arn, val)
 }
 
 func testAccSnapshotInstanceConfig() string {
