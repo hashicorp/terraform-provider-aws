@@ -2720,6 +2720,33 @@ func TestValidateCognitoRoleMappingsType(t *testing.T) {
 	}
 }
 
+func TestValidateCognitoRoles(t *testing.T) {
+	validValues := []map[string]interface{}{
+		map[string]interface{}{"authenticated": "hoge"},
+		map[string]interface{}{"unauthenticated": "hoge"},
+		map[string]interface{}{"authenticated": "hoge", "unauthenticated": "hoge"},
+	}
+
+	for _, s := range validValues {
+		errors := validateCognitoRoles(s, "roles")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito Roles: %v", s, errors)
+		}
+	}
+
+	invalidValues := []map[string]interface{}{
+		map[string]interface{}{},
+		map[string]interface{}{"invalid": "hoge"},
+	}
+
+	for _, s := range invalidValues {
+		errors := validateCognitoRoles(s, "roles")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito Roles: %v", s, errors)
+		}
+	}
+}
+
 func TestValidateDxConnectionBandWidth(t *testing.T) {
 	validValues := []string{
 		"1Gbps",
