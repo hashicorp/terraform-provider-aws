@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+        "github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -132,6 +133,7 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 						"path": {
 							Type:         schema.TypeString,
 							Optional:     true,
+                                                        Computed:     true,
 							ValidateFunc: validateAwsLbTargetGroupHealthCheckPath,
 						},
 
@@ -155,7 +157,7 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 						"timeout": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      10,
+                                                        Computed:     true,
 							ValidateFunc: validateAwsLbTargetGroupHealthCheckTimeout,
 						},
 
@@ -168,6 +170,7 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 
 						"matcher": {
 							Type:     schema.TypeString,
+                                                        Computed: true,
 							Optional: true,
 						},
 
@@ -214,15 +217,26 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		params.HealthCheckProtocol = aws.String(healthCheck["protocol"].(string))
 		params.HealthyThresholdCount = aws.Int64(int64(healthCheck["healthy_threshold"].(int)))
 		params.UnhealthyThresholdCount = aws.Int64(int64(healthCheck["unhealthy_threshold"].(int)))
+                t := healthCheck["timeout"].(int)
+                if t != 0 {
+                        params.HealthCheckTimeoutSeconds = aws.Int64(int64(t))
+                }
 
-		if *params.Protocol != "TCP" {
-			params.HealthCheckTimeoutSeconds = aws.Int64(int64(healthCheck["timeout"].(int)))
-			params.HealthCheckPath = aws.String(healthCheck["path"].(string))
-			params.Matcher = &elbv2.Matcher{
-				HttpCode: aws.String(healthCheck["matcher"].(string)),
+                if *params.HealthCheckProtocol != "TCP" {
+                        p := healthCheck["path"].(string)
+                        if p != "" {
+                                params.HealthCheckPath = aws.String(p)
+                        }
+
+                        m := healthCheck["matcher"].(string)
+                        if m != "" {
+                                params.Matcher = &elbv2.Matcher{
+                                        HttpCode: aws.String(m),
+                                }
 			}
 		}
 	}
+        log.Printf("\n@@@\nParams: %s\n@@@\n", spew.Sdump(params))
 
 	resp, err := elbconn.CreateTargetGroup(params)
 	if err != nil {
@@ -269,10 +283,14 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("health_check") {
+                var params *elbv2.ModifyTargetGroupInput
 		healthChecks := d.Get("health_check").([]interface{})
 
-		var params *elbv2.ModifyTargetGroupInput
 		if len(healthChecks) == 1 {
+                        params = &elbv2.ModifyTargetGroupInput{
+                                TargetGroupArn: aws.String(d.Id()),
+                        }
+
 			healthCheck := healthChecks[0].(map[string]interface{})
 
 			params = &elbv2.ModifyTargetGroupInput{
@@ -285,23 +303,24 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 			healthCheckProtocol := strings.ToLower(healthCheck["protocol"].(string))
 
-			if healthCheckProtocol != "tcp" {
+                        if healthCheckProtocol != "tcp" && !d.IsNewResource() {
 				params.Matcher = &elbv2.Matcher{
 					HttpCode: aws.String(healthCheck["matcher"].(string)),
 				}
 				params.HealthCheckPath = aws.String(healthCheck["path"].(string))
 				params.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
-				params.HealthCheckTimeoutSeconds = aws.Int64(int64(healthCheck["timeout"].(int)))
 			}
-		} else {
-			params = &elbv2.ModifyTargetGroupInput{
-				TargetGroupArn: aws.String(d.Id()),
+                        t := healthCheck["timeout"].(int)
+                        if t != 0 {
+                                params.HealthCheckTimeoutSeconds = aws.Int64(int64(t))
 			}
 		}
 
-		_, err := elbconn.ModifyTargetGroup(params)
-		if err != nil {
-			return errwrap.Wrapf("Error modifying Target Group: {{err}}", err)
+                if params != nil {
+                        _, err := elbconn.ModifyTargetGroup(params)
+                        if err != nil {
+                                return errwrap.Wrapf("Error modifying Target Group: {{err}}", err)
+                        }
 		}
 	}
 
@@ -570,9 +589,40 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 
 func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
 	protocol := diff.Get("protocol").(string)
-	if protocol != "TCP" {
-		return nil
+        if protocol == "TCP" {
+                // Network Load Balancers have many special qwirks to them.
+                // See http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html
+                if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+                        healthCheck := healthChecks[0].(map[string]interface{})
+                        // Cannot set custom matcher on TCP health checks
+                        if m := healthCheck["matcher"].(string); m != "" {
+                                return fmt.Errorf("%s: custom matcher is not supported for target_groups with TCP protocol", diff.Id())
+                        }
+                        // Cannot set custom path on TCP health checks
+                        if m := healthCheck["path"].(string); m != "" {
+                                return fmt.Errorf("%s: custom path is not supported for target_groups with TCP protocol", diff.Id())
+                        }
+                        // Cannot set custom timeout on TCP health checks
+                        if t := healthCheck["timeout"].(int); t != 0 && diff.Id() == "" {
+                                // timeout has a default value, so only check this if this is a network
+                                // LB and is a first run
+                                return fmt.Errorf("%s: custom timeout is not supported for target_groups with TCP protocol", diff.Id())
+                        }
+                }
+        }
+
+        if strings.Contains(protocol, "HTTP") {
+                if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+                        healthCheck := healthChecks[0].(map[string]interface{})
+                        // HTTP(S) Target Groups cannot use TCP health checks
+                        if p := healthCheck["protocol"].(string); strings.ToLower(p) == "tcp" {
+                                return fmt.Errorf("%s: HTTP Target Groups cannot use TCP health checks", diff.Id())
+                        }
+                }
 	}
+        // if protocol != "TCP" {
+        // 	return nil
+        // }
 
 	if diff.Id() == "" {
 		return nil
