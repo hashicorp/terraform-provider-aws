@@ -594,7 +594,7 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
                 // TCP load balancers do not support stickiness
                 stickinessBlocks := diff.Get("stickiness").([]interface{})
                 if len(stickinessBlocks) != 0 {
-                        return fmt.Errorf("Network Load Balancers do not support Stickiness", diff.Id())
+                        return fmt.Errorf("Network Load Balancers do not support Stickiness")
                 }
                 // Network Load Balancers have many special qwirks to them.
                 // See http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html
