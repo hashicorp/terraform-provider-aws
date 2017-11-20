@@ -2269,35 +2269,35 @@ func flattenCognitoUserPoolDeviceConfiguration(s *cognitoidentityprovider.Device
 func expandCognitoUserPoolLambdaConfig(config map[string]interface{}) *cognitoidentityprovider.LambdaConfigType {
 	configs := &cognitoidentityprovider.LambdaConfigType{}
 
-	if v, ok := config["create_auth_challenge"]; ok {
+	if v, ok := config["create_auth_challenge"]; ok && v.(string) != "" {
 		configs.CreateAuthChallenge = aws.String(v.(string))
 	}
 
-	if v, ok := config["custom_message"]; ok {
+	if v, ok := config["custom_message"]; ok && v.(string) != "" {
 		configs.CustomMessage = aws.String(v.(string))
 	}
 
-	if v, ok := config["define_auth_challenge"]; ok {
+	if v, ok := config["define_auth_challenge"]; ok && v.(string) != "" {
 		configs.DefineAuthChallenge = aws.String(v.(string))
 	}
 
-	if v, ok := config["post_authentication"]; ok {
+	if v, ok := config["post_authentication"]; ok && v.(string) != "" {
 		configs.PostAuthentication = aws.String(v.(string))
 	}
 
-	if v, ok := config["post_confirmation"]; ok {
+	if v, ok := config["post_confirmation"]; ok && v.(string) != "" {
 		configs.PostConfirmation = aws.String(v.(string))
 	}
 
-	if v, ok := config["pre_authentication"]; ok {
+	if v, ok := config["pre_authentication"]; ok && v.(string) != "" {
 		configs.PreAuthentication = aws.String(v.(string))
 	}
 
-	if v, ok := config["pre_sign_up"]; ok {
+	if v, ok := config["pre_sign_up"]; ok && v.(string) != "" {
 		configs.PreSignUp = aws.String(v.(string))
 	}
 
-	if v, ok := config["verify_auth_challenge_response"]; ok {
+	if v, ok := config["verify_auth_challenge_response"]; ok && v.(string) != "" {
 		configs.VerifyAuthChallengeResponse = aws.String(v.(string))
 	}
 
