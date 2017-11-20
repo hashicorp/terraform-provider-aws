@@ -61654,6 +61654,21 @@ const (
 	// InstanceTypeX132xlarge is a InstanceType enum value
 	InstanceTypeX132xlarge = "x1.32xlarge"
 
+	// InstanceTypeX1eXlarge is a InstanceType enum value
+	InstanceTypeX1eXlarge = "x1e.xlarge"
+
+	// InstanceTypeX1e2xlarge is a InstanceType enum value
+	InstanceTypeX1e2xlarge = "x1e.2xlarge"
+
+	// InstanceTypeX1e4xlarge is a InstanceType enum value
+	InstanceTypeX1e4xlarge = "x1e.4xlarge"
+
+	// InstanceTypeX1e8xlarge is a InstanceType enum value
+	InstanceTypeX1e8xlarge = "x1e.8xlarge"
+
+	// InstanceTypeX1e16xlarge is a InstanceType enum value
+	InstanceTypeX1e16xlarge = "x1e.16xlarge"
+
 	// InstanceTypeX1e32xlarge is a InstanceType enum value
 	InstanceTypeX1e32xlarge = "x1e.32xlarge"
 

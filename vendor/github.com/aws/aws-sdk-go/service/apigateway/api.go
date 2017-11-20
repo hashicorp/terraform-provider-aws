@@ -13999,6 +13999,12 @@ type DomainName struct {
 	// CloudFront documentation (http://aws.amazon.com/documentation/cloudfront/).
 	DistributionDomainName *string `locationName:"distributionDomainName" type:"string"`
 
+	// The region-agnostic Amazon Route 53 Hosted Zone ID of the edge-optimized
+	// endpoint. The valid value is Z2FDTNDATAQYW2 for all the regions. For more
+	// information, see Set up a Regional Custom Domain Name (https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-regional-api-custom-domain-create.html)
+	// and AWS Regions and Endpoints for API Gateway (http://docs.aws.amazon.com/general/latest/gr/rande.html#apigateway_region).
+	DistributionHostedZoneId *string `locationName:"distributionHostedZoneId" type:"string"`
+
 	// The name of the DomainName resource.
 	DomainName *string `locationName:"domainName" type:"string"`
 
@@ -14019,6 +14025,11 @@ type DomainName struct {
 	// custom domain name to this regional domain name. The regional domain name
 	// is returned by Amazon API Gateway when you create a regional endpoint.
 	RegionalDomainName *string `locationName:"regionalDomainName" type:"string"`
+
+	// The region-specific Amazon Route 53 Hosted Zone ID of the regional endpoint.
+	// For more information, see Set up a Regional Custom Domain Name (https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-regional-api-custom-domain-create.html)
+	// and AWS Regions and Endpoints for API Gateway (http://docs.aws.amazon.com/general/latest/gr/rande.html#apigateway_region).
+	RegionalHostedZoneId *string `locationName:"regionalHostedZoneId" type:"string"`
 }
 
 // String returns the string representation
@@ -14055,6 +14066,12 @@ func (s *DomainName) SetDistributionDomainName(v string) *DomainName {
 	return s
 }
 
+// SetDistributionHostedZoneId sets the DistributionHostedZoneId field's value.
+func (s *DomainName) SetDistributionHostedZoneId(v string) *DomainName {
+	s.DistributionHostedZoneId = &v
+	return s
+}
+
 // SetDomainName sets the DomainName field's value.
 func (s *DomainName) SetDomainName(v string) *DomainName {
 	s.DomainName = &v
@@ -14082,6 +14099,12 @@ func (s *DomainName) SetRegionalCertificateName(v string) *DomainName {
 // SetRegionalDomainName sets the RegionalDomainName field's value.
 func (s *DomainName) SetRegionalDomainName(v string) *DomainName {
 	s.RegionalDomainName = &v
+	return s
+}
+
+// SetRegionalHostedZoneId sets the RegionalHostedZoneId field's value.
+func (s *DomainName) SetRegionalHostedZoneId(v string) *DomainName {
+	s.RegionalHostedZoneId = &v
 	return s
 }
 
@@ -15071,6 +15094,11 @@ type GetDocumentationPartsInput struct {
 	// The maximum number of returned results per page.
 	Limit *int64 `location:"querystring" locationName:"limit" type:"integer"`
 
+	// The status of the API documentation parts to retrieve. Valid values are DOCUMENTED
+	// for retrieving DocumentationPart resources with content and UNDOCUMENTED
+	// for DocumentationPart resources without content.
+	LocationStatus *string `location:"querystring" locationName:"locationStatus" type:"string" enum:"LocationStatusType"`
+
 	// The name of API entities of the to-be-retrieved documentation parts.
 	NameQuery *string `location:"querystring" locationName:"name" type:"string"`
 
@@ -15115,6 +15143,12 @@ func (s *GetDocumentationPartsInput) Validate() error {
 // SetLimit sets the Limit field's value.
 func (s *GetDocumentationPartsInput) SetLimit(v int64) *GetDocumentationPartsInput {
 	s.Limit = &v
+	return s
+}
+
+// SetLocationStatus sets the LocationStatus field's value.
+func (s *GetDocumentationPartsInput) SetLocationStatus(v string) *GetDocumentationPartsInput {
+	s.LocationStatus = &v
 	return s
 }
 
@@ -17812,10 +17846,27 @@ type ImportRestApiInput struct {
 	// or not (false) when a warning is encountered. The default value is false.
 	FailOnWarnings *bool `location:"querystring" locationName:"failonwarnings" type:"boolean"`
 
-	// Custom header parameters as part of the request. For example, to exclude
-	// DocumentationParts from an imported API, set ignore=documentation as a parameters
-	// value, as in the AWS CLI command of aws apigateway import-rest-api --parameters
-	// ignore=documentation --body 'file:///path/to/imported-api-body.json.
+	// A key-value map of context-specific query string parameters specifying the
+	// behavior of different API importing operations. The following shows operation-specific
+	// parameters and their supported values.
+	//
+	// To exclude DocumentationParts from the import, set parameters as ignore=documentation.
+	//
+	// To configure the endpoint type, set parameters as endpointConfigurationTypes=EDGE
+	// orendpointConfigurationTypes=REGIONAL. The default endpoint type is EDGE.
+	//
+	// To handle imported basePath, set parameters as basePath=ignore, basePath=prepend
+	// or basePath=split.
+	//
+	// For example, the AWS CLI command to exclude documentation from the imported
+	// API is:
+	//
+	//    aws apigateway import-rest-api --parameters ignore=documentation --body
+	//    'file:///path/to/imported-api-body.json
+	// The AWS CLI command to set the regional endpoint on the imported API is:
+	//
+	//    aws apigateway import-rest-api --parameters endpointConfigurationTypes=REGIONAL
+	//    --body 'file:///path/to/imported-api-body.json
 	Parameters map[string]*string `location:"querystring" locationName:"parameters" type:"map"`
 }
 
@@ -22423,6 +22474,14 @@ const (
 
 	// IntegrationTypeAwsProxy is a IntegrationType enum value
 	IntegrationTypeAwsProxy = "AWS_PROXY"
+)
+
+const (
+	// LocationStatusTypeDocumented is a LocationStatusType enum value
+	LocationStatusTypeDocumented = "DOCUMENTED"
+
+	// LocationStatusTypeUndocumented is a LocationStatusType enum value
+	LocationStatusTypeUndocumented = "UNDOCUMENTED"
 )
 
 const (
