@@ -17,17 +17,17 @@ import (
 )
 
 func resourceAwsLbTargetGroup() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceAwsLbTargetGroupCreate,
-		Read:   resourceAwsLbTargetGroupRead,
-		Update: resourceAwsLbTargetGroupUpdate,
-		Delete: resourceAwsLbTargetGroupDelete,
-
+        return &schema.Resource{
                 // NLBs have restrictions on them at this time
-		CustomizeDiff: resourceAwsLbTargetGroupCustomizeDiff,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+                CustomizeDiff: resourceAwsLbTargetGroupCustomizeDiff,
+
+                Create: resourceAwsLbTargetGroupCreate,
+                Read:   resourceAwsLbTargetGroupRead,
+                Update: resourceAwsLbTargetGroupUpdate,
+                Delete: resourceAwsLbTargetGroupDelete,
+                Importer: &schema.ResourceImporter{
+                        State: schema.ImportStatePassthrough,
+                },
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -563,7 +563,11 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		}
 	}
 
-	if err := d.Set("stickiness", []interface{}{stickinessMap}); err != nil {
+        setStickyMap := []interface{}{}
+        if len(stickinessMap) > 0 {
+                setStickyMap = []interface{}{stickinessMap}
+        }
+        if err := d.Set("stickiness", setStickyMap); err != nil {
 		return err
 	}
 
@@ -585,8 +589,13 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 }
 
 func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
-	protocol := diff.Get("protocol").(string)
+        protocol := diff.Get("protocol").(string)
         if protocol == "TCP" {
+                // TCP load balancers do not support stickiness
+                stickinessBlocks := diff.Get("stickiness").([]interface{})
+                if len(stickinessBlocks) != 0 {
+                        return fmt.Errorf("Network Load Balancers do not support Stickiness", diff.Id())
+                }
                 // Network Load Balancers have many special qwirks to them.
                 // See http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html
                 if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
@@ -613,20 +622,22 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
                         healthCheck := healthChecks[0].(map[string]interface{})
                         // HTTP(S) Target Groups cannot use TCP health checks
                         if p := healthCheck["protocol"].(string); strings.ToLower(p) == "tcp" {
-                                return fmt.Errorf("%s: HTTP Target Groups cannot use TCP health checks", diff.Id())
+                                return fmt.Errorf("HTTP Target Groups cannot use TCP health checks")
                         }
                 }
         }
 
         if diff.Id() == "" {
                 return nil
-	}
+        }
 
-	if diff.HasChange("health_check.0.interval") {
-		old, new := diff.GetChange("health_check.0.interval")
-		return fmt.Errorf("Health check interval cannot be updated from %d to %d for TCP based Target Group %s,"+
-			" use 'terraform taint' to recreate the resource if you wish",
-			old, new, diff.Id())
-	}
-	return nil
+        if protocol == "TCP" {
+                if diff.HasChange("health_check.0.interval") {
+                        old, new := diff.GetChange("health_check.0.interval")
+                        return fmt.Errorf("Health check interval cannot be updated from %d to %d for TCP based Target Group %s,"+
+                                " use 'terraform taint' to recreate the resource if you wish",
+                                old, new, diff.Id())
+                }
+        }
+        return nil
 }
