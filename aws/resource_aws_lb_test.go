@@ -109,6 +109,38 @@ func TestAccAWSLB_networkLoadbalancer(t *testing.T) {
 	})
 }
 
+func TestAccAWSLB_networkLoadbalancerAccessLogsDisabled(t *testing.T) {
+	var conf elbv2.LoadBalancer
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb.lb_test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_networkLoadbalancerAccessLogs(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.Name", "TestAccAWSALB_basic"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "zone_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "dns_name"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "arn"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "arn"),
+					resource.TestCheckNoResourceAttr("aws_lb.lb_test", "access_logs"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "load_balancer_type", "network"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLB_networkLoadbalancerEIP(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -451,6 +483,25 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "dns_name"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "arn"),
+				),
+			},
+			{
+				Config: testAccAWSLBConfig_accessLogs(false, lbName, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "security_groups.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.Name", "TestAccAWSALB_basic1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "idle_timeout", "50"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "zone_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "dns_name"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.#", "0"),
 					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "arn"),
 				),
 			},
@@ -912,6 +963,51 @@ func testAccAWSLBConfig_networkLoadbalancer(lbName string) string {
 
   subnet_mapping {
   	subnet_id = "${aws_subnet.alb_test.id}"
+  }
+
+  tags {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.10.0.0/16"
+
+  tags {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  vpc_id                  = "${aws_vpc.alb_test.id}"
+  cidr_block              = "10.10.0.0/21"
+  map_public_ip_on_launch = true
+  availability_zone       = "us-west-2a"
+
+  tags {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+
+`, lbName)
+}
+
+func testAccAWSLBConfig_networkLoadbalancerAccessLogs(lbName string) string {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+  name            = "%s"
+  internal        = true
+  load_balancer_type = "network"
+
+  enable_deletion_protection = false
+
+  access_logs {
+    bucket = "${aws_s3_bucket.logs.bucket}"
+    prefix = "${var.bucket_prefix}"
+    enabled = true
+  }
+
+  subnet_mapping {
+    subnet_id = "${aws_subnet.alb_test.id}"
   }
 
   tags {

@@ -330,30 +330,36 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("access_logs") {
 		logs := d.Get("access_logs").([]interface{})
-		if len(logs) == 1 {
-			log := logs[0].(map[string]interface{})
 
-			attributes = append(attributes,
-				&elbv2.LoadBalancerAttribute{
-					Key:   aws.String("access_logs.s3.enabled"),
-					Value: aws.String(strconv.FormatBool(log["enabled"].(bool))),
-				},
-				&elbv2.LoadBalancerAttribute{
-					Key:   aws.String("access_logs.s3.bucket"),
-					Value: aws.String(log["bucket"].(string)),
-				})
+		// Access Logs are not supported for Network Loadbalancers
+		if d.Get("load_balancer_type").(string) == "network" {
+			log.Printf("[INFO] Access logs are not supported by Network Load Balancers. Skipping creation: %#v", logs)
+		} else {
+			if len(logs) == 1 {
+				log := logs[0].(map[string]interface{})
 
-			if prefix, ok := log["prefix"]; ok {
+				attributes = append(attributes,
+					&elbv2.LoadBalancerAttribute{
+						Key:   aws.String("access_logs.s3.enabled"),
+						Value: aws.String(strconv.FormatBool(log["enabled"].(bool))),
+					},
+					&elbv2.LoadBalancerAttribute{
+						Key:   aws.String("access_logs.s3.bucket"),
+						Value: aws.String(log["bucket"].(string)),
+					})
+
+				if prefix, ok := log["prefix"]; ok {
+					attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+						Key:   aws.String("access_logs.s3.prefix"),
+						Value: aws.String(prefix.(string)),
+					})
+				}
+			} else if len(logs) == 0 {
 				attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-					Key:   aws.String("access_logs.s3.prefix"),
-					Value: aws.String(prefix.(string)),
+					Key:   aws.String("access_logs.s3.enabled"),
+					Value: aws.String("false"),
 				})
 			}
-		} else if len(logs) == 0 {
-			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("access_logs.s3.enabled"),
-				Value: aws.String("false"),
-			})
 		}
 	}
 
@@ -364,7 +370,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 	}
 
-	// It's important to know that Idle timeout is not supported for Network Loadbalancers
+	// Idle timeout is not supported for Network Loadbalancers
 	if d.Get("load_balancer_type").(string) != "network" && d.HasChange("idle_timeout") {
 		attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 			Key:   aws.String("idle_timeout.timeout_seconds"),
