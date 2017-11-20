@@ -6,6 +6,7 @@ BUG FIXES:
 * resource/aws_batch_job_queue: Return errors correctly if deletion fails [GH-2322]
 * resource/aws_security_group_rule: Parse `description` correctly [GH-1959]
 * Fixed Cognito Lambda Config Validation for optional ARN configurations [GH-2370]
+* resource/aws_cognito_identity_pool_roles_attachment: Fix typo "authenticated" -> "unauthenticated" [GH-2358]
 
 ## 1.3.0 (November 16, 2017)
 
