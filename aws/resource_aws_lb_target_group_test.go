@@ -531,6 +531,41 @@ func TestAccAWSLBTargetGroup_updateSticknessEnabled(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBTargetGroup_application_LB_defaults(t *testing.T) {
+        var conf elbv2.TargetGroup
+        targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+        resource.Test(t, resource.TestCase{
+                PreCheck:      func() { testAccPreCheck(t) },
+                IDRefreshName: "aws_lb_target_group.test",
+                Providers:     testAccProviders,
+                CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+                Steps: []resource.TestStep{
+                        {
+                                Config: testAccNlbAlb_defaults(targetGroupName),
+                                Check: resource.ComposeAggregateTestCheckFunc(
+                                        testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &conf),
+                                        resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "arn"),
+                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "name", targetGroupName),
+                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "port", "443"),
+                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "HTTP"),
+                                        resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
+                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
+                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
+                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "10"),
+                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.port", "8081"),
+                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.protocol", "HTTP"),
+                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.timeout", "5"),
+                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.healthy_threshold", "3"),
+                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.unhealthy_threshold", "3"),
+                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.%", "1"),
+                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.Name", "TestAccAWSLBTargetGroup_application_LB_defaults"),
+                                ),
+                        },
+                },
+        })
+}
+
 func testAccCheckAWSLBTargetGroupExists(n string, res *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -646,6 +681,43 @@ func testAccCheckAWSLBTargetGroupDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccNlbAlb_defaults(name string) string {
+        return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 443
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.test.id}"
+
+  deregistration_delay = 200
+
+  # HTTP Only
+  stickiness {
+    type            = "lb_cookie"
+    cookie_duration = 10000
+  }
+
+  health_check {
+    interval = 10
+    port     = 8081
+    protocol = "HTTP"
+    healthy_threshold = 3
+    unhealthy_threshold = 3
+  }
+  tags {
+    Name = "TestAccAWSLBTargetGroup_application_LB_defaults"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    Name = "TestAccAWSLBTargetGroup_application_LB_defaults"
+  }
+}`, name)
 }
 
 func testAccAWSLBTargetGroupConfig_basic(targetGroupName string) string {
