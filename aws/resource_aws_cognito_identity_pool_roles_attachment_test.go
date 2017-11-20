@@ -43,35 +43,6 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoIdentityPoolRolesAttachment_unauthenticated(t *testing.T) {
-	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	updatedName := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCognitoIdentityPoolRolesAttachmentConfig_unauthenticated(name),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists("aws_cognito_identity_pool_roles_attachment.main"),
-					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "identity_pool_id"),
-					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "roles.unauthenticated"),
-				),
-			},
-			{
-				Config: testAccAWSCognitoIdentityPoolRolesAttachmentConfig_unauthenticated(updatedName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists("aws_cognito_identity_pool_roles_attachment.main"),
-					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "identity_pool_id"),
-					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "roles.unauthenticated"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
@@ -339,18 +310,6 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
 
   roles {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
-  }
-}
-`)
-}
-
-func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_unauthenticated(name string) string {
-	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig(name) + `
-resource "aws_cognito_identity_pool_roles_attachment" "main" {
-  identity_pool_id = "${aws_cognito_identity_pool.main.id}"
-
-  roles {
-    "unauthenticated" = "${aws_iam_role.unauthenticated.arn}"
   }
 }
 `)
