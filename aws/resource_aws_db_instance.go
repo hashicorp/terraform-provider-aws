@@ -420,11 +420,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		//
 		// go figure, eh?
 		//
+		replicaRegion := meta.(*AWSClient).region
+
 		arnParts, arnErr := arn.Parse(d.Get("replicate_source_db").(string))
 		if arnErr == nil {
-			var replicaRegion string
-			replicaRegion = (string)(*opts.AvailabilityZone)
-			if arnParts.Region != replicaRegion[0:len(replicaRegion)-1] {
+			if arnParts.Region != replicaRegion {
 				opts.SourceRegion = aws.String(arnParts.Region)
 			}
 		}
