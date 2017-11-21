@@ -138,6 +138,25 @@ func TestAccAWSIAMRole_badJSON(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
+	var conf iam.GetRoleOutput
+	rName := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMRoleConfig_force_detach_policies(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists("aws_iam_role.test", &conf),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRoleDestroy(s *terraform.State) error {
 	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
 
@@ -374,4 +393,72 @@ resource "aws_iam_role" "my_instance_role" {
 POLICY
 }
 `, rName)
+}
+
+func testAccAWSIAMRoleConfig_force_detach_policies(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role_policy" "test" {
+  name = "tf-iam-role-policy-%s"
+  role = "${aws_iam_role.test.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "test" {
+  name = "tf-iam-policy-%s"
+  description = "A test policy"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+      "iam:ChangePassword"
+    ],
+    "Resource": "*",
+    "Effect": "Allow"
+  }
+]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role = "${aws_iam_role.test.name}"
+  policy_arn = "${aws_iam_policy.test.arn}"
+}
+
+resource "aws_iam_role" "test" {
+  name = "tf-iam-role-%s"
+  force_detach_policies = true
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+`, rName, rName, rName)
 }
