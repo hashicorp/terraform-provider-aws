@@ -34,8 +34,23 @@ func dataSourceAwsNatGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
-
+			"allocation_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"network_interface_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"public_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"private_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags":   tagsSchemaComputed(),
 			"filter": ec2CustomFiltersSchema(),
 		},
 	}
@@ -94,6 +109,8 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	ngw := resp.NatGateways[0]
+
+	log.Printf("[DEBUG] NAT Gateway response: %s", ngw)
 
 	d.SetId(aws.StringValue(ngw.NatGatewayId))
 	d.Set("state", ngw.State)
