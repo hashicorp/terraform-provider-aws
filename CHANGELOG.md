@@ -1,5 +1,9 @@
 ## 1.3.2 (Unreleased)
 
+BUG FIXES:
+
+* Fix Cognito Userpool email_subject_by_link [GH-2395]
+
 IMPROVEMENTS:
 
 * resource/aws_ssm_maintenance_window_target: Change MaxItems of targets [GH-2361]
