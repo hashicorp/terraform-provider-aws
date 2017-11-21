@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * Fix Cognito Userpool email_subject_by_link [GH-2395]
+* resource/aws_api_gateway_method_response: Fix conflict exception in API gateway method response [GH-2393]
 
 IMPROVEMENTS:
 
