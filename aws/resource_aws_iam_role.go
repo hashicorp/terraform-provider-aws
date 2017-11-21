@@ -294,13 +294,13 @@ func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 		// Loop and remove the Policies from the Role
 		if len(inlinePoliciesResp.PolicyNames) > 0 {
-			for _, i := range policiesResp.AttachedPolicies {
-				_, err := iamconn.DetachRolePolicy(&iam.DetachRolePolicyInput{
-					PolicyArn: i.PolicyArn,
-					RoleName:  aws.String(d.Id()),
+			for _, i := range inlinePoliciesResp.PolicyNames {
+				_, err := iamconn.DeleteRolePolicy(&iam.DeleteRolePolicyInput{
+					PolicyName: aws.String(i),
+					RoleName:   aws.String(d.Id()),
 				})
 				if err != nil {
-					return fmt.Errorf("Error deleting IAM Role %s: %s", d.Id(), err)
+					return fmt.Errorf("Error deleting inline policy of IAM Role %s: %s", d.Id(), err)
 				}
 			}
 		}
