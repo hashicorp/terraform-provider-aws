@@ -1,4 +1,9 @@
 ## 1.3.2 (Unreleased)
+
+IMPROVEMENTS:
+
+* resource/aws_ssm_maintenance_window_target: Change MaxItems of targets [GH-2361]
+
 ## 1.3.1 (November 20, 2017)
 
 BUG FIXES:
