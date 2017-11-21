@@ -266,7 +266,7 @@ func TestAccAWSDBInstance_replica(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &s),
 					testAccCheckAWSDBInstanceExists("aws_db_instance.replica", &r),
-					resource.TestCheckNoResourceAttrSet("aws_db_instance.replica", "source_region"),
+					resource.TestCheckNoResourceAttr("aws_db_instance.replica", "source_region"),
 					testAccCheckAWSDBInstanceReplicaAttributes(&s, &r),
 				),
 			},
@@ -298,7 +298,7 @@ func TestAccAWSDBInstanceReplicaSameRegionWithArn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &s),
 					testAccCheckAWSDBInstanceExists("aws_db_instance.replica", &r),
-					resource.TestCheckNoResourceAttrSet("aws_db_instance.replica", "source_region"),
+					resource.TestCheckNoResourceAttr("aws_db_instance.replica", "source_region"),
 					testAccCheckAWSDBInstanceReplicaAttributes(&s, &r),
 				),
 			},
