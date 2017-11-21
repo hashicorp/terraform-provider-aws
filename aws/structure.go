@@ -2661,7 +2661,7 @@ func sliceContainsMap(l []interface{}, m map[string]interface{}) (int, bool) {
 }
 
 func expandAwsSsmTargets(d *schema.ResourceData) []*ssm.Target {
-	var targets []*ssm.Target
+	targets := make([]*ssm.Target, 0)
 
 	targetConfig := d.Get("targets").([]interface{})
 
@@ -2685,13 +2685,13 @@ func flattenAwsSsmTargets(targets []*ssm.Target) []map[string]interface{} {
 	}
 
 	result := make([]map[string]interface{}, 0, len(targets))
-	target := targets[0]
+	for _, target := range targets {
+		t := make(map[string]interface{}, 1)
+		t["key"] = *target.Key
+		t["values"] = flattenStringList(target.Values)
 
-	t := make(map[string]interface{})
-	t["key"] = *target.Key
-	t["values"] = flattenStringList(target.Values)
-
-	result = append(result, t)
+		result = append(result, t)
+	}
 
 	return result
 }
