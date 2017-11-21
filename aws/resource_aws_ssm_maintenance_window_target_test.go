@@ -23,6 +23,8 @@ func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
 				Config: testAccAWSSSMMaintenanceWindowTargetBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTargetExists("aws_ssm_maintenance_window_target.target"),
+					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "targets.0.key", "tag:Name"),
+					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "targets.1.key", "tag:Name2"),
 				),
 			},
 		},
