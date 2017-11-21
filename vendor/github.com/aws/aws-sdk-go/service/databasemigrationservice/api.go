@@ -2546,6 +2546,142 @@ func (c *DatabaseMigrationService) DescribeReplicationSubnetGroupsPagesWithConte
 	return p.Err()
 }
 
+const opDescribeReplicationTaskAssessmentResults = "DescribeReplicationTaskAssessmentResults"
+
+// DescribeReplicationTaskAssessmentResultsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeReplicationTaskAssessmentResults operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeReplicationTaskAssessmentResults for more information on using the DescribeReplicationTaskAssessmentResults
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeReplicationTaskAssessmentResultsRequest method.
+//    req, resp := client.DescribeReplicationTaskAssessmentResultsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTaskAssessmentResults
+func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentResultsRequest(input *DescribeReplicationTaskAssessmentResultsInput) (req *request.Request, output *DescribeReplicationTaskAssessmentResultsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeReplicationTaskAssessmentResults,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeReplicationTaskAssessmentResultsInput{}
+	}
+
+	output = &DescribeReplicationTaskAssessmentResultsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeReplicationTaskAssessmentResults API operation for AWS Database Migration Service.
+//
+// Returns the task assessment results from Amazon S3. This action always returns
+// the latest results.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Database Migration Service's
+// API operation DescribeReplicationTaskAssessmentResults for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   The resource could not be found.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTaskAssessmentResults
+func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentResults(input *DescribeReplicationTaskAssessmentResultsInput) (*DescribeReplicationTaskAssessmentResultsOutput, error) {
+	req, out := c.DescribeReplicationTaskAssessmentResultsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeReplicationTaskAssessmentResultsWithContext is the same as DescribeReplicationTaskAssessmentResults with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeReplicationTaskAssessmentResults for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentResultsWithContext(ctx aws.Context, input *DescribeReplicationTaskAssessmentResultsInput, opts ...request.Option) (*DescribeReplicationTaskAssessmentResultsOutput, error) {
+	req, out := c.DescribeReplicationTaskAssessmentResultsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeReplicationTaskAssessmentResultsPages iterates over the pages of a DescribeReplicationTaskAssessmentResults operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeReplicationTaskAssessmentResults method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeReplicationTaskAssessmentResults operation.
+//    pageNum := 0
+//    err := client.DescribeReplicationTaskAssessmentResultsPages(params,
+//        func(page *DescribeReplicationTaskAssessmentResultsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentResultsPages(input *DescribeReplicationTaskAssessmentResultsInput, fn func(*DescribeReplicationTaskAssessmentResultsOutput, bool) bool) error {
+	return c.DescribeReplicationTaskAssessmentResultsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeReplicationTaskAssessmentResultsPagesWithContext same as DescribeReplicationTaskAssessmentResultsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentResultsPagesWithContext(ctx aws.Context, input *DescribeReplicationTaskAssessmentResultsInput, fn func(*DescribeReplicationTaskAssessmentResultsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeReplicationTaskAssessmentResultsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeReplicationTaskAssessmentResultsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeReplicationTaskAssessmentResultsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opDescribeReplicationTasks = "DescribeReplicationTasks"
 
 // DescribeReplicationTasksRequest generates a "aws/request.Request" representing the
@@ -3934,6 +4070,90 @@ func (c *DatabaseMigrationService) StartReplicationTaskWithContext(ctx aws.Conte
 	return out, req.Send()
 }
 
+const opStartReplicationTaskAssessment = "StartReplicationTaskAssessment"
+
+// StartReplicationTaskAssessmentRequest generates a "aws/request.Request" representing the
+// client's request for the StartReplicationTaskAssessment operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartReplicationTaskAssessment for more information on using the StartReplicationTaskAssessment
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartReplicationTaskAssessmentRequest method.
+//    req, resp := client.StartReplicationTaskAssessmentRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StartReplicationTaskAssessment
+func (c *DatabaseMigrationService) StartReplicationTaskAssessmentRequest(input *StartReplicationTaskAssessmentInput) (req *request.Request, output *StartReplicationTaskAssessmentOutput) {
+	op := &request.Operation{
+		Name:       opStartReplicationTaskAssessment,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartReplicationTaskAssessmentInput{}
+	}
+
+	output = &StartReplicationTaskAssessmentOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartReplicationTaskAssessment API operation for AWS Database Migration Service.
+//
+// Starts the replication task assessment for unsupported data types in the
+// source database.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Database Migration Service's
+// API operation StartReplicationTaskAssessment for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   The resource is in a state that prevents it from being used for database
+//   migration.
+//
+//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   The resource could not be found.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StartReplicationTaskAssessment
+func (c *DatabaseMigrationService) StartReplicationTaskAssessment(input *StartReplicationTaskAssessmentInput) (*StartReplicationTaskAssessmentOutput, error) {
+	req, out := c.StartReplicationTaskAssessmentRequest(input)
+	return out, req.Send()
+}
+
+// StartReplicationTaskAssessmentWithContext is the same as StartReplicationTaskAssessment with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartReplicationTaskAssessment for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) StartReplicationTaskAssessmentWithContext(ctx aws.Context, input *StartReplicationTaskAssessmentInput, opts ...request.Option) (*StartReplicationTaskAssessmentOutput, error) {
+	req, out := c.StartReplicationTaskAssessmentRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opStopReplicationTask = "StopReplicationTask"
 
 // StopReplicationTaskRequest generates a "aws/request.Request" representing the
@@ -4164,7 +4384,7 @@ type AddTagsToResourceInput struct {
 	// The tag to be assigned to the DMS resource.
 	//
 	// Tags is a required field
-	Tags []*Tag `locationNameList:"Tag" type:"list" required:"true"`
+	Tags []*Tag `type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -4430,7 +4650,7 @@ func (s *Connection) SetStatus(v string) *Connection {
 type CreateEndpointInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Number (ARN) for the certificate.
+	// The Amazon Resource Name (ARN) for the certificate.
 	CertificateArn *string `type:"string"`
 
 	// The name of the endpoint database.
@@ -4499,7 +4719,7 @@ type CreateEndpointInput struct {
 	SslMode *string `type:"string" enum:"DmsSslModeValue"`
 
 	// Tags to be added to the endpoint.
-	Tags []*Tag `locationNameList:"Tag" type:"list"`
+	Tags []*Tag `type:"list"`
 
 	// The user name to be used to login to the endpoint database.
 	Username *string `type:"string"`
@@ -4672,7 +4892,7 @@ type CreateEventSubscriptionInput struct {
 	// DescribeEventCategories action or in the topic  Working with Events and Notifications
 	// (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Events.html) in the
 	// AWS Database Migration Service User Guide.
-	EventCategories []*string `locationNameList:"EventCategory" type:"list"`
+	EventCategories []*string `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the Amazon SNS topic created for event
 	// notification. The ARN is created by Amazon SNS when you create a topic and
@@ -4685,7 +4905,7 @@ type CreateEventSubscriptionInput struct {
 	// If not specified, then all sources are included in the response. An identifier
 	// must begin with a letter and must contain only ASCII letters, digits, and
 	// hyphens; it cannot end with a hyphen or contain two consecutive hyphens.
-	SourceIds []*string `locationNameList:"SourceId" type:"list"`
+	SourceIds []*string `type:"list"`
 
 	// The type of AWS DMS resource that generates the events. For example, if you
 	// want to be notified of events generated by a replication instance, you set
@@ -4703,7 +4923,7 @@ type CreateEventSubscriptionInput struct {
 	SubscriptionName *string `type:"string" required:"true"`
 
 	// A tag to be attached to the event subscription.
-	Tags []*Tag `locationNameList:"Tag" type:"list"`
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -4880,12 +5100,12 @@ type CreateReplicationInstanceInput struct {
 	ReplicationSubnetGroupIdentifier *string `type:"string"`
 
 	// Tags to be associated with the replication instance.
-	Tags []*Tag `locationNameList:"Tag" type:"list"`
+	Tags []*Tag `type:"list"`
 
 	// Specifies the VPC security group to be used with the replication instance.
 	// The VPC security group must work with the VPC containing the replication
 	// instance.
-	VpcSecurityGroupIds []*string `locationNameList:"VpcSecurityGroupId" type:"list"`
+	VpcSecurityGroupIds []*string `type:"list"`
 }
 
 // String returns the string representation
@@ -5039,10 +5259,10 @@ type CreateReplicationSubnetGroupInput struct {
 	// The EC2 subnet IDs for the subnet group.
 	//
 	// SubnetIds is a required field
-	SubnetIds []*string `locationNameList:"SubnetIdentifier" type:"list" required:"true"`
+	SubnetIds []*string `type:"list" required:"true"`
 
 	// The tag to be assigned to the subnet group.
-	Tags []*Tag `locationNameList:"Tag" type:"list"`
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -5172,7 +5392,7 @@ type CreateReplicationTaskInput struct {
 	TableMappings *string `type:"string" required:"true"`
 
 	// Tags to be added to the replication instance.
-	Tags []*Tag `locationNameList:"Tag" type:"list"`
+	Tags []*Tag `type:"list"`
 
 	// The Amazon Resource Name (ARN) string that uniquely identifies the endpoint.
 	//
@@ -5685,7 +5905,7 @@ type DescribeAccountAttributesOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Account quota information.
-	AccountQuotas []*AccountQuota `locationNameList:"AccountQuota" type:"list"`
+	AccountQuotas []*AccountQuota `type:"list"`
 }
 
 // String returns the string representation
@@ -5709,7 +5929,7 @@ type DescribeCertificatesInput struct {
 	_ struct{} `type:"structure"`
 
 	// Filters applied to the certificate described in the form of key-value pairs.
-	Filters []*Filter `locationNameList:"Filter" type:"list"`
+	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
@@ -5778,7 +5998,7 @@ type DescribeCertificatesOutput struct {
 
 	// The Secure Sockets Layer (SSL) certificates associated with the replication
 	// instance.
-	Certificates []*Certificate `locationNameList:"Certificate" type:"list"`
+	Certificates []*Certificate `type:"list"`
 
 	// The pagination token.
 	Marker *string `type:"string"`
@@ -5813,7 +6033,7 @@ type DescribeConnectionsInput struct {
 	// The filters applied to the connection.
 	//
 	// Valid filter names: endpoint-arn | replication-instance-arn
-	Filters []*Filter `locationNameList:"Filter" type:"list"`
+	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
@@ -5883,7 +6103,7 @@ type DescribeConnectionsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A description of the connections.
-	Connections []*Connection `locationNameList:"Connection" type:"list"`
+	Connections []*Connection `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
@@ -5920,7 +6140,7 @@ type DescribeEndpointTypesInput struct {
 	// Filters applied to the describe action.
 	//
 	// Valid filter names: engine-name | endpoint-type
-	Filters []*Filter `locationNameList:"Filter" type:"list"`
+	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
@@ -5995,7 +6215,7 @@ type DescribeEndpointTypesOutput struct {
 	Marker *string `type:"string"`
 
 	// The type of endpoints that are supported.
-	SupportedEndpointTypes []*SupportedEndpointType `locationNameList:"SupportedEndpointType" type:"list"`
+	SupportedEndpointTypes []*SupportedEndpointType `type:"list"`
 }
 
 // String returns the string representation
@@ -6027,7 +6247,7 @@ type DescribeEndpointsInput struct {
 	// Filters applied to the describe action.
 	//
 	// Valid filter names: endpoint-arn | endpoint-type | endpoint-id | engine-name
-	Filters []*Filter `locationNameList:"Filter" type:"list"`
+	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
@@ -6097,7 +6317,7 @@ type DescribeEndpointsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Endpoint description.
-	Endpoints []*Endpoint `locationNameList:"Endpoint" type:"list"`
+	Endpoints []*Endpoint `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
@@ -6132,7 +6352,7 @@ type DescribeEventCategoriesInput struct {
 	_ struct{} `type:"structure"`
 
 	// Filters applied to the action.
-	Filters []*Filter `locationNameList:"Filter" type:"list"`
+	Filters []*Filter `type:"list"`
 
 	// The type of AWS DMS resource that generates events.
 	//
@@ -6187,7 +6407,7 @@ type DescribeEventCategoriesOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of event categories.
-	EventCategoryGroupList []*EventCategoryGroup `locationNameList:"EventCategoryGroup" type:"list"`
+	EventCategoryGroupList []*EventCategoryGroup `type:"list"`
 }
 
 // String returns the string representation
@@ -6211,7 +6431,7 @@ type DescribeEventSubscriptionsInput struct {
 	_ struct{} `type:"structure"`
 
 	// Filters applied to the action.
-	Filters []*Filter `locationNameList:"Filter" type:"list"`
+	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
@@ -6290,7 +6510,7 @@ type DescribeEventSubscriptionsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of event subscriptions.
-	EventSubscriptionsList []*EventSubscription `locationNameList:"EventSubscription" type:"list"`
+	EventSubscriptionsList []*EventSubscription `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
@@ -6331,10 +6551,10 @@ type DescribeEventsInput struct {
 	EndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// A list of event categories for a source type that you want to subscribe to.
-	EventCategories []*string `locationNameList:"EventCategory" type:"list"`
+	EventCategories []*string `type:"list"`
 
 	// Filters applied to the action.
-	Filters []*Filter `locationNameList:"Filter" type:"list"`
+	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
@@ -6453,7 +6673,7 @@ type DescribeEventsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The events described.
-	Events []*Event `locationNameList:"Event" type:"list"`
+	Events []*Event `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
@@ -6534,7 +6754,7 @@ type DescribeOrderableReplicationInstancesOutput struct {
 	Marker *string `type:"string"`
 
 	// The order-able replication instances available.
-	OrderableReplicationInstances []*OrderableReplicationInstance `locationNameList:"OrderableReplicationInstance" type:"list"`
+	OrderableReplicationInstances []*OrderableReplicationInstance `type:"list"`
 }
 
 // String returns the string representation
@@ -6630,7 +6850,7 @@ type DescribeReplicationInstancesInput struct {
 	//
 	// Valid filter names: replication-instance-arn | replication-instance-id |
 	// replication-instance-class | engine-version
-	Filters []*Filter `locationNameList:"Filter" type:"list"`
+	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
@@ -6705,7 +6925,7 @@ type DescribeReplicationInstancesOutput struct {
 	Marker *string `type:"string"`
 
 	// The replication instances described.
-	ReplicationInstances []*ReplicationInstance `locationNameList:"ReplicationInstance" type:"list"`
+	ReplicationInstances []*ReplicationInstance `type:"list"`
 }
 
 // String returns the string representation
@@ -6735,7 +6955,7 @@ type DescribeReplicationSubnetGroupsInput struct {
 	_ struct{} `type:"structure"`
 
 	// Filters applied to the describe action.
-	Filters []*Filter `locationNameList:"Filter" type:"list"`
+	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
@@ -6810,7 +7030,7 @@ type DescribeReplicationSubnetGroupsOutput struct {
 	Marker *string `type:"string"`
 
 	// A description of the replication subnet groups.
-	ReplicationSubnetGroups []*ReplicationSubnetGroup `locationNameList:"ReplicationSubnetGroup" type:"list"`
+	ReplicationSubnetGroups []*ReplicationSubnetGroup `type:"list"`
 }
 
 // String returns the string representation
@@ -6835,6 +7055,102 @@ func (s *DescribeReplicationSubnetGroupsOutput) SetReplicationSubnetGroups(v []*
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTaskAssessmentResultsMessage
+type DescribeReplicationTaskAssessmentResultsInput struct {
+	_ struct{} `type:"structure"`
+
+	// An optional pagination token provided by a previous request. If this parameter
+	// is specified, the response includes only records beyond the marker, up to
+	// the value specified by MaxRecords.
+	Marker *string `type:"string"`
+
+	// The maximum number of records to include in the response. If more records
+	// exist than the specified MaxRecords value, a pagination token called a marker
+	// is included in the response so that the remaining results can be retrieved.
+	//
+	// Default: 100
+	//
+	// Constraints: Minimum 20, maximum 100.
+	MaxRecords *int64 `type:"integer"`
+
+	// - The Amazon Resource Name (ARN) string that uniquely identifies the task.
+	// When this input parameter is specified the API will return only one result
+	// and ignore the values of the max-records and marker parameters.
+	ReplicationTaskArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeReplicationTaskAssessmentResultsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeReplicationTaskAssessmentResultsInput) GoString() string {
+	return s.String()
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeReplicationTaskAssessmentResultsInput) SetMarker(v string) *DescribeReplicationTaskAssessmentResultsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxRecords sets the MaxRecords field's value.
+func (s *DescribeReplicationTaskAssessmentResultsInput) SetMaxRecords(v int64) *DescribeReplicationTaskAssessmentResultsInput {
+	s.MaxRecords = &v
+	return s
+}
+
+// SetReplicationTaskArn sets the ReplicationTaskArn field's value.
+func (s *DescribeReplicationTaskAssessmentResultsInput) SetReplicationTaskArn(v string) *DescribeReplicationTaskAssessmentResultsInput {
+	s.ReplicationTaskArn = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTaskAssessmentResultsResponse
+type DescribeReplicationTaskAssessmentResultsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// - The Amazon S3 bucket where the task assessment report is located.
+	BucketName *string `type:"string"`
+
+	// An optional pagination token provided by a previous request. If this parameter
+	// is specified, the response includes only records beyond the marker, up to
+	// the value specified by MaxRecords.
+	Marker *string `type:"string"`
+
+	// The task assessment report.
+	ReplicationTaskAssessmentResults []*ReplicationTaskAssessmentResult `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeReplicationTaskAssessmentResultsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeReplicationTaskAssessmentResultsOutput) GoString() string {
+	return s.String()
+}
+
+// SetBucketName sets the BucketName field's value.
+func (s *DescribeReplicationTaskAssessmentResultsOutput) SetBucketName(v string) *DescribeReplicationTaskAssessmentResultsOutput {
+	s.BucketName = &v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeReplicationTaskAssessmentResultsOutput) SetMarker(v string) *DescribeReplicationTaskAssessmentResultsOutput {
+	s.Marker = &v
+	return s
+}
+
+// SetReplicationTaskAssessmentResults sets the ReplicationTaskAssessmentResults field's value.
+func (s *DescribeReplicationTaskAssessmentResultsOutput) SetReplicationTaskAssessmentResults(v []*ReplicationTaskAssessmentResult) *DescribeReplicationTaskAssessmentResultsOutput {
+	s.ReplicationTaskAssessmentResults = v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTasksMessage
 type DescribeReplicationTasksInput struct {
 	_ struct{} `type:"structure"`
@@ -6843,7 +7159,7 @@ type DescribeReplicationTasksInput struct {
 	//
 	// Valid filter names: replication-task-arn | replication-task-id | migration-type
 	// | endpoint-arn | replication-instance-arn
-	Filters []*Filter `locationNameList:"Filter" type:"list"`
+	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
@@ -6918,7 +7234,7 @@ type DescribeReplicationTasksOutput struct {
 	Marker *string `type:"string"`
 
 	// A description of the replication tasks.
-	ReplicationTasks []*ReplicationTask `locationNameList:"ReplicationTask" type:"list"`
+	ReplicationTasks []*ReplicationTask `type:"list"`
 }
 
 // String returns the string representation
@@ -7053,7 +7369,7 @@ type DescribeTableStatisticsInput struct {
 	//
 	// A combination of filters creates an AND condition where each record matches
 	// all specified filters.
-	Filters []*Filter `locationNameList:"Filter" type:"list"`
+	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
@@ -7408,7 +7724,7 @@ type Event struct {
 	Date *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The event categories available for the specified source type.
-	EventCategories []*string `locationNameList:"EventCategory" type:"list"`
+	EventCategories []*string `type:"list"`
 
 	// The event message.
 	Message *string `type:"string"`
@@ -7471,7 +7787,7 @@ type EventCategoryGroup struct {
 	_ struct{} `type:"structure"`
 
 	// A list of event categories for a SourceType that you want to subscribe to.
-	EventCategories []*string `locationNameList:"EventCategory" type:"list"`
+	EventCategories []*string `type:"list"`
 
 	// The type of AWS DMS resource that generates events.
 	//
@@ -7516,13 +7832,13 @@ type EventSubscription struct {
 	Enabled *bool `type:"boolean"`
 
 	// A lists of event categories.
-	EventCategoriesList []*string `locationNameList:"EventCategory" type:"list"`
+	EventCategoriesList []*string `type:"list"`
 
 	// The topic ARN of the AWS DMS event notification subscription.
 	SnsTopicArn *string `type:"string"`
 
 	// A list of source Ids for the event subscription.
-	SourceIdsList []*string `locationNameList:"SourceId" type:"list"`
+	SourceIdsList []*string `type:"list"`
 
 	// The type of AWS DMS resource that generates events.
 	//
@@ -7622,7 +7938,7 @@ type Filter struct {
 	// The filter value.
 	//
 	// Values is a required field
-	Values []*string `locationNameList:"Value" type:"list" required:"true"`
+	Values []*string `type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -7682,7 +7998,7 @@ type ImportCertificateInput struct {
 	CertificateWallet []byte `type:"blob"`
 
 	// The tags associated with the certificate.
-	Tags []*Tag `locationNameList:"Tag" type:"list"`
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -7801,7 +8117,7 @@ type ListTagsForResourceOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of tags for the resource.
-	TagList []*Tag `locationNameList:"Tag" type:"list"`
+	TagList []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -8040,7 +8356,7 @@ type ModifyEventSubscriptionInput struct {
 
 	// A list of event categories for a source type that you want to subscribe to.
 	// Use the DescribeEventCategories action to see a list of event categories.
-	EventCategories []*string `locationNameList:"EventCategory" type:"list"`
+	EventCategories []*string `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the Amazon SNS topic created for event
 	// notification. The ARN is created by Amazon SNS when you create a topic and
@@ -8207,7 +8523,7 @@ type ModifyReplicationInstanceInput struct {
 	// Specifies the VPC security group to be used with the replication instance.
 	// The VPC security group must work with the VPC containing the replication
 	// instance.
-	VpcSecurityGroupIds []*string `locationNameList:"VpcSecurityGroupId" type:"list"`
+	VpcSecurityGroupIds []*string `type:"list"`
 }
 
 // String returns the string representation
@@ -8338,7 +8654,7 @@ type ModifyReplicationSubnetGroupInput struct {
 	// A list of subnet IDs.
 	//
 	// SubnetIds is a required field
-	SubnetIds []*string `locationNameList:"SubnetIdentifier" type:"list" required:"true"`
+	SubnetIds []*string `type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -9124,7 +9440,7 @@ type ReplicationInstance struct {
 	SecondaryAvailabilityZone *string `type:"string"`
 
 	// The VPC security group for the instance.
-	VpcSecurityGroups []*VpcSecurityGroupMembership `locationNameList:"VpcSecurityGroupMembership" type:"list"`
+	VpcSecurityGroups []*VpcSecurityGroupMembership `type:"list"`
 }
 
 // String returns the string representation
@@ -9333,7 +9649,7 @@ type ReplicationSubnetGroup struct {
 	SubnetGroupStatus *string `type:"string"`
 
 	// The subnets that are in the subnet group.
-	Subnets []*Subnet `locationNameList:"Subnet" type:"list"`
+	Subnets []*Subnet `type:"list"`
 
 	// The ID of the VPC.
 	VpcId *string `type:"string"`
@@ -9529,6 +9845,86 @@ func (s *ReplicationTask) SetTargetEndpointArn(v string) *ReplicationTask {
 	return s
 }
 
+// The task assessment report in JSON format.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ReplicationTaskAssessmentResult
+type ReplicationTaskAssessmentResult struct {
+	_ struct{} `type:"structure"`
+
+	// The task assessment results in JSON format.
+	AssessmentResults *string `type:"string"`
+
+	// The file containing the results of the task assessment.
+	AssessmentResultsFile *string `type:"string"`
+
+	// The status of the task assessment.
+	AssessmentStatus *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) of the replication task.
+	ReplicationTaskArn *string `type:"string"`
+
+	// The replication task identifier of the task on which the task assessment
+	// was run.
+	ReplicationTaskIdentifier *string `type:"string"`
+
+	// The date the task assessment was completed.
+	ReplicationTaskLastAssessmentDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The URL of the S3 object containing the task assessment results.
+	S3ObjectUrl *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ReplicationTaskAssessmentResult) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicationTaskAssessmentResult) GoString() string {
+	return s.String()
+}
+
+// SetAssessmentResults sets the AssessmentResults field's value.
+func (s *ReplicationTaskAssessmentResult) SetAssessmentResults(v string) *ReplicationTaskAssessmentResult {
+	s.AssessmentResults = &v
+	return s
+}
+
+// SetAssessmentResultsFile sets the AssessmentResultsFile field's value.
+func (s *ReplicationTaskAssessmentResult) SetAssessmentResultsFile(v string) *ReplicationTaskAssessmentResult {
+	s.AssessmentResultsFile = &v
+	return s
+}
+
+// SetAssessmentStatus sets the AssessmentStatus field's value.
+func (s *ReplicationTaskAssessmentResult) SetAssessmentStatus(v string) *ReplicationTaskAssessmentResult {
+	s.AssessmentStatus = &v
+	return s
+}
+
+// SetReplicationTaskArn sets the ReplicationTaskArn field's value.
+func (s *ReplicationTaskAssessmentResult) SetReplicationTaskArn(v string) *ReplicationTaskAssessmentResult {
+	s.ReplicationTaskArn = &v
+	return s
+}
+
+// SetReplicationTaskIdentifier sets the ReplicationTaskIdentifier field's value.
+func (s *ReplicationTaskAssessmentResult) SetReplicationTaskIdentifier(v string) *ReplicationTaskAssessmentResult {
+	s.ReplicationTaskIdentifier = &v
+	return s
+}
+
+// SetReplicationTaskLastAssessmentDate sets the ReplicationTaskLastAssessmentDate field's value.
+func (s *ReplicationTaskAssessmentResult) SetReplicationTaskLastAssessmentDate(v time.Time) *ReplicationTaskAssessmentResult {
+	s.ReplicationTaskLastAssessmentDate = &v
+	return s
+}
+
+// SetS3ObjectUrl sets the S3ObjectUrl field's value.
+func (s *ReplicationTaskAssessmentResult) SetS3ObjectUrl(v string) *ReplicationTaskAssessmentResult {
+	s.S3ObjectUrl = &v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ReplicationTaskStats
 type ReplicationTaskStats struct {
 	_ struct{} `type:"structure"`
@@ -9681,6 +10077,69 @@ func (s *S3Settings) SetServiceAccessRoleArn(v string) *S3Settings {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StartReplicationTaskAssessmentMessage
+type StartReplicationTaskAssessmentInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the replication task.
+	//
+	// ReplicationTaskArn is a required field
+	ReplicationTaskArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartReplicationTaskAssessmentInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartReplicationTaskAssessmentInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartReplicationTaskAssessmentInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartReplicationTaskAssessmentInput"}
+	if s.ReplicationTaskArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationTaskArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetReplicationTaskArn sets the ReplicationTaskArn field's value.
+func (s *StartReplicationTaskAssessmentInput) SetReplicationTaskArn(v string) *StartReplicationTaskAssessmentInput {
+	s.ReplicationTaskArn = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StartReplicationTaskAssessmentResponse
+type StartReplicationTaskAssessmentOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The assessed replication task.
+	ReplicationTask *ReplicationTask `type:"structure"`
+}
+
+// String returns the string representation
+func (s StartReplicationTaskAssessmentOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartReplicationTaskAssessmentOutput) GoString() string {
+	return s.String()
+}
+
+// SetReplicationTask sets the ReplicationTask field's value.
+func (s *StartReplicationTaskAssessmentOutput) SetReplicationTask(v *ReplicationTask) *StartReplicationTaskAssessmentOutput {
+	s.ReplicationTask = v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StartReplicationTaskMessage
 type StartReplicationTaskInput struct {
 	_ struct{} `type:"structure"`
@@ -9688,7 +10147,7 @@ type StartReplicationTaskInput struct {
 	// The start time for the Change Data Capture (CDC) operation.
 	CdcStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// The Amazon Resource Number (ARN) of the replication task to be started.
+	// The Amazon Resource Name (ARN) of the replication task to be started.
 	//
 	// ReplicationTaskArn is a required field
 	ReplicationTaskArn *string `type:"string" required:"true"`
@@ -9771,7 +10230,7 @@ func (s *StartReplicationTaskOutput) SetReplicationTask(v *ReplicationTask) *Sta
 type StopReplicationTaskInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Number(ARN) of the replication task to be stopped.
+	// The Amazon Resource Name(ARN) of the replication task to be stopped.
 	//
 	// ReplicationTaskArn is a required field
 	ReplicationTaskArn *string `type:"string" required:"true"`
@@ -9959,6 +10418,41 @@ type TableStatistics struct {
 
 	// The number of update actions performed on a table.
 	Updates *int64 `type:"long"`
+
+	// The number of records that failed validation.
+	ValidationFailedRecords *int64 `type:"long"`
+
+	// The number of records that have yet to be validated.
+	ValidationPendingRecords *int64 `type:"long"`
+
+	// The validation state of the table.
+	//
+	// The parameter can have the following values
+	//
+	//    * Not enabled—Validation is not enabled for the table in the migration
+	//    task.
+	//
+	//    * Pending records—Some records in the table are waiting for validation.
+	//
+	//    * Mismatched records—Some records in the table do not match between the
+	//    source and target.
+	//
+	//    * Suspended records—Some records in the table could not be validated.
+	//
+	//    * No primary key—The table could not be validated because it had no primary
+	//    key.
+	//
+	//    * Table error—The table was not validated because it was in an error state
+	//    and some data was not migrated.
+	//
+	//    * Validated—All rows in the table were validated. If the table is updated,
+	//    the status can change from Validated.
+	//
+	//    * Error—The table could not be validated because of an unexpected error.
+	ValidationState *string `type:"string"`
+
+	// The number of records that could not be validated.
+	ValidationSuspendedRecords *int64 `type:"long"`
 }
 
 // String returns the string representation
@@ -10034,6 +10528,30 @@ func (s *TableStatistics) SetTableState(v string) *TableStatistics {
 // SetUpdates sets the Updates field's value.
 func (s *TableStatistics) SetUpdates(v int64) *TableStatistics {
 	s.Updates = &v
+	return s
+}
+
+// SetValidationFailedRecords sets the ValidationFailedRecords field's value.
+func (s *TableStatistics) SetValidationFailedRecords(v int64) *TableStatistics {
+	s.ValidationFailedRecords = &v
+	return s
+}
+
+// SetValidationPendingRecords sets the ValidationPendingRecords field's value.
+func (s *TableStatistics) SetValidationPendingRecords(v int64) *TableStatistics {
+	s.ValidationPendingRecords = &v
+	return s
+}
+
+// SetValidationState sets the ValidationState field's value.
+func (s *TableStatistics) SetValidationState(v string) *TableStatistics {
+	s.ValidationState = &v
+	return s
+}
+
+// SetValidationSuspendedRecords sets the ValidationSuspendedRecords field's value.
+func (s *TableStatistics) SetValidationSuspendedRecords(v int64) *TableStatistics {
+	s.ValidationSuspendedRecords = &v
 	return s
 }
 

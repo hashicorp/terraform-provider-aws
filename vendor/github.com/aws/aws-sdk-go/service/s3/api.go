@@ -20498,6 +20498,9 @@ const (
 const (
 	// InventoryFormatCsv is a InventoryFormat enum value
 	InventoryFormatCsv = "CSV"
+
+	// InventoryFormatOrc is a InventoryFormat enum value
+	InventoryFormatOrc = "ORC"
 )
 
 const (
