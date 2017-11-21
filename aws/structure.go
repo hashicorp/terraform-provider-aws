@@ -2686,7 +2686,7 @@ func flattenAwsSsmTargets(targets []*ssm.Target) []map[string]interface{} {
 
 	result := make([]map[string]interface{}, 0, len(targets))
 	for _, target := range targets {
-		t := make(map[string]interface{})
+		t := make(map[string]interface{}, 1)
 		t["key"] = *target.Key
 		t["values"] = flattenStringList(target.Values)
 

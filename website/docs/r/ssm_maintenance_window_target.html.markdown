@@ -36,7 +36,7 @@ The following arguments are supported:
 
 * `window_id` - (Required) The Id of the maintenance window to register the target with.
 * `resource_type` - (Required) The type of target being registered with the Maintenance Window. Possible values `INSTANCE`.
-* `targets` - (Required) The targets (either instances or tags). Instances are specified using Key=instanceids,Values=instanceid1,instanceid2. Tags are specified using Key=tag name,Values=tag value. Minimum number of 0 items. Maximum number of 5 items.
+* `targets` - (Required) The targets (either instances or tags). Instances are specified using Key=instanceids,Values=instanceid1,instanceid2. Tags are specified using Key=tag name,Values=tag value.
 * `owner_information` - (Optional) User-provided value that will be included in any CloudWatch events raised while running tasks for these targets in this Maintenance Window.
 
 ## Attributes Reference
