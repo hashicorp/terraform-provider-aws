@@ -389,11 +389,6 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			Tags:                       tags,
 		}
 
-		arnParts, arnErr := arn.Parse(d.Get("replicate_source_db").(string))
-		if arnErr == nil {
-			opts.SourceRegion = aws.String(arnParts.Region)
-		}
-
 		if attr, ok := d.GetOk("iops"); ok {
 			opts.Iops = aws.Int64(int64(attr.(int)))
 		}
@@ -406,6 +401,34 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.AvailabilityZone = aws.String(attr.(string))
 		}
 
+		//
+		// If we are called with a Source DB ARN, and the ARN is a different region
+		// than the replica to be created, set SourceRegion.
+		//
+		// The correct way to do this would be to query the master, and see if it
+		// is encrypted and in the same region.  If it is encrypted and in the
+		// same region, drop the source region and the kms_key_id.  If the master is not
+		// encrypted, behavior is kinda undefined.
+		//
+		// The CLI docs for kms_key_id state:
+		// "If you specify this parameter when you create a Read Replica from an
+		// unencrypted DB instance, the Read Replica is encrypted.""
+		//
+		// The RDS userguide states:
+		// "You cannot have an encrypted Read Replica of an unencrypted DB instance
+		// or an unencrypted Read Replica of an encrypted DB instance."
+		//
+		// go figure, eh?
+		//
+		arnParts, arnErr := arn.Parse(d.Get("replicate_source_db").(string))
+		if arnErr == nil {
+			var replicaRegion string
+			replicaRegion = (string)(*opts.AvailabilityZone)
+			if arnParts.Region != replicaRegion[0:len(replicaRegion)-1] {
+				opts.SourceRegion = aws.String(arnParts.Region)
+			}
+		}
+
 		if attr, ok := d.GetOk("storage_type"); ok {
 			opts.StorageType = aws.String(attr.(string))
 		}
@@ -413,6 +436,9 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
+
+		// TODO: Only allow this param if the master is not encrypted or
+		// is in a different region than the replica
 
 		if attr, ok := d.GetOk("kms_key_id"); ok {
 			opts.KmsKeyId = aws.String(attr.(string))
