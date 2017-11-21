@@ -2629,7 +2629,7 @@ func flattenCognitoUserPoolVerificationMessageTemplate(s *cognitoidentityprovide
 		m["email_subject"] = *s.EmailSubject
 	}
 
-	if s.EmailMessageByLink != nil {
+	if s.EmailSubjectByLink != nil {
 		m["email_subject_by_link"] = *s.EmailSubjectByLink
 	}
 
