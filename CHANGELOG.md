@@ -2,12 +2,13 @@
 
 BUG FIXES:
 
-* Fix Cognito Userpool email_subject_by_link [GH-2395]
+* Fix Cognito Userpool `email_subject_by_link` [GH-2395]
 * resource/aws_api_gateway_method_response: Fix conflict exception in API gateway method response [GH-2393]
 
 IMPROVEMENTS:
 
 * resource/aws_ssm_maintenance_window_target: Change MaxItems of targets [GH-2361]
+* data-source/aws_nat_gateway: Add missing address attributes to the schema [GH-2209]
 
 ## 1.3.1 (November 20, 2017)
 
