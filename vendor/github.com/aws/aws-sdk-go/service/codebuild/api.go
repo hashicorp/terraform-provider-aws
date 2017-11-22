@@ -600,6 +600,88 @@ func (c *CodeBuild) DeleteWebhookWithContext(ctx aws.Context, input *DeleteWebho
 	return out, req.Send()
 }
 
+const opInvalidateProjectCache = "InvalidateProjectCache"
+
+// InvalidateProjectCacheRequest generates a "aws/request.Request" representing the
+// client's request for the InvalidateProjectCache operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See InvalidateProjectCache for more information on using the InvalidateProjectCache
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the InvalidateProjectCacheRequest method.
+//    req, resp := client.InvalidateProjectCacheRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/InvalidateProjectCache
+func (c *CodeBuild) InvalidateProjectCacheRequest(input *InvalidateProjectCacheInput) (req *request.Request, output *InvalidateProjectCacheOutput) {
+	op := &request.Operation{
+		Name:       opInvalidateProjectCache,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &InvalidateProjectCacheInput{}
+	}
+
+	output = &InvalidateProjectCacheOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// InvalidateProjectCache API operation for AWS CodeBuild.
+//
+// Resets the cache for a project.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeBuild's
+// API operation InvalidateProjectCache for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input value that was provided is not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified AWS resource cannot be found.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/InvalidateProjectCache
+func (c *CodeBuild) InvalidateProjectCache(input *InvalidateProjectCacheInput) (*InvalidateProjectCacheOutput, error) {
+	req, out := c.InvalidateProjectCacheRequest(input)
+	return out, req.Send()
+}
+
+// InvalidateProjectCacheWithContext is the same as InvalidateProjectCache with the addition of
+// the ability to pass a context and additional request options.
+//
+// See InvalidateProjectCache for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) InvalidateProjectCacheWithContext(ctx aws.Context, input *InvalidateProjectCacheInput, opts ...request.Option) (*InvalidateProjectCacheOutput, error) {
+	req, out := c.InvalidateProjectCacheRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListBuilds = "ListBuilds"
 
 // ListBuildsRequest generates a "aws/request.Request" representing the
@@ -1419,6 +1501,9 @@ type Build struct {
 	//    * TIMED_OUT: The build timed out.
 	BuildStatus *string `locationName:"buildStatus" type:"string" enum:"StatusType"`
 
+	// Information about the cache for the build.
+	Cache *ProjectCache `locationName:"cache" type:"structure"`
+
 	// The current build phase.
 	CurrentPhase *string `locationName:"currentPhase" type:"string"`
 
@@ -1446,6 +1531,9 @@ type Build struct {
 	// Information about the build's logs in Amazon CloudWatch Logs.
 	Logs *LogsLocation `locationName:"logs" type:"structure"`
 
+	// Describes a network interface.
+	NetworkInterface *NetworkInterface `locationName:"networkInterface" type:"structure"`
+
 	// Information about all previous build phases that are completed and information
 	// about any current build phase that is not yet complete.
 	Phases []*BuildPhase `locationName:"phases" type:"list"`
@@ -1465,6 +1553,12 @@ type Build struct {
 	// How long, in minutes, for AWS CodeBuild to wait before timing out this build
 	// if it does not get marked as completed.
 	TimeoutInMinutes *int64 `locationName:"timeoutInMinutes" type:"integer"`
+
+	// If your AWS CodeBuild project accesses resources in an Amazon VPC, you provide
+	// this parameter that identifies the VPC ID and the list of security group
+	// IDs and subnet IDs. The security groups and subnets must belong to the same
+	// VPC. You must provide at least one security group and one subnet ID.
+	VpcConfig *VpcConfig `locationName:"vpcConfig" type:"structure"`
 }
 
 // String returns the string representation
@@ -1498,6 +1592,12 @@ func (s *Build) SetBuildComplete(v bool) *Build {
 // SetBuildStatus sets the BuildStatus field's value.
 func (s *Build) SetBuildStatus(v string) *Build {
 	s.BuildStatus = &v
+	return s
+}
+
+// SetCache sets the Cache field's value.
+func (s *Build) SetCache(v *ProjectCache) *Build {
+	s.Cache = v
 	return s
 }
 
@@ -1537,6 +1637,12 @@ func (s *Build) SetLogs(v *LogsLocation) *Build {
 	return s
 }
 
+// SetNetworkInterface sets the NetworkInterface field's value.
+func (s *Build) SetNetworkInterface(v *NetworkInterface) *Build {
+	s.NetworkInterface = v
+	return s
+}
+
 // SetPhases sets the Phases field's value.
 func (s *Build) SetPhases(v []*BuildPhase) *Build {
 	s.Phases = v
@@ -1570,6 +1676,12 @@ func (s *Build) SetStartTime(v time.Time) *Build {
 // SetTimeoutInMinutes sets the TimeoutInMinutes field's value.
 func (s *Build) SetTimeoutInMinutes(v int64) *Build {
 	s.TimeoutInMinutes = &v
+	return s
+}
+
+// SetVpcConfig sets the VpcConfig field's value.
+func (s *Build) SetVpcConfig(v *VpcConfig) *Build {
+	s.VpcConfig = v
 	return s
 }
 
@@ -1776,6 +1888,14 @@ type CreateProjectInput struct {
 	// Artifacts is a required field
 	Artifacts *ProjectArtifacts `locationName:"artifacts" type:"structure" required:"true"`
 
+	// Set this to true to generate a publicly-accessible URL for your project's
+	// build badge.
+	BadgeEnabled *bool `locationName:"badgeEnabled" type:"boolean"`
+
+	// Stores recently used information so that it can be quickly accessed at a
+	// later time.
+	Cache *ProjectCache `locationName:"cache" type:"structure"`
+
 	// A description that makes the build project easy to identify.
 	Description *string `locationName:"description" type:"string"`
 
@@ -1816,6 +1936,9 @@ type CreateProjectInput struct {
 	// until timing out any build that has not been marked as completed. The default
 	// is 60 minutes.
 	TimeoutInMinutes *int64 `locationName:"timeoutInMinutes" min:"5" type:"integer"`
+
+	// VpcConfig enables AWS CodeBuild to access resources in an Amazon VPC.
+	VpcConfig *VpcConfig `locationName:"vpcConfig" type:"structure"`
 }
 
 // String returns the string representation
@@ -1860,6 +1983,11 @@ func (s *CreateProjectInput) Validate() error {
 			invalidParams.AddNested("Artifacts", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Cache != nil {
+		if err := s.Cache.Validate(); err != nil {
+			invalidParams.AddNested("Cache", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Environment != nil {
 		if err := s.Environment.Validate(); err != nil {
 			invalidParams.AddNested("Environment", err.(request.ErrInvalidParams))
@@ -1880,6 +2008,11 @@ func (s *CreateProjectInput) Validate() error {
 			}
 		}
 	}
+	if s.VpcConfig != nil {
+		if err := s.VpcConfig.Validate(); err != nil {
+			invalidParams.AddNested("VpcConfig", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -1890,6 +2023,18 @@ func (s *CreateProjectInput) Validate() error {
 // SetArtifacts sets the Artifacts field's value.
 func (s *CreateProjectInput) SetArtifacts(v *ProjectArtifacts) *CreateProjectInput {
 	s.Artifacts = v
+	return s
+}
+
+// SetBadgeEnabled sets the BadgeEnabled field's value.
+func (s *CreateProjectInput) SetBadgeEnabled(v bool) *CreateProjectInput {
+	s.BadgeEnabled = &v
+	return s
+}
+
+// SetCache sets the Cache field's value.
+func (s *CreateProjectInput) SetCache(v *ProjectCache) *CreateProjectInput {
+	s.Cache = v
 	return s
 }
 
@@ -1938,6 +2083,12 @@ func (s *CreateProjectInput) SetTags(v []*Tag) *CreateProjectInput {
 // SetTimeoutInMinutes sets the TimeoutInMinutes field's value.
 func (s *CreateProjectInput) SetTimeoutInMinutes(v int64) *CreateProjectInput {
 	s.TimeoutInMinutes = &v
+	return s
+}
+
+// SetVpcConfig sets the VpcConfig field's value.
+func (s *CreateProjectInput) SetVpcConfig(v *VpcConfig) *CreateProjectInput {
+	s.VpcConfig = v
 	return s
 }
 
@@ -2326,6 +2477,63 @@ func (s *EnvironmentVariable) SetValue(v string) *EnvironmentVariable {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/InvalidateProjectCacheInput
+type InvalidateProjectCacheInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the build project that the cache will be reset for.
+	//
+	// ProjectName is a required field
+	ProjectName *string `locationName:"projectName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s InvalidateProjectCacheInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidateProjectCacheInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InvalidateProjectCacheInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InvalidateProjectCacheInput"}
+	if s.ProjectName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProjectName"))
+	}
+	if s.ProjectName != nil && len(*s.ProjectName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProjectName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetProjectName sets the ProjectName field's value.
+func (s *InvalidateProjectCacheInput) SetProjectName(v string) *InvalidateProjectCacheInput {
+	s.ProjectName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/InvalidateProjectCacheOutput
+type InvalidateProjectCacheOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s InvalidateProjectCacheOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidateProjectCacheOutput) GoString() string {
+	return s.String()
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuildsForProjectInput
 type ListBuildsForProjectInput struct {
 	_ struct{} `type:"structure"`
@@ -2707,6 +2915,40 @@ func (s *LogsLocation) SetStreamName(v string) *LogsLocation {
 	return s
 }
 
+// Describes a network interface.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/NetworkInterface
+type NetworkInterface struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the network interface.
+	NetworkInterfaceId *string `locationName:"networkInterfaceId" min:"1" type:"string"`
+
+	// The ID of the subnet.
+	SubnetId *string `locationName:"subnetId" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s NetworkInterface) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NetworkInterface) GoString() string {
+	return s.String()
+}
+
+// SetNetworkInterfaceId sets the NetworkInterfaceId field's value.
+func (s *NetworkInterface) SetNetworkInterfaceId(v string) *NetworkInterface {
+	s.NetworkInterfaceId = &v
+	return s
+}
+
+// SetSubnetId sets the SubnetId field's value.
+func (s *NetworkInterface) SetSubnetId(v string) *NetworkInterface {
+	s.SubnetId = &v
+	return s
+}
+
 // Additional information about a build phase that has an error. You can use
 // this information to help troubleshoot a failed build.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/PhaseContext
@@ -2754,6 +2996,12 @@ type Project struct {
 	// Information about the build output artifacts for the build project.
 	Artifacts *ProjectArtifacts `locationName:"artifacts" type:"structure"`
 
+	// Information about the build badge for the build project.
+	Badge *ProjectBadge `locationName:"badge" type:"structure"`
+
+	// Information about the cache for the build project.
+	Cache *ProjectCache `locationName:"cache" type:"structure"`
+
 	// When the build project was created, expressed in Unix time format.
 	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
 
@@ -2796,6 +3044,12 @@ type Project struct {
 	// The default is 60 minutes.
 	TimeoutInMinutes *int64 `locationName:"timeoutInMinutes" min:"5" type:"integer"`
 
+	// If your AWS CodeBuild project accesses resources in an Amazon VPC, you provide
+	// this parameter that identifies the VPC ID and the list of security group
+	// IDs and subnet IDs. The security groups and subnets must belong to the same
+	// VPC. You must provide at least one security group and one subnet ID.
+	VpcConfig *VpcConfig `locationName:"vpcConfig" type:"structure"`
+
 	// Information about a webhook in GitHub that connects repository events to
 	// a build project in AWS CodeBuild.
 	Webhook *Webhook `locationName:"webhook" type:"structure"`
@@ -2820,6 +3074,18 @@ func (s *Project) SetArn(v string) *Project {
 // SetArtifacts sets the Artifacts field's value.
 func (s *Project) SetArtifacts(v *ProjectArtifacts) *Project {
 	s.Artifacts = v
+	return s
+}
+
+// SetBadge sets the Badge field's value.
+func (s *Project) SetBadge(v *ProjectBadge) *Project {
+	s.Badge = v
+	return s
+}
+
+// SetCache sets the Cache field's value.
+func (s *Project) SetCache(v *ProjectCache) *Project {
+	s.Cache = v
 	return s
 }
 
@@ -2880,6 +3146,12 @@ func (s *Project) SetTags(v []*Tag) *Project {
 // SetTimeoutInMinutes sets the TimeoutInMinutes field's value.
 func (s *Project) SetTimeoutInMinutes(v int64) *Project {
 	s.TimeoutInMinutes = &v
+	return s
+}
+
+// SetVpcConfig sets the VpcConfig field's value.
+func (s *Project) SetVpcConfig(v *VpcConfig) *Project {
+	s.VpcConfig = v
 	return s
 }
 
@@ -3050,6 +3322,99 @@ func (s *ProjectArtifacts) SetPath(v string) *ProjectArtifacts {
 
 // SetType sets the Type field's value.
 func (s *ProjectArtifacts) SetType(v string) *ProjectArtifacts {
+	s.Type = &v
+	return s
+}
+
+// Information about the build badge for the build project.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ProjectBadge
+type ProjectBadge struct {
+	_ struct{} `type:"structure"`
+
+	// Set this to true to generate a publicly-accessible URL for your project's
+	// build badge.
+	BadgeEnabled *bool `locationName:"badgeEnabled" type:"boolean"`
+
+	// The publicly-accessible URL through which you can access the build badge
+	// for your project.
+	BadgeRequestUrl *string `locationName:"badgeRequestUrl" type:"string"`
+}
+
+// String returns the string representation
+func (s ProjectBadge) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProjectBadge) GoString() string {
+	return s.String()
+}
+
+// SetBadgeEnabled sets the BadgeEnabled field's value.
+func (s *ProjectBadge) SetBadgeEnabled(v bool) *ProjectBadge {
+	s.BadgeEnabled = &v
+	return s
+}
+
+// SetBadgeRequestUrl sets the BadgeRequestUrl field's value.
+func (s *ProjectBadge) SetBadgeRequestUrl(v string) *ProjectBadge {
+	s.BadgeRequestUrl = &v
+	return s
+}
+
+// Information about the cache for the build project.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ProjectCache
+type ProjectCache struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the cache location, as follows:
+	//
+	//    * NO_CACHE: This value will be ignored.
+	//
+	//    * S3: This is the S3 bucket name/prefix.
+	Location *string `locationName:"location" type:"string"`
+
+	// The type of cache used by the build project. Valid values include:
+	//
+	//    * NO_CACHE: The build project will not use any cache.
+	//
+	//    * S3: The build project will read and write from/to S3.
+	//
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true" enum:"CacheType"`
+}
+
+// String returns the string representation
+func (s ProjectCache) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProjectCache) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ProjectCache) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ProjectCache"}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLocation sets the Location field's value.
+func (s *ProjectCache) SetLocation(v string) *ProjectCache {
+	s.Location = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ProjectCache) SetType(v string) *ProjectCache {
 	s.Type = &v
 	return s
 }
@@ -3638,6 +4003,14 @@ type UpdateProjectInput struct {
 	// project.
 	Artifacts *ProjectArtifacts `locationName:"artifacts" type:"structure"`
 
+	// Set this to true to generate a publicly-accessible URL for your project's
+	// build badge.
+	BadgeEnabled *bool `locationName:"badgeEnabled" type:"boolean"`
+
+	// Stores recently used information so that it can be quickly accessed at a
+	// later time.
+	Cache *ProjectCache `locationName:"cache" type:"structure"`
+
 	// A new or replacement description of the build project.
 	Description *string `locationName:"description" type:"string"`
 
@@ -3676,6 +4049,9 @@ type UpdateProjectInput struct {
 	// The replacement value in minutes, from 5 to 480 (8 hours), for AWS CodeBuild
 	// to wait before timing out any related build that did not get marked as completed.
 	TimeoutInMinutes *int64 `locationName:"timeoutInMinutes" min:"5" type:"integer"`
+
+	// VpcConfig enables AWS CodeBuild to access resources in an Amazon VPC.
+	VpcConfig *VpcConfig `locationName:"vpcConfig" type:"structure"`
 }
 
 // String returns the string representation
@@ -3711,6 +4087,11 @@ func (s *UpdateProjectInput) Validate() error {
 			invalidParams.AddNested("Artifacts", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Cache != nil {
+		if err := s.Cache.Validate(); err != nil {
+			invalidParams.AddNested("Cache", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Environment != nil {
 		if err := s.Environment.Validate(); err != nil {
 			invalidParams.AddNested("Environment", err.(request.ErrInvalidParams))
@@ -3731,6 +4112,11 @@ func (s *UpdateProjectInput) Validate() error {
 			}
 		}
 	}
+	if s.VpcConfig != nil {
+		if err := s.VpcConfig.Validate(); err != nil {
+			invalidParams.AddNested("VpcConfig", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3741,6 +4127,18 @@ func (s *UpdateProjectInput) Validate() error {
 // SetArtifacts sets the Artifacts field's value.
 func (s *UpdateProjectInput) SetArtifacts(v *ProjectArtifacts) *UpdateProjectInput {
 	s.Artifacts = v
+	return s
+}
+
+// SetBadgeEnabled sets the BadgeEnabled field's value.
+func (s *UpdateProjectInput) SetBadgeEnabled(v bool) *UpdateProjectInput {
+	s.BadgeEnabled = &v
+	return s
+}
+
+// SetCache sets the Cache field's value.
+func (s *UpdateProjectInput) SetCache(v *ProjectCache) *UpdateProjectInput {
+	s.Cache = v
 	return s
 }
 
@@ -3792,6 +4190,12 @@ func (s *UpdateProjectInput) SetTimeoutInMinutes(v int64) *UpdateProjectInput {
 	return s
 }
 
+// SetVpcConfig sets the VpcConfig field's value.
+func (s *UpdateProjectInput) SetVpcConfig(v *VpcConfig) *UpdateProjectInput {
+	s.VpcConfig = v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/UpdateProjectOutput
 type UpdateProjectOutput struct {
 	_ struct{} `type:"structure"`
@@ -3813,6 +4217,65 @@ func (s UpdateProjectOutput) GoString() string {
 // SetProject sets the Project field's value.
 func (s *UpdateProjectOutput) SetProject(v *Project) *UpdateProjectOutput {
 	s.Project = v
+	return s
+}
+
+// If your AWS CodeBuild project accesses resources in an Amazon VPC, you provide
+// this parameter that identifies the VPC ID and the list of security group
+// IDs and subnet IDs. The security groups and subnets must belong to the same
+// VPC. You must provide at least one security group and one subnet ID.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/VpcConfig
+type VpcConfig struct {
+	_ struct{} `type:"structure"`
+
+	// A list of one or more security groups IDs in your Amazon VPC.
+	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list"`
+
+	// A list of one or more subnet IDs in your Amazon VPC.
+	Subnets []*string `locationName:"subnets" type:"list"`
+
+	// The ID of the Amazon VPC.
+	VpcId *string `locationName:"vpcId" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s VpcConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VpcConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *VpcConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "VpcConfig"}
+	if s.VpcId != nil && len(*s.VpcId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VpcId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *VpcConfig) SetSecurityGroupIds(v []*string) *VpcConfig {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnets sets the Subnets field's value.
+func (s *VpcConfig) SetSubnets(v []*string) *VpcConfig {
+	s.Subnets = v
+	return s
+}
+
+// SetVpcId sets the VpcId field's value.
+func (s *VpcConfig) SetVpcId(v string) *VpcConfig {
+	s.VpcId = &v
 	return s
 }
 
@@ -3899,6 +4362,14 @@ const (
 
 	// BuildPhaseTypeCompleted is a BuildPhaseType enum value
 	BuildPhaseTypeCompleted = "COMPLETED"
+)
+
+const (
+	// CacheTypeNoCache is a CacheType enum value
+	CacheTypeNoCache = "NO_CACHE"
+
+	// CacheTypeS3 is a CacheType enum value
+	CacheTypeS3 = "S3"
 )
 
 const (

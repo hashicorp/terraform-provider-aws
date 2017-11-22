@@ -5408,7 +5408,7 @@ func (c *APIGateway) GetIntegrationRequest(input *GetIntegrationInput) (req *req
 
 // GetIntegration API operation for Amazon API Gateway.
 //
-// Represents a get integration.
+// Get the integration settings.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10558,6 +10558,42 @@ func (c *APIGateway) UpdateUsagePlanWithContext(ctx aws.Context, input *UpdateUs
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// Access log settings, including the access log format and access log destination
+// ARN.
+type AccessLogSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the CloudWatch Logs log group to receive access logs.
+	DestinationArn *string `locationName:"destinationArn" type:"string"`
+
+	// A single line format of the access logs of data, as specified by selected
+	// $context variables (http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html#context-variable-reference).
+	// The format must include at least $context.requestId.
+	Format *string `locationName:"format" type:"string"`
+}
+
+// String returns the string representation
+func (s AccessLogSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessLogSettings) GoString() string {
+	return s.String()
+}
+
+// SetDestinationArn sets the DestinationArn field's value.
+func (s *AccessLogSettings) SetDestinationArn(v string) *AccessLogSettings {
+	s.DestinationArn = &v
+	return s
+}
+
+// SetFormat sets the Format field's value.
+func (s *AccessLogSettings) SetFormat(v string) *AccessLogSettings {
+	s.Format = &v
+	return s
 }
 
 // Represents an AWS account that is associated with Amazon API Gateway.
@@ -15933,7 +15969,7 @@ func (s *GetGatewayResponsesOutput) SetPosition(v string) *GetGatewayResponsesOu
 	return s
 }
 
-// Represents a get integration request.
+// Represents a request to get the integration configuration.
 type GetIntegrationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16911,7 +16947,7 @@ type GetSdkInput struct {
 	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
 
 	// The language for the generated SDK. Currently java, javascript, android,
-	// objectivec and swift (for iOS) are supported.
+	// objectivec (for iOS), swift (for iOS), and ruby are supported.
 	//
 	// SdkType is a required field
 	SdkType *string `location:"uri" locationName:"sdk_type" type:"string" required:"true"`
@@ -18011,6 +18047,10 @@ type Integration struct {
 	// value.
 	RequestTemplates map[string]*string `locationName:"requestTemplates" type:"map"`
 
+	// Custom timeout between 50 and 29,000 milliseconds. The default value is 29,000
+	// milliseconds or 29 seconds.
+	TimeoutInMillis *int64 `locationName:"timeoutInMillis" type:"integer"`
+
 	// Specifies the integration's type. The valid value is HTTP for integrating
 	// with an HTTP back end, AWS for any AWS service endpoints, MOCK for testing
 	// without actually invoking the back end, HTTP_PROXY for integrating with the
@@ -18091,6 +18131,12 @@ func (s *Integration) SetRequestParameters(v map[string]*string) *Integration {
 // SetRequestTemplates sets the RequestTemplates field's value.
 func (s *Integration) SetRequestTemplates(v map[string]*string) *Integration {
 	s.RequestTemplates = v
+	return s
+}
+
+// SetTimeoutInMillis sets the TimeoutInMillis field's value.
+func (s *Integration) SetTimeoutInMillis(v int64) *Integration {
+	s.TimeoutInMillis = &v
 	return s
 }
 
@@ -19017,6 +19063,10 @@ type PutIntegrationInput struct {
 	// RestApiId is a required field
 	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
 
+	// Custom timeout between 50 and 29,000 milliseconds. The default value is 29,000
+	// milliseconds or 29 seconds.
+	TimeoutInMillis *int64 `locationName:"timeoutInMillis" type:"integer"`
+
 	// Specifies a put integration input's type.
 	//
 	// Type is a required field
@@ -19129,6 +19179,12 @@ func (s *PutIntegrationInput) SetResourceId(v string) *PutIntegrationInput {
 // SetRestApiId sets the RestApiId field's value.
 func (s *PutIntegrationInput) SetRestApiId(v string) *PutIntegrationInput {
 	s.RestApiId = &v
+	return s
+}
+
+// SetTimeoutInMillis sets the TimeoutInMillis field's value.
+func (s *PutIntegrationInput) SetTimeoutInMillis(v int64) *PutIntegrationInput {
+	s.TimeoutInMillis = &v
 	return s
 }
 
@@ -20003,6 +20059,9 @@ func (s *SdkType) SetId(v string) *SdkType {
 type Stage struct {
 	_ struct{} `type:"structure"`
 
+	// The access log settings in this stage.
+	AccessLogSettings *AccessLogSettings `locationName:"accessLogSettings" type:"structure"`
+
 	// Specifies whether a cache cluster is enabled for the stage.
 	CacheClusterEnabled *bool `locationName:"cacheClusterEnabled" type:"boolean"`
 
@@ -20054,6 +20113,12 @@ func (s Stage) String() string {
 // GoString returns the string representation
 func (s Stage) GoString() string {
 	return s.String()
+}
+
+// SetAccessLogSettings sets the AccessLogSettings field's value.
+func (s *Stage) SetAccessLogSettings(v *AccessLogSettings) *Stage {
+	s.AccessLogSettings = v
+	return s
 }
 
 // SetCacheClusterEnabled sets the CacheClusterEnabled field's value.
