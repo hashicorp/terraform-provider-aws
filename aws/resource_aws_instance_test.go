@@ -1715,32 +1715,32 @@ resource "aws_instance" "foo" {
 func testAccInstanceConfigPlacementGroup(rStr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "testAccInstanceConfigPlacementGroup_%s"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "testAccInstanceConfigPlacementGroup_%s"
+  }
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
+  cidr_block = "10.1.1.0/24"
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
 resource "aws_placement_group" "foo" {
-	name = "testAccInstanceConfigPlacementGroup_%s"
-	strategy = "cluster"
+  name = "testAccInstanceConfigPlacementGroup_%s"
+  strategy = "cluster"
 }
 
 # Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
 resource "aws_instance" "foo" {
-	# us-west-2
-	ami = "ami-55a7ea65"
-	instance_type = "c3.large"
-	subnet_id = "${aws_subnet.foo.id}"
-	associate_public_ip_address = true
-	placement_group = "${aws_placement_group.foo.name}"
-	# pre-encoded base64 data
-	user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+  # us-west-2
+  ami = "ami-55a7ea65"
+  instance_type = "c3.large"
+  subnet_id = "${aws_subnet.foo.id}"
+  associate_public_ip_address = true
+  placement_group = "${aws_placement_group.foo.name}"
+  # pre-encoded base64 data
+  user_data = "3dc39dda39be1205215e776bad998da361a5955d"
 }
 `, rStr, rStr)
 }
