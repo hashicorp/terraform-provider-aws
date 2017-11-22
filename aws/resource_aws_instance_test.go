@@ -559,6 +559,31 @@ func TestAccAWSInstance_vpc(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_placementGroup(t *testing.T) {
+	var v ec2.Instance
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   "aws_instance.foo",
+		IDRefreshIgnore: []string{"associate_public_ip_address"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigPlacementGroup,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"aws_instance.foo", &v),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo",
+						"placement_group",
+						"testAccInstanceConfigPlacementGroup"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_ipv6_supportAddressCount(t *testing.T) {
 	var v ec2.Instance
 
@@ -1680,6 +1705,38 @@ resource "aws_instance" "foo" {
 	instance_type = "m1.small"
 	subnet_id = "${aws_subnet.foo.id}"
 	associate_public_ip_address = true
+	tenancy = "dedicated"
+	# pre-encoded base64 data
+	user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+}
+`
+
+const testAccInstanceConfigPlacementGroup = `
+resource "aws_vpc" "foo" {
+	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "testAccInstanceConfigPlacementGroup"
+	}
+}
+
+resource "aws_subnet" "foo" {
+	cidr_block = "10.1.1.0/24"
+	vpc_id = "${aws_vpc.foo.id}"
+}
+
+resource "aws_placement_group" "foo" {
+	name = "testAccInstanceConfigPlacementGroup"
+	strategy = "cluster"
+}
+
+# Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
+resource "aws_instance" "foo" {
+	# us-west-2
+	ami = "ami-55a7ea65"
+	instance_type = "c3.large"
+	subnet_id = "${aws_subnet.foo.id}"
+	associate_public_ip_address = true
+	placement_group = "${aws_placement_group.foo.name}"
 	tenancy = "dedicated"
 	# pre-encoded base64 data
 	user_data = "3dc39dda39be1205215e776bad998da361a5955d"
