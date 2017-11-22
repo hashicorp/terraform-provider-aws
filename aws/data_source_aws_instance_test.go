@@ -433,7 +433,7 @@ resource "aws_instance" "foo" {
   ami = "ami-4fccb37f"
   instance_type = "m1.small"
   subnet_id = "${aws_subnet.foo.id}"
-	associate_public_ip_address = true
+  associate_public_ip_address = true
   tenancy = "dedicated"
   # pre-encoded base64 data
   user_data = "3dc39dda39be1205215e776bad998da361a5955d"
@@ -458,8 +458,8 @@ resource "aws_subnet" "foo" {
 }
 
 resource "aws_placement_group" "foo" {
-	name = "testAccInstanceDataSourceConfig_PlacementGroup"
-	strategy = "cluster"
+  name = "testAccInstanceDataSourceConfig_PlacementGroup"
+  strategy = "cluster"
 }
 
 # Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
@@ -468,8 +468,8 @@ resource "aws_instance" "foo" {
   ami = "ami-55a7ea65"
   instance_type = "c3.large"
   subnet_id = "${aws_subnet.foo.id}"
-	associate_public_ip_address = true
-	placement_group = "${aws_placement_group.foo.name}"
+  associate_public_ip_address = true
+  placement_group = "${aws_placement_group.foo.name}"
   tenancy = "dedicated"
   # pre-encoded base64 data
   user_data = "3dc39dda39be1205215e776bad998da361a5955d"
