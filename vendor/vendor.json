@@ -853,6 +853,14 @@
 			"versionExact": "v1.12.30"
 		},
 		{
+			"checksumSHA1": "Uw4pOUxSMbx4xBHUcOUkNhtnywE=",
+			"path": "github.com/aws/aws-sdk-go/service/swf",
+			"revision": "e4f7e38b704e3ed0acc4a7f8196b777696f6f1f3",
+			"revisionTime": "2017-11-17T22:19:00Z",
+			"version": "v1.12.30",
+			"versionExact": "v1.12.30"
+		},
+		{
 			"checksumSHA1": "sjZeBzVjWM2tWSIOr7p13Kx2iNU=",
 			"path": "github.com/aws/aws-sdk-go/service/waf",
 			"revision": "e4f7e38b704e3ed0acc4a7f8196b777696f6f1f3",
