@@ -9,6 +9,7 @@ IMPROVEMENTS:
 
 * resource/aws_ssm_maintenance_window_target: Change MaxItems of targets [GH-2361]
 * data-source/aws_nat_gateway: Add missing address attributes to the schema [GH-2209]
+* resource/aws_sfn_state_machine: Support Update State machine call [GH-2349]
 
 ## 1.3.1 (November 20, 2017)
 
