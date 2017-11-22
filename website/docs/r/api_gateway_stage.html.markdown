@@ -76,3 +76,12 @@ The following arguments are supported:
 * `description` - (Optional) The description of the stage
 * `documentation_version` - (Optional) The version of the associated API documentation
 * `variables` - (Optional) A map that defines the stage variables
+
+
+## Import
+
+Api Gateway Stages can be imported using the `api gateway id` and `stage name`, e.g.
+
+```
+$ terraform import aws_api_gateway_stage.appStable 8c2j11wpha.stable
+```
