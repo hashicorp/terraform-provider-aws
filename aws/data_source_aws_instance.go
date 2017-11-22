@@ -38,6 +38,10 @@ func dataSourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"placement_group": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tenancy": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -276,6 +280,9 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	d.Set("instance_state", instance.State.Name)
 	if instance.Placement != nil {
 		d.Set("availability_zone", instance.Placement.AvailabilityZone)
+	}
+	if instance.Placement.GroupName != nil {
+		d.Set("placement_group", instance.Placement.GroupName)
 	}
 	if instance.Placement.Tenancy != nil {
 		d.Set("tenancy", instance.Placement.Tenancy)
