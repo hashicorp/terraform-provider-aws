@@ -62,7 +62,22 @@ func dataSourceAwsEcsContainerDefinition() *schema.Resource {
 			"port_mappings": &schema.Schema{
 				Type:     schema.TypeSet,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeMap, Elem: schema.TypeString},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"host_port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"container_port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -103,7 +118,7 @@ func dataSourceAwsEcsContainerDefinitionRead(d *schema.ResourceData, meta interf
 		}
 		d.Set("environment", environment)
 
-		var portMappings = make([]map[string]string, 0)
+		var portMappings = make([]map[string]string, len(def.PortMappings), len(def.PortMappings))
 		for _, portKeyValuePair := range def.PortMappings {
 			var portMapping = make(map[string]string)
 			portMapping["container_port"] = fmt.Sprintf("%d", aws.Int64Value(portKeyValuePair.ContainerPort))
