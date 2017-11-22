@@ -179,14 +179,16 @@ func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_PlacementGroup(t *testing.T) {
+	rStr := acctest.RandString(5)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_PlacementGroup,
+				Config: testAccInstanceDataSourceConfig_PlacementGroup(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instance.foo", "placement_group", "testAccInstanceDataSourceConfig_PlacementGroup"),
+					resource.TestCheckResourceAttr("data.aws_instance.foo", "placement_group", fmt.Sprintf("testAccInstanceDataSourceConfig_PlacementGroup_%s", rStr)),
 				),
 			},
 		},
@@ -444,11 +446,12 @@ data "aws_instance" "foo" {
 }
 `
 
-const testAccInstanceDataSourceConfig_PlacementGroup = `
+func testAccInstanceDataSourceConfig_PlacementGroup(rStr string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "testAccInstanceDataSourceConfig_PlacementGroup"
+    Name = "testAccInstanceDataSourceConfig_PlacementGroup_%s"
   }
 }
 
@@ -458,7 +461,7 @@ resource "aws_subnet" "foo" {
 }
 
 resource "aws_placement_group" "foo" {
-  name = "testAccInstanceDataSourceConfig_PlacementGroup"
+  name = "testAccInstanceDataSourceConfig_PlacementGroup_%s"
   strategy = "cluster"
 }
 
@@ -470,7 +473,6 @@ resource "aws_instance" "foo" {
   subnet_id = "${aws_subnet.foo.id}"
   associate_public_ip_address = true
   placement_group = "${aws_placement_group.foo.name}"
-  tenancy = "dedicated"
   # pre-encoded base64 data
   user_data = "3dc39dda39be1205215e776bad998da361a5955d"
 }
@@ -478,7 +480,8 @@ resource "aws_instance" "foo" {
 data "aws_instance" "foo" {
   instance_id = "${aws_instance.foo.id}"
 }
-`
+`, rStr, rStr)
+}
 
 func testAccInstanceDataSourceConfig_SecurityGroups(rInt int) string {
 	return fmt.Sprintf(`
