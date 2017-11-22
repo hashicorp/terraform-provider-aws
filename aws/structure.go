@@ -775,12 +775,12 @@ func flattenGroupIdentifiers(dtos []*ec2.GroupIdentifier) []string {
 //Expands an array of IPs into a ec2 Private IP Address Spec
 func expandPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecification {
 	dtos := make([]*ec2.PrivateIpAddressSpecification, 0, len(ips))
-	for i, v := range ips {
+	for _, v := range ips {
 		new_private_ip := &ec2.PrivateIpAddressSpecification{
 			PrivateIpAddress: aws.String(v.(string)),
 		}
 
-		new_private_ip.Primary = aws.Bool(i == 0)
+		new_private_ip.Primary = aws.Bool(false)
 
 		dtos = append(dtos, new_private_ip)
 	}

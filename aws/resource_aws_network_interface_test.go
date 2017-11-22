@@ -8,7 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	"strings"
 )
 
 func TestAccAWSENI_basic(t *testing.T) {
@@ -254,6 +256,30 @@ func testAccCheckAWSENIAttributesWithAttachment(conf *ec2.NetworkInterface) reso
 	}
 }
 
+func testAccCheckAWSENISecondaryPrivateIPs(conf *ec2.NetworkInterface, privateIPs []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		ips := &schema.Set{
+			F: schema.HashString,
+		}
+
+		for _, v := range conf.PrivateIpAddresses {
+			if *v.Primary {
+				continue
+			}
+			ips.Add(*v.PrivateIpAddress)
+		}
+
+		for _, ip := range privateIPs {
+			if !ips.Contains(ip) {
+				return fmt.Errorf("expected private ip %s to be in the set %s", ip, strings.Join(privateIPs, ","))
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSENIDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_network_interface" {
@@ -296,6 +322,34 @@ func testAccCheckAWSENIMakeExternalAttachment(n string, conf *ec2.NetworkInterfa
 		}
 		return nil
 	}
+}
+
+func TestAccAWSENI_PrimaryPrivateIPWithPrivateIPs(t *testing.T) {
+	var conf ec2.NetworkInterface
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_network_interface.bar",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSENIDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSENIConfigWithPrimaryPrivateIPAndPrivateIPs,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
+					resource.TestCheckResourceAttr(
+						"aws_network_interface.bar", "private_ip", "172.16.10.99"),
+					resource.TestCheckResourceAttr(
+						"aws_network_interface.bar", "private_ips.#", "3"),
+					testAccCheckAWSENISecondaryPrivateIPs(&conf, []string{
+						"172.16.10.100",
+						"172.16.10.10",
+						"172.16.10.50",
+					}),
+				),
+			},
+		},
+	})
 }
 
 const testAccAWSENIConfig = `
@@ -393,18 +447,18 @@ resource "aws_subnet" "foo" {
 
 resource "aws_network_interface" "bar" {
     subnet_id = "${aws_subnet.foo.id}"
-        source_dest_check = false
+	source_dest_check = false
     private_ips = ["172.16.10.100"]
 }
 `
 
-const testAccAWSENIConfigWithNoPrivateIPs = `
+const testAccAWSENIConfigWithPrimaryPrivateIPAndPrivateIPs = `
 resource "aws_vpc" "foo" {
 	cidr_block = "172.16.0.0/16"
 	enable_dns_hostnames = true
-		tags {
-			Name = "testAccAWSENIConfigWithNoPrivateIPs"
-		}
+	tags {
+		Name = "testAccAWSENIConfigWithPrimaryPrivateIPAndPrivateIPs"
+	}
 }
 
 resource "aws_subnet" "foo" {
@@ -415,7 +469,30 @@ resource "aws_subnet" "foo" {
 
 resource "aws_network_interface" "bar" {
     subnet_id = "${aws_subnet.foo.id}"
-        source_dest_check = false
+	source_dest_check = false
+	private_ip = "172.16.10.99"
+	private_ips = ["172.16.10.100", "172.16.10.10", "172.16.10.50"]
+}
+`
+
+const testAccAWSENIConfigWithNoPrivateIPs = `
+resource "aws_vpc" "foo" {
+	cidr_block = "172.16.0.0/16"
+	enable_dns_hostnames = true
+	tags {
+		Name = "testAccAWSENIConfigWithNoPrivateIPs"
+	}
+}
+
+resource "aws_subnet" "foo" {
+    vpc_id = "${aws_vpc.foo.id}"
+    cidr_block = "172.16.10.0/24"
+    availability_zone = "us-west-2a"
+}
+
+resource "aws_network_interface" "bar" {
+    subnet_id = "${aws_subnet.foo.id}"
+	source_dest_check = false
 }
 `
 

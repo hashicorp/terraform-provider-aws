@@ -38,6 +38,7 @@ func resourceAwsNetworkInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 
 			"private_dns_name": &schema.Schema{
@@ -119,6 +120,11 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 		request.Groups = expandStringList(security_groups)
 	}
 
+	private_ip := d.Get("private_ip").(string)
+	if private_ip != "" {
+		request.PrivateIpAddress = &private_ip
+	}
+
 	private_ips := d.Get("private_ips").(*schema.Set).List()
 	if len(private_ips) != 0 {
 		request.PrivateIpAddresses = expandPrivateIPAddresses(private_ips)
@@ -165,10 +171,24 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	eni := describeResp.NetworkInterfaces[0]
+
+	// Remove the first private IP address from the list of private addresses to obtain
+	// only the list of secondary private addresses
+	secondaryPrivateIPs := make([]*ec2.NetworkInterfacePrivateIpAddress, len(eni.PrivateIpAddresses)-1)
+	idx := 0
+	for _, ip := range eni.PrivateIpAddresses {
+		if *ip.Primary {
+			continue
+		}
+
+		secondaryPrivateIPs[idx] = ip
+		idx += 1
+	}
+
 	d.Set("subnet_id", eni.SubnetId)
 	d.Set("private_ip", eni.PrivateIpAddress)
 	d.Set("private_dns_name", eni.PrivateDnsName)
-	d.Set("private_ips", flattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses))
+	d.Set("private_ips", flattenNetworkInterfacesPrivateIPAddresses(secondaryPrivateIPs))
 	d.Set("security_groups", flattenGroupIdentifiers(eni.Groups))
 	d.Set("source_dest_check", eni.SourceDestCheck)
 
