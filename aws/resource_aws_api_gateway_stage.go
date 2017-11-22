@@ -304,6 +304,12 @@ func diffVariablesOps(prefix string, oldVars, newVars map[string]interface{}) []
 			if oldValue == newValue {
 				continue
 			}
+		} else {
+			ops = append(ops, &apigateway.PatchOperation{
+				Op:    aws.String("add"),
+				Path:  aws.String(prefix + k),
+				Value: aws.String(newValue),
+			})
 		}
 		ops = append(ops, &apigateway.PatchOperation{
 			Op:    aws.String("replace"),
