@@ -555,6 +555,7 @@ POLICY
 }
 
 resource "aws_rds_cluster" "default" {
+  engine             = "aurora-postgresql"
   cluster_identifier = "tf-aurora-cluster-test-%d"
   availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
   database_name      = "mydb"
