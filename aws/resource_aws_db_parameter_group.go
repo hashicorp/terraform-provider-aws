@@ -80,7 +80,7 @@ func resourceAwsDbParameterGroup() *schema.Resource {
 				},
 				Set: resourceAwsDbParameterHash,
 			},
-			"force_detached": &schema.Schema{
+			"force_detach": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -256,8 +256,7 @@ func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{})
 func resourceAwsDbParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	if d.Get("force_detached").(bool) {
-		log.Printf("[DEBUG] Modify DB instance which sync with PG %s", d.Id())
+	if d.Get("force_detach").(bool) {
 		instances, err := findDBInstancesWithParameterGroup(conn, d.Id())
 		if err != nil {
 			return err

@@ -772,7 +772,7 @@ func testAccAWSDBParameterGroupConfig_withDBInstance(rName string, dbName string
 resource "aws_db_parameter_group" "test" {
   name = "%s"
   family = "mysql5.6"
-	force_detached = true
+	force_detach = true
   parameter {
     name = "character_set_server"
     value = "utf8"
