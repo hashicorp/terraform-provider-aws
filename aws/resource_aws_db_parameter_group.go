@@ -269,7 +269,7 @@ func resourceAwsDbParameterGroupDelete(d *schema.ResourceData, meta interface{})
 			}
 			_, err = conn.ModifyDBInstance(req)
 			if err != nil {
-				return fmt.Errorf("Error modifying DB Instance %s: %s", instance.DBInstanceIdentifier, err)
+				return fmt.Errorf("Error modifying DB Instance %s: %s", *instance.DBInstanceIdentifier, err)
 			}
 
 			stateConf := &resource.StateChangeConf{
