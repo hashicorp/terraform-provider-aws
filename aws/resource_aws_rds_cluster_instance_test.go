@@ -138,7 +138,7 @@ func TestAccAWSRDSClusterInstance_disappears(t *testing.T) {
 func testAccCheckAWSDBClusterInstanceAttributes(v *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		if *v.Engine != "aurora" || *v.Engine != "aurora-postgresql" {
+		if *v.Engine != "aurora" && *v.Engine != "aurora-postgresql" {
 			return fmt.Errorf("bad engine, expected \"aurora\" or \"aurora-postgresql\": %#v", *v.Engine)
 		}
 
