@@ -80,7 +80,11 @@ func resourceAwsDbParameterGroup() *schema.Resource {
 				},
 				Set: resourceAwsDbParameterHash,
 			},
-
+			"force_detached": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -251,6 +255,41 @@ func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsDbParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+
+	if d.Get("force_detached").(bool) {
+		log.Printf("[DEBUG] Modify DB instance which sync with PG %s", d.Id())
+		instances, err := findDBInstancesWithParameterGroup(conn, d.Id())
+		if err != nil {
+			return err
+		}
+		for _, instance := range instances {
+			req := &rds.ModifyDBInstanceInput{
+				ApplyImmediately:     aws.Bool(true),
+				DBInstanceIdentifier: instance.DBInstanceIdentifier,
+				DBParameterGroupName: aws.String("default.mysql5.6"),
+			}
+			_, err = conn.ModifyDBInstance(req)
+			if err != nil {
+				return fmt.Errorf("Error modifying DB Instance %s: %s", instance.DBInstanceIdentifier, err)
+			}
+
+			stateConf := &resource.StateChangeConf{
+				Pending: []string{"creating", "backing-up", "modifying", "resetting-master-credentials",
+					"maintenance", "renaming", "rebooting", "upgrading", "configuring-enhanced-monitoring", "moving-to-vpc"},
+				Target:     []string{"available"},
+				Refresh:    dbInstanceRefreshStatusFunc(conn, *instance.DBInstanceIdentifier),
+				Timeout:    d.Timeout(schema.TimeoutUpdate),
+				MinTimeout: 10 * time.Second,
+				Delay:      30 * time.Second, // Wait 30 secs before starting
+			}
+
+			_, dbStateErr := stateConf.WaitForState()
+			if dbStateErr != nil {
+				return dbStateErr
+			}
+		}
+	}
+
 	return resource.Retry(3*time.Minute, func() *resource.RetryError {
 		deleteOpts := rds.DeleteDBParameterGroupInput{
 			DBParameterGroupName: aws.String(d.Id()),
@@ -290,4 +329,30 @@ func buildRDSPGARN(identifier, partition, accountid, region string) (string, err
 	arn := fmt.Sprintf("arn:%s:rds:%s:%s:pg:%s", partition, region, accountid, identifier)
 	return arn, nil
 
+}
+
+func findDBInstancesWithParameterGroup(conn *rds.RDS, name string) ([]*rds.DBInstance, error) {
+	results := make([]*rds.DBInstance, 0)
+	var maker *string
+	for {
+		resp, err := conn.DescribeDBInstances(&rds.DescribeDBInstancesInput{
+			Marker: maker,
+		})
+		if err != nil {
+			return results, err
+		}
+		for _, v := range resp.DBInstances {
+			for _, pg := range v.DBParameterGroups {
+				if *pg.DBParameterGroupName == name {
+					results = append(results, v)
+					break
+				}
+			}
+		}
+		maker = resp.Marker
+		if maker == nil {
+			break
+		}
+	}
+	return results, nil
 }
