@@ -6,7 +6,7 @@ description: |-
     Provides details about a single container within an ecs task definition
 ---
 
-# aws\_ecs\_container\_definition
+# Data Source: aws\_ecs\_container\_definition
 
 The ECS container definition data source allows access to details of
 a specific container within an AWS ECS service.

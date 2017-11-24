@@ -32,3 +32,15 @@ website/vendor
 
 # Keep windows files with windows line endings
 *.winfile eol=crlf
+/.vs
+/.vs/VSWorkspaceState.json
+/.vs/terraform-provider-aws/v15/.suo
+/.vs/terraform-provider-aws/v15
+/.vs/slnx.sqlite
+/.vs/ProjectSettings.json
+/.vs
+/.vs/VSWorkspaceState.json
+/.vs/slnx.sqlite
+/.vs/ProjectSettings.json
+/.vs/terraform-provider-aws/v15/.suo
+/.vs/terraform-provider-aws/v15

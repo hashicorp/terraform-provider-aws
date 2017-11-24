@@ -6,7 +6,7 @@ description: |-
   Get information on a Amazon IAM Instance Profile
 ---
 
-# aws_iam_instance_profile
+# Data Source: aws_iam_instance_profile
 
 This data source can be used to fetch information about a specific
 IAM instance profile. By using this data source, you can reference IAM 

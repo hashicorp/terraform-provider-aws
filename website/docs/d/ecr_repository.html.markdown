@@ -6,7 +6,7 @@ description: |-
     Provides details about an ECR Repository
 ---
 
-# aws\_ecr\_repository
+# Data Source: aws\_ecr\_repository
 
 The ECR Repository data source allows the ARN, Repository URI and Registry ID to be retrieved for an ECR repository.
 

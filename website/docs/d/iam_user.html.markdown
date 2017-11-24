@@ -6,7 +6,7 @@ description: |-
   Get information on a Amazon IAM user
 ---
 
-# aws_iam_user
+# Data Source: aws_iam_user
 
 This data source can be used to fetch information about a specific
 IAM user. By using this data source, you can reference IAM user
