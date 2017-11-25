@@ -8,6 +8,7 @@ import (
 
 	"bytes"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/hashicorp/terraform/helper/hashcode"
@@ -308,7 +309,11 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("name", d.Id())
+				resARN, err := arn.Parse(d.Id())
+				if err != nil {
+					return []*schema.ResourceData{}, err
+				}
+				d.Set("name", strings.Split(resARN.Resource, "/")[1])
 				return []*schema.ResourceData{d}, nil
 			},
 		},

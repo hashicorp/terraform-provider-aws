@@ -16,7 +16,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_importBasic(t *testing.T) {
 		rInt, os.Getenv("AWS_ACCOUNT_ID"), rInt, rInt, rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     testAccKinesisFirehosePreCheck(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
