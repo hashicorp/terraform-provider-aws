@@ -392,6 +392,35 @@ func TestAccAWSDBParameterGroup_Only(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBParameterGroup_withDBInstance(t *testing.T) {
+	var v rds.DBParameterGroup
+
+	pgName1 := fmt.Sprintf("tf-pg-%s", acctest.RandString(5))
+	pgName2 := fmt.Sprintf("tf-pg-%s", acctest.RandString(5))
+	dbName := acctest.RandString(5)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSDBParameterGroupConfig_withDBInstance(pgName1, dbName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.test", &v),
+					resource.TestCheckResourceAttr("aws_db_instance.test", "parameter_group_name", pgName1),
+				),
+			},
+			resource.TestStep{
+				Config: testAccAWSDBParameterGroupConfig_withDBInstance(pgName2, dbName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.test", &v),
+					resource.TestCheckResourceAttr("aws_db_instance.test", "parameter_group_name", pgName2),
+				),
+			},
+		},
+	})
+}
+
 func TestResourceAWSDBParameterGroupName_validation(t *testing.T) {
 	cases := []struct {
 		Value    string
@@ -737,3 +766,39 @@ resource "aws_db_parameter_group" "test" {
 	}
 }
 `
+
+func testAccAWSDBParameterGroupConfig_withDBInstance(rName string, dbName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_parameter_group" "test" {
+  name = "%s"
+  family = "mysql5.6"
+	force_detach = true
+  parameter {
+    name = "character_set_server"
+    value = "utf8"
+  }
+  parameter {
+    name = "character_set_client"
+    value = "utf8"
+  }
+  parameter{
+    name = "character_set_results"
+    value = "utf8"
+  }
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage = 10
+  storage_type = "gp2"
+  engine = "mysql"
+  engine_version = "5.6.35"
+  instance_class = "db.t2.micro"
+  name = "tfdb%s"
+  username = "foo"
+  password = "barbarbar"
+  apply_immediately = true
+  skip_final_snapshot = true
+  parameter_group_name = "${aws_db_parameter_group.test.name}"
+}
+`, rName, dbName)
+}

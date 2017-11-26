@@ -1153,6 +1153,21 @@ func resourceAwsDbInstanceStateRefreshFunc(
 	}
 }
 
+func dbInstanceRefreshStatusFunc(conn *rds.RDS, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		opts := &rds.DescribeDBInstancesInput{
+			DBInstanceIdentifier: aws.String(id),
+		}
+
+		resp, err := conn.DescribeDBInstances(opts)
+		if err != nil {
+			return nil, "failed", err
+		}
+
+		return resp, *resp.DBInstances[0].DBInstanceStatus, nil
+	}
+}
+
 func buildRDSARN(identifier, partition, accountid, region string) (string, error) {
 	if partition == "" {
 		return "", fmt.Errorf("Unable to construct RDS ARN because of missing AWS partition")
