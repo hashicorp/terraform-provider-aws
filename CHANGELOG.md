@@ -4,6 +4,7 @@ BUG FIXES:
 
 * resource/aws_cognito_user_pool: Fix `email_subject_by_link` [GH-2395]
 * resource/aws_api_gateway_method_response: Fix conflict exception in API gateway method response [GH-2393]
+* resource/aws_api_gateway_method: Fix typo `authorization_type` -> `authorization` [GH-2430]
 
 IMPROVEMENTS:
 
