@@ -162,7 +162,7 @@ func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("request_parameters", aws.BoolValueMap(out.RequestParameters))
 	d.Set("request_parameters_in_json", aws.BoolValueMap(out.RequestParameters))
 	d.Set("api_key_required", out.ApiKeyRequired)
-	d.Set("authorization_type", out.AuthorizationType)
+	d.Set("authorization", out.AuthorizationType)
 	d.Set("authorizer_id", out.AuthorizerId)
 	d.Set("request_models", aws.StringValueMap(out.RequestModels))
 	d.Set("request_validator_id", out.RequestValidatorId)
