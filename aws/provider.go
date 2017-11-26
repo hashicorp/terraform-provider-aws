@@ -502,6 +502,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_route_table_association":                  resourceAwsRouteTableAssociation(),
 			"aws_secretsmanager_secret":                    resourceAwsSecretsManagerSecret(),
 			"aws_secretsmanager_secret_version":            resourceAwsSecretsManagerSecretVersion(),
+			"aws_sagemaker_model":                          resourceAwsSagemakerModel(),
 			"aws_ses_active_receipt_rule_set":              resourceAwsSesActiveReceiptRuleSet(),
 			"aws_ses_domain_identity":                      resourceAwsSesDomainIdentity(),
 			"aws_ses_domain_identity_verification":         resourceAwsSesDomainIdentityVerification(),
