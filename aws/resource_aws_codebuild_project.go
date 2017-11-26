@@ -560,9 +560,22 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
-	artifactType := m["type"].(string)
-
-	buf.WriteString(fmt.Sprintf("%s-", artifactType))
+	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
+	if v, ok := m["name"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["location"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["namespace_type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["packaging"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["path"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
 
 	return hashcode.String(buf.String())
 }
