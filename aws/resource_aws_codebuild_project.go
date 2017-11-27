@@ -22,6 +22,9 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 		Update: resourceAwsCodeBuildProjectUpdate,
 		Delete: resourceAwsCodeBuildProjectDelete,
 
+		SchemaVersion: 1,
+		MigrateState:  resourceAwsCodebuildMigrateState,
+
 		Schema: map[string]*schema.Schema{
 			"artifacts": {
 				Type:     schema.TypeSet,
@@ -57,7 +60,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsCodeBuildProjectArtifactsHash,
 			},
 			"description": {
 				Type:         schema.TypeString,
