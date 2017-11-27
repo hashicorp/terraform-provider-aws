@@ -23,6 +23,9 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 		Required:     true,
 		ForceNew:     true,
 		ValidateFunc: validateAwsElastiCacheReplicationGroupId,
+		StateFunc: func(val interface{}) string {
+			return strings.ToLower(val.(string))
+		},
 	}
 
 	resourceSchema["automatic_failover_enabled"] = &schema.Schema{
@@ -518,7 +521,7 @@ func validateAwsElastiCacheReplicationGroupId(v interface{}, k string) (ws []str
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters and hyphens allowed in %q", k))
 	}
-	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+	if !regexp.MustCompile(`^[a-zA-Z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"first character of %q must be a letter", k))
 	}
