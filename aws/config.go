@@ -58,6 +58,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -188,6 +189,7 @@ type AWSClient struct {
 	batchconn             *batch.Batch
 	athenaconn            *athena.Athena
 	dxconn                *directconnect.DirectConnect
+	mediastoreconn        *mediastore.MediaStore
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -426,6 +428,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.batchconn = batch.New(sess)
 	client.athenaconn = athena.New(sess)
 	client.dxconn = directconnect.New(sess)
+	client.mediastoreconn = mediastore.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {

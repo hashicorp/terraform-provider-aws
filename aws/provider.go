@@ -400,6 +400,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_main_route_table_association":             resourceAwsMainRouteTableAssociation(),
 			"aws_mq_broker":                                resourceAwsMqBroker(),
 			"aws_mq_configuration":                         resourceAwsMqConfiguration(),
+			"aws_media_store_container":                    resourceAwsMediaStoreContainer(),
 			"aws_nat_gateway":                              resourceAwsNatGateway(),
 			"aws_network_acl":                              resourceAwsNetworkAcl(),
 			"aws_default_network_acl":                      resourceAwsDefaultNetworkAcl(),
