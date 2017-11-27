@@ -807,7 +807,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	// list tags for resource
 	// set tags
 	conn := meta.(*AWSClient).rdsconn
-	arn, err := buildRDSARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
+	builtArn, err := buildRDSARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
 	if err != nil {
 		name := "<empty>"
 		if v.DBName != nil && *v.DBName != "" {
@@ -815,13 +815,13 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		log.Printf("[DEBUG] Error building ARN for DB Instance, not setting Tags for DB %s", name)
 	} else {
-		d.Set("arn", arn)
+		d.Set("arn", builtArn)
 		resp, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
-			ResourceName: aws.String(arn),
+			ResourceName: aws.String(builtArn),
 		})
 
 		if err != nil {
-			log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
+			log.Printf("[DEBUG] Error retrieving tags for ARN: %s", builtArn)
 		}
 
 		var dt []*rds.Tag
