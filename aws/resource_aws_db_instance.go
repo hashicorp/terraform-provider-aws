@@ -861,7 +861,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	//  If an ARN was passed in, do NOT use what AWS passes back for replicaste_source_id,
 	//  as it passes back the master's ID-
 	//  see https://github.com/terraform-providers/terraform-provider-aws/issues/2399
-	arnParts, arnErr := arn.Parse(d.Get("replicate_source_db").(string))
+	_, arnErr := arn.Parse(d.Get("replicate_source_db").(string))
 	if arnErr != nil {
 		d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
 	}
