@@ -866,8 +866,6 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
 	}
 
-	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
-
 	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
 
 	return nil
