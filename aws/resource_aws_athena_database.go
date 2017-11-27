@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"errors"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -190,7 +189,7 @@ func queryExecutionStateRefreshFunc(qeid string, conn *athena.Athena) resource.S
 		status := out.QueryExecution.Status
 		if *status.State == athena.QueryExecutionStateFailed &&
 			status.StateChangeReason != nil {
-			err = errors.New(*status.StateChangeReason)
+			err = fmt.Errorf("reason: %s", *status.StateChangeReason)
 		}
 		return out, *out.QueryExecution.Status.State, err
 	}
