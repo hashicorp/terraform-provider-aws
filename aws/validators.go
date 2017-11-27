@@ -1367,7 +1367,7 @@ func validateAwsKmsName(v interface{}, k string) (ws []string, es []error) {
 func validateCognitoIdentityPoolName(v interface{}, k string) (ws []string, errors []error) {
 	val := v.(string)
 	if !regexp.MustCompile("^[\\w _]+$").MatchString(val) {
-		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric caracters and spaces", k))
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters and spaces", k))
 	}
 
 	return
@@ -1376,11 +1376,11 @@ func validateCognitoIdentityPoolName(v interface{}, k string) (ws []string, erro
 func validateCognitoProviderDeveloperName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 100 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 100 caracters", k))
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 100 characters", k))
 	}
 
 	if !regexp.MustCompile("^[\\w._-]+$").MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric caracters, dots, underscores and hyphens", k))
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores and hyphens", k))
 	}
 
 	return
@@ -1393,11 +1393,11 @@ func validateCognitoSupportedLoginProviders(v interface{}, k string) (ws []strin
 	}
 
 	if len(value) > 128 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 caracters", k))
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 characters", k))
 	}
 
 	if !regexp.MustCompile("^[\\w.;_/-]+$").MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric caracters, dots, semicolons, underscores, slashes and hyphens", k))
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, semicolons, underscores, slashes and hyphens", k))
 	}
 
 	return
@@ -1410,11 +1410,11 @@ func validateCognitoIdentityProvidersClientId(v interface{}, k string) (ws []str
 	}
 
 	if len(value) > 128 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 caracters", k))
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 characters", k))
 	}
 
 	if !regexp.MustCompile("^[\\w_]+$").MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric caracters and underscores", k))
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters and underscores", k))
 	}
 
 	return
@@ -1431,7 +1431,7 @@ func validateCognitoIdentityProvidersProviderName(v interface{}, k string) (ws [
 	}
 
 	if !regexp.MustCompile("^[\\w._:/-]+$").MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric caracters, dots, underscores, colons, slashes and hyphens", k))
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores, colons, slashes and hyphens", k))
 	}
 
 	return
@@ -1728,7 +1728,7 @@ func validateIamRoleDescription(v interface{}, k string) (ws []string, errors []
 	value := v.(string)
 
 	if len(value) > 1000 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 1000 caracters", k))
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 1000 characters", k))
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`).MatchString(value) {
@@ -1888,7 +1888,7 @@ func validateCognitoRoleMappingsRulesClaim(v interface{}, k string) (ws []string
 	value := v.(string)
 
 	if !regexp.MustCompile("^[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+$").MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric caracters, dots, underscores, colons, slashes and hyphens", k))
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores, colons, slashes and hyphens", k))
 	}
 
 	return
@@ -1916,11 +1916,11 @@ func validateCognitoRoleMappingsRulesMatchType(v interface{}, k string) (ws []st
 func validateCognitoRoleMappingsRulesValue(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) < 1 {
-		errors = append(errors, fmt.Errorf("%q cannot be less than 1 caracter", k))
+		errors = append(errors, fmt.Errorf("%q cannot be less than 1 character", k))
 	}
 
 	if len(value) > 128 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 1 caracters", k))
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 1 characters", k))
 	}
 
 	return
