@@ -57,7 +57,9 @@ func resourceAwsIamUserPolicyPut(d *schema.ResourceData, meta interface{}) error
 	}
 
 	var policyName string
-	if v, ok := d.GetOk("name"); ok {
+	if d.Id() != "" {
+		_, policyName = resourceAwsIamUserPolicyParseId(d.Id())
+	} else if v, ok := d.GetOk("name"); ok {
 		policyName = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
 		policyName = resource.PrefixedUniqueId(v.(string))

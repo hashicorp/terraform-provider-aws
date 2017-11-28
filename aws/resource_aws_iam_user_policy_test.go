@@ -36,6 +36,7 @@ func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
 						"aws_iam_user.user",
 						"aws_iam_user_policy.bar",
 					),
+					testAccCheckIAMUserPolicyExpectedPolicies("aws_iam_user.user", 2),
 				),
 			},
 		},
@@ -58,6 +59,7 @@ func TestAccAWSIAMUserPolicy_namePrefix(t *testing.T) {
 						"aws_iam_user.test",
 						"aws_iam_user_policy.test",
 					),
+					testAccCheckIAMUserPolicyExpectedPolicies("aws_iam_user.test", 1),
 				),
 			},
 		},
@@ -82,6 +84,16 @@ func TestAccAWSIAMUserPolicy_generatedName(t *testing.T) {
 					),
 				),
 			},
+			{
+				Config: testAccIAMUserPolicyConfig_generatedNameUpdate(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIAMUserPolicy(
+						"aws_iam_user.test",
+						"aws_iam_user_policy.test",
+					),
+					testAccCheckIAMUserPolicyExpectedPolicies("aws_iam_user.test", 1),
+				),
+			},
 		},
 	})
 }
@@ -94,25 +106,25 @@ func testAccCheckIAMUserPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		role, name := resourceAwsIamUserPolicyParseId(rs.Primary.ID)
+		user, name := resourceAwsIamUserPolicyParseId(rs.Primary.ID)
 
-		request := &iam.GetRolePolicyInput{
+		request := &iam.GetUserPolicyInput{
 			PolicyName: aws.String(name),
-			RoleName:   aws.String(role),
+			UserName:   aws.String(user),
 		}
 
 		var err error
-		getResp, err := iamconn.GetRolePolicy(request)
+		getResp, err := iamconn.GetUserPolicy(request)
 		if err != nil {
 			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
 				// none found, that's good
 				return nil
 			}
-			return fmt.Errorf("Error reading IAM policy %s from role %s: %s", name, role, err)
+			return fmt.Errorf("Error reading IAM policy %s from user %s: %s", name, user, err)
 		}
 
 		if getResp != nil {
-			return fmt.Errorf("Found IAM Role, expected none: %s", getResp)
+			return fmt.Errorf("Found IAM user policy, expected none: %s", getResp)
 		}
 	}
 
@@ -146,6 +158,34 @@ func testAccCheckIAMUserPolicy(
 
 		if err != nil {
 			return err
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckIAMUserPolicyExpectedPolicies(iamUserResource string, expected int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[iamUserResource]
+		if !ok {
+			return fmt.Errorf("Not Found: %s", iamUserResource)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		userPolicies, err := iamconn.ListUserPolicies(&iam.ListUserPoliciesInput{
+			UserName: aws.String(rs.Primary.ID),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if len(userPolicies.PolicyNames) != expected {
+			return fmt.Errorf("Expected (%d) IAM user policies for user (%s), found: %d", expected, rs.Primary.ID, len(userPolicies.PolicyNames))
 		}
 
 		return nil
@@ -190,6 +230,19 @@ func testAccIAMUserPolicyConfig_generatedName(rInt int) string {
 	resource "aws_iam_user_policy" "test" {
 		user = "${aws_iam_user.test.name}"
 		policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}}"
+	}`, rInt)
+}
+
+func testAccIAMUserPolicyConfig_generatedNameUpdate(rInt int) string {
+	return fmt.Sprintf(`
+	resource "aws_iam_user" "test" {
+		name = "test_user_%d"
+		path = "/"
+	}
+
+	resource "aws_iam_user_policy" "test" {
+		user = "${aws_iam_user.test.name}"
+		policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"iam:*\",\"Resource\":\"*\"}}"
 	}`, rInt)
 }
 
