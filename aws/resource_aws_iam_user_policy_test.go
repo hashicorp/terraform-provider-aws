@@ -220,16 +220,16 @@ func testAccIAMUserPolicyConfig(rInt int) string {
 
 func testAccIAMUserPolicyConfig_invalidJSON(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_user" "user" {
-		name = "test_user_%d"
-		path = "/"
-	}
+  resource "aws_iam_user" "user" {
+    name = "test_user_%d"
+    path = "/"
+  }
 
-	resource "aws_iam_user_policy" "foo" {
-		name = "foo_policy_%d"
-		user = "${aws_iam_user.user.name}"
-		policy = "NonJSONString"
-	}`, rInt, rInt)
+  resource "aws_iam_user_policy" "foo" {
+    name = "foo_policy_%d"
+    user = "${aws_iam_user.user.name}"
+    policy = "NonJSONString"
+  }`, rInt, rInt)
 }
 
 func testAccIAMUserPolicyConfig_namePrefix(rInt int) string {
@@ -261,15 +261,15 @@ func testAccIAMUserPolicyConfig_generatedName(rInt int) string {
 
 func testAccIAMUserPolicyConfig_generatedNameUpdate(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_user" "test" {
-		name = "test_user_%d"
-		path = "/"
-	}
+  resource "aws_iam_user" "test" {
+    name = "test_user_%d"
+    path = "/"
+  }
 
-	resource "aws_iam_user_policy" "test" {
-		user = "${aws_iam_user.test.name}"
-		policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"iam:*\",\"Resource\":\"*\"}}"
-	}`, rInt)
+  resource "aws_iam_user_policy" "test" {
+    user = "${aws_iam_user.test.name}"
+    policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"iam:*\",\"Resource\":\"*\"}}"
+  }`, rInt)
 }
 
 func testAccIAMUserPolicyConfigUpdate(rInt int) string {
