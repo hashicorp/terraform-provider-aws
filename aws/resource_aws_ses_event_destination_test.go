@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -18,16 +19,17 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESEventDestinationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSESEventDestinationConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESEventDestinationExists("aws_ses_configuration_set.test"),
+					testAccCheckAwsSESEventConfigurationSetExists("aws_ses_configuration_set.test"),
 					resource.TestCheckResourceAttr(
 						"aws_ses_event_destination.kinesis", "name", "event-destination-kinesis"),
 					resource.TestCheckResourceAttr(
 						"aws_ses_event_destination.cloudwatch", "name", "event-destination-cloudwatch"),
 					resource.TestCheckResourceAttr(
-						"aws_ses_event_destination.sns", "name", "event-destination-sns"),
+						"aws_ses_event_destination.sns", "name", fmt.Sprintf("event-destination-sns-%d", edRandomInteger)),
+					testAccCheckAwsSESEventDestinationSnsArn("aws_ses_event_destination.sns"),
 				),
 			},
 		},
@@ -64,15 +66,15 @@ func testAccCheckSESEventDestinationDestroy(s *terraform.State) error {
 
 }
 
-func testAccCheckAwsSESEventDestinationExists(n string) resource.TestCheckFunc {
+func testAccCheckAwsSESEventConfigurationSetExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES event destination not found: %s", n)
+			return fmt.Errorf("SES configuration set not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES event destination ID not set")
+			return fmt.Errorf("SES configuration set ID not set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).sesConn
@@ -91,6 +93,52 @@ func testAccCheckAwsSESEventDestinationExists(n string) resource.TestCheckFunc {
 
 		if !found {
 			return fmt.Errorf("The configuration set was not created")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAwsSESEventDestinationSnsArn(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).sesConn
+		rs, _ := s.RootModule().Resources[n]
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No SES Event Destination ID is set")
+		}
+
+		req := &ses.DescribeConfigurationSetInput{
+			ConfigurationSetName:           aws.String(fmt.Sprintf("some-configuration-set-%d", edRandomInteger)),
+			ConfigurationSetAttributeNames: []*string{aws.String("eventDestinations")},
+		}
+		resp, err := conn.DescribeConfigurationSet(req)
+		if err != nil {
+			return err
+		}
+
+		found := false
+		dest := ""
+		for _, element := range resp.EventDestinations {
+			if *element.Name == fmt.Sprintf("event-destination-sns-%d", edRandomInteger) {
+				dest = *element.SNSDestination.TopicARN
+				found = true
+			}
+		}
+
+		if !found {
+			return fmt.Errorf("The SNS event destination was not created")
+		}
+
+		expected := fmt.Sprintf(
+			"arn:%s:sns:%s:%s:%s",
+			testAccProvider.Meta().(*AWSClient).partition,
+			testAccProvider.Meta().(*AWSClient).region,
+			testAccProvider.Meta().(*AWSClient).accountid,
+			fmt.Sprintf("ses-destination-test-%d", edRandomInteger))
+
+		if dest != expected {
+			return fmt.Errorf("Incorrect ARN: expected %q, got %q", expected, dest)
 		}
 
 		return nil
@@ -159,7 +207,7 @@ data "aws_iam_policy_document" "fh_felivery_document" {
 }
 
 resource "aws_sns_topic" "ses_destination" {
-  name = "ses-destination-test"
+  name = "ses-destination-test-%d"
 }
 
 resource "aws_ses_configuration_set" "test" {
@@ -192,7 +240,7 @@ resource "aws_ses_event_destination" "cloudwatch" {
 }
 
 resource "aws_ses_event_destination" "sns" {
-  name = "event-destination-sns",
+  name = "event-destination-sns-%d",
   configuration_set_name = "${aws_ses_configuration_set.test.name}",
   enabled = true,
   matching_types = ["bounce", "send"],
@@ -202,4 +250,4 @@ resource "aws_ses_event_destination" "sns" {
   }
 }
 
-`, edRandomInteger)
+`, edRandomInteger, edRandomInteger, edRandomInteger)
