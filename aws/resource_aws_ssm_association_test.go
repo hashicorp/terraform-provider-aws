@@ -40,6 +40,10 @@ func TestAccAWSSSMAssociation_withTargets(t *testing.T) {
 				Config: testAccAWSSSMAssociationBasicConfigWithTargets(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "targets.0.key", "tag:Name"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "targets.0.values.0", "acceptanceTest"),
 				),
 			},
 		},
@@ -57,6 +61,14 @@ func TestAccAWSSSMAssociation_withMultipleTargets(t *testing.T) {
 				Config: testAccAWSSSMAssociationBasicConfigWithMultipleTargets(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "targets.0.key", "tag:Name"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "targets.0.values.0", "acceptanceTest"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "targets.1.key", "tag:Environment"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "targets.1.values.0", "acceptanceTest"),
 				),
 			},
 		},
