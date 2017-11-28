@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -115,6 +116,22 @@ func TestAccAWSIAMUserPolicy_importBasic(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMUserPolicy_invalidJSON(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccIAMUserPolicyConfig_invalidJSON(rInt),
+				ExpectError: regexp.MustCompile("invalid JSON"),
+			},
+		},
+	})
+}
+
 func testAccCheckIAMUserPolicyDestroy(s *terraform.State) error {
 	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
 
@@ -198,6 +215,20 @@ func testAccIAMUserPolicyConfig(rInt int) string {
 		name = "foo_policy_%d"
 		user = "${aws_iam_user.user.name}"
 		policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}}"
+	}`, rInt, rInt)
+}
+
+func testAccIAMUserPolicyConfig_invalidJSON(rInt int) string {
+	return fmt.Sprintf(`
+	resource "aws_iam_user" "user" {
+		name = "test_user_%d"
+		path = "/"
+	}
+
+	resource "aws_iam_user_policy" "foo" {
+		name = "foo_policy_%d"
+		user = "${aws_iam_user.user.name}"
+		policy = "NonJSONString"
 	}`, rInt, rInt)
 }
 
