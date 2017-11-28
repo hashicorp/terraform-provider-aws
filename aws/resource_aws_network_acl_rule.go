@@ -42,10 +42,15 @@ func resourceAwsNetworkAclRule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "all" && new == "-1" || old == "-1" && new == "all" {
-						return true
+					pi := protocolIntegers()
+					if val, ok := pi[old]; ok {
+						old = strconv.Itoa(val)
 					}
-					return false
+					if val, ok := pi[new]; ok {
+						new = strconv.Itoa(val)
+					}
+
+					return old == new
 				},
 			},
 			"rule_action": {

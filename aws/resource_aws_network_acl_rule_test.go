@@ -85,6 +85,25 @@ func TestAccAWSNetworkAclRule_allProtocol(t *testing.T) {
 	})
 }
 
+func TestAccAWSNetworkAclRule_tcpProtocol(t *testing.T) {
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:             testAccAWSNetworkAclRuleTcpProtocolConfig,
+				ExpectNonEmptyPlan: false,
+			},
+			{
+				Config:             testAccAWSNetworkAclRuleTcpProtocolConfigNoRealUpdate,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
 func TestResourceAWSNetworkAclRule_validateICMPArgumentValue(t *testing.T) {
 	type testCases struct {
 		Value    string
@@ -352,6 +371,28 @@ resource "aws_network_acl_rule" "baz" {
 }
 `
 
+const testAccAWSNetworkAclRuleTcpProtocolConfigNoRealUpdate = `
+resource "aws_vpc" "foo" {
+	cidr_block = "10.3.0.0/16"
+	tags {
+		Name = "testAccAWSNetworkAclRuleTcpProtocolConfigNoRealUpdate"
+	}
+}
+resource "aws_network_acl" "bar" {
+	vpc_id = "${aws_vpc.foo.id}"
+}
+resource "aws_network_acl_rule" "baz" {
+	network_acl_id = "${aws_network_acl.bar.id}"
+	rule_number = 150
+	egress = false
+	protocol = "tcp"
+	rule_action = "allow"
+	cidr_block = "0.0.0.0/0"
+	from_port = 22
+	to_port = 22
+}
+`
+
 const testAccAWSNetworkAclRuleAllProtocolConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.3.0.0/16"
@@ -367,6 +408,28 @@ resource "aws_network_acl_rule" "baz" {
 	rule_number = 150
 	egress = false
 	protocol = "-1"
+	rule_action = "allow"
+	cidr_block = "0.0.0.0/0"
+	from_port = 22
+	to_port = 22
+}
+`
+
+const testAccAWSNetworkAclRuleTcpProtocolConfig = `
+resource "aws_vpc" "foo" {
+	cidr_block = "10.3.0.0/16"
+	tags {
+		Name = "testAccAWSNetworkAclRuleTcpProtocolConfig"
+	}
+}
+resource "aws_network_acl" "bar" {
+	vpc_id = "${aws_vpc.foo.id}"
+}
+resource "aws_network_acl_rule" "baz" {
+	network_acl_id = "${aws_network_acl.bar.id}"
+	rule_number = 150
+	egress = false
+	protocol = "6"
 	rule_action = "allow"
 	cidr_block = "0.0.0.0/0"
 	from_port = 22
