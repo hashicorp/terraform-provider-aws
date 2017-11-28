@@ -36,7 +36,6 @@ func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
 						"aws_iam_user.user",
 						"aws_iam_user_policy.bar",
 					),
-					testAccCheckIAMUserPolicyExpectedPolicies("aws_iam_user.user", 2),
 				),
 			},
 		},
@@ -59,7 +58,6 @@ func TestAccAWSIAMUserPolicy_namePrefix(t *testing.T) {
 						"aws_iam_user.test",
 						"aws_iam_user_policy.test",
 					),
-					testAccCheckIAMUserPolicyExpectedPolicies("aws_iam_user.test", 1),
 				),
 			},
 		},
@@ -91,8 +89,27 @@ func TestAccAWSIAMUserPolicy_generatedName(t *testing.T) {
 						"aws_iam_user.test",
 						"aws_iam_user_policy.test",
 					),
-					testAccCheckIAMUserPolicyExpectedPolicies("aws_iam_user.test", 1),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMUserPolicy_importBasic(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIAMUserPolicyConfig(rInt),
+			},
+			{
+				ResourceName:      "aws_iam_user_policy.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -106,14 +123,16 @@ func testAccCheckIAMUserPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		user, name := resourceAwsIamUserPolicyParseId(rs.Primary.ID)
+		user, name, err := resourceAwsIamUserPolicyParseId(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 
 		request := &iam.GetUserPolicyInput{
 			PolicyName: aws.String(name),
 			UserName:   aws.String(user),
 		}
 
-		var err error
 		getResp, err := iamconn.GetUserPolicy(request)
 		if err != nil {
 			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
@@ -150,42 +169,18 @@ func testAccCheckIAMUserPolicy(
 		}
 
 		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
-		username, name := resourceAwsIamUserPolicyParseId(policy.Primary.ID)
-		_, err := iamconn.GetUserPolicy(&iam.GetUserPolicyInput{
+		username, name, err := resourceAwsIamUserPolicyParseId(policy.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		_, err = iamconn.GetUserPolicy(&iam.GetUserPolicyInput{
 			UserName:   aws.String(username),
 			PolicyName: aws.String(name),
 		})
 
 		if err != nil {
 			return err
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckIAMUserPolicyExpectedPolicies(iamUserResource string, expected int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[iamUserResource]
-		if !ok {
-			return fmt.Errorf("Not Found: %s", iamUserResource)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
-		userPolicies, err := iamconn.ListUserPolicies(&iam.ListUserPoliciesInput{
-			UserName: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			return err
-		}
-
-		if len(userPolicies.PolicyNames) != expected {
-			return fmt.Errorf("Expected (%d) IAM user policies for user (%s), found: %d", expected, rs.Primary.ID, len(userPolicies.PolicyNames))
 		}
 
 		return nil
