@@ -526,7 +526,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 			stateConf := &resource.StateChangeConf{
 				Pending:    resourceAwsDbInstanceCreatePendingStates,
-				Target:     []string{"available"},
+				Target:     []string{"available", "storage-optimization"},
 				Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
 				Timeout:    d.Timeout(schema.TimeoutCreate),
 				MinTimeout: 10 * time.Second,
@@ -687,7 +687,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceAwsDbInstanceCreatePendingStates,
-		Target:     []string{"available"},
+		Target:     []string{"available", "storage-optimization"},
 		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
@@ -1037,7 +1037,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 
 		stateConf := &resource.StateChangeConf{
 			Pending:    resourceAwsDbInstanceUpdatePendingStates,
-			Target:     []string{"available"},
+			Target:     []string{"available", "storage-optimization"},
 			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
@@ -1170,16 +1170,20 @@ var resourceAwsDbInstanceCreatePendingStates = []string{
 	"rebooting",
 	"renaming",
 	"resetting-master-credentials",
-	"storage-optimization",
+	"starting",
+	"stopping",
 	"upgrading",
 }
 
 var resourceAwsDbInstanceDeletePendingStates = []string{
 	"available",
 	"backing-up",
+	"configuring-enhanced-monitoring",
 	"creating",
 	"deleting",
 	"modifying",
+	"starting",
+	"stopping",
 	"storage-optimization",
 }
 
@@ -1193,6 +1197,7 @@ var resourceAwsDbInstanceUpdatePendingStates = []string{
 	"rebooting",
 	"renaming",
 	"resetting-master-credentials",
-	"storage-optimization",
+	"starting",
+	"stopping",
 	"upgrading",
 }
