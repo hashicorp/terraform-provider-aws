@@ -1,17 +1,17 @@
-## 1.4.0 (Unreleased)
+## 1.4.0 (November 29, 2017)
 
 BUG FIXES:
 
-* resource/aws_cognito_user_pool: Fix `email_subject_by_link` [GH-2395]
-* resource/aws_api_gateway_method_response: Fix conflict exception in API gateway method response [GH-2393]
-* resource/aws_api_gateway_method: Fix typo `authorization_type` -> `authorization` [GH-2430]
+* resource/aws_cognito_user_pool: Fix `email_subject_by_link` ([#2395](https://github.com/terraform-providers/terraform-provider-aws/issues/2395))
+* resource/aws_api_gateway_method_response: Fix conflict exception in API gateway method response ([#2393](https://github.com/terraform-providers/terraform-provider-aws/issues/2393))
+* resource/aws_api_gateway_method: Fix typo `authorization_type` -> `authorization` ([#2430](https://github.com/terraform-providers/terraform-provider-aws/issues/2430))
 
 IMPROVEMENTS:
 
-* data-source/aws_nat_gateway: Add missing address attributes to the schema [GH-2209]
-* resource/aws_ssm_maintenance_window_target: Change MaxItems of targets [GH-2361]
-* resource/aws_sfn_state_machine: Support Update State machine call [GH-2349]
-* resource/aws_instance: Set placement_group in state on read if available [GH-2398]
+* data-source/aws_nat_gateway: Add missing address attributes to the schema ([#2209](https://github.com/terraform-providers/terraform-provider-aws/issues/2209))
+* resource/aws_ssm_maintenance_window_target: Change MaxItems of targets ([#2361](https://github.com/terraform-providers/terraform-provider-aws/issues/2361))
+* resource/aws_sfn_state_machine: Support Update State machine call ([#2349](https://github.com/terraform-providers/terraform-provider-aws/issues/2349))
+* resource/aws_instance: Set placement_group in state on read if available ([#2398](https://github.com/terraform-providers/terraform-provider-aws/issues/2398))
 
 ## 1.3.1 (November 20, 2017)
 
