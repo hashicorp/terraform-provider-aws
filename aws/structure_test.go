@@ -1377,18 +1377,18 @@ func TestCanonicalXML(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			old, err := canonicalXML(tc.Config)
+			config, err := canonicalXML(tc.Config)
 			if err != nil {
-				t.Fatalf("Error getting canonical xml: %s", err)
+				t.Fatalf("Error getting canonical xml for given config: %s", err)
 			}
-			new, err := canonicalXML(tc.Expected)
+			expected, err := canonicalXML(tc.Expected)
 			if err != nil {
-				t.Fatalf("Error getting canonical xml: %s", err)
+				t.Fatalf("Error getting canonical xml for expected config: %s", err)
 			}
 
-			if old != new {
+			if config != expected {
 				if !tc.ExpectError {
-					t.Fatalf("Error matching canonical xmls:\n\tfirst: %s\n\n\tsecond: %s\n", old, new)
+					t.Fatalf("Error matching canonical xmls:\n\tconfig: %s\n\n\texpected: %s\n", config, expected)
 				}
 			}
 		})
