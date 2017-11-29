@@ -1,4 +1,10 @@
-## 1.4.1 (Unreleased)
+## 1.5.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_mq_broker` [GH-2466]
+* **New Resource:** `aws_mq_configuration` [GH-2466]
+
 ## 1.4.0 (November 29, 2017)
 
 BUG FIXES:
