@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -31,6 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/beevik/etree"
 	"github.com/hashicorp/terraform/helper/schema"
 	"gopkg.in/yaml.v2"
 )
@@ -2880,4 +2882,23 @@ func flattenRedshiftSnapshotCopy(scs *redshift.ClusterSnapshotCopyStatus) []inte
 	}
 
 	return []interface{}{cfg}
+}
+
+// cannonicalXML reads XML in a string and re-writes it canonically, used for
+// comparing XML for logical equivalency
+func canonicalXML(s string) (string, error) {
+	doc := etree.NewDocument()
+	doc.WriteSettings.CanonicalEndTags = true
+	if err := doc.ReadFromString(s); err != nil {
+		return "", err
+	}
+
+	rawString, err := doc.WriteToString()
+	if err != nil {
+		return "", err
+	}
+
+	re := regexp.MustCompile(`\s`)
+	results := re.ReplaceAllString(rawString, "")
+	return results, nil
 }

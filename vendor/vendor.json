@@ -885,6 +885,12 @@
 			"versionExact": "v1.12.32"
 		},
 		{
+			"checksumSHA1": "usT4LCSQItkFvFOQT7cBlkCuGaE=",
+			"path": "github.com/beevik/etree",
+			"revision": "af219c0c7ea1b67ec263c0b1b1b96d284a9181ce",
+			"revisionTime": "2017-10-15T22:09:51Z"
+		},
+		{
 			"checksumSHA1": "nqw2Qn5xUklssHTubS5HDvEL9L4=",
 			"path": "github.com/bgentry/go-netrc/netrc",
 			"revision": "9fd32a8b3d3d3f9d43c341bfe098430e07609480",
