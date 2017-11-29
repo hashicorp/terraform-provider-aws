@@ -160,6 +160,27 @@ func TestAccAWSEcsTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 	})
 }
 
+// Regression for https://github.com/terraform-providers/terraform-provider-aws/issues/2336
+func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
+	var conf ecs.TaskDefinition
+	familyName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	containerName := fmt.Sprintf("tfacctest%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionArrays(familyName, containerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.test", &conf),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckEcsTaskDefinitionRecreated(t *testing.T,
 	before, after *ecs.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -424,6 +445,113 @@ TASK_DEFINITION
   }
 }
 `
+
+func testAccAWSEcsTaskDefinitionArrays(familyName, containerName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = "%s"
+  container_definitions = <<TASK_DEFINITION
+[
+    {
+      "name": "wordpress",
+      "image": "wordpress",
+      "essential": true,
+      "links": ["container1", "container2", "container3"],
+      "portMappings": [
+        {"containerPort": 80},
+        {"containerPort": 81},
+        {"containerPort": 82}
+      ],
+      "environment": [
+        {"name": "VARNAME1", "value": "VARVAL1"},
+        {"name": "VARNAME2", "value": "VARVAL2"},
+        {"name": "VARNAME3", "value": "VARVAL3"}
+      ],
+      "extraHosts": [
+        {"hostname": "host1", "ipAddress": "127.0.0.1"},
+        {"hostname": "host2", "ipAddress": "127.0.0.2"},
+        {"hostname": "host3", "ipAddress": "127.0.0.3"}
+      ],
+      "mountPoints": [
+        {"sourceVolume": "vol1", "containerPath": "/vol1"},
+        {"sourceVolume": "vol2", "containerPath": "/vol2"},
+        {"sourceVolume": "vol3", "containerPath": "/vol3"}
+      ],
+      "volumesFrom": [
+        {"sourceContainer": "container1"},
+        {"sourceContainer": "container2"},
+        {"sourceContainer": "container3"}
+      ],
+      "ulimits": [
+        {
+          "name": "core",
+          "softLimit": 10, "hardLimit": 20
+        },
+        {
+          "name": "cpu",
+          "softLimit": 10, "hardLimit": 20
+        },
+        {
+          "name": "fsize",
+          "softLimit": 10, "hardLimit": 20
+        }
+      ],
+      "linuxParameters": {
+        "capabilities": {
+          "add": ["AUDIT_CONTROL", "AUDIT_WRITE", "BLOCK_SUSPEND"],
+          "drop": ["CHOWN", "IPC_LOCK", "KILL"]
+        }
+      },
+      "devices": [
+        {
+          "hostPath": "/path1",
+          "permissions": ["read", "write", "mknod"]
+        },
+        {
+          "hostPath": "/path2",
+          "permissions": ["read", "write"]
+        },
+        {
+          "hostPath": "/path3",
+          "permissions": ["read", "mknod"]
+        }
+      ],
+      "dockerSecurityOptions": ["label:one", "label:two", "label:three"],
+      "memory": 500,
+      "cpu": 10
+    },
+    {
+      "name": "container1",
+      "image": "busybox",
+      "memory": 100
+    },
+    {
+      "name": "container2",
+      "image": "busybox",
+      "memory": 100
+    },
+    {
+      "name": "container3",
+      "image": "busybox",
+      "memory": 100
+    }
+]
+TASK_DEFINITION
+  volume {
+    name = "vol1"
+    host_path = "/host/vol1"
+  }
+  volume {
+    name = "vol2"
+    host_path = "/host/vol2"
+  }
+  volume {
+    name = "vol3"
+    host_path = "/host/vol3"
+  }
+}
+`, familyName)
+}
 
 var testAccAWSEcsTaskDefinitionWithScratchVolume = `
 resource "aws_ecs_task_definition" "sleep" {

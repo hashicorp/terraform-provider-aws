@@ -12,7 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"sync"
 )
+
+var resourceAwsApiGatewayMethodResponseMutex = &sync.Mutex{}
 
 func resourceAwsApiGatewayMethodResponse() *schema.Resource {
 	return &schema.Resource{
@@ -93,14 +96,20 @@ func resourceAwsApiGatewayMethodResponseCreate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	_, err := conn.PutMethodResponse(&apigateway.PutMethodResponseInput{
-		HttpMethod:         aws.String(d.Get("http_method").(string)),
-		ResourceId:         aws.String(d.Get("resource_id").(string)),
-		RestApiId:          aws.String(d.Get("rest_api_id").(string)),
-		StatusCode:         aws.String(d.Get("status_code").(string)),
-		ResponseModels:     aws.StringMap(models),
-		ResponseParameters: aws.BoolMap(parameters),
+	resourceAwsApiGatewayMethodResponseMutex.Lock()
+	defer resourceAwsApiGatewayMethodResponseMutex.Unlock()
+
+	_, err := retryOnAwsCode(apigateway.ErrCodeConflictException, func() (interface{}, error) {
+		return conn.PutMethodResponse(&apigateway.PutMethodResponseInput{
+			HttpMethod:         aws.String(d.Get("http_method").(string)),
+			ResourceId:         aws.String(d.Get("resource_id").(string)),
+			RestApiId:          aws.String(d.Get("rest_api_id").(string)),
+			StatusCode:         aws.String(d.Get("status_code").(string)),
+			ResponseModels:     aws.StringMap(models),
+			ResponseParameters: aws.BoolMap(parameters),
+		})
 	})
+
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Method Response: %s", err)
 	}

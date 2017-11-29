@@ -24,6 +24,7 @@ func TestAccAWSEBSVolume_basic(t *testing.T) {
 				Config: testAccAwsEbsVolumeConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
+					resource.TestCheckResourceAttrSet("aws_ebs_volume.test", "arn"),
 				),
 			},
 		},

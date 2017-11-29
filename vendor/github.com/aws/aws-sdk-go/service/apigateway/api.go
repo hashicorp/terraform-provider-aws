@@ -5408,7 +5408,7 @@ func (c *APIGateway) GetIntegrationRequest(input *GetIntegrationInput) (req *req
 
 // GetIntegration API operation for Amazon API Gateway.
 //
-// Represents a get integration.
+// Get the integration settings.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10560,6 +10560,42 @@ func (c *APIGateway) UpdateUsagePlanWithContext(ctx aws.Context, input *UpdateUs
 	return out, req.Send()
 }
 
+// Access log settings, including the access log format and access log destination
+// ARN.
+type AccessLogSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the CloudWatch Logs log group to receive access logs.
+	DestinationArn *string `locationName:"destinationArn" type:"string"`
+
+	// A single line format of the access logs of data, as specified by selected
+	// $context variables (http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html#context-variable-reference).
+	// The format must include at least $context.requestId.
+	Format *string `locationName:"format" type:"string"`
+}
+
+// String returns the string representation
+func (s AccessLogSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessLogSettings) GoString() string {
+	return s.String()
+}
+
+// SetDestinationArn sets the DestinationArn field's value.
+func (s *AccessLogSettings) SetDestinationArn(v string) *AccessLogSettings {
+	s.DestinationArn = &v
+	return s
+}
+
+// SetFormat sets the Format field's value.
+func (s *AccessLogSettings) SetFormat(v string) *AccessLogSettings {
+	s.Format = &v
+	return s
+}
+
 // Represents an AWS account that is associated with Amazon API Gateway.
 //
 // To view the account info, call GET on this resource.
@@ -10980,6 +11016,60 @@ func (s *BasePathMapping) SetStage(v string) *BasePathMapping {
 	return s
 }
 
+// Configuration settings of a canary deployment.
+type CanarySettings struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the canary deployment.
+	DeploymentId *string `locationName:"deploymentId" type:"string"`
+
+	// The percent (0-100) of traffic diverted to a canary deployment.
+	PercentTraffic *float64 `locationName:"percentTraffic" type:"double"`
+
+	// Stage variables overridden for a canary release deployment, including new
+	// stage variables introduced in the canary. These stage variables are represented
+	// as a string-to-string map between stage variable names and their values.
+	StageVariableOverrides map[string]*string `locationName:"stageVariableOverrides" type:"map"`
+
+	// A Boolean flag to indicate whether the canary deployment uses the stage cache
+	// or not.
+	UseStageCache *bool `locationName:"useStageCache" type:"boolean"`
+}
+
+// String returns the string representation
+func (s CanarySettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CanarySettings) GoString() string {
+	return s.String()
+}
+
+// SetDeploymentId sets the DeploymentId field's value.
+func (s *CanarySettings) SetDeploymentId(v string) *CanarySettings {
+	s.DeploymentId = &v
+	return s
+}
+
+// SetPercentTraffic sets the PercentTraffic field's value.
+func (s *CanarySettings) SetPercentTraffic(v float64) *CanarySettings {
+	s.PercentTraffic = &v
+	return s
+}
+
+// SetStageVariableOverrides sets the StageVariableOverrides field's value.
+func (s *CanarySettings) SetStageVariableOverrides(v map[string]*string) *CanarySettings {
+	s.StageVariableOverrides = v
+	return s
+}
+
+// SetUseStageCache sets the UseStageCache field's value.
+func (s *CanarySettings) SetUseStageCache(v bool) *CanarySettings {
+	s.UseStageCache = &v
+	return s
+}
+
 // Represents a client certificate used to configure client-side SSL authentication
 // while sending requests to the integration endpoint.
 //
@@ -11386,6 +11476,10 @@ type CreateDeploymentInput struct {
 	// input, if a cache cluster is enabled.
 	CacheClusterSize *string `locationName:"cacheClusterSize" type:"string" enum:"CacheClusterSize"`
 
+	// The input configuration for the canary deployment when the deployment is
+	// a canary release deployment.
+	CanarySettings *DeploymentCanarySettings `locationName:"canarySettings" type:"structure"`
+
 	// The description for the Deployment resource to create.
 	Description *string `locationName:"description" type:"string"`
 
@@ -11438,6 +11532,12 @@ func (s *CreateDeploymentInput) SetCacheClusterEnabled(v bool) *CreateDeployment
 // SetCacheClusterSize sets the CacheClusterSize field's value.
 func (s *CreateDeploymentInput) SetCacheClusterSize(v string) *CreateDeploymentInput {
 	s.CacheClusterSize = &v
+	return s
+}
+
+// SetCanarySettings sets the CanarySettings field's value.
+func (s *CreateDeploymentInput) SetCanarySettings(v *DeploymentCanarySettings) *CreateDeploymentInput {
+	s.CanarySettings = v
 	return s
 }
 
@@ -12060,7 +12160,10 @@ type CreateStageInput struct {
 	// The stage's cache cluster size.
 	CacheClusterSize *string `locationName:"cacheClusterSize" type:"string" enum:"CacheClusterSize"`
 
-	// The identifier of the Deployment resource for the Stage resource.
+	// The canary deployment settings of this stage.
+	CanarySettings *CanarySettings `locationName:"canarySettings" type:"structure"`
+
+	// [Required] The identifier of the Deployment resource for the Stage resource.
 	//
 	// DeploymentId is a required field
 	DeploymentId *string `locationName:"deploymentId" type:"string" required:"true"`
@@ -12076,7 +12179,7 @@ type CreateStageInput struct {
 	// RestApiId is a required field
 	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
 
-	// The name for the Stage resource.
+	// {Required] The name for the Stage resource.
 	//
 	// StageName is a required field
 	StageName *string `locationName:"stageName" type:"string" required:"true"`
@@ -12125,6 +12228,12 @@ func (s *CreateStageInput) SetCacheClusterEnabled(v bool) *CreateStageInput {
 // SetCacheClusterSize sets the CacheClusterSize field's value.
 func (s *CreateStageInput) SetCacheClusterSize(v string) *CreateStageInput {
 	s.CacheClusterSize = &v
+	return s
+}
+
+// SetCanarySettings sets the CanarySettings field's value.
+func (s *CreateStageInput) SetCanarySettings(v *CanarySettings) *CreateStageInput {
+	s.CanarySettings = v
 	return s
 }
 
@@ -13748,6 +13857,52 @@ func (s *Deployment) SetId(v string) *Deployment {
 	return s
 }
 
+// The input configuration for a canary deployment.
+type DeploymentCanarySettings struct {
+	_ struct{} `type:"structure"`
+
+	// The percentage (0.0-100.0) of traffic routed to the canary deployment.
+	PercentTraffic *float64 `locationName:"percentTraffic" type:"double"`
+
+	// A stage variable overrides used for the canary release deployment. They can
+	// override existing stage variables or add new stage variables for the canary
+	// release deployment. These stage variables are represented as a string-to-string
+	// map between stage variable names and their values.
+	StageVariableOverrides map[string]*string `locationName:"stageVariableOverrides" type:"map"`
+
+	// A Boolean flag to indicate whether the canary release deployment uses the
+	// stage cache or not.
+	UseStageCache *bool `locationName:"useStageCache" type:"boolean"`
+}
+
+// String returns the string representation
+func (s DeploymentCanarySettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeploymentCanarySettings) GoString() string {
+	return s.String()
+}
+
+// SetPercentTraffic sets the PercentTraffic field's value.
+func (s *DeploymentCanarySettings) SetPercentTraffic(v float64) *DeploymentCanarySettings {
+	s.PercentTraffic = &v
+	return s
+}
+
+// SetStageVariableOverrides sets the StageVariableOverrides field's value.
+func (s *DeploymentCanarySettings) SetStageVariableOverrides(v map[string]*string) *DeploymentCanarySettings {
+	s.StageVariableOverrides = v
+	return s
+}
+
+// SetUseStageCache sets the UseStageCache field's value.
+func (s *DeploymentCanarySettings) SetUseStageCache(v bool) *DeploymentCanarySettings {
+	s.UseStageCache = &v
+	return s
+}
+
 // A documentation part for a targeted API entity.
 //
 // A documentation part consists of a content map (properties) and a target
@@ -13999,6 +14154,12 @@ type DomainName struct {
 	// CloudFront documentation (http://aws.amazon.com/documentation/cloudfront/).
 	DistributionDomainName *string `locationName:"distributionDomainName" type:"string"`
 
+	// The region-agnostic Amazon Route 53 Hosted Zone ID of the edge-optimized
+	// endpoint. The valid value is Z2FDTNDATAQYW2 for all the regions. For more
+	// information, see Set up a Regional Custom Domain Name (https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-regional-api-custom-domain-create.html)
+	// and AWS Regions and Endpoints for API Gateway (http://docs.aws.amazon.com/general/latest/gr/rande.html#apigateway_region).
+	DistributionHostedZoneId *string `locationName:"distributionHostedZoneId" type:"string"`
+
 	// The name of the DomainName resource.
 	DomainName *string `locationName:"domainName" type:"string"`
 
@@ -14019,6 +14180,11 @@ type DomainName struct {
 	// custom domain name to this regional domain name. The regional domain name
 	// is returned by Amazon API Gateway when you create a regional endpoint.
 	RegionalDomainName *string `locationName:"regionalDomainName" type:"string"`
+
+	// The region-specific Amazon Route 53 Hosted Zone ID of the regional endpoint.
+	// For more information, see Set up a Regional Custom Domain Name (https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-regional-api-custom-domain-create.html)
+	// and AWS Regions and Endpoints for API Gateway (http://docs.aws.amazon.com/general/latest/gr/rande.html#apigateway_region).
+	RegionalHostedZoneId *string `locationName:"regionalHostedZoneId" type:"string"`
 }
 
 // String returns the string representation
@@ -14055,6 +14221,12 @@ func (s *DomainName) SetDistributionDomainName(v string) *DomainName {
 	return s
 }
 
+// SetDistributionHostedZoneId sets the DistributionHostedZoneId field's value.
+func (s *DomainName) SetDistributionHostedZoneId(v string) *DomainName {
+	s.DistributionHostedZoneId = &v
+	return s
+}
+
 // SetDomainName sets the DomainName field's value.
 func (s *DomainName) SetDomainName(v string) *DomainName {
 	s.DomainName = &v
@@ -14082,6 +14254,12 @@ func (s *DomainName) SetRegionalCertificateName(v string) *DomainName {
 // SetRegionalDomainName sets the RegionalDomainName field's value.
 func (s *DomainName) SetRegionalDomainName(v string) *DomainName {
 	s.RegionalDomainName = &v
+	return s
+}
+
+// SetRegionalHostedZoneId sets the RegionalHostedZoneId field's value.
+func (s *DomainName) SetRegionalHostedZoneId(v string) *DomainName {
+	s.RegionalHostedZoneId = &v
 	return s
 }
 
@@ -15071,6 +15249,11 @@ type GetDocumentationPartsInput struct {
 	// The maximum number of returned results per page.
 	Limit *int64 `location:"querystring" locationName:"limit" type:"integer"`
 
+	// The status of the API documentation parts to retrieve. Valid values are DOCUMENTED
+	// for retrieving DocumentationPart resources with content and UNDOCUMENTED
+	// for DocumentationPart resources without content.
+	LocationStatus *string `location:"querystring" locationName:"locationStatus" type:"string" enum:"LocationStatusType"`
+
 	// The name of API entities of the to-be-retrieved documentation parts.
 	NameQuery *string `location:"querystring" locationName:"name" type:"string"`
 
@@ -15115,6 +15298,12 @@ func (s *GetDocumentationPartsInput) Validate() error {
 // SetLimit sets the Limit field's value.
 func (s *GetDocumentationPartsInput) SetLimit(v int64) *GetDocumentationPartsInput {
 	s.Limit = &v
+	return s
+}
+
+// SetLocationStatus sets the LocationStatus field's value.
+func (s *GetDocumentationPartsInput) SetLocationStatus(v string) *GetDocumentationPartsInput {
+	s.LocationStatus = &v
 	return s
 }
 
@@ -15899,7 +16088,7 @@ func (s *GetGatewayResponsesOutput) SetPosition(v string) *GetGatewayResponsesOu
 	return s
 }
 
-// Represents a get integration request.
+// Represents a request to get the integration configuration.
 type GetIntegrationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16877,7 +17066,7 @@ type GetSdkInput struct {
 	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
 
 	// The language for the generated SDK. Currently java, javascript, android,
-	// objectivec and swift (for iOS) are supported.
+	// objectivec (for iOS), swift (for iOS), and ruby are supported.
 	//
 	// SdkType is a required field
 	SdkType *string `location:"uri" locationName:"sdk_type" type:"string" required:"true"`
@@ -17812,10 +18001,27 @@ type ImportRestApiInput struct {
 	// or not (false) when a warning is encountered. The default value is false.
 	FailOnWarnings *bool `location:"querystring" locationName:"failonwarnings" type:"boolean"`
 
-	// Custom header parameters as part of the request. For example, to exclude
-	// DocumentationParts from an imported API, set ignore=documentation as a parameters
-	// value, as in the AWS CLI command of aws apigateway import-rest-api --parameters
-	// ignore=documentation --body 'file:///path/to/imported-api-body.json.
+	// A key-value map of context-specific query string parameters specifying the
+	// behavior of different API importing operations. The following shows operation-specific
+	// parameters and their supported values.
+	//
+	// To exclude DocumentationParts from the import, set parameters as ignore=documentation.
+	//
+	// To configure the endpoint type, set parameters as endpointConfigurationTypes=EDGE
+	// orendpointConfigurationTypes=REGIONAL. The default endpoint type is EDGE.
+	//
+	// To handle imported basePath, set parameters as basePath=ignore, basePath=prepend
+	// or basePath=split.
+	//
+	// For example, the AWS CLI command to exclude documentation from the imported
+	// API is:
+	//
+	//    aws apigateway import-rest-api --parameters ignore=documentation --body
+	//    'file:///path/to/imported-api-body.json
+	// The AWS CLI command to set the regional endpoint on the imported API is:
+	//
+	//    aws apigateway import-rest-api --parameters endpointConfigurationTypes=REGIONAL
+	//    --body 'file:///path/to/imported-api-body.json
 	Parameters map[string]*string `location:"querystring" locationName:"parameters" type:"map"`
 }
 
@@ -17960,6 +18166,10 @@ type Integration struct {
 	// value.
 	RequestTemplates map[string]*string `locationName:"requestTemplates" type:"map"`
 
+	// Custom timeout between 50 and 29,000 milliseconds. The default value is 29,000
+	// milliseconds or 29 seconds.
+	TimeoutInMillis *int64 `locationName:"timeoutInMillis" type:"integer"`
+
 	// Specifies the integration's type. The valid value is HTTP for integrating
 	// with an HTTP back end, AWS for any AWS service endpoints, MOCK for testing
 	// without actually invoking the back end, HTTP_PROXY for integrating with the
@@ -18040,6 +18250,12 @@ func (s *Integration) SetRequestParameters(v map[string]*string) *Integration {
 // SetRequestTemplates sets the RequestTemplates field's value.
 func (s *Integration) SetRequestTemplates(v map[string]*string) *Integration {
 	s.RequestTemplates = v
+	return s
+}
+
+// SetTimeoutInMillis sets the TimeoutInMillis field's value.
+func (s *Integration) SetTimeoutInMillis(v int64) *Integration {
+	s.TimeoutInMillis = &v
 	return s
 }
 
@@ -18725,11 +18941,15 @@ func (s *Model) SetSchema(v string) *Model {
 type PatchOperation struct {
 	_ struct{} `type:"structure"`
 
-	// Not supported.
+	// The copy update operation's source as identified by a JSON-Pointer value
+	// referencing the location within the targeted resource to copy the value from.
+	// For example, to promote a canary deployment, you copy the canary deployment
+	// ID to the affiliated deployment ID by calling a PATCH request on a Stage
+	// resource with "op":"copy", "from":"/canarySettings/deploymentId" and "path":"/deploymentId".
 	From *string `locationName:"from" type:"string"`
 
 	// An update operation to be performed with this PATCH request. The valid value
-	// can be "add", "remove", or "replace". Not all valid operations are supported
+	// can be add, remove, replace or copy. Not all valid operations are supported
 	// for a given resource. Support of the operations depends on specific operational
 	// contexts. Attempts to apply an unsupported operation on a resource will return
 	// an error message.
@@ -18745,10 +18965,10 @@ type PatchOperation struct {
 	// op operation can have only one path associated with it.
 	Path *string `locationName:"path" type:"string"`
 
-	// The new target value of the update operation. When using AWS CLI to update
-	// a property of a JSON value, enclose the JSON object with a pair of single
-	// quotes in a Linux shell, e.g., '{"a": ...}'. In a Windows shell, see Using
-	// JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json).
+	// The new target value of the update operation. It is applicable for the add
+	// or replace operation. When using AWS CLI to update a property of a JSON value,
+	// enclose the JSON object with a pair of single quotes in a Linux shell, e.g.,
+	// '{"a": ...}'. In a Windows shell, see Using JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json).
 	Value *string `locationName:"value" type:"string"`
 }
 
@@ -18966,6 +19186,10 @@ type PutIntegrationInput struct {
 	// RestApiId is a required field
 	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
 
+	// Custom timeout between 50 and 29,000 milliseconds. The default value is 29,000
+	// milliseconds or 29 seconds.
+	TimeoutInMillis *int64 `locationName:"timeoutInMillis" type:"integer"`
+
 	// Specifies a put integration input's type.
 	//
 	// Type is a required field
@@ -19078,6 +19302,12 @@ func (s *PutIntegrationInput) SetResourceId(v string) *PutIntegrationInput {
 // SetRestApiId sets the RestApiId field's value.
 func (s *PutIntegrationInput) SetRestApiId(v string) *PutIntegrationInput {
 	s.RestApiId = &v
+	return s
+}
+
+// SetTimeoutInMillis sets the TimeoutInMillis field's value.
+func (s *PutIntegrationInput) SetTimeoutInMillis(v int64) *PutIntegrationInput {
+	s.TimeoutInMillis = &v
 	return s
 }
 
@@ -19952,6 +20182,9 @@ func (s *SdkType) SetId(v string) *SdkType {
 type Stage struct {
 	_ struct{} `type:"structure"`
 
+	// Settings for logging access in this stage.
+	AccessLogSettings *AccessLogSettings `locationName:"accessLogSettings" type:"structure"`
+
 	// Specifies whether a cache cluster is enabled for the stage.
 	CacheClusterEnabled *bool `locationName:"cacheClusterEnabled" type:"boolean"`
 
@@ -19960,6 +20193,9 @@ type Stage struct {
 
 	// The status of the cache cluster for the stage, if enabled.
 	CacheClusterStatus *string `locationName:"cacheClusterStatus" type:"string" enum:"CacheClusterStatus"`
+
+	// Settings for the canary deployment in this stage.
+	CanarySettings *CanarySettings `locationName:"canarySettings" type:"structure"`
 
 	// The identifier of a client certificate for an API stage.
 	ClientCertificateId *string `locationName:"clientCertificateId" type:"string"`
@@ -20005,6 +20241,12 @@ func (s Stage) GoString() string {
 	return s.String()
 }
 
+// SetAccessLogSettings sets the AccessLogSettings field's value.
+func (s *Stage) SetAccessLogSettings(v *AccessLogSettings) *Stage {
+	s.AccessLogSettings = v
+	return s
+}
+
 // SetCacheClusterEnabled sets the CacheClusterEnabled field's value.
 func (s *Stage) SetCacheClusterEnabled(v bool) *Stage {
 	s.CacheClusterEnabled = &v
@@ -20020,6 +20262,12 @@ func (s *Stage) SetCacheClusterSize(v string) *Stage {
 // SetCacheClusterStatus sets the CacheClusterStatus field's value.
 func (s *Stage) SetCacheClusterStatus(v string) *Stage {
 	s.CacheClusterStatus = &v
+	return s
+}
+
+// SetCanarySettings sets the CanarySettings field's value.
+func (s *Stage) SetCanarySettings(v *CanarySettings) *Stage {
+	s.CanarySettings = v
 	return s
 }
 
@@ -22423,6 +22671,14 @@ const (
 
 	// IntegrationTypeAwsProxy is a IntegrationType enum value
 	IntegrationTypeAwsProxy = "AWS_PROXY"
+)
+
+const (
+	// LocationStatusTypeDocumented is a LocationStatusType enum value
+	LocationStatusTypeDocumented = "DOCUMENTED"
+
+	// LocationStatusTypeUndocumented is a LocationStatusType enum value
+	LocationStatusTypeUndocumented = "UNDOCUMENTED"
 )
 
 const (

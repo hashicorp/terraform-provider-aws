@@ -1944,6 +1944,82 @@ func (c *SES) DescribeReceiptRuleSetWithContext(ctx aws.Context, input *Describe
 	return out, req.Send()
 }
 
+const opGetAccountSendingEnabled = "GetAccountSendingEnabled"
+
+// GetAccountSendingEnabledRequest generates a "aws/request.Request" representing the
+// client's request for the GetAccountSendingEnabled operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetAccountSendingEnabled for more information on using the GetAccountSendingEnabled
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetAccountSendingEnabledRequest method.
+//    req, resp := client.GetAccountSendingEnabledRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetAccountSendingEnabled
+func (c *SES) GetAccountSendingEnabledRequest(input *GetAccountSendingEnabledInput) (req *request.Request, output *GetAccountSendingEnabledOutput) {
+	op := &request.Operation{
+		Name:       opGetAccountSendingEnabled,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetAccountSendingEnabledInput{}
+	}
+
+	output = &GetAccountSendingEnabledOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetAccountSendingEnabled API operation for Amazon Simple Email Service.
+//
+// Returns the email sending status of the Amazon SES account.
+//
+// You can execute this operation no more than once per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation GetAccountSendingEnabled for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetAccountSendingEnabled
+func (c *SES) GetAccountSendingEnabled(input *GetAccountSendingEnabledInput) (*GetAccountSendingEnabledOutput, error) {
+	req, out := c.GetAccountSendingEnabledRequest(input)
+	return out, req.Send()
+}
+
+// GetAccountSendingEnabledWithContext is the same as GetAccountSendingEnabled with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetAccountSendingEnabled for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) GetAccountSendingEnabledWithContext(ctx aws.Context, input *GetAccountSendingEnabledInput, opts ...request.Option) (*GetAccountSendingEnabledOutput, error) {
+	req, out := c.GetAccountSendingEnabledRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetIdentityDkimAttributes = "GetIdentityDkimAttributes"
 
 // GetIdentityDkimAttributesRequest generates a "aws/request.Request" representing the
@@ -3597,6 +3673,17 @@ func (c *SES) SendBulkTemplatedEmailRequest(input *SendBulkTemplatedEmailInput) 
 //   Indicates that the Template object you specified does not exist in your Amazon
 //   SES account.
 //
+//   * ErrCodeConfigurationSetSendingPausedException "ConfigurationSetSendingPausedException"
+//   Indicates that email sending is disabled for the configuration set.
+//
+//   You can enable or disable email sending for a configuration set using UpdateConfigurationSetSendingEnabled.
+//
+//   * ErrCodeAccountSendingPausedException "AccountSendingPausedException"
+//   Indicates that email sending is disabled for your entire Amazon SES account.
+//
+//   You can enable or disable email sending for your Amazon SES account using
+//   UpdateAccountSendingEnabled.
+//
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendBulkTemplatedEmail
 func (c *SES) SendBulkTemplatedEmail(input *SendBulkTemplatedEmailInput) (*SendBulkTemplatedEmailOutput, error) {
 	req, out := c.SendBulkTemplatedEmailRequest(input)
@@ -3719,6 +3806,17 @@ func (c *SES) SendEmailRequest(input *SendEmailInput) (req *request.Request, out
 //
 //   * ErrCodeConfigurationSetDoesNotExistException "ConfigurationSetDoesNotExist"
 //   Indicates that the configuration set does not exist.
+//
+//   * ErrCodeConfigurationSetSendingPausedException "ConfigurationSetSendingPausedException"
+//   Indicates that email sending is disabled for the configuration set.
+//
+//   You can enable or disable email sending for a configuration set using UpdateConfigurationSetSendingEnabled.
+//
+//   * ErrCodeAccountSendingPausedException "AccountSendingPausedException"
+//   Indicates that email sending is disabled for your entire Amazon SES account.
+//
+//   You can enable or disable email sending for your Amazon SES account using
+//   UpdateAccountSendingEnabled.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendEmail
 func (c *SES) SendEmail(input *SendEmailInput) (*SendEmailOutput, error) {
@@ -3879,6 +3977,17 @@ func (c *SES) SendRawEmailRequest(input *SendRawEmailInput) (req *request.Reques
 //   * ErrCodeConfigurationSetDoesNotExistException "ConfigurationSetDoesNotExist"
 //   Indicates that the configuration set does not exist.
 //
+//   * ErrCodeConfigurationSetSendingPausedException "ConfigurationSetSendingPausedException"
+//   Indicates that email sending is disabled for the configuration set.
+//
+//   You can enable or disable email sending for a configuration set using UpdateConfigurationSetSendingEnabled.
+//
+//   * ErrCodeAccountSendingPausedException "AccountSendingPausedException"
+//   Indicates that email sending is disabled for your entire Amazon SES account.
+//
+//   You can enable or disable email sending for your Amazon SES account using
+//   UpdateAccountSendingEnabled.
+//
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendRawEmail
 func (c *SES) SendRawEmail(input *SendRawEmailInput) (*SendRawEmailOutput, error) {
 	req, out := c.SendRawEmailRequest(input)
@@ -4001,6 +4110,17 @@ func (c *SES) SendTemplatedEmailRequest(input *SendTemplatedEmailInput) (req *re
 //   * ErrCodeTemplateDoesNotExistException "TemplateDoesNotExist"
 //   Indicates that the Template object you specified does not exist in your Amazon
 //   SES account.
+//
+//   * ErrCodeConfigurationSetSendingPausedException "ConfigurationSetSendingPausedException"
+//   Indicates that email sending is disabled for the configuration set.
+//
+//   You can enable or disable email sending for a configuration set using UpdateConfigurationSetSendingEnabled.
+//
+//   * ErrCodeAccountSendingPausedException "AccountSendingPausedException"
+//   Indicates that email sending is disabled for your entire Amazon SES account.
+//
+//   You can enable or disable email sending for your Amazon SES account using
+//   UpdateAccountSendingEnabled.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendTemplatedEmail
 func (c *SES) SendTemplatedEmail(input *SendTemplatedEmailInput) (*SendTemplatedEmailOutput, error) {
@@ -4714,6 +4834,87 @@ func (c *SES) TestRenderTemplateWithContext(ctx aws.Context, input *TestRenderTe
 	return out, req.Send()
 }
 
+const opUpdateAccountSendingEnabled = "UpdateAccountSendingEnabled"
+
+// UpdateAccountSendingEnabledRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateAccountSendingEnabled operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateAccountSendingEnabled for more information on using the UpdateAccountSendingEnabled
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateAccountSendingEnabledRequest method.
+//    req, resp := client.UpdateAccountSendingEnabledRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateAccountSendingEnabled
+func (c *SES) UpdateAccountSendingEnabledRequest(input *UpdateAccountSendingEnabledInput) (req *request.Request, output *UpdateAccountSendingEnabledOutput) {
+	op := &request.Operation{
+		Name:       opUpdateAccountSendingEnabled,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateAccountSendingEnabledInput{}
+	}
+
+	output = &UpdateAccountSendingEnabledOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateAccountSendingEnabled API operation for Amazon Simple Email Service.
+//
+// Enables or disables email sending across your entire Amazon SES account.
+// You can use this operation in conjunction with Amazon CloudWatch alarms to
+// temporarily pause email sending across your Amazon SES account when reputation
+// metrics (such as your bounce on complaint rate) reach certain thresholds.
+//
+// You can execute this operation no more than once per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation UpdateAccountSendingEnabled for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateAccountSendingEnabled
+func (c *SES) UpdateAccountSendingEnabled(input *UpdateAccountSendingEnabledInput) (*UpdateAccountSendingEnabledOutput, error) {
+	req, out := c.UpdateAccountSendingEnabledRequest(input)
+	return out, req.Send()
+}
+
+// UpdateAccountSendingEnabledWithContext is the same as UpdateAccountSendingEnabled with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateAccountSendingEnabled for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) UpdateAccountSendingEnabledWithContext(ctx aws.Context, input *UpdateAccountSendingEnabledInput, opts ...request.Option) (*UpdateAccountSendingEnabledOutput, error) {
+	req, out := c.UpdateAccountSendingEnabledRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateConfigurationSetEventDestination = "UpdateConfigurationSetEventDestination"
 
 // UpdateConfigurationSetEventDestinationRequest generates a "aws/request.Request" representing the
@@ -4814,6 +5015,180 @@ func (c *SES) UpdateConfigurationSetEventDestination(input *UpdateConfigurationS
 // for more information on using Contexts.
 func (c *SES) UpdateConfigurationSetEventDestinationWithContext(ctx aws.Context, input *UpdateConfigurationSetEventDestinationInput, opts ...request.Option) (*UpdateConfigurationSetEventDestinationOutput, error) {
 	req, out := c.UpdateConfigurationSetEventDestinationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateConfigurationSetReputationMetricsEnabled = "UpdateConfigurationSetReputationMetricsEnabled"
+
+// UpdateConfigurationSetReputationMetricsEnabledRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateConfigurationSetReputationMetricsEnabled operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateConfigurationSetReputationMetricsEnabled for more information on using the UpdateConfigurationSetReputationMetricsEnabled
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateConfigurationSetReputationMetricsEnabledRequest method.
+//    req, resp := client.UpdateConfigurationSetReputationMetricsEnabledRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetReputationMetricsEnabled
+func (c *SES) UpdateConfigurationSetReputationMetricsEnabledRequest(input *UpdateConfigurationSetReputationMetricsEnabledInput) (req *request.Request, output *UpdateConfigurationSetReputationMetricsEnabledOutput) {
+	op := &request.Operation{
+		Name:       opUpdateConfigurationSetReputationMetricsEnabled,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateConfigurationSetReputationMetricsEnabledInput{}
+	}
+
+	output = &UpdateConfigurationSetReputationMetricsEnabledOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateConfigurationSetReputationMetricsEnabled API operation for Amazon Simple Email Service.
+//
+// Enables or disables the publishing of reputation metrics for emails sent
+// using a specific configuration set. Reputation metrics include bounce and
+// complaint rates. These metrics are published to Amazon CloudWatch. By using
+// Amazon CloudWatch, you can create alarms when bounce or complaint rates exceed
+// a certain threshold.
+//
+// You can execute this operation no more than once per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation UpdateConfigurationSetReputationMetricsEnabled for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeConfigurationSetDoesNotExistException "ConfigurationSetDoesNotExist"
+//   Indicates that the configuration set does not exist.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetReputationMetricsEnabled
+func (c *SES) UpdateConfigurationSetReputationMetricsEnabled(input *UpdateConfigurationSetReputationMetricsEnabledInput) (*UpdateConfigurationSetReputationMetricsEnabledOutput, error) {
+	req, out := c.UpdateConfigurationSetReputationMetricsEnabledRequest(input)
+	return out, req.Send()
+}
+
+// UpdateConfigurationSetReputationMetricsEnabledWithContext is the same as UpdateConfigurationSetReputationMetricsEnabled with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateConfigurationSetReputationMetricsEnabled for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) UpdateConfigurationSetReputationMetricsEnabledWithContext(ctx aws.Context, input *UpdateConfigurationSetReputationMetricsEnabledInput, opts ...request.Option) (*UpdateConfigurationSetReputationMetricsEnabledOutput, error) {
+	req, out := c.UpdateConfigurationSetReputationMetricsEnabledRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateConfigurationSetSendingEnabled = "UpdateConfigurationSetSendingEnabled"
+
+// UpdateConfigurationSetSendingEnabledRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateConfigurationSetSendingEnabled operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateConfigurationSetSendingEnabled for more information on using the UpdateConfigurationSetSendingEnabled
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateConfigurationSetSendingEnabledRequest method.
+//    req, resp := client.UpdateConfigurationSetSendingEnabledRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetSendingEnabled
+func (c *SES) UpdateConfigurationSetSendingEnabledRequest(input *UpdateConfigurationSetSendingEnabledInput) (req *request.Request, output *UpdateConfigurationSetSendingEnabledOutput) {
+	op := &request.Operation{
+		Name:       opUpdateConfigurationSetSendingEnabled,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateConfigurationSetSendingEnabledInput{}
+	}
+
+	output = &UpdateConfigurationSetSendingEnabledOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateConfigurationSetSendingEnabled API operation for Amazon Simple Email Service.
+//
+// Enables or disables email sending for messages sent using a specific configuration
+// set. You can use this operation in conjunction with Amazon CloudWatch alarms
+// to temporarily pause email sending for a configuration set when the reputation
+// metrics for that configuration set (such as your bounce on complaint rate)
+// reach certain thresholds.
+//
+// You can execute this operation no more than once per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation UpdateConfigurationSetSendingEnabled for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeConfigurationSetDoesNotExistException "ConfigurationSetDoesNotExist"
+//   Indicates that the configuration set does not exist.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetSendingEnabled
+func (c *SES) UpdateConfigurationSetSendingEnabled(input *UpdateConfigurationSetSendingEnabledInput) (*UpdateConfigurationSetSendingEnabledOutput, error) {
+	req, out := c.UpdateConfigurationSetSendingEnabledRequest(input)
+	return out, req.Send()
+}
+
+// UpdateConfigurationSetSendingEnabledWithContext is the same as UpdateConfigurationSetSendingEnabled with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateConfigurationSetSendingEnabled for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) UpdateConfigurationSetSendingEnabledWithContext(ctx aws.Context, input *UpdateConfigurationSetSendingEnabledInput, opts ...request.Option) (*UpdateConfigurationSetSendingEnabledOutput, error) {
+	req, out := c.UpdateConfigurationSetSendingEnabledRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5847,6 +6222,12 @@ type BulkEmailDestinationStatus struct {
 	//
 	//    * InvalidSendingPoolName: The configuration set you specified refers to
 	//    an IP pool that does not exist.
+	//
+	//    * AccountSendingPaused: Email sending for the Amazon SES account was disabled
+	//    using the UpdateAccountSendingEnabled operation.
+	//
+	//    * ConfigurationSetSendingPaused: Email sending for this configuration
+	//    set was disabled using the UpdateConfigurationSetSendingEnabled operation.
 	//
 	//    * InvalidParameterValue: One or more of the parameters you specified when
 	//    calling this operation was invalid. See the error message for additional
@@ -7463,6 +7844,9 @@ type DescribeConfigurationSetOutput struct {
 	// A list of event destinations associated with the configuration set.
 	EventDestinations []*EventDestination `type:"list"`
 
+	// An object that represents the reputation settings for the configuration set.
+	ReputationOptions *ReputationOptions `type:"structure"`
+
 	// The name of the custom open and click tracking domain associated with the
 	// configuration set.
 	TrackingOptions *TrackingOptions `type:"structure"`
@@ -7487,6 +7871,12 @@ func (s *DescribeConfigurationSetOutput) SetConfigurationSet(v *ConfigurationSet
 // SetEventDestinations sets the EventDestinations field's value.
 func (s *DescribeConfigurationSetOutput) SetEventDestinations(v []*EventDestination) *DescribeConfigurationSetOutput {
 	s.EventDestinations = v
+	return s
+}
+
+// SetReputationOptions sets the ReputationOptions field's value.
+func (s *DescribeConfigurationSetOutput) SetReputationOptions(v *ReputationOptions) *DescribeConfigurationSetOutput {
+	s.ReputationOptions = v
 	return s
 }
 
@@ -7888,6 +8278,48 @@ func (s *ExtensionField) SetName(v string) *ExtensionField {
 // SetValue sets the Value field's value.
 func (s *ExtensionField) SetValue(v string) *ExtensionField {
 	s.Value = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetAccountSendingEnabledInput
+type GetAccountSendingEnabledInput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetAccountSendingEnabledInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetAccountSendingEnabledInput) GoString() string {
+	return s.String()
+}
+
+// Represents a request to return the email sending status for your Amazon SES
+// account.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetAccountSendingEnabledResponse
+type GetAccountSendingEnabledOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Describes whether email sending is enabled or disabled for your Amazon SES
+	// account.
+	Enabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s GetAccountSendingEnabledOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetAccountSendingEnabledOutput) GoString() string {
+	return s.String()
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *GetAccountSendingEnabledOutput) SetEnabled(v bool) *GetAccountSendingEnabledOutput {
+	s.Enabled = &v
 	return s
 }
 
@@ -10301,6 +10733,65 @@ func (s ReorderReceiptRuleSetOutput) GoString() string {
 	return s.String()
 }
 
+// Contains information about the reputation settings for a configuration set.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ReputationOptions
+type ReputationOptions struct {
+	_ struct{} `type:"structure"`
+
+	// The date and time at which the reputation metrics for the configuration set
+	// were last reset. Resetting these metrics is known as a fresh start.
+	//
+	// When you disable email sending for a configuration set using UpdateConfigurationSetSendingEnabled
+	// and later re-enable it, the reputation metrics for the configuration set
+	// (but not for the entire Amazon SES account) are reset.
+	//
+	// If email sending for the configuration set has never been disabled and later
+	// re-enabled, the value of this attribute is null.
+	LastFreshStart *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+
+	// Describes whether or not Amazon SES publishes reputation metrics for the
+	// configuration set, such as bounce and complaint rates, to Amazon CloudWatch.
+	//
+	// If the value is true, reputation metrics are published. If the value is false,
+	// reputation metrics are not published. The default value is false.
+	ReputationMetricsEnabled *bool `type:"boolean"`
+
+	// Describes whether email sending is enabled or disabled for the configuration
+	// set. If the value is true, then Amazon SES will send emails that use the
+	// configuration set. If the value is false, Amazon SES will not send emails
+	// that use the configuration set. The default value is true. You can change
+	// this setting using UpdateConfigurationSetSendingEnabled.
+	SendingEnabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s ReputationOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReputationOptions) GoString() string {
+	return s.String()
+}
+
+// SetLastFreshStart sets the LastFreshStart field's value.
+func (s *ReputationOptions) SetLastFreshStart(v time.Time) *ReputationOptions {
+	s.LastFreshStart = &v
+	return s
+}
+
+// SetReputationMetricsEnabled sets the ReputationMetricsEnabled field's value.
+func (s *ReputationOptions) SetReputationMetricsEnabled(v bool) *ReputationOptions {
+	s.ReputationMetricsEnabled = &v
+	return s
+}
+
+// SetSendingEnabled sets the SendingEnabled field's value.
+func (s *ReputationOptions) SetSendingEnabled(v bool) *ReputationOptions {
+	s.SendingEnabled = &v
+	return s
+}
+
 // When included in a receipt rule, this action saves the received message to
 // an Amazon Simple Storage Service (Amazon S3) bucket and, optionally, publishes
 // a notification to Amazon Simple Notification Service (Amazon SNS).
@@ -12447,6 +12938,48 @@ func (s *TrackingOptions) SetCustomRedirectDomain(v string) *TrackingOptions {
 	return s
 }
 
+// Represents a request to enable or disable the email sending capabilities
+// for your entire Amazon SES account.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateAccountSendingEnabledRequest
+type UpdateAccountSendingEnabledInput struct {
+	_ struct{} `type:"structure"`
+
+	// Describes whether email sending is enabled or disabled for your Amazon SES
+	// account.
+	Enabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s UpdateAccountSendingEnabledInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAccountSendingEnabledInput) GoString() string {
+	return s.String()
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *UpdateAccountSendingEnabledInput) SetEnabled(v bool) *UpdateAccountSendingEnabledInput {
+	s.Enabled = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateAccountSendingEnabledOutput
+type UpdateAccountSendingEnabledOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateAccountSendingEnabledOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAccountSendingEnabledOutput) GoString() string {
+	return s.String()
+}
+
 // Represents a request to update the event destination of a configuration set.
 // Configuration sets enable you to publish email sending events. For information
 // about using configuration sets, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
@@ -12523,6 +13056,148 @@ func (s UpdateConfigurationSetEventDestinationOutput) String() string {
 
 // GoString returns the string representation
 func (s UpdateConfigurationSetEventDestinationOutput) GoString() string {
+	return s.String()
+}
+
+// Represents a request to modify the reputation metric publishing settings
+// for a configuration set.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetReputationMetricsEnabledRequest
+type UpdateConfigurationSetReputationMetricsEnabledInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the configuration set that you want to update.
+	//
+	// ConfigurationSetName is a required field
+	ConfigurationSetName *string `type:"string" required:"true"`
+
+	// Describes whether or not Amazon SES will publish reputation metrics for the
+	// configuration set, such as bounce and complaint rates, to Amazon CloudWatch.
+	//
+	// Enabled is a required field
+	Enabled *bool `type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateConfigurationSetReputationMetricsEnabledInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateConfigurationSetReputationMetricsEnabledInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateConfigurationSetReputationMetricsEnabledInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateConfigurationSetReputationMetricsEnabledInput"}
+	if s.ConfigurationSetName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConfigurationSetName"))
+	}
+	if s.Enabled == nil {
+		invalidParams.Add(request.NewErrParamRequired("Enabled"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfigurationSetName sets the ConfigurationSetName field's value.
+func (s *UpdateConfigurationSetReputationMetricsEnabledInput) SetConfigurationSetName(v string) *UpdateConfigurationSetReputationMetricsEnabledInput {
+	s.ConfigurationSetName = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *UpdateConfigurationSetReputationMetricsEnabledInput) SetEnabled(v bool) *UpdateConfigurationSetReputationMetricsEnabledInput {
+	s.Enabled = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetReputationMetricsEnabledOutput
+type UpdateConfigurationSetReputationMetricsEnabledOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateConfigurationSetReputationMetricsEnabledOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateConfigurationSetReputationMetricsEnabledOutput) GoString() string {
+	return s.String()
+}
+
+// Represents a request to enable or disable the email sending capabilities
+// for a specific configuration set.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetSendingEnabledRequest
+type UpdateConfigurationSetSendingEnabledInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the configuration set that you want to update.
+	//
+	// ConfigurationSetName is a required field
+	ConfigurationSetName *string `type:"string" required:"true"`
+
+	// Describes whether email sending is enabled or disabled for the configuration
+	// set.
+	//
+	// Enabled is a required field
+	Enabled *bool `type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateConfigurationSetSendingEnabledInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateConfigurationSetSendingEnabledInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateConfigurationSetSendingEnabledInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateConfigurationSetSendingEnabledInput"}
+	if s.ConfigurationSetName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConfigurationSetName"))
+	}
+	if s.Enabled == nil {
+		invalidParams.Add(request.NewErrParamRequired("Enabled"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfigurationSetName sets the ConfigurationSetName field's value.
+func (s *UpdateConfigurationSetSendingEnabledInput) SetConfigurationSetName(v string) *UpdateConfigurationSetSendingEnabledInput {
+	s.ConfigurationSetName = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *UpdateConfigurationSetSendingEnabledInput) SetEnabled(v bool) *UpdateConfigurationSetSendingEnabledInput {
+	s.Enabled = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetSendingEnabledOutput
+type UpdateConfigurationSetSendingEnabledOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateConfigurationSetSendingEnabledOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateConfigurationSetSendingEnabledOutput) GoString() string {
 	return s.String()
 }
 
@@ -13131,6 +13806,12 @@ const (
 	// BulkEmailStatusInvalidSendingPoolName is a BulkEmailStatus enum value
 	BulkEmailStatusInvalidSendingPoolName = "InvalidSendingPoolName"
 
+	// BulkEmailStatusAccountSendingPaused is a BulkEmailStatus enum value
+	BulkEmailStatusAccountSendingPaused = "AccountSendingPaused"
+
+	// BulkEmailStatusConfigurationSetSendingPaused is a BulkEmailStatus enum value
+	BulkEmailStatusConfigurationSetSendingPaused = "ConfigurationSetSendingPaused"
+
 	// BulkEmailStatusInvalidParameterValue is a BulkEmailStatus enum value
 	BulkEmailStatusInvalidParameterValue = "InvalidParameterValue"
 
@@ -13147,6 +13828,9 @@ const (
 
 	// ConfigurationSetAttributeTrackingOptions is a ConfigurationSetAttribute enum value
 	ConfigurationSetAttributeTrackingOptions = "trackingOptions"
+
+	// ConfigurationSetAttributeReputationOptions is a ConfigurationSetAttribute enum value
+	ConfigurationSetAttributeReputationOptions = "reputationOptions"
 )
 
 const (

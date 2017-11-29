@@ -4,7 +4,7 @@
 // requests to Application Auto Scaling.
 //
 // With Application Auto Scaling, you can automatically scale your AWS resources.
-// The experience similar to that of Auto Scaling (https://aws.amazon.com/autoscaling/).
+// The experience is similar to that of Auto Scaling (https://aws.amazon.com/autoscaling/).
 // You can use Application Auto Scaling to accomplish the following tasks:
 //
 //    * Define scaling policies to automatically scale your AWS resources
@@ -35,6 +35,9 @@
 //    secondary indexes. For more information, see Managing Throughput Capacity
 //    Automatically with DynamoDB Auto Scaling (http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/AutoScaling.html)
 //    in the Amazon DynamoDB Developer Guide.
+//
+//    * Amazon Aurora Replicas. For more information, see Using Application
+//    Auto Scaling with an Amazon Aurora DB Cluster (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Aurora.Integrating.AutoScaling.html).
 //
 // For a list of supported regions, see AWS Regions and Endpoints: Application
 // Auto Scaling (http://docs.aws.amazon.com/general/latest/gr/rande.html#as-app_region)
