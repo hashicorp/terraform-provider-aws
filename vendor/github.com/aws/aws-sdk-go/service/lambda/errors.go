@@ -43,7 +43,8 @@ const (
 	// an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 	// API, that AWS Lambda is unable to assume you will get this exception. You
 	// will also get this exception if you have selected a deprecated runtime, such
-	// as Node v0.10.42.
+	// as Node v0.10.42 or if you point to an additional version when the version
+	// specified is $LATEST.
 	ErrCodeInvalidParameterValueException = "InvalidParameterValueException"
 
 	// ErrCodeInvalidRequestContentException for service response error code
