@@ -741,6 +741,14 @@
 			"versionExact": "v1.12.35"
 		},
 		{
+			"checksumSHA1": "75LM8oENH3zGsQhNKuwIfEjXRDw=",
+			"path": "github.com/aws/aws-sdk-go/service/mq",
+			"revision": "80bf27afd5602f55c398d43621b9900583df3661",
+			"revisionTime": "2017-11-29T07:44:19Z",
+			"version": "v1.12.35",
+			"versionExact": "v1.12.35"
+		},
+		{
 			"checksumSHA1": "xkNWwN2rw+szg+zXAxCun34zxhs=",
 			"path": "github.com/aws/aws-sdk-go/service/opsworks",
 			"revision": "80bf27afd5602f55c398d43621b9900583df3661",
