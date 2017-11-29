@@ -1474,6 +1474,7 @@ var awsPartition = partition{
 				},
 			},
 			Endpoints: endpoints{
+				"eu-west-1": endpoint{},
 				"us-east-1": endpoint{},
 			},
 		},

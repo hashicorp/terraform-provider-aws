@@ -70,8 +70,8 @@ func (c *Batch) CancelJobRequest(input *CancelJobInput) (req *request.Request, o
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -149,8 +149,8 @@ func (c *Batch) CreateComputeEnvironmentRequest(input *CreateComputeEnvironmentI
 // within the environment, based on the compute resources that you specify.
 // Instances launched into a managed compute environment use a recent, approved
 // version of the Amazon ECS-optimized AMI. You can choose to use Amazon EC2
-// On-Demand instances in your managed compute environment, or you can use Amazon
-// EC2 Spot instances that only launch when the Spot bid price is below a specified
+// On-Demand Instances in your managed compute environment, or you can use Amazon
+// EC2 Spot Instances that only launch when the Spot bid price is below a specified
 // percentage of the On-Demand price.
 //
 // In an unmanaged compute environment, you can manage your own compute resources.
@@ -158,12 +158,12 @@ func (c *Batch) CreateComputeEnvironmentRequest(input *CreateComputeEnvironmentI
 // a custom AMI, but you must ensure that your AMI meets the Amazon ECS container
 // instance AMI specification. For more information, see Container Instance
 // AMIs (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/container_instance_AMIs.html)
-// in the Amazon EC2 Container Service Developer Guide. After you have created
+// in the Amazon Elastic Container Service Developer Guide. After you have created
 // your unmanaged compute environment, you can use the DescribeComputeEnvironments
 // operation to find the Amazon ECS cluster that is associated with it and then
 // manually launch your container instances into that Amazon ECS cluster. For
 // more information, see Launching an Amazon ECS Container Instance (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_container_instance.html)
-// in the Amazon EC2 Container Service Developer Guide.
+// in the Amazon Elastic Container Service Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -175,8 +175,8 @@ func (c *Batch) CreateComputeEnvironmentRequest(input *CreateComputeEnvironmentI
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -267,8 +267,8 @@ func (c *Batch) CreateJobQueueRequest(input *CreateJobQueueInput) (req *request.
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -355,8 +355,8 @@ func (c *Batch) DeleteComputeEnvironmentRequest(input *DeleteComputeEnvironmentI
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -444,8 +444,8 @@ func (c *Batch) DeleteJobQueueRequest(input *DeleteJobQueueInput) (req *request.
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -528,8 +528,8 @@ func (c *Batch) DeregisterJobDefinitionRequest(input *DeregisterJobDefinitionInp
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -616,8 +616,8 @@ func (c *Batch) DescribeComputeEnvironmentsRequest(input *DescribeComputeEnviron
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -701,8 +701,8 @@ func (c *Batch) DescribeJobDefinitionsRequest(input *DescribeJobDefinitionsInput
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -785,8 +785,8 @@ func (c *Batch) DescribeJobQueuesRequest(input *DescribeJobQueuesInput) (req *re
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -869,8 +869,8 @@ func (c *Batch) DescribeJobsRequest(input *DescribeJobsInput) (req *request.Requ
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -955,8 +955,8 @@ func (c *Batch) ListJobsRequest(input *ListJobsInput) (req *request.Request, out
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -1039,8 +1039,8 @@ func (c *Batch) RegisterJobDefinitionRequest(input *RegisterJobDefinitionInput) 
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -1124,8 +1124,8 @@ func (c *Batch) SubmitJobRequest(input *SubmitJobInput) (req *request.Request, o
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -1210,8 +1210,8 @@ func (c *Batch) TerminateJobRequest(input *TerminateJobInput) (req *request.Requ
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -1294,8 +1294,8 @@ func (c *Batch) UpdateComputeEnvironmentRequest(input *UpdateComputeEnvironmentI
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -1378,8 +1378,8 @@ func (c *Batch) UpdateJobQueueRequest(input *UpdateJobQueueInput) (req *request.
 // Returned Error Codes:
 //   * ErrCodeClientException "ClientException"
 //   These errors are usually caused by a client action, such as using an action
-//   or resource on behalf of a user that doesn't have permission to use the action
-//   or resource, or specifying an identifier that is not valid.
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
 //
 //   * ErrCodeServerException "ServerException"
 //   These errors are usually caused by a server issue.
@@ -1404,6 +1404,111 @@ func (c *Batch) UpdateJobQueueWithContext(ctx aws.Context, input *UpdateJobQueue
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// An object representing an AWS Batch array job.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/ArrayProperties
+type ArrayProperties struct {
+	_ struct{} `type:"structure"`
+
+	// The size of the array job.
+	Size *int64 `locationName:"size" type:"integer"`
+}
+
+// String returns the string representation
+func (s ArrayProperties) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ArrayProperties) GoString() string {
+	return s.String()
+}
+
+// SetSize sets the Size field's value.
+func (s *ArrayProperties) SetSize(v int64) *ArrayProperties {
+	s.Size = &v
+	return s
+}
+
+// An object representing the array properties of a job.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/ArrayPropertiesDetail
+type ArrayPropertiesDetail struct {
+	_ struct{} `type:"structure"`
+
+	// The job index within the array that is associated with this job. This parameter
+	// is returned for array job children.
+	Index *int64 `locationName:"index" type:"integer"`
+
+	// The size of the array job. This parameter is returned for parent array jobs.
+	Size *int64 `locationName:"size" type:"integer"`
+
+	// A summary of the number of array job children in each available job status.
+	// This parameter is returned for parent array jobs.
+	StatusSummary map[string]*int64 `locationName:"statusSummary" type:"map"`
+}
+
+// String returns the string representation
+func (s ArrayPropertiesDetail) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ArrayPropertiesDetail) GoString() string {
+	return s.String()
+}
+
+// SetIndex sets the Index field's value.
+func (s *ArrayPropertiesDetail) SetIndex(v int64) *ArrayPropertiesDetail {
+	s.Index = &v
+	return s
+}
+
+// SetSize sets the Size field's value.
+func (s *ArrayPropertiesDetail) SetSize(v int64) *ArrayPropertiesDetail {
+	s.Size = &v
+	return s
+}
+
+// SetStatusSummary sets the StatusSummary field's value.
+func (s *ArrayPropertiesDetail) SetStatusSummary(v map[string]*int64) *ArrayPropertiesDetail {
+	s.StatusSummary = v
+	return s
+}
+
+// An object representing the array properties of a job.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/ArrayPropertiesSummary
+type ArrayPropertiesSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The job index within the array that is associated with this job. This parameter
+	// is returned for children of array jobs.
+	Index *int64 `locationName:"index" type:"integer"`
+
+	// The size of the array job. This parameter is returned for parent array jobs.
+	Size *int64 `locationName:"size" type:"integer"`
+}
+
+// String returns the string representation
+func (s ArrayPropertiesSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ArrayPropertiesSummary) GoString() string {
+	return s.String()
+}
+
+// SetIndex sets the Index field's value.
+func (s *ArrayPropertiesSummary) SetIndex(v int64) *ArrayPropertiesSummary {
+	s.Index = &v
+	return s
+}
+
+// SetSize sets the Size field's value.
+func (s *ArrayPropertiesSummary) SetSize(v int64) *ArrayPropertiesSummary {
+	s.Size = &v
+	return s
 }
 
 // An object representing the details of a container that is part of a job attempt.
@@ -1481,16 +1586,16 @@ type AttemptDetail struct {
 	// Details about the container in this job attempt.
 	Container *AttemptContainerDetail `locationName:"container" type:"structure"`
 
-	// The Unix timestamp for when the attempt was started (when the task transitioned
-	// from the PENDING state to the RUNNING state).
+	// The Unix time stamp for when the attempt was started (when the attempt transitioned
+	// from the STARTING state to the RUNNING state).
 	StartedAt *int64 `locationName:"startedAt" type:"long"`
 
 	// A short, human-readable string to provide additional details about the current
 	// status of the job attempt.
 	StatusReason *string `locationName:"statusReason" type:"string"`
 
-	// The Unix timestamp for when the attempt was stopped (when the task transitioned
-	// from the RUNNING state to the STOPPED state).
+	// The Unix time stamp for when the attempt was stopped (when the attempt transitioned
+	// from the RUNNING state to a terminal state, such as SUCCEEDED or FAILED).
 	StoppedAt *int64 `locationName:"stoppedAt" type:"long"`
 }
 
@@ -1537,7 +1642,7 @@ type CancelJobInput struct {
 	// JobId is a required field
 	JobId *string `locationName:"jobId" type:"string" required:"true"`
 
-	// A message to attach to the job that explains the reason for cancelling it.
+	// A message to attach to the job that explains the reason for canceling it.
 	// This message is returned by future DescribeJobs operations on the job. This
 	// message is also recorded in the AWS Batch activity logs.
 	//
@@ -2259,8 +2364,8 @@ type ContainerProperties struct {
 	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
 	// and the --env option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
-	// We do not recommend using plain text environment variables for sensitive
-	// information, such as credential data.
+	// We do not recommend using plaintext environment variables for sensitive information,
+	// such as credential data.
 	//
 	// Environment variables must not start with AWS_BATCH; this naming convention
 	// is reserved for variables that are set by the AWS Batch service.
@@ -2341,7 +2446,7 @@ type ContainerProperties struct {
 	// in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
 	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
 	// and the --cpu-shares option to docker run (https://docs.docker.com/engine/reference/run/).
-	// Each vCPU is equivalent to 1,024 CPU shares. You must specify at least 1
+	// Each vCPU is equivalent to 1,024 CPU shares. You must specify at least one
 	// vCPU.
 	//
 	// Vcpus is a required field
@@ -2459,6 +2564,41 @@ func (s *ContainerProperties) SetVcpus(v int64) *ContainerProperties {
 // SetVolumes sets the Volumes field's value.
 func (s *ContainerProperties) SetVolumes(v []*Volume) *ContainerProperties {
 	s.Volumes = v
+	return s
+}
+
+// An object representing summary details of a container within a job.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/ContainerSummary
+type ContainerSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The exit code to return upon completion.
+	ExitCode *int64 `locationName:"exitCode" type:"integer"`
+
+	// A short (255 max characters) human-readable string to provide additional
+	// details about a running or stopped container.
+	Reason *string `locationName:"reason" type:"string"`
+}
+
+// String returns the string representation
+func (s ContainerSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ContainerSummary) GoString() string {
+	return s.String()
+}
+
+// SetExitCode sets the ExitCode field's value.
+func (s *ContainerSummary) SetExitCode(v int64) *ContainerSummary {
+	s.ExitCode = &v
+	return s
+}
+
+// SetReason sets the Reason field's value.
+func (s *ContainerSummary) SetReason(v string) *ContainerSummary {
+	s.Reason = &v
 	return s
 }
 
@@ -2608,7 +2748,7 @@ type CreateJobQueueInput struct {
 	// to each other. The job scheduler uses this parameter to determine which compute
 	// environment should execute a given job. Compute environments must be in the
 	// VALID state before you can associate them with a job queue. You can associate
-	// up to 3 compute environments with a job queue.
+	// up to three compute environments with a job queue.
 	//
 	// ComputeEnvironmentOrder is a required field
 	ComputeEnvironmentOrder []*ComputeEnvironmentOrder `locationName:"computeEnvironmentOrder" type:"list" required:"true"`
@@ -3395,6 +3535,9 @@ type JobDependency struct {
 
 	// The job ID of the AWS Batch job associated with this dependency.
 	JobId *string `locationName:"jobId" type:"string"`
+
+	// The type of the job dependency.
+	Type *string `locationName:"type" type:"string" enum:"ArrayJobDependency"`
 }
 
 // String returns the string representation
@@ -3413,10 +3556,19 @@ func (s *JobDependency) SetJobId(v string) *JobDependency {
 	return s
 }
 
+// SetType sets the Type field's value.
+func (s *JobDependency) SetType(v string) *JobDependency {
+	s.Type = &v
+	return s
+}
+
 // An object representing an AWS Batch job.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/JobDetail
 type JobDetail struct {
 	_ struct{} `type:"structure"`
+
+	// The array properties of the job, if it is an array job.
+	ArrayProperties *ArrayPropertiesDetail `locationName:"arrayProperties" type:"structure"`
 
 	// A list of job attempts associated with this job.
 	Attempts []*AttemptDetail `locationName:"attempts" type:"list"`
@@ -3425,8 +3577,10 @@ type JobDetail struct {
 	// the job.
 	Container *ContainerDetail `locationName:"container" type:"structure"`
 
-	// The Unix timestamp for when the job was created (when the task entered the
-	// PENDING state).
+	// The Unix time stamp for when the job was created. For non-array jobs and
+	// parent array jobs, this is when the job entered the SUBMITTED state (at the
+	// time SubmitJob was called). For array child jobs, this is when the child
+	// job was spawned by its parent and entered the PENDING state.
 	CreatedAt *int64 `locationName:"createdAt" type:"long"`
 
 	// A list of job names or IDs on which this job depends.
@@ -3460,8 +3614,8 @@ type JobDetail struct {
 	// The retry strategy to use for this job if an attempt fails.
 	RetryStrategy *RetryStrategy `locationName:"retryStrategy" type:"structure"`
 
-	// The Unix timestamp for when the job was started (when the task transitioned
-	// from the PENDING state to the RUNNING state).
+	// The Unix time stamp for when the job was started (when the job transitioned
+	// from the STARTING state to the RUNNING state).
 	//
 	// StartedAt is a required field
 	StartedAt *int64 `locationName:"startedAt" type:"long" required:"true"`
@@ -3475,8 +3629,8 @@ type JobDetail struct {
 	// status of the job.
 	StatusReason *string `locationName:"statusReason" type:"string"`
 
-	// The Unix timestamp for when the job was stopped (when the task transitioned
-	// from the RUNNING state to the STOPPED state).
+	// The Unix time stamp for when the job was stopped (when the job transitioned
+	// from the RUNNING state to a terminal state, such as SUCCEEDED or FAILED).
 	StoppedAt *int64 `locationName:"stoppedAt" type:"long"`
 }
 
@@ -3488,6 +3642,12 @@ func (s JobDetail) String() string {
 // GoString returns the string representation
 func (s JobDetail) GoString() string {
 	return s.String()
+}
+
+// SetArrayProperties sets the ArrayProperties field's value.
+func (s *JobDetail) SetArrayProperties(v *ArrayPropertiesDetail) *JobDetail {
+	s.ArrayProperties = v
+	return s
 }
 
 // SetAttempts sets the Attempts field's value.
@@ -3671,6 +3831,19 @@ func (s *JobQueueDetail) SetStatusReason(v string) *JobQueueDetail {
 type JobSummary struct {
 	_ struct{} `type:"structure"`
 
+	// The array properties of the job, if it is an array job.
+	ArrayProperties *ArrayPropertiesSummary `locationName:"arrayProperties" type:"structure"`
+
+	// An object representing the details of the container that is associated with
+	// the job.
+	Container *ContainerSummary `locationName:"container" type:"structure"`
+
+	// The Unix time stamp for when the job was created. For non-array jobs and
+	// parent array jobs, this is when the job entered the SUBMITTED state (at the
+	// time SubmitJob was called). For array child jobs, this is when the child
+	// job was spawned by its parent and entered the PENDING state.
+	CreatedAt *int64 `locationName:"createdAt" type:"long"`
+
 	// The ID of the job.
 	//
 	// JobId is a required field
@@ -3680,6 +3853,21 @@ type JobSummary struct {
 	//
 	// JobName is a required field
 	JobName *string `locationName:"jobName" type:"string" required:"true"`
+
+	// The Unix time stamp for when the job was started (when the job transitioned
+	// from the STARTING state to the RUNNING state).
+	StartedAt *int64 `locationName:"startedAt" type:"long"`
+
+	// The current status for the job.
+	Status *string `locationName:"status" type:"string" enum:"JobStatus"`
+
+	// A short, human-readable string to provide additional details about the current
+	// status of the job.
+	StatusReason *string `locationName:"statusReason" type:"string"`
+
+	// The Unix time stamp for when the job was stopped (when the job transitioned
+	// from the RUNNING state to a terminal state, such as SUCCEEDED or FAILED).
+	StoppedAt *int64 `locationName:"stoppedAt" type:"long"`
 }
 
 // String returns the string representation
@@ -3690,6 +3878,24 @@ func (s JobSummary) String() string {
 // GoString returns the string representation
 func (s JobSummary) GoString() string {
 	return s.String()
+}
+
+// SetArrayProperties sets the ArrayProperties field's value.
+func (s *JobSummary) SetArrayProperties(v *ArrayPropertiesSummary) *JobSummary {
+	s.ArrayProperties = v
+	return s
+}
+
+// SetContainer sets the Container field's value.
+func (s *JobSummary) SetContainer(v *ContainerSummary) *JobSummary {
+	s.Container = v
+	return s
+}
+
+// SetCreatedAt sets the CreatedAt field's value.
+func (s *JobSummary) SetCreatedAt(v int64) *JobSummary {
+	s.CreatedAt = &v
+	return s
 }
 
 // SetJobId sets the JobId field's value.
@@ -3704,16 +3910,40 @@ func (s *JobSummary) SetJobName(v string) *JobSummary {
 	return s
 }
 
+// SetStartedAt sets the StartedAt field's value.
+func (s *JobSummary) SetStartedAt(v int64) *JobSummary {
+	s.StartedAt = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *JobSummary) SetStatus(v string) *JobSummary {
+	s.Status = &v
+	return s
+}
+
+// SetStatusReason sets the StatusReason field's value.
+func (s *JobSummary) SetStatusReason(v string) *JobSummary {
+	s.StatusReason = &v
+	return s
+}
+
+// SetStoppedAt sets the StoppedAt field's value.
+func (s *JobSummary) SetStoppedAt(v int64) *JobSummary {
+	s.StoppedAt = &v
+	return s
+}
+
 // A key-value pair object.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/KeyValuePair
 type KeyValuePair struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the key value pair. For environment variables, this is the name
+	// The name of the key-value pair. For environment variables, this is the name
 	// of the environment variable.
 	Name *string `locationName:"name" type:"string"`
 
-	// The value of the key value pair. For environment variables, this is the value
+	// The value of the key-value pair. For environment variables, this is the value
 	// of the environment variable.
 	Value *string `locationName:"value" type:"string"`
 }
@@ -3744,11 +3974,13 @@ func (s *KeyValuePair) SetValue(v string) *KeyValuePair {
 type ListJobsInput struct {
 	_ struct{} `type:"structure"`
 
+	// The job ID for an array job. Specifying an array job ID with this parameter
+	// lists all child jobs from within the specified array.
+	ArrayJobId *string `locationName:"arrayJobId" type:"string"`
+
 	// The name or full Amazon Resource Name (ARN) of the job queue with which to
 	// list jobs.
-	//
-	// JobQueue is a required field
-	JobQueue *string `locationName:"jobQueue" type:"string" required:"true"`
+	JobQueue *string `locationName:"jobQueue" type:"string"`
 
 	// The job status with which to filter jobs in the specified queue. If you do
 	// not specify a status, only RUNNING jobs are returned.
@@ -3783,17 +4015,10 @@ func (s ListJobsInput) GoString() string {
 	return s.String()
 }
 
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *ListJobsInput) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "ListJobsInput"}
-	if s.JobQueue == nil {
-		invalidParams.Add(request.NewErrParamRequired("JobQueue"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
+// SetArrayJobId sets the ArrayJobId field's value.
+func (s *ListJobsInput) SetArrayJobId(v string) *ListJobsInput {
+	s.ArrayJobId = &v
+	return s
 }
 
 // SetJobQueue sets the JobQueue field's value.
@@ -4048,8 +4273,8 @@ type RetryStrategy struct {
 	_ struct{} `type:"structure"`
 
 	// The number of times to move a job to the RUNNABLE status. You may specify
-	// between 1 and 10 attempts. If attempts is greater than one, the job is retried
-	// if it fails until it has moved to RUNNABLE that many times.
+	// between 1 and 10 attempts. If the value of attempts is greater than one,
+	// the job is retried if it fails until it has moved to RUNNABLE that many times.
 	Attempts *int64 `locationName:"attempts" type:"integer"`
 }
 
@@ -4073,6 +4298,13 @@ func (s *RetryStrategy) SetAttempts(v int64) *RetryStrategy {
 type SubmitJobInput struct {
 	_ struct{} `type:"structure"`
 
+	// The array properties for the submitted job, such as the size of the array.
+	// The array size can be between 2 and 10,000. If you specify array properties
+	// for a job, it becomes an array job. For more information, see Array Jobs
+	// (http://docs.aws.amazon.com/batch/latest/userguide/array_jobs.html) in the
+	// AWS Batch User Guide.
+	ArrayProperties *ArrayProperties `locationName:"arrayProperties" type:"structure"`
+
 	// A list of container overrides in JSON format that specify the name of a container
 	// in the specified job definition and the overrides it should receive. You
 	// can override the default command for a container (that is specified in the
@@ -4082,8 +4314,12 @@ type SubmitJobInput struct {
 	// an environment override.
 	ContainerOverrides *ContainerOverrides `locationName:"containerOverrides" type:"structure"`
 
-	// A list of job IDs on which this job depends. A job can depend upon a maximum
-	// of 20 jobs.
+	// A list of dependencies for the job. A job can depend upon a maximum of 20
+	// jobs. You can specify a SEQUENTIAL type dependency without specifying a job
+	// ID for array jobs so that each child array job completes sequentially, starting
+	// at index 0. You can also specify an N_TO_N type dependency with a job ID
+	// for array jobs so that each index child of this job must wait for the corresponding
+	// index child of each dependency to complete before it can begin.
 	DependsOn []*JobDependency `locationName:"dependsOn" type:"list"`
 
 	// The job definition used by this job. This value can be either a name:revision
@@ -4099,8 +4335,8 @@ type SubmitJobInput struct {
 	// JobName is a required field
 	JobName *string `locationName:"jobName" type:"string" required:"true"`
 
-	// The job queue into which the job will be submitted. You can specify either
-	// the name or the Amazon Resource Name (ARN) of the queue.
+	// The job queue into which the job is submitted. You can specify either the
+	// name or the Amazon Resource Name (ARN) of the queue.
 	//
 	// JobQueue is a required field
 	JobQueue *string `locationName:"jobQueue" type:"string" required:"true"`
@@ -4144,6 +4380,12 @@ func (s *SubmitJobInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetArrayProperties sets the ArrayProperties field's value.
+func (s *SubmitJobInput) SetArrayProperties(v *ArrayProperties) *SubmitJobInput {
+	s.ArrayProperties = v
+	return s
 }
 
 // SetContainerOverrides sets the ContainerOverrides field's value.
@@ -4234,7 +4476,7 @@ type TerminateJobInput struct {
 	// JobId is a required field
 	JobId *string `locationName:"jobId" type:"string" required:"true"`
 
-	// A message to attach to the job that explains the reason for cancelling it.
+	// A message to attach to the job that explains the reason for canceling it.
 	// This message is returned by future DescribeJobs operations on the job. This
 	// message is also recorded in the AWS Batch activity logs.
 	//
@@ -4599,8 +4841,8 @@ type Volume struct {
 
 	// The contents of the host parameter determine whether your data volume persists
 	// on the host container instance and where it is stored. If the host parameter
-	// is empty, then the Docker daemon assigns a host path for your data volume,
-	// but the data is not guaranteed to persist after the containers associated
+	// is empty, then the Docker daemon assigns a host path for your data volume.
+	// However, the data is not guaranteed to persist after the containers associated
 	// with it stop running.
 	Host *Host `locationName:"host" type:"structure"`
 
@@ -4631,6 +4873,14 @@ func (s *Volume) SetName(v string) *Volume {
 	s.Name = &v
 	return s
 }
+
+const (
+	// ArrayJobDependencyNToN is a ArrayJobDependency enum value
+	ArrayJobDependencyNToN = "N_TO_N"
+
+	// ArrayJobDependencySequential is a ArrayJobDependency enum value
+	ArrayJobDependencySequential = "SEQUENTIAL"
+)
 
 const (
 	// CEStateEnabled is a CEState enum value

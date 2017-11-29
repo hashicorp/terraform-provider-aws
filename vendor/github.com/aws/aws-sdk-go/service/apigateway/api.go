@@ -11016,6 +11016,60 @@ func (s *BasePathMapping) SetStage(v string) *BasePathMapping {
 	return s
 }
 
+// Configuration settings of a canary deployment.
+type CanarySettings struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the canary deployment.
+	DeploymentId *string `locationName:"deploymentId" type:"string"`
+
+	// The percent (0-100) of traffic diverted to a canary deployment.
+	PercentTraffic *float64 `locationName:"percentTraffic" type:"double"`
+
+	// Stage variables overridden for a canary release deployment, including new
+	// stage variables introduced in the canary. These stage variables are represented
+	// as a string-to-string map between stage variable names and their values.
+	StageVariableOverrides map[string]*string `locationName:"stageVariableOverrides" type:"map"`
+
+	// A Boolean flag to indicate whether the canary deployment uses the stage cache
+	// or not.
+	UseStageCache *bool `locationName:"useStageCache" type:"boolean"`
+}
+
+// String returns the string representation
+func (s CanarySettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CanarySettings) GoString() string {
+	return s.String()
+}
+
+// SetDeploymentId sets the DeploymentId field's value.
+func (s *CanarySettings) SetDeploymentId(v string) *CanarySettings {
+	s.DeploymentId = &v
+	return s
+}
+
+// SetPercentTraffic sets the PercentTraffic field's value.
+func (s *CanarySettings) SetPercentTraffic(v float64) *CanarySettings {
+	s.PercentTraffic = &v
+	return s
+}
+
+// SetStageVariableOverrides sets the StageVariableOverrides field's value.
+func (s *CanarySettings) SetStageVariableOverrides(v map[string]*string) *CanarySettings {
+	s.StageVariableOverrides = v
+	return s
+}
+
+// SetUseStageCache sets the UseStageCache field's value.
+func (s *CanarySettings) SetUseStageCache(v bool) *CanarySettings {
+	s.UseStageCache = &v
+	return s
+}
+
 // Represents a client certificate used to configure client-side SSL authentication
 // while sending requests to the integration endpoint.
 //
@@ -11422,6 +11476,10 @@ type CreateDeploymentInput struct {
 	// input, if a cache cluster is enabled.
 	CacheClusterSize *string `locationName:"cacheClusterSize" type:"string" enum:"CacheClusterSize"`
 
+	// The input configuration for the canary deployment when the deployment is
+	// a canary release deployment.
+	CanarySettings *DeploymentCanarySettings `locationName:"canarySettings" type:"structure"`
+
 	// The description for the Deployment resource to create.
 	Description *string `locationName:"description" type:"string"`
 
@@ -11474,6 +11532,12 @@ func (s *CreateDeploymentInput) SetCacheClusterEnabled(v bool) *CreateDeployment
 // SetCacheClusterSize sets the CacheClusterSize field's value.
 func (s *CreateDeploymentInput) SetCacheClusterSize(v string) *CreateDeploymentInput {
 	s.CacheClusterSize = &v
+	return s
+}
+
+// SetCanarySettings sets the CanarySettings field's value.
+func (s *CreateDeploymentInput) SetCanarySettings(v *DeploymentCanarySettings) *CreateDeploymentInput {
+	s.CanarySettings = v
 	return s
 }
 
@@ -12096,7 +12160,10 @@ type CreateStageInput struct {
 	// The stage's cache cluster size.
 	CacheClusterSize *string `locationName:"cacheClusterSize" type:"string" enum:"CacheClusterSize"`
 
-	// The identifier of the Deployment resource for the Stage resource.
+	// The canary deployment settings of this stage.
+	CanarySettings *CanarySettings `locationName:"canarySettings" type:"structure"`
+
+	// [Required] The identifier of the Deployment resource for the Stage resource.
 	//
 	// DeploymentId is a required field
 	DeploymentId *string `locationName:"deploymentId" type:"string" required:"true"`
@@ -12112,7 +12179,7 @@ type CreateStageInput struct {
 	// RestApiId is a required field
 	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
 
-	// The name for the Stage resource.
+	// {Required] The name for the Stage resource.
 	//
 	// StageName is a required field
 	StageName *string `locationName:"stageName" type:"string" required:"true"`
@@ -12161,6 +12228,12 @@ func (s *CreateStageInput) SetCacheClusterEnabled(v bool) *CreateStageInput {
 // SetCacheClusterSize sets the CacheClusterSize field's value.
 func (s *CreateStageInput) SetCacheClusterSize(v string) *CreateStageInput {
 	s.CacheClusterSize = &v
+	return s
+}
+
+// SetCanarySettings sets the CanarySettings field's value.
+func (s *CreateStageInput) SetCanarySettings(v *CanarySettings) *CreateStageInput {
+	s.CanarySettings = v
 	return s
 }
 
@@ -13781,6 +13854,52 @@ func (s *Deployment) SetDescription(v string) *Deployment {
 // SetId sets the Id field's value.
 func (s *Deployment) SetId(v string) *Deployment {
 	s.Id = &v
+	return s
+}
+
+// The input configuration for a canary deployment.
+type DeploymentCanarySettings struct {
+	_ struct{} `type:"structure"`
+
+	// The percentage (0.0-100.0) of traffic routed to the canary deployment.
+	PercentTraffic *float64 `locationName:"percentTraffic" type:"double"`
+
+	// A stage variable overrides used for the canary release deployment. They can
+	// override existing stage variables or add new stage variables for the canary
+	// release deployment. These stage variables are represented as a string-to-string
+	// map between stage variable names and their values.
+	StageVariableOverrides map[string]*string `locationName:"stageVariableOverrides" type:"map"`
+
+	// A Boolean flag to indicate whether the canary release deployment uses the
+	// stage cache or not.
+	UseStageCache *bool `locationName:"useStageCache" type:"boolean"`
+}
+
+// String returns the string representation
+func (s DeploymentCanarySettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeploymentCanarySettings) GoString() string {
+	return s.String()
+}
+
+// SetPercentTraffic sets the PercentTraffic field's value.
+func (s *DeploymentCanarySettings) SetPercentTraffic(v float64) *DeploymentCanarySettings {
+	s.PercentTraffic = &v
+	return s
+}
+
+// SetStageVariableOverrides sets the StageVariableOverrides field's value.
+func (s *DeploymentCanarySettings) SetStageVariableOverrides(v map[string]*string) *DeploymentCanarySettings {
+	s.StageVariableOverrides = v
+	return s
+}
+
+// SetUseStageCache sets the UseStageCache field's value.
+func (s *DeploymentCanarySettings) SetUseStageCache(v bool) *DeploymentCanarySettings {
+	s.UseStageCache = &v
 	return s
 }
 
@@ -18822,11 +18941,15 @@ func (s *Model) SetSchema(v string) *Model {
 type PatchOperation struct {
 	_ struct{} `type:"structure"`
 
-	// Not supported.
+	// The copy update operation's source as identified by a JSON-Pointer value
+	// referencing the location within the targeted resource to copy the value from.
+	// For example, to promote a canary deployment, you copy the canary deployment
+	// ID to the affiliated deployment ID by calling a PATCH request on a Stage
+	// resource with "op":"copy", "from":"/canarySettings/deploymentId" and "path":"/deploymentId".
 	From *string `locationName:"from" type:"string"`
 
 	// An update operation to be performed with this PATCH request. The valid value
-	// can be "add", "remove", or "replace". Not all valid operations are supported
+	// can be add, remove, replace or copy. Not all valid operations are supported
 	// for a given resource. Support of the operations depends on specific operational
 	// contexts. Attempts to apply an unsupported operation on a resource will return
 	// an error message.
@@ -18842,10 +18965,10 @@ type PatchOperation struct {
 	// op operation can have only one path associated with it.
 	Path *string `locationName:"path" type:"string"`
 
-	// The new target value of the update operation. When using AWS CLI to update
-	// a property of a JSON value, enclose the JSON object with a pair of single
-	// quotes in a Linux shell, e.g., '{"a": ...}'. In a Windows shell, see Using
-	// JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json).
+	// The new target value of the update operation. It is applicable for the add
+	// or replace operation. When using AWS CLI to update a property of a JSON value,
+	// enclose the JSON object with a pair of single quotes in a Linux shell, e.g.,
+	// '{"a": ...}'. In a Windows shell, see Using JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json).
 	Value *string `locationName:"value" type:"string"`
 }
 
@@ -20059,7 +20182,7 @@ func (s *SdkType) SetId(v string) *SdkType {
 type Stage struct {
 	_ struct{} `type:"structure"`
 
-	// The access log settings in this stage.
+	// Settings for logging access in this stage.
 	AccessLogSettings *AccessLogSettings `locationName:"accessLogSettings" type:"structure"`
 
 	// Specifies whether a cache cluster is enabled for the stage.
@@ -20070,6 +20193,9 @@ type Stage struct {
 
 	// The status of the cache cluster for the stage, if enabled.
 	CacheClusterStatus *string `locationName:"cacheClusterStatus" type:"string" enum:"CacheClusterStatus"`
+
+	// Settings for the canary deployment in this stage.
+	CanarySettings *CanarySettings `locationName:"canarySettings" type:"structure"`
 
 	// The identifier of a client certificate for an API stage.
 	ClientCertificateId *string `locationName:"clientCertificateId" type:"string"`
@@ -20136,6 +20262,12 @@ func (s *Stage) SetCacheClusterSize(v string) *Stage {
 // SetCacheClusterStatus sets the CacheClusterStatus field's value.
 func (s *Stage) SetCacheClusterStatus(v string) *Stage {
 	s.CacheClusterStatus = &v
+	return s
+}
+
+// SetCanarySettings sets the CanarySettings field's value.
+func (s *Stage) SetCanarySettings(v *CanarySettings) *Stage {
+	s.CanarySettings = v
 	return s
 }
 

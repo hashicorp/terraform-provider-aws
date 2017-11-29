@@ -96,7 +96,8 @@ func (c *Lambda) AddPermissionRequest(input *AddPermissionInput) (req *request.R
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodePolicyLengthExceededException "PolicyLengthExceededException"
 //   Lambda function access policy is limited to 20 KB.
@@ -198,7 +199,8 @@ func (c *Lambda) CreateAliasRequest(input *CreateAliasInput) (req *request.Reque
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -310,7 +312,8 @@ func (c *Lambda) CreateEventSourceMappingRequest(input *CreateEventSourceMapping
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeResourceConflictException "ResourceConflictException"
 //   The resource already exists.
@@ -414,7 +417,8 @@ func (c *Lambda) CreateFunctionRequest(input *CreateFunctionInput) (req *request
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   The resource (for example, a Lambda function or access policy statement)
@@ -517,7 +521,8 @@ func (c *Lambda) DeleteAliasRequest(input *DeleteAliasInput) (req *request.Reque
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -613,7 +618,8 @@ func (c *Lambda) DeleteEventSourceMappingRequest(input *DeleteEventSourceMapping
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -721,7 +727,8 @@ func (c *Lambda) DeleteFunctionRequest(input *DeleteFunctionInput) (req *request
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeResourceConflictException "ResourceConflictException"
 //   The resource already exists.
@@ -905,7 +912,8 @@ func (c *Lambda) GetAliasRequest(input *GetAliasInput) (req *request.Request, ou
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -1000,7 +1008,8 @@ func (c *Lambda) GetEventSourceMappingRequest(input *GetEventSourceMappingInput)
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -1106,7 +1115,8 @@ func (c *Lambda) GetFunctionRequest(input *GetFunctionInput) (req *request.Reque
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunction
 func (c *Lambda) GetFunction(input *GetFunctionInput) (*GetFunctionOutput, error) {
@@ -1210,7 +1220,8 @@ func (c *Lambda) GetFunctionConfigurationRequest(input *GetFunctionConfiguration
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunctionConfiguration
 func (c *Lambda) GetFunctionConfiguration(input *GetFunctionConfigurationInput) (*FunctionConfiguration, error) {
@@ -1309,7 +1320,8 @@ func (c *Lambda) GetPolicyRequest(input *GetPolicyInput) (req *request.Request, 
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetPolicy
 func (c *Lambda) GetPolicy(input *GetPolicyInput) (*GetPolicyOutput, error) {
@@ -1422,7 +1434,8 @@ func (c *Lambda) InvokeRequest(input *InvokeInput) (req *request.Request, output
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeEC2UnexpectedException "EC2UnexpectedException"
 //   AWS Lambda received an unexpected EC2 client exception while setting up for
@@ -1663,7 +1676,8 @@ func (c *Lambda) ListAliasesRequest(input *ListAliasesInput) (req *request.Reque
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -1773,7 +1787,8 @@ func (c *Lambda) ListEventSourceMappingsRequest(input *ListEventSourceMappingsIn
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -1927,7 +1942,8 @@ func (c *Lambda) ListFunctionsRequest(input *ListFunctionsInput) (req *request.R
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListFunctions
 func (c *Lambda) ListFunctions(input *ListFunctionsInput) (*ListFunctionsOutput, error) {
@@ -2068,7 +2084,8 @@ func (c *Lambda) ListTagsRequest(input *ListTagsInput) (req *request.Request, ou
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -2161,7 +2178,8 @@ func (c *Lambda) ListVersionsByFunctionRequest(input *ListVersionsByFunctionInpu
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -2257,7 +2275,8 @@ func (c *Lambda) PublishVersionRequest(input *PublishVersionInput) (req *request
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -2366,7 +2385,8 @@ func (c *Lambda) RemovePermissionRequest(input *RemovePermissionInput) (req *req
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -2462,7 +2482,8 @@ func (c *Lambda) TagResourceRequest(input *TagResourceInput) (req *request.Reque
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -2557,7 +2578,8 @@ func (c *Lambda) UntagResourceRequest(input *UntagResourceInput) (req *request.R
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -2653,7 +2675,8 @@ func (c *Lambda) UpdateAliasRequest(input *UpdateAliasInput) (req *request.Reque
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -2761,7 +2784,8 @@ func (c *Lambda) UpdateEventSourceMappingRequest(input *UpdateEventSourceMapping
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -2864,7 +2888,8 @@ func (c *Lambda) UpdateFunctionCodeRequest(input *UpdateFunctionCodeInput) (req 
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -2969,7 +2994,8 @@ func (c *Lambda) UpdateFunctionConfigurationRequest(input *UpdateFunctionConfigu
 //   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
 //   API, that AWS Lambda is unable to assume you will get this exception. You
 //   will also get this exception if you have selected a deprecated runtime, such
-//   as Node v0.10.42.
+//   as Node v0.10.42 or if you point to an additional version when the version
+//   specified is $LATEST.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
@@ -3016,7 +3042,7 @@ type AccountLimit struct {
 	// Number of simultaneous executions of your function per region. For more information
 	// or to request a limit increase for concurrent executions, see Lambda Function
 	// Concurrent Executions (http://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html).
-	// The default limit is 100.
+	// The default limit is 1000.
 	ConcurrentExecutions *int64 `type:"integer"`
 
 	// Maximum size, in bytes, of a code package you can upload per region. The
@@ -3308,6 +3334,11 @@ type AliasConfiguration struct {
 
 	// Alias name.
 	Name *string `min:"1" type:"string"`
+
+	// Specifies an additional function versions the alias points to, allowing you
+	// to dictate what percentage of traffic will invoke each version. For more
+	// information, see lambda-traffic-shifting-using-aliases.
+	RoutingConfig *AliasRoutingConfiguration `type:"structure"`
 }
 
 // String returns the string representation
@@ -3344,6 +3375,40 @@ func (s *AliasConfiguration) SetName(v string) *AliasConfiguration {
 	return s
 }
 
+// SetRoutingConfig sets the RoutingConfig field's value.
+func (s *AliasConfiguration) SetRoutingConfig(v *AliasRoutingConfiguration) *AliasConfiguration {
+	s.RoutingConfig = v
+	return s
+}
+
+// The parent object that implements what percentage of traffic will invoke
+// each function version. For more information, see lambda-traffic-shifting-using-aliases.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/AliasRoutingConfiguration
+type AliasRoutingConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// Set this property value to dictate what percentage of traffic will invoke
+	// the updated function version. If set to an empty string, 100 percent of traffic
+	// will invoke function-version.
+	AdditionalVersionWeights map[string]*float64 `type:"map"`
+}
+
+// String returns the string representation
+func (s AliasRoutingConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AliasRoutingConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetAdditionalVersionWeights sets the AdditionalVersionWeights field's value.
+func (s *AliasRoutingConfiguration) SetAdditionalVersionWeights(v map[string]*float64) *AliasRoutingConfiguration {
+	s.AdditionalVersionWeights = v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/CreateAliasRequest
 type CreateAliasInput struct {
 	_ struct{} `type:"structure"`
@@ -3367,6 +3432,11 @@ type CreateAliasInput struct {
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
+
+	// Specifies an additional version your alias can point to, allowing you to
+	// dictate what percentage of traffic will invoke each version. For more information,
+	// see lambda-traffic-shifting-using-aliases.
+	RoutingConfig *AliasRoutingConfiguration `type:"structure"`
 }
 
 // String returns the string representation
@@ -3428,6 +3498,12 @@ func (s *CreateAliasInput) SetFunctionVersion(v string) *CreateAliasInput {
 // SetName sets the Name field's value.
 func (s *CreateAliasInput) SetName(v string) *CreateAliasInput {
 	s.Name = &v
+	return s
+}
+
+// SetRoutingConfig sets the RoutingConfig field's value.
+func (s *CreateAliasInput) SetRoutingConfig(v *AliasRoutingConfiguration) *CreateAliasInput {
+	s.RoutingConfig = v
 	return s
 }
 
@@ -4758,7 +4834,7 @@ type GetFunctionInput struct {
 	// FunctionName is a required field
 	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
 
-	// Using this optional parameter to specify a function version or an alias name.
+	// Use this optional parameter to specify a function version or an alias name.
 	// If you specify function version, the API uses qualified function ARN for
 	// the request and returns information about the specific Lambda function version.
 	// If you specify an alias name, the API uses the alias ARN and returns information
@@ -5037,7 +5113,8 @@ type InvokeInput struct {
 	// of a ClientContext JSON, see PutEvents (http://docs.aws.amazon.com/mobileanalytics/latest/ug/PutEvents.html)
 	// in the Amazon Mobile Analytics API Reference and User Guide.
 	//
-	// The ClientContext JSON must be base64-encoded.
+	// The ClientContext JSON must be base64-encoded and has a maximum size of 3583
+	// bytes.
 	ClientContext *string `location:"header" locationName:"X-Amz-Client-Context" type:"string"`
 
 	// The Lambda function name.
@@ -5150,6 +5227,10 @@ func (s *InvokeInput) SetQualifier(v string) *InvokeInput {
 type InvokeOutput struct {
 	_ struct{} `type:"structure" payload:"Payload"`
 
+	// The function version that has been executed. This value is returned only
+	// if the invocation type is RequestResponse.
+	ExecutedVersion *string `location:"header" locationName:"X-Amz-Executed-Version" min:"1" type:"string"`
+
 	// Indicates whether an error occurred while executing the Lambda function.
 	// If an error occurred this field will have one of two values; Handled or Unhandled.
 	// Handled errors are errors that are reported by the function while the Unhandled
@@ -5186,6 +5267,12 @@ func (s InvokeOutput) String() string {
 // GoString returns the string representation
 func (s InvokeOutput) GoString() string {
 	return s.String()
+}
+
+// SetExecutedVersion sets the ExecutedVersion field's value.
+func (s *InvokeOutput) SetExecutedVersion(v string) *InvokeOutput {
+	s.ExecutedVersion = &v
+	return s
 }
 
 // SetFunctionError sets the FunctionError field's value.
@@ -5449,7 +5536,7 @@ type ListFunctionsInput struct {
 	//
 	// Valid value:
 	//
-	// ALL _ Will return all versions, including $LATEST which will have fully qualified
+	// ALL: Will return all versions, including $LATEST which will have fully qualified
 	// ARNs (Amazon Resource Names).
 	FunctionVersion *string `location:"querystring" locationName:"FunctionVersion" type:"string" enum:"FunctionVersion"`
 
@@ -5465,7 +5552,7 @@ type ListFunctionsInput struct {
 	// The region from which the functions are replicated. For example, if you specify
 	// us-east-1, only functions replicated from that region will be returned.
 	//
-	// ALL _ Will return all functions from any region. If specified, you also must
+	// ALL: Will return all functions from any region. If specified, you also must
 	// specify a valid FunctionVersion parameter.
 	MasterRegion *string `location:"querystring" locationName:"MasterRegion" type:"string"`
 
@@ -5726,9 +5813,10 @@ type PublishVersionInput struct {
 	_ struct{} `type:"structure"`
 
 	// The SHA256 hash of the deployment package you want to publish. This provides
-	// validation on the code you are publishing. If you provide this parameter
-	// value must match the SHA256 of the $LATEST version for the publication to
-	// succeed.
+	// validation on the code you are publishing. If you provide this parameter,
+	// the value must match the SHA256 of the $LATEST version for the publication
+	// to succeed. You can use the DryRun parameter of UpdateFunctionCode to verify
+	// the hash value that will be returned before publishing your new version.
 	CodeSha256 *string `type:"string"`
 
 	// The description for the version you are publishing. If not provided, AWS
@@ -6097,6 +6185,11 @@ type UpdateAliasInput struct {
 	//
 	// Name is a required field
 	Name *string `location:"uri" locationName:"Name" min:"1" type:"string" required:"true"`
+
+	// Specifies an additional version your alias can point to, allowing you to
+	// dictate what percentage of traffic will invoke each version. For more information,
+	// see lambda-traffic-shifting-using-aliases.
+	RoutingConfig *AliasRoutingConfiguration `type:"structure"`
 }
 
 // String returns the string representation
@@ -6155,6 +6248,12 @@ func (s *UpdateAliasInput) SetFunctionVersion(v string) *UpdateAliasInput {
 // SetName sets the Name field's value.
 func (s *UpdateAliasInput) SetName(v string) *UpdateAliasInput {
 	s.Name = &v
+	return s
+}
+
+// SetRoutingConfig sets the RoutingConfig field's value.
+func (s *UpdateAliasInput) SetRoutingConfig(v *AliasRoutingConfiguration) *UpdateAliasInput {
+	s.RoutingConfig = v
 	return s
 }
 
@@ -6254,8 +6353,8 @@ type UpdateFunctionCodeInput struct {
 	// update the Lambda function and publish a version as an atomic operation.
 	// It will do all necessary computation and validation of your code but will
 	// not upload it or a publish a version. Each time this operation is invoked,
-	// the CodeSha256 hash value the provided code will also be computed and returned
-	// in the response.
+	// the CodeSha256 hash value of the provided code will also be computed and
+	// returned in the response.
 	DryRun *bool `type:"boolean"`
 
 	// The existing Lambda function name whose code you want to replace.
