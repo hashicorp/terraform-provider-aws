@@ -58,6 +58,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
@@ -172,6 +173,7 @@ type AWSClient struct {
 	elastictranscoderconn *elastictranscoder.ElasticTranscoder
 	lambdaconn            *lambda.Lambda
 	lightsailconn         *lightsail.Lightsail
+	mqconn                *mq.MQ
 	opsworksconn          *opsworks.OpsWorks
 	glacierconn           *glacier.Glacier
 	codebuildconn         *codebuild.CodeBuild
@@ -406,6 +408,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.kmsconn = kms.New(awsKmsSess)
 	client.lambdaconn = lambda.New(sess)
 	client.lightsailconn = lightsail.New(sess)
+	client.mqconn = mq.New(sess)
 	client.opsworksconn = opsworks.New(sess)
 	client.r53conn = route53.New(r53Sess)
 	client.rdsconn = rds.New(awsRdsSess)

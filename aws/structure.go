@@ -27,6 +27,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -2901,4 +2902,132 @@ func canonicalXML(s string) (string, error) {
 	re := regexp.MustCompile(`\s`)
 	results := re.ReplaceAllString(rawString, "")
 	return results, nil
+}
+
+func expandMqUsers(cfg []interface{}) []*mq.User {
+	users := make([]*mq.User, len(cfg), len(cfg))
+	for i, m := range cfg {
+		u := m.(map[string]interface{})
+		user := mq.User{
+			Username: aws.String(u["username"].(string)),
+			Password: aws.String(u["password"].(string)),
+		}
+		if v, ok := u["console_access"]; ok {
+			user.ConsoleAccess = aws.Bool(v.(bool))
+		}
+		if v, ok := u["groups"]; ok {
+			user.Groups = expandStringList(v.(*schema.Set).List())
+		}
+		users[i] = &user
+	}
+	return users
+}
+
+// We use cfgdUsers to get & set the password
+func flattenMqUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
+	existingPairs := make(map[string]string, 0)
+	for _, u := range cfgUsers {
+		user := u.(map[string]interface{})
+		username := user["username"].(string)
+		existingPairs[username] = user["password"].(string)
+	}
+
+	out := make([]interface{}, 0)
+	for _, u := range users {
+		password := ""
+		if p, ok := existingPairs[*u.Username]; ok {
+			password = p
+		}
+		m := map[string]interface{}{
+			"username": *u.Username,
+			"password": password,
+		}
+		if u.ConsoleAccess != nil {
+			m["console_access"] = *u.ConsoleAccess
+		}
+		if len(u.Groups) > 0 {
+			m["groups"] = schema.NewSet(schema.HashString, flattenStringList(u.Groups))
+		}
+		out = append(out, m)
+	}
+	return schema.NewSet(resourceAwsMqUserHash, out)
+}
+
+func expandMqWeeklyStartTime(cfg []interface{}) *mq.WeeklyStartTime {
+	if len(cfg) < 1 {
+		return nil
+	}
+
+	m := cfg[0].(map[string]interface{})
+	return &mq.WeeklyStartTime{
+		DayOfWeek: aws.String(m["day_of_week"].(string)),
+		TimeOfDay: aws.String(m["time_of_day"].(string)),
+		TimeZone:  aws.String(m["time_zone"].(string)),
+	}
+}
+
+func flattenMqWeeklyStartTime(wst *mq.WeeklyStartTime) []interface{} {
+	if wst == nil {
+		return []interface{}{}
+	}
+	m := make(map[string]interface{}, 0)
+	if wst.DayOfWeek != nil {
+		m["day_of_week"] = *wst.DayOfWeek
+	}
+	if wst.TimeOfDay != nil {
+		m["time_of_day"] = *wst.TimeOfDay
+	}
+	if wst.TimeZone != nil {
+		m["time_zone"] = *wst.TimeZone
+	}
+	return []interface{}{m}
+}
+
+func expandMqConfigurationId(cfg []interface{}) *mq.ConfigurationId {
+	if len(cfg) < 1 {
+		return nil
+	}
+
+	m := cfg[0].(map[string]interface{})
+	out := mq.ConfigurationId{
+		Id: aws.String(m["id"].(string)),
+	}
+	if v, ok := m["revision"].(int); ok && v > 0 {
+		out.Revision = aws.Int64(int64(v))
+	}
+
+	return &out
+}
+
+func flattenMqConfigurationId(cid *mq.ConfigurationId) []interface{} {
+	if cid == nil {
+		return []interface{}{}
+	}
+	m := make(map[string]interface{}, 0)
+	if cid.Id != nil {
+		m["id"] = *cid.Id
+	}
+	if cid.Revision != nil {
+		m["revision"] = *cid.Revision
+	}
+	return []interface{}{m}
+}
+
+func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
+	if len(instances) == 0 {
+		return []interface{}{}
+	}
+	l := make([]interface{}, len(instances), len(instances))
+	for i, instance := range instances {
+		m := make(map[string]interface{}, 0)
+		if instance.ConsoleURL != nil {
+			m["console_url"] = *instance.ConsoleURL
+		}
+		if len(instance.Endpoints) > 0 {
+			m["endpoints"] = aws.StringValueSlice(instance.Endpoints)
+		}
+		l[i] = m
+	}
+
+	return l
 }
