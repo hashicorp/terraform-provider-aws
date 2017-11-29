@@ -1,9 +1,9 @@
-## 1.5.0 (Unreleased)
+## 1.5.0 (November 29, 2017)
 
 FEATURES:
 
-* **New Resource:** `aws_mq_broker` [GH-2466]
-* **New Resource:** `aws_mq_configuration` [GH-2466]
+* **New Resource:** `aws_mq_broker` ([#2466](https://github.com/terraform-providers/terraform-provider-aws/issues/2466))
+* **New Resource:** `aws_mq_configuration` ([#2466](https://github.com/terraform-providers/terraform-provider-aws/issues/2466))
 
 ## 1.4.0 (November 29, 2017)
 
