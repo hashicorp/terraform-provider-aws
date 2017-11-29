@@ -51,9 +51,9 @@ The following arguments are supported:
 
 ##### Invite Message template
 
-  * `email_message` (Optional) - The message template for email messages. Must contain `{username}` and `{####}` placeholders.
+  * `email_message` (Optional) - The message template for email messages. Must contain `{username}` and `{####}` placeholders, for username and temporary password, respectively.
   * `email_subject` (Optional) - The subject line for email messages.
-  * `sms_message` (Optional) - The message template for SMS messages. Must contain `{username}` and `{####}` placeholders.
+  * `sms_message` (Optional) - The message template for SMS messages. Must contain `{username}` and `{####}` placeholders, for username and temporary password, respectively.
 
 #### Device Configuration
 
