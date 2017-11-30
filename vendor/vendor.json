@@ -685,6 +685,14 @@
 			"versionExact": "v1.12.37"
 		},
 		{
+			"checksumSHA1": "pUw08vq4ypW0qg5np1bZBPUdFhk=",
+			"path": "github.com/aws/aws-sdk-go/service/guardduty",
+			"revision": "b00fb575f3373d28ad8b5d259e12f2314f3efa31",
+			"revisionTime": "2017-11-30T18:49:58Z",
+			"version": "v1.12.38",
+			"versionExact": "v1.12.38"
+		},
+		{
 			"checksumSHA1": "HBlNyNP2zLI589MIX82zMvANmLY=",
 			"path": "github.com/aws/aws-sdk-go/service/iam",
 			"revision": "83e491e1ee74c797ee52c228b654601ba6702c31",
