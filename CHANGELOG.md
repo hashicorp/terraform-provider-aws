@@ -1,4 +1,9 @@
 ## 1.5.1 (Unreleased)
+
+BUG FIXES:
+
+* resource/elasticache_parameter_group: Add StateFunc to make name lowercase [GH-2426]
+
 ## 1.5.0 (November 29, 2017)
 
 FEATURES:
