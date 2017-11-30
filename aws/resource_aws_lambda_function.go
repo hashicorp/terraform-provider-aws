@@ -88,6 +88,10 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Optional: true,
 				Default:  128,
 			},
+			"reserved_concurrent_executions": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"role": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -205,6 +209,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).lambdaconn
 
 	functionName := d.Get("function_name").(string)
+	reservedConcurrentExecutions := d.Get("reserved_concurrent_executions").(int)
 	iamRole := d.Get("role").(string)
 
 	log.Printf("[DEBUG] Creating Lambda Function %s with role %s", functionName, iamRole)
@@ -355,6 +360,21 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error creating Lambda function: %s", err)
 	}
 
+	if reservedConcurrentExecutions > 0 {
+
+		log.Printf("[DEBUG] Setting Concurrency to %d for the Lambda Function %s", reservedConcurrentExecutions, functionName)
+
+		concurrencyParams := &lambda.PutFunctionConcurrencyInput{
+			FunctionName:                 aws.String(functionName),
+			ReservedConcurrentExecutions: aws.Int64(int64(reservedConcurrentExecutions)),
+		}
+
+		_, err := conn.PutFunctionConcurrency(concurrencyParams)
+		if err != nil {
+			return fmt.Errorf("Error setting concurrency for Lambda %s: %s", functionName, err)
+		}
+	}
+
 	d.SetId(d.Get("function_name").(string))
 
 	return resourceAwsLambdaFunctionRead(d, meta)
@@ -452,6 +472,12 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("qualified_arn", lastQualifiedArn)
 
 	d.Set("invoke_arn", buildLambdaInvokeArn(*function.FunctionArn, meta.(*AWSClient).region))
+
+	if getFunctionOutput.Concurrency != nil {
+		d.Set("reserved_concurrent_executions", getFunctionOutput.Concurrency.ReservedConcurrentExecutions)
+	} else {
+		d.Set("reserved_concurrent_executions", nil)
+	}
 
 	return nil
 }
@@ -665,6 +691,34 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		d.SetPartial("s3_bucket")
 		d.SetPartial("s3_key")
 		d.SetPartial("s3_object_version")
+	}
+
+	if d.HasChange("reserved_concurrent_executions") {
+		nc := d.Get("reserved_concurrent_executions")
+
+		if nc.(int) > 0 {
+			log.Printf("[DEBUG] Updating Concurrency to %d for the Lambda Function %s", nc.(int), d.Id())
+
+			concurrencyParams := &lambda.PutFunctionConcurrencyInput{
+				FunctionName:                 aws.String(d.Id()),
+				ReservedConcurrentExecutions: aws.Int64(int64(d.Get("reserved_concurrent_executions").(int))),
+			}
+
+			_, err := conn.PutFunctionConcurrency(concurrencyParams)
+			if err != nil {
+				return fmt.Errorf("Error setting concurrency for Lambda %s: %s", d.Id(), err)
+			}
+		} else {
+			log.Printf("[DEBUG] Removing Concurrency for the Lambda Function %s", d.Id())
+
+			deleteConcurrencyParams := &lambda.DeleteFunctionConcurrencyInput{
+				FunctionName: aws.String(d.Id()),
+			}
+			_, err := conn.DeleteFunctionConcurrency(deleteConcurrencyParams)
+			if err != nil {
+				return fmt.Errorf("Error setting concurrency for Lambda %s: %s", d.Id(), err)
+			}
+		}
 	}
 
 	d.Partial(false)
