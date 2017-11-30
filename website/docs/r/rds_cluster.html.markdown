@@ -6,7 +6,7 @@ description: |-
   Provides an RDS Cluster Resource
 ---
 
-# aws\_rds\_cluster
+# aws_rds_cluster
 
 Provides an RDS Cluster Resource. A Cluster Resource defines attributes that are
 applied to the entire cluster of [RDS Cluster Instances][3]. Use the RDS Cluster
@@ -55,9 +55,7 @@ The following arguments are supported:
 
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifer`.
-* `database_name` - (Optional) The name for your database of up to 8 alpha-numeric
-  characters. If you do not provide a name, Amazon RDS will not create a
-  database in the DB cluster you are creating
+* `database_name` - (Optional) Name for an automatically created database on cluster creation. There are different naming restrictions per database engine: [RDS Naming Constraints][5]
 * `master_password` - (Required unless a `snapshot_identifier` is provided) Password for the master DB user. Note that this may
     show up in logs, and it will be stored in the state file
 * `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user
@@ -120,6 +118,7 @@ load-balanced across replicas
 [2]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Aurora.html
 [3]: /docs/providers/aws/r/rds_cluster_instance.html
 [4]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
+[5]: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints
 
 ## Timeouts
 
