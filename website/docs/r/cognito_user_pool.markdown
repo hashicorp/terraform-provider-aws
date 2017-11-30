@@ -40,7 +40,7 @@ The following arguments are supported:
 * `sms_configuration` (Optional) - The [SMS Configuration](#sms-configuration).
 * `sms_verification_message` - (Optional) A string representing the SMS verification message.
 * `tags` - (Optional) A mapping of tags to assign to the User Pool.
-* `username_attributes` - (Optional) pecifies whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `alias_attributes`.
+* `username_attributes` - (Optional) Specifies whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `alias_attributes`.
 * `verification_message_template` (Optional) - The [verification message templates](#verification-message-template) configuration.
 
 #### Admin Create User Config
