@@ -27,6 +27,12 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 				Computed: true,
 			},
 
+			"cpu": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+
 			"family": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -54,6 +60,12 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 			},
 
 			"task_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+
+			"memory": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -109,6 +121,14 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 					},
 				},
 			},
+
+			"requires_compatibilities": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 		},
 	}
 }
@@ -155,6 +175,14 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 		input.TaskRoleArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("cpu"); ok {
+		input.Cpu = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("memory"); ok {
+		input.Memory = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("network_mode"); ok {
 		input.NetworkMode = aws.String(v.(string))
 	}
@@ -183,6 +211,10 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 			})
 		}
 		input.PlacementConstraints = pc
+	}
+
+	if v, ok := d.GetOk("requires_compatibilities"); ok && v.(*schema.Set).Len() > 0 {
+		input.RequiresCompatibilities = expandStringList(v.(*schema.Set).List())
 	}
 
 	log.Printf("[DEBUG] Registering ECS task definition: %s", input)
@@ -231,10 +263,17 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
+	d.Set("cpu", taskDefinition.Cpu)
+	d.Set("memory", taskDefinition.Memory)
 	d.Set("network_mode", taskDefinition.NetworkMode)
 	d.Set("volumes", flattenEcsVolumes(taskDefinition.Volumes))
 	if err := d.Set("placement_constraints", flattenPlacementConstraints(taskDefinition.PlacementConstraints)); err != nil {
 		log.Printf("[ERR] Error setting placement_constraints for (%s): %s", d.Id(), err)
+	}
+
+	d.Set("requires_compatibilities", taskDefinition.RequiresCompatibilities)
+	if err := d.Set("requires_compatibilities", flattenStringList(taskDefinition.RequiresCompatibilities)); err != nil {
+		log.Printf("[ERR] Error setting requires_compatibilities for (%s): %s", d.Id(), err)
 	}
 
 	return nil

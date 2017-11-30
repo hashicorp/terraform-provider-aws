@@ -49,6 +49,12 @@ func resourceAwsEcsService() *schema.Resource {
 				Optional: true,
 			},
 
+			"launch_type": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
+
 			"iam_role": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -206,6 +212,10 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		input.Cluster = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("launch_type"); ok {
+		input.LaunchType = aws.String(v.(string))
+	}
+
 	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
 	if len(loadBalancers) > 0 {
 		log.Printf("[DEBUG] Adding ECS load balancers: %s", loadBalancers)
@@ -341,6 +351,8 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("desired_count", service.DesiredCount)
+
+	d.Set("launch_type", service.LaunchType)
 
 	// Save cluster in the same format
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*AWSClient).partition+":ecs:") {

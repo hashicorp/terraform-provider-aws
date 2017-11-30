@@ -181,6 +181,28 @@ func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsTaskDefinition_Fargate(t *testing.T) {
+	var conf ecs.TaskDefinition
+	familyName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionFargate(familyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.fargate", &conf),
+					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "requires_compatibilities.#", "1"),
+					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "cpu", "256"),
+					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "memory", "512"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckEcsTaskDefinitionRecreated(t *testing.T,
 	before, after *ecs.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -549,6 +571,30 @@ TASK_DEFINITION
     name = "vol3"
     host_path = "/host/vol3"
   }
+}
+`, familyName)
+}
+
+func testAccAWSEcsTaskDefinitionFargate(familyName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "fargate" {
+	family                   = "%s"
+	network_mode             = "awsvpc"
+	requires_compatibilities = ["FARGATE"]
+	cpu                      = "256"
+	memory                   = "512"
+	container_definitions = <<TASK_DEFINITION
+	[
+		{
+			"name": "sleep",
+			"image": "busybox",
+			"cpu": 10,
+			"command": ["sleep","360"],
+			"memory": 10,
+			"essential": true
+		}
+	]
+TASK_DEFINITION
 }
 `, familyName)
 }

@@ -70,6 +70,7 @@ Load balancers support the following:
 * `target_group_arn` - (Required for ALB) The ARN of the ALB target group to associate with the service.
 * `container_name` - (Required) The name of the container to associate with the load balancer (as it appears in a container definition).
 * `container_port` - (Required) The port on the container to associate with the load balancer.
+* `launch_type` - (Optional) The launch type on which to run your service. The valid values are `EC2` and `FARGATE`. Defaults to `EC2`.
 
 ## placement_strategy
 
