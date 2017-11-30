@@ -741,6 +741,46 @@
 			"versionExact": "v1.12.35"
 		},
 		{
+			"checksumSHA1": "gSpDdjt2R3cME3YZWOF4SZ/mrJ8=",
+			"path": "github.com/aws/aws-sdk-go/service/mediaconvert",
+			"revision": "80bf27afd5602f55c398d43621b9900583df3661",
+			"revisionTime": "2017-11-29T07:44:19Z",
+			"version": "v1.12.35",
+			"versionExact": "v1.12.35"
+		},
+		{
+			"checksumSHA1": "42hWUchiIBN8VvWSPzi9QcHoDVk=",
+			"path": "github.com/aws/aws-sdk-go/service/medialive",
+			"revision": "80bf27afd5602f55c398d43621b9900583df3661",
+			"revisionTime": "2017-11-29T07:44:19Z",
+			"version": "v1.12.35",
+			"versionExact": "v1.12.35"
+		},
+		{
+			"checksumSHA1": "tN30knTZ2ALjKm4IDU6jK+kYqtE=",
+			"path": "github.com/aws/aws-sdk-go/service/mediapackage",
+			"revision": "80bf27afd5602f55c398d43621b9900583df3661",
+			"revisionTime": "2017-11-29T07:44:19Z",
+			"version": "v1.12.35",
+			"versionExact": "v1.12.35"
+		},
+		{
+			"checksumSHA1": "4Uq/ZoglG76ZQ16gLnnpO1Ga3Ak=",
+			"path": "github.com/aws/aws-sdk-go/service/mediastore",
+			"revision": "80bf27afd5602f55c398d43621b9900583df3661",
+			"revisionTime": "2017-11-29T07:44:19Z",
+			"version": "v1.12.35",
+			"versionExact": "v1.12.35"
+		},
+		{
+			"checksumSHA1": "n+Jxsi0zhH+TYMTm+JIJfpVrJGQ=",
+			"path": "github.com/aws/aws-sdk-go/service/mediastoredata",
+			"revision": "80bf27afd5602f55c398d43621b9900583df3661",
+			"revisionTime": "2017-11-29T07:44:19Z",
+			"version": "v1.12.35",
+			"versionExact": "v1.12.35"
+		},
+		{
 			"checksumSHA1": "75LM8oENH3zGsQhNKuwIfEjXRDw=",
 			"path": "github.com/aws/aws-sdk-go/service/mq",
 			"revision": "80bf27afd5602f55c398d43621b9900583df3661",
