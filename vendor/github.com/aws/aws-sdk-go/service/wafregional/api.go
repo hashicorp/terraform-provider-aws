@@ -1134,6 +1134,112 @@ func (c *WAFRegional) CreateRuleWithContext(ctx aws.Context, input *waf.CreateRu
 	return out, req.Send()
 }
 
+const opCreateRuleGroup = "CreateRuleGroup"
+
+// CreateRuleGroupRequest generates a "aws/request.Request" representing the
+// client's request for the CreateRuleGroup operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateRuleGroup for more information on using the CreateRuleGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateRuleGroupRequest method.
+//    req, resp := client.CreateRuleGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/CreateRuleGroup
+func (c *WAFRegional) CreateRuleGroupRequest(input *waf.CreateRuleGroupInput) (req *request.Request, output *waf.CreateRuleGroupOutput) {
+	op := &request.Operation{
+		Name:       opCreateRuleGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &waf.CreateRuleGroupInput{}
+	}
+
+	output = &waf.CreateRuleGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateRuleGroup API operation for AWS WAF Regional.
+//
+// Creates a RuleGroup. A rule group is a collection of predefined rules that
+// you add to a web ACL. You use UpdateRuleGroup to add rules to the rule group.
+//
+// Rule groups are subject to the following limits:
+//
+//    * Three rule groups per account. You can request an increase to this limit
+//    by contacting customer support.
+//
+//    * One rule group per web ACL.
+//
+//    * Ten rules per rule group.
+//
+// For more information about how to use the AWS WAF API to allow or block HTTP
+// requests, see the AWS WAF Developer Guide (http://docs.aws.amazon.com/waf/latest/developerguide/).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF Regional's
+// API operation CreateRuleGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeWAFStaleDataException "WAFStaleDataException"
+//   The operation failed because you tried to create, update, or delete an object
+//   by using a change token that has already been used.
+//
+//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeWAFDisallowedNameException "WAFDisallowedNameException"
+//   The name specified is invalid.
+//
+//   * ErrCodeWAFLimitsExceededException "WAFLimitsExceededException"
+//   The operation exceeds a resource limit, for example, the maximum number of
+//   WebACL objects that you can create for an AWS account. For more information,
+//   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
+//   in the AWS WAF Developer Guide.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/CreateRuleGroup
+func (c *WAFRegional) CreateRuleGroup(input *waf.CreateRuleGroupInput) (*waf.CreateRuleGroupOutput, error) {
+	req, out := c.CreateRuleGroupRequest(input)
+	return out, req.Send()
+}
+
+// CreateRuleGroupWithContext is the same as CreateRuleGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateRuleGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAFRegional) CreateRuleGroupWithContext(ctx aws.Context, input *waf.CreateRuleGroupInput, opts ...request.Option) (*waf.CreateRuleGroupOutput, error) {
+	req, out := c.CreateRuleGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateSizeConstraintSet = "CreateSizeConstraintSet"
 
 // CreateSizeConstraintSetRequest generates a "aws/request.Request" representing the
@@ -2597,6 +2703,127 @@ func (c *WAFRegional) DeleteRule(input *waf.DeleteRuleInput) (*waf.DeleteRuleOut
 // for more information on using Contexts.
 func (c *WAFRegional) DeleteRuleWithContext(ctx aws.Context, input *waf.DeleteRuleInput, opts ...request.Option) (*waf.DeleteRuleOutput, error) {
 	req, out := c.DeleteRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteRuleGroup = "DeleteRuleGroup"
+
+// DeleteRuleGroupRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteRuleGroup operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteRuleGroup for more information on using the DeleteRuleGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteRuleGroupRequest method.
+//    req, resp := client.DeleteRuleGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/DeleteRuleGroup
+func (c *WAFRegional) DeleteRuleGroupRequest(input *waf.DeleteRuleGroupInput) (req *request.Request, output *waf.DeleteRuleGroupOutput) {
+	op := &request.Operation{
+		Name:       opDeleteRuleGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &waf.DeleteRuleGroupInput{}
+	}
+
+	output = &waf.DeleteRuleGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteRuleGroup API operation for AWS WAF Regional.
+//
+// Permanently deletes a RuleGroup. You can't delete a RuleGroup if it's still
+// used in any WebACL objects or if it still includes any rules.
+//
+// If you just want to remove a RuleGroup from a WebACL, use UpdateWebACL.
+//
+// To permanently delete a RuleGroup from AWS WAF, perform the following steps:
+//
+// Update the RuleGroup to remove rules, if any. For more information, see UpdateRuleGroup.
+//
+// Use GetChangeToken to get the change token that you provide in the ChangeToken
+// parameter of a DeleteRuleGroup request.
+//
+// Submit a DeleteRuleGroup request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF Regional's
+// API operation DeleteRuleGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeWAFStaleDataException "WAFStaleDataException"
+//   The operation failed because you tried to create, update, or delete an object
+//   by using a change token that has already been used.
+//
+//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+//   * ErrCodeWAFReferencedItemException "WAFReferencedItemException"
+//   The operation failed because you tried to delete an object that is still
+//   in use. For example:
+//
+//      * You tried to delete a ByteMatchSet that is still referenced by a Rule.
+//
+//      * You tried to delete a Rule that is still referenced by a WebACL.
+//
+//   * ErrCodeWAFNonEmptyEntityException "WAFNonEmptyEntityException"
+//   The operation failed because you tried to delete an object that isn't empty.
+//   For example:
+//
+//      * You tried to delete a WebACL that still contains one or more Rule objects.
+//
+//      * You tried to delete a Rule that still contains one or more ByteMatchSet
+//      objects or other predicates.
+//
+//      * You tried to delete a ByteMatchSet that contains one or more ByteMatchTuple
+//      objects.
+//
+//      * You tried to delete an IPSet that references one or more IP addresses.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/DeleteRuleGroup
+func (c *WAFRegional) DeleteRuleGroup(input *waf.DeleteRuleGroupInput) (*waf.DeleteRuleGroupOutput, error) {
+	req, out := c.DeleteRuleGroupRequest(input)
+	return out, req.Send()
+}
+
+// DeleteRuleGroupWithContext is the same as DeleteRuleGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteRuleGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAFRegional) DeleteRuleGroupWithContext(ctx aws.Context, input *waf.DeleteRuleGroupInput, opts ...request.Option) (*waf.DeleteRuleGroupOutput, error) {
+	req, out := c.DeleteRuleGroupRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4140,6 +4367,92 @@ func (c *WAFRegional) GetRuleWithContext(ctx aws.Context, input *waf.GetRuleInpu
 	return out, req.Send()
 }
 
+const opGetRuleGroup = "GetRuleGroup"
+
+// GetRuleGroupRequest generates a "aws/request.Request" representing the
+// client's request for the GetRuleGroup operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetRuleGroup for more information on using the GetRuleGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetRuleGroupRequest method.
+//    req, resp := client.GetRuleGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/GetRuleGroup
+func (c *WAFRegional) GetRuleGroupRequest(input *waf.GetRuleGroupInput) (req *request.Request, output *waf.GetRuleGroupOutput) {
+	op := &request.Operation{
+		Name:       opGetRuleGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &waf.GetRuleGroupInput{}
+	}
+
+	output = &waf.GetRuleGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetRuleGroup API operation for AWS WAF Regional.
+//
+// Returns the RuleGroup that is specified by the RuleGroupId that you included
+// in the GetRuleGroup request.
+//
+// To view the rules in a rule group, use ListActivatedRulesInRuleGroup.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF Regional's
+// API operation GetRuleGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/GetRuleGroup
+func (c *WAFRegional) GetRuleGroup(input *waf.GetRuleGroupInput) (*waf.GetRuleGroupOutput, error) {
+	req, out := c.GetRuleGroupRequest(input)
+	return out, req.Send()
+}
+
+// GetRuleGroupWithContext is the same as GetRuleGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetRuleGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAFRegional) GetRuleGroupWithContext(ctx aws.Context, input *waf.GetRuleGroupInput, opts ...request.Option) (*waf.GetRuleGroupOutput, error) {
+	req, out := c.GetRuleGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetSampledRequests = "GetSampledRequests"
 
 // GetSampledRequestsRequest generates a "aws/request.Request" representing the
@@ -4696,6 +5009,118 @@ func (c *WAFRegional) GetXssMatchSet(input *waf.GetXssMatchSetInput) (*waf.GetXs
 // for more information on using Contexts.
 func (c *WAFRegional) GetXssMatchSetWithContext(ctx aws.Context, input *waf.GetXssMatchSetInput, opts ...request.Option) (*waf.GetXssMatchSetOutput, error) {
 	req, out := c.GetXssMatchSetRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListActivatedRulesInRuleGroup = "ListActivatedRulesInRuleGroup"
+
+// ListActivatedRulesInRuleGroupRequest generates a "aws/request.Request" representing the
+// client's request for the ListActivatedRulesInRuleGroup operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListActivatedRulesInRuleGroup for more information on using the ListActivatedRulesInRuleGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListActivatedRulesInRuleGroupRequest method.
+//    req, resp := client.ListActivatedRulesInRuleGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/ListActivatedRulesInRuleGroup
+func (c *WAFRegional) ListActivatedRulesInRuleGroupRequest(input *waf.ListActivatedRulesInRuleGroupInput) (req *request.Request, output *waf.ListActivatedRulesInRuleGroupOutput) {
+	op := &request.Operation{
+		Name:       opListActivatedRulesInRuleGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &waf.ListActivatedRulesInRuleGroupInput{}
+	}
+
+	output = &waf.ListActivatedRulesInRuleGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListActivatedRulesInRuleGroup API operation for AWS WAF Regional.
+//
+// Returns an array of ActivatedRule objects.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF Regional's
+// API operation ListActivatedRulesInRuleGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   The operation failed because AWS WAF didn't recognize a parameter in the
+//   request. For example:
+//
+//      * You specified an invalid parameter name.
+//
+//      * You specified an invalid value.
+//
+//      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
+//      using an action other than INSERT or DELETE.
+//
+//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      BLOCK, or COUNT.
+//
+//      * You tried to create a RateBasedRule with a RateKey value other than
+//      IP.
+//
+//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      BLOCK, or COUNT.
+//
+//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      HEADER, METHOD, QUERY_STRING, URI, or BODY.
+//
+//      * You tried to update a ByteMatchSet with a Field of HEADER but no value
+//      for Data.
+//
+//      * Your request references an ARN that is malformed, or corresponds to
+//      a resource with which a web ACL cannot be associated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/ListActivatedRulesInRuleGroup
+func (c *WAFRegional) ListActivatedRulesInRuleGroup(input *waf.ListActivatedRulesInRuleGroupInput) (*waf.ListActivatedRulesInRuleGroupOutput, error) {
+	req, out := c.ListActivatedRulesInRuleGroupRequest(input)
+	return out, req.Send()
+}
+
+// ListActivatedRulesInRuleGroupWithContext is the same as ListActivatedRulesInRuleGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListActivatedRulesInRuleGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAFRegional) ListActivatedRulesInRuleGroupWithContext(ctx aws.Context, input *waf.ListActivatedRulesInRuleGroupInput, opts ...request.Option) (*waf.ListActivatedRulesInRuleGroupOutput, error) {
+	req, out := c.ListActivatedRulesInRuleGroupRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5292,6 +5717,86 @@ func (c *WAFRegional) ListResourcesForWebACLWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opListRuleGroups = "ListRuleGroups"
+
+// ListRuleGroupsRequest generates a "aws/request.Request" representing the
+// client's request for the ListRuleGroups operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListRuleGroups for more information on using the ListRuleGroups
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListRuleGroupsRequest method.
+//    req, resp := client.ListRuleGroupsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/ListRuleGroups
+func (c *WAFRegional) ListRuleGroupsRequest(input *waf.ListRuleGroupsInput) (req *request.Request, output *waf.ListRuleGroupsOutput) {
+	op := &request.Operation{
+		Name:       opListRuleGroups,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &waf.ListRuleGroupsInput{}
+	}
+
+	output = &waf.ListRuleGroupsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListRuleGroups API operation for AWS WAF Regional.
+//
+// Returns an array of RuleGroup objects.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF Regional's
+// API operation ListRuleGroups for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/ListRuleGroups
+func (c *WAFRegional) ListRuleGroups(input *waf.ListRuleGroupsInput) (*waf.ListRuleGroupsOutput, error) {
+	req, out := c.ListRuleGroupsRequest(input)
+	return out, req.Send()
+}
+
+// ListRuleGroupsWithContext is the same as ListRuleGroups with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListRuleGroups for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAFRegional) ListRuleGroupsWithContext(ctx aws.Context, input *waf.ListRuleGroupsInput, opts ...request.Option) (*waf.ListRuleGroupsOutput, error) {
+	req, out := c.ListRuleGroupsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListRules = "ListRules"
 
 // ListRulesRequest generates a "aws/request.Request" representing the
@@ -5539,6 +6044,89 @@ func (c *WAFRegional) ListSqlInjectionMatchSets(input *waf.ListSqlInjectionMatch
 // for more information on using Contexts.
 func (c *WAFRegional) ListSqlInjectionMatchSetsWithContext(ctx aws.Context, input *waf.ListSqlInjectionMatchSetsInput, opts ...request.Option) (*waf.ListSqlInjectionMatchSetsOutput, error) {
 	req, out := c.ListSqlInjectionMatchSetsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListSubscribedRuleGroups = "ListSubscribedRuleGroups"
+
+// ListSubscribedRuleGroupsRequest generates a "aws/request.Request" representing the
+// client's request for the ListSubscribedRuleGroups operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListSubscribedRuleGroups for more information on using the ListSubscribedRuleGroups
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListSubscribedRuleGroupsRequest method.
+//    req, resp := client.ListSubscribedRuleGroupsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/ListSubscribedRuleGroups
+func (c *WAFRegional) ListSubscribedRuleGroupsRequest(input *waf.ListSubscribedRuleGroupsInput) (req *request.Request, output *waf.ListSubscribedRuleGroupsOutput) {
+	op := &request.Operation{
+		Name:       opListSubscribedRuleGroups,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &waf.ListSubscribedRuleGroupsInput{}
+	}
+
+	output = &waf.ListSubscribedRuleGroupsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListSubscribedRuleGroups API operation for AWS WAF Regional.
+//
+// Returns an array of RuleGroup objects that you are subscribed to.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF Regional's
+// API operation ListSubscribedRuleGroups for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/ListSubscribedRuleGroups
+func (c *WAFRegional) ListSubscribedRuleGroups(input *waf.ListSubscribedRuleGroupsInput) (*waf.ListSubscribedRuleGroupsOutput, error) {
+	req, out := c.ListSubscribedRuleGroupsRequest(input)
+	return out, req.Send()
+}
+
+// ListSubscribedRuleGroupsWithContext is the same as ListSubscribedRuleGroups with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListSubscribedRuleGroups for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAFRegional) ListSubscribedRuleGroupsWithContext(ctx aws.Context, input *waf.ListSubscribedRuleGroupsInput, opts ...request.Option) (*waf.ListSubscribedRuleGroupsOutput, error) {
+	req, out := c.ListSubscribedRuleGroupsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6580,15 +7168,15 @@ func (c *WAFRegional) UpdateRegexMatchSetRequest(input *waf.UpdateRegexMatchSetI
 
 // UpdateRegexMatchSet API operation for AWS WAF Regional.
 //
-// Inserts or deletes RegexMatchSetUpdate objects (filters) in a RegexMatchSet.
+// Inserts or deletes RegexMatchTuple objects (filters) in a RegexMatchSet.
 // For each RegexMatchSetUpdate object, you specify the following values:
 //
 //    * Whether to insert or delete the object from the array. If you want to
 //    change a RegexMatchSetUpdate object, you delete the existing object and
 //    add a new one.
 //
-//    * The part of a web request that you want AWS WAF to inspect, such as
-//    a query string or the value of the User-Agent header.
+//    * The part of a web request that you want AWS WAF to inspectupdate, such
+//    as a query string or the value of the User-Agent header.
 //
 //    * The identifier of the pattern (a regular expression) that you want AWS
 //    WAF to look for. For more information, see RegexPatternSet.
@@ -6750,14 +7338,12 @@ func (c *WAFRegional) UpdateRegexPatternSetRequest(input *waf.UpdateRegexPattern
 
 // UpdateRegexPatternSet API operation for AWS WAF Regional.
 //
-// Inserts or deletes RegexMatchSetUpdate objects (filters) in a RegexPatternSet.
-// For each RegexPatternSet object, you specify the following values:
+// Inserts or deletes RegexPatternString objects in a RegexPatternSet. For each
+// RegexPatternString object, you specify the following values:
 //
-//    * Whether to insert or delete the object from the array. If you want to
-//    change a RegexPatternSet object, you delete the existing object and add
-//    a new one.
+//    * Whether to insert or delete the RegexPatternString.
 //
-//    * The regular expression pattern that you want AWS WAF to look for. For
+//    * The regular expression pattern that you want to insert or delete. For
 //    more information, see RegexPatternSet.
 //
 // For example, you can create a RegexPatternString such as B[a@]dB[o0]t. AWS
@@ -6805,6 +7391,9 @@ func (c *WAFRegional) UpdateRegexPatternSetRequest(input *waf.UpdateRegexPattern
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
+//
+//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
 //
 //   * ErrCodeWAFNonexistentContainerException "WAFNonexistentContainerException"
 //   The operation failed because you tried to add an object to or delete an object
@@ -7070,6 +7659,187 @@ func (c *WAFRegional) UpdateRule(input *waf.UpdateRuleInput) (*waf.UpdateRuleOut
 // for more information on using Contexts.
 func (c *WAFRegional) UpdateRuleWithContext(ctx aws.Context, input *waf.UpdateRuleInput, opts ...request.Option) (*waf.UpdateRuleOutput, error) {
 	req, out := c.UpdateRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateRuleGroup = "UpdateRuleGroup"
+
+// UpdateRuleGroupRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateRuleGroup operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateRuleGroup for more information on using the UpdateRuleGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateRuleGroupRequest method.
+//    req, resp := client.UpdateRuleGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/UpdateRuleGroup
+func (c *WAFRegional) UpdateRuleGroupRequest(input *waf.UpdateRuleGroupInput) (req *request.Request, output *waf.UpdateRuleGroupOutput) {
+	op := &request.Operation{
+		Name:       opUpdateRuleGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &waf.UpdateRuleGroupInput{}
+	}
+
+	output = &waf.UpdateRuleGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateRuleGroup API operation for AWS WAF Regional.
+//
+// Inserts or deletes ActivatedRule objects in a RuleGroup.
+//
+// You can only insert REGULAR rules into a rule group.
+//
+// You can have a maximum of ten rules per rule group.
+//
+// To create and configure a RuleGroup, perform the following steps:
+//
+// Create and update the Rules that you want to include in the RuleGroup. See
+// CreateRule.
+//
+// Use GetChangeToken to get the change token that you provide in the ChangeToken
+// parameter of an UpdateRuleGroup request.
+//
+// Submit an UpdateRuleGroup request to add Rules to the RuleGroup.
+//
+// Create and update a WebACL that contains the RuleGroup. See CreateWebACL.
+//
+// If you want to replace one Rule with another, you delete the existing one
+// and add the new one.
+//
+// For more information about how to use the AWS WAF API to allow or block HTTP
+// requests, see the AWS WAF Developer Guide (http://docs.aws.amazon.com/waf/latest/developerguide/).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF Regional's
+// API operation UpdateRuleGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeWAFStaleDataException "WAFStaleDataException"
+//   The operation failed because you tried to create, update, or delete an object
+//   by using a change token that has already been used.
+//
+//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeWAFNonexistentContainerException "WAFNonexistentContainerException"
+//   The operation failed because you tried to add an object to or delete an object
+//   from another object that doesn't exist. For example:
+//
+//      * You tried to add a Rule to or delete a Rule from a WebACL that doesn't
+//      exist.
+//
+//      * You tried to add a ByteMatchSet to or delete a ByteMatchSet from a Rule
+//      that doesn't exist.
+//
+//      * You tried to add an IP address to or delete an IP address from an IPSet
+//      that doesn't exist.
+//
+//      * You tried to add a ByteMatchTuple to or delete a ByteMatchTuple from
+//      a ByteMatchSet that doesn't exist.
+//
+//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+//   * ErrCodeWAFInvalidOperationException "WAFInvalidOperationException"
+//   The operation failed because there was nothing to do. For example:
+//
+//      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
+//      specified WebACL.
+//
+//      * You tried to remove an IP address from an IPSet, but the IP address
+//      isn't in the specified IPSet.
+//
+//      * You tried to remove a ByteMatchTuple from a ByteMatchSet, but the ByteMatchTuple
+//      isn't in the specified WebACL.
+//
+//      * You tried to add a Rule to a WebACL, but the Rule already exists in
+//      the specified WebACL.
+//
+//      * You tried to add an IP address to an IPSet, but the IP address already
+//      exists in the specified IPSet.
+//
+//      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
+//      already exists in the specified WebACL.
+//
+//   * ErrCodeWAFLimitsExceededException "WAFLimitsExceededException"
+//   The operation exceeds a resource limit, for example, the maximum number of
+//   WebACL objects that you can create for an AWS account. For more information,
+//   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
+//   in the AWS WAF Developer Guide.
+//
+//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   The operation failed because AWS WAF didn't recognize a parameter in the
+//   request. For example:
+//
+//      * You specified an invalid parameter name.
+//
+//      * You specified an invalid value.
+//
+//      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
+//      using an action other than INSERT or DELETE.
+//
+//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      BLOCK, or COUNT.
+//
+//      * You tried to create a RateBasedRule with a RateKey value other than
+//      IP.
+//
+//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      BLOCK, or COUNT.
+//
+//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      HEADER, METHOD, QUERY_STRING, URI, or BODY.
+//
+//      * You tried to update a ByteMatchSet with a Field of HEADER but no value
+//      for Data.
+//
+//      * Your request references an ARN that is malformed, or corresponds to
+//      a resource with which a web ACL cannot be associated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/UpdateRuleGroup
+func (c *WAFRegional) UpdateRuleGroup(input *waf.UpdateRuleGroupInput) (*waf.UpdateRuleGroupOutput, error) {
+	req, out := c.UpdateRuleGroupRequest(input)
+	return out, req.Send()
+}
+
+// UpdateRuleGroupWithContext is the same as UpdateRuleGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateRuleGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAFRegional) UpdateRuleGroupWithContext(ctx aws.Context, input *waf.UpdateRuleGroupInput, opts ...request.Option) (*waf.UpdateRuleGroupOutput, error) {
+	req, out := c.UpdateRuleGroupRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -7673,6 +8443,9 @@ func (c *WAFRegional) UpdateWebACLRequest(input *waf.UpdateWebACLInput) (req *re
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
+//
+//   * ErrCodeWAFSubscriptionNotFoundException "WAFSubscriptionNotFoundException"
+//   The specified subscription does not exist.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-regional-2016-11-28/UpdateWebACL
 func (c *WAFRegional) UpdateWebACL(input *waf.UpdateWebACLInput) (*waf.UpdateWebACLOutput, error) {
@@ -8983,6 +9756,9 @@ const (
 	// ParameterExceptionFieldWafAction is a ParameterExceptionField enum value
 	ParameterExceptionFieldWafAction = "WAF_ACTION"
 
+	// ParameterExceptionFieldWafOverrideAction is a ParameterExceptionField enum value
+	ParameterExceptionFieldWafOverrideAction = "WAF_OVERRIDE_ACTION"
+
 	// ParameterExceptionFieldPredicateType is a ParameterExceptionField enum value
 	ParameterExceptionFieldPredicateType = "PREDICATE_TYPE"
 
@@ -9105,9 +9881,20 @@ const (
 )
 
 const (
+	// WafOverrideActionTypeNone is a WafOverrideActionType enum value
+	WafOverrideActionTypeNone = "NONE"
+
+	// WafOverrideActionTypeCount is a WafOverrideActionType enum value
+	WafOverrideActionTypeCount = "COUNT"
+)
+
+const (
 	// WafRuleTypeRegular is a WafRuleType enum value
 	WafRuleTypeRegular = "REGULAR"
 
 	// WafRuleTypeRateBased is a WafRuleType enum value
 	WafRuleTypeRateBased = "RATE_BASED"
+
+	// WafRuleTypeGroup is a WafRuleType enum value
+	WafRuleTypeGroup = "GROUP"
 )

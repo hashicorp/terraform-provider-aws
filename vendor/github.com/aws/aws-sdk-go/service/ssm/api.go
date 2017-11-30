@@ -2301,6 +2301,12 @@ func (c *SSM) DescribeAutomationExecutionsRequest(input *DescribeAutomationExecu
 // API operation DescribeAutomationExecutions for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeInvalidFilterKey "InvalidFilterKey"
+//   The specified key is not valid.
+//
+//   * ErrCodeInvalidFilterValue "InvalidFilterValue"
+//   The filter value is not valid. Verify the value and try again.
+//
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
@@ -2324,6 +2330,99 @@ func (c *SSM) DescribeAutomationExecutions(input *DescribeAutomationExecutionsIn
 // for more information on using Contexts.
 func (c *SSM) DescribeAutomationExecutionsWithContext(ctx aws.Context, input *DescribeAutomationExecutionsInput, opts ...request.Option) (*DescribeAutomationExecutionsOutput, error) {
 	req, out := c.DescribeAutomationExecutionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeAutomationStepExecutions = "DescribeAutomationStepExecutions"
+
+// DescribeAutomationStepExecutionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAutomationStepExecutions operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAutomationStepExecutions for more information on using the DescribeAutomationStepExecutions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAutomationStepExecutionsRequest method.
+//    req, resp := client.DescribeAutomationStepExecutionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationStepExecutions
+func (c *SSM) DescribeAutomationStepExecutionsRequest(input *DescribeAutomationStepExecutionsInput) (req *request.Request, output *DescribeAutomationStepExecutionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAutomationStepExecutions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeAutomationStepExecutionsInput{}
+	}
+
+	output = &DescribeAutomationStepExecutionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAutomationStepExecutions API operation for Amazon Simple Systems Manager (SSM).
+//
+// Information about all active and terminated step executions in an Automation
+// workflow.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation DescribeAutomationStepExecutions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAutomationExecutionNotFoundException "AutomationExecutionNotFoundException"
+//   There is no automation execution information for the requested automation
+//   execution ID.
+//
+//   * ErrCodeInvalidNextToken "InvalidNextToken"
+//   The specified token is not valid.
+//
+//   * ErrCodeInvalidFilterKey "InvalidFilterKey"
+//   The specified key is not valid.
+//
+//   * ErrCodeInvalidFilterValue "InvalidFilterValue"
+//   The filter value is not valid. Verify the value and try again.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationStepExecutions
+func (c *SSM) DescribeAutomationStepExecutions(input *DescribeAutomationStepExecutionsInput) (*DescribeAutomationStepExecutionsOutput, error) {
+	req, out := c.DescribeAutomationStepExecutionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAutomationStepExecutionsWithContext is the same as DescribeAutomationStepExecutions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAutomationStepExecutions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeAutomationStepExecutionsWithContext(ctx aws.Context, input *DescribeAutomationStepExecutionsInput, opts ...request.Option) (*DescribeAutomationStepExecutionsOutput, error) {
+	req, out := c.DescribeAutomationStepExecutionsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -8157,6 +8256,10 @@ func (c *SSM) SendAutomationSignalRequest(input *SendAutomationSignalInput) (req
 //   There is no automation execution information for the requested automation
 //   execution ID.
 //
+//   * ErrCodeAutomationStepNotFoundException "AutomationStepNotFoundException"
+//   The specified step name and execution ID don't exist. Verify the information
+//   and try again.
+//
 //   * ErrCodeInvalidAutomationSignalException "InvalidAutomationSignalException"
 //   The signal is not valid for the current Automation execution.
 //
@@ -8283,7 +8386,7 @@ func (c *SSM) SendCommandRequest(input *SendCommandInput) (req *request.Request,
 //   an IAM role for notifications that includes the required trust policy. For
 //   information about configuring the IAM role for Run Command notifications,
 //   see Configuring Amazon SNS Notifications for Run Command (http://docs.aws.amazon.com/systems-manager/latest/userguide/rc-sns-notifications.html)
-//   in the Amazon EC2 Systems Manager User Guide.
+//   in the AWS Systems Manager User Guide.
 //
 //   * ErrCodeInvalidNotificationConfig "InvalidNotificationConfig"
 //   One or more configuration items is not valid. Verify that a valid Amazon
@@ -8384,6 +8487,10 @@ func (c *SSM) StartAutomationExecutionRequest(input *StartAutomationExecutionInp
 //   Error returned when an idempotent operation is retried and the parameters
 //   don't match the original call to the API with the same idempotency token.
 //
+//   * ErrCodeInvalidTarget "InvalidTarget"
+//   The target is not valid or does not exist. It might not be configured for
+//   EC2 Systems Manager or you might not have permission to perform the operation.
+//
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
@@ -8466,6 +8573,9 @@ func (c *SSM) StopAutomationExecutionRequest(input *StopAutomationExecutionInput
 //   * ErrCodeAutomationExecutionNotFoundException "AutomationExecutionNotFoundException"
 //   There is no automation execution information for the requested automation
 //   execution ID.
+//
+//   * ErrCodeInvalidAutomationStatusUpdateException "InvalidAutomationStatusUpdateException"
+//   The specified update status operation is not valid.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -10145,11 +10255,20 @@ type AutomationExecution struct {
 	// The execution status of the Automation.
 	AutomationExecutionStatus *string `type:"string" enum:"AutomationExecutionStatus"`
 
+	// The action of the currently executing step.
+	CurrentAction *string `type:"string"`
+
+	// The name of the currently executing step.
+	CurrentStepName *string `type:"string"`
+
 	// The name of the Automation document used during the execution.
 	DocumentName *string `type:"string"`
 
 	// The version of the document to use during execution.
 	DocumentVersion *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) of the user who executed the automation.
+	ExecutedBy *string `type:"string"`
 
 	// The time the execution finished.
 	ExecutionEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
@@ -10161,6 +10280,15 @@ type AutomationExecution struct {
 	// Failed.
 	FailureMessage *string `type:"string"`
 
+	// The MaxConcurrency value specified by the user when the execution started.
+	MaxConcurrency *string `min:"1" type:"string"`
+
+	// The MaxErrors value specified by the user when the execution started.
+	MaxErrors *string `min:"1" type:"string"`
+
+	// The automation execution mode.
+	Mode *string `type:"string" enum:"ExecutionMode"`
+
 	// The list of execution outputs as defined in the automation document.
 	Outputs map[string][]*string `min:"1" type:"map"`
 
@@ -10168,9 +10296,29 @@ type AutomationExecution struct {
 	// StartAutomationExecution.
 	Parameters map[string][]*string `min:"1" type:"map"`
 
+	// The AutomationExecutionId of the parent automation.
+	ParentAutomationExecutionId *string `min:"36" type:"string"`
+
+	// A list of resolved targets in the rate control execution.
+	ResolvedTargets *ResolvedTargets `type:"structure"`
+
 	// A list of details about the current state of all steps that comprise an execution.
 	// An Automation document contains a list of steps that are executed in order.
 	StepExecutions []*StepExecution `type:"list"`
+
+	// A boolean value that indicates if the response contains the full list of
+	// the Automation step executions. If true, use the DescribeAutomationStepExecutions
+	// API action to get the full list of step executions.
+	StepExecutionsTruncated *bool `type:"boolean"`
+
+	// The target of the execution.
+	Target *string `type:"string"`
+
+	// The parameter name.
+	TargetParameterName *string `min:"1" type:"string"`
+
+	// The specified targets.
+	Targets []*Target `type:"list"`
 }
 
 // String returns the string representation
@@ -10195,6 +10343,18 @@ func (s *AutomationExecution) SetAutomationExecutionStatus(v string) *Automation
 	return s
 }
 
+// SetCurrentAction sets the CurrentAction field's value.
+func (s *AutomationExecution) SetCurrentAction(v string) *AutomationExecution {
+	s.CurrentAction = &v
+	return s
+}
+
+// SetCurrentStepName sets the CurrentStepName field's value.
+func (s *AutomationExecution) SetCurrentStepName(v string) *AutomationExecution {
+	s.CurrentStepName = &v
+	return s
+}
+
 // SetDocumentName sets the DocumentName field's value.
 func (s *AutomationExecution) SetDocumentName(v string) *AutomationExecution {
 	s.DocumentName = &v
@@ -10204,6 +10364,12 @@ func (s *AutomationExecution) SetDocumentName(v string) *AutomationExecution {
 // SetDocumentVersion sets the DocumentVersion field's value.
 func (s *AutomationExecution) SetDocumentVersion(v string) *AutomationExecution {
 	s.DocumentVersion = &v
+	return s
+}
+
+// SetExecutedBy sets the ExecutedBy field's value.
+func (s *AutomationExecution) SetExecutedBy(v string) *AutomationExecution {
+	s.ExecutedBy = &v
 	return s
 }
 
@@ -10225,6 +10391,24 @@ func (s *AutomationExecution) SetFailureMessage(v string) *AutomationExecution {
 	return s
 }
 
+// SetMaxConcurrency sets the MaxConcurrency field's value.
+func (s *AutomationExecution) SetMaxConcurrency(v string) *AutomationExecution {
+	s.MaxConcurrency = &v
+	return s
+}
+
+// SetMaxErrors sets the MaxErrors field's value.
+func (s *AutomationExecution) SetMaxErrors(v string) *AutomationExecution {
+	s.MaxErrors = &v
+	return s
+}
+
+// SetMode sets the Mode field's value.
+func (s *AutomationExecution) SetMode(v string) *AutomationExecution {
+	s.Mode = &v
+	return s
+}
+
 // SetOutputs sets the Outputs field's value.
 func (s *AutomationExecution) SetOutputs(v map[string][]*string) *AutomationExecution {
 	s.Outputs = v
@@ -10237,9 +10421,45 @@ func (s *AutomationExecution) SetParameters(v map[string][]*string) *AutomationE
 	return s
 }
 
+// SetParentAutomationExecutionId sets the ParentAutomationExecutionId field's value.
+func (s *AutomationExecution) SetParentAutomationExecutionId(v string) *AutomationExecution {
+	s.ParentAutomationExecutionId = &v
+	return s
+}
+
+// SetResolvedTargets sets the ResolvedTargets field's value.
+func (s *AutomationExecution) SetResolvedTargets(v *ResolvedTargets) *AutomationExecution {
+	s.ResolvedTargets = v
+	return s
+}
+
 // SetStepExecutions sets the StepExecutions field's value.
 func (s *AutomationExecution) SetStepExecutions(v []*StepExecution) *AutomationExecution {
 	s.StepExecutions = v
+	return s
+}
+
+// SetStepExecutionsTruncated sets the StepExecutionsTruncated field's value.
+func (s *AutomationExecution) SetStepExecutionsTruncated(v bool) *AutomationExecution {
+	s.StepExecutionsTruncated = &v
+	return s
+}
+
+// SetTarget sets the Target field's value.
+func (s *AutomationExecution) SetTarget(v string) *AutomationExecution {
+	s.Target = &v
+	return s
+}
+
+// SetTargetParameterName sets the TargetParameterName field's value.
+func (s *AutomationExecution) SetTargetParameterName(v string) *AutomationExecution {
+	s.TargetParameterName = &v
+	return s
+}
+
+// SetTargets sets the Targets field's value.
+func (s *AutomationExecution) SetTargets(v []*Target) *AutomationExecution {
+	s.Targets = v
 	return s
 }
 
@@ -10249,7 +10469,9 @@ func (s *AutomationExecution) SetStepExecutions(v []*StepExecution) *AutomationE
 type AutomationExecutionFilter struct {
 	_ struct{} `type:"structure"`
 
-	// The aspect of the Automation execution information that should be limited.
+	// One or more keys to limit the results. Valid filter keys include the following:
+	// DocumentNamePrefix, ExecutionStatus, ExecutionId, ParentExecutionId, CurrentAction,
+	// StartTimeBefore, StartTimeAfter.
 	//
 	// Key is a required field
 	Key *string `type:"string" required:"true" enum:"AutomationExecutionFilterKey"`
@@ -10314,6 +10536,12 @@ type AutomationExecutionMetadata struct {
 	// Timed out, or Cancelled.
 	AutomationExecutionStatus *string `type:"string" enum:"AutomationExecutionStatus"`
 
+	// The action of the currently executing step.
+	CurrentAction *string `type:"string"`
+
+	// The name of the currently executing step.
+	CurrentStepName *string `type:"string"`
+
 	// The name of the Automation document used during execution.
 	DocumentName *string `type:"string"`
 
@@ -10330,11 +10558,38 @@ type AutomationExecutionMetadata struct {
 	// The time the execution started.>
 	ExecutionStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
+	// The list of execution outputs as defined in the Automation document.
+	FailureMessage *string `type:"string"`
+
 	// An Amazon S3 bucket where execution information is stored.
 	LogFile *string `type:"string"`
 
+	// The MaxConcurrency value specified by the user when starting the Automation.
+	MaxConcurrency *string `min:"1" type:"string"`
+
+	// The MaxErrors value specified by the user when starting the Automation.
+	MaxErrors *string `min:"1" type:"string"`
+
+	// The Automation execution mode.
+	Mode *string `type:"string" enum:"ExecutionMode"`
+
 	// The list of execution outputs as defined in the Automation document.
 	Outputs map[string][]*string `min:"1" type:"map"`
+
+	// The ExecutionId of the parent Automation.
+	ParentAutomationExecutionId *string `min:"36" type:"string"`
+
+	// A list of targets that resolved during the execution.
+	ResolvedTargets *ResolvedTargets `type:"structure"`
+
+	// The list of execution outputs as defined in the Automation document.
+	Target *string `type:"string"`
+
+	// The list of execution outputs as defined in the Automation document.
+	TargetParameterName *string `min:"1" type:"string"`
+
+	// The targets defined by the user when starting the Automation.
+	Targets []*Target `type:"list"`
 }
 
 // String returns the string representation
@@ -10356,6 +10611,18 @@ func (s *AutomationExecutionMetadata) SetAutomationExecutionId(v string) *Automa
 // SetAutomationExecutionStatus sets the AutomationExecutionStatus field's value.
 func (s *AutomationExecutionMetadata) SetAutomationExecutionStatus(v string) *AutomationExecutionMetadata {
 	s.AutomationExecutionStatus = &v
+	return s
+}
+
+// SetCurrentAction sets the CurrentAction field's value.
+func (s *AutomationExecutionMetadata) SetCurrentAction(v string) *AutomationExecutionMetadata {
+	s.CurrentAction = &v
+	return s
+}
+
+// SetCurrentStepName sets the CurrentStepName field's value.
+func (s *AutomationExecutionMetadata) SetCurrentStepName(v string) *AutomationExecutionMetadata {
+	s.CurrentStepName = &v
 	return s
 }
 
@@ -10389,15 +10656,69 @@ func (s *AutomationExecutionMetadata) SetExecutionStartTime(v time.Time) *Automa
 	return s
 }
 
+// SetFailureMessage sets the FailureMessage field's value.
+func (s *AutomationExecutionMetadata) SetFailureMessage(v string) *AutomationExecutionMetadata {
+	s.FailureMessage = &v
+	return s
+}
+
 // SetLogFile sets the LogFile field's value.
 func (s *AutomationExecutionMetadata) SetLogFile(v string) *AutomationExecutionMetadata {
 	s.LogFile = &v
 	return s
 }
 
+// SetMaxConcurrency sets the MaxConcurrency field's value.
+func (s *AutomationExecutionMetadata) SetMaxConcurrency(v string) *AutomationExecutionMetadata {
+	s.MaxConcurrency = &v
+	return s
+}
+
+// SetMaxErrors sets the MaxErrors field's value.
+func (s *AutomationExecutionMetadata) SetMaxErrors(v string) *AutomationExecutionMetadata {
+	s.MaxErrors = &v
+	return s
+}
+
+// SetMode sets the Mode field's value.
+func (s *AutomationExecutionMetadata) SetMode(v string) *AutomationExecutionMetadata {
+	s.Mode = &v
+	return s
+}
+
 // SetOutputs sets the Outputs field's value.
 func (s *AutomationExecutionMetadata) SetOutputs(v map[string][]*string) *AutomationExecutionMetadata {
 	s.Outputs = v
+	return s
+}
+
+// SetParentAutomationExecutionId sets the ParentAutomationExecutionId field's value.
+func (s *AutomationExecutionMetadata) SetParentAutomationExecutionId(v string) *AutomationExecutionMetadata {
+	s.ParentAutomationExecutionId = &v
+	return s
+}
+
+// SetResolvedTargets sets the ResolvedTargets field's value.
+func (s *AutomationExecutionMetadata) SetResolvedTargets(v *ResolvedTargets) *AutomationExecutionMetadata {
+	s.ResolvedTargets = v
+	return s
+}
+
+// SetTarget sets the Target field's value.
+func (s *AutomationExecutionMetadata) SetTarget(v string) *AutomationExecutionMetadata {
+	s.Target = &v
+	return s
+}
+
+// SetTargetParameterName sets the TargetParameterName field's value.
+func (s *AutomationExecutionMetadata) SetTargetParameterName(v string) *AutomationExecutionMetadata {
+	s.TargetParameterName = &v
+	return s
+}
+
+// SetTargets sets the Targets field's value.
+func (s *AutomationExecutionMetadata) SetTargets(v []*Target) *AutomationExecutionMetadata {
+	s.Targets = v
 	return s
 }
 
@@ -12037,10 +12358,14 @@ func (s *CreateAssociationOutput) SetAssociationDescription(v *AssociationDescri
 type CreateDocumentInput struct {
 	_ struct{} `type:"structure"`
 
-	// A valid JSON string.
+	// A valid JSON or YAML string.
 	//
 	// Content is a required field
 	Content *string `min:"1" type:"string" required:"true"`
+
+	// Specify the document format for the request. The document format can be either
+	// JSON or YAML. JSON is the default format.
+	DocumentFormat *string `type:"string" enum:"DocumentFormat"`
 
 	// The type of document to create. Valid document types include: Policy, Automation,
 	// and Command.
@@ -12050,6 +12375,15 @@ type CreateDocumentInput struct {
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
+
+	// Specify a target type to define the kinds of resources the document can run
+	// on. For example, to run a document on EC2 instances, specify the following
+	// value: /AWS::EC2::Instance. If you specify a value of '/' the document can
+	// run on all types of resources. If you don't specify a value, the document
+	// can't run on any resources. For a list of valid resource types, see AWS Resource
+	// Types Reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
+	// in the AWS CloudFormation User Guide.
+	TargetType *string `type:"string"`
 }
 
 // String returns the string representation
@@ -12087,6 +12421,12 @@ func (s *CreateDocumentInput) SetContent(v string) *CreateDocumentInput {
 	return s
 }
 
+// SetDocumentFormat sets the DocumentFormat field's value.
+func (s *CreateDocumentInput) SetDocumentFormat(v string) *CreateDocumentInput {
+	s.DocumentFormat = &v
+	return s
+}
+
 // SetDocumentType sets the DocumentType field's value.
 func (s *CreateDocumentInput) SetDocumentType(v string) *CreateDocumentInput {
 	s.DocumentType = &v
@@ -12096,6 +12436,12 @@ func (s *CreateDocumentInput) SetDocumentType(v string) *CreateDocumentInput {
 // SetName sets the Name field's value.
 func (s *CreateDocumentInput) SetName(v string) *CreateDocumentInput {
 	s.Name = &v
+	return s
+}
+
+// SetTargetType sets the TargetType field's value.
+func (s *CreateDocumentInput) SetTargetType(v string) *CreateDocumentInput {
+	s.TargetType = &v
 	return s
 }
 
@@ -13652,6 +13998,139 @@ func (s *DescribeAutomationExecutionsOutput) SetAutomationExecutionMetadataList(
 // SetNextToken sets the NextToken field's value.
 func (s *DescribeAutomationExecutionsOutput) SetNextToken(v string) *DescribeAutomationExecutionsOutput {
 	s.NextToken = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationStepExecutionsRequest
+type DescribeAutomationStepExecutionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Automation execution ID for which you want step execution descriptions.
+	//
+	// AutomationExecutionId is a required field
+	AutomationExecutionId *string `min:"36" type:"string" required:"true"`
+
+	// One or more filters to limit the number of step executions returned by the
+	// request.
+	Filters []*StepExecutionFilter `min:"1" type:"list"`
+
+	// The maximum number of items to return for this call. The call also returns
+	// a token that you can specify in a subsequent call to get the next set of
+	// results.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The token for the next set of items to return. (You received this token from
+	// a previous call.)
+	NextToken *string `type:"string"`
+
+	// A boolean that indicates whether to list step executions in reverse order
+	// by start time. The default value is false.
+	ReverseOrder *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s DescribeAutomationStepExecutionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAutomationStepExecutionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAutomationStepExecutionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAutomationStepExecutionsInput"}
+	if s.AutomationExecutionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AutomationExecutionId"))
+	}
+	if s.AutomationExecutionId != nil && len(*s.AutomationExecutionId) < 36 {
+		invalidParams.Add(request.NewErrParamMinLen("AutomationExecutionId", 36))
+	}
+	if s.Filters != nil && len(s.Filters) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Filters", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAutomationExecutionId sets the AutomationExecutionId field's value.
+func (s *DescribeAutomationStepExecutionsInput) SetAutomationExecutionId(v string) *DescribeAutomationStepExecutionsInput {
+	s.AutomationExecutionId = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeAutomationStepExecutionsInput) SetFilters(v []*StepExecutionFilter) *DescribeAutomationStepExecutionsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeAutomationStepExecutionsInput) SetMaxResults(v int64) *DescribeAutomationStepExecutionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeAutomationStepExecutionsInput) SetNextToken(v string) *DescribeAutomationStepExecutionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetReverseOrder sets the ReverseOrder field's value.
+func (s *DescribeAutomationStepExecutionsInput) SetReverseOrder(v bool) *DescribeAutomationStepExecutionsInput {
+	s.ReverseOrder = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationStepExecutionsResult
+type DescribeAutomationStepExecutionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token to use when requesting the next set of items. If there are no additional
+	// items to return, the string is empty.
+	NextToken *string `type:"string"`
+
+	// A list of details about the current state of all steps that make up an execution.
+	StepExecutions []*StepExecution `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeAutomationStepExecutionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAutomationStepExecutionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeAutomationStepExecutionsOutput) SetNextToken(v string) *DescribeAutomationStepExecutionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetStepExecutions sets the StepExecutions field's value.
+func (s *DescribeAutomationStepExecutionsOutput) SetStepExecutions(v []*StepExecution) *DescribeAutomationStepExecutionsOutput {
+	s.StepExecutions = v
 	return s
 }
 
@@ -15891,6 +16370,9 @@ type DocumentDescription struct {
 	// A description of the document.
 	Description *string `type:"string"`
 
+	// The document format, either JSON or YAML.
+	DocumentFormat *string `type:"string" enum:"DocumentFormat"`
+
 	// The type of document.
 	DocumentType *string `type:"string" enum:"DocumentType"`
 
@@ -15933,6 +16415,12 @@ type DocumentDescription struct {
 
 	// The tags, or metadata, that have been applied to the document.
 	Tags []*Tag `type:"list"`
+
+	// The target type which defines the kinds of resources the document can run
+	// on. For example, /AWS::EC2::Instance. For a list of valid resource types,
+	// see AWS Resource Types Reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
+	// in the AWS CloudFormation User Guide.
+	TargetType *string `type:"string"`
 }
 
 // String returns the string representation
@@ -15960,6 +16448,12 @@ func (s *DocumentDescription) SetDefaultVersion(v string) *DocumentDescription {
 // SetDescription sets the Description field's value.
 func (s *DocumentDescription) SetDescription(v string) *DocumentDescription {
 	s.Description = &v
+	return s
+}
+
+// SetDocumentFormat sets the DocumentFormat field's value.
+func (s *DocumentDescription) SetDocumentFormat(v string) *DocumentDescription {
+	s.DocumentFormat = &v
 	return s
 }
 
@@ -16041,6 +16535,12 @@ func (s *DocumentDescription) SetTags(v []*Tag) *DocumentDescription {
 	return s
 }
 
+// SetTargetType sets the TargetType field's value.
+func (s *DocumentDescription) SetTargetType(v string) *DocumentDescription {
+	s.TargetType = &v
+	return s
+}
+
 // Describes a filter.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentFilter
 type DocumentFilter struct {
@@ -16103,6 +16603,9 @@ func (s *DocumentFilter) SetValue(v string) *DocumentFilter {
 type DocumentIdentifier struct {
 	_ struct{} `type:"structure"`
 
+	// The document format, either JSON or YAML.
+	DocumentFormat *string `type:"string" enum:"DocumentFormat"`
+
 	// The document type.
 	DocumentType *string `type:"string" enum:"DocumentType"`
 
@@ -16123,6 +16626,12 @@ type DocumentIdentifier struct {
 
 	// The tags, or metadata, that have been applied to the document.
 	Tags []*Tag `type:"list"`
+
+	// The target type which defines the kinds of resources the document can run
+	// on. For example, /AWS::EC2::Instance. For a list of valid resource types,
+	// see AWS Resource Types Reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
+	// in the AWS CloudFormation User Guide.
+	TargetType *string `type:"string"`
 }
 
 // String returns the string representation
@@ -16133,6 +16642,12 @@ func (s DocumentIdentifier) String() string {
 // GoString returns the string representation
 func (s DocumentIdentifier) GoString() string {
 	return s.String()
+}
+
+// SetDocumentFormat sets the DocumentFormat field's value.
+func (s *DocumentIdentifier) SetDocumentFormat(v string) *DocumentIdentifier {
+	s.DocumentFormat = &v
+	return s
 }
 
 // SetDocumentType sets the DocumentType field's value.
@@ -16174,6 +16689,12 @@ func (s *DocumentIdentifier) SetSchemaVersion(v string) *DocumentIdentifier {
 // SetTags sets the Tags field's value.
 func (s *DocumentIdentifier) SetTags(v []*Tag) *DocumentIdentifier {
 	s.Tags = v
+	return s
+}
+
+// SetTargetType sets the TargetType field's value.
+func (s *DocumentIdentifier) SetTargetType(v string) *DocumentIdentifier {
+	s.TargetType = &v
 	return s
 }
 
@@ -16311,6 +16832,9 @@ type DocumentVersionInfo struct {
 	// The date the document was created.
 	CreatedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
+	// The document format, either JSON or YAML.
+	DocumentFormat *string `type:"string" enum:"DocumentFormat"`
+
 	// The document version.
 	DocumentVersion *string `type:"string"`
 
@@ -16334,6 +16858,12 @@ func (s DocumentVersionInfo) GoString() string {
 // SetCreatedDate sets the CreatedDate field's value.
 func (s *DocumentVersionInfo) SetCreatedDate(v time.Time) *DocumentVersionInfo {
 	s.CreatedDate = &v
+	return s
+}
+
+// SetDocumentFormat sets the DocumentFormat field's value.
+func (s *DocumentVersionInfo) SetDocumentFormat(v string) *DocumentVersionInfo {
+	s.DocumentFormat = &v
 	return s
 }
 
@@ -17014,6 +17544,10 @@ func (s *GetDeployablePatchSnapshotForInstanceOutput) SetSnapshotId(v string) *G
 type GetDocumentInput struct {
 	_ struct{} `type:"structure"`
 
+	// Returns the document in the specified format. The document format can be
+	// either JSON or YAML. JSON is the default format.
+	DocumentFormat *string `type:"string" enum:"DocumentFormat"`
+
 	// The document version for which you want information.
 	DocumentVersion *string `type:"string"`
 
@@ -17046,6 +17580,12 @@ func (s *GetDocumentInput) Validate() error {
 	return nil
 }
 
+// SetDocumentFormat sets the DocumentFormat field's value.
+func (s *GetDocumentInput) SetDocumentFormat(v string) *GetDocumentInput {
+	s.DocumentFormat = &v
+	return s
+}
+
 // SetDocumentVersion sets the DocumentVersion field's value.
 func (s *GetDocumentInput) SetDocumentVersion(v string) *GetDocumentInput {
 	s.DocumentVersion = &v
@@ -17064,6 +17604,9 @@ type GetDocumentOutput struct {
 
 	// The contents of the Systems Manager document.
 	Content *string `min:"1" type:"string"`
+
+	// The document format, either JSON or YAML.
+	DocumentFormat *string `type:"string" enum:"DocumentFormat"`
 
 	// The document type.
 	DocumentType *string `type:"string" enum:"DocumentType"`
@@ -17088,6 +17631,12 @@ func (s GetDocumentOutput) GoString() string {
 // SetContent sets the Content field's value.
 func (s *GetDocumentOutput) SetContent(v string) *GetDocumentOutput {
 	s.Content = &v
+	return s
+}
+
+// SetDocumentFormat sets the DocumentFormat field's value.
+func (s *GetDocumentOutput) SetDocumentFormat(v string) *GetDocumentOutput {
+	s.DocumentFormat = &v
 	return s
 }
 
@@ -20071,7 +20620,7 @@ func (s *InventoryItemSchema) SetVersion(v string) *InventoryItemSchema {
 type InventoryResultEntity struct {
 	_ struct{} `type:"structure"`
 
-	// The data section in the inventory result entity json.
+	// The data section in the inventory result entity JSON.
 	Data map[string]*InventoryResultItem `type:"map"`
 
 	// ID of the inventory result entity. For example, for managed instance inventory
@@ -22746,7 +23295,7 @@ type NotificationConfig struct {
 	// include the following: All (events), InProgress, Success, TimedOut, Cancelled,
 	// Failed. To learn more about these events, see Setting Up Events and Notifications
 	// (http://docs.aws.amazon.com/systems-manager/latest/userguide/monitor-commands.html)
-	// in the Amazon EC2 Systems Manager User Guide.
+	// in the AWS Systems Manager User Guide.
 	NotificationEvents []*string `type:"list"`
 
 	// Command: Receive notification when the status of a command changes. Invocation:
@@ -24823,6 +25372,41 @@ func (s RemoveTagsFromResourceOutput) GoString() string {
 	return s.String()
 }
 
+// Information about targets that resolved during the Automation execution.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResolvedTargets
+type ResolvedTargets struct {
+	_ struct{} `type:"structure"`
+
+	// A list of parameter values sent to targets that resolved during the Automation
+	// execution.
+	ParameterValues []*string `type:"list"`
+
+	// A boolean value indicating whether the resolved target list is truncated.
+	Truncated *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s ResolvedTargets) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResolvedTargets) GoString() string {
+	return s.String()
+}
+
+// SetParameterValues sets the ParameterValues field's value.
+func (s *ResolvedTargets) SetParameterValues(v []*string) *ResolvedTargets {
+	s.ParameterValues = v
+	return s
+}
+
+// SetTruncated sets the Truncated field's value.
+func (s *ResolvedTargets) SetTruncated(v bool) *ResolvedTargets {
+	s.Truncated = &v
+	return s
+}
+
 // Compliance summary information for a specific resource.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResourceComplianceSummaryItem
 type ResourceComplianceSummaryItem struct {
@@ -25638,9 +26222,41 @@ type StartAutomationExecutionInput struct {
 	// The version of the Automation document to use for this execution.
 	DocumentVersion *string `type:"string"`
 
+	// The maximum number of targets allowed to run this task in parallel. You can
+	// specify a number, such as 10, or a percentage, such as 10%. The default value
+	// is 10.
+	MaxConcurrency *string `min:"1" type:"string"`
+
+	// The number of errors that are allowed before the system stops running the
+	// automation on additional targets. You can specify either an absolute number
+	// of errors, for example 10, or a percentage of the target set, for example
+	// 10%. If you specify 3, for example, the system stops running the automation
+	// when the fourth error is received. If you specify 0, then the system stops
+	// running the automation on additional targets after the first error result
+	// is returned. If you run an automation on 50 resources and set max-errors
+	// to 10%, then the system stops running the automation on additional targets
+	// when the sixth error is received.
+	//
+	// Executions that are already running an automation when max-errors is reached
+	// are allowed to complete, but some of these executions may fail as well. If
+	// you need to ensure that there won't be more than max-errors failed executions,
+	// set max-concurrency to 1 so the executions proceed one at a time.
+	MaxErrors *string `min:"1" type:"string"`
+
+	// The execution mode of the automation. Valid modes include the following:
+	// Auto and Interactive. The default mode is Auto.
+	Mode *string `type:"string" enum:"ExecutionMode"`
+
 	// A key-value map of execution parameters, which match the declared parameters
 	// in the Automation document.
 	Parameters map[string][]*string `min:"1" type:"map"`
+
+	// The name of the parameter used as the target resource for the rate-controlled
+	// execution. Required if you specify Targets.
+	TargetParameterName *string `min:"1" type:"string"`
+
+	// A key-value mapping to target resources. Required if you specify TargetParameterName.
+	Targets []*Target `type:"list"`
 }
 
 // String returns the string representation
@@ -25662,8 +26278,27 @@ func (s *StartAutomationExecutionInput) Validate() error {
 	if s.DocumentName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DocumentName"))
 	}
+	if s.MaxConcurrency != nil && len(*s.MaxConcurrency) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MaxConcurrency", 1))
+	}
+	if s.MaxErrors != nil && len(*s.MaxErrors) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MaxErrors", 1))
+	}
 	if s.Parameters != nil && len(s.Parameters) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Parameters", 1))
+	}
+	if s.TargetParameterName != nil && len(*s.TargetParameterName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TargetParameterName", 1))
+	}
+	if s.Targets != nil {
+		for i, v := range s.Targets {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Targets", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -25690,9 +26325,39 @@ func (s *StartAutomationExecutionInput) SetDocumentVersion(v string) *StartAutom
 	return s
 }
 
+// SetMaxConcurrency sets the MaxConcurrency field's value.
+func (s *StartAutomationExecutionInput) SetMaxConcurrency(v string) *StartAutomationExecutionInput {
+	s.MaxConcurrency = &v
+	return s
+}
+
+// SetMaxErrors sets the MaxErrors field's value.
+func (s *StartAutomationExecutionInput) SetMaxErrors(v string) *StartAutomationExecutionInput {
+	s.MaxErrors = &v
+	return s
+}
+
+// SetMode sets the Mode field's value.
+func (s *StartAutomationExecutionInput) SetMode(v string) *StartAutomationExecutionInput {
+	s.Mode = &v
+	return s
+}
+
 // SetParameters sets the Parameters field's value.
 func (s *StartAutomationExecutionInput) SetParameters(v map[string][]*string) *StartAutomationExecutionInput {
 	s.Parameters = v
+	return s
+}
+
+// SetTargetParameterName sets the TargetParameterName field's value.
+func (s *StartAutomationExecutionInput) SetTargetParameterName(v string) *StartAutomationExecutionInput {
+	s.TargetParameterName = &v
+	return s
+}
+
+// SetTargets sets the Targets field's value.
+func (s *StartAutomationExecutionInput) SetTargets(v []*Target) *StartAutomationExecutionInput {
+	s.Targets = v
 	return s
 }
 
@@ -25746,8 +26411,18 @@ type StepExecution struct {
 	// Fully-resolved values passed into the step before execution.
 	Inputs map[string]*string `type:"map"`
 
+	// The maximum number of tries to run the action of the step. The default value
+	// is 1.
+	MaxAttempts *int64 `type:"integer"`
+
+	// The action to take if the step fails. The default value is Abort.
+	OnFailure *string `type:"string"`
+
 	// Returned values from the execution of the step.
 	Outputs map[string][]*string `min:"1" type:"map"`
+
+	// A user-specified list of parameters to override when executing a step.
+	OverriddenParameters map[string][]*string `min:"1" type:"map"`
 
 	// A message associated with the response code for an execution.
 	Response *string `type:"string"`
@@ -25755,12 +26430,18 @@ type StepExecution struct {
 	// The response code returned by the execution of the step.
 	ResponseCode *string `type:"string"`
 
+	// The unique ID of a step execution.
+	StepExecutionId *string `type:"string"`
+
 	// The name of this execution step.
 	StepName *string `type:"string"`
 
 	// The execution status for this step. Valid values include: Pending, InProgress,
 	// Success, Cancelled, Failed, and TimedOut.
 	StepStatus *string `type:"string" enum:"AutomationExecutionStatus"`
+
+	// The timeout seconds of the step.
+	TimeoutSeconds *int64 `type:"long"`
 }
 
 // String returns the string representation
@@ -25809,9 +26490,27 @@ func (s *StepExecution) SetInputs(v map[string]*string) *StepExecution {
 	return s
 }
 
+// SetMaxAttempts sets the MaxAttempts field's value.
+func (s *StepExecution) SetMaxAttempts(v int64) *StepExecution {
+	s.MaxAttempts = &v
+	return s
+}
+
+// SetOnFailure sets the OnFailure field's value.
+func (s *StepExecution) SetOnFailure(v string) *StepExecution {
+	s.OnFailure = &v
+	return s
+}
+
 // SetOutputs sets the Outputs field's value.
 func (s *StepExecution) SetOutputs(v map[string][]*string) *StepExecution {
 	s.Outputs = v
+	return s
+}
+
+// SetOverriddenParameters sets the OverriddenParameters field's value.
+func (s *StepExecution) SetOverriddenParameters(v map[string][]*string) *StepExecution {
+	s.OverriddenParameters = v
 	return s
 }
 
@@ -25827,6 +26526,12 @@ func (s *StepExecution) SetResponseCode(v string) *StepExecution {
 	return s
 }
 
+// SetStepExecutionId sets the StepExecutionId field's value.
+func (s *StepExecution) SetStepExecutionId(v string) *StepExecution {
+	s.StepExecutionId = &v
+	return s
+}
+
 // SetStepName sets the StepName field's value.
 func (s *StepExecution) SetStepName(v string) *StepExecution {
 	s.StepName = &v
@@ -25839,6 +26544,72 @@ func (s *StepExecution) SetStepStatus(v string) *StepExecution {
 	return s
 }
 
+// SetTimeoutSeconds sets the TimeoutSeconds field's value.
+func (s *StepExecution) SetTimeoutSeconds(v int64) *StepExecution {
+	s.TimeoutSeconds = &v
+	return s
+}
+
+// A filter to limit the amount of step execution information returned by the
+// call.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StepExecutionFilter
+type StepExecutionFilter struct {
+	_ struct{} `type:"structure"`
+
+	// One or more keys to limit the results. Valid filter keys include the following:
+	// StepName, Action, StepExecutionId, StepExecutionStatus, StartTimeBefore,
+	// StartTimeAfter.
+	//
+	// Key is a required field
+	Key *string `type:"string" required:"true" enum:"StepExecutionFilterKey"`
+
+	// The values of the filter key.
+	//
+	// Values is a required field
+	Values []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s StepExecutionFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StepExecutionFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StepExecutionFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StepExecutionFilter"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Values == nil {
+		invalidParams.Add(request.NewErrParamRequired("Values"))
+	}
+	if s.Values != nil && len(s.Values) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Values", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *StepExecutionFilter) SetKey(v string) *StepExecutionFilter {
+	s.Key = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *StepExecutionFilter) SetValues(v []*string) *StepExecutionFilter {
+	s.Values = v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StopAutomationExecutionRequest
 type StopAutomationExecutionInput struct {
 	_ struct{} `type:"structure"`
@@ -25847,6 +26618,10 @@ type StopAutomationExecutionInput struct {
 	//
 	// AutomationExecutionId is a required field
 	AutomationExecutionId *string `min:"36" type:"string" required:"true"`
+
+	// The stop request type. Valid types include the following: Cancel and Complete.
+	// The default type is Cancel.
+	Type *string `type:"string" enum:"StopType"`
 }
 
 // String returns the string representation
@@ -25878,6 +26653,12 @@ func (s *StopAutomationExecutionInput) Validate() error {
 // SetAutomationExecutionId sets the AutomationExecutionId field's value.
 func (s *StopAutomationExecutionInput) SetAutomationExecutionId(v string) *StopAutomationExecutionInput {
 	s.AutomationExecutionId = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *StopAutomationExecutionInput) SetType(v string) *StopAutomationExecutionInput {
+	s.Type = &v
 	return s
 }
 
@@ -26354,6 +27135,10 @@ type UpdateDocumentInput struct {
 	// Content is a required field
 	Content *string `min:"1" type:"string" required:"true"`
 
+	// Specify the document format for the new document version. Systems Manager
+	// supports JSON and YAML documents. JSON is the default format.
+	DocumentFormat *string `type:"string" enum:"DocumentFormat"`
+
 	// The version of the document that you want to update.
 	DocumentVersion *string `type:"string"`
 
@@ -26361,6 +27146,9 @@ type UpdateDocumentInput struct {
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
+
+	// Specify a new target type for the document.
+	TargetType *string `type:"string"`
 }
 
 // String returns the string representation
@@ -26398,6 +27186,12 @@ func (s *UpdateDocumentInput) SetContent(v string) *UpdateDocumentInput {
 	return s
 }
 
+// SetDocumentFormat sets the DocumentFormat field's value.
+func (s *UpdateDocumentInput) SetDocumentFormat(v string) *UpdateDocumentInput {
+	s.DocumentFormat = &v
+	return s
+}
+
 // SetDocumentVersion sets the DocumentVersion field's value.
 func (s *UpdateDocumentInput) SetDocumentVersion(v string) *UpdateDocumentInput {
 	s.DocumentVersion = &v
@@ -26407,6 +27201,12 @@ func (s *UpdateDocumentInput) SetDocumentVersion(v string) *UpdateDocumentInput 
 // SetName sets the Name field's value.
 func (s *UpdateDocumentInput) SetName(v string) *UpdateDocumentInput {
 	s.Name = &v
+	return s
+}
+
+// SetTargetType sets the TargetType field's value.
+func (s *UpdateDocumentInput) SetTargetType(v string) *UpdateDocumentInput {
+	s.TargetType = &v
 	return s
 }
 
@@ -27539,6 +28339,21 @@ const (
 
 	// AutomationExecutionFilterKeyExecutionStatus is a AutomationExecutionFilterKey enum value
 	AutomationExecutionFilterKeyExecutionStatus = "ExecutionStatus"
+
+	// AutomationExecutionFilterKeyExecutionId is a AutomationExecutionFilterKey enum value
+	AutomationExecutionFilterKeyExecutionId = "ExecutionId"
+
+	// AutomationExecutionFilterKeyParentExecutionId is a AutomationExecutionFilterKey enum value
+	AutomationExecutionFilterKeyParentExecutionId = "ParentExecutionId"
+
+	// AutomationExecutionFilterKeyCurrentAction is a AutomationExecutionFilterKey enum value
+	AutomationExecutionFilterKeyCurrentAction = "CurrentAction"
+
+	// AutomationExecutionFilterKeyStartTimeBefore is a AutomationExecutionFilterKey enum value
+	AutomationExecutionFilterKeyStartTimeBefore = "StartTimeBefore"
+
+	// AutomationExecutionFilterKeyStartTimeAfter is a AutomationExecutionFilterKey enum value
+	AutomationExecutionFilterKeyStartTimeAfter = "StartTimeAfter"
 )
 
 const (
@@ -27556,6 +28371,9 @@ const (
 
 	// AutomationExecutionStatusTimedOut is a AutomationExecutionStatus enum value
 	AutomationExecutionStatusTimedOut = "TimedOut"
+
+	// AutomationExecutionStatusCancelling is a AutomationExecutionStatus enum value
+	AutomationExecutionStatusCancelling = "Cancelling"
 
 	// AutomationExecutionStatusCancelled is a AutomationExecutionStatus enum value
 	AutomationExecutionStatusCancelled = "Cancelled"
@@ -27715,6 +28533,14 @@ const (
 )
 
 const (
+	// DocumentFormatYaml is a DocumentFormat enum value
+	DocumentFormatYaml = "YAML"
+
+	// DocumentFormatJson is a DocumentFormat enum value
+	DocumentFormatJson = "JSON"
+)
+
+const (
 	// DocumentHashTypeSha256 is a DocumentHashType enum value
 	DocumentHashTypeSha256 = "Sha256"
 
@@ -27758,6 +28584,14 @@ const (
 
 	// DocumentTypeAutomation is a DocumentType enum value
 	DocumentTypeAutomation = "Automation"
+)
+
+const (
+	// ExecutionModeAuto is a ExecutionMode enum value
+	ExecutionModeAuto = "Auto"
+
+	// ExecutionModeInteractive is a ExecutionMode enum value
+	ExecutionModeInteractive = "Interactive"
 )
 
 const (
@@ -28096,4 +28930,41 @@ const (
 
 	// SignalTypeReject is a SignalType enum value
 	SignalTypeReject = "Reject"
+
+	// SignalTypeStartStep is a SignalType enum value
+	SignalTypeStartStep = "StartStep"
+
+	// SignalTypeStopStep is a SignalType enum value
+	SignalTypeStopStep = "StopStep"
+
+	// SignalTypeResume is a SignalType enum value
+	SignalTypeResume = "Resume"
+)
+
+const (
+	// StepExecutionFilterKeyStartTimeBefore is a StepExecutionFilterKey enum value
+	StepExecutionFilterKeyStartTimeBefore = "StartTimeBefore"
+
+	// StepExecutionFilterKeyStartTimeAfter is a StepExecutionFilterKey enum value
+	StepExecutionFilterKeyStartTimeAfter = "StartTimeAfter"
+
+	// StepExecutionFilterKeyStepExecutionStatus is a StepExecutionFilterKey enum value
+	StepExecutionFilterKeyStepExecutionStatus = "StepExecutionStatus"
+
+	// StepExecutionFilterKeyStepExecutionId is a StepExecutionFilterKey enum value
+	StepExecutionFilterKeyStepExecutionId = "StepExecutionId"
+
+	// StepExecutionFilterKeyStepName is a StepExecutionFilterKey enum value
+	StepExecutionFilterKeyStepName = "StepName"
+
+	// StepExecutionFilterKeyAction is a StepExecutionFilterKey enum value
+	StepExecutionFilterKeyAction = "Action"
+)
+
+const (
+	// StopTypeComplete is a StopType enum value
+	StopTypeComplete = "Complete"
+
+	// StopTypeCancel is a StopType enum value
+	StopTypeCancel = "Cancel"
 )

@@ -10160,6 +10160,98 @@ func (c *EC2) DescribeInstanceAttributeWithContext(ctx aws.Context, input *Descr
 	return out, req.Send()
 }
 
+const opDescribeInstanceCreditSpecifications = "DescribeInstanceCreditSpecifications"
+
+// DescribeInstanceCreditSpecificationsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeInstanceCreditSpecifications operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeInstanceCreditSpecifications for more information on using the DescribeInstanceCreditSpecifications
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeInstanceCreditSpecificationsRequest method.
+//    req, resp := client.DescribeInstanceCreditSpecificationsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeInstanceCreditSpecifications
+func (c *EC2) DescribeInstanceCreditSpecificationsRequest(input *DescribeInstanceCreditSpecificationsInput) (req *request.Request, output *DescribeInstanceCreditSpecificationsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeInstanceCreditSpecifications,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeInstanceCreditSpecificationsInput{}
+	}
+
+	output = &DescribeInstanceCreditSpecificationsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeInstanceCreditSpecifications API operation for Amazon Elastic Compute Cloud.
+//
+// Describes the credit option for CPU usage of one or more of your T2 instances.
+// The credit options are standard and unlimited.
+//
+// If you do not specify an instance ID, Amazon EC2 returns only the T2 instances
+// with the unlimited credit option. If you specify one or more instance IDs,
+// Amazon EC2 returns the credit option (standard or unlimited) of those instances.
+// If you specify an instance ID that is not valid, such as an instance that
+// is not a T2 instance, an error is returned.
+//
+// Recently terminated instances might appear in the returned results. This
+// interval is usually less than one hour.
+//
+// If an Availability Zone is experiencing a service disruption and you specify
+// instance IDs in the affected zone, or do not specify any instance IDs at
+// all, the call fails. If you specify only instance IDs in an unaffected zone,
+// the call works normally.
+//
+// For more information, see T2 Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/t2-instances.html)
+// in the Amazon Elastic Compute Cloud User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DescribeInstanceCreditSpecifications for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeInstanceCreditSpecifications
+func (c *EC2) DescribeInstanceCreditSpecifications(input *DescribeInstanceCreditSpecificationsInput) (*DescribeInstanceCreditSpecificationsOutput, error) {
+	req, out := c.DescribeInstanceCreditSpecificationsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeInstanceCreditSpecificationsWithContext is the same as DescribeInstanceCreditSpecifications with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeInstanceCreditSpecifications for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeInstanceCreditSpecificationsWithContext(ctx aws.Context, input *DescribeInstanceCreditSpecificationsInput, opts ...request.Option) (*DescribeInstanceCreditSpecificationsOutput, error) {
+	req, out := c.DescribeInstanceCreditSpecificationsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeInstanceStatus = "DescribeInstanceStatus"
 
 // DescribeInstanceStatusRequest generates a "aws/request.Request" representing the
@@ -17625,6 +17717,84 @@ func (c *EC2) ModifyInstanceAttribute(input *ModifyInstanceAttributeInput) (*Mod
 // for more information on using Contexts.
 func (c *EC2) ModifyInstanceAttributeWithContext(ctx aws.Context, input *ModifyInstanceAttributeInput, opts ...request.Option) (*ModifyInstanceAttributeOutput, error) {
 	req, out := c.ModifyInstanceAttributeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opModifyInstanceCreditSpecification = "ModifyInstanceCreditSpecification"
+
+// ModifyInstanceCreditSpecificationRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyInstanceCreditSpecification operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyInstanceCreditSpecification for more information on using the ModifyInstanceCreditSpecification
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyInstanceCreditSpecificationRequest method.
+//    req, resp := client.ModifyInstanceCreditSpecificationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyInstanceCreditSpecification
+func (c *EC2) ModifyInstanceCreditSpecificationRequest(input *ModifyInstanceCreditSpecificationInput) (req *request.Request, output *ModifyInstanceCreditSpecificationOutput) {
+	op := &request.Operation{
+		Name:       opModifyInstanceCreditSpecification,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyInstanceCreditSpecificationInput{}
+	}
+
+	output = &ModifyInstanceCreditSpecificationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyInstanceCreditSpecification API operation for Amazon Elastic Compute Cloud.
+//
+// Modifies the credit option for CPU usage on a running or stopped T2 instance.
+// The credit options are standard and unlimited.
+//
+// For more information, see T2 Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/t2-instances.html)
+// in the Amazon Elastic Compute Cloud User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation ModifyInstanceCreditSpecification for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyInstanceCreditSpecification
+func (c *EC2) ModifyInstanceCreditSpecification(input *ModifyInstanceCreditSpecificationInput) (*ModifyInstanceCreditSpecificationOutput, error) {
+	req, out := c.ModifyInstanceCreditSpecificationRequest(input)
+	return out, req.Send()
+}
+
+// ModifyInstanceCreditSpecificationWithContext is the same as ModifyInstanceCreditSpecification with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyInstanceCreditSpecification for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) ModifyInstanceCreditSpecificationWithContext(ctx aws.Context, input *ModifyInstanceCreditSpecificationInput, opts ...request.Option) (*ModifyInstanceCreditSpecificationOutput, error) {
+	req, out := c.ModifyInstanceCreditSpecificationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -30343,7 +30513,9 @@ type CreditSpecificationRequest struct {
 
 	// The credit option for CPU usage of a T2 instance. Valid values are standard
 	// and unlimited.
-	CpuCredits *string `type:"string"`
+	//
+	// CpuCredits is a required field
+	CpuCredits *string `type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -30354,6 +30526,19 @@ func (s CreditSpecificationRequest) String() string {
 // GoString returns the string representation
 func (s CreditSpecificationRequest) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreditSpecificationRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreditSpecificationRequest"}
+	if s.CpuCredits == nil {
+		invalidParams.Add(request.NewErrParamRequired("CpuCredits"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetCpuCredits sets the CpuCredits field's value.
@@ -35481,6 +35666,112 @@ func (s *DescribeInstanceAttributeOutput) SetSriovNetSupport(v *AttributeValue) 
 // SetUserData sets the UserData field's value.
 func (s *DescribeInstanceAttributeOutput) SetUserData(v *AttributeValue) *DescribeInstanceAttributeOutput {
 	s.UserData = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeInstanceCreditSpecificationsRequest
+type DescribeInstanceCreditSpecificationsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// One or more filters.
+	//
+	//    * instance-id - The ID of the instance.
+	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
+
+	// One or more instance IDs.
+	//
+	// Default: Describes all your instances.
+	//
+	// Constraints: Maximum 1000 explicitly specified instance IDs.
+	InstanceIds []*string `locationName:"InstanceId" locationNameList:"InstanceId" type:"list"`
+
+	// The maximum number of results to return in a single call. To retrieve the
+	// remaining results, make another call with the returned NextToken value. This
+	// value can be between 5 and 1000. You cannot specify this parameter and the
+	// instance IDs parameter in the same call.
+	MaxResults *int64 `type:"integer"`
+
+	// The token to retrieve the next page of results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeInstanceCreditSpecificationsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeInstanceCreditSpecificationsInput) GoString() string {
+	return s.String()
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DescribeInstanceCreditSpecificationsInput) SetDryRun(v bool) *DescribeInstanceCreditSpecificationsInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeInstanceCreditSpecificationsInput) SetFilters(v []*Filter) *DescribeInstanceCreditSpecificationsInput {
+	s.Filters = v
+	return s
+}
+
+// SetInstanceIds sets the InstanceIds field's value.
+func (s *DescribeInstanceCreditSpecificationsInput) SetInstanceIds(v []*string) *DescribeInstanceCreditSpecificationsInput {
+	s.InstanceIds = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeInstanceCreditSpecificationsInput) SetMaxResults(v int64) *DescribeInstanceCreditSpecificationsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeInstanceCreditSpecificationsInput) SetNextToken(v string) *DescribeInstanceCreditSpecificationsInput {
+	s.NextToken = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeInstanceCreditSpecificationsResult
+type DescribeInstanceCreditSpecificationsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the credit option for CPU usage of an instance.
+	InstanceCreditSpecifications []*InstanceCreditSpecification `locationName:"instanceCreditSpecificationSet" locationNameList:"item" type:"list"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeInstanceCreditSpecificationsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeInstanceCreditSpecificationsOutput) GoString() string {
+	return s.String()
+}
+
+// SetInstanceCreditSpecifications sets the InstanceCreditSpecifications field's value.
+func (s *DescribeInstanceCreditSpecificationsOutput) SetInstanceCreditSpecifications(v []*InstanceCreditSpecification) *DescribeInstanceCreditSpecificationsOutput {
+	s.InstanceCreditSpecifications = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeInstanceCreditSpecificationsOutput) SetNextToken(v string) *DescribeInstanceCreditSpecificationsOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -48161,6 +48452,76 @@ func (s *InstanceCount) SetState(v string) *InstanceCount {
 	return s
 }
 
+// Describes the credit option for CPU usage of a T2 instance.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/InstanceCreditSpecification
+type InstanceCreditSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// The credit option for CPU usage of the instance. Valid values are standard
+	// and unlimited.
+	CpuCredits *string `locationName:"cpuCredits" type:"string"`
+
+	// The ID of the instance.
+	InstanceId *string `locationName:"instanceId" type:"string"`
+}
+
+// String returns the string representation
+func (s InstanceCreditSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InstanceCreditSpecification) GoString() string {
+	return s.String()
+}
+
+// SetCpuCredits sets the CpuCredits field's value.
+func (s *InstanceCreditSpecification) SetCpuCredits(v string) *InstanceCreditSpecification {
+	s.CpuCredits = &v
+	return s
+}
+
+// SetInstanceId sets the InstanceId field's value.
+func (s *InstanceCreditSpecification) SetInstanceId(v string) *InstanceCreditSpecification {
+	s.InstanceId = &v
+	return s
+}
+
+// Describes the credit option for CPU usage of a T2 instance.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/InstanceCreditSpecificationRequest
+type InstanceCreditSpecificationRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The credit option for CPU usage of the instance. Valid values are standard
+	// and unlimited.
+	CpuCredits *string `type:"string"`
+
+	// The ID of the instance.
+	InstanceId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InstanceCreditSpecificationRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InstanceCreditSpecificationRequest) GoString() string {
+	return s.String()
+}
+
+// SetCpuCredits sets the CpuCredits field's value.
+func (s *InstanceCreditSpecificationRequest) SetCpuCredits(v string) *InstanceCreditSpecificationRequest {
+	s.CpuCredits = &v
+	return s
+}
+
+// SetInstanceId sets the InstanceId field's value.
+func (s *InstanceCreditSpecificationRequest) SetInstanceId(v string) *InstanceCreditSpecificationRequest {
+	s.InstanceId = &v
+	return s
+}
+
 // Describes an instance to export.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/InstanceExportDetails
 type InstanceExportDetails struct {
@@ -51969,6 +52330,103 @@ func (s ModifyInstanceAttributeOutput) String() string {
 // GoString returns the string representation
 func (s ModifyInstanceAttributeOutput) GoString() string {
 	return s.String()
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyInstanceCreditSpecificationRequest
+type ModifyInstanceCreditSpecificationInput struct {
+	_ struct{} `type:"structure"`
+
+	// A unique, case-sensitive token that you provide to ensure idempotency of
+	// your modification request. For more information, see Ensuring Idempotency
+	// (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	ClientToken *string `type:"string"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// Information about the credit option for CPU usage.
+	//
+	// InstanceCreditSpecifications is a required field
+	InstanceCreditSpecifications []*InstanceCreditSpecificationRequest `locationName:"InstanceCreditSpecification" locationNameList:"item" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s ModifyInstanceCreditSpecificationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyInstanceCreditSpecificationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyInstanceCreditSpecificationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyInstanceCreditSpecificationInput"}
+	if s.InstanceCreditSpecifications == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceCreditSpecifications"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *ModifyInstanceCreditSpecificationInput) SetClientToken(v string) *ModifyInstanceCreditSpecificationInput {
+	s.ClientToken = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *ModifyInstanceCreditSpecificationInput) SetDryRun(v bool) *ModifyInstanceCreditSpecificationInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetInstanceCreditSpecifications sets the InstanceCreditSpecifications field's value.
+func (s *ModifyInstanceCreditSpecificationInput) SetInstanceCreditSpecifications(v []*InstanceCreditSpecificationRequest) *ModifyInstanceCreditSpecificationInput {
+	s.InstanceCreditSpecifications = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyInstanceCreditSpecificationResult
+type ModifyInstanceCreditSpecificationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the instances whose credit option for CPU usage was successfully
+	// modified.
+	SuccessfulInstanceCreditSpecifications []*SuccessfulInstanceCreditSpecificationItem `locationName:"successfulInstanceCreditSpecificationSet" locationNameList:"item" type:"list"`
+
+	// Information about the instances whose credit option for CPU usage was not
+	// modified.
+	UnsuccessfulInstanceCreditSpecifications []*UnsuccessfulInstanceCreditSpecificationItem `locationName:"unsuccessfulInstanceCreditSpecificationSet" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s ModifyInstanceCreditSpecificationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyInstanceCreditSpecificationOutput) GoString() string {
+	return s.String()
+}
+
+// SetSuccessfulInstanceCreditSpecifications sets the SuccessfulInstanceCreditSpecifications field's value.
+func (s *ModifyInstanceCreditSpecificationOutput) SetSuccessfulInstanceCreditSpecifications(v []*SuccessfulInstanceCreditSpecificationItem) *ModifyInstanceCreditSpecificationOutput {
+	s.SuccessfulInstanceCreditSpecifications = v
+	return s
+}
+
+// SetUnsuccessfulInstanceCreditSpecifications sets the UnsuccessfulInstanceCreditSpecifications field's value.
+func (s *ModifyInstanceCreditSpecificationOutput) SetUnsuccessfulInstanceCreditSpecifications(v []*UnsuccessfulInstanceCreditSpecificationItem) *ModifyInstanceCreditSpecificationOutput {
+	s.UnsuccessfulInstanceCreditSpecifications = v
+	return s
 }
 
 // Contains the parameters for ModifyInstancePlacement.
@@ -57460,6 +57918,11 @@ func (s RequestLaunchTemplateData) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *RequestLaunchTemplateData) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "RequestLaunchTemplateData"}
+	if s.CreditSpecification != nil {
+		if err := s.CreditSpecification.Validate(); err != nil {
+			invalidParams.AddNested("CreditSpecification", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.ElasticGpuSpecifications != nil {
 		for i, v := range s.ElasticGpuSpecifications {
 			if v == nil {
@@ -60228,6 +60691,14 @@ type RunInstancesInput struct {
 	// Constraints: Maximum 64 ASCII characters
 	ClientToken *string `locationName:"clientToken" type:"string"`
 
+	// The credit option for CPU usage of the instance. Valid values are standard
+	// and unlimited. To change this attribute after launch, use ModifyInstanceCreditSpecification.
+	// For more information, see T2 Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/t2-instances.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	//
+	// Default: standard
+	CreditSpecification *CreditSpecificationRequest `type:"structure"`
+
 	// If you set this parameter to true, you can't terminate the instance using
 	// the Amazon EC2 console, CLI, or API; otherwise, you can. To change this attribute
 	// to false after launch, use ModifyInstanceAttribute. Alternatively, if you
@@ -60404,6 +60875,11 @@ func (s *RunInstancesInput) Validate() error {
 	if s.MinCount == nil {
 		invalidParams.Add(request.NewErrParamRequired("MinCount"))
 	}
+	if s.CreditSpecification != nil {
+		if err := s.CreditSpecification.Validate(); err != nil {
+			invalidParams.AddNested("CreditSpecification", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.ElasticGpuSpecification != nil {
 		for i, v := range s.ElasticGpuSpecification {
 			if v == nil {
@@ -60451,6 +60927,12 @@ func (s *RunInstancesInput) SetBlockDeviceMappings(v []*BlockDeviceMapping) *Run
 // SetClientToken sets the ClientToken field's value.
 func (s *RunInstancesInput) SetClientToken(v string) *RunInstancesInput {
 	s.ClientToken = &v
+	return s
+}
+
+// SetCreditSpecification sets the CreditSpecification field's value.
+func (s *RunInstancesInput) SetCreditSpecification(v *CreditSpecificationRequest) *RunInstancesInput {
+	s.CreditSpecification = v
 	return s
 }
 
@@ -64497,6 +64979,32 @@ func (s *SubnetIpv6CidrBlockAssociation) SetIpv6CidrBlockState(v *SubnetCidrBloc
 	return s
 }
 
+// Describes the T2 instance whose credit option for CPU usage was successfully
+// modified.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/SuccessfulInstanceCreditSpecificationItem
+type SuccessfulInstanceCreditSpecificationItem struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the instance.
+	InstanceId *string `locationName:"instanceId" type:"string"`
+}
+
+// String returns the string representation
+func (s SuccessfulInstanceCreditSpecificationItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SuccessfulInstanceCreditSpecificationItem) GoString() string {
+	return s.String()
+}
+
+// SetInstanceId sets the InstanceId field's value.
+func (s *SuccessfulInstanceCreditSpecificationItem) SetInstanceId(v string) *SuccessfulInstanceCreditSpecificationItem {
+	s.InstanceId = &v
+	return s
+}
+
 // Describes a tag.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/Tag
 type Tag struct {
@@ -65150,6 +65658,76 @@ func (s UnmonitorInstancesOutput) GoString() string {
 // SetInstanceMonitorings sets the InstanceMonitorings field's value.
 func (s *UnmonitorInstancesOutput) SetInstanceMonitorings(v []*InstanceMonitoring) *UnmonitorInstancesOutput {
 	s.InstanceMonitorings = v
+	return s
+}
+
+// Describes the T2 instance whose credit option for CPU usage was not modified.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/UnsuccessfulInstanceCreditSpecificationItem
+type UnsuccessfulInstanceCreditSpecificationItem struct {
+	_ struct{} `type:"structure"`
+
+	// The applicable error for the T2 instance whose credit option for CPU usage
+	// was not modified.
+	Error *UnsuccessfulInstanceCreditSpecificationItemError `locationName:"error" type:"structure"`
+
+	// The ID of the instance.
+	InstanceId *string `locationName:"instanceId" type:"string"`
+}
+
+// String returns the string representation
+func (s UnsuccessfulInstanceCreditSpecificationItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnsuccessfulInstanceCreditSpecificationItem) GoString() string {
+	return s.String()
+}
+
+// SetError sets the Error field's value.
+func (s *UnsuccessfulInstanceCreditSpecificationItem) SetError(v *UnsuccessfulInstanceCreditSpecificationItemError) *UnsuccessfulInstanceCreditSpecificationItem {
+	s.Error = v
+	return s
+}
+
+// SetInstanceId sets the InstanceId field's value.
+func (s *UnsuccessfulInstanceCreditSpecificationItem) SetInstanceId(v string) *UnsuccessfulInstanceCreditSpecificationItem {
+	s.InstanceId = &v
+	return s
+}
+
+// Information about the error for the T2 instance whose credit option for CPU
+// usage was not modified.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/UnsuccessfulInstanceCreditSpecificationItemError
+type UnsuccessfulInstanceCreditSpecificationItemError struct {
+	_ struct{} `type:"structure"`
+
+	// The error code.
+	Code *string `locationName:"code" type:"string" enum:"UnsuccessfulInstanceCreditSpecificationErrorCode"`
+
+	// The applicable error message.
+	Message *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s UnsuccessfulInstanceCreditSpecificationItemError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnsuccessfulInstanceCreditSpecificationItemError) GoString() string {
+	return s.String()
+}
+
+// SetCode sets the Code field's value.
+func (s *UnsuccessfulInstanceCreditSpecificationItemError) SetCode(v string) *UnsuccessfulInstanceCreditSpecificationItemError {
+	s.Code = &v
+	return s
+}
+
+// SetMessage sets the Message field's value.
+func (s *UnsuccessfulInstanceCreditSpecificationItemError) SetMessage(v string) *UnsuccessfulInstanceCreditSpecificationItemError {
+	s.Message = &v
 	return s
 }
 
@@ -68204,6 +68782,36 @@ const (
 
 	// InstanceTypeF116xlarge is a InstanceType enum value
 	InstanceTypeF116xlarge = "f1.16xlarge"
+
+	// InstanceTypeM5Large is a InstanceType enum value
+	InstanceTypeM5Large = "m5.large"
+
+	// InstanceTypeM5Xlarge is a InstanceType enum value
+	InstanceTypeM5Xlarge = "m5.xlarge"
+
+	// InstanceTypeM52xlarge is a InstanceType enum value
+	InstanceTypeM52xlarge = "m5.2xlarge"
+
+	// InstanceTypeM54xlarge is a InstanceType enum value
+	InstanceTypeM54xlarge = "m5.4xlarge"
+
+	// InstanceTypeM512xlarge is a InstanceType enum value
+	InstanceTypeM512xlarge = "m5.12xlarge"
+
+	// InstanceTypeM524xlarge is a InstanceType enum value
+	InstanceTypeM524xlarge = "m5.24xlarge"
+
+	// InstanceTypeH12xlarge is a InstanceType enum value
+	InstanceTypeH12xlarge = "h1.2xlarge"
+
+	// InstanceTypeH14xlarge is a InstanceType enum value
+	InstanceTypeH14xlarge = "h1.4xlarge"
+
+	// InstanceTypeH18xlarge is a InstanceType enum value
+	InstanceTypeH18xlarge = "h1.8xlarge"
+
+	// InstanceTypeH116xlarge is a InstanceType enum value
+	InstanceTypeH116xlarge = "h1.16xlarge"
 )
 
 const (
@@ -68840,6 +69448,20 @@ const (
 
 	// TrafficTypeAll is a TrafficType enum value
 	TrafficTypeAll = "ALL"
+)
+
+const (
+	// UnsuccessfulInstanceCreditSpecificationErrorCodeInvalidInstanceIdMalformed is a UnsuccessfulInstanceCreditSpecificationErrorCode enum value
+	UnsuccessfulInstanceCreditSpecificationErrorCodeInvalidInstanceIdMalformed = "InvalidInstanceID.Malformed"
+
+	// UnsuccessfulInstanceCreditSpecificationErrorCodeInvalidInstanceIdNotFound is a UnsuccessfulInstanceCreditSpecificationErrorCode enum value
+	UnsuccessfulInstanceCreditSpecificationErrorCodeInvalidInstanceIdNotFound = "InvalidInstanceID.NotFound"
+
+	// UnsuccessfulInstanceCreditSpecificationErrorCodeIncorrectInstanceState is a UnsuccessfulInstanceCreditSpecificationErrorCode enum value
+	UnsuccessfulInstanceCreditSpecificationErrorCodeIncorrectInstanceState = "IncorrectInstanceState"
+
+	// UnsuccessfulInstanceCreditSpecificationErrorCodeInstanceCreditSpecificationNotSupported is a UnsuccessfulInstanceCreditSpecificationErrorCode enum value
+	UnsuccessfulInstanceCreditSpecificationErrorCodeInstanceCreditSpecificationNotSupported = "InstanceCreditSpecification.NotSupported"
 )
 
 const (
