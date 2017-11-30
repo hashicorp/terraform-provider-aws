@@ -858,7 +858,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("[DEBUG] Error setting replicas attribute: %#v, error: %#v", replicas, err)
 	}
 
-	//  If an ARN was passed in, do NOT use what AWS passes back for replicaste_source_id,
+	//  If an ARN was passed in, do NOT use what AWS passes back for replicate_source_id,
 	//  as it passes back the master's ID-
 	//  see https://github.com/terraform-providers/terraform-provider-aws/issues/2399
 	_, arnErr := arn.Parse(d.Get("replicate_source_db").(string))
