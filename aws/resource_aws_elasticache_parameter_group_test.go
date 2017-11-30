@@ -269,11 +269,11 @@ resource "aws_elasticache_parameter_group" "bar" {
 func testAccAWSElasticacheParameterGroupConfig_UppercaseName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_parameter_group" "bar" {
-	name = "%s"
-	family = "redis2.8"
-	parameter {
-	  name = "appendonly"
-	  value = "yes"
-	}
+  name = "%s"
+  family = "redis2.8"
+  parameter {
+    name = "appendonly"
+    value = "yes"
+  }
 }`, rName)
 }
