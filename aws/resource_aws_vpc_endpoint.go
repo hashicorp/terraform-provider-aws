@@ -24,7 +24,7 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"vpc_id": &schema.Schema{
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -36,12 +36,12 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 				Default:      ec2.VpcEndpointTypeGateway,
 				ValidateFunc: validateVpcEndpointType,
 			},
-			"service_name": &schema.Schema{
+			"service_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"policy": &schema.Schema{
+			"policy": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -51,7 +51,7 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 					return json
 				},
 			},
-			"route_table_ids": &schema.Schema{
+			"route_table_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -81,11 +81,11 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"prefix_list_id": &schema.Schema{
+			"prefix_list_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cidr_blocks": &schema.Schema{
+			"cidr_blocks": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
