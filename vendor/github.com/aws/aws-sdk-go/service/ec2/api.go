@@ -212,6 +212,9 @@ func (c *EC2) AcceptVpcPeeringConnectionRequest(input *AcceptVpcPeeringConnectio
 // of the peer VPC. Use DescribeVpcPeeringConnections to view your outstanding
 // VPC peering connection requests.
 //
+// For an inter-region VPC peering connection request, you must accept the VPC
+// peering connection in the region of the accepter VPC.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -4172,11 +4175,14 @@ func (c *EC2) CreatePlacementGroupRequest(input *CreatePlacementGroupInput) (req
 
 // CreatePlacementGroup API operation for Amazon Elastic Compute Cloud.
 //
-// Creates a placement group that you launch cluster instances into. Give the
-// group a name that's unique within the scope of your account.
+// Creates a placement group in which to launch instances. The strategy of the
+// placement group determines how the instances are organized within the group.
 //
-// For more information about placement groups and cluster instances, see Cluster
-// Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using_cluster_computing.html)
+// A cluster placement group is a logical grouping of instances within a single
+// Availability Zone that benefit from low network latency, high network throughput.
+// A spread placement group places instances on distinct hardware.
+//
+// For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -5417,16 +5423,17 @@ func (c *EC2) CreateVpcPeeringConnectionRequest(input *CreateVpcPeeringConnectio
 // CreateVpcPeeringConnection API operation for Amazon Elastic Compute Cloud.
 //
 // Requests a VPC peering connection between two VPCs: a requester VPC that
-// you own and a peer VPC with which to create the connection. The peer VPC
-// can belong to another AWS account. The requester VPC and peer VPC cannot
-// have overlapping CIDR blocks.
+// you own and an accepter VPC with which to create the connection. The accepter
+// VPC can belong to another AWS account and can be in a different region to
+// the requester VPC. The requester VPC and accepter VPC cannot have overlapping
+// CIDR blocks.
 //
-// The owner of the peer VPC must accept the peering request to activate the
-// peering connection. The VPC peering connection request expires after 7 days,
-// after which it cannot be accepted or rejected.
+// The owner of the accepter VPC must accept the peering request to activate
+// the peering connection. The VPC peering connection request expires after
+// 7 days, after which it cannot be accepted or rejected.
 //
-// If you try to create a VPC peering connection between VPCs that have overlapping
-// CIDR blocks, the VPC peering connection status goes to failed.
+// If you create a VPC peering connection request between VPCs with overlapping
+// CIDR blocks, the VPC peering connection has a status of failed.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6825,8 +6832,8 @@ func (c *EC2) DeletePlacementGroupRequest(input *DeletePlacementGroupInput) (req
 // DeletePlacementGroup API operation for Amazon Elastic Compute Cloud.
 //
 // Deletes the specified placement group. You must terminate all instances in
-// the placement group before you can delete the placement group. For more information
-// about placement groups and cluster instances, see Cluster Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using_cluster_computing.html)
+// the placement group before you can delete the placement group. For more information,
+// see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -7849,8 +7856,8 @@ func (c *EC2) DeleteVpcPeeringConnectionRequest(input *DeleteVpcPeeringConnectio
 // DeleteVpcPeeringConnection API operation for Amazon Elastic Compute Cloud.
 //
 // Deletes a VPC peering connection. Either the owner of the requester VPC or
-// the owner of the peer VPC can delete the VPC peering connection if it's in
-// the active state. The owner of the requester VPC can delete a VPC peering
+// the owner of the accepter VPC can delete the VPC peering connection if it's
+// in the active state. The owner of the requester VPC can delete a VPC peering
 // connection in the pending-acceptance state.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -11398,8 +11405,8 @@ func (c *EC2) DescribePlacementGroupsRequest(input *DescribePlacementGroupsInput
 
 // DescribePlacementGroups API operation for Amazon Elastic Compute Cloud.
 //
-// Describes one or more of your placement groups. For more information about
-// placement groups and cluster instances, see Cluster Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using_cluster_computing.html)
+// Describes one or more of your placement groups. For more information, see
+// Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -22450,7 +22457,8 @@ type AcceptVpcPeeringConnectionInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// The ID of the VPC peering connection.
+	// The ID of the VPC peering connection. You must specify this parameter in
+	// the request.
 	VpcPeeringConnectionId *string `locationName:"vpcPeeringConnectionId" type:"string"`
 }
 
@@ -28506,7 +28514,8 @@ type CreatePlacementGroupInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// A name for the placement group.
+	// A name for the placement group. Must be unique within the scope of your account
+	// for the region.
 	//
 	// Constraints: Up to 255 ASCII characters
 	//
@@ -30128,15 +30137,22 @@ type CreateVpcPeeringConnectionInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// The AWS account ID of the owner of the peer VPC.
+	// The AWS account ID of the owner of the accepter VPC.
 	//
 	// Default: Your AWS account ID
 	PeerOwnerId *string `locationName:"peerOwnerId" type:"string"`
 
+	// The region code for the accepter VPC, if the accepter VPC is located in a
+	// region other than the region in which you make the request.
+	//
+	// Default: The region in which you make the request.
+	PeerRegion *string `type:"string"`
+
 	// The ID of the VPC with which you are creating the VPC peering connection.
+	// You must specify this parameter in the request.
 	PeerVpcId *string `locationName:"peerVpcId" type:"string"`
 
-	// The ID of the requester VPC.
+	// The ID of the requester VPC. You must specify this parameter in the request.
 	VpcId *string `locationName:"vpcId" type:"string"`
 }
 
@@ -30159,6 +30175,12 @@ func (s *CreateVpcPeeringConnectionInput) SetDryRun(v bool) *CreateVpcPeeringCon
 // SetPeerOwnerId sets the PeerOwnerId field's value.
 func (s *CreateVpcPeeringConnectionInput) SetPeerOwnerId(v string) *CreateVpcPeeringConnectionInput {
 	s.PeerOwnerId = &v
+	return s
+}
+
+// SetPeerRegion sets the PeerRegion field's value.
+func (s *CreateVpcPeeringConnectionInput) SetPeerRegion(v string) *CreateVpcPeeringConnectionInput {
+	s.PeerRegion = &v
 	return s
 }
 
@@ -37496,7 +37518,7 @@ type DescribePlacementGroupsInput struct {
 	//    * state - The state of the placement group (pending | available | deleting
 	//    | deleted).
 	//
-	//    * strategy - The strategy of the placement group (cluster).
+	//    * strategy - The strategy of the placement group (cluster | spread).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// One or more placement group names.
@@ -41873,12 +41895,12 @@ type DescribeVpcPeeringConnectionsInput struct {
 
 	// One or more filters.
 	//
-	//    * accepter-vpc-info.cidr-block - The IPv4 CIDR block of the peer VPC.
+	//    * accepter-vpc-info.cidr-block - The IPv4 CIDR block of the accepter VPC.
 	//
 	//    * accepter-vpc-info.owner-id - The AWS account ID of the owner of the
-	//    peer VPC.
+	//    accepter VPC.
 	//
-	//    * accepter-vpc-info.vpc-id - The ID of the peer VPC.
+	//    * accepter-vpc-info.vpc-id - The ID of the accepter VPC.
 	//
 	//    * expiration-time - The expiration date and time for the VPC peering connection.
 	//
@@ -41891,7 +41913,7 @@ type DescribeVpcPeeringConnectionsInput struct {
 	//    * requester-vpc-info.vpc-id - The ID of the requester VPC.
 	//
 	//    * status-code - The status of the VPC peering connection (pending-acceptance
-	//    | failed | expired | provisioning | active | deleted | rejected).
+	//    | failed | expired | provisioning | active | deleting | deleted | rejected).
 	//
 	//    * status-message - A message that provides more information about the
 	//    status of the VPC peering connection, if applicable.
@@ -64239,7 +64261,7 @@ type SpotPlacement struct {
 	// commas; for example, "us-west-2a, us-west-2b".
 	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
 
-	// The name of the placement group (for cluster instances).
+	// The name of the placement group.
 	GroupName *string `locationName:"groupName" type:"string"`
 
 	// The tenancy of the instance (if the instance is running in a VPC). An instance
@@ -67530,6 +67552,9 @@ type VpcPeeringConnectionVpcInfo struct {
 	// requester VPC.
 	PeeringOptions *VpcPeeringConnectionOptionsDescription `locationName:"peeringOptions" type:"structure"`
 
+	// The region in which the VPC is located.
+	Region *string `locationName:"region" type:"string"`
+
 	// The ID of the VPC.
 	VpcId *string `locationName:"vpcId" type:"string"`
 }
@@ -67571,6 +67596,12 @@ func (s *VpcPeeringConnectionVpcInfo) SetOwnerId(v string) *VpcPeeringConnection
 // SetPeeringOptions sets the PeeringOptions field's value.
 func (s *VpcPeeringConnectionVpcInfo) SetPeeringOptions(v *VpcPeeringConnectionOptionsDescription) *VpcPeeringConnectionVpcInfo {
 	s.PeeringOptions = v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *VpcPeeringConnectionVpcInfo) SetRegion(v string) *VpcPeeringConnectionVpcInfo {
+	s.Region = &v
 	return s
 }
 
@@ -69033,6 +69064,9 @@ const (
 const (
 	// PlacementStrategyCluster is a PlacementStrategy enum value
 	PlacementStrategyCluster = "cluster"
+
+	// PlacementStrategySpread is a PlacementStrategy enum value
+	PlacementStrategySpread = "spread"
 )
 
 const (
