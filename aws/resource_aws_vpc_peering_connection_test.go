@@ -315,6 +315,29 @@ func testAccCheckAWSVpcPeeringConnectionOptions(n, block string, options *ec2.Vp
 	}
 }
 
+func TestAccAWSVPCPeeringConnection_region(t *testing.T) {
+	var connection ec2.VpcPeeringConnection
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   "aws_vpc_peering_connection.foo",
+		IDRefreshIgnore: []string{"auto_accept"},
+
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccVpcPeeringConfigRegion,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSVpcPeeringConnectionExists(
+						"aws_vpc_peering_connection.foo",
+						&connection),
+				),
+			},
+		},
+	})
+}
+
 const testAccVpcPeeringConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
@@ -400,5 +423,33 @@ resource "aws_vpc" "bar" {
 resource "aws_vpc_peering_connection" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
 	peer_vpc_id = "${aws_vpc.bar.id}"
+}
+`
+
+const testAccVpcPeeringConfigRegion = `
+provider "aws" {
+  region = "us-west-2"
+}
+
+provider "aws" {
+	alias = "us-east-1"
+  region = "us-east-1"
+}
+
+resource "aws_vpc" "foo" {
+	provider = "aws"
+	cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_vpc" "bar" {
+	provider = "aws.us-east-1"
+	cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_vpc_peering_connection" "foo" {
+	provider = "aws"
+	vpc_id = "${aws_vpc.foo.id}"
+	peer_vpc_id = "${aws_vpc.bar.id}"
+	peer_region = "us-east-1"
 }
 `

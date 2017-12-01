@@ -49,6 +49,12 @@ func resourceAwsVpcPeeringConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"peer_region": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
 			"accepter":  vpcPeeringConnectionOptionsSchema(),
 			"requester": vpcPeeringConnectionOptionsSchema(),
 			"tags":      tagsSchema(),
@@ -67,6 +73,10 @@ func resourceAwsVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error
 
 	if v, ok := d.GetOk("peer_owner_id"); ok {
 		createOpts.PeerOwnerId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("peer_region"); ok {
+		createOpts.SetPeerRegion(v.(string))
 	}
 
 	log.Printf("[DEBUG] VPC Peering Create options: %#v", createOpts)
@@ -152,6 +162,7 @@ func resourceAwsVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("accept_status", pc.Status.Code)
+	d.Set("peer_region", pc.AccepterVpcInfo.Region)
 
 	// When the VPC Peering Connection is pending acceptance,
 	// the details about accepter and/or requester peering
