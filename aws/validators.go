@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -2206,4 +2207,23 @@ func validateDynamoDbStreamSpec(d *schema.ResourceDiff) error {
 		return errors.New("stream_view_type is required when stream_enabled = true")
 	}
 	return nil
+}
+
+func validateVpcEndpointType(v interface{}, k string) (ws []string, errors []error) {
+	return validateStringIn(ec2.VpcEndpointTypeGateway, ec2.VpcEndpointTypeInterface)(v, k)
+}
+
+func validateStringIn(validValues ...string) schema.SchemaValidateFunc {
+	return func(v interface{}, k string) (ws []string, errors []error) {
+		value := v.(string)
+		for _, s := range validValues {
+			if value == s {
+				return
+			}
+		}
+		errors = append(errors, fmt.Errorf(
+			"%q contains an invalid value %q. Valid values are %q.",
+			k, value, validValues))
+		return
+	}
 }
