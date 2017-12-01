@@ -37,6 +37,10 @@ func dataSourceAwsVpcEndpointService() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"acceptance_required": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"availability_zones": &schema.Schema{
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -79,6 +83,7 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 			d.Set("service_type", sd.ServiceType[0].ServiceType)
 			d.Set("owner", sd.Owner)
 			d.Set("vpc_endpoint_policy_supported", sd.VpcEndpointPolicySupported)
+			d.Set("acceptance_required", sd.AcceptanceRequired)
 			d.Set("availability_zones", flattenStringList(sd.AvailabilityZones))
 			d.Set("private_dns_name", sd.PrivateDnsName)
 			d.Set("base_endpoint_dns_names", flattenStringList(sd.BaseEndpointDnsNames))

@@ -47,6 +47,7 @@ The following attributes are exported:
 * `service_type` - The service type, `Gateway` or `Interface`.
 * `owner` - The AWS account ID of the service owner or `amazon`.
 * `vpc_endpoint_policy_supported` - Whether or not the service supports endpoint policies - `true` or `false`.
+* `acceptance_required` - Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
 * `availability_zones` - The Availability Zones in which the service is available.
 * `private_dns_name` - The private DNS name for the service. Applicable for services of type `Interface`.
 * `base_endpoint_dns_names` - The DNS names for the service.
