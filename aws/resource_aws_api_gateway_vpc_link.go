@@ -27,11 +27,10 @@ func resourceAwsApiGatewayVpcLink() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"target_arns": {
-				Type:     schema.TypeSet,
+			"target_arn": {
+				Type:     schema.TypeString,
 				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				ForceNew: true,
 			},
 		},
 	}
@@ -42,7 +41,7 @@ func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}
 
 	input := &apigateway.CreateVpcLinkInput{
 		Name:       aws.String(d.Get("name").(string)),
-		TargetArns: expandStringSet(d.Get("target_arns").(*schema.Set)),
+		TargetArns: []*string{aws.String(d.Get("target_arn").(string))},
 	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -92,7 +91,7 @@ func resourceAwsApiGatewayVpcLinkRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("name", resp.Name)
 	d.Set("description", resp.Description)
-	d.Set("target_arns", schema.NewSet(schema.HashString, flattenStringList(resp.TargetArns)))
+	d.Set("target_arn", resp.TargetArns[0])
 	return nil
 }
 
@@ -115,30 +114,6 @@ func resourceAwsApiGatewayVpcLinkUpdate(d *schema.ResourceData, meta interface{}
 			Path:  aws.String("/description"),
 			Value: aws.String(d.Get("description").(string)),
 		})
-	}
-
-	if d.HasChange("target_arns") {
-		o, n := d.GetChange("target_arns")
-		prefix := "targetArns"
-
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-		adddiff := ns.Difference(os).List()
-		remdiff := os.Difference(ns).List()
-
-		for _, v := range remdiff {
-			operations = append(operations, &apigateway.PatchOperation{
-				Op:   aws.String("remove"),
-				Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJsonPointer(v.(string)))),
-			})
-		}
-
-		for _, v := range adddiff {
-			operations = append(operations, &apigateway.PatchOperation{
-				Op:   aws.String("add"),
-				Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJsonPointer(v.(string)))),
-			})
-		}
 	}
 
 	input := &apigateway.UpdateVpcLinkInput{
