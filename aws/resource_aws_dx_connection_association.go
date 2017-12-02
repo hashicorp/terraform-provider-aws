@@ -62,18 +62,9 @@ func resourceAwsDxConnectionAssociationRead(d *schema.ResourceData, meta interfa
 		return nil
 	}
 	if len(resp.Connections) != 1 {
-		return fmt.Errorf("Number of DX Connection (%s) isn't one, got %d", connectionId, len(resp.Connections))
+		return fmt.Errorf("Found %d DX connections for %s, expected 1", len(resp.Connections))
 	}
-	if d.Id() != *resp.Connections[0].ConnectionId {
-		return fmt.Errorf("DX Connection (%s) not found", connectionId)
-	}
-	if resp.Connections[0].LagId == nil {
-		d.SetId("")
-		return nil
-	}
-	if *resp.Connections[0].LagId != d.Get("lag_id").(string) {
-		return fmt.Errorf("DX Connection (%s) is associated with unexpected LAG (%s)", connectionId, *resp.Connections[0].LagId)
-	}
+
 	return nil
 }
 
@@ -88,9 +79,6 @@ func resourceAwsDxConnectionAssociationDelete(d *schema.ResourceData, meta inter
 	resp, err := conn.DisassociateConnectionFromLag(input)
 	if err != nil {
 		return err
-	}
-	if resp.LagId != nil {
-		return fmt.Errorf("DX Connection (%s) is still associated with LAG", d.Id())
 	}
 
 	d.SetId("")
