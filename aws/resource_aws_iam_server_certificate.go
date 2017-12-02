@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -180,6 +181,7 @@ func resourceAwsIAMServerCertificateDelete(d *schema.ResourceData, meta interfac
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == "DeleteConflict" && strings.Contains(awsErr.Message(), "currently in use by arn") {
+					currentlyInUseBy(awsErr.Message(), meta)
 					log.Printf("[WARN] Conflict deleting server certificate: %s, retrying", awsErr.Message())
 					return resource.RetryableError(err)
 				}
@@ -207,6 +209,27 @@ func resourceAwsIAMServerCertificateImport(
 	d.Set("name", d.Id())
 	// private_key can't be fetched from any API call
 	return []*schema.ResourceData{d}, nil
+}
+
+func currentlyInUseBy(awsErr string, meta interface{}) {
+	msg := strings.Split(awsErr, "currently in use by ")
+	if len(msg) > 1 {
+		lbArn := strings.Split(msg[1], ".")[0]
+		lbName := strings.Split(lbArn, "loadbalancer/")
+		if len(lbName) > 1 {
+			conn := meta.(*AWSClient).elbconn
+			describeElbOpts := &elb.DescribeLoadBalancersInput{
+				LoadBalancerNames: []*string{aws.String(lbName[1])},
+			}
+			_, err := conn.DescribeLoadBalancers(describeElbOpts)
+			if err != nil {
+				elbErr, ok := err.(awserr.Error)
+				if ok && elbErr.Code() == "LoadBalancerNotFound" {
+					log.Printf("[WARN] Load Balancer (%s) causing delete conflict not found", lbArn)
+				}
+			}
+		}
+	}
 }
 
 func normalizeCert(cert interface{}) string {
