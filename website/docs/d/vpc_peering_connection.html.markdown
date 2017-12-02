@@ -54,6 +54,8 @@ The given filters must match exactly one VPC peering connection whose data will 
 
 * `peer_cidr_block` - (Optional) The CIDR block of the accepter VPC of the specific VPC Peering Connection to retrieve.
 
+* `peer_region` - (Optional) The region of the accepter VPC of the specific VPC Peering Connection to retrieve.
+
 * `filter` - (Optional) Custom filter block as described below.
 
 * `tags` - (Optional) A mapping of tags, each pair of which must exactly match
