@@ -17,7 +17,7 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 				Required: true,
 			},
 			"association": &schema.Schema{
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -45,7 +45,7 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 				},
 			},
 			"attachment": &schema.Schema{
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -107,7 +107,7 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 				Computed: true,
 			},
 			"private_ips": &schema.Schema{
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -143,7 +143,7 @@ func dataSourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("no matching network interface found")
 	}
 	if len(resp.NetworkInterfaces) > 1 {
-		return fmt.Errorf("multiple network interfaces matched")
+		return fmt.Errorf("multiple network interfaces matched %s", d.Id())
 	}
 
 	eni := resp.NetworkInterfaces[0]
@@ -153,7 +153,7 @@ func dataSourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{})
 		d.Set("association", flattenEc2NetworkInterfaceAssociation(eni.Association))
 	}
 	if eni.Attachment != nil {
-		attachment := []map[string]interface{}{flattenAttachment(eni.Attachment)}
+		attachment := []interface{}{flattenAttachment(eni.Attachment)}
 		d.Set("attachment", attachment)
 	}
 	d.Set("availability_zone", eni.AvailabilityZone)

@@ -797,7 +797,7 @@ func flattenAttachment(a *ec2.NetworkInterfaceAttachment) map[string]interface{}
 	return att
 }
 
-func flattenEc2NetworkInterfaceAssociation(a *ec2.NetworkInterfaceAssociation) []map[string]interface{} {
+func flattenEc2NetworkInterfaceAssociation(a *ec2.NetworkInterfaceAssociation) []interface{} {
 	att := make(map[string]interface{})
 	if a.AllocationId != nil {
 		att["allocation_id"] = *a.AllocationId
@@ -814,7 +814,7 @@ func flattenEc2NetworkInterfaceAssociation(a *ec2.NetworkInterfaceAssociation) [
 	if a.PublicIp != nil {
 		att["public_ip"] = *a.PublicIp
 	}
-	return []map[string]interface{}{att}
+	return []interface{}{att}
 }
 
 func flattenEc2NetworkInterfaceIpv6Address(niia []*ec2.NetworkInterfaceIpv6Address) []string {
