@@ -221,7 +221,7 @@ resource "aws_iam_role_policy" "hoge" {
       "Action": [
         "ecs:DescribeServices",
         "ecs:UpdateService",
-				"cloudwatch:DescribeAlarms"
+        "cloudwatch:DescribeAlarms"
       ],
       "Resource": [
         "*"
@@ -233,11 +233,11 @@ EOF
 }
 
 resource "aws_ecs_cluster" "hoge" {
-	name = "tf-ecs-cluster-%s"
+  name = "tf-ecs-cluster-%s"
 }
 
 resource "aws_ecs_task_definition" "hoge" {
-  family = "foobar"
+  family = "foobar%s"
   container_definitions = <<EOF
 [
   {
@@ -262,12 +262,12 @@ resource "aws_ecs_service" "hoge" {
 }
 
 resource "aws_appautoscaling_target" "hoge" {
-	service_namespace = "ecs"
-	resource_id = "service/${aws_ecs_cluster.hoge.name}/${aws_ecs_service.hoge.name}"
-	scalable_dimension = "ecs:service:DesiredCount"
-	role_arn = "${aws_iam_role.hoge.arn}"
-	min_capacity = 1
-	max_capacity = 3
+  service_namespace = "ecs"
+  resource_id = "service/${aws_ecs_cluster.hoge.name}/${aws_ecs_service.hoge.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  role_arn = "${aws_iam_role.hoge.arn}"
+  min_capacity = 1
+  max_capacity = 3
 }
 
 resource "aws_appautoscaling_scheduled_action" "hoge" {
@@ -282,7 +282,7 @@ resource "aws_appautoscaling_scheduled_action" "hoge" {
     max_capacity = 5
   }
 }
-`, rName, rName, rName, ts)
+`, rName, rName, rName, rName, ts)
 }
 
 func testAccAppautoscalingScheduledActionConfig_EMR(rName, ts string) string {

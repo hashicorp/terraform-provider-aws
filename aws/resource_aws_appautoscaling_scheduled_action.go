@@ -15,7 +15,7 @@ const awsAppautoscalingScheduleTimeLayout = "2006-01-02T15:04:05Z"
 
 func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppautoscalingScheduledActionCreate,
+		Create: resourceAwsAppautoscalingScheduledActionPut,
 		Read:   resourceAwsAppautoscalingScheduledActionRead,
 		Delete: resourceAwsAppautoscalingScheduledActionDelete,
 
@@ -29,17 +29,6 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					validServiceNamespaces := []string{"ecs", "elasticmapreduce", "ec2", "appstream", "dynamodb"}
-					for _, str := range validServiceNamespaces {
-						if value == str {
-							return
-						}
-					}
-					errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validServiceNamespaces, value))
-					return
-				},
 			},
 			"resource_id": &schema.Schema{
 				Type:     schema.TypeString,
@@ -50,20 +39,6 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					validDimensions := []string{"ecs:service:DesiredCount", "ec2:spot-fleet-request:TargetCapacity",
-						"elasticmapreduce:instancegroup:InstanceCount", "appstream:fleet:DesiredCapacity",
-						"dynamodb:table:ReadCapacityUnits", "dynamodb:table:WriteCapacityUnits",
-						"dynamodb:index:ReadCapacityUnits", "dynamodb:index:WriteCapacityUnits"}
-					for _, str := range validDimensions {
-						if value == str {
-							return
-						}
-					}
-					errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validDimensions, value))
-					return
-				},
 			},
 			"scalable_target_action": &schema.Schema{
 				Type:     schema.TypeList,
@@ -108,7 +83,7 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 	}
 }
 
-func resourceAwsAppautoscalingScheduledActionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appautoscalingconn
 
 	input := &applicationautoscaling.PutScheduledActionInput{
@@ -151,13 +126,8 @@ func resourceAwsAppautoscalingScheduledActionCreate(d *schema.ResourceData, meta
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutScheduledAction(input)
 		if err != nil {
-			if aerr, ok := err.(awserr.Error); ok {
-				switch aerr.Code() {
-				case applicationautoscaling.ErrCodeObjectNotFoundException:
-					return resource.RetryableError(err)
-				default:
-					return resource.NonRetryableError(err)
-				}
+			if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
@@ -189,7 +159,7 @@ func resourceAwsAppautoscalingScheduledActionRead(d *schema.ResourceData, meta i
 		return nil
 	}
 	if len(resp.ScheduledActions) != 1 {
-		return fmt.Errorf("Number of Scheduled Action (%s) isn't one, got %d", saName, len(resp.ScheduledActions))
+		return fmt.Errorf("Expected 1 scheduled action under %s, found %d", saName, len(resp.ScheduledActions))
 	}
 	if *resp.ScheduledActions[0].ScheduledActionName != saName {
 		return fmt.Errorf("Scheduled Action (%s) not found", saName)
