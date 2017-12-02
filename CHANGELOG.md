@@ -1,5 +1,9 @@
 ## 1.5.1 (Unreleased)
 
+IMPROVEMENTS:
+
+* resource/aws_ssm_association: Allow specifying `association_name` [GH-2257]
+
 BUG FIXES:
 
 * resource/elasticache_parameter_group: Add StateFunc to make name lowercase [GH-2426]
