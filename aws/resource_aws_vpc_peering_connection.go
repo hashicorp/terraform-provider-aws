@@ -153,16 +153,15 @@ func resourceAwsVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
 		// We're the accepter
 		d.Set("peer_owner_id", pc.RequesterVpcInfo.OwnerId)
 		d.Set("peer_vpc_id", pc.RequesterVpcInfo.VpcId)
-		d.Set("peer_region", pc.RequesterVpcInfo.Region)
 		d.Set("vpc_id", pc.AccepterVpcInfo.VpcId)
 	} else {
 		// We're the requester
 		d.Set("peer_owner_id", pc.AccepterVpcInfo.OwnerId)
 		d.Set("peer_vpc_id", pc.AccepterVpcInfo.VpcId)
-		d.Set("peer_region", pc.AccepterVpcInfo.Region)
 		d.Set("vpc_id", pc.RequesterVpcInfo.VpcId)
 	}
 
+	d.Set("peer_region", pc.AccepterVpcInfo.Region)
 	d.Set("accept_status", pc.Status.Code)
 
 	// When the VPC Peering Connection is pending acceptance,

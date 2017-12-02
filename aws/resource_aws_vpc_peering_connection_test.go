@@ -437,7 +437,6 @@ provider "aws" {
 }
 
 resource "aws_vpc" "foo" {
-	provider = "aws"
 	cidr_block = "10.0.0.0/16"
 }
 
@@ -447,7 +446,6 @@ resource "aws_vpc" "bar" {
 }
 
 resource "aws_vpc_peering_connection" "foo" {
-	provider = "aws"
 	vpc_id = "${aws_vpc.foo.id}"
 	peer_vpc_id = "${aws_vpc.bar.id}"
 	peer_region = "us-east-1"
