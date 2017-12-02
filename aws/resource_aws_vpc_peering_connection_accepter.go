@@ -43,6 +43,10 @@ func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"peer_region": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"accepter":  vpcPeeringConnectionOptionsSchema(),
 			"requester": vpcPeeringConnectionOptionsSchema(),
 			"tags":      tagsSchema(),

@@ -91,6 +91,7 @@ All of the argument attributes except `auto_accept` are also exported as result 
 * `vpc_id` - The ID of the accepter VPC.
 * `peer_vpc_id` - The ID of the requester VPC.
 * `peer_owner_id` - The AWS account ID of the owner of the requester VPC.
+* `peer_region` - The region of the requester VPC.
 * `accepter` - A configuration block that describes [VPC Peering Connection]
 (http://docs.aws.amazon.com/AmazonVPC/latest/PeeringGuide) options set for the accepter VPC.
 * `requester` - A configuration block that describes [VPC Peering Connection]
