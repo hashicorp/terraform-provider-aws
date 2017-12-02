@@ -109,14 +109,16 @@ func resourceAwsEcsService() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"security_groups": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
 						},
 						"subnets": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
 						},
 					},
 				},
@@ -375,7 +377,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("network_configuration", flattenEcsNetworkConfigration(service.NetworkConfiguration)); err != nil {
-		log.Printf("[ERR] Error setting network_configuration for (%s): %s", d.Id(), err)
+		return fmt.Errorf("[ERR] Error setting network_configuration for (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -386,8 +388,8 @@ func flattenEcsNetworkConfigration(nc *ecs.NetworkConfiguration) []interface{} {
 		return nil
 	}
 	result := make(map[string]interface{})
-	result["security_groups"] = flattenStringList(nc.AwsvpcConfiguration.SecurityGroups)
-	result["subnets"] = flattenStringList(nc.AwsvpcConfiguration.Subnets)
+	result["security_groups"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.SecurityGroups))
+	result["subnets"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.Subnets))
 	return []interface{}{result}
 }
 
@@ -398,9 +400,9 @@ func expandEcsNetworkConfigration(nc []interface{}) *ecs.NetworkConfiguration {
 	awsVpcConfig := &ecs.AwsVpcConfiguration{}
 	raw := nc[0].(map[string]interface{})
 	if val, ok := raw["security_groups"]; ok {
-		awsVpcConfig.SecurityGroups = expandStringList(val.([]interface{}))
+		awsVpcConfig.SecurityGroups = expandStringSet(val.(*schema.Set))
 	}
-	awsVpcConfig.Subnets = expandStringList(raw["subnets"].([]interface{}))
+	awsVpcConfig.Subnets = expandStringSet(raw["subnets"].(*schema.Set))
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
