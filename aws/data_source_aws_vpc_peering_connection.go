@@ -39,6 +39,11 @@ func dataSourceAwsVpcPeeringConnection() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"region": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"peer_vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -126,6 +131,7 @@ func dataSourceAwsVpcPeeringConnectionRead(d *schema.ResourceData, meta interfac
 	d.Set("vpc_id", pcx.RequesterVpcInfo.VpcId)
 	d.Set("owner_id", pcx.RequesterVpcInfo.OwnerId)
 	d.Set("cidr_block", pcx.RequesterVpcInfo.CidrBlock)
+	d.Set("region", pcx.RequesterVpcInfo.Region)
 	d.Set("peer_vpc_id", pcx.AccepterVpcInfo.VpcId)
 	d.Set("peer_owner_id", pcx.AccepterVpcInfo.OwnerId)
 	d.Set("peer_cidr_block", pcx.AccepterVpcInfo.CidrBlock)
