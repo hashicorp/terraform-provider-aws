@@ -10,9 +10,9 @@ description: |-
 
 Provides a resource to manage a VPC Peering Connection resource.
 
--> **Note:** For cross-account (requester's AWS account differs from the accepter's AWS account) VPC Peering Connections
-use the `aws_vpc_peering_connection` resource to manage the requester's side of the connection and
-use the `aws_vpc_peering_connection_accepter` resource to manage the accepter's side of the connection.
+-> **Note:** For cross-account (requester's AWS account differs from the accepter's AWS account) or inter-region
+VPC Peering Connections use the `aws_vpc_peering_connection` resource to manage the requester's side of the
+connection and use the `aws_vpc_peering_connection_accepter` resource to manage the accepter's side of the connection.
 
 ## Example Usage
 
@@ -102,7 +102,8 @@ The following arguments are supported:
 * `peer_vpc_id` - (Required) The ID of the VPC with which you are creating the VPC Peering Connection.
 * `vpc_id` - (Required) The ID of the requester VPC.
 * `auto_accept` - (Optional) Accept the peering (both VPCs need to be in the same AWS account).
-* `peer_region` - (Optional) The region of the accepter VPC of the [VPC Peering Connection].
+* `peer_region` - (Optional) The region of the accepter VPC of the [VPC Peering Connection]. `auto_accept` must be `false`,
+and use the `aws_vpc_peering_connection_accepter` to manage the accepter side.
 * `accepter` (Optional) - An optional configuration block that allows for [VPC Peering Connection]
 (http://docs.aws.amazon.com/AmazonVPC/latest/PeeringGuide) options to be set for the VPC that accepts
 the peering connection (a maximum of one).
