@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -50,11 +49,8 @@ func testAccCheckAwsMediaStoreContainerDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeContainer(input)
 		if err != nil {
-			if ecrerr, ok := err.(awserr.Error); ok {
-				switch ecrerr.Code() {
-				case mediastore.ErrCodeContainerNotFoundException:
-					return nil
-				}
+			if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+				return nil
 			}
 			return err
 		}

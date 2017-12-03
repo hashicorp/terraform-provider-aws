@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -27,7 +26,7 @@ func resourceAwsMediaStoreContainer() *schema.Resource {
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(string)
 					if !regexp.MustCompile("^\\w+$").MatchString(value) {
-						errors = append(errors, fmt.Errorf("%q must match \\w+", k))
+						errors = append(errors, fmt.Errorf("%q must contain alphanumeric characters or underscores", k))
 					}
 					return
 				},
@@ -72,7 +71,7 @@ func resourceAwsMediaStoreContainerCreate(d *schema.ResourceData, meta interface
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("[WARN] Error waiting for MediaStore Container status to be \"ACTIVE\": %s", err)
+		return err
 	}
 
 	d.SetId(d.Get("name").(string))
@@ -100,7 +99,6 @@ func resourceAwsMediaStoreContainerUpdate(d *schema.ResourceData, meta interface
 	if !d.HasChange("policy") {
 		return resourceAwsMediaStoreContainerRead(d, meta)
 	}
-
 	input := &mediastore.PutContainerPolicyInput{
 		ContainerName: aws.String(d.Id()),
 		Policy:        aws.String(d.Get("policy").(string)),
@@ -121,13 +119,27 @@ func resourceAwsMediaStoreContainerDelete(d *schema.ResourceData, meta interface
 	}
 	_, err := conn.DeleteContainer(input)
 	if err != nil {
-		if ecrerr, ok := err.(awserr.Error); ok {
-			switch ecrerr.Code() {
-			case mediastore.ErrCodeContainerNotFoundException:
-				d.SetId("")
+		if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		dcinput := &mediastore.DescribeContainerInput{
+			ContainerName: aws.String(d.Id()),
+		}
+		_, err := conn.DescribeContainer(dcinput)
+		if err != nil {
+			if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
 				return nil
 			}
+			return resource.NonRetryableError(err)
 		}
+		return resource.RetryableError(nil)
+	})
+	if err != nil {
 		return err
 	}
 
