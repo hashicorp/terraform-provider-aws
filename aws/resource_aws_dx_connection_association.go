@@ -76,7 +76,7 @@ func resourceAwsDxConnectionAssociationDelete(d *schema.ResourceData, meta inter
 		LagId:        aws.String(d.Get("lag_id").(string)),
 	}
 
-	resp, err := conn.DisassociateConnectionFromLag(input)
+	_, err := conn.DisassociateConnectionFromLag(input)
 	if err != nil {
 		return err
 	}
