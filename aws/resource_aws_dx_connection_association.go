@@ -48,9 +48,8 @@ func resourceAwsDxConnectionAssociationCreate(d *schema.ResourceData, meta inter
 func resourceAwsDxConnectionAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
-	connectionId := d.Id()
 	input := &directconnect.DescribeConnectionsInput{
-		ConnectionId: aws.String(connectionId),
+		ConnectionId: aws.String(d.Id()),
 	}
 
 	resp, err := conn.DescribeConnections(input)
@@ -62,7 +61,7 @@ func resourceAwsDxConnectionAssociationRead(d *schema.ResourceData, meta interfa
 		return nil
 	}
 	if len(resp.Connections) != 1 {
-		return fmt.Errorf("Found %d DX connections for %s, expected 1", len(resp.Connections))
+		return fmt.Errorf("Found %d DX connections for %s, expected 1", len(resp.Connections), d.Id())
 	}
 
 	return nil
