@@ -244,6 +244,8 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 						"aws_instance.foo", &v),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "root_block_device.#", "1"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo", "root_block_device.0.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "root_block_device.0.volume_size", "11"),
 					resource.TestCheckResourceAttr(
