@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -138,14 +137,14 @@ func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta in
 		return err
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(d.Get("name").(string) + "-" + d.Get("service_namespace").(string) + "-" + d.Get("resource_id").(string))
 	return resourceAwsAppautoscalingScheduledActionRead(d, meta)
 }
 
 func resourceAwsAppautoscalingScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appautoscalingconn
 
-	saName := d.Id()
+	saName := d.Get("name").(string)
 	input := &applicationautoscaling.DescribeScheduledActionsInput{
 		ScheduledActionNames: []*string{aws.String(saName)},
 		ServiceNamespace:     aws.String(d.Get("service_namespace").(string)),
@@ -181,7 +180,7 @@ func resourceAwsAppautoscalingScheduledActionDelete(d *schema.ResourceData, meta
 	}
 	_, err := conn.DeleteScheduledAction(input)
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == applicationautoscaling.ErrCodeObjectNotFoundException {
+		if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
 			d.SetId("")
 			return nil
 		}

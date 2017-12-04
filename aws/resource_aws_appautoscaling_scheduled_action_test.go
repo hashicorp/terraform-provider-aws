@@ -89,7 +89,7 @@ func testAccCheckAwsAppautoscalingScheduledActionDestroy(s *terraform.State) err
 		}
 
 		input := &applicationautoscaling.DescribeScheduledActionsInput{
-			ScheduledActionNames: []*string{aws.String(rs.Primary.ID)},
+			ScheduledActionNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 			ServiceNamespace:     aws.String(rs.Primary.Attributes["service_namespace"]),
 		}
 		resp, err := conn.DescribeScheduledActions(input)
@@ -97,7 +97,7 @@ func testAccCheckAwsAppautoscalingScheduledActionDestroy(s *terraform.State) err
 			return err
 		}
 		if len(resp.ScheduledActions) > 0 {
-			return fmt.Errorf("Appautoscaling Scheduled Action (%s) not deleted", rs.Primary.ID)
+			return fmt.Errorf("Appautoscaling Scheduled Action (%s) not deleted", rs.Primary.Attributes["name"])
 		}
 	}
 	return nil
