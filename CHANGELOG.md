@@ -2,7 +2,8 @@
 
 IMPROVEMENTS:
 
-* resource/aws_ssm_association: Allow specifying `association_name` [GH-2257]
+* resource/aws_ssm_association: Add `association_name` [GH-2257]
+* resource/aws_ecs_service: Add `network_configuration` [GH-2299]
 
 BUG FIXES:
 
