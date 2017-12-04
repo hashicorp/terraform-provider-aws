@@ -349,6 +349,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_emr_security_configuration":               resourceAwsEMRSecurityConfiguration(),
 			"aws_flow_log":                                 resourceAwsFlowLog(),
 			"aws_glacier_vault":                            resourceAwsGlacierVault(),
+			"aws_guardduty_detector":                       resourceAwsGuardDutyDetector(),
 			"aws_iam_access_key":                           resourceAwsIamAccessKey(),
 			"aws_iam_account_alias":                        resourceAwsIamAccountAlias(),
 			"aws_iam_account_password_policy":              resourceAwsIamAccountPasswordPolicy(),
