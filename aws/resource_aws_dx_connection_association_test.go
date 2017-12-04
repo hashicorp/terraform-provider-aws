@@ -27,6 +27,23 @@ func TestAccAwsDxConnectionAssociation_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsDxConnectionAssociation_multiConns(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxConnectionAssociationConfig_multiConns(acctest.RandString(5)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxConnectionAssociationExists("aws_dx_connection_association.test1"),
+					testAccCheckAwsDxConnectionAssociationExists("aws_dx_connection_association.test2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsDxConnectionAssociationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).dxconn
 
@@ -84,4 +101,38 @@ resource "aws_dx_connection_association" "test" {
   lag_id = "${aws_dx_lag.test.id}"
 }
 `, rName, rName)
+}
+
+func testAccDxConnectionAssociationConfig_multiConns(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dx_connection" "test1" {
+  name = "tf-dxconn1-%s"
+  bandwidth = "1Gbps"
+  location = "EqSe2"
+}
+
+resource "aws_dx_connection" "test2" {
+  name = "tf-dxconn2-%s"
+  bandwidth = "1Gbps"
+  location = "EqSe2"
+}
+
+resource "aws_dx_lag" "test" {
+  name = "tf-dx-%s"
+  connections_bandwidth = "1Gbps"
+  location = "EqSe2"
+  number_of_connections = 1
+  force_destroy = true
+}
+
+resource "aws_dx_connection_association" "test1" {
+  connection_id = "${aws_dx_connection.test1.id}"
+  lag_id = "${aws_dx_lag.test.id}"
+}
+
+resource "aws_dx_connection_association" "test2" {
+  connection_id = "${aws_dx_connection.test2.id}"
+  lag_id = "${aws_dx_lag.test.id}"
+}
+`, rName, rName, rName)
 }
