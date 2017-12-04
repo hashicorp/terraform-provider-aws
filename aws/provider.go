@@ -263,6 +263,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_app_cookie_stickiness_policy":             resourceAwsAppCookieStickinessPolicy(),
 			"aws_appautoscaling_target":                    resourceAwsAppautoscalingTarget(),
 			"aws_appautoscaling_policy":                    resourceAwsAppautoscalingPolicy(),
+			"aws_appautoscaling_scheduled_action":          resourceAwsAppautoscalingScheduledAction(),
 			"aws_athena_database":                          resourceAwsAthenaDatabase(),
 			"aws_athena_named_query":                       resourceAwsAthenaNamedQuery(),
 			"aws_autoscaling_attachment":                   resourceAwsAutoscalingAttachment(),
