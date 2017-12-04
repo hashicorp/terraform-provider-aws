@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -212,21 +213,17 @@ func resourceAwsIAMServerCertificateImport(
 }
 
 func currentlyInUseBy(awsErr string, meta interface{}) {
-	msg := strings.Split(awsErr, "currently in use by ")
-	if len(msg) > 1 {
-		lbArn := strings.Split(msg[1], ".")[0]
-		lbName := strings.Split(lbArn, "loadbalancer/")
-		if len(lbName) > 1 {
-			conn := meta.(*AWSClient).elbconn
-			describeElbOpts := &elb.DescribeLoadBalancersInput{
-				LoadBalancerNames: []*string{aws.String(lbName[1])},
-			}
-			_, err := conn.DescribeLoadBalancers(describeElbOpts)
-			if err != nil {
-				elbErr, ok := err.(awserr.Error)
-				if ok && elbErr.Code() == "LoadBalancerNotFound" {
-					log.Printf("[WARN] Load Balancer (%s) causing delete conflict not found", lbArn)
-				}
+	r := regexp.MustCompile(`currently in use by ([a-z0-9:-]+)\/([a-z0-9-]+)\.`)
+	matches := r.FindStringSubmatch(awsErr)
+	if len(matches) > 0 {
+		lbName := matches[2]
+		conn := meta.(*AWSClient).elbconn
+		describeElbOpts := &elb.DescribeLoadBalancersInput{
+			LoadBalancerNames: []*string{aws.String(lbName)},
+		}
+		if _, err := conn.DescribeLoadBalancers(describeElbOpts); err != nil {
+			if elbErr, ok := err.(awserr.Error); ok && elbErr.Code() == "LoadBalancerNotFound" {
+				log.Printf("[WARN] Load Balancer (%s) causing delete conflict not found", lbName)
 			}
 		}
 	}
