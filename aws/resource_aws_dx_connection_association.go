@@ -63,6 +63,10 @@ func resourceAwsDxConnectionAssociationRead(d *schema.ResourceData, meta interfa
 	if len(resp.Connections) != 1 {
 		return fmt.Errorf("Found %d DX connections for %s, expected 1", len(resp.Connections), d.Id())
 	}
+	if *resp.Connections[0].LagId != d.Get("lag_id").(string) {
+		d.SetId("")
+		return nil
+	}
 
 	return nil
 }

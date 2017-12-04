@@ -45,7 +45,7 @@ func testAccCheckAwsDxConnectionAssociationDestroy(s *terraform.State) error {
 		}
 		for _, v := range resp.Connections {
 			if *v.ConnectionId == rs.Primary.ID && v.LagId != nil {
-				return fmt.Errorf("Dx Connection (%s) is not diasociated with Lag", rs.Primary.ID)
+				return fmt.Errorf("Dx Connection (%s) is not dissociated with Lag", rs.Primary.ID)
 			}
 		}
 	}
