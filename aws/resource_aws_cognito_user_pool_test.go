@@ -923,9 +923,7 @@ resource "aws_cognito_user_pool" "pool" {
   # attributes.
   verification_message_template {
     default_email_option  = "CONFIRM_WITH_LINK"
-    email_message         = "Foo {####} Bar"
     email_message_by_link = "{##foobar##}"
-    email_subject         = "FooBar {####}"
     email_subject_by_link = "foobar"
     sms_message           = "{####} Baz"
   }

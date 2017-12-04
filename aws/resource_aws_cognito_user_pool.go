@@ -137,17 +137,19 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"email_verification_subject": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateCognitoUserPoolEmailVerificationSubject,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validateCognitoUserPoolEmailVerificationSubject,
+				ConflictsWith: []string{"verification_message_template.0.email_subject"},
 			},
 
 			"email_verification_message": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateCognitoUserPoolEmailVerificationMessage,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validateCognitoUserPoolEmailVerificationMessage,
+				ConflictsWith: []string{"verification_message_template.0.email_message"},
 			},
 
 			"lambda_config": {
@@ -385,10 +387,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							ValidateFunc: validateCognitoUserPoolTemplateDefaultEmailOption,
 						},
 						"email_message": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validateCognitoUserPoolTemplateEmailMessage,
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ValidateFunc:  validateCognitoUserPoolTemplateEmailMessage,
+							ConflictsWith: []string{"email_verification_message"},
 						},
 						"email_message_by_link": {
 							Type:         schema.TypeString,
@@ -397,10 +400,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							ValidateFunc: validateCognitoUserPoolTemplateEmailMessageByLink,
 						},
 						"email_subject": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validateCognitoUserPoolTemplateEmailSubject,
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ValidateFunc:  validateCognitoUserPoolTemplateEmailSubject,
+							ConflictsWith: []string{"email_verification_subject"},
 						},
 						"email_subject_by_link": {
 							Type:         schema.TypeString,
