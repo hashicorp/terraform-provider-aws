@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -56,7 +55,7 @@ func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}
 		Pending:    []string{apigateway.VpcLinkStatusPending},
 		Target:     []string{apigateway.VpcLinkStatusAvailable},
 		Refresh:    apigatewayVpcLinkRefreshStatusFunc(conn, *resp.Id),
-		Timeout:    10 * time.Minute,
+		Timeout:    5 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -79,12 +78,9 @@ func resourceAwsApiGatewayVpcLinkRead(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.GetVpcLink(input)
 	if err != nil {
-		if ecrerr, ok := err.(awserr.Error); ok {
-			switch ecrerr.Code() {
-			case apigateway.ErrCodeNotFoundException:
-				d.SetId("")
-				return nil
-			}
+		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+			d.SetId("")
+			return nil
 		}
 		return err
 	}
@@ -123,12 +119,9 @@ func resourceAwsApiGatewayVpcLinkUpdate(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.UpdateVpcLink(input)
 	if err != nil {
-		if ecrerr, ok := err.(awserr.Error); ok {
-			switch ecrerr.Code() {
-			case apigateway.ErrCodeNotFoundException:
-				d.SetId("")
-				return nil
-			}
+		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+			d.SetId("")
+			return nil
 		}
 		return err
 	}
@@ -137,7 +130,7 @@ func resourceAwsApiGatewayVpcLinkUpdate(d *schema.ResourceData, meta interface{}
 		Pending:    []string{apigateway.VpcLinkStatusPending},
 		Target:     []string{apigateway.VpcLinkStatusAvailable},
 		Refresh:    apigatewayVpcLinkRefreshStatusFunc(conn, d.Id()),
-		Timeout:    10 * time.Minute,
+		Timeout:    5 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -159,12 +152,9 @@ func resourceAwsApiGatewayVpcLinkDelete(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.DeleteVpcLink(input)
 	if err != nil {
-		if ecrerr, ok := err.(awserr.Error); ok {
-			switch ecrerr.Code() {
-			case apigateway.ErrCodeNotFoundException:
-				d.SetId("")
-				return nil
-			}
+		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+			d.SetId("")
+			return nil
 		}
 		return err
 	}

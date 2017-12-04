@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway VPC Link.
 ---
 
-# aws_api_gateway_usage_plan
+# aws_api_gateway_vpc_link
 
 Provides an API Gateway VPC Link.
 
