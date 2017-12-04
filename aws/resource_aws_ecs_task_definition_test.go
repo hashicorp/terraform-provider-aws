@@ -584,16 +584,16 @@ resource "aws_ecs_task_definition" "fargate" {
 	cpu                      = "256"
 	memory                   = "512"
 	container_definitions = <<TASK_DEFINITION
-	[
-		{
-			"name": "sleep",
-			"image": "busybox",
-			"cpu": 10,
-			"command": ["sleep","360"],
-			"memory": 10,
-			"essential": true
-		}
-	]
+[
+	{
+		"name": "sleep",
+		"image": "busybox",
+		"cpu": 10,
+		"command": ["sleep","360"],
+		"memory": 10,
+		"essential": true
+	}
+]
 TASK_DEFINITION
 }
 `, familyName)

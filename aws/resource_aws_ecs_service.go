@@ -53,6 +53,7 @@ func resourceAwsEcsService() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
+				Default:  "EC2",
 			},
 
 			"iam_role": {
