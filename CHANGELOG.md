@@ -1,5 +1,9 @@
 ## 1.5.1 (Unreleased)
 
+FEATURES:
+
+* **New Datasource:** `aws_network_interface` [GH-2316]
+
 IMPROVEMENTS:
 
 * resource/aws_ssm_association: Add `association_name` [GH-2257]
