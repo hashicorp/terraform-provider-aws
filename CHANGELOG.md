@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Datasource:** `aws_network_interface` [GH-2316]
+* **New Resource:** `aws_dx_connection_association` [GH-2360]
 * **New Resource:** `aws_appautoscaling_scheduled_action` [GH-2231]
 
 IMPROVEMENTS:
