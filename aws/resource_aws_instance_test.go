@@ -254,12 +254,16 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 						"aws_instance.foo", "ebs_block_device.#", "3"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2576023345.device_name", "/dev/sdb"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo", "ebs_block_device.2576023345.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2576023345.volume_size", "9"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2576023345.volume_type", "standard"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2554893574.device_name", "/dev/sdc"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo", "ebs_block_device.2554893574.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2554893574.volume_size", "10"),
 					resource.TestCheckResourceAttr(
