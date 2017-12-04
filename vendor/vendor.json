@@ -397,6 +397,14 @@
 			"versionExact": "v1.12.38"
 		},
 		{
+			"checksumSHA1": "FjLBsCW1nIlajKKmON/gq5RCgHU=",
+			"path": "github.com/aws/aws-sdk-go/service/appsync",
+			"revision": "b00fb575f3373d28ad8b5d259e12f2314f3efa31",
+			"revisionTime": "2017-11-30T18:49:58Z",
+			"version": "v1.12.38",
+			"versionExact": "v1.12.38"
+		},
+		{
 			"checksumSHA1": "1/p8oChMJW38gBTOA8AUCWkHuM8=",
 			"path": "github.com/aws/aws-sdk-go/service/athena",
 			"revision": "b00fb575f3373d28ad8b5d259e12f2314f3efa31",
