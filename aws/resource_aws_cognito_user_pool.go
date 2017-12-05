@@ -261,7 +261,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"attribute_data_type": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								cognitoidentityprovider.AttributeDataTypeString,
 								cognitoidentityprovider.AttributeDataTypeNumber,
@@ -279,7 +279,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						},
 						"name": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validateCognitoUserPoolSchemaName,
 						},
 						"number_attribute_constraints": {
