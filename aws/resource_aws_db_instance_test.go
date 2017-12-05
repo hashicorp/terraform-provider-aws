@@ -3,10 +3,9 @@ package aws
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"regexp"
 	"strings"
-
-	"math/rand"
 	"testing"
 	"time"
 
@@ -18,6 +17,66 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_db_instance", &resource.Sweeper{
+		Name: "aws_db_instance",
+		F:    testSweepDbInstances,
+	})
+}
+
+func testSweepDbInstances(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).rdsconn
+
+	prefixes := []string{
+		"foobarbaz-test-terraform-",
+		"foobarbaz-enhanced-monitoring-",
+		"mydb-rds-",
+		"terraform-",
+		"tf-",
+	}
+
+	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
+		for _, dbi := range out.DBInstances {
+			hasPrefix := false
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(*dbi.DBInstanceIdentifier, prefix) {
+					hasPrefix = true
+				}
+			}
+			if !hasPrefix {
+				continue
+			}
+			log.Printf("[INFO] Deleting DB instance: %s", *dbi.DBInstanceIdentifier)
+
+			_, err := conn.DeleteDBInstance(&rds.DeleteDBInstanceInput{
+				DBInstanceIdentifier: dbi.DBInstanceIdentifier,
+				SkipFinalSnapshot:    aws.Bool(true),
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete DB instance %s: %s",
+					*dbi.DBInstanceIdentifier, err)
+				continue
+			}
+
+			err = waitUntilAwsDbInstanceIsDeleted(*dbi.DBInstanceIdentifier, conn, 40*time.Minute)
+			if err != nil {
+				log.Printf("[ERROR] Failure while waiting for DB instance %s to be deleted: %s",
+					*dbi.DBInstanceIdentifier, err)
+			}
+		}
+		return !lastPage
+	})
+	if err != nil {
+		return fmt.Errorf("Error retrieving DB instances: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSDBInstance_basic(t *testing.T) {
 	var v rds.DBInstance
