@@ -182,7 +182,7 @@ func resourceAwsIAMServerCertificateDelete(d *schema.ResourceData, meta interfac
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == "DeleteConflict" && strings.Contains(awsErr.Message(), "currently in use by arn") {
-					currentlyInUseBy(awsErr.Message(), meta)
+					currentlyInUseBy(awsErr.Message(), meta.(*AWSClient).elbconn)
 					log.Printf("[WARN] Conflict deleting server certificate: %s, retrying", awsErr.Message())
 					return resource.RetryableError(err)
 				}
@@ -212,17 +212,16 @@ func resourceAwsIAMServerCertificateImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func currentlyInUseBy(awsErr string, meta interface{}) {
+func currentlyInUseBy(awsErr string, conn *elb.ELB) {
 	r := regexp.MustCompile(`currently in use by ([a-z0-9:-]+)\/([a-z0-9-]+)\.`)
 	matches := r.FindStringSubmatch(awsErr)
 	if len(matches) > 0 {
 		lbName := matches[2]
-		conn := meta.(*AWSClient).elbconn
 		describeElbOpts := &elb.DescribeLoadBalancersInput{
 			LoadBalancerNames: []*string{aws.String(lbName)},
 		}
 		if _, err := conn.DescribeLoadBalancers(describeElbOpts); err != nil {
-			if elbErr, ok := err.(awserr.Error); ok && elbErr.Code() == "LoadBalancerNotFound" {
+			if isAWSErr(err, "LoadBalancerNotFound", "") {
 				log.Printf("[WARN] Load Balancer (%s) causing delete conflict not found", lbName)
 			}
 		}
