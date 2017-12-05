@@ -112,20 +112,29 @@ func resourceAwsEcsService() *schema.Resource {
 			"network_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
 						"subnets": {
 							Type:     schema.TypeSet,
 							Required: true,
+							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
+						},
+						"assign_public_ip": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -403,6 +412,9 @@ func flattenEcsNetworkConfigration(nc *ecs.NetworkConfiguration) []interface{} {
 	result := make(map[string]interface{})
 	result["security_groups"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.SecurityGroups))
 	result["subnets"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.Subnets))
+	if val, ok := result["assign_public_ip"].(string); ok {
+		result["assign_public_ip"] = val
+	}
 	return []interface{}{result}
 }
 
@@ -416,6 +428,11 @@ func expandEcsNetworkConfigration(nc []interface{}) *ecs.NetworkConfiguration {
 		awsVpcConfig.SecurityGroups = expandStringSet(val.(*schema.Set))
 	}
 	awsVpcConfig.Subnets = expandStringSet(raw["subnets"].(*schema.Set))
+
+	//if val, ok := raw["assign_public_ip"].(string); ok {
+	//	awsVpcConfig.AssignPublicIp = aws.String(val)
+	//	}
+
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
