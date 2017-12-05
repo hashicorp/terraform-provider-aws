@@ -750,7 +750,7 @@ resource "aws_db_instance" "bar" {
 	allocated_storage = 10
 	engine = "MySQL"
 	engine_version = "5.6.35"
-	instance_class = "db.m3.medium"
+	instance_class = "db.t2.small"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
@@ -785,7 +785,7 @@ resource "aws_db_instance" "bar" {
 
 	allocated_storage = 10
 	engine = "MySQL"
-	instance_class = "db.m1.small"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
@@ -864,7 +864,7 @@ resource "aws_db_instance" "snapshot" {
 	allocated_storage = 5
 	engine = "mysql"
 	engine_version = "5.6.35"
-	instance_class = "db.r3.large"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
@@ -891,7 +891,7 @@ resource "aws_db_instance" "snapshot" {
 	allocated_storage = 5
 	engine = "mysql"
 	engine_version = "5.6.35"
-	instance_class = "db.r3.large"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	publicly_accessible = true
@@ -948,7 +948,7 @@ resource "aws_db_instance" "enhanced_monitoring" {
 	allocated_storage = 5
 	engine = "mysql"
 	engine_version = "5.6.35"
-	instance_class = "db.m3.medium"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
