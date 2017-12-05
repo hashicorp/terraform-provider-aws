@@ -503,7 +503,7 @@ resource "aws_elasticsearch_domain" "example" {
   cluster_config {
     instance_count = 2
     zone_awareness_enabled = true
-    instance_type = "r3.large.elasticsearch"
+    instance_type = "m3.medium.elasticsearch"
   }
 
   snapshot_options {
@@ -570,7 +570,7 @@ resource "aws_elasticsearch_domain" "example" {
   cluster_config {
     instance_count = 2
     zone_awareness_enabled = true
-    instance_type = "r3.large.elasticsearch"
+    instance_type = "m3.medium.elasticsearch"
   }
 
   vpc_options {
@@ -642,7 +642,7 @@ resource "aws_elasticsearch_domain" "example" {
   cluster_config {
     instance_count = 2
     zone_awareness_enabled = true
-    instance_type = "r3.large.elasticsearch"
+    instance_type = "m3.medium.elasticsearch"
   }
 
   vpc_options {
@@ -694,7 +694,7 @@ resource "aws_elasticsearch_domain" "example" {
   cluster_config {
     instance_count = 2
     zone_awareness_enabled = true
-    instance_type = "r3.large.elasticsearch"
+    instance_type = "t2.micro.elasticsearch"
   }
 
   vpc_options {
