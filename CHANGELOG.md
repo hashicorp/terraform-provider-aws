@@ -10,6 +10,7 @@ IMPROVEMENTS:
 
 * resource/aws_ssm_association: Add `association_name` [GH-2257]
 * resource/aws_ecs_service: Add `network_configuration` [GH-2299]
+* resource/aws_lambda_function: Add `reserved_concurrent_executions` [GH-2504]
 
 BUG FIXES:
 
