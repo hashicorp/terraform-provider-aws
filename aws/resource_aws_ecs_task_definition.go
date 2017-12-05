@@ -65,6 +65,12 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"execution_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+
 			"memory": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -174,6 +180,10 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 		input.TaskRoleArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("execution_role_arn"); ok {
+		input.ExecutionRoleArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("cpu"); ok {
 		input.Cpu = aws.String(v.(string))
 	}
@@ -262,6 +272,7 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
+	d.Set("execution_role_arn", taskDefinition.ExecutionRoleArn)
 	d.Set("cpu", taskDefinition.Cpu)
 	d.Set("memory", taskDefinition.Memory)
 	d.Set("network_mode", taskDefinition.NetworkMode)
