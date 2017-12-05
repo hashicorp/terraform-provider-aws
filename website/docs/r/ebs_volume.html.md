@@ -44,6 +44,7 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - The volume ID (e.g. vol-59fcb34e).
+* `arn` - The volume ARN (e.g. arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
 
 
 ## Import

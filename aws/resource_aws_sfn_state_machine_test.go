@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSSfnStateMachine_basic(t *testing.T) {
+func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 	name := acctest.RandString(10)
 
 	resource.Test(t, resource.TestCase{
@@ -21,13 +22,25 @@ func TestAccAWSSfnStateMachine_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineBasicConfig(name),
+				Config: testAccAWSSfnStateMachineConfig(name, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists("aws_sfn_state_machine.foo"),
 					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "name"),
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "creation_date"),
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "definition"),
+					resource.TestMatchResourceAttr("aws_sfn_state_machine.foo", "definition", regexp.MustCompile(`.*\"MaxAttempts\": 5.*`)),
+					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "role_arn"),
+				),
+			},
+			{
+				Config: testAccAWSSfnStateMachineConfig(name, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSfnExists("aws_sfn_state_machine.foo"),
+					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "status", sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "name"),
+					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "creation_date"),
+					resource.TestMatchResourceAttr("aws_sfn_state_machine.foo", "definition", regexp.MustCompile(`.*\"MaxAttempts\": 10.*`)),
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "role_arn"),
 				),
 			},
@@ -89,7 +102,7 @@ func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
 	return fmt.Errorf("Default error in Step Function Test")
 }
 
-func testAccAWSSfnStateMachineBasicConfig(rName string) string {
+func testAccAWSSfnStateMachineConfig(rName string, rMaxAttempts int) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {
   current = true
@@ -190,6 +203,14 @@ resource "aws_sfn_state_machine" "foo" {
     "HelloWorld": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.lambda_function_test.arn}",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "IntervalSeconds": 5,
+          "MaxAttempts": %d,
+          "BackoffRate": 8.0
+        }
+      ],
       "End": true
     }
   }
@@ -197,5 +218,5 @@ resource "aws_sfn_state_machine" "foo" {
 EOF
 }
 
-`, rName, rName, rName, rName, rName, rName)
+`, rName, rName, rName, rName, rName, rName, rMaxAttempts)
 }

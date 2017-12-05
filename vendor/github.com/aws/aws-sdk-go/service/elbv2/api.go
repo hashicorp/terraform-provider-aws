@@ -834,6 +834,9 @@ func (c *ELBV2) DeleteLoadBalancerRequest(input *DeleteLoadBalancerInput) (req *
 //   * ErrCodeOperationNotPermittedException "OperationNotPermitted"
 //   This operation is not allowed.
 //
+//   * ErrCodeResourceInUseException "ResourceInUse"
+//   A specified resource is in use.
+//
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/DeleteLoadBalancer
 func (c *ELBV2) DeleteLoadBalancer(input *DeleteLoadBalancerInput) (*DeleteLoadBalancerOutput, error) {
 	req, out := c.DeleteLoadBalancerRequest(input)
@@ -7663,6 +7666,9 @@ type TargetGroupAttribute struct {
 	//    Balancing to wait before changing the state of a deregistering target
 	//    from draining to unused. The range is 0-3600 seconds. The default value
 	//    is 300 seconds.
+	//
+	//    * proxy_protocol_v2.enabled - [Network Load Balancers] Indicates whether
+	//    Proxy Protocol version 2 is enabled.
 	//
 	//    * stickiness.enabled - [Application Load Balancers] Indicates whether
 	//    sticky sessions are enabled. The value is true or false.

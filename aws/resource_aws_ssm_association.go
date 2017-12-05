@@ -21,6 +21,10 @@ func resourceAwsSsmAssociation() *schema.Resource {
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
+			"association_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"association_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -99,6 +103,10 @@ func resourceAwsSsmAssociationCreate(d *schema.ResourceData, meta interface{}) e
 		Name: aws.String(d.Get("name").(string)),
 	}
 
+	if v, ok := d.GetOk("association_name"); ok {
+		assosciationInput.AssociationName = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("instance_id"); ok {
 		assosciationInput.InstanceId = aws.String(v.(string))
 	}
@@ -157,6 +165,7 @@ func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	association := resp.AssociationDescription
+	d.Set("association_name", association.AssociationName)
 	d.Set("instance_id", association.InstanceId)
 	d.Set("name", association.Name)
 	d.Set("parameters", association.Parameters)
@@ -182,6 +191,10 @@ func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) er
 
 	associationInput := &ssm.UpdateAssociationInput{
 		AssociationId: aws.String(d.Get("association_id").(string)),
+	}
+
+	if d.HasChange("association_name") {
+		associationInput.AssociationName = aws.String(d.Get("association_name").(string))
 	}
 
 	if d.HasChange("schedule_expression") {

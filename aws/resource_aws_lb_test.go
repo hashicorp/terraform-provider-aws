@@ -458,6 +458,31 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 	})
 }
 
+func TestAccAWSLB_networkLoadbalancer_subnet_change(t *testing.T) {
+	var conf elbv2.LoadBalancer
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb.lb_test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_networkLoadbalancer_subnets(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.Name", "testAccAWSLBConfig_networkLoadbalancer_subnets"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "load_balancer_type", "network"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSlbARNs(pre, post *elbv2.LoadBalancer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *pre.LoadBalancerArn != *post.LoadBalancerArn {
@@ -818,6 +843,65 @@ resource "aws_security_group" "alb_test" {
 }`, lbName)
 }
 
+func testAccAWSLBConfig_networkLoadbalancer_subnets(lbName string) string {
+	return fmt.Sprintf(`resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
+  }
+}
+
+resource "aws_lb" "lb_test" {
+  name = "%s"
+
+  subnets = [
+    "${aws_subnet.alb_test_1.id}",
+    "${aws_subnet.alb_test_2.id}",
+    "${aws_subnet.alb_test_3.id}",
+  ]
+
+  load_balancer_type         = "network"
+  internal                   = true
+  idle_timeout               = 60
+  enable_deletion_protection = false
+
+  tags {
+    Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
+  }
+}
+
+resource "aws_subnet" "alb_test_1" {
+  vpc_id            = "${aws_vpc.alb_test.id}"
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "us-west-2a"
+
+  tags {
+    Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
+  }
+}
+
+resource "aws_subnet" "alb_test_2" {
+  vpc_id            = "${aws_vpc.alb_test.id}"
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "us-west-2b"
+
+  tags {
+    Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
+  }
+}
+
+resource "aws_subnet" "alb_test_3" {
+  vpc_id            = "${aws_vpc.alb_test.id}"
+  cidr_block        = "10.0.3.0/24"
+  availability_zone = "us-west-2c"
+
+  tags {
+    Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
+  }
+}
+`, lbName)
+}
 func testAccAWSLBConfig_networkLoadbalancer(lbName string) string {
 	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"

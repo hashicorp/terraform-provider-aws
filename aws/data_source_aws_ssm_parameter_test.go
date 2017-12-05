@@ -18,6 +18,7 @@ func TestAccAwsSsmParameterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsSsmParameterDataSourceConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.aws_ssm_parameter.test", "arn"),
 					resource.TestCheckResourceAttr("data.aws_ssm_parameter.test", "name", name),
 					resource.TestCheckResourceAttr("data.aws_ssm_parameter.test", "type", "String"),
 					resource.TestCheckResourceAttr("data.aws_ssm_parameter.test", "value", "TestValue"),

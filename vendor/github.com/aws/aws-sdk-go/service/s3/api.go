@@ -6986,6 +6986,140 @@ func (s *CORSRule) SetMaxAgeSeconds(v int64) *CORSRule {
 	return s
 }
 
+// Describes how a CSV-formatted input object is formatted.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/CSVInput
+type CSVInput struct {
+	_ struct{} `type:"structure"`
+
+	// Single character used to indicate a row should be ignored when present at
+	// the start of a row.
+	Comments *string `type:"string"`
+
+	// Value used to separate individual fields in a record.
+	FieldDelimiter *string `type:"string"`
+
+	// Describes the first line of input. Valid values: None, Ignore, Use.
+	FileHeaderInfo *string `type:"string" enum:"FileHeaderInfo"`
+
+	// Value used for escaping where the field delimiter is part of the value.
+	QuoteCharacter *string `type:"string"`
+
+	// Single character used for escaping the quote character inside an already
+	// escaped value.
+	QuoteEscapeCharacter *string `type:"string"`
+
+	// Value used to separate individual records.
+	RecordDelimiter *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CSVInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CSVInput) GoString() string {
+	return s.String()
+}
+
+// SetComments sets the Comments field's value.
+func (s *CSVInput) SetComments(v string) *CSVInput {
+	s.Comments = &v
+	return s
+}
+
+// SetFieldDelimiter sets the FieldDelimiter field's value.
+func (s *CSVInput) SetFieldDelimiter(v string) *CSVInput {
+	s.FieldDelimiter = &v
+	return s
+}
+
+// SetFileHeaderInfo sets the FileHeaderInfo field's value.
+func (s *CSVInput) SetFileHeaderInfo(v string) *CSVInput {
+	s.FileHeaderInfo = &v
+	return s
+}
+
+// SetQuoteCharacter sets the QuoteCharacter field's value.
+func (s *CSVInput) SetQuoteCharacter(v string) *CSVInput {
+	s.QuoteCharacter = &v
+	return s
+}
+
+// SetQuoteEscapeCharacter sets the QuoteEscapeCharacter field's value.
+func (s *CSVInput) SetQuoteEscapeCharacter(v string) *CSVInput {
+	s.QuoteEscapeCharacter = &v
+	return s
+}
+
+// SetRecordDelimiter sets the RecordDelimiter field's value.
+func (s *CSVInput) SetRecordDelimiter(v string) *CSVInput {
+	s.RecordDelimiter = &v
+	return s
+}
+
+// Describes how CSV-formatted results are formatted.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/CSVOutput
+type CSVOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Value used to separate individual fields in a record.
+	FieldDelimiter *string `type:"string"`
+
+	// Value used for escaping where the field delimiter is part of the value.
+	QuoteCharacter *string `type:"string"`
+
+	// Single character used for escaping the quote character inside an already
+	// escaped value.
+	QuoteEscapeCharacter *string `type:"string"`
+
+	// Indicates whether or not all output fields should be quoted.
+	QuoteFields *string `type:"string" enum:"QuoteFields"`
+
+	// Value used to separate individual records.
+	RecordDelimiter *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CSVOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CSVOutput) GoString() string {
+	return s.String()
+}
+
+// SetFieldDelimiter sets the FieldDelimiter field's value.
+func (s *CSVOutput) SetFieldDelimiter(v string) *CSVOutput {
+	s.FieldDelimiter = &v
+	return s
+}
+
+// SetQuoteCharacter sets the QuoteCharacter field's value.
+func (s *CSVOutput) SetQuoteCharacter(v string) *CSVOutput {
+	s.QuoteCharacter = &v
+	return s
+}
+
+// SetQuoteEscapeCharacter sets the QuoteEscapeCharacter field's value.
+func (s *CSVOutput) SetQuoteEscapeCharacter(v string) *CSVOutput {
+	s.QuoteEscapeCharacter = &v
+	return s
+}
+
+// SetQuoteFields sets the QuoteFields field's value.
+func (s *CSVOutput) SetQuoteFields(v string) *CSVOutput {
+	s.QuoteFields = &v
+	return s
+}
+
+// SetRecordDelimiter sets the RecordDelimiter field's value.
+func (s *CSVOutput) SetRecordDelimiter(v string) *CSVOutput {
+	s.RecordDelimiter = &v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/CloudFunctionConfiguration
 type CloudFunctionConfiguration struct {
 	_ struct{} `type:"structure"`
@@ -9760,6 +9894,68 @@ func (s *Destination) SetEncryptionConfiguration(v *EncryptionConfiguration) *De
 // SetStorageClass sets the StorageClass field's value.
 func (s *Destination) SetStorageClass(v string) *Destination {
 	s.StorageClass = &v
+	return s
+}
+
+// Describes the server-side encryption that will be applied to the restore
+// results.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/Encryption
+type Encryption struct {
+	_ struct{} `type:"structure"`
+
+	// The server-side encryption algorithm used when storing job results in Amazon
+	// S3 (e.g., AES256, aws:kms).
+	//
+	// EncryptionType is a required field
+	EncryptionType *string `type:"string" required:"true" enum:"ServerSideEncryption"`
+
+	// If the encryption type is aws:kms, this optional value can be used to specify
+	// the encryption context for the restore results.
+	KMSContext *string `type:"string"`
+
+	// If the encryption type is aws:kms, this optional value specifies the AWS
+	// KMS key ID to use for encryption of job results.
+	KMSKeyId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s Encryption) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Encryption) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Encryption) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Encryption"}
+	if s.EncryptionType == nil {
+		invalidParams.Add(request.NewErrParamRequired("EncryptionType"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEncryptionType sets the EncryptionType field's value.
+func (s *Encryption) SetEncryptionType(v string) *Encryption {
+	s.EncryptionType = &v
+	return s
+}
+
+// SetKMSContext sets the KMSContext field's value.
+func (s *Encryption) SetKMSContext(v string) *Encryption {
+	s.KMSContext = &v
+	return s
+}
+
+// SetKMSKeyId sets the KMSKeyId field's value.
+func (s *Encryption) SetKMSKeyId(v string) *Encryption {
+	s.KMSKeyId = &v
 	return s
 }
 
@@ -12786,6 +12982,31 @@ func (s *Initiator) SetID(v string) *Initiator {
 	return s
 }
 
+// Describes the serialization format of the object.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/InputSerialization
+type InputSerialization struct {
+	_ struct{} `type:"structure"`
+
+	// Describes the serialization of a CSV-encoded object.
+	CSV *CSVInput `type:"structure"`
+}
+
+// String returns the string representation
+func (s InputSerialization) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputSerialization) GoString() string {
+	return s.String()
+}
+
+// SetCSV sets the CSV field's value.
+func (s *InputSerialization) SetCSV(v *CSVInput) *InputSerialization {
+	s.CSV = v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/InventoryConfiguration
 type InventoryConfiguration struct {
 	_ struct{} `type:"structure"`
@@ -15203,6 +15424,135 @@ func (s *ListPartsOutput) SetUploadId(v string) *ListPartsOutput {
 	return s
 }
 
+// Describes an S3 location that will receive the results of the restore request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/S3Location
+type Location struct {
+	_ struct{} `type:"structure"`
+
+	// A list of grants that control access to the staged results.
+	AccessControlList []*Grant `locationNameList:"Grant" type:"list"`
+
+	// The name of the bucket where the restore results will be placed.
+	//
+	// BucketName is a required field
+	BucketName *string `type:"string" required:"true"`
+
+	// The canned ACL to apply to the restore results.
+	CannedACL *string `type:"string" enum:"ObjectCannedACL"`
+
+	// Describes the server-side encryption that will be applied to the restore
+	// results.
+	Encryption *Encryption `type:"structure"`
+
+	// The prefix that is prepended to the restore results for this request.
+	//
+	// Prefix is a required field
+	Prefix *string `type:"string" required:"true"`
+
+	// The class of storage used to store the restore results.
+	StorageClass *string `type:"string" enum:"StorageClass"`
+
+	// The tag-set that is applied to the restore results.
+	Tagging *Tagging `type:"structure"`
+
+	// A list of metadata to store with the restore results in S3.
+	UserMetadata []*MetadataEntry `locationNameList:"MetadataEntry" type:"list"`
+}
+
+// String returns the string representation
+func (s Location) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Location) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Location) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Location"}
+	if s.BucketName == nil {
+		invalidParams.Add(request.NewErrParamRequired("BucketName"))
+	}
+	if s.Prefix == nil {
+		invalidParams.Add(request.NewErrParamRequired("Prefix"))
+	}
+	if s.AccessControlList != nil {
+		for i, v := range s.AccessControlList {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AccessControlList", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Encryption != nil {
+		if err := s.Encryption.Validate(); err != nil {
+			invalidParams.AddNested("Encryption", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tagging != nil {
+		if err := s.Tagging.Validate(); err != nil {
+			invalidParams.AddNested("Tagging", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAccessControlList sets the AccessControlList field's value.
+func (s *Location) SetAccessControlList(v []*Grant) *Location {
+	s.AccessControlList = v
+	return s
+}
+
+// SetBucketName sets the BucketName field's value.
+func (s *Location) SetBucketName(v string) *Location {
+	s.BucketName = &v
+	return s
+}
+
+// SetCannedACL sets the CannedACL field's value.
+func (s *Location) SetCannedACL(v string) *Location {
+	s.CannedACL = &v
+	return s
+}
+
+// SetEncryption sets the Encryption field's value.
+func (s *Location) SetEncryption(v *Encryption) *Location {
+	s.Encryption = v
+	return s
+}
+
+// SetPrefix sets the Prefix field's value.
+func (s *Location) SetPrefix(v string) *Location {
+	s.Prefix = &v
+	return s
+}
+
+// SetStorageClass sets the StorageClass field's value.
+func (s *Location) SetStorageClass(v string) *Location {
+	s.StorageClass = &v
+	return s
+}
+
+// SetTagging sets the Tagging field's value.
+func (s *Location) SetTagging(v *Tagging) *Location {
+	s.Tagging = v
+	return s
+}
+
+// SetUserMetadata sets the UserMetadata field's value.
+func (s *Location) SetUserMetadata(v []*MetadataEntry) *Location {
+	s.UserMetadata = v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/LoggingEnabled
 type LoggingEnabled struct {
 	_ struct{} `type:"structure"`
@@ -15267,6 +15617,38 @@ func (s *LoggingEnabled) SetTargetGrants(v []*TargetGrant) *LoggingEnabled {
 // SetTargetPrefix sets the TargetPrefix field's value.
 func (s *LoggingEnabled) SetTargetPrefix(v string) *LoggingEnabled {
 	s.TargetPrefix = &v
+	return s
+}
+
+// A metadata key-value pair to store with an object.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/MetadataEntry
+type MetadataEntry struct {
+	_ struct{} `type:"structure"`
+
+	Name *string `type:"string"`
+
+	Value *string `type:"string"`
+}
+
+// String returns the string representation
+func (s MetadataEntry) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MetadataEntry) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *MetadataEntry) SetName(v string) *MetadataEntry {
+	s.Name = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *MetadataEntry) SetValue(v string) *MetadataEntry {
+	s.Value = &v
 	return s
 }
 
@@ -15927,6 +16309,71 @@ func (s *ObjectVersion) SetStorageClass(v string) *ObjectVersion {
 // SetVersionId sets the VersionId field's value.
 func (s *ObjectVersion) SetVersionId(v string) *ObjectVersion {
 	s.VersionId = &v
+	return s
+}
+
+// Describes the location where the restore job's output is stored.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/OutputLocation
+type OutputLocation struct {
+	_ struct{} `type:"structure"`
+
+	// Describes an S3 location that will receive the results of the restore request.
+	S3 *Location `type:"structure"`
+}
+
+// String returns the string representation
+func (s OutputLocation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OutputLocation) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OutputLocation) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OutputLocation"}
+	if s.S3 != nil {
+		if err := s.S3.Validate(); err != nil {
+			invalidParams.AddNested("S3", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetS3 sets the S3 field's value.
+func (s *OutputLocation) SetS3(v *Location) *OutputLocation {
+	s.S3 = v
+	return s
+}
+
+// Describes how results of the Select job are serialized.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/OutputSerialization
+type OutputSerialization struct {
+	_ struct{} `type:"structure"`
+
+	// Describes the serialization of CSV-encoded Select results.
+	CSV *CSVOutput `type:"structure"`
+}
+
+// String returns the string representation
+func (s OutputSerialization) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OutputSerialization) GoString() string {
+	return s.String()
+}
+
+// SetCSV sets the CSV field's value.
+func (s *OutputSerialization) SetCSV(v *CSVOutput) *OutputSerialization {
+	s.CSV = v
 	return s
 }
 
@@ -18637,6 +19084,7 @@ type RestoreObjectInput struct {
 	// at http://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
+	// Container for restore job parameters.
 	RestoreRequest *RestoreRequest `locationName:"RestoreRequest" type:"structure" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 
 	VersionId *string `location:"querystring" locationName:"versionId" type:"string"`
@@ -18720,6 +19168,10 @@ type RestoreObjectOutput struct {
 	// If present, indicates that the requester was successfully charged for the
 	// request.
 	RequestCharged *string `location:"header" locationName:"x-amz-request-charged" type:"string" enum:"RequestCharged"`
+
+	// Indicates the path in the provided S3 output location where Select results
+	// will be restored to.
+	RestoreOutputPath *string `location:"header" locationName:"x-amz-restore-output-path" type:"string"`
 }
 
 // String returns the string representation
@@ -18738,17 +19190,39 @@ func (s *RestoreObjectOutput) SetRequestCharged(v string) *RestoreObjectOutput {
 	return s
 }
 
+// SetRestoreOutputPath sets the RestoreOutputPath field's value.
+func (s *RestoreObjectOutput) SetRestoreOutputPath(v string) *RestoreObjectOutput {
+	s.RestoreOutputPath = &v
+	return s
+}
+
+// Container for restore job parameters.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/RestoreRequest
 type RestoreRequest struct {
 	_ struct{} `type:"structure"`
 
-	// Lifetime of the active copy in days
-	//
-	// Days is a required field
-	Days *int64 `type:"integer" required:"true"`
+	// Lifetime of the active copy in days. Do not use with restores that specify
+	// OutputLocation.
+	Days *int64 `type:"integer"`
 
-	// Glacier related prameters pertaining to this job.
+	// The optional description for the job.
+	Description *string `type:"string"`
+
+	// Glacier related parameters pertaining to this job. Do not use with restores
+	// that specify OutputLocation.
 	GlacierJobParameters *GlacierJobParameters `type:"structure"`
+
+	// Describes the location where the restore job's output is stored.
+	OutputLocation *OutputLocation `type:"structure"`
+
+	// Describes the parameters for Select job types.
+	SelectParameters *SelectParameters `type:"structure"`
+
+	// Glacier retrieval tier at which the restore will be processed.
+	Tier *string `type:"string" enum:"Tier"`
+
+	// Type of restore request.
+	Type *string `type:"string" enum:"RestoreRequestType"`
 }
 
 // String returns the string representation
@@ -18764,12 +19238,19 @@ func (s RestoreRequest) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *RestoreRequest) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "RestoreRequest"}
-	if s.Days == nil {
-		invalidParams.Add(request.NewErrParamRequired("Days"))
-	}
 	if s.GlacierJobParameters != nil {
 		if err := s.GlacierJobParameters.Validate(); err != nil {
 			invalidParams.AddNested("GlacierJobParameters", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.OutputLocation != nil {
+		if err := s.OutputLocation.Validate(); err != nil {
+			invalidParams.AddNested("OutputLocation", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.SelectParameters != nil {
+		if err := s.SelectParameters.Validate(); err != nil {
+			invalidParams.AddNested("SelectParameters", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -18785,9 +19266,39 @@ func (s *RestoreRequest) SetDays(v int64) *RestoreRequest {
 	return s
 }
 
+// SetDescription sets the Description field's value.
+func (s *RestoreRequest) SetDescription(v string) *RestoreRequest {
+	s.Description = &v
+	return s
+}
+
 // SetGlacierJobParameters sets the GlacierJobParameters field's value.
 func (s *RestoreRequest) SetGlacierJobParameters(v *GlacierJobParameters) *RestoreRequest {
 	s.GlacierJobParameters = v
+	return s
+}
+
+// SetOutputLocation sets the OutputLocation field's value.
+func (s *RestoreRequest) SetOutputLocation(v *OutputLocation) *RestoreRequest {
+	s.OutputLocation = v
+	return s
+}
+
+// SetSelectParameters sets the SelectParameters field's value.
+func (s *RestoreRequest) SetSelectParameters(v *SelectParameters) *RestoreRequest {
+	s.SelectParameters = v
+	return s
+}
+
+// SetTier sets the Tier field's value.
+func (s *RestoreRequest) SetTier(v string) *RestoreRequest {
+	s.Tier = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *RestoreRequest) SetType(v string) *RestoreRequest {
+	s.Type = &v
 	return s
 }
 
@@ -19014,6 +19525,88 @@ func (s SSES3) String() string {
 // GoString returns the string representation
 func (s SSES3) GoString() string {
 	return s.String()
+}
+
+// Describes the parameters for Select job types.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/SelectParameters
+type SelectParameters struct {
+	_ struct{} `type:"structure"`
+
+	// The expression that is used to query the object.
+	//
+	// Expression is a required field
+	Expression *string `type:"string" required:"true"`
+
+	// The type of the provided expression (e.g., SQL).
+	//
+	// ExpressionType is a required field
+	ExpressionType *string `type:"string" required:"true" enum:"ExpressionType"`
+
+	// Describes the serialization format of the object.
+	//
+	// InputSerialization is a required field
+	InputSerialization *InputSerialization `type:"structure" required:"true"`
+
+	// Describes how the results of the Select job are serialized.
+	//
+	// OutputSerialization is a required field
+	OutputSerialization *OutputSerialization `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s SelectParameters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SelectParameters) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SelectParameters) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SelectParameters"}
+	if s.Expression == nil {
+		invalidParams.Add(request.NewErrParamRequired("Expression"))
+	}
+	if s.ExpressionType == nil {
+		invalidParams.Add(request.NewErrParamRequired("ExpressionType"))
+	}
+	if s.InputSerialization == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputSerialization"))
+	}
+	if s.OutputSerialization == nil {
+		invalidParams.Add(request.NewErrParamRequired("OutputSerialization"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetExpression sets the Expression field's value.
+func (s *SelectParameters) SetExpression(v string) *SelectParameters {
+	s.Expression = &v
+	return s
+}
+
+// SetExpressionType sets the ExpressionType field's value.
+func (s *SelectParameters) SetExpressionType(v string) *SelectParameters {
+	s.ExpressionType = &v
+	return s
+}
+
+// SetInputSerialization sets the InputSerialization field's value.
+func (s *SelectParameters) SetInputSerialization(v *InputSerialization) *SelectParameters {
+	s.InputSerialization = v
+	return s
+}
+
+// SetOutputSerialization sets the OutputSerialization field's value.
+func (s *SelectParameters) SetOutputSerialization(v *OutputSerialization) *SelectParameters {
+	s.OutputSerialization = v
+	return s
 }
 
 // Describes the default server-side encryption to apply to new objects in the
@@ -20488,6 +21081,22 @@ const (
 )
 
 const (
+	// ExpressionTypeSql is a ExpressionType enum value
+	ExpressionTypeSql = "SQL"
+)
+
+const (
+	// FileHeaderInfoUse is a FileHeaderInfo enum value
+	FileHeaderInfoUse = "USE"
+
+	// FileHeaderInfoIgnore is a FileHeaderInfo enum value
+	FileHeaderInfoIgnore = "IGNORE"
+
+	// FileHeaderInfoNone is a FileHeaderInfo enum value
+	FileHeaderInfoNone = "NONE"
+)
+
+const (
 	// FilterRuleNamePrefix is a FilterRuleName enum value
 	FilterRuleNamePrefix = "prefix"
 
@@ -20498,6 +21107,9 @@ const (
 const (
 	// InventoryFormatCsv is a InventoryFormat enum value
 	InventoryFormatCsv = "CSV"
+
+	// InventoryFormatOrc is a InventoryFormat enum value
+	InventoryFormatOrc = "ORC"
 )
 
 const (
@@ -20641,6 +21253,14 @@ const (
 )
 
 const (
+	// QuoteFieldsAlways is a QuoteFields enum value
+	QuoteFieldsAlways = "ALWAYS"
+
+	// QuoteFieldsAsneeded is a QuoteFields enum value
+	QuoteFieldsAsneeded = "ASNEEDED"
+)
+
+const (
 	// ReplicationRuleStatusEnabled is a ReplicationRuleStatus enum value
 	ReplicationRuleStatusEnabled = "Enabled"
 
@@ -20676,6 +21296,11 @@ const (
 const (
 	// RequestPayerRequester is a RequestPayer enum value
 	RequestPayerRequester = "requester"
+)
+
+const (
+	// RestoreRequestTypeSelect is a RestoreRequestType enum value
+	RestoreRequestTypeSelect = "SELECT"
 )
 
 const (

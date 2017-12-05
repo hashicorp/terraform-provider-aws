@@ -230,7 +230,7 @@ func (c *EMR) AddJobFlowStepsRequest(input *AddJobFlowStepsInput) (req *request.
 // the 256-step limitation in various ways, including using SSH to connect to
 // the master node and submitting queries directly to the software running on
 // the master node, such as Hive and Hadoop. For more information on how to
-// do this, see Add More than 256 Steps to a Cluster (http://docs.aws.amazon.com/ElasticMapReduce/latest/ManagementGuide/AddMoreThan256Steps.html)
+// do this, see Add More than 256 Steps to a Cluster (http://docs.aws.amazon.com/emr/latest/ManagementGuide/AddMoreThan256Steps.html)
 // in the Amazon EMR Management Guide.
 //
 // A step specifies the location of a JAR file stored either on the master node
@@ -326,8 +326,7 @@ func (c *EMR) AddTagsRequest(input *AddTagsInput) (req *request.Request, output 
 //
 // Adds tags to an Amazon EMR resource. Tags make it easier to associate clusters
 // in various ways, such as grouping clusters to track your Amazon EMR resource
-// allocation costs. For more information, see Tagging Amazon EMR Resources
-// (http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/emr-plan-tags.html).
+// allocation costs. For more information, see Tag Clusters (http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-tags.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2263,8 +2262,7 @@ func (c *EMR) RemoveTagsRequest(input *RemoveTagsInput) (req *request.Request, o
 //
 // Removes tags from an Amazon EMR resource. Tags make it easier to associate
 // clusters in various ways, such as grouping clusters to track your Amazon
-// EMR resource allocation costs. For more information, see Tagging Amazon EMR
-// Resources (http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/emr-plan-tags.html).
+// EMR resource allocation costs. For more information, see Tag Clusters (http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-tags.html).
 //
 // The following example removes the stack tag with value Prod from a cluster:
 //
@@ -2366,7 +2364,7 @@ func (c *EMR) RunJobFlowRequest(input *RunJobFlowInput) (req *request.Request, o
 // the 256-step limitation in various ways, including using the SSH shell to
 // connect to the master node and submitting queries directly to the software
 // running on the master node, such as Hive and Hadoop. For more information
-// on how to do this, see Add More than 256 Steps to a Cluster (http://docs.aws.amazon.com/ElasticMapReduce/latest/Management/Guide/AddMoreThan256Steps.html)
+// on how to do this, see Add More than 256 Steps to a Cluster (http://docs.aws.amazon.com/emr/latest/ManagementGuide/AddMoreThan256Steps.html)
 // in the Amazon EMR Management Guide.
 //
 // For long running clusters, we recommend that you periodically store your
@@ -3044,7 +3042,7 @@ func (s AddTagsOutput) GoString() string {
 // software to use with the cluster and accepts a user argument list. Amazon
 // EMR accepts and forwards the argument list to the corresponding installation
 // script as bootstrap action argument. For more information, see Using the
-// MapR Distribution for Hadoop (http://docs.aws.amazon.com/ElasticMapReduce/latest/ManagementGuide/emr-mapr.html).
+// MapR Distribution for Hadoop (http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-mapr.html).
 // Currently supported values are:
 //
 //    * "mapr-m3" - launch the cluster using MapR M3 Edition.
@@ -3673,10 +3671,17 @@ type Cluster struct {
 	// indicates an instance fleets configuration.
 	InstanceCollectionType *string `type:"string" enum:"InstanceCollectionType"`
 
+	// Attributes for Kerberos configuration when Kerberos authentication is enabled
+	// using a security configuration. For more information see Use Kerberos Authentication
+	// (http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-kerberos.html)
+	// in the EMR Management Guide.
+	KerberosAttributes *KerberosAttributes `type:"structure"`
+
 	// The path to the Amazon S3 location where logs for this cluster are stored.
 	LogUri *string `type:"string"`
 
-	// The public DNS name of the master EC2 instance.
+	// The DNS name of the master node. If the cluster is on a private subnet, this
+	// is the private DNS name. On a public subnet, this is the public DNS name.
 	MasterPublicDnsName *string `type:"string"`
 
 	// The name of the cluster.
@@ -3806,6 +3811,12 @@ func (s *Cluster) SetId(v string) *Cluster {
 // SetInstanceCollectionType sets the InstanceCollectionType field's value.
 func (s *Cluster) SetInstanceCollectionType(v string) *Cluster {
 	s.InstanceCollectionType = &v
+	return s
+}
+
+// SetKerberosAttributes sets the KerberosAttributes field's value.
+func (s *Cluster) SetKerberosAttributes(v *KerberosAttributes) *Cluster {
+	s.KerberosAttributes = v
 	return s
 }
 
@@ -4179,7 +4190,9 @@ type CreateSecurityConfigurationInput struct {
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
 
-	// The security configuration details in JSON format.
+	// The security configuration details in JSON format. For JSON parameters and
+	// examples, see Use Security Configurations to Set Up Cluster Security (http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-security-configurations.html)
+	// in the Amazon EMR Management Guide.
 	//
 	// SecurityConfiguration is a required field
 	SecurityConfiguration *string `type:"string" required:"true"`
@@ -5686,6 +5699,26 @@ type InstanceFleetStatus struct {
 	_ struct{} `type:"structure"`
 
 	// A code representing the instance fleet status.
+	//
+	//    * PROVISIONING—The instance fleet is provisioning EC2 resources and is
+	//    not yet ready to run jobs.
+	//
+	//    * BOOTSTRAPPING—EC2 instances and other resources have been provisioned
+	//    and the bootstrap actions specified for the instances are underway.
+	//
+	//    * RUNNING—EC2 instances and other resources are running. They are either
+	//    executing jobs or waiting to execute jobs.
+	//
+	//    * RESIZING—A resize operation is underway. EC2 instances are either being
+	//    added or removed.
+	//
+	//    * SUSPENDED—A resize operation could not complete. Existing EC2 instances
+	//    are running, but instances can't be added or removed.
+	//
+	//    * TERMINATING—The instance fleet is terminating EC2 instances.
+	//
+	//    * TERMINATED—The instance fleet is no longer active, and all EC2 instances
+	//    have been terminated.
 	State *string `type:"string" enum:"InstanceFleetState"`
 
 	// Provides status change reason details for the instance fleet.
@@ -6788,7 +6821,7 @@ type JobFlowDetail struct {
 
 	// Used only for version 2.x and 3.x of Amazon EMR. The version of the AMI used
 	// to initialize Amazon EC2 instances in the job flow. For a list of AMI versions
-	// supported by Amazon EMR, see AMI Versions Supported in EMR (http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/EnvironmentConfig_AMIVersion.html#ami-versions-supported)
+	// supported by Amazon EMR, see AMI Versions Supported in EMR (http://docs.aws.amazon.com/emr/latest/DeveloperGuide/emr-dg.pdf#nameddest=ami-versions-supported)
 	// in the Amazon EMR Developer Guide.
 	AmiVersion *string `type:"string"`
 
@@ -7308,7 +7341,8 @@ type JobFlowInstancesDetail struct {
 	// MasterInstanceType is a required field
 	MasterInstanceType *string `min:"1" type:"string" required:"true"`
 
-	// The DNS name of the master node.
+	// The DNS name of the master node. If the cluster is on a private subnet, this
+	// is the private DNS name. On a public subnet, this is the public DNS name.
 	MasterPublicDnsName *string `type:"string"`
 
 	// An approximation of the cost of the cluster, represented in m1.small/hours.
@@ -7418,6 +7452,96 @@ func (s *JobFlowInstancesDetail) SetSlaveInstanceType(v string) *JobFlowInstance
 // SetTerminationProtected sets the TerminationProtected field's value.
 func (s *JobFlowInstancesDetail) SetTerminationProtected(v bool) *JobFlowInstancesDetail {
 	s.TerminationProtected = &v
+	return s
+}
+
+// Attributes for Kerberos configuration when Kerberos authentication is enabled
+// using a security configuration. For more information see Use Kerberos Authentication
+// (http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-kerberos.html)
+// in the EMR Management Guide.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/KerberosAttributes
+type KerberosAttributes struct {
+	_ struct{} `type:"structure"`
+
+	// The Active Directory password for ADDomainJoinUser.
+	ADDomainJoinPassword *string `type:"string"`
+
+	// Required only when establishing a cross-realm trust with an Active Directory
+	// domain. A user with sufficient privileges to join resources to the domain.
+	ADDomainJoinUser *string `type:"string"`
+
+	// Required only when establishing a cross-realm trust with a KDC in a different
+	// realm. The cross-realm principal password, which must be identical across
+	// realms.
+	CrossRealmTrustPrincipalPassword *string `type:"string"`
+
+	// The password used within the cluster for the kadmin service on the cluster-dedicated
+	// KDC, which maintains Kerberos principals, password policies, and keytabs
+	// for the cluster.
+	//
+	// KdcAdminPassword is a required field
+	KdcAdminPassword *string `type:"string" required:"true"`
+
+	// The name of the Kerberos realm to which all nodes in a cluster belong. For
+	// example, EC2.INTERNAL.
+	//
+	// Realm is a required field
+	Realm *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s KerberosAttributes) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KerberosAttributes) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *KerberosAttributes) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "KerberosAttributes"}
+	if s.KdcAdminPassword == nil {
+		invalidParams.Add(request.NewErrParamRequired("KdcAdminPassword"))
+	}
+	if s.Realm == nil {
+		invalidParams.Add(request.NewErrParamRequired("Realm"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetADDomainJoinPassword sets the ADDomainJoinPassword field's value.
+func (s *KerberosAttributes) SetADDomainJoinPassword(v string) *KerberosAttributes {
+	s.ADDomainJoinPassword = &v
+	return s
+}
+
+// SetADDomainJoinUser sets the ADDomainJoinUser field's value.
+func (s *KerberosAttributes) SetADDomainJoinUser(v string) *KerberosAttributes {
+	s.ADDomainJoinUser = &v
+	return s
+}
+
+// SetCrossRealmTrustPrincipalPassword sets the CrossRealmTrustPrincipalPassword field's value.
+func (s *KerberosAttributes) SetCrossRealmTrustPrincipalPassword(v string) *KerberosAttributes {
+	s.CrossRealmTrustPrincipalPassword = &v
+	return s
+}
+
+// SetKdcAdminPassword sets the KdcAdminPassword field's value.
+func (s *KerberosAttributes) SetKdcAdminPassword(v string) *KerberosAttributes {
+	s.KdcAdminPassword = &v
+	return s
+}
+
+// SetRealm sets the Realm field's value.
+func (s *KerberosAttributes) SetRealm(v string) *KerberosAttributes {
+	s.Realm = &v
 	return s
 }
 
@@ -8571,7 +8695,7 @@ type RunJobFlowInput struct {
 	// later, the Linux AMI is determined by the ReleaseLabel specified or by CustomAmiID.
 	// The version of the Amazon Machine Image (AMI) to use when launching Amazon
 	// EC2 instances in the job flow. For details about the AMI versions currently
-	// supported in EMR version 3.x and 2.x, see AMI Versions Supported in EMR (ElasticMapReduce/latest/DeveloperGuide/emr-dg.pdf#nameddest=ami-versions-supported)
+	// supported in EMR version 3.x and 2.x, see AMI Versions Supported in EMR (emr/latest/DeveloperGuide/emr-dg.pdf#nameddest=ami-versions-supported)
 	// in the Amazon EMR Developer Guide.
 	//
 	// If the AMI supports multiple versions of Hadoop (for example, AMI 1.0 supports
@@ -8631,6 +8755,12 @@ type RunJobFlowInput struct {
 	// the CLI or console.
 	JobFlowRole *string `type:"string"`
 
+	// Attributes for Kerberos configuration when Kerberos authentication is enabled
+	// using a security configuration. For more information see Use Kerberos Authentication
+	// (http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-kerberos.html)
+	// in the EMR Management Guide.
+	KerberosAttributes *KerberosAttributes `type:"structure"`
+
 	// The location in Amazon S3 to write the log files of the job flow. If a value
 	// is not provided, logs are not created.
 	LogUri *string `type:"string"`
@@ -8647,7 +8777,7 @@ type RunJobFlowInput struct {
 	// flow that accepts a user argument list. EMR accepts and forwards the argument
 	// list to the corresponding installation script as bootstrap action arguments.
 	// For more information, see "Launch a Job Flow on the MapR Distribution for
-	// Hadoop" in the Amazon EMR Developer Guide (http://docs.aws.amazon.com/http:/docs.aws.amazon.com/emr/latest/DeveloperGuide/emr-dg.pdf).
+	// Hadoop" in the Amazon EMR Developer Guide (http://docs.aws.amazon.com/emr/latest/DeveloperGuide/emr-dg.pdf).
 	// Supported values are:
 	//
 	//    * "mapr-m3" - launch the cluster using MapR M3 Edition.
@@ -8707,7 +8837,7 @@ type RunJobFlowInput struct {
 	// use Applications.
 	//
 	// A list of strings that indicates third-party software to use. For more information,
-	// see Use Third Party Applications with Amazon EMR (http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/emr-supported-products.html).
+	// see the Amazon EMR Developer Guide (http://docs.aws.amazon.com/emr/latest/DeveloperGuide/emr-dg.pdf).
 	// Currently supported values are:
 	//
 	//    * "mapr-m3" - launch the job flow using MapR M3 Edition.
@@ -8758,6 +8888,11 @@ func (s *RunJobFlowInput) Validate() error {
 	if s.Instances != nil {
 		if err := s.Instances.Validate(); err != nil {
 			invalidParams.AddNested("Instances", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.KerberosAttributes != nil {
+		if err := s.KerberosAttributes.Validate(); err != nil {
+			invalidParams.AddNested("KerberosAttributes", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.Steps != nil {
@@ -8834,6 +8969,12 @@ func (s *RunJobFlowInput) SetInstances(v *JobFlowInstancesConfig) *RunJobFlowInp
 // SetJobFlowRole sets the JobFlowRole field's value.
 func (s *RunJobFlowInput) SetJobFlowRole(v string) *RunJobFlowInput {
 	s.JobFlowRole = &v
+	return s
+}
+
+// SetKerberosAttributes sets the KerberosAttributes field's value.
+func (s *RunJobFlowInput) SetKerberosAttributes(v *KerberosAttributes) *RunJobFlowInput {
+	s.KerberosAttributes = v
 	return s
 }
 
@@ -9469,8 +9610,8 @@ type SimpleScalingPolicyConfiguration struct {
 	// indicates that the EC2 instance count increments or decrements by ScalingAdjustment,
 	// which should be expressed as an integer. PERCENT_CHANGE_IN_CAPACITY indicates
 	// the instance count increments or decrements by the percentage specified by
-	// ScalingAdjustment, which should be expressed as a decimal. For example, 0.20
-	// indicates an increase in 20% increments of cluster capacity. EXACT_CAPACITY
+	// ScalingAdjustment, which should be expressed as an integer. For example,
+	// 20 indicates an increase in 20% increments of cluster capacity. EXACT_CAPACITY
 	// indicates the scaling activity results in an instance group with the number
 	// of EC2 instances specified by ScalingAdjustment, which should be expressed
 	// as a positive integer.
@@ -9485,8 +9626,8 @@ type SimpleScalingPolicyConfiguration struct {
 	// A positive value adds to the instance group's EC2 instance count while a
 	// negative number removes instances. If AdjustmentType is set to EXACT_CAPACITY,
 	// the number should only be a positive integer. If AdjustmentType is set to
-	// PERCENT_CHANGE_IN_CAPACITY, the value should express the percentage as a
-	// decimal. For example, -0.20 indicates a decrease in 20% increments of cluster
+	// PERCENT_CHANGE_IN_CAPACITY, the value should express the percentage as an
+	// integer. For example, -20 indicates a decrease in 20% increments of cluster
 	// capacity.
 	//
 	// ScalingAdjustment is a required field
@@ -10080,18 +10221,17 @@ func (s *SupportedProductConfig) SetName(v string) *SupportedProductConfig {
 // A key/value pair containing user-defined metadata that you can associate
 // with an Amazon EMR resource. Tags make it easier to associate clusters in
 // various ways, such as grouping clusters to track your Amazon EMR resource
-// allocation costs. For more information, see Tagging Amazon EMR Resources
-// (http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/emr-plan-tags.html).
+// allocation costs. For more information, see Tag Clusters (http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-tags.html).
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/Tag
 type Tag struct {
 	_ struct{} `type:"structure"`
 
 	// A user-defined key, which is the minimum required information for a valid
-	// tag. For more information, see Tagging Amazon EMR Resources (http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/emr-plan-tags.html).
+	// tag. For more information, see Tag  (http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-tags.html).
 	Key *string `type:"string"`
 
 	// A user-defined value, which is optional in a tag. For more information, see
-	// Tagging Amazon EMR Resources (http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/emr-plan-tags.html).
+	// Tag Clusters (http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-tags.html).
 	Value *string `type:"string"`
 }
 

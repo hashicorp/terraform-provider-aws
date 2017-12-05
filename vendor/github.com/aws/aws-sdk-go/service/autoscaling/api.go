@@ -5240,7 +5240,7 @@ func (s *Alarm) SetAlarmName(v string) *Alarm {
 type AttachInstancesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the group.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -5377,7 +5377,7 @@ func (s AttachLoadBalancerTargetGroupsOutput) GoString() string {
 type AttachLoadBalancersInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the group.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -5530,7 +5530,7 @@ func (s *BlockDeviceMapping) SetVirtualName(v string) *BlockDeviceMapping {
 type CompleteLifecycleActionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the group for the lifecycle hook.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -5645,8 +5645,8 @@ func (s CompleteLifecycleActionOutput) GoString() string {
 type CreateAutoScalingGroupInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the group. This name must be unique within the scope of your
-	// AWS account.
+	// The name of the Auto Scaling group. This name must be unique within the scope
+	// of your AWS account.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -5687,7 +5687,8 @@ type CreateAutoScalingGroupInput struct {
 	HealthCheckType *string `min:"1" type:"string"`
 
 	// The ID of the instance used to create a launch configuration for the group.
-	// Alternatively, specify a launch configuration instead of an EC2 instance.
+	// You must specify one of the following: an EC2 instance, a launch configuration,
+	// or a launch template.
 	//
 	// When you specify an ID of an instance, Auto Scaling creates a new launch
 	// configuration and associates it with the group. This launch configuration
@@ -5699,9 +5700,13 @@ type CreateAutoScalingGroupInput struct {
 	// in the Auto Scaling User Guide.
 	InstanceId *string `min:"1" type:"string"`
 
-	// The name of the launch configuration. Alternatively, specify an EC2 instance
-	// instead of a launch configuration.
+	// The name of the launch configuration. You must specify one of the following:
+	// a launch configuration, a launch template, or an EC2 instance.
 	LaunchConfigurationName *string `min:"1" type:"string"`
+
+	// The launch template to use to launch instances. You must specify one of the
+	// following: a launch template, a launch configuration, or an EC2 instance.
+	LaunchTemplate *LaunchTemplateSpecification `type:"structure"`
 
 	// One or more lifecycle hooks.
 	LifecycleHookSpecificationList []*LifecycleHookSpecification `type:"list"`
@@ -5804,6 +5809,11 @@ func (s *CreateAutoScalingGroupInput) Validate() error {
 	if s.VPCZoneIdentifier != nil && len(*s.VPCZoneIdentifier) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("VPCZoneIdentifier", 1))
 	}
+	if s.LaunchTemplate != nil {
+		if err := s.LaunchTemplate.Validate(); err != nil {
+			invalidParams.AddNested("LaunchTemplate", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.LifecycleHookSpecificationList != nil {
 		for i, v := range s.LifecycleHookSpecificationList {
 			if v == nil {
@@ -5876,6 +5886,12 @@ func (s *CreateAutoScalingGroupInput) SetInstanceId(v string) *CreateAutoScaling
 // SetLaunchConfigurationName sets the LaunchConfigurationName field's value.
 func (s *CreateAutoScalingGroupInput) SetLaunchConfigurationName(v string) *CreateAutoScalingGroupInput {
 	s.LaunchConfigurationName = &v
+	return s
+}
+
+// SetLaunchTemplate sets the LaunchTemplate field's value.
+func (s *CreateAutoScalingGroupInput) SetLaunchTemplate(v *LaunchTemplateSpecification) *CreateAutoScalingGroupInput {
+	s.LaunchTemplate = v
 	return s
 }
 
@@ -6455,7 +6471,7 @@ func (s *CustomizedMetricSpecification) SetUnit(v string) *CustomizedMetricSpeci
 type DeleteAutoScalingGroupInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the group to delete.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -6580,7 +6596,7 @@ func (s DeleteLaunchConfigurationOutput) GoString() string {
 type DeleteLifecycleHookInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the Auto Scaling group for the lifecycle hook.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -7043,8 +7059,8 @@ func (s *DescribeAdjustmentTypesOutput) SetAdjustmentTypes(v []*AdjustmentType) 
 type DescribeAutoScalingGroupsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The group names. If you omit this parameter, all Auto Scaling groups are
-	// described.
+	// The names of the Auto Scaling groups. If you omit this parameter, all Auto
+	// Scaling groups are described.
 	AutoScalingGroupNames []*string `type:"list"`
 
 	// The maximum number of items to return with this call. The default value is
@@ -7363,7 +7379,7 @@ func (s *DescribeLifecycleHookTypesOutput) SetLifecycleHookTypes(v []*string) *D
 type DescribeLifecycleHooksInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the group.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -7535,7 +7551,7 @@ func (s *DescribeLoadBalancerTargetGroupsOutput) SetNextToken(v string) *Describ
 type DescribeLoadBalancersInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the group.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -7679,7 +7695,7 @@ func (s *DescribeMetricCollectionTypesOutput) SetMetrics(v []*MetricCollectionTy
 type DescribeNotificationConfigurationsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the group.
+	// The name of the Auto Scaling group.
 	AutoScalingGroupNames []*string `type:"list"`
 
 	// The maximum number of items to return with this call. The default value is
@@ -7759,7 +7775,7 @@ func (s *DescribeNotificationConfigurationsOutput) SetNotificationConfigurations
 type DescribePoliciesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the group.
+	// The name of the Auto Scaling group.
 	AutoScalingGroupName *string `min:"1" type:"string"`
 
 	// The maximum number of items to be returned with each call. The default value
@@ -7770,10 +7786,10 @@ type DescribePoliciesInput struct {
 	// a previous call.)
 	NextToken *string `type:"string"`
 
-	// One or more policy names or policy ARNs to be described. If you omit this
-	// parameter, all policy names are described. If an group name is provided,
-	// the results are limited to that group. This list is limited to 50 items.
-	// If you specify an unknown policy name, it is ignored with no error.
+	// The names of one or more policies. If you omit this parameter, all policies
+	// are described. If an group name is provided, the results are limited to that
+	// group. This list is limited to 50 items. If you specify an unknown policy
+	// name, it is ignored with no error.
 	PolicyNames []*string `type:"list"`
 
 	// One or more policy types. Valid values are SimpleScaling and StepScaling.
@@ -7878,7 +7894,7 @@ type DescribeScalingActivitiesInput struct {
 	// they are ignored with no error.
 	ActivityIds []*string `type:"list"`
 
-	// The name of the group.
+	// The name of the Auto Scaling group.
 	AutoScalingGroupName *string `min:"1" type:"string"`
 
 	// The maximum number of items to return with this call. The default value is
@@ -8017,7 +8033,7 @@ func (s *DescribeScalingProcessTypesOutput) SetProcesses(v []*ProcessType) *Desc
 type DescribeScheduledActionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the group.
+	// The name of the Auto Scaling group.
 	AutoScalingGroupName *string `min:"1" type:"string"`
 
 	// The latest scheduled start time to return. If scheduled action names are
@@ -8261,7 +8277,7 @@ func (s *DescribeTerminationPolicyTypesOutput) SetTerminationPolicyTypes(v []*st
 type DetachInstancesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the group.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -8493,7 +8509,7 @@ func (s DetachLoadBalancersOutput) GoString() string {
 type DisableMetricsCollectionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name or Amazon Resource Name (ARN) of the group.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -8689,7 +8705,7 @@ func (s *Ebs) SetVolumeType(v string) *Ebs {
 type EnableMetricsCollectionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name or ARN of the Auto Scaling group.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -8933,7 +8949,7 @@ func (s *EnterStandbyOutput) SetActivities(v []*Activity) *EnterStandbyOutput {
 type ExecutePolicyInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name or Amazon Resource Name (ARN) of the Auto Scaling group.
+	// The name of the Auto Scaling group.
 	AutoScalingGroupName *string `min:"1" type:"string"`
 
 	// The breach threshold for the alarm.
@@ -9160,10 +9176,10 @@ func (s *Filter) SetValues(v []*string) *Filter {
 type Group struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the group.
+	// The Amazon Resource Name (ARN) of the Auto Scaling group.
 	AutoScalingGroupARN *string `min:"1" type:"string"`
 
-	// The name of the group.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -9206,6 +9222,9 @@ type Group struct {
 
 	// The name of the associated launch configuration.
 	LaunchConfigurationName *string `min:"1" type:"string"`
+
+	// The launch template for the group.
+	LaunchTemplate *LaunchTemplateSpecification `type:"structure"`
 
 	// One or more load balancers associated with the group.
 	LoadBalancerNames []*string `type:"list"`
@@ -9327,6 +9346,12 @@ func (s *Group) SetLaunchConfigurationName(v string) *Group {
 	return s
 }
 
+// SetLaunchTemplate sets the LaunchTemplate field's value.
+func (s *Group) SetLaunchTemplate(v *LaunchTemplateSpecification) *Group {
+	s.LaunchTemplate = v
+	return s
+}
+
 // SetLoadBalancerNames sets the LoadBalancerNames field's value.
 func (s *Group) SetLoadBalancerNames(v []*string) *Group {
 	s.LoadBalancerNames = v
@@ -9416,9 +9441,10 @@ type Instance struct {
 	InstanceId *string `min:"1" type:"string" required:"true"`
 
 	// The launch configuration associated with the instance.
-	//
-	// LaunchConfigurationName is a required field
-	LaunchConfigurationName *string `min:"1" type:"string" required:"true"`
+	LaunchConfigurationName *string `min:"1" type:"string"`
+
+	// The launch template for the instance.
+	LaunchTemplate *LaunchTemplateSpecification `type:"structure"`
 
 	// A description of the current lifecycle state. Note that the Quarantined state
 	// is not used.
@@ -9467,6 +9493,12 @@ func (s *Instance) SetLaunchConfigurationName(v string) *Instance {
 	return s
 }
 
+// SetLaunchTemplate sets the LaunchTemplate field's value.
+func (s *Instance) SetLaunchTemplate(v *LaunchTemplateSpecification) *Instance {
+	s.LaunchTemplate = v
+	return s
+}
+
 // SetLifecycleState sets the LifecycleState field's value.
 func (s *Instance) SetLifecycleState(v string) *Instance {
 	s.LifecycleState = &v
@@ -9484,7 +9516,7 @@ func (s *Instance) SetProtectedFromScaleIn(v bool) *Instance {
 type InstanceDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the Auto Scaling group associated with the instance.
+	// The name of the Auto Scaling group for the instance.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -9508,9 +9540,10 @@ type InstanceDetails struct {
 
 	// The launch configuration used to launch the instance. This value is not available
 	// if you attached the instance to the Auto Scaling group.
-	//
-	// LaunchConfigurationName is a required field
-	LaunchConfigurationName *string `min:"1" type:"string" required:"true"`
+	LaunchConfigurationName *string `min:"1" type:"string"`
+
+	// The launch template for the instance.
+	LaunchTemplate *LaunchTemplateSpecification `type:"structure"`
 
 	// The lifecycle state for the instance. For more information, see Auto Scaling
 	// Lifecycle (http://docs.aws.amazon.com/autoscaling/latest/userguide/AutoScalingGroupLifecycle.html)
@@ -9563,6 +9596,12 @@ func (s *InstanceDetails) SetInstanceId(v string) *InstanceDetails {
 // SetLaunchConfigurationName sets the LaunchConfigurationName field's value.
 func (s *InstanceDetails) SetLaunchConfigurationName(v string) *InstanceDetails {
 	s.LaunchConfigurationName = &v
+	return s
+}
+
+// SetLaunchTemplate sets the LaunchTemplate field's value.
+func (s *InstanceDetails) SetLaunchTemplate(v *LaunchTemplateSpecification) *InstanceDetails {
+	s.LaunchTemplate = v
 	return s
 }
 
@@ -9808,6 +9847,71 @@ func (s *LaunchConfiguration) SetUserData(v string) *LaunchConfiguration {
 	return s
 }
 
+// Describes a launch template.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/autoscaling-2011-01-01/LaunchTemplateSpecification
+type LaunchTemplateSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the launch template. You must specify either a template ID or a
+	// template name.
+	LaunchTemplateId *string `min:"1" type:"string"`
+
+	// The name of the launch template. You must specify either a template name
+	// or a template ID.
+	LaunchTemplateName *string `min:"3" type:"string"`
+
+	// The version number. By default, the default version of the launch template
+	// is used.
+	Version *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s LaunchTemplateSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LaunchTemplateSpecification) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LaunchTemplateSpecification) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LaunchTemplateSpecification"}
+	if s.LaunchTemplateId != nil && len(*s.LaunchTemplateId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LaunchTemplateId", 1))
+	}
+	if s.LaunchTemplateName != nil && len(*s.LaunchTemplateName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("LaunchTemplateName", 3))
+	}
+	if s.Version != nil && len(*s.Version) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Version", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLaunchTemplateId sets the LaunchTemplateId field's value.
+func (s *LaunchTemplateSpecification) SetLaunchTemplateId(v string) *LaunchTemplateSpecification {
+	s.LaunchTemplateId = &v
+	return s
+}
+
+// SetLaunchTemplateName sets the LaunchTemplateName field's value.
+func (s *LaunchTemplateSpecification) SetLaunchTemplateName(v string) *LaunchTemplateSpecification {
+	s.LaunchTemplateName = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *LaunchTemplateSpecification) SetVersion(v string) *LaunchTemplateSpecification {
+	s.Version = &v
+	return s
+}
+
 // Describes a lifecycle hook, which tells Auto Scaling that you want to perform
 // an action whenever it launches instances or whenever it terminates instances.
 //
@@ -9931,7 +10035,7 @@ type LifecycleHookSpecification struct {
 
 	// Defines the action the Auto Scaling group should take when the lifecycle
 	// hook timeout elapses or if an unexpected failure occurs. The valid values
-	// are CONTINUE and ABANDON. The default value is CONTINUE.
+	// are CONTINUE and ABANDON.
 	DefaultResult *string `type:"string"`
 
 	// The maximum time, in seconds, that can elapse before the lifecycle hook times
@@ -9946,7 +10050,9 @@ type LifecycleHookSpecification struct {
 
 	// The state of the EC2 instance to which you want to attach the lifecycle hook.
 	// For a list of lifecycle hook types, see DescribeLifecycleHookTypes.
-	LifecycleTransition *string `type:"string"`
+	//
+	// LifecycleTransition is a required field
+	LifecycleTransition *string `type:"string" required:"true"`
 
 	// Additional information that you want to include any time Auto Scaling sends
 	// a message to the notification target.
@@ -9980,6 +10086,9 @@ func (s *LifecycleHookSpecification) Validate() error {
 	}
 	if s.LifecycleHookName != nil && len(*s.LifecycleHookName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("LifecycleHookName", 1))
+	}
+	if s.LifecycleTransition == nil {
+		invalidParams.Add(request.NewErrParamRequired("LifecycleTransition"))
 	}
 	if s.NotificationMetadata != nil && len(*s.NotificationMetadata) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("NotificationMetadata", 1))
@@ -10276,7 +10385,7 @@ func (s *MetricGranularityType) SetGranularity(v string) *MetricGranularityType 
 type NotificationConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the group.
+	// The name of the Auto Scaling group.
 	AutoScalingGroupName *string `min:"1" type:"string"`
 
 	// One of the following event notification types:
@@ -10350,7 +10459,7 @@ type PredefinedMetricSpecification struct {
 	//    * ALBRequestCountPerTarget - number of requests completed per target in
 	//    an Application Load Balancer target group
 	//
-	// For predefined metric types ASGAverageCPUUtilization, ASGAverageNetworkIn
+	// For predefined metric types ASGAverageCPUUtilization, ASGAverageNetworkIn,
 	// and ASGAverageNetworkOut, the parameter must not be specified as the resource
 	// associated with the metric type is the Auto Scaling group. For predefined
 	// metric type ALBRequestCountPerTarget, the parameter must be specified in
@@ -10450,8 +10559,7 @@ func (s *ProcessType) SetProcessName(v string) *ProcessType {
 type PutLifecycleHookInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the Auto Scaling group to which you want to assign the lifecycle
-	// hook.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -10711,7 +10819,7 @@ type PutScalingPolicyInput struct {
 	// in the Auto Scaling User Guide.
 	AdjustmentType *string `min:"1" type:"string"`
 
-	// The name or ARN of the group.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -10948,7 +11056,7 @@ func (s *PutScalingPolicyOutput) SetPolicyARN(v string) *PutScalingPolicyOutput 
 type PutScheduledUpdateGroupActionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name or Amazon Resource Name (ARN) of the Auto Scaling group.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -11097,7 +11205,7 @@ func (s PutScheduledUpdateGroupActionOutput) GoString() string {
 type RecordLifecycleActionHeartbeatInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the Auto Scaling group for the hook.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -11220,7 +11328,7 @@ type ScalingPolicy struct {
 	// The CloudWatch alarms related to the policy.
 	Alarms []*Alarm `type:"list"`
 
-	// The name of the Auto Scaling group associated with this scaling policy.
+	// The name of the Auto Scaling group.
 	AutoScalingGroupName *string `min:"1" type:"string"`
 
 	// The amount of time, in seconds, after a scaling activity completes before
@@ -11364,7 +11472,7 @@ func (s *ScalingPolicy) SetTargetTrackingConfiguration(v *TargetTrackingConfigur
 type ScalingProcessQuery struct {
 	_ struct{} `type:"structure"`
 
-	// The name or Amazon Resource Name (ARN) of the Auto Scaling group.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -11433,7 +11541,7 @@ func (s *ScalingProcessQuery) SetScalingProcesses(v []*string) *ScalingProcessQu
 type ScheduledUpdateGroupAction struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the group.
+	// The name of the Auto Scaling group.
 	AutoScalingGroupName *string `min:"1" type:"string"`
 
 	// The number of instances you prefer to maintain in the group.
@@ -11717,7 +11825,7 @@ func (s SetInstanceHealthOutput) GoString() string {
 type SetInstanceProtectionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the group.
+	// The name of the Auto Scaling group.
 	//
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
@@ -12287,8 +12395,13 @@ type UpdateAutoScalingGroupInput struct {
 	// The service to use for the health checks. The valid values are EC2 and ELB.
 	HealthCheckType *string `min:"1" type:"string"`
 
-	// The name of the launch configuration.
+	// The name of the launch configuration. You must specify either a launch configuration
+	// or a launch template.
 	LaunchConfigurationName *string `min:"1" type:"string"`
+
+	// The launch template to use to specify the updates. You must specify a launch
+	// configuration or a launch template.
+	LaunchTemplate *LaunchTemplateSpecification `type:"structure"`
 
 	// The maximum size of the Auto Scaling group.
 	MaxSize *int64 `type:"integer"`
@@ -12359,6 +12472,11 @@ func (s *UpdateAutoScalingGroupInput) Validate() error {
 	if s.VPCZoneIdentifier != nil && len(*s.VPCZoneIdentifier) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("VPCZoneIdentifier", 1))
 	}
+	if s.LaunchTemplate != nil {
+		if err := s.LaunchTemplate.Validate(); err != nil {
+			invalidParams.AddNested("LaunchTemplate", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -12405,6 +12523,12 @@ func (s *UpdateAutoScalingGroupInput) SetHealthCheckType(v string) *UpdateAutoSc
 // SetLaunchConfigurationName sets the LaunchConfigurationName field's value.
 func (s *UpdateAutoScalingGroupInput) SetLaunchConfigurationName(v string) *UpdateAutoScalingGroupInput {
 	s.LaunchConfigurationName = &v
+	return s
+}
+
+// SetLaunchTemplate sets the LaunchTemplate field's value.
+func (s *UpdateAutoScalingGroupInput) SetLaunchTemplate(v *LaunchTemplateSpecification) *UpdateAutoScalingGroupInput {
+	s.LaunchTemplate = v
 	return s
 }
 
