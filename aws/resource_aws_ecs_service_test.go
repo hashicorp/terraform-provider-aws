@@ -617,6 +617,9 @@ resource "aws_ecs_service" "mongo" {
 
 func testAccAWSEcsServiceWithLaunchTypeFargate(rInt int) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-east-1"
+}
 data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
