@@ -11,6 +11,8 @@ IMPROVEMENTS:
 * resource/aws_ssm_association: Add `association_name` [GH-2257]
 * resource/aws_ecs_service: Add `network_configuration` [GH-2299]
 * resource/aws_lambda_function: Add `reserved_concurrent_executions` [GH-2504]
+* resource/aws_ecs_service: Add `launch_type` (Fargate support) [GH-2483]
+* resource/aws_ecs_task_definition: Add `cpu`, `memory`, `execution_role_arn` & `requires_compatibilities` (Fargate support) [GH-2483]
 
 BUG FIXES:
 
