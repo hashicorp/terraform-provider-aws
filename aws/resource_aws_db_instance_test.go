@@ -933,12 +933,47 @@ EOF
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
-    name = "enhanced-monitoring-attachment"
+    name = "enhanced-monitoring-attachment-%s"
     roles = [
         "${aws_iam_role.enhanced_policy_role.name}",
     ]
 
-    policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+    policy_arn = "${aws_iam_policy.test.arn}"
+}
+
+resource "aws_iam_policy" "test" {
+  name   = "tf-enhanced-monitoring-policy-%s"
+  policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogGroups",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:PutRetentionPolicy"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:RDS*"
+            ]
+        },
+        {
+            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogStreams",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams",
+                "logs:GetLogEvents"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:RDS*:log-stream:*"
+            ]
+        }
+    ]
+}
+POLICY
 }
 
 resource "aws_db_instance" "enhanced_monitoring" {
@@ -960,7 +995,7 @@ resource "aws_db_instance" "enhanced_monitoring" {
 	monitoring_interval = "5"
 
 	skip_final_snapshot = true
-}`, rName, rName)
+}`, rName, rName, rName, rName)
 }
 
 func testAccSnapshotInstanceConfig_iopsUpdate(rName string, iops int) string {

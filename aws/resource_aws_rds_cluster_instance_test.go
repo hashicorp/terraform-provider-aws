@@ -484,9 +484,44 @@ EOF
 }
 
 resource "aws_iam_policy_attachment" "rds_m_attach" {
-    name = "AmazonRDSEnhancedMonitoringRole"
+    name = "tf-enhanced-monitoring-attachment-%d"
     roles = ["${aws_iam_role.tf_enhanced_monitor_role.name}"]
-    policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+    policy_arn = "${aws_iam_policy.test.arn}"
+}
+
+resource "aws_iam_policy" "test" {
+  name   = "tf-enhanced-monitoring-policy-%d"
+  policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogGroups",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:PutRetentionPolicy"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:RDS*"
+            ]
+        },
+        {
+            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogStreams",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams",
+                "logs:GetLogEvents"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:RDS*:log-stream:*"
+            ]
+        }
+    ]
+}
+POLICY
 }
 
 resource "aws_db_parameter_group" "bar" {
@@ -503,5 +538,5 @@ resource "aws_db_parameter_group" "bar" {
     foo = "bar"
   }
 }
-`, n, n, n, n)
+`, n, n, n, n, n, n)
 }
