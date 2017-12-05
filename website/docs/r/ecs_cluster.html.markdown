@@ -6,7 +6,7 @@ description: |-
   Provides an ECS cluster.
 ---
 
-# aws\_ecs\_cluster
+# aws_ecs_cluster
 
 Provides an ECS cluster.
 
@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+The following additional attributes are exported:
 
-* `name` - The name of the cluster
 * `id` - The Amazon Resource Name (ARN) that identifies the cluster
+* `arn` - The Amazon Resource Name (ARN) that identifies the cluster
