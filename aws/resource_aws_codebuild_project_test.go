@@ -352,6 +352,19 @@ func testAccCheckAWSCodeBuildProjectDestroy(s *terraform.State) error {
 
 func testAccAWSCodeBuildProjectConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_vpc" "codebuild_vpc" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "codebuild_subnet" {
+  vpc_id     = "${aws_vpc.codebuild_vpc.id}"
+  cidr_block = "10.0.0.0/24"
+}
+
+resource "aws_security_group" "codebuild_security_group" {
+  vpc_id = "${aws_vpc.codebuild_vpc.id}"
+}
+
 resource "aws_iam_role" "codebuild_role" {
   name = "codebuild-role-%s"
   assume_role_policy = <<EOF
@@ -371,10 +384,10 @@ EOF
 }
 
 resource "aws_iam_policy" "codebuild_policy" {
-    name        = "codebuild-policy-%s"
-    path        = "/service-role/"
-    description = "Policy used in trust relationship with CodeBuild"
-    policy      = <<POLICY
+  name        = "codebuild-policy-%s"
+  path        = "/service-role/"
+  description = "Policy used in trust relationship with CodeBuild"
+  policy      = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -388,6 +401,34 @@ resource "aws_iam_policy" "codebuild_policy" {
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInterface",
+        "ec2:DescribeDhcpOptions",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DeleteNetworkInterface",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeVpcs"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInterfacePermission"
+      ],
+      "Resource": "arn:aws:ec2::*:network-interface/*",
+      "Condition": {
+        "StringEquals": {
+          "ec2:Subnet": [
+            "arn:aws:ec2::*:subnet/${aws_subnet.codebuild_subnet.id}"
+          ],
+          "ec2:AuthorizedService": "codebuild.amazonaws.com"
+        }
+      }
     }
   ]
 }
@@ -401,10 +442,10 @@ resource "aws_iam_policy_attachment" "codebuild_policy_attachment" {
 }
 
 resource "aws_codebuild_project" "foo" {
-  name         = "test-project-%s"
-  description  = "test_codebuild_project"
-  build_timeout      = "5"
-  service_role = "${aws_iam_role.codebuild_role.arn}"
+  name          = "test-project-%s"
+  description   = "test_codebuild_project"
+  build_timeout = "5"
+  service_role  = "${aws_iam_role.codebuild_role.arn}"
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -428,6 +469,18 @@ resource "aws_codebuild_project" "foo" {
 
   tags {
     "Environment" = "Test"
+  }
+
+  vpc_config {
+    vpc_id = "${aws_vpc.codebuild_vpc.id}"
+
+    subnets = [
+      "${aws_subnet.codebuild_subnet.id}"
+    ]
+
+    security_group_ids = [
+      "${aws_security_group.codebuild_security_group.id}"
+    ]
   }
 }
 `, rName, rName, rName, rName)
