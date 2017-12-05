@@ -409,12 +409,12 @@ func flattenEcsNetworkConfigration(nc *ecs.NetworkConfiguration) []interface{} {
 	if nc == nil {
 		return nil
 	}
+
 	result := make(map[string]interface{})
 	result["security_groups"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.SecurityGroups))
 	result["subnets"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.Subnets))
-	if val, ok := result["assign_public_ip"].(string); ok {
-		result["assign_public_ip"] = val
-	}
+	result["assign_public_ip"] = *nc.AwsvpcConfiguration.AssignPublicIp
+
 	return []interface{}{result}
 }
 
@@ -429,9 +429,9 @@ func expandEcsNetworkConfigration(nc []interface{}) *ecs.NetworkConfiguration {
 	}
 	awsVpcConfig.Subnets = expandStringSet(raw["subnets"].(*schema.Set))
 
-	//if val, ok := raw["assign_public_ip"].(string); ok {
-	//	awsVpcConfig.AssignPublicIp = aws.String(val)
-	//	}
+	if val, ok := raw["assign_public_ip"].(string); ok {
+		awsVpcConfig.AssignPublicIp = aws.String(val)
+	}
 
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
