@@ -299,8 +299,8 @@ resource "aws_emr_cluster" "hoge" {
     instance_profile                  = "${aws_iam_instance_profile.instance_profile.arn}"
   }
 
-  master_instance_type = "m4.large"
-  core_instance_type   = "m4.large"
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
   core_instance_count  = 2
 
   tags {
@@ -329,7 +329,7 @@ resource "aws_emr_cluster" "hoge" {
 resource "aws_emr_instance_group" "hoge" {
   cluster_id     = "${aws_emr_cluster.hoge.id}"
   instance_count = 1
-  instance_type  = "m4.large"
+  instance_type  = "c4.large"
 }
 
 resource "aws_security_group" "hoge" {
