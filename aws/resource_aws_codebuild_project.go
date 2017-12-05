@@ -258,6 +258,10 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 				return resource.RetryableError(err)
 			}
 
+			if isAWSErr(err, "InvalidInputException", "Not authorized to perform DescribeSecurityGroups") {
+				return resource.RetryableError(err)
+			}
+
 			return resource.NonRetryableError(err)
 		}
 

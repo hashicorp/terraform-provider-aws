@@ -454,8 +454,6 @@ resource "aws_codebuild_project" "foo" {
       "${aws_security_group.codebuild_security_group.id}"
     ]
   }
-
-  depends_on = ["aws_iam_policy_attachment.codebuild_policy_attachment"]
 }
 `, rName, rName, rName, rName)
 }
