@@ -17,18 +17,17 @@ func resourceAwsAppautoscalingTarget() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAppautoscalingTargetCreate,
 		Read:   resourceAwsAppautoscalingTargetRead,
+		Update: resourceAwsAppautoscalingTargetUpdate,
 		Delete: resourceAwsAppautoscalingTargetDelete,
 
 		Schema: map[string]*schema.Schema{
 			"max_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
-				ForceNew: true,
 			},
 			"min_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
-				ForceNew: true,
 			},
 			"resource_id": {
 				Type:     schema.TypeString,
@@ -38,7 +37,6 @@ func resourceAwsAppautoscalingTarget() *schema.Resource {
 			"role_arn": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"scalable_dimension": {
 				Type:         schema.TypeString,
@@ -116,6 +114,36 @@ func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{
 	d.Set("service_namespace", t.ServiceNamespace)
 
 	return nil
+}
+
+func resourceAwsAppautoscalingTargetUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).appautoscalingconn
+
+	input := &applicationautoscaling.RegisterScalableTargetInput{
+		ResourceId:        aws.String(d.Get("resource_id").(string)),
+		ScalableDimension: aws.String(d.Get("scalable_dimension").(string)),
+		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
+	}
+
+	if d.HasChange("max_capacity") {
+		input.MaxCapacity = aws.Int64(int64(d.Get("max_capacity").(int)))
+	}
+
+	if d.HasChange("min_capacity") {
+		input.MinCapacity = aws.Int64(int64(d.Get("min_capacity").(int)))
+	}
+
+	if d.HasChange("role_arn") {
+		input.RoleARN = aws.String(d.Get("role_arn").(string))
+	}
+
+	log.Printf("[DEBUG] Updating Application Autoscaling Target: %#v", input)
+	_, err := conn.RegisterScalableTarget(input)
+	if err != nil {
+		return err
+	}
+
+	return resourceAwsAppautoscalingTargetRead(d, meta)
 }
 
 func resourceAwsAppautoscalingTargetDelete(d *schema.ResourceData, meta interface{}) error {
