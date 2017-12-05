@@ -351,7 +351,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"id": {
 										Type:         schema.TypeString,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: validateS3BucketReplicationRuleId,
 									},
 									"destination": {
