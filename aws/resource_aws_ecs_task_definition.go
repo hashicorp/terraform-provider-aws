@@ -281,9 +281,8 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 		log.Printf("[ERR] Error setting placement_constraints for (%s): %s", d.Id(), err)
 	}
 
-	d.Set("requires_compatibilities", taskDefinition.RequiresCompatibilities)
 	if err := d.Set("requires_compatibilities", flattenStringList(taskDefinition.RequiresCompatibilities)); err != nil {
-		log.Printf("[ERR] Error setting requires_compatibilities for (%s): %s", d.Id(), err)
+		return err
 	}
 
 	return nil
