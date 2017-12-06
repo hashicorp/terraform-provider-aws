@@ -15,7 +15,7 @@ func TestAccDataSourceAwsKmsCiphertext_basic(t *testing.T) {
 				Config: testAccDataSourceAwsKmsCiphertextConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
-						"data.aws_kms_ciphertext.foo", "ciphertext_blob"),
+						"aws_kms_ciphertext.foo", "ciphertext_blob"),
 				),
 			},
 		},
@@ -31,11 +31,11 @@ func TestAccDataSourceAwsKmsCiphertext_validate(t *testing.T) {
 				Config: testAccDataSourceAwsKmsCiphertextConfig_validate,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
-						"data.aws_kms_ciphertext.foo", "ciphertext_blob"),
+						"aws_kms_ciphertext.foo", "ciphertext_blob"),
 					resource.TestCheckResourceAttrSet(
-						"data.aws_kms_secret.foo", "plaintext"),
+						"aws_kms_secret.foo", "plaintext"),
 					resource.TestCheckResourceAttr(
-						"data.aws_kms_secret.foo", "plaintext", "Super secret data"),
+						"aws_kms_secret.foo", "plaintext", "Super secret data"),
 				),
 			},
 		},
@@ -51,11 +51,11 @@ func TestAccDataSourceAwsKmsCiphertext_validate_withContext(t *testing.T) {
 				Config: testAccDataSourceAwsKmsCiphertextConfig_validate_withContext,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
-						"data.aws_kms_ciphertext.foo", "ciphertext_blob"),
+						"aws_kms_ciphertext.foo", "ciphertext_blob"),
 					resource.TestCheckResourceAttrSet(
-						"data.aws_kms_secret.foo", "plaintext"),
+						"aws_kms_secret.foo", "plaintext"),
 					resource.TestCheckResourceAttr(
-						"data.aws_kms_secret.foo", "plaintext", "Super secret data"),
+						"aws_kms_secret.foo", "plaintext", "Super secret data"),
 				),
 			},
 		},
@@ -98,7 +98,7 @@ data "aws_kms_ciphertext" "foo" {
 data "aws_kms_secret" "foo" {
   secret {
     name = "plaintext"
-    payload = "${data.aws_kms_ciphertext.foo.ciphertext_blob}"
+    payload = "${aws_kms_ciphertext.foo.ciphertext_blob}"
   }
 }
 `
@@ -126,7 +126,7 @@ data "aws_kms_ciphertext" "foo" {
 data "aws_kms_secret" "foo" {
   secret {
     name = "plaintext"
-    payload = "${data.aws_kms_ciphertext.foo.ciphertext_blob}"
+    payload = "${aws_kms_ciphertext.foo.ciphertext_blob}"
 
     context {
 	  name = "value"
