@@ -1,14 +1,14 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_kms_ciphertext"
-sidebar_current: "docs-aws-datasource-kms-ciphertext"
+sidebar_current: "docs-aws-resource-kms-ciphertext"
 description: |-
     Provides ciphertext encrypted using a KMS key
 ---
 
 # aws\_kms\_ciphertext
 
-The KMS ciphertext data source allows you to encrypt plaintext into ciphertext
+The KMS ciphertext resource allows you to encrypt plaintext into ciphertext
 by using an AWS KMS customer master key.
 
 ~> **Note:** All arguments including the plaintext be stored in the raw state as plain-text.
@@ -22,7 +22,7 @@ resource "aws_kms_key" "oauth_config" {
   is_enabled = true
 }
 
-data "aws_kms_ciphertext" "oauth" {
+resource "aws_kms_ciphertext" "oauth" {
   key_id = "${aws_kms_key.oauth_config.key_id}"
   plaintext = <<EOF
 {
