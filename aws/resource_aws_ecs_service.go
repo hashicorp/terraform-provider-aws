@@ -134,6 +134,7 @@ func resourceAwsEcsService() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							Default:  "DISABLED",
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -432,7 +433,6 @@ func expandEcsNetworkConfigration(nc []interface{}) *ecs.NetworkConfiguration {
 	if val, ok := raw["assign_public_ip"].(string); ok {
 		awsVpcConfig.AssignPublicIp = aws.String(val)
 	}
-
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
