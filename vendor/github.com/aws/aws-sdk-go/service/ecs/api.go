@@ -9685,7 +9685,7 @@ type TaskDefinition struct {
 	// If the network mode is awsvpc, the task is allocated an Elastic Network Interface,
 	// and you must specify a NetworkConfiguration when you create a service or
 	// run a task with the task definition. For more information, see Task Networking
-	// (http://docs.aws.amazon.com/AmazonECS/latest/developerguidetask-networking.html)
+	// (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-networking.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	//
 	// If the network mode is host, you can't run multiple instantiations of the
