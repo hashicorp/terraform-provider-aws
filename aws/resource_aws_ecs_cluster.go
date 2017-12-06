@@ -17,6 +17,9 @@ func resourceAwsEcsCluster() *schema.Resource {
 		Create: resourceAwsEcsClusterCreate,
 		Read:   resourceAwsEcsClusterRead,
 		Delete: resourceAwsEcsClusterDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsEcsClusterImportState,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -26,6 +29,27 @@ func resourceAwsEcsCluster() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceAwsEcsClusterImportState(
+	d *schema.ResourceData,
+	meta interface{}) ([]*schema.ResourceData, error) {
+
+	// Check if the cluster exists.
+	conn := meta.(*AWSClient).ecsconn
+	resp, err := conn.DescribeClusters(&ecs.DescribeClustersInput{
+		Clusters: []*string{aws.String(d.Id())},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.Clusters) < 1 {
+		return nil, fmt.Errorf("cluster %s is not found", d.Id())
+	}
+	cluster := resp.Clusters[0]
+
+	d.Set("name", cluster.ClusterName)
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error {

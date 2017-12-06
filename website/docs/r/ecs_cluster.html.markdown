@@ -30,3 +30,11 @@ The following attributes are exported:
 
 * `name` - The name of the cluster
 * `id` - The Amazon Resource Name (ARN) that identifies the cluster
+
+## Import
+
+ECS clusters can be imported using the `name`, e.g.
+
+```
+$ terraform import aws_ecs_cluster.foo_cluster cluster-8
+```
