@@ -219,6 +219,216 @@ func (c *Lightsail) AttachDiskWithContext(ctx aws.Context, input *AttachDiskInpu
 	return out, req.Send()
 }
 
+const opAttachInstancesToLoadBalancer = "AttachInstancesToLoadBalancer"
+
+// AttachInstancesToLoadBalancerRequest generates a "aws/request.Request" representing the
+// client's request for the AttachInstancesToLoadBalancer operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AttachInstancesToLoadBalancer for more information on using the AttachInstancesToLoadBalancer
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AttachInstancesToLoadBalancerRequest method.
+//    req, resp := client.AttachInstancesToLoadBalancerRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/AttachInstancesToLoadBalancer
+func (c *Lightsail) AttachInstancesToLoadBalancerRequest(input *AttachInstancesToLoadBalancerInput) (req *request.Request, output *AttachInstancesToLoadBalancerOutput) {
+	op := &request.Operation{
+		Name:       opAttachInstancesToLoadBalancer,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AttachInstancesToLoadBalancerInput{}
+	}
+
+	output = &AttachInstancesToLoadBalancerOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AttachInstancesToLoadBalancer API operation for Amazon Lightsail.
+//
+// Attaches one or more Lightsail instances to a load balancer.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lightsail's
+// API operation AttachInstancesToLoadBalancer for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   A general service exception.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Lightsail throws this exception when user input does not conform to the validation
+//   rules of an input field.
+//
+//   Domain-related APIs are only available in the N. Virginia (us-east-1) Region.
+//   Please set your Region configuration to us-east-1 to create, view, or edit
+//   these resources.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Lightsail throws this exception when it cannot find a resource.
+//
+//   * ErrCodeOperationFailureException "OperationFailureException"
+//   Lightsail throws this exception when an operation fails to execute.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Lightsail throws this exception when the user cannot be authenticated or
+//   uses invalid credentials to access a resource.
+//
+//   * ErrCodeAccountSetupInProgressException "AccountSetupInProgressException"
+//   Lightsail throws this exception when an account is still in the setup in
+//   progress state.
+//
+//   * ErrCodeUnauthenticatedException "UnauthenticatedException"
+//   Lightsail throws this exception when the user has not been authenticated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/AttachInstancesToLoadBalancer
+func (c *Lightsail) AttachInstancesToLoadBalancer(input *AttachInstancesToLoadBalancerInput) (*AttachInstancesToLoadBalancerOutput, error) {
+	req, out := c.AttachInstancesToLoadBalancerRequest(input)
+	return out, req.Send()
+}
+
+// AttachInstancesToLoadBalancerWithContext is the same as AttachInstancesToLoadBalancer with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AttachInstancesToLoadBalancer for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lightsail) AttachInstancesToLoadBalancerWithContext(ctx aws.Context, input *AttachInstancesToLoadBalancerInput, opts ...request.Option) (*AttachInstancesToLoadBalancerOutput, error) {
+	req, out := c.AttachInstancesToLoadBalancerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opAttachLoadBalancerTlsCertificate = "AttachLoadBalancerTlsCertificate"
+
+// AttachLoadBalancerTlsCertificateRequest generates a "aws/request.Request" representing the
+// client's request for the AttachLoadBalancerTlsCertificate operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AttachLoadBalancerTlsCertificate for more information on using the AttachLoadBalancerTlsCertificate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AttachLoadBalancerTlsCertificateRequest method.
+//    req, resp := client.AttachLoadBalancerTlsCertificateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/AttachLoadBalancerTlsCertificate
+func (c *Lightsail) AttachLoadBalancerTlsCertificateRequest(input *AttachLoadBalancerTlsCertificateInput) (req *request.Request, output *AttachLoadBalancerTlsCertificateOutput) {
+	op := &request.Operation{
+		Name:       opAttachLoadBalancerTlsCertificate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AttachLoadBalancerTlsCertificateInput{}
+	}
+
+	output = &AttachLoadBalancerTlsCertificateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AttachLoadBalancerTlsCertificate API operation for Amazon Lightsail.
+//
+// Attaches a Transport Layer Security (TLS) certificate to your load balancer.
+//
+// TLS is just an updated, more secure version of Secure Socket Layer (SSL).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lightsail's
+// API operation AttachLoadBalancerTlsCertificate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   A general service exception.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Lightsail throws this exception when user input does not conform to the validation
+//   rules of an input field.
+//
+//   Domain-related APIs are only available in the N. Virginia (us-east-1) Region.
+//   Please set your Region configuration to us-east-1 to create, view, or edit
+//   these resources.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Lightsail throws this exception when it cannot find a resource.
+//
+//   * ErrCodeOperationFailureException "OperationFailureException"
+//   Lightsail throws this exception when an operation fails to execute.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Lightsail throws this exception when the user cannot be authenticated or
+//   uses invalid credentials to access a resource.
+//
+//   * ErrCodeAccountSetupInProgressException "AccountSetupInProgressException"
+//   Lightsail throws this exception when an account is still in the setup in
+//   progress state.
+//
+//   * ErrCodeUnauthenticatedException "UnauthenticatedException"
+//   Lightsail throws this exception when the user has not been authenticated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/AttachLoadBalancerTlsCertificate
+func (c *Lightsail) AttachLoadBalancerTlsCertificate(input *AttachLoadBalancerTlsCertificateInput) (*AttachLoadBalancerTlsCertificateOutput, error) {
+	req, out := c.AttachLoadBalancerTlsCertificateRequest(input)
+	return out, req.Send()
+}
+
+// AttachLoadBalancerTlsCertificateWithContext is the same as AttachLoadBalancerTlsCertificate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AttachLoadBalancerTlsCertificate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lightsail) AttachLoadBalancerTlsCertificateWithContext(ctx aws.Context, input *AttachLoadBalancerTlsCertificateInput, opts ...request.Option) (*AttachLoadBalancerTlsCertificateOutput, error) {
+	req, out := c.AttachLoadBalancerTlsCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opAttachStaticIp = "AttachStaticIp"
 
 // AttachStaticIpRequest generates a "aws/request.Request" representing the
@@ -1385,6 +1595,219 @@ func (c *Lightsail) CreateKeyPairWithContext(ctx aws.Context, input *CreateKeyPa
 	return out, req.Send()
 }
 
+const opCreateLoadBalancer = "CreateLoadBalancer"
+
+// CreateLoadBalancerRequest generates a "aws/request.Request" representing the
+// client's request for the CreateLoadBalancer operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateLoadBalancer for more information on using the CreateLoadBalancer
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateLoadBalancerRequest method.
+//    req, resp := client.CreateLoadBalancerRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/CreateLoadBalancer
+func (c *Lightsail) CreateLoadBalancerRequest(input *CreateLoadBalancerInput) (req *request.Request, output *CreateLoadBalancerOutput) {
+	op := &request.Operation{
+		Name:       opCreateLoadBalancer,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateLoadBalancerInput{}
+	}
+
+	output = &CreateLoadBalancerOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateLoadBalancer API operation for Amazon Lightsail.
+//
+// Creates a Lightsail load balancer.
+//
+// When you create a load balancer, you can specify certificates and port settings.
+// You can create up to 5 load balancers per AWS Region in your account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lightsail's
+// API operation CreateLoadBalancer for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   A general service exception.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Lightsail throws this exception when user input does not conform to the validation
+//   rules of an input field.
+//
+//   Domain-related APIs are only available in the N. Virginia (us-east-1) Region.
+//   Please set your Region configuration to us-east-1 to create, view, or edit
+//   these resources.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Lightsail throws this exception when it cannot find a resource.
+//
+//   * ErrCodeOperationFailureException "OperationFailureException"
+//   Lightsail throws this exception when an operation fails to execute.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Lightsail throws this exception when the user cannot be authenticated or
+//   uses invalid credentials to access a resource.
+//
+//   * ErrCodeAccountSetupInProgressException "AccountSetupInProgressException"
+//   Lightsail throws this exception when an account is still in the setup in
+//   progress state.
+//
+//   * ErrCodeUnauthenticatedException "UnauthenticatedException"
+//   Lightsail throws this exception when the user has not been authenticated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/CreateLoadBalancer
+func (c *Lightsail) CreateLoadBalancer(input *CreateLoadBalancerInput) (*CreateLoadBalancerOutput, error) {
+	req, out := c.CreateLoadBalancerRequest(input)
+	return out, req.Send()
+}
+
+// CreateLoadBalancerWithContext is the same as CreateLoadBalancer with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateLoadBalancer for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lightsail) CreateLoadBalancerWithContext(ctx aws.Context, input *CreateLoadBalancerInput, opts ...request.Option) (*CreateLoadBalancerOutput, error) {
+	req, out := c.CreateLoadBalancerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateLoadBalancerTlsCertificate = "CreateLoadBalancerTlsCertificate"
+
+// CreateLoadBalancerTlsCertificateRequest generates a "aws/request.Request" representing the
+// client's request for the CreateLoadBalancerTlsCertificate operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateLoadBalancerTlsCertificate for more information on using the CreateLoadBalancerTlsCertificate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateLoadBalancerTlsCertificateRequest method.
+//    req, resp := client.CreateLoadBalancerTlsCertificateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/CreateLoadBalancerTlsCertificate
+func (c *Lightsail) CreateLoadBalancerTlsCertificateRequest(input *CreateLoadBalancerTlsCertificateInput) (req *request.Request, output *CreateLoadBalancerTlsCertificateOutput) {
+	op := &request.Operation{
+		Name:       opCreateLoadBalancerTlsCertificate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateLoadBalancerTlsCertificateInput{}
+	}
+
+	output = &CreateLoadBalancerTlsCertificateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateLoadBalancerTlsCertificate API operation for Amazon Lightsail.
+//
+// Creates a Lightsail load balancer TLS certificate.
+//
+// TLS is just an updated, more secure version of Secure Socket Layer (SSL).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lightsail's
+// API operation CreateLoadBalancerTlsCertificate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   A general service exception.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Lightsail throws this exception when user input does not conform to the validation
+//   rules of an input field.
+//
+//   Domain-related APIs are only available in the N. Virginia (us-east-1) Region.
+//   Please set your Region configuration to us-east-1 to create, view, or edit
+//   these resources.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Lightsail throws this exception when it cannot find a resource.
+//
+//   * ErrCodeOperationFailureException "OperationFailureException"
+//   Lightsail throws this exception when an operation fails to execute.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Lightsail throws this exception when the user cannot be authenticated or
+//   uses invalid credentials to access a resource.
+//
+//   * ErrCodeAccountSetupInProgressException "AccountSetupInProgressException"
+//   Lightsail throws this exception when an account is still in the setup in
+//   progress state.
+//
+//   * ErrCodeUnauthenticatedException "UnauthenticatedException"
+//   Lightsail throws this exception when the user has not been authenticated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/CreateLoadBalancerTlsCertificate
+func (c *Lightsail) CreateLoadBalancerTlsCertificate(input *CreateLoadBalancerTlsCertificateInput) (*CreateLoadBalancerTlsCertificateOutput, error) {
+	req, out := c.CreateLoadBalancerTlsCertificateRequest(input)
+	return out, req.Send()
+}
+
+// CreateLoadBalancerTlsCertificateWithContext is the same as CreateLoadBalancerTlsCertificate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateLoadBalancerTlsCertificate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lightsail) CreateLoadBalancerTlsCertificateWithContext(ctx aws.Context, input *CreateLoadBalancerTlsCertificateInput, opts ...request.Option) (*CreateLoadBalancerTlsCertificateOutput, error) {
+	req, out := c.CreateLoadBalancerTlsCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteDisk = "DeleteDisk"
 
 // DeleteDiskRequest generates a "aws/request.Request" representing the
@@ -2123,6 +2546,214 @@ func (c *Lightsail) DeleteKeyPairWithContext(ctx aws.Context, input *DeleteKeyPa
 	return out, req.Send()
 }
 
+const opDeleteLoadBalancer = "DeleteLoadBalancer"
+
+// DeleteLoadBalancerRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteLoadBalancer operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteLoadBalancer for more information on using the DeleteLoadBalancer
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteLoadBalancerRequest method.
+//    req, resp := client.DeleteLoadBalancerRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DeleteLoadBalancer
+func (c *Lightsail) DeleteLoadBalancerRequest(input *DeleteLoadBalancerInput) (req *request.Request, output *DeleteLoadBalancerOutput) {
+	op := &request.Operation{
+		Name:       opDeleteLoadBalancer,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteLoadBalancerInput{}
+	}
+
+	output = &DeleteLoadBalancerOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteLoadBalancer API operation for Amazon Lightsail.
+//
+// Deletes a Lightsail load balancer.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lightsail's
+// API operation DeleteLoadBalancer for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   A general service exception.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Lightsail throws this exception when user input does not conform to the validation
+//   rules of an input field.
+//
+//   Domain-related APIs are only available in the N. Virginia (us-east-1) Region.
+//   Please set your Region configuration to us-east-1 to create, view, or edit
+//   these resources.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Lightsail throws this exception when it cannot find a resource.
+//
+//   * ErrCodeOperationFailureException "OperationFailureException"
+//   Lightsail throws this exception when an operation fails to execute.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Lightsail throws this exception when the user cannot be authenticated or
+//   uses invalid credentials to access a resource.
+//
+//   * ErrCodeAccountSetupInProgressException "AccountSetupInProgressException"
+//   Lightsail throws this exception when an account is still in the setup in
+//   progress state.
+//
+//   * ErrCodeUnauthenticatedException "UnauthenticatedException"
+//   Lightsail throws this exception when the user has not been authenticated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DeleteLoadBalancer
+func (c *Lightsail) DeleteLoadBalancer(input *DeleteLoadBalancerInput) (*DeleteLoadBalancerOutput, error) {
+	req, out := c.DeleteLoadBalancerRequest(input)
+	return out, req.Send()
+}
+
+// DeleteLoadBalancerWithContext is the same as DeleteLoadBalancer with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteLoadBalancer for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lightsail) DeleteLoadBalancerWithContext(ctx aws.Context, input *DeleteLoadBalancerInput, opts ...request.Option) (*DeleteLoadBalancerOutput, error) {
+	req, out := c.DeleteLoadBalancerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteLoadBalancerTlsCertificate = "DeleteLoadBalancerTlsCertificate"
+
+// DeleteLoadBalancerTlsCertificateRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteLoadBalancerTlsCertificate operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteLoadBalancerTlsCertificate for more information on using the DeleteLoadBalancerTlsCertificate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteLoadBalancerTlsCertificateRequest method.
+//    req, resp := client.DeleteLoadBalancerTlsCertificateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DeleteLoadBalancerTlsCertificate
+func (c *Lightsail) DeleteLoadBalancerTlsCertificateRequest(input *DeleteLoadBalancerTlsCertificateInput) (req *request.Request, output *DeleteLoadBalancerTlsCertificateOutput) {
+	op := &request.Operation{
+		Name:       opDeleteLoadBalancerTlsCertificate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteLoadBalancerTlsCertificateInput{}
+	}
+
+	output = &DeleteLoadBalancerTlsCertificateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteLoadBalancerTlsCertificate API operation for Amazon Lightsail.
+//
+// Deletes a TLS/SSL certificate associated with a Lightsail load balancer.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lightsail's
+// API operation DeleteLoadBalancerTlsCertificate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   A general service exception.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Lightsail throws this exception when user input does not conform to the validation
+//   rules of an input field.
+//
+//   Domain-related APIs are only available in the N. Virginia (us-east-1) Region.
+//   Please set your Region configuration to us-east-1 to create, view, or edit
+//   these resources.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Lightsail throws this exception when it cannot find a resource.
+//
+//   * ErrCodeOperationFailureException "OperationFailureException"
+//   Lightsail throws this exception when an operation fails to execute.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Lightsail throws this exception when the user cannot be authenticated or
+//   uses invalid credentials to access a resource.
+//
+//   * ErrCodeAccountSetupInProgressException "AccountSetupInProgressException"
+//   Lightsail throws this exception when an account is still in the setup in
+//   progress state.
+//
+//   * ErrCodeUnauthenticatedException "UnauthenticatedException"
+//   Lightsail throws this exception when the user has not been authenticated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DeleteLoadBalancerTlsCertificate
+func (c *Lightsail) DeleteLoadBalancerTlsCertificate(input *DeleteLoadBalancerTlsCertificateInput) (*DeleteLoadBalancerTlsCertificateOutput, error) {
+	req, out := c.DeleteLoadBalancerTlsCertificateRequest(input)
+	return out, req.Send()
+}
+
+// DeleteLoadBalancerTlsCertificateWithContext is the same as DeleteLoadBalancerTlsCertificate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteLoadBalancerTlsCertificate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lightsail) DeleteLoadBalancerTlsCertificateWithContext(ctx aws.Context, input *DeleteLoadBalancerTlsCertificateInput, opts ...request.Option) (*DeleteLoadBalancerTlsCertificateOutput, error) {
+	req, out := c.DeleteLoadBalancerTlsCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDetachDisk = "DetachDisk"
 
 // DetachDiskRequest generates a "aws/request.Request" representing the
@@ -2224,6 +2855,110 @@ func (c *Lightsail) DetachDisk(input *DetachDiskInput) (*DetachDiskOutput, error
 // for more information on using Contexts.
 func (c *Lightsail) DetachDiskWithContext(ctx aws.Context, input *DetachDiskInput, opts ...request.Option) (*DetachDiskOutput, error) {
 	req, out := c.DetachDiskRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDetachInstancesFromLoadBalancer = "DetachInstancesFromLoadBalancer"
+
+// DetachInstancesFromLoadBalancerRequest generates a "aws/request.Request" representing the
+// client's request for the DetachInstancesFromLoadBalancer operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DetachInstancesFromLoadBalancer for more information on using the DetachInstancesFromLoadBalancer
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DetachInstancesFromLoadBalancerRequest method.
+//    req, resp := client.DetachInstancesFromLoadBalancerRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DetachInstancesFromLoadBalancer
+func (c *Lightsail) DetachInstancesFromLoadBalancerRequest(input *DetachInstancesFromLoadBalancerInput) (req *request.Request, output *DetachInstancesFromLoadBalancerOutput) {
+	op := &request.Operation{
+		Name:       opDetachInstancesFromLoadBalancer,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DetachInstancesFromLoadBalancerInput{}
+	}
+
+	output = &DetachInstancesFromLoadBalancerOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DetachInstancesFromLoadBalancer API operation for Amazon Lightsail.
+//
+// Detaches the specified instances from a Lightsail load balancer.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lightsail's
+// API operation DetachInstancesFromLoadBalancer for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   A general service exception.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Lightsail throws this exception when user input does not conform to the validation
+//   rules of an input field.
+//
+//   Domain-related APIs are only available in the N. Virginia (us-east-1) Region.
+//   Please set your Region configuration to us-east-1 to create, view, or edit
+//   these resources.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Lightsail throws this exception when it cannot find a resource.
+//
+//   * ErrCodeOperationFailureException "OperationFailureException"
+//   Lightsail throws this exception when an operation fails to execute.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Lightsail throws this exception when the user cannot be authenticated or
+//   uses invalid credentials to access a resource.
+//
+//   * ErrCodeAccountSetupInProgressException "AccountSetupInProgressException"
+//   Lightsail throws this exception when an account is still in the setup in
+//   progress state.
+//
+//   * ErrCodeUnauthenticatedException "UnauthenticatedException"
+//   Lightsail throws this exception when the user has not been authenticated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DetachInstancesFromLoadBalancer
+func (c *Lightsail) DetachInstancesFromLoadBalancer(input *DetachInstancesFromLoadBalancerInput) (*DetachInstancesFromLoadBalancerOutput, error) {
+	req, out := c.DetachInstancesFromLoadBalancerRequest(input)
+	return out, req.Send()
+}
+
+// DetachInstancesFromLoadBalancerWithContext is the same as DetachInstancesFromLoadBalancer with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DetachInstancesFromLoadBalancer for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lightsail) DetachInstancesFromLoadBalancerWithContext(ctx aws.Context, input *DetachInstancesFromLoadBalancerInput, opts ...request.Option) (*DetachInstancesFromLoadBalancerOutput, error) {
+	req, out := c.DetachInstancesFromLoadBalancerRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4431,6 +5166,429 @@ func (c *Lightsail) GetKeyPairsWithContext(ctx aws.Context, input *GetKeyPairsIn
 	return out, req.Send()
 }
 
+const opGetLoadBalancer = "GetLoadBalancer"
+
+// GetLoadBalancerRequest generates a "aws/request.Request" representing the
+// client's request for the GetLoadBalancer operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetLoadBalancer for more information on using the GetLoadBalancer
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetLoadBalancerRequest method.
+//    req, resp := client.GetLoadBalancerRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancer
+func (c *Lightsail) GetLoadBalancerRequest(input *GetLoadBalancerInput) (req *request.Request, output *GetLoadBalancerOutput) {
+	op := &request.Operation{
+		Name:       opGetLoadBalancer,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetLoadBalancerInput{}
+	}
+
+	output = &GetLoadBalancerOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetLoadBalancer API operation for Amazon Lightsail.
+//
+// Returns information about the specified Lightsail load balancer.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lightsail's
+// API operation GetLoadBalancer for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   A general service exception.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Lightsail throws this exception when user input does not conform to the validation
+//   rules of an input field.
+//
+//   Domain-related APIs are only available in the N. Virginia (us-east-1) Region.
+//   Please set your Region configuration to us-east-1 to create, view, or edit
+//   these resources.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Lightsail throws this exception when it cannot find a resource.
+//
+//   * ErrCodeOperationFailureException "OperationFailureException"
+//   Lightsail throws this exception when an operation fails to execute.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Lightsail throws this exception when the user cannot be authenticated or
+//   uses invalid credentials to access a resource.
+//
+//   * ErrCodeAccountSetupInProgressException "AccountSetupInProgressException"
+//   Lightsail throws this exception when an account is still in the setup in
+//   progress state.
+//
+//   * ErrCodeUnauthenticatedException "UnauthenticatedException"
+//   Lightsail throws this exception when the user has not been authenticated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancer
+func (c *Lightsail) GetLoadBalancer(input *GetLoadBalancerInput) (*GetLoadBalancerOutput, error) {
+	req, out := c.GetLoadBalancerRequest(input)
+	return out, req.Send()
+}
+
+// GetLoadBalancerWithContext is the same as GetLoadBalancer with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetLoadBalancer for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lightsail) GetLoadBalancerWithContext(ctx aws.Context, input *GetLoadBalancerInput, opts ...request.Option) (*GetLoadBalancerOutput, error) {
+	req, out := c.GetLoadBalancerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetLoadBalancerMetricData = "GetLoadBalancerMetricData"
+
+// GetLoadBalancerMetricDataRequest generates a "aws/request.Request" representing the
+// client's request for the GetLoadBalancerMetricData operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetLoadBalancerMetricData for more information on using the GetLoadBalancerMetricData
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetLoadBalancerMetricDataRequest method.
+//    req, resp := client.GetLoadBalancerMetricDataRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancerMetricData
+func (c *Lightsail) GetLoadBalancerMetricDataRequest(input *GetLoadBalancerMetricDataInput) (req *request.Request, output *GetLoadBalancerMetricDataOutput) {
+	op := &request.Operation{
+		Name:       opGetLoadBalancerMetricData,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetLoadBalancerMetricDataInput{}
+	}
+
+	output = &GetLoadBalancerMetricDataOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetLoadBalancerMetricData API operation for Amazon Lightsail.
+//
+// Returns information about health metrics for your Lightsail load balancer.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lightsail's
+// API operation GetLoadBalancerMetricData for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   A general service exception.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Lightsail throws this exception when user input does not conform to the validation
+//   rules of an input field.
+//
+//   Domain-related APIs are only available in the N. Virginia (us-east-1) Region.
+//   Please set your Region configuration to us-east-1 to create, view, or edit
+//   these resources.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Lightsail throws this exception when it cannot find a resource.
+//
+//   * ErrCodeOperationFailureException "OperationFailureException"
+//   Lightsail throws this exception when an operation fails to execute.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Lightsail throws this exception when the user cannot be authenticated or
+//   uses invalid credentials to access a resource.
+//
+//   * ErrCodeAccountSetupInProgressException "AccountSetupInProgressException"
+//   Lightsail throws this exception when an account is still in the setup in
+//   progress state.
+//
+//   * ErrCodeUnauthenticatedException "UnauthenticatedException"
+//   Lightsail throws this exception when the user has not been authenticated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancerMetricData
+func (c *Lightsail) GetLoadBalancerMetricData(input *GetLoadBalancerMetricDataInput) (*GetLoadBalancerMetricDataOutput, error) {
+	req, out := c.GetLoadBalancerMetricDataRequest(input)
+	return out, req.Send()
+}
+
+// GetLoadBalancerMetricDataWithContext is the same as GetLoadBalancerMetricData with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetLoadBalancerMetricData for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lightsail) GetLoadBalancerMetricDataWithContext(ctx aws.Context, input *GetLoadBalancerMetricDataInput, opts ...request.Option) (*GetLoadBalancerMetricDataOutput, error) {
+	req, out := c.GetLoadBalancerMetricDataRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetLoadBalancerTlsCertificates = "GetLoadBalancerTlsCertificates"
+
+// GetLoadBalancerTlsCertificatesRequest generates a "aws/request.Request" representing the
+// client's request for the GetLoadBalancerTlsCertificates operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetLoadBalancerTlsCertificates for more information on using the GetLoadBalancerTlsCertificates
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetLoadBalancerTlsCertificatesRequest method.
+//    req, resp := client.GetLoadBalancerTlsCertificatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancerTlsCertificates
+func (c *Lightsail) GetLoadBalancerTlsCertificatesRequest(input *GetLoadBalancerTlsCertificatesInput) (req *request.Request, output *GetLoadBalancerTlsCertificatesOutput) {
+	op := &request.Operation{
+		Name:       opGetLoadBalancerTlsCertificates,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetLoadBalancerTlsCertificatesInput{}
+	}
+
+	output = &GetLoadBalancerTlsCertificatesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetLoadBalancerTlsCertificates API operation for Amazon Lightsail.
+//
+// Returns information about the TLS certificates that are associated with the
+// specified Lightsail load balancer.
+//
+// TLS is just an updated, more secure version of Secure Socket Layer (SSL).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lightsail's
+// API operation GetLoadBalancerTlsCertificates for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   A general service exception.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Lightsail throws this exception when user input does not conform to the validation
+//   rules of an input field.
+//
+//   Domain-related APIs are only available in the N. Virginia (us-east-1) Region.
+//   Please set your Region configuration to us-east-1 to create, view, or edit
+//   these resources.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Lightsail throws this exception when it cannot find a resource.
+//
+//   * ErrCodeOperationFailureException "OperationFailureException"
+//   Lightsail throws this exception when an operation fails to execute.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Lightsail throws this exception when the user cannot be authenticated or
+//   uses invalid credentials to access a resource.
+//
+//   * ErrCodeAccountSetupInProgressException "AccountSetupInProgressException"
+//   Lightsail throws this exception when an account is still in the setup in
+//   progress state.
+//
+//   * ErrCodeUnauthenticatedException "UnauthenticatedException"
+//   Lightsail throws this exception when the user has not been authenticated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancerTlsCertificates
+func (c *Lightsail) GetLoadBalancerTlsCertificates(input *GetLoadBalancerTlsCertificatesInput) (*GetLoadBalancerTlsCertificatesOutput, error) {
+	req, out := c.GetLoadBalancerTlsCertificatesRequest(input)
+	return out, req.Send()
+}
+
+// GetLoadBalancerTlsCertificatesWithContext is the same as GetLoadBalancerTlsCertificates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetLoadBalancerTlsCertificates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lightsail) GetLoadBalancerTlsCertificatesWithContext(ctx aws.Context, input *GetLoadBalancerTlsCertificatesInput, opts ...request.Option) (*GetLoadBalancerTlsCertificatesOutput, error) {
+	req, out := c.GetLoadBalancerTlsCertificatesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetLoadBalancers = "GetLoadBalancers"
+
+// GetLoadBalancersRequest generates a "aws/request.Request" representing the
+// client's request for the GetLoadBalancers operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetLoadBalancers for more information on using the GetLoadBalancers
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetLoadBalancersRequest method.
+//    req, resp := client.GetLoadBalancersRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancers
+func (c *Lightsail) GetLoadBalancersRequest(input *GetLoadBalancersInput) (req *request.Request, output *GetLoadBalancersOutput) {
+	op := &request.Operation{
+		Name:       opGetLoadBalancers,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetLoadBalancersInput{}
+	}
+
+	output = &GetLoadBalancersOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetLoadBalancers API operation for Amazon Lightsail.
+//
+// Returns information about all load balancers in an account.
+//
+// If you are describing a long list of load balancers, you can paginate the
+// output to make the list more manageable. You can use the pageToken and nextPageToken
+// values to retrieve the next items in the list.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lightsail's
+// API operation GetLoadBalancers for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   A general service exception.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Lightsail throws this exception when user input does not conform to the validation
+//   rules of an input field.
+//
+//   Domain-related APIs are only available in the N. Virginia (us-east-1) Region.
+//   Please set your Region configuration to us-east-1 to create, view, or edit
+//   these resources.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Lightsail throws this exception when it cannot find a resource.
+//
+//   * ErrCodeOperationFailureException "OperationFailureException"
+//   Lightsail throws this exception when an operation fails to execute.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Lightsail throws this exception when the user cannot be authenticated or
+//   uses invalid credentials to access a resource.
+//
+//   * ErrCodeAccountSetupInProgressException "AccountSetupInProgressException"
+//   Lightsail throws this exception when an account is still in the setup in
+//   progress state.
+//
+//   * ErrCodeUnauthenticatedException "UnauthenticatedException"
+//   Lightsail throws this exception when the user has not been authenticated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancers
+func (c *Lightsail) GetLoadBalancers(input *GetLoadBalancersInput) (*GetLoadBalancersOutput, error) {
+	req, out := c.GetLoadBalancersRequest(input)
+	return out, req.Send()
+}
+
+// GetLoadBalancersWithContext is the same as GetLoadBalancers with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetLoadBalancers for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lightsail) GetLoadBalancersWithContext(ctx aws.Context, input *GetLoadBalancersInput, opts ...request.Option) (*GetLoadBalancersOutput, error) {
+	req, out := c.GetLoadBalancersRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetOperation = "GetOperation"
 
 // GetOperationRequest generates a "aws/request.Request" representing the
@@ -6211,6 +7369,110 @@ func (c *Lightsail) UpdateDomainEntryWithContext(ctx aws.Context, input *UpdateD
 	return out, req.Send()
 }
 
+const opUpdateLoadBalancerAttribute = "UpdateLoadBalancerAttribute"
+
+// UpdateLoadBalancerAttributeRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateLoadBalancerAttribute operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateLoadBalancerAttribute for more information on using the UpdateLoadBalancerAttribute
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateLoadBalancerAttributeRequest method.
+//    req, resp := client.UpdateLoadBalancerAttributeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/UpdateLoadBalancerAttribute
+func (c *Lightsail) UpdateLoadBalancerAttributeRequest(input *UpdateLoadBalancerAttributeInput) (req *request.Request, output *UpdateLoadBalancerAttributeOutput) {
+	op := &request.Operation{
+		Name:       opUpdateLoadBalancerAttribute,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateLoadBalancerAttributeInput{}
+	}
+
+	output = &UpdateLoadBalancerAttributeOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateLoadBalancerAttribute API operation for Amazon Lightsail.
+//
+// Updates the specified attribute for a load balancer.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lightsail's
+// API operation UpdateLoadBalancerAttribute for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   A general service exception.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Lightsail throws this exception when user input does not conform to the validation
+//   rules of an input field.
+//
+//   Domain-related APIs are only available in the N. Virginia (us-east-1) Region.
+//   Please set your Region configuration to us-east-1 to create, view, or edit
+//   these resources.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Lightsail throws this exception when it cannot find a resource.
+//
+//   * ErrCodeOperationFailureException "OperationFailureException"
+//   Lightsail throws this exception when an operation fails to execute.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Lightsail throws this exception when the user cannot be authenticated or
+//   uses invalid credentials to access a resource.
+//
+//   * ErrCodeAccountSetupInProgressException "AccountSetupInProgressException"
+//   Lightsail throws this exception when an account is still in the setup in
+//   progress state.
+//
+//   * ErrCodeUnauthenticatedException "UnauthenticatedException"
+//   Lightsail throws this exception when the user has not been authenticated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/UpdateLoadBalancerAttribute
+func (c *Lightsail) UpdateLoadBalancerAttribute(input *UpdateLoadBalancerAttributeInput) (*UpdateLoadBalancerAttributeOutput, error) {
+	req, out := c.UpdateLoadBalancerAttributeRequest(input)
+	return out, req.Send()
+}
+
+// UpdateLoadBalancerAttributeWithContext is the same as UpdateLoadBalancerAttribute with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateLoadBalancerAttribute for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lightsail) UpdateLoadBalancerAttributeWithContext(ctx aws.Context, input *UpdateLoadBalancerAttributeInput, opts ...request.Option) (*UpdateLoadBalancerAttributeOutput, error) {
+	req, out := c.UpdateLoadBalancerAttributeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/AllocateStaticIpRequest
 type AllocateStaticIpInput struct {
 	_ struct{} `type:"structure"`
@@ -6347,7 +7609,7 @@ func (s *AttachDiskInput) SetInstanceName(v string) *AttachDiskInput {
 type AttachDiskOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An object describing the API operation.
+	// An object describing the API operations.
 	Operations []*Operation `locationName:"operations" type:"list"`
 }
 
@@ -6363,6 +7625,162 @@ func (s AttachDiskOutput) GoString() string {
 
 // SetOperations sets the Operations field's value.
 func (s *AttachDiskOutput) SetOperations(v []*Operation) *AttachDiskOutput {
+	s.Operations = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/AttachInstancesToLoadBalancerRequest
+type AttachInstancesToLoadBalancerInput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of strings representing the instance name(s) you want to attach
+	// to your load balancer.
+	//
+	// InstanceNames is a required field
+	InstanceNames []*string `locationName:"instanceNames" type:"list" required:"true"`
+
+	// The name of the load balancer.
+	//
+	// LoadBalancerName is a required field
+	LoadBalancerName *string `locationName:"loadBalancerName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AttachInstancesToLoadBalancerInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AttachInstancesToLoadBalancerInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AttachInstancesToLoadBalancerInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AttachInstancesToLoadBalancerInput"}
+	if s.InstanceNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceNames"))
+	}
+	if s.LoadBalancerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LoadBalancerName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInstanceNames sets the InstanceNames field's value.
+func (s *AttachInstancesToLoadBalancerInput) SetInstanceNames(v []*string) *AttachInstancesToLoadBalancerInput {
+	s.InstanceNames = v
+	return s
+}
+
+// SetLoadBalancerName sets the LoadBalancerName field's value.
+func (s *AttachInstancesToLoadBalancerInput) SetLoadBalancerName(v string) *AttachInstancesToLoadBalancerInput {
+	s.LoadBalancerName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/AttachInstancesToLoadBalancerResult
+type AttachInstancesToLoadBalancerOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object representing the API operations.
+	Operations []*Operation `locationName:"operations" type:"list"`
+}
+
+// String returns the string representation
+func (s AttachInstancesToLoadBalancerOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AttachInstancesToLoadBalancerOutput) GoString() string {
+	return s.String()
+}
+
+// SetOperations sets the Operations field's value.
+func (s *AttachInstancesToLoadBalancerOutput) SetOperations(v []*Operation) *AttachInstancesToLoadBalancerOutput {
+	s.Operations = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/AttachLoadBalancerTlsCertificateRequest
+type AttachLoadBalancerTlsCertificateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of your TLS/SSL certificate.
+	//
+	// CertificateName is a required field
+	CertificateName *string `locationName:"certificateName" type:"string" required:"true"`
+
+	// The name of the load balancer to which you want to associate the TLS/SSL
+	// certificate.
+	//
+	// LoadBalancerName is a required field
+	LoadBalancerName *string `locationName:"loadBalancerName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AttachLoadBalancerTlsCertificateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AttachLoadBalancerTlsCertificateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AttachLoadBalancerTlsCertificateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AttachLoadBalancerTlsCertificateInput"}
+	if s.CertificateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateName"))
+	}
+	if s.LoadBalancerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LoadBalancerName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateName sets the CertificateName field's value.
+func (s *AttachLoadBalancerTlsCertificateInput) SetCertificateName(v string) *AttachLoadBalancerTlsCertificateInput {
+	s.CertificateName = &v
+	return s
+}
+
+// SetLoadBalancerName sets the LoadBalancerName field's value.
+func (s *AttachLoadBalancerTlsCertificateInput) SetLoadBalancerName(v string) *AttachLoadBalancerTlsCertificateInput {
+	s.LoadBalancerName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/AttachLoadBalancerTlsCertificateResult
+type AttachLoadBalancerTlsCertificateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object representing the API operations.
+	Operations []*Operation `locationName:"operations" type:"list"`
+}
+
+// String returns the string representation
+func (s AttachLoadBalancerTlsCertificateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AttachLoadBalancerTlsCertificateOutput) GoString() string {
+	return s.String()
+}
+
+// SetOperations sets the Operations field's value.
+func (s *AttachLoadBalancerTlsCertificateOutput) SetOperations(v []*Operation) *AttachLoadBalancerTlsCertificateOutput {
 	s.Operations = v
 	return s
 }
@@ -7358,7 +8776,7 @@ type CreateInstancesFromSnapshotInput struct {
 	KeyPairName *string `locationName:"keyPairName" type:"string"`
 
 	// You can create a launch script that configures a server with additional user
-	// data. For example, apt-get –y update.
+	// data. For example, apt-get -y update.
 	//
 	// Depending on the machine image you choose, the command to get software on
 	// your instance varies. Amazon Linux and CentOS use yum, Debian and Ubuntu
@@ -7508,7 +8926,7 @@ type CreateInstancesInput struct {
 	KeyPairName *string `locationName:"keyPairName" type:"string"`
 
 	// A launch script you can create that configures a server with additional user
-	// data. For example, you might want to run apt-get –y update.
+	// data. For example, you might want to run apt-get -y update.
 	//
 	// Depending on the machine image you choose, the command to get software on
 	// your instance varies. Amazon Linux and CentOS use yum, Debian and Ubuntu
@@ -7705,6 +9123,228 @@ func (s *CreateKeyPairOutput) SetPrivateKeyBase64(v string) *CreateKeyPairOutput
 // SetPublicKeyBase64 sets the PublicKeyBase64 field's value.
 func (s *CreateKeyPairOutput) SetPublicKeyBase64(v string) *CreateKeyPairOutput {
 	s.PublicKeyBase64 = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/CreateLoadBalancerRequest
+type CreateLoadBalancerInput struct {
+	_ struct{} `type:"structure"`
+
+	// The alternative domain names to use with your TLS/SSL certificate (e.g.,
+	// www.example.com, www.ejemplo.com, ejemplo.com).
+	CertificateAlternativeNames []*string `locationName:"certificateAlternativeNames" type:"list"`
+
+	// The domain name with which your certificate is associated (e.g., example.com).
+	//
+	// If you specify certificateDomainName, then certificateName is required (and
+	// vice-versa).
+	CertificateDomainName *string `locationName:"certificateDomainName" type:"string"`
+
+	// The name of the TLS/SSL certificate.
+	//
+	// If you specify certificateName, then certificateDomainName is required (and
+	// vice-versa).
+	CertificateName *string `locationName:"certificateName" type:"string"`
+
+	// The path you provided to perform the load balancer health check. If you didn't
+	// specify a health check path, Lightsail uses the root path of your website
+	// (e.g., "/").
+	HealthCheckPath *string `locationName:"healthCheckPath" type:"string"`
+
+	// The instance port where you're creating your load balancer.
+	//
+	// InstancePort is a required field
+	InstancePort *int64 `locationName:"instancePort" type:"integer" required:"true"`
+
+	// The name of your load balancer.
+	//
+	// LoadBalancerName is a required field
+	LoadBalancerName *string `locationName:"loadBalancerName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateLoadBalancerInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateLoadBalancerInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateLoadBalancerInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateLoadBalancerInput"}
+	if s.InstancePort == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstancePort"))
+	}
+	if s.LoadBalancerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LoadBalancerName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateAlternativeNames sets the CertificateAlternativeNames field's value.
+func (s *CreateLoadBalancerInput) SetCertificateAlternativeNames(v []*string) *CreateLoadBalancerInput {
+	s.CertificateAlternativeNames = v
+	return s
+}
+
+// SetCertificateDomainName sets the CertificateDomainName field's value.
+func (s *CreateLoadBalancerInput) SetCertificateDomainName(v string) *CreateLoadBalancerInput {
+	s.CertificateDomainName = &v
+	return s
+}
+
+// SetCertificateName sets the CertificateName field's value.
+func (s *CreateLoadBalancerInput) SetCertificateName(v string) *CreateLoadBalancerInput {
+	s.CertificateName = &v
+	return s
+}
+
+// SetHealthCheckPath sets the HealthCheckPath field's value.
+func (s *CreateLoadBalancerInput) SetHealthCheckPath(v string) *CreateLoadBalancerInput {
+	s.HealthCheckPath = &v
+	return s
+}
+
+// SetInstancePort sets the InstancePort field's value.
+func (s *CreateLoadBalancerInput) SetInstancePort(v int64) *CreateLoadBalancerInput {
+	s.InstancePort = &v
+	return s
+}
+
+// SetLoadBalancerName sets the LoadBalancerName field's value.
+func (s *CreateLoadBalancerInput) SetLoadBalancerName(v string) *CreateLoadBalancerInput {
+	s.LoadBalancerName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/CreateLoadBalancerResult
+type CreateLoadBalancerOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object containing information about the API operations.
+	Operations []*Operation `locationName:"operations" type:"list"`
+}
+
+// String returns the string representation
+func (s CreateLoadBalancerOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateLoadBalancerOutput) GoString() string {
+	return s.String()
+}
+
+// SetOperations sets the Operations field's value.
+func (s *CreateLoadBalancerOutput) SetOperations(v []*Operation) *CreateLoadBalancerOutput {
+	s.Operations = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/CreateLoadBalancerTlsCertificateRequest
+type CreateLoadBalancerTlsCertificateInput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of strings listing alternative domain names for your TLS/SSL certificate.
+	CertificateAlternativeNames []*string `locationName:"certificateAlternativeNames" type:"list"`
+
+	// The domain name (e.g., example.com) for your TLS/SSL certificate.
+	//
+	// CertificateDomainName is a required field
+	CertificateDomainName *string `locationName:"certificateDomainName" type:"string" required:"true"`
+
+	// The TLS/SSL certificate name.
+	//
+	// CertificateName is a required field
+	CertificateName *string `locationName:"certificateName" type:"string" required:"true"`
+
+	// The load balancer name where you want to create the TLS/SSL certificate.
+	//
+	// LoadBalancerName is a required field
+	LoadBalancerName *string `locationName:"loadBalancerName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateLoadBalancerTlsCertificateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateLoadBalancerTlsCertificateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateLoadBalancerTlsCertificateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateLoadBalancerTlsCertificateInput"}
+	if s.CertificateDomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateDomainName"))
+	}
+	if s.CertificateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateName"))
+	}
+	if s.LoadBalancerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LoadBalancerName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateAlternativeNames sets the CertificateAlternativeNames field's value.
+func (s *CreateLoadBalancerTlsCertificateInput) SetCertificateAlternativeNames(v []*string) *CreateLoadBalancerTlsCertificateInput {
+	s.CertificateAlternativeNames = v
+	return s
+}
+
+// SetCertificateDomainName sets the CertificateDomainName field's value.
+func (s *CreateLoadBalancerTlsCertificateInput) SetCertificateDomainName(v string) *CreateLoadBalancerTlsCertificateInput {
+	s.CertificateDomainName = &v
+	return s
+}
+
+// SetCertificateName sets the CertificateName field's value.
+func (s *CreateLoadBalancerTlsCertificateInput) SetCertificateName(v string) *CreateLoadBalancerTlsCertificateInput {
+	s.CertificateName = &v
+	return s
+}
+
+// SetLoadBalancerName sets the LoadBalancerName field's value.
+func (s *CreateLoadBalancerTlsCertificateInput) SetLoadBalancerName(v string) *CreateLoadBalancerTlsCertificateInput {
+	s.LoadBalancerName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/CreateLoadBalancerTlsCertificateResult
+type CreateLoadBalancerTlsCertificateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object containing information about the API operations.
+	Operations []*Operation `locationName:"operations" type:"list"`
+}
+
+// String returns the string representation
+func (s CreateLoadBalancerTlsCertificateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateLoadBalancerTlsCertificateOutput) GoString() string {
+	return s.String()
+}
+
+// SetOperations sets the Operations field's value.
+func (s *CreateLoadBalancerTlsCertificateOutput) SetOperations(v []*Operation) *CreateLoadBalancerTlsCertificateOutput {
+	s.Operations = v
 	return s
 }
 
@@ -8168,6 +9808,155 @@ func (s *DeleteKeyPairOutput) SetOperation(v *Operation) *DeleteKeyPairOutput {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DeleteLoadBalancerRequest
+type DeleteLoadBalancerInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the load balancer you want to delete.
+	//
+	// LoadBalancerName is a required field
+	LoadBalancerName *string `locationName:"loadBalancerName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteLoadBalancerInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteLoadBalancerInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteLoadBalancerInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteLoadBalancerInput"}
+	if s.LoadBalancerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LoadBalancerName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLoadBalancerName sets the LoadBalancerName field's value.
+func (s *DeleteLoadBalancerInput) SetLoadBalancerName(v string) *DeleteLoadBalancerInput {
+	s.LoadBalancerName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DeleteLoadBalancerResult
+type DeleteLoadBalancerOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object describing the API operations.
+	Operations []*Operation `locationName:"operations" type:"list"`
+}
+
+// String returns the string representation
+func (s DeleteLoadBalancerOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteLoadBalancerOutput) GoString() string {
+	return s.String()
+}
+
+// SetOperations sets the Operations field's value.
+func (s *DeleteLoadBalancerOutput) SetOperations(v []*Operation) *DeleteLoadBalancerOutput {
+	s.Operations = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DeleteLoadBalancerTlsCertificateRequest
+type DeleteLoadBalancerTlsCertificateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The TLS/SSL certificate name.
+	//
+	// CertificateName is a required field
+	CertificateName *string `locationName:"certificateName" type:"string" required:"true"`
+
+	// When true, forces the deletion of a TLS/SSL certificate.
+	Force *bool `locationName:"force" type:"boolean"`
+
+	// The load balancer name.
+	//
+	// LoadBalancerName is a required field
+	LoadBalancerName *string `locationName:"loadBalancerName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteLoadBalancerTlsCertificateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteLoadBalancerTlsCertificateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteLoadBalancerTlsCertificateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteLoadBalancerTlsCertificateInput"}
+	if s.CertificateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateName"))
+	}
+	if s.LoadBalancerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LoadBalancerName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateName sets the CertificateName field's value.
+func (s *DeleteLoadBalancerTlsCertificateInput) SetCertificateName(v string) *DeleteLoadBalancerTlsCertificateInput {
+	s.CertificateName = &v
+	return s
+}
+
+// SetForce sets the Force field's value.
+func (s *DeleteLoadBalancerTlsCertificateInput) SetForce(v bool) *DeleteLoadBalancerTlsCertificateInput {
+	s.Force = &v
+	return s
+}
+
+// SetLoadBalancerName sets the LoadBalancerName field's value.
+func (s *DeleteLoadBalancerTlsCertificateInput) SetLoadBalancerName(v string) *DeleteLoadBalancerTlsCertificateInput {
+	s.LoadBalancerName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DeleteLoadBalancerTlsCertificateResult
+type DeleteLoadBalancerTlsCertificateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object describing the API operations.
+	Operations []*Operation `locationName:"operations" type:"list"`
+}
+
+// String returns the string representation
+func (s DeleteLoadBalancerTlsCertificateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteLoadBalancerTlsCertificateOutput) GoString() string {
+	return s.String()
+}
+
+// SetOperations sets the Operations field's value.
+func (s *DeleteLoadBalancerTlsCertificateOutput) SetOperations(v []*Operation) *DeleteLoadBalancerTlsCertificateOutput {
+	s.Operations = v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DetachDiskRequest
 type DetachDiskInput struct {
 	_ struct{} `type:"structure"`
@@ -8228,6 +10017,84 @@ func (s DetachDiskOutput) GoString() string {
 
 // SetOperations sets the Operations field's value.
 func (s *DetachDiskOutput) SetOperations(v []*Operation) *DetachDiskOutput {
+	s.Operations = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DetachInstancesFromLoadBalancerRequest
+type DetachInstancesFromLoadBalancerInput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of strings containing the names of the instances you want to detach
+	// from the load balancer.
+	//
+	// InstanceNames is a required field
+	InstanceNames []*string `locationName:"instanceNames" type:"list" required:"true"`
+
+	// The name of the Lightsail load balancer.
+	//
+	// LoadBalancerName is a required field
+	LoadBalancerName *string `locationName:"loadBalancerName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DetachInstancesFromLoadBalancerInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DetachInstancesFromLoadBalancerInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DetachInstancesFromLoadBalancerInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DetachInstancesFromLoadBalancerInput"}
+	if s.InstanceNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceNames"))
+	}
+	if s.LoadBalancerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LoadBalancerName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInstanceNames sets the InstanceNames field's value.
+func (s *DetachInstancesFromLoadBalancerInput) SetInstanceNames(v []*string) *DetachInstancesFromLoadBalancerInput {
+	s.InstanceNames = v
+	return s
+}
+
+// SetLoadBalancerName sets the LoadBalancerName field's value.
+func (s *DetachInstancesFromLoadBalancerInput) SetLoadBalancerName(v string) *DetachInstancesFromLoadBalancerInput {
+	s.LoadBalancerName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DetachInstancesFromLoadBalancerResult
+type DetachInstancesFromLoadBalancerOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object describing the API operations.
+	Operations []*Operation `locationName:"operations" type:"list"`
+}
+
+// String returns the string representation
+func (s DetachInstancesFromLoadBalancerOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DetachInstancesFromLoadBalancerOutput) GoString() string {
+	return s.String()
+}
+
+// SetOperations sets the Operations field's value.
+func (s *DetachInstancesFromLoadBalancerOutput) SetOperations(v []*Operation) *DetachInstancesFromLoadBalancerOutput {
 	s.Operations = v
 	return s
 }
@@ -8309,8 +10176,8 @@ type Disk struct {
 
 	// (Deprecated) The attachment state of the disk.
 	//
-	// In releases prior to November 9, 2017, this parameter returned attached for
-	// system disks in the API response. It is now deprecated, but still included
+	// In releases prior to November 14, 2017, this parameter returned attached
+	// for system disks in the API response. It is now deprecated, but still included
 	// in the response. Use isAttached instead.
 	AttachmentState *string `locationName:"attachmentState" deprecated:"true" type:"string"`
 
@@ -8319,7 +10186,7 @@ type Disk struct {
 
 	// (Deprecated) The number of GB in use by the disk.
 	//
-	// In releases prior to November 9, 2017, this parameter was not included in
+	// In releases prior to November 14, 2017, this parameter was not included in
 	// the API response. It is now deprecated.
 	GbInUse *int64 `locationName:"gbInUse" deprecated:"true" type:"integer"`
 
@@ -8698,11 +10565,18 @@ type DomainEntry struct {
 	// The ID of the domain recordset entry.
 	Id *string `locationName:"id" type:"string"`
 
+	// When true, specifies whether the domain entry is an alias used by the Lightsail
+	// load balancer.
+	IsAlias *bool `locationName:"isAlias" type:"boolean"`
+
 	// The name of the domain.
 	Name *string `locationName:"name" type:"string"`
 
-	// The options for the domain entry.
-	Options map[string]*string `locationName:"options" type:"map"`
+	// (Deprecated) The options for the domain entry.
+	//
+	// In releases prior to November 29, 2017, this parameter was not included in
+	// the API response. It is now deprecated.
+	Options map[string]*string `locationName:"options" deprecated:"true" type:"map"`
 
 	// The target AWS name server (e.g., ns-111.awsdns-22.com.).
 	Target *string `locationName:"target" type:"string"`
@@ -8724,6 +10598,12 @@ func (s DomainEntry) GoString() string {
 // SetId sets the Id field's value.
 func (s *DomainEntry) SetId(v string) *DomainEntry {
 	s.Id = &v
+	return s
+}
+
+// SetIsAlias sets the IsAlias field's value.
+func (s *DomainEntry) SetIsAlias(v bool) *DomainEntry {
+	s.IsAlias = &v
 	return s
 }
 
@@ -10091,6 +11971,431 @@ func (s *GetKeyPairsOutput) SetNextPageToken(v string) *GetKeyPairsOutput {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancerRequest
+type GetLoadBalancerInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the load balancer.
+	//
+	// LoadBalancerName is a required field
+	LoadBalancerName *string `locationName:"loadBalancerName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetLoadBalancerInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLoadBalancerInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetLoadBalancerInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetLoadBalancerInput"}
+	if s.LoadBalancerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LoadBalancerName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLoadBalancerName sets the LoadBalancerName field's value.
+func (s *GetLoadBalancerInput) SetLoadBalancerName(v string) *GetLoadBalancerInput {
+	s.LoadBalancerName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancerMetricDataRequest
+type GetLoadBalancerMetricDataInput struct {
+	_ struct{} `type:"structure"`
+
+	// The end time of the period.
+	//
+	// EndTime is a required field
+	EndTime *time.Time `locationName:"endTime" type:"timestamp" timestampFormat:"unix" required:"true"`
+
+	// The name of the load balancer.
+	//
+	// LoadBalancerName is a required field
+	LoadBalancerName *string `locationName:"loadBalancerName" type:"string" required:"true"`
+
+	// The metric about which you want to return information. Valid values are listed
+	// below, along with the most useful statistics to include in your request.
+	//
+	//    * ClientTLSNegotiationErrorCount - The number of TLS connections initiated
+	//    by the client that did not establish a session with the load balancer.
+	//    Possible causes include a mismatch of ciphers or protocols.
+	//
+	// Statistics: The most useful statistic is Sum.
+	//
+	//    * HealthyHostCount - The number of target instances that are considered
+	//    healthy.
+	//
+	// Statistics: The most useful statistic are Average, Minimum, and Maximum.
+	//
+	//    * UnhealthyHostCount - The number of target instances that are considered
+	//    unhealthy.
+	//
+	// Statistics: The most useful statistic are Average, Minimum, and Maximum.
+	//
+	//    * HTTPCode_LB_4XX_Count - The number of HTTP 4XX client error codes that
+	//    originate from the load balancer. Client errors are generated when requests
+	//    are malformed or incomplete. These requests have not been received by
+	//    the target instance. This count does not include any response codes generated
+	//    by the target instances.
+	//
+	// Statistics: The most useful statistic is Sum. Note that Minimum, Maximum,
+	//    and Average all return 1.
+	//
+	//    * HTTPCode_LB_5XX_Count - The number of HTTP 5XX server error codes that
+	//    originate from the load balancer. This count does not include any response
+	//    codes generated by the target instances.
+	//
+	// Statistics: The most useful statistic is Sum. Note that Minimum, Maximum,
+	//    and Average all return 1. Note that Minimum, Maximum, and Average all
+	//    return 1.
+	//
+	//    * HTTPCode_Instance_2XX_Count - The number of HTTP response codes generated
+	//    by the target instances. This does not include any response codes generated
+	//    by the load balancer.
+	//
+	// Statistics: The most useful statistic is Sum. Note that Minimum, Maximum,
+	//    and Average all return 1.
+	//
+	//    * HTTPCode_Instance_3XX_Count - The number of HTTP response codes generated
+	//    by the target instances. This does not include any response codes generated
+	//    by the load balancer.
+	//
+	// Statistics: The most useful statistic is Sum. Note that Minimum, Maximum,
+	//    and Average all return 1.
+	//
+	//    * HTTPCode_Instance_4XX_Count - The number of HTTP response codes generated
+	//    by the target instances. This does not include any response codes generated
+	//    by the load balancer.
+	//
+	// Statistics: The most useful statistic is Sum. Note that Minimum, Maximum,
+	//    and Average all return 1.
+	//
+	//    * HTTPCode_Instance_5XX_Count - The number of HTTP response codes generated
+	//    by the target instances. This does not include any response codes generated
+	//    by the load balancer.
+	//
+	// Statistics: The most useful statistic is Sum. Note that Minimum, Maximum,
+	//    and Average all return 1.
+	//
+	//    * InstanceResponseTime - The time elapsed, in seconds, after the request
+	//    leaves the load balancer until a response from the target instance is
+	//    received.
+	//
+	// Statistics: The most useful statistic is Average.
+	//
+	//    * RejectedConnectionCount - The number of connections that were rejected
+	//    because the load balancer had reached its maximum number of connections.
+	//
+	// Statistics: The most useful statistic is Sum.
+	//
+	//    * RequestCount - The number of requests processed over IPv4. This count
+	//    includes only the requests with a response generated by a target instance
+	//    of the load balancer.
+	//
+	// Statistics: The most useful statistic is Sum. Note that Minimum, Maximum,
+	//    and Average all return 1.
+	//
+	// MetricName is a required field
+	MetricName *string `locationName:"metricName" type:"string" required:"true" enum:"LoadBalancerMetricName"`
+
+	// The time period duration for your health data request.
+	//
+	// Period is a required field
+	Period *int64 `locationName:"period" min:"60" type:"integer" required:"true"`
+
+	// The start time of the period.
+	//
+	// StartTime is a required field
+	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unix" required:"true"`
+
+	// An array of statistics that you want to request metrics for. Valid values
+	// are listed below.
+	//
+	// Statistics is a required field
+	Statistics []*string `locationName:"statistics" type:"list" required:"true"`
+
+	// The unit for the time period request. Valid values are listed below.
+	//
+	// Unit is a required field
+	Unit *string `locationName:"unit" type:"string" required:"true" enum:"MetricUnit"`
+}
+
+// String returns the string representation
+func (s GetLoadBalancerMetricDataInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLoadBalancerMetricDataInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetLoadBalancerMetricDataInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetLoadBalancerMetricDataInput"}
+	if s.EndTime == nil {
+		invalidParams.Add(request.NewErrParamRequired("EndTime"))
+	}
+	if s.LoadBalancerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LoadBalancerName"))
+	}
+	if s.MetricName == nil {
+		invalidParams.Add(request.NewErrParamRequired("MetricName"))
+	}
+	if s.Period == nil {
+		invalidParams.Add(request.NewErrParamRequired("Period"))
+	}
+	if s.Period != nil && *s.Period < 60 {
+		invalidParams.Add(request.NewErrParamMinValue("Period", 60))
+	}
+	if s.StartTime == nil {
+		invalidParams.Add(request.NewErrParamRequired("StartTime"))
+	}
+	if s.Statistics == nil {
+		invalidParams.Add(request.NewErrParamRequired("Statistics"))
+	}
+	if s.Unit == nil {
+		invalidParams.Add(request.NewErrParamRequired("Unit"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *GetLoadBalancerMetricDataInput) SetEndTime(v time.Time) *GetLoadBalancerMetricDataInput {
+	s.EndTime = &v
+	return s
+}
+
+// SetLoadBalancerName sets the LoadBalancerName field's value.
+func (s *GetLoadBalancerMetricDataInput) SetLoadBalancerName(v string) *GetLoadBalancerMetricDataInput {
+	s.LoadBalancerName = &v
+	return s
+}
+
+// SetMetricName sets the MetricName field's value.
+func (s *GetLoadBalancerMetricDataInput) SetMetricName(v string) *GetLoadBalancerMetricDataInput {
+	s.MetricName = &v
+	return s
+}
+
+// SetPeriod sets the Period field's value.
+func (s *GetLoadBalancerMetricDataInput) SetPeriod(v int64) *GetLoadBalancerMetricDataInput {
+	s.Period = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *GetLoadBalancerMetricDataInput) SetStartTime(v time.Time) *GetLoadBalancerMetricDataInput {
+	s.StartTime = &v
+	return s
+}
+
+// SetStatistics sets the Statistics field's value.
+func (s *GetLoadBalancerMetricDataInput) SetStatistics(v []*string) *GetLoadBalancerMetricDataInput {
+	s.Statistics = v
+	return s
+}
+
+// SetUnit sets the Unit field's value.
+func (s *GetLoadBalancerMetricDataInput) SetUnit(v string) *GetLoadBalancerMetricDataInput {
+	s.Unit = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancerMetricDataResult
+type GetLoadBalancerMetricDataOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of metric datapoint objects.
+	MetricData []*MetricDatapoint `locationName:"metricData" type:"list"`
+
+	// The metric about which you are receiving information. Valid values are listed
+	// below.
+	MetricName *string `locationName:"metricName" type:"string" enum:"LoadBalancerMetricName"`
+}
+
+// String returns the string representation
+func (s GetLoadBalancerMetricDataOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLoadBalancerMetricDataOutput) GoString() string {
+	return s.String()
+}
+
+// SetMetricData sets the MetricData field's value.
+func (s *GetLoadBalancerMetricDataOutput) SetMetricData(v []*MetricDatapoint) *GetLoadBalancerMetricDataOutput {
+	s.MetricData = v
+	return s
+}
+
+// SetMetricName sets the MetricName field's value.
+func (s *GetLoadBalancerMetricDataOutput) SetMetricName(v string) *GetLoadBalancerMetricDataOutput {
+	s.MetricName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancerResult
+type GetLoadBalancerOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object containing information about your load balancer.
+	LoadBalancer *LoadBalancer `locationName:"loadBalancer" type:"structure"`
+}
+
+// String returns the string representation
+func (s GetLoadBalancerOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLoadBalancerOutput) GoString() string {
+	return s.String()
+}
+
+// SetLoadBalancer sets the LoadBalancer field's value.
+func (s *GetLoadBalancerOutput) SetLoadBalancer(v *LoadBalancer) *GetLoadBalancerOutput {
+	s.LoadBalancer = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancerTlsCertificatesRequest
+type GetLoadBalancerTlsCertificatesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the load balancer where you stored your TLS/SSL certificate.
+	//
+	// LoadBalancerName is a required field
+	LoadBalancerName *string `locationName:"loadBalancerName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetLoadBalancerTlsCertificatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLoadBalancerTlsCertificatesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetLoadBalancerTlsCertificatesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetLoadBalancerTlsCertificatesInput"}
+	if s.LoadBalancerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LoadBalancerName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLoadBalancerName sets the LoadBalancerName field's value.
+func (s *GetLoadBalancerTlsCertificatesInput) SetLoadBalancerName(v string) *GetLoadBalancerTlsCertificatesInput {
+	s.LoadBalancerName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancerTlsCertificatesResult
+type GetLoadBalancerTlsCertificatesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of LoadBalancerTlsCertificate objects describing your TLS/SSL certificates.
+	TlsCertificates []*LoadBalancerTlsCertificate `locationName:"tlsCertificates" type:"list"`
+}
+
+// String returns the string representation
+func (s GetLoadBalancerTlsCertificatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLoadBalancerTlsCertificatesOutput) GoString() string {
+	return s.String()
+}
+
+// SetTlsCertificates sets the TlsCertificates field's value.
+func (s *GetLoadBalancerTlsCertificatesOutput) SetTlsCertificates(v []*LoadBalancerTlsCertificate) *GetLoadBalancerTlsCertificatesOutput {
+	s.TlsCertificates = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancersRequest
+type GetLoadBalancersInput struct {
+	_ struct{} `type:"structure"`
+
+	// A token used for paginating the results from your GetLoadBalancers request.
+	PageToken *string `locationName:"pageToken" type:"string"`
+}
+
+// String returns the string representation
+func (s GetLoadBalancersInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLoadBalancersInput) GoString() string {
+	return s.String()
+}
+
+// SetPageToken sets the PageToken field's value.
+func (s *GetLoadBalancersInput) SetPageToken(v string) *GetLoadBalancersInput {
+	s.PageToken = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetLoadBalancersResult
+type GetLoadBalancersOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of LoadBalancer objects describing your load balancers.
+	LoadBalancers []*LoadBalancer `locationName:"loadBalancers" type:"list"`
+
+	// A token used for advancing to the next page of results from your GetLoadBalancers
+	// request.
+	NextPageToken *string `locationName:"nextPageToken" type:"string"`
+}
+
+// String returns the string representation
+func (s GetLoadBalancersOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLoadBalancersOutput) GoString() string {
+	return s.String()
+}
+
+// SetLoadBalancers sets the LoadBalancers field's value.
+func (s *GetLoadBalancersOutput) SetLoadBalancers(v []*LoadBalancer) *GetLoadBalancersOutput {
+	s.LoadBalancers = v
+	return s
+}
+
+// SetNextPageToken sets the NextPageToken field's value.
+func (s *GetLoadBalancersOutput) SetNextPageToken(v string) *GetLoadBalancersOutput {
+	s.NextPageToken = &v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/GetOperationRequest
 type GetOperationInput struct {
 	_ struct{} `type:"structure"`
@@ -10902,6 +13207,50 @@ func (s *InstanceHardware) SetRamSizeInGb(v float64) *InstanceHardware {
 	return s
 }
 
+// Describes information about the health of the instance.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/InstanceHealthSummary
+type InstanceHealthSummary struct {
+	_ struct{} `type:"structure"`
+
+	// Describes the overall instance health. Valid values are below.
+	InstanceHealth *string `locationName:"instanceHealth" type:"string" enum:"InstanceHealthState"`
+
+	// More information about the instance health. Valid values are below.
+	InstanceHealthReason *string `locationName:"instanceHealthReason" type:"string" enum:"InstanceHealthReason"`
+
+	// The name of the Lightsail instance for which you are requesting health check
+	// data.
+	InstanceName *string `locationName:"instanceName" type:"string"`
+}
+
+// String returns the string representation
+func (s InstanceHealthSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InstanceHealthSummary) GoString() string {
+	return s.String()
+}
+
+// SetInstanceHealth sets the InstanceHealth field's value.
+func (s *InstanceHealthSummary) SetInstanceHealth(v string) *InstanceHealthSummary {
+	s.InstanceHealth = &v
+	return s
+}
+
+// SetInstanceHealthReason sets the InstanceHealthReason field's value.
+func (s *InstanceHealthSummary) SetInstanceHealthReason(v string) *InstanceHealthSummary {
+	s.InstanceHealthReason = &v
+	return s
+}
+
+// SetInstanceName sets the InstanceName field's value.
+func (s *InstanceHealthSummary) SetInstanceName(v string) *InstanceHealthSummary {
+	s.InstanceName = &v
+	return s
+}
+
 // Describes monthly data transfer rates and port information for an instance.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/InstanceNetworking
 type InstanceNetworking struct {
@@ -11400,6 +13749,577 @@ func (s *KeyPair) SetResourceType(v string) *KeyPair {
 // SetSupportCode sets the SupportCode field's value.
 func (s *KeyPair) SetSupportCode(v string) *KeyPair {
 	s.SupportCode = &v
+	return s
+}
+
+// Describes the Lightsail load balancer.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/LoadBalancer
+type LoadBalancer struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the load balancer.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// A string to string map of the configuration options for your load balancer.
+	// Valid values are listed below.
+	ConfigurationOptions map[string]*string `locationName:"configurationOptions" type:"map"`
+
+	// The date when your load balancer was created.
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+
+	// The DNS name of your Lightsail load balancer.
+	DnsName *string `locationName:"dnsName" type:"string"`
+
+	// The path you specified to perform your health checks. If no path is specified,
+	// the load balancer tries to make a request to the default (root) page.
+	HealthCheckPath *string `locationName:"healthCheckPath" type:"string"`
+
+	// An array of InstanceHealthSummary objects describing the health of the load
+	// balancer.
+	InstanceHealthSummary []*InstanceHealthSummary `locationName:"instanceHealthSummary" type:"list"`
+
+	// The instance port where the load balancer is listening.
+	InstancePort *int64 `locationName:"instancePort" type:"integer"`
+
+	// The AWS Region and Availability Zone where your load balancer was created
+	// (e.g., us-east-2a).
+	Location *ResourceLocation `locationName:"location" type:"structure"`
+
+	// The name of the load balancer (e.g., my-load-balancer).
+	Name *string `locationName:"name" type:"string"`
+
+	// The protocol you have enabled for your load balancer. Valid values are below.
+	Protocol *string `locationName:"protocol" type:"string" enum:"LoadBalancerProtocol"`
+
+	// An array of public port settings for your load balancer.
+	PublicPorts []*int64 `locationName:"publicPorts" type:"list"`
+
+	// The resource type (e.g., LoadBalancer.
+	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
+
+	// The status of your load balancer. Valid values are below.
+	State *string `locationName:"state" type:"string" enum:"LoadBalancerState"`
+
+	// The support code. Include this code in your email to support when you have
+	// questions about your Lightsail load balancer. This code enables our support
+	// team to look up your Lightsail information more easily.
+	SupportCode *string `locationName:"supportCode" type:"string"`
+
+	// An array of LoadBalancerTlsCertificateSummary objects that provide additional
+	// information about the TLS/SSL certificates.
+	TlsCertificateSummaries []*LoadBalancerTlsCertificateSummary `locationName:"tlsCertificateSummaries" type:"list"`
+}
+
+// String returns the string representation
+func (s LoadBalancer) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LoadBalancer) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *LoadBalancer) SetArn(v string) *LoadBalancer {
+	s.Arn = &v
+	return s
+}
+
+// SetConfigurationOptions sets the ConfigurationOptions field's value.
+func (s *LoadBalancer) SetConfigurationOptions(v map[string]*string) *LoadBalancer {
+	s.ConfigurationOptions = v
+	return s
+}
+
+// SetCreatedAt sets the CreatedAt field's value.
+func (s *LoadBalancer) SetCreatedAt(v time.Time) *LoadBalancer {
+	s.CreatedAt = &v
+	return s
+}
+
+// SetDnsName sets the DnsName field's value.
+func (s *LoadBalancer) SetDnsName(v string) *LoadBalancer {
+	s.DnsName = &v
+	return s
+}
+
+// SetHealthCheckPath sets the HealthCheckPath field's value.
+func (s *LoadBalancer) SetHealthCheckPath(v string) *LoadBalancer {
+	s.HealthCheckPath = &v
+	return s
+}
+
+// SetInstanceHealthSummary sets the InstanceHealthSummary field's value.
+func (s *LoadBalancer) SetInstanceHealthSummary(v []*InstanceHealthSummary) *LoadBalancer {
+	s.InstanceHealthSummary = v
+	return s
+}
+
+// SetInstancePort sets the InstancePort field's value.
+func (s *LoadBalancer) SetInstancePort(v int64) *LoadBalancer {
+	s.InstancePort = &v
+	return s
+}
+
+// SetLocation sets the Location field's value.
+func (s *LoadBalancer) SetLocation(v *ResourceLocation) *LoadBalancer {
+	s.Location = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *LoadBalancer) SetName(v string) *LoadBalancer {
+	s.Name = &v
+	return s
+}
+
+// SetProtocol sets the Protocol field's value.
+func (s *LoadBalancer) SetProtocol(v string) *LoadBalancer {
+	s.Protocol = &v
+	return s
+}
+
+// SetPublicPorts sets the PublicPorts field's value.
+func (s *LoadBalancer) SetPublicPorts(v []*int64) *LoadBalancer {
+	s.PublicPorts = v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *LoadBalancer) SetResourceType(v string) *LoadBalancer {
+	s.ResourceType = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *LoadBalancer) SetState(v string) *LoadBalancer {
+	s.State = &v
+	return s
+}
+
+// SetSupportCode sets the SupportCode field's value.
+func (s *LoadBalancer) SetSupportCode(v string) *LoadBalancer {
+	s.SupportCode = &v
+	return s
+}
+
+// SetTlsCertificateSummaries sets the TlsCertificateSummaries field's value.
+func (s *LoadBalancer) SetTlsCertificateSummaries(v []*LoadBalancerTlsCertificateSummary) *LoadBalancer {
+	s.TlsCertificateSummaries = v
+	return s
+}
+
+// Describes a load balancer TLS/SSL certificate.
+//
+// TLS is just an updated, more secure version of Secure Socket Layer (SSL).
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/LoadBalancerTlsCertificate
+type LoadBalancerTlsCertificate struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the TLS/SSL certificate.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// The time when you created your TLS/SSL certificate.
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+
+	// The domain name for your TLS/SSL certificate.
+	DomainName *string `locationName:"domainName" type:"string"`
+
+	// An array of LoadBalancerTlsCertificateDomainValidationRecord objects describing
+	// the records.
+	DomainValidationRecords []*LoadBalancerTlsCertificateDomainValidationRecord `locationName:"domainValidationRecords" type:"list"`
+
+	// The reason for the TLS/SSL certificate validation failure.
+	FailureReason *string `locationName:"failureReason" type:"string" enum:"LoadBalancerTlsCertificateFailureReason"`
+
+	// When true, the TLS/SSL certificate is attached to the Lightsail load balancer.
+	IsAttached *bool `locationName:"isAttached" type:"boolean"`
+
+	// The time when the TLS/SSL certificate was issued.
+	IssuedAt *time.Time `locationName:"issuedAt" type:"timestamp" timestampFormat:"unix"`
+
+	// The issuer of the certificate.
+	Issuer *string `locationName:"issuer" type:"string"`
+
+	// The algorithm that was used to generate the key pair (the public and private
+	// key).
+	KeyAlgorithm *string `locationName:"keyAlgorithm" type:"string"`
+
+	// The load balancer name where your TLS/SSL certificate is attached.
+	LoadBalancerName *string `locationName:"loadBalancerName" type:"string"`
+
+	// The AWS Region and Availability Zone where you created your certificate.
+	Location *ResourceLocation `locationName:"location" type:"structure"`
+
+	// The name of the TLS/SSL certificate (e.g., my-certificate).
+	Name *string `locationName:"name" type:"string"`
+
+	// The timestamp when the TLS/SSL certificate expires.
+	NotAfter *time.Time `locationName:"notAfter" type:"timestamp" timestampFormat:"unix"`
+
+	// The timestamp when the TLS/SSL certificate is first valid.
+	NotBefore *time.Time `locationName:"notBefore" type:"timestamp" timestampFormat:"unix"`
+
+	// An object containing information about the status of Lightsail's managed
+	// renewal for the certificate.
+	RenewalSummary *LoadBalancerTlsCertificateRenewalSummary `locationName:"renewalSummary" type:"structure"`
+
+	// The resource type (e.g., LoadBalancerTlsCertificate.
+	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
+
+	// The reason the certificate was revoked. Valid values are below.
+	RevocationReason *string `locationName:"revocationReason" type:"string" enum:"LoadBalancerTlsCertificateRevocationReason"`
+
+	// The timestamp when the TLS/SSL certificate was revoked.
+	RevokedAt *time.Time `locationName:"revokedAt" type:"timestamp" timestampFormat:"unix"`
+
+	// The serial number of the certificate.
+	Serial *string `locationName:"serial" type:"string"`
+
+	// The algorithm that was used to sign the certificate.
+	SignatureAlgorithm *string `locationName:"signatureAlgorithm" type:"string"`
+
+	// The status of the TLS/SSL certificate. Valid values are below.
+	Status *string `locationName:"status" type:"string" enum:"LoadBalancerTlsCertificateStatus"`
+
+	// The name of the entity that is associated with the public key contained in
+	// the certificate.
+	Subject *string `locationName:"subject" type:"string"`
+
+	// One or more domain names (subject alternative names) included in the certificate.
+	// This list contains the domain names that are bound to the public key that
+	// is contained in the certificate. The subject alternative names include the
+	// canonical domain name (CN) of the certificate and additional domain names
+	// that can be used to connect to the website.
+	SubjectAlternativeNames []*string `locationName:"subjectAlternativeNames" type:"list"`
+
+	// The support code. Include this code in your email to support when you have
+	// questions about your Lightsail load balancer or TLS/SSL certificate. This
+	// code enables our support team to look up your Lightsail information more
+	// easily.
+	SupportCode *string `locationName:"supportCode" type:"string"`
+}
+
+// String returns the string representation
+func (s LoadBalancerTlsCertificate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LoadBalancerTlsCertificate) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *LoadBalancerTlsCertificate) SetArn(v string) *LoadBalancerTlsCertificate {
+	s.Arn = &v
+	return s
+}
+
+// SetCreatedAt sets the CreatedAt field's value.
+func (s *LoadBalancerTlsCertificate) SetCreatedAt(v time.Time) *LoadBalancerTlsCertificate {
+	s.CreatedAt = &v
+	return s
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *LoadBalancerTlsCertificate) SetDomainName(v string) *LoadBalancerTlsCertificate {
+	s.DomainName = &v
+	return s
+}
+
+// SetDomainValidationRecords sets the DomainValidationRecords field's value.
+func (s *LoadBalancerTlsCertificate) SetDomainValidationRecords(v []*LoadBalancerTlsCertificateDomainValidationRecord) *LoadBalancerTlsCertificate {
+	s.DomainValidationRecords = v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *LoadBalancerTlsCertificate) SetFailureReason(v string) *LoadBalancerTlsCertificate {
+	s.FailureReason = &v
+	return s
+}
+
+// SetIsAttached sets the IsAttached field's value.
+func (s *LoadBalancerTlsCertificate) SetIsAttached(v bool) *LoadBalancerTlsCertificate {
+	s.IsAttached = &v
+	return s
+}
+
+// SetIssuedAt sets the IssuedAt field's value.
+func (s *LoadBalancerTlsCertificate) SetIssuedAt(v time.Time) *LoadBalancerTlsCertificate {
+	s.IssuedAt = &v
+	return s
+}
+
+// SetIssuer sets the Issuer field's value.
+func (s *LoadBalancerTlsCertificate) SetIssuer(v string) *LoadBalancerTlsCertificate {
+	s.Issuer = &v
+	return s
+}
+
+// SetKeyAlgorithm sets the KeyAlgorithm field's value.
+func (s *LoadBalancerTlsCertificate) SetKeyAlgorithm(v string) *LoadBalancerTlsCertificate {
+	s.KeyAlgorithm = &v
+	return s
+}
+
+// SetLoadBalancerName sets the LoadBalancerName field's value.
+func (s *LoadBalancerTlsCertificate) SetLoadBalancerName(v string) *LoadBalancerTlsCertificate {
+	s.LoadBalancerName = &v
+	return s
+}
+
+// SetLocation sets the Location field's value.
+func (s *LoadBalancerTlsCertificate) SetLocation(v *ResourceLocation) *LoadBalancerTlsCertificate {
+	s.Location = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *LoadBalancerTlsCertificate) SetName(v string) *LoadBalancerTlsCertificate {
+	s.Name = &v
+	return s
+}
+
+// SetNotAfter sets the NotAfter field's value.
+func (s *LoadBalancerTlsCertificate) SetNotAfter(v time.Time) *LoadBalancerTlsCertificate {
+	s.NotAfter = &v
+	return s
+}
+
+// SetNotBefore sets the NotBefore field's value.
+func (s *LoadBalancerTlsCertificate) SetNotBefore(v time.Time) *LoadBalancerTlsCertificate {
+	s.NotBefore = &v
+	return s
+}
+
+// SetRenewalSummary sets the RenewalSummary field's value.
+func (s *LoadBalancerTlsCertificate) SetRenewalSummary(v *LoadBalancerTlsCertificateRenewalSummary) *LoadBalancerTlsCertificate {
+	s.RenewalSummary = v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *LoadBalancerTlsCertificate) SetResourceType(v string) *LoadBalancerTlsCertificate {
+	s.ResourceType = &v
+	return s
+}
+
+// SetRevocationReason sets the RevocationReason field's value.
+func (s *LoadBalancerTlsCertificate) SetRevocationReason(v string) *LoadBalancerTlsCertificate {
+	s.RevocationReason = &v
+	return s
+}
+
+// SetRevokedAt sets the RevokedAt field's value.
+func (s *LoadBalancerTlsCertificate) SetRevokedAt(v time.Time) *LoadBalancerTlsCertificate {
+	s.RevokedAt = &v
+	return s
+}
+
+// SetSerial sets the Serial field's value.
+func (s *LoadBalancerTlsCertificate) SetSerial(v string) *LoadBalancerTlsCertificate {
+	s.Serial = &v
+	return s
+}
+
+// SetSignatureAlgorithm sets the SignatureAlgorithm field's value.
+func (s *LoadBalancerTlsCertificate) SetSignatureAlgorithm(v string) *LoadBalancerTlsCertificate {
+	s.SignatureAlgorithm = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *LoadBalancerTlsCertificate) SetStatus(v string) *LoadBalancerTlsCertificate {
+	s.Status = &v
+	return s
+}
+
+// SetSubject sets the Subject field's value.
+func (s *LoadBalancerTlsCertificate) SetSubject(v string) *LoadBalancerTlsCertificate {
+	s.Subject = &v
+	return s
+}
+
+// SetSubjectAlternativeNames sets the SubjectAlternativeNames field's value.
+func (s *LoadBalancerTlsCertificate) SetSubjectAlternativeNames(v []*string) *LoadBalancerTlsCertificate {
+	s.SubjectAlternativeNames = v
+	return s
+}
+
+// SetSupportCode sets the SupportCode field's value.
+func (s *LoadBalancerTlsCertificate) SetSupportCode(v string) *LoadBalancerTlsCertificate {
+	s.SupportCode = &v
+	return s
+}
+
+// Contains information about the domain names on a TLS/SSL certificate that
+// you will use to validate domain ownership.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/LoadBalancerTlsCertificateDomainValidationOption
+type LoadBalancerTlsCertificateDomainValidationOption struct {
+	_ struct{} `type:"structure"`
+
+	// A fully qualified domain name in the certificate request.
+	DomainName *string `locationName:"domainName" type:"string"`
+
+	// The status of the domain validation. Valid values are listed below.
+	ValidationStatus *string `locationName:"validationStatus" type:"string" enum:"LoadBalancerTlsCertificateDomainStatus"`
+}
+
+// String returns the string representation
+func (s LoadBalancerTlsCertificateDomainValidationOption) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LoadBalancerTlsCertificateDomainValidationOption) GoString() string {
+	return s.String()
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *LoadBalancerTlsCertificateDomainValidationOption) SetDomainName(v string) *LoadBalancerTlsCertificateDomainValidationOption {
+	s.DomainName = &v
+	return s
+}
+
+// SetValidationStatus sets the ValidationStatus field's value.
+func (s *LoadBalancerTlsCertificateDomainValidationOption) SetValidationStatus(v string) *LoadBalancerTlsCertificateDomainValidationOption {
+	s.ValidationStatus = &v
+	return s
+}
+
+// Describes the validation record of each domain name in the TLS/SSL certificate.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/LoadBalancerTlsCertificateDomainValidationRecord
+type LoadBalancerTlsCertificateDomainValidationRecord struct {
+	_ struct{} `type:"structure"`
+
+	// The domain name against which your TLS/SSL certificate was validated.
+	DomainName *string `locationName:"domainName" type:"string"`
+
+	// A fully qualified domain name in the certificate. For example, example.com.
+	Name *string `locationName:"name" type:"string"`
+
+	// The type of validation record. For example, CNAME for domain validation.
+	Type *string `locationName:"type" type:"string"`
+
+	// The validation status. Valid values are listed below.
+	ValidationStatus *string `locationName:"validationStatus" type:"string" enum:"LoadBalancerTlsCertificateDomainStatus"`
+
+	// The value for that type.
+	Value *string `locationName:"value" type:"string"`
+}
+
+// String returns the string representation
+func (s LoadBalancerTlsCertificateDomainValidationRecord) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LoadBalancerTlsCertificateDomainValidationRecord) GoString() string {
+	return s.String()
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *LoadBalancerTlsCertificateDomainValidationRecord) SetDomainName(v string) *LoadBalancerTlsCertificateDomainValidationRecord {
+	s.DomainName = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *LoadBalancerTlsCertificateDomainValidationRecord) SetName(v string) *LoadBalancerTlsCertificateDomainValidationRecord {
+	s.Name = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *LoadBalancerTlsCertificateDomainValidationRecord) SetType(v string) *LoadBalancerTlsCertificateDomainValidationRecord {
+	s.Type = &v
+	return s
+}
+
+// SetValidationStatus sets the ValidationStatus field's value.
+func (s *LoadBalancerTlsCertificateDomainValidationRecord) SetValidationStatus(v string) *LoadBalancerTlsCertificateDomainValidationRecord {
+	s.ValidationStatus = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *LoadBalancerTlsCertificateDomainValidationRecord) SetValue(v string) *LoadBalancerTlsCertificateDomainValidationRecord {
+	s.Value = &v
+	return s
+}
+
+// Contains information about the status of Lightsail's managed renewal for
+// the certificate.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/LoadBalancerTlsCertificateRenewalSummary
+type LoadBalancerTlsCertificateRenewalSummary struct {
+	_ struct{} `type:"structure"`
+
+	// Contains information about the validation of each domain name in the certificate,
+	// as it pertains to Lightsail's managed renewal. This is different from the
+	// initial validation that occurs as a result of the RequestCertificate request.
+	DomainValidationOptions []*LoadBalancerTlsCertificateDomainValidationOption `locationName:"domainValidationOptions" type:"list"`
+
+	// The status of Lightsail's managed renewal of the certificate. Valid values
+	// are listed below.
+	RenewalStatus *string `locationName:"renewalStatus" type:"string" enum:"LoadBalancerTlsCertificateRenewalStatus"`
+}
+
+// String returns the string representation
+func (s LoadBalancerTlsCertificateRenewalSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LoadBalancerTlsCertificateRenewalSummary) GoString() string {
+	return s.String()
+}
+
+// SetDomainValidationOptions sets the DomainValidationOptions field's value.
+func (s *LoadBalancerTlsCertificateRenewalSummary) SetDomainValidationOptions(v []*LoadBalancerTlsCertificateDomainValidationOption) *LoadBalancerTlsCertificateRenewalSummary {
+	s.DomainValidationOptions = v
+	return s
+}
+
+// SetRenewalStatus sets the RenewalStatus field's value.
+func (s *LoadBalancerTlsCertificateRenewalSummary) SetRenewalStatus(v string) *LoadBalancerTlsCertificateRenewalSummary {
+	s.RenewalStatus = &v
+	return s
+}
+
+// Provides a summary of TLS/SSL certificate metadata.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/LoadBalancerTlsCertificateSummary
+type LoadBalancerTlsCertificateSummary struct {
+	_ struct{} `type:"structure"`
+
+	// When true, the TLS/SSL certificate is attached to the Lightsail load balancer.
+	IsAttached *bool `locationName:"isAttached" type:"boolean"`
+
+	// The name of the TLS/SSL certificate.
+	Name *string `locationName:"name" type:"string"`
+}
+
+// String returns the string representation
+func (s LoadBalancerTlsCertificateSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LoadBalancerTlsCertificateSummary) GoString() string {
+	return s.String()
+}
+
+// SetIsAttached sets the IsAttached field's value.
+func (s *LoadBalancerTlsCertificateSummary) SetIsAttached(v bool) *LoadBalancerTlsCertificateSummary {
+	s.IsAttached = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *LoadBalancerTlsCertificateSummary) SetName(v string) *LoadBalancerTlsCertificateSummary {
+	s.Name = &v
 	return s
 }
 
@@ -12499,6 +15419,100 @@ func (s *UpdateDomainEntryOutput) SetOperations(v []*Operation) *UpdateDomainEnt
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/UpdateLoadBalancerAttributeRequest
+type UpdateLoadBalancerAttributeInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the attribute you want to update. Valid values are below.
+	//
+	// AttributeName is a required field
+	AttributeName *string `locationName:"attributeName" type:"string" required:"true" enum:"LoadBalancerAttributeName"`
+
+	// The value that you want to specify for the attribute name.
+	//
+	// AttributeValue is a required field
+	AttributeValue *string `locationName:"attributeValue" min:"1" type:"string" required:"true"`
+
+	// The name of the load balancer that you want to modify.
+	//
+	// LoadBalancerName is a required field
+	LoadBalancerName *string `locationName:"loadBalancerName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateLoadBalancerAttributeInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateLoadBalancerAttributeInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateLoadBalancerAttributeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateLoadBalancerAttributeInput"}
+	if s.AttributeName == nil {
+		invalidParams.Add(request.NewErrParamRequired("AttributeName"))
+	}
+	if s.AttributeValue == nil {
+		invalidParams.Add(request.NewErrParamRequired("AttributeValue"))
+	}
+	if s.AttributeValue != nil && len(*s.AttributeValue) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AttributeValue", 1))
+	}
+	if s.LoadBalancerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LoadBalancerName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAttributeName sets the AttributeName field's value.
+func (s *UpdateLoadBalancerAttributeInput) SetAttributeName(v string) *UpdateLoadBalancerAttributeInput {
+	s.AttributeName = &v
+	return s
+}
+
+// SetAttributeValue sets the AttributeValue field's value.
+func (s *UpdateLoadBalancerAttributeInput) SetAttributeValue(v string) *UpdateLoadBalancerAttributeInput {
+	s.AttributeValue = &v
+	return s
+}
+
+// SetLoadBalancerName sets the LoadBalancerName field's value.
+func (s *UpdateLoadBalancerAttributeInput) SetLoadBalancerName(v string) *UpdateLoadBalancerAttributeInput {
+	s.LoadBalancerName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/UpdateLoadBalancerAttributeResult
+type UpdateLoadBalancerAttributeOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object describing the API operations.
+	Operations []*Operation `locationName:"operations" type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateLoadBalancerAttributeOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateLoadBalancerAttributeOutput) GoString() string {
+	return s.String()
+}
+
+// SetOperations sets the Operations field's value.
+func (s *UpdateLoadBalancerAttributeOutput) SetOperations(v []*Operation) *UpdateLoadBalancerAttributeOutput {
+	s.Operations = v
+	return s
+}
+
 const (
 	// AccessDirectionInbound is a AccessDirection enum value
 	AccessDirectionInbound = "inbound"
@@ -12555,6 +15569,61 @@ const (
 )
 
 const (
+	// InstanceHealthReasonLbRegistrationInProgress is a InstanceHealthReason enum value
+	InstanceHealthReasonLbRegistrationInProgress = "Lb.RegistrationInProgress"
+
+	// InstanceHealthReasonLbInitialHealthChecking is a InstanceHealthReason enum value
+	InstanceHealthReasonLbInitialHealthChecking = "Lb.InitialHealthChecking"
+
+	// InstanceHealthReasonLbInternalError is a InstanceHealthReason enum value
+	InstanceHealthReasonLbInternalError = "Lb.InternalError"
+
+	// InstanceHealthReasonInstanceResponseCodeMismatch is a InstanceHealthReason enum value
+	InstanceHealthReasonInstanceResponseCodeMismatch = "Instance.ResponseCodeMismatch"
+
+	// InstanceHealthReasonInstanceTimeout is a InstanceHealthReason enum value
+	InstanceHealthReasonInstanceTimeout = "Instance.Timeout"
+
+	// InstanceHealthReasonInstanceFailedHealthChecks is a InstanceHealthReason enum value
+	InstanceHealthReasonInstanceFailedHealthChecks = "Instance.FailedHealthChecks"
+
+	// InstanceHealthReasonInstanceNotRegistered is a InstanceHealthReason enum value
+	InstanceHealthReasonInstanceNotRegistered = "Instance.NotRegistered"
+
+	// InstanceHealthReasonInstanceNotInUse is a InstanceHealthReason enum value
+	InstanceHealthReasonInstanceNotInUse = "Instance.NotInUse"
+
+	// InstanceHealthReasonInstanceDeregistrationInProgress is a InstanceHealthReason enum value
+	InstanceHealthReasonInstanceDeregistrationInProgress = "Instance.DeregistrationInProgress"
+
+	// InstanceHealthReasonInstanceInvalidState is a InstanceHealthReason enum value
+	InstanceHealthReasonInstanceInvalidState = "Instance.InvalidState"
+
+	// InstanceHealthReasonInstanceIpUnusable is a InstanceHealthReason enum value
+	InstanceHealthReasonInstanceIpUnusable = "Instance.IpUnusable"
+)
+
+const (
+	// InstanceHealthStateInitial is a InstanceHealthState enum value
+	InstanceHealthStateInitial = "initial"
+
+	// InstanceHealthStateHealthy is a InstanceHealthState enum value
+	InstanceHealthStateHealthy = "healthy"
+
+	// InstanceHealthStateUnhealthy is a InstanceHealthState enum value
+	InstanceHealthStateUnhealthy = "unhealthy"
+
+	// InstanceHealthStateUnused is a InstanceHealthState enum value
+	InstanceHealthStateUnused = "unused"
+
+	// InstanceHealthStateDraining is a InstanceHealthState enum value
+	InstanceHealthStateDraining = "draining"
+
+	// InstanceHealthStateUnavailable is a InstanceHealthState enum value
+	InstanceHealthStateUnavailable = "unavailable"
+)
+
+const (
 	// InstanceMetricNameCpuutilization is a InstanceMetricName enum value
 	InstanceMetricNameCpuutilization = "CPUUtilization"
 
@@ -12591,6 +15660,180 @@ const (
 
 	// InstanceSnapshotStateAvailable is a InstanceSnapshotState enum value
 	InstanceSnapshotStateAvailable = "available"
+)
+
+const (
+	// LoadBalancerAttributeNameHealthCheckPath is a LoadBalancerAttributeName enum value
+	LoadBalancerAttributeNameHealthCheckPath = "HealthCheckPath"
+
+	// LoadBalancerAttributeNameSessionStickinessEnabled is a LoadBalancerAttributeName enum value
+	LoadBalancerAttributeNameSessionStickinessEnabled = "SessionStickinessEnabled"
+
+	// LoadBalancerAttributeNameSessionStickinessLbCookieDurationSeconds is a LoadBalancerAttributeName enum value
+	LoadBalancerAttributeNameSessionStickinessLbCookieDurationSeconds = "SessionStickiness_LB_CookieDurationSeconds"
+)
+
+const (
+	// LoadBalancerMetricNameClientTlsnegotiationErrorCount is a LoadBalancerMetricName enum value
+	LoadBalancerMetricNameClientTlsnegotiationErrorCount = "ClientTLSNegotiationErrorCount"
+
+	// LoadBalancerMetricNameHealthyHostCount is a LoadBalancerMetricName enum value
+	LoadBalancerMetricNameHealthyHostCount = "HealthyHostCount"
+
+	// LoadBalancerMetricNameUnhealthyHostCount is a LoadBalancerMetricName enum value
+	LoadBalancerMetricNameUnhealthyHostCount = "UnhealthyHostCount"
+
+	// LoadBalancerMetricNameHttpcodeLb4xxCount is a LoadBalancerMetricName enum value
+	LoadBalancerMetricNameHttpcodeLb4xxCount = "HTTPCode_LB_4XX_Count"
+
+	// LoadBalancerMetricNameHttpcodeLb5xxCount is a LoadBalancerMetricName enum value
+	LoadBalancerMetricNameHttpcodeLb5xxCount = "HTTPCode_LB_5XX_Count"
+
+	// LoadBalancerMetricNameHttpcodeInstance2xxCount is a LoadBalancerMetricName enum value
+	LoadBalancerMetricNameHttpcodeInstance2xxCount = "HTTPCode_Instance_2XX_Count"
+
+	// LoadBalancerMetricNameHttpcodeInstance3xxCount is a LoadBalancerMetricName enum value
+	LoadBalancerMetricNameHttpcodeInstance3xxCount = "HTTPCode_Instance_3XX_Count"
+
+	// LoadBalancerMetricNameHttpcodeInstance4xxCount is a LoadBalancerMetricName enum value
+	LoadBalancerMetricNameHttpcodeInstance4xxCount = "HTTPCode_Instance_4XX_Count"
+
+	// LoadBalancerMetricNameHttpcodeInstance5xxCount is a LoadBalancerMetricName enum value
+	LoadBalancerMetricNameHttpcodeInstance5xxCount = "HTTPCode_Instance_5XX_Count"
+
+	// LoadBalancerMetricNameInstanceResponseTime is a LoadBalancerMetricName enum value
+	LoadBalancerMetricNameInstanceResponseTime = "InstanceResponseTime"
+
+	// LoadBalancerMetricNameRejectedConnectionCount is a LoadBalancerMetricName enum value
+	LoadBalancerMetricNameRejectedConnectionCount = "RejectedConnectionCount"
+
+	// LoadBalancerMetricNameRequestCount is a LoadBalancerMetricName enum value
+	LoadBalancerMetricNameRequestCount = "RequestCount"
+)
+
+const (
+	// LoadBalancerProtocolHttpHttps is a LoadBalancerProtocol enum value
+	LoadBalancerProtocolHttpHttps = "HTTP_HTTPS"
+
+	// LoadBalancerProtocolHttp is a LoadBalancerProtocol enum value
+	LoadBalancerProtocolHttp = "HTTP"
+)
+
+const (
+	// LoadBalancerStateActive is a LoadBalancerState enum value
+	LoadBalancerStateActive = "active"
+
+	// LoadBalancerStateProvisioning is a LoadBalancerState enum value
+	LoadBalancerStateProvisioning = "provisioning"
+
+	// LoadBalancerStateActiveImpaired is a LoadBalancerState enum value
+	LoadBalancerStateActiveImpaired = "active_impaired"
+
+	// LoadBalancerStateFailed is a LoadBalancerState enum value
+	LoadBalancerStateFailed = "failed"
+
+	// LoadBalancerStateUnknown is a LoadBalancerState enum value
+	LoadBalancerStateUnknown = "unknown"
+)
+
+const (
+	// LoadBalancerTlsCertificateDomainStatusPendingValidation is a LoadBalancerTlsCertificateDomainStatus enum value
+	LoadBalancerTlsCertificateDomainStatusPendingValidation = "PENDING_VALIDATION"
+
+	// LoadBalancerTlsCertificateDomainStatusFailed is a LoadBalancerTlsCertificateDomainStatus enum value
+	LoadBalancerTlsCertificateDomainStatusFailed = "FAILED"
+
+	// LoadBalancerTlsCertificateDomainStatusSuccess is a LoadBalancerTlsCertificateDomainStatus enum value
+	LoadBalancerTlsCertificateDomainStatusSuccess = "SUCCESS"
+)
+
+const (
+	// LoadBalancerTlsCertificateFailureReasonNoAvailableContacts is a LoadBalancerTlsCertificateFailureReason enum value
+	LoadBalancerTlsCertificateFailureReasonNoAvailableContacts = "NO_AVAILABLE_CONTACTS"
+
+	// LoadBalancerTlsCertificateFailureReasonAdditionalVerificationRequired is a LoadBalancerTlsCertificateFailureReason enum value
+	LoadBalancerTlsCertificateFailureReasonAdditionalVerificationRequired = "ADDITIONAL_VERIFICATION_REQUIRED"
+
+	// LoadBalancerTlsCertificateFailureReasonDomainNotAllowed is a LoadBalancerTlsCertificateFailureReason enum value
+	LoadBalancerTlsCertificateFailureReasonDomainNotAllowed = "DOMAIN_NOT_ALLOWED"
+
+	// LoadBalancerTlsCertificateFailureReasonInvalidPublicDomain is a LoadBalancerTlsCertificateFailureReason enum value
+	LoadBalancerTlsCertificateFailureReasonInvalidPublicDomain = "INVALID_PUBLIC_DOMAIN"
+
+	// LoadBalancerTlsCertificateFailureReasonOther is a LoadBalancerTlsCertificateFailureReason enum value
+	LoadBalancerTlsCertificateFailureReasonOther = "OTHER"
+)
+
+const (
+	// LoadBalancerTlsCertificateRenewalStatusPendingAutoRenewal is a LoadBalancerTlsCertificateRenewalStatus enum value
+	LoadBalancerTlsCertificateRenewalStatusPendingAutoRenewal = "PENDING_AUTO_RENEWAL"
+
+	// LoadBalancerTlsCertificateRenewalStatusPendingValidation is a LoadBalancerTlsCertificateRenewalStatus enum value
+	LoadBalancerTlsCertificateRenewalStatusPendingValidation = "PENDING_VALIDATION"
+
+	// LoadBalancerTlsCertificateRenewalStatusSuccess is a LoadBalancerTlsCertificateRenewalStatus enum value
+	LoadBalancerTlsCertificateRenewalStatusSuccess = "SUCCESS"
+
+	// LoadBalancerTlsCertificateRenewalStatusFailed is a LoadBalancerTlsCertificateRenewalStatus enum value
+	LoadBalancerTlsCertificateRenewalStatusFailed = "FAILED"
+)
+
+const (
+	// LoadBalancerTlsCertificateRevocationReasonUnspecified is a LoadBalancerTlsCertificateRevocationReason enum value
+	LoadBalancerTlsCertificateRevocationReasonUnspecified = "UNSPECIFIED"
+
+	// LoadBalancerTlsCertificateRevocationReasonKeyCompromise is a LoadBalancerTlsCertificateRevocationReason enum value
+	LoadBalancerTlsCertificateRevocationReasonKeyCompromise = "KEY_COMPROMISE"
+
+	// LoadBalancerTlsCertificateRevocationReasonCaCompromise is a LoadBalancerTlsCertificateRevocationReason enum value
+	LoadBalancerTlsCertificateRevocationReasonCaCompromise = "CA_COMPROMISE"
+
+	// LoadBalancerTlsCertificateRevocationReasonAffiliationChanged is a LoadBalancerTlsCertificateRevocationReason enum value
+	LoadBalancerTlsCertificateRevocationReasonAffiliationChanged = "AFFILIATION_CHANGED"
+
+	// LoadBalancerTlsCertificateRevocationReasonSuperceded is a LoadBalancerTlsCertificateRevocationReason enum value
+	LoadBalancerTlsCertificateRevocationReasonSuperceded = "SUPERCEDED"
+
+	// LoadBalancerTlsCertificateRevocationReasonCessationOfOperation is a LoadBalancerTlsCertificateRevocationReason enum value
+	LoadBalancerTlsCertificateRevocationReasonCessationOfOperation = "CESSATION_OF_OPERATION"
+
+	// LoadBalancerTlsCertificateRevocationReasonCertificateHold is a LoadBalancerTlsCertificateRevocationReason enum value
+	LoadBalancerTlsCertificateRevocationReasonCertificateHold = "CERTIFICATE_HOLD"
+
+	// LoadBalancerTlsCertificateRevocationReasonRemoveFromCrl is a LoadBalancerTlsCertificateRevocationReason enum value
+	LoadBalancerTlsCertificateRevocationReasonRemoveFromCrl = "REMOVE_FROM_CRL"
+
+	// LoadBalancerTlsCertificateRevocationReasonPrivilegeWithdrawn is a LoadBalancerTlsCertificateRevocationReason enum value
+	LoadBalancerTlsCertificateRevocationReasonPrivilegeWithdrawn = "PRIVILEGE_WITHDRAWN"
+
+	// LoadBalancerTlsCertificateRevocationReasonAACompromise is a LoadBalancerTlsCertificateRevocationReason enum value
+	LoadBalancerTlsCertificateRevocationReasonAACompromise = "A_A_COMPROMISE"
+)
+
+const (
+	// LoadBalancerTlsCertificateStatusPendingValidation is a LoadBalancerTlsCertificateStatus enum value
+	LoadBalancerTlsCertificateStatusPendingValidation = "PENDING_VALIDATION"
+
+	// LoadBalancerTlsCertificateStatusIssued is a LoadBalancerTlsCertificateStatus enum value
+	LoadBalancerTlsCertificateStatusIssued = "ISSUED"
+
+	// LoadBalancerTlsCertificateStatusInactive is a LoadBalancerTlsCertificateStatus enum value
+	LoadBalancerTlsCertificateStatusInactive = "INACTIVE"
+
+	// LoadBalancerTlsCertificateStatusExpired is a LoadBalancerTlsCertificateStatus enum value
+	LoadBalancerTlsCertificateStatusExpired = "EXPIRED"
+
+	// LoadBalancerTlsCertificateStatusValidationTimedOut is a LoadBalancerTlsCertificateStatus enum value
+	LoadBalancerTlsCertificateStatusValidationTimedOut = "VALIDATION_TIMED_OUT"
+
+	// LoadBalancerTlsCertificateStatusRevoked is a LoadBalancerTlsCertificateStatus enum value
+	LoadBalancerTlsCertificateStatusRevoked = "REVOKED"
+
+	// LoadBalancerTlsCertificateStatusFailed is a LoadBalancerTlsCertificateStatus enum value
+	LoadBalancerTlsCertificateStatusFailed = "FAILED"
+
+	// LoadBalancerTlsCertificateStatusUnknown is a LoadBalancerTlsCertificateStatus enum value
+	LoadBalancerTlsCertificateStatusUnknown = "UNKNOWN"
 )
 
 const (
@@ -12776,6 +16019,30 @@ const (
 	// OperationTypeCreateInstancesFromSnapshot is a OperationType enum value
 	OperationTypeCreateInstancesFromSnapshot = "CreateInstancesFromSnapshot"
 
+	// OperationTypeCreateLoadBalancer is a OperationType enum value
+	OperationTypeCreateLoadBalancer = "CreateLoadBalancer"
+
+	// OperationTypeDeleteLoadBalancer is a OperationType enum value
+	OperationTypeDeleteLoadBalancer = "DeleteLoadBalancer"
+
+	// OperationTypeAttachInstancesToLoadBalancer is a OperationType enum value
+	OperationTypeAttachInstancesToLoadBalancer = "AttachInstancesToLoadBalancer"
+
+	// OperationTypeDetachInstancesFromLoadBalancer is a OperationType enum value
+	OperationTypeDetachInstancesFromLoadBalancer = "DetachInstancesFromLoadBalancer"
+
+	// OperationTypeUpdateLoadBalancerAttribute is a OperationType enum value
+	OperationTypeUpdateLoadBalancerAttribute = "UpdateLoadBalancerAttribute"
+
+	// OperationTypeCreateLoadBalancerTlsCertificate is a OperationType enum value
+	OperationTypeCreateLoadBalancerTlsCertificate = "CreateLoadBalancerTlsCertificate"
+
+	// OperationTypeDeleteLoadBalancerTlsCertificate is a OperationType enum value
+	OperationTypeDeleteLoadBalancerTlsCertificate = "DeleteLoadBalancerTlsCertificate"
+
+	// OperationTypeAttachLoadBalancerTlsCertificate is a OperationType enum value
+	OperationTypeAttachLoadBalancerTlsCertificate = "AttachLoadBalancerTlsCertificate"
+
 	// OperationTypeCreateDisk is a OperationType enum value
 	OperationTypeCreateDisk = "CreateDisk"
 
@@ -12867,6 +16134,12 @@ const (
 
 	// ResourceTypePeeredVpc is a ResourceType enum value
 	ResourceTypePeeredVpc = "PeeredVpc"
+
+	// ResourceTypeLoadBalancer is a ResourceType enum value
+	ResourceTypeLoadBalancer = "LoadBalancer"
+
+	// ResourceTypeLoadBalancerTlsCertificate is a ResourceType enum value
+	ResourceTypeLoadBalancerTlsCertificate = "LoadBalancerTlsCertificate"
 
 	// ResourceTypeDisk is a ResourceType enum value
 	ResourceTypeDisk = "Disk"

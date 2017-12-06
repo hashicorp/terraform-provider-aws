@@ -341,6 +341,40 @@ func TestAccAWSEcsServiceWithPlacementConstraints_emptyExpression(t *testing.T) 
 	})
 }
 
+func TestAccAWSEcsServiceWithLaunchTypeFargate(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithLaunchTypeFargate(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "launch_type", "FARGATE"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsServiceWithNetworkConfiguration(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithNetworkConfigration(acctest.RandString(5)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEcsServiceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ecsconn
 
@@ -579,6 +613,89 @@ resource "aws_ecs_service" "mongo" {
   }
 }
 `, rInt, rInt)
+}
+
+func testAccAWSEcsServiceWithLaunchTypeFargate(rInt int) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-east-1"
+}
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.10.0.0/16"
+}
+
+resource "aws_subnet" "main" {
+  count = 2
+  cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  vpc_id = "${aws_vpc.main.id}"
+}
+
+resource "aws_security_group" "allow_all_a" {
+  name        = "allow_all_a_%d"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["${aws_vpc.main.cidr_block}"]
+  }
+}
+
+resource "aws_security_group" "allow_all_b" {
+  name        = "allow_all_b_%d"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["${aws_vpc.main.cidr_block}"]
+  }
+}
+
+resource "aws_ecs_cluster" "main" {
+  name = "tf-ecs-cluster-%d"
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "mongodb"
+  network_mode = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu = "256"
+  memory = "512"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 512,
+    "name": "mongodb",
+    "networkMode": "awsvpc"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "main" {
+  name = "tf-ecs-service-%d"
+  cluster = "${aws_ecs_cluster.main.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count = 1
+  launch_type = "FARGATE"
+  network_configuration {
+    security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
+    subnets = ["${aws_subnet.main.*.id}"]
+  }
+}
+`, rInt, rInt, rInt, rInt)
 }
 
 var testAccAWSEcsService_withIamRole = `
@@ -1073,4 +1190,78 @@ resource "aws_ecs_service" "with_alb" {
   ]
 }
 `, rName, rName, rName, rName, rName, rName, rName)
+}
+
+func testAccAWSEcsServiceWithNetworkConfigration(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.10.0.0/16"
+}
+
+resource "aws_subnet" "main" {
+  count = 2
+  cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  vpc_id = "${aws_vpc.main.id}"
+}
+
+resource "aws_security_group" "allow_all_a" {
+  name        = "allow_all_a"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+	ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["${aws_vpc.main.cidr_block}"]
+  }
+}
+
+resource "aws_security_group" "allow_all_b" {
+  name        = "allow_all_b"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+	ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["${aws_vpc.main.cidr_block}"]
+  }
+}
+
+resource "aws_ecs_cluster" "main" {
+	name = "tf-ecs-cluster-%s"
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "mongodb"
+	network_mode = "awsvpc"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "main" {
+  name = "tf-ecs-service-%s"
+  cluster = "${aws_ecs_cluster.main.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count = 1
+	network_configuration {
+		security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
+		subnets = ["${aws_subnet.main.*.id}"]
+	}
+}
+`, rName, rName)
 }

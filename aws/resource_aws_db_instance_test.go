@@ -750,7 +750,7 @@ resource "aws_db_instance" "bar" {
 	allocated_storage = 10
 	engine = "MySQL"
 	engine_version = "5.6.35"
-	instance_class = "db.m3.medium"
+	instance_class = "db.t2.small"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
@@ -785,7 +785,7 @@ resource "aws_db_instance" "bar" {
 
 	allocated_storage = 10
 	engine = "MySQL"
-	instance_class = "db.m1.small"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
@@ -864,7 +864,7 @@ resource "aws_db_instance" "snapshot" {
 	allocated_storage = 5
 	engine = "mysql"
 	engine_version = "5.6.35"
-	instance_class = "db.r3.large"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
@@ -891,7 +891,7 @@ resource "aws_db_instance" "snapshot" {
 	allocated_storage = 5
 	engine = "mysql"
 	engine_version = "5.6.35"
-	instance_class = "db.r3.large"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	publicly_accessible = true
@@ -933,12 +933,47 @@ EOF
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
-    name = "enhanced-monitoring-attachment"
+    name = "enhanced-monitoring-attachment-%s"
     roles = [
         "${aws_iam_role.enhanced_policy_role.name}",
     ]
 
-    policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+    policy_arn = "${aws_iam_policy.test.arn}"
+}
+
+resource "aws_iam_policy" "test" {
+  name   = "tf-enhanced-monitoring-policy-%s"
+  policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogGroups",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:PutRetentionPolicy"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:RDS*"
+            ]
+        },
+        {
+            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogStreams",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams",
+                "logs:GetLogEvents"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:RDS*:log-stream:*"
+            ]
+        }
+    ]
+}
+POLICY
 }
 
 resource "aws_db_instance" "enhanced_monitoring" {
@@ -948,7 +983,7 @@ resource "aws_db_instance" "enhanced_monitoring" {
 	allocated_storage = 5
 	engine = "mysql"
 	engine_version = "5.6.35"
-	instance_class = "db.m3.medium"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
@@ -960,7 +995,7 @@ resource "aws_db_instance" "enhanced_monitoring" {
 	monitoring_interval = "5"
 
 	skip_final_snapshot = true
-}`, rName, rName)
+}`, rName, rName, rName, rName)
 }
 
 func testAccSnapshotInstanceConfig_iopsUpdate(rName string, iops int) string {

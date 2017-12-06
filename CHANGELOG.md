@@ -1,4 +1,24 @@
-## 1.5.1 (Unreleased)
+## 1.6.0 (Unreleased)
+
+FEATURES:
+
+* **New Datasource:** `aws_network_interface` [GH-2316]
+* **New Resource:** `aws_dx_connection_association` [GH-2360]
+* **New Resource:** `aws_appautoscaling_scheduled_action` [GH-2231]
+
+IMPROVEMENTS:
+
+* resource/aws_ssm_association: Add `association_name` [GH-2257]
+* resource/aws_ecs_service: Add `network_configuration` [GH-2299]
+* resource/aws_lambda_function: Add `reserved_concurrent_executions` [GH-2504]
+* resource/aws_ecs_service: Add `launch_type` (Fargate support) [GH-2483]
+* resource/aws_ecs_task_definition: Add `cpu`, `memory`, `execution_role_arn` & `requires_compatibilities` (Fargate support) [GH-2483]
+
+BUG FIXES:
+
+* resource/aws_elasticache_parameter_group: Add StateFunc to make name lowercase [GH-2426]
+* resource/aws_elasticache_replication_group: Modify validation, make replication_group_id lowercase [GH-2432]
+
 ## 1.5.0 (November 29, 2017)
 
 FEATURES:

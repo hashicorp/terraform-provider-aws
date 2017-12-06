@@ -25,7 +25,7 @@ resource "aws_placement_group" "web" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the placement group.
-* `strategy` - (Required) The placement strategy. The only supported value is `cluster`
+* `strategy` - (Required) The placement strategy.
 
 ## Attributes Reference
 

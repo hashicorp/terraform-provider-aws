@@ -1016,6 +1016,112 @@ func (c *WAF) CreateRuleWithContext(ctx aws.Context, input *CreateRuleInput, opt
 	return out, req.Send()
 }
 
+const opCreateRuleGroup = "CreateRuleGroup"
+
+// CreateRuleGroupRequest generates a "aws/request.Request" representing the
+// client's request for the CreateRuleGroup operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateRuleGroup for more information on using the CreateRuleGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateRuleGroupRequest method.
+//    req, resp := client.CreateRuleGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRuleGroup
+func (c *WAF) CreateRuleGroupRequest(input *CreateRuleGroupInput) (req *request.Request, output *CreateRuleGroupOutput) {
+	op := &request.Operation{
+		Name:       opCreateRuleGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateRuleGroupInput{}
+	}
+
+	output = &CreateRuleGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateRuleGroup API operation for AWS WAF.
+//
+// Creates a RuleGroup. A rule group is a collection of predefined rules that
+// you add to a web ACL. You use UpdateRuleGroup to add rules to the rule group.
+//
+// Rule groups are subject to the following limits:
+//
+//    * Three rule groups per account. You can request an increase to this limit
+//    by contacting customer support.
+//
+//    * One rule group per web ACL.
+//
+//    * Ten rules per rule group.
+//
+// For more information about how to use the AWS WAF API to allow or block HTTP
+// requests, see the AWS WAF Developer Guide (http://docs.aws.amazon.com/waf/latest/developerguide/).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation CreateRuleGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeStaleDataException "StaleDataException"
+//   The operation failed because you tried to create, update, or delete an object
+//   by using a change token that has already been used.
+//
+//   * ErrCodeInternalErrorException "InternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeDisallowedNameException "DisallowedNameException"
+//   The name specified is invalid.
+//
+//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   The operation exceeds a resource limit, for example, the maximum number of
+//   WebACL objects that you can create for an AWS account. For more information,
+//   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
+//   in the AWS WAF Developer Guide.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRuleGroup
+func (c *WAF) CreateRuleGroup(input *CreateRuleGroupInput) (*CreateRuleGroupOutput, error) {
+	req, out := c.CreateRuleGroupRequest(input)
+	return out, req.Send()
+}
+
+// CreateRuleGroupWithContext is the same as CreateRuleGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateRuleGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) CreateRuleGroupWithContext(ctx aws.Context, input *CreateRuleGroupInput, opts ...request.Option) (*CreateRuleGroupOutput, error) {
+	req, out := c.CreateRuleGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateSizeConstraintSet = "CreateSizeConstraintSet"
 
 // CreateSizeConstraintSetRequest generates a "aws/request.Request" representing the
@@ -2484,6 +2590,127 @@ func (c *WAF) DeleteRuleWithContext(ctx aws.Context, input *DeleteRuleInput, opt
 	return out, req.Send()
 }
 
+const opDeleteRuleGroup = "DeleteRuleGroup"
+
+// DeleteRuleGroupRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteRuleGroup operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteRuleGroup for more information on using the DeleteRuleGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteRuleGroupRequest method.
+//    req, resp := client.DeleteRuleGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRuleGroup
+func (c *WAF) DeleteRuleGroupRequest(input *DeleteRuleGroupInput) (req *request.Request, output *DeleteRuleGroupOutput) {
+	op := &request.Operation{
+		Name:       opDeleteRuleGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteRuleGroupInput{}
+	}
+
+	output = &DeleteRuleGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteRuleGroup API operation for AWS WAF.
+//
+// Permanently deletes a RuleGroup. You can't delete a RuleGroup if it's still
+// used in any WebACL objects or if it still includes any rules.
+//
+// If you just want to remove a RuleGroup from a WebACL, use UpdateWebACL.
+//
+// To permanently delete a RuleGroup from AWS WAF, perform the following steps:
+//
+// Update the RuleGroup to remove rules, if any. For more information, see UpdateRuleGroup.
+//
+// Use GetChangeToken to get the change token that you provide in the ChangeToken
+// parameter of a DeleteRuleGroup request.
+//
+// Submit a DeleteRuleGroup request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation DeleteRuleGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeStaleDataException "StaleDataException"
+//   The operation failed because you tried to create, update, or delete an object
+//   by using a change token that has already been used.
+//
+//   * ErrCodeInternalErrorException "InternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   The operation failed because you tried to delete an object that is still
+//   in use. For example:
+//
+//      * You tried to delete a ByteMatchSet that is still referenced by a Rule.
+//
+//      * You tried to delete a Rule that is still referenced by a WebACL.
+//
+//   * ErrCodeNonEmptyEntityException "NonEmptyEntityException"
+//   The operation failed because you tried to delete an object that isn't empty.
+//   For example:
+//
+//      * You tried to delete a WebACL that still contains one or more Rule objects.
+//
+//      * You tried to delete a Rule that still contains one or more ByteMatchSet
+//      objects or other predicates.
+//
+//      * You tried to delete a ByteMatchSet that contains one or more ByteMatchTuple
+//      objects.
+//
+//      * You tried to delete an IPSet that references one or more IP addresses.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRuleGroup
+func (c *WAF) DeleteRuleGroup(input *DeleteRuleGroupInput) (*DeleteRuleGroupOutput, error) {
+	req, out := c.DeleteRuleGroupRequest(input)
+	return out, req.Send()
+}
+
+// DeleteRuleGroupWithContext is the same as DeleteRuleGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteRuleGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) DeleteRuleGroupWithContext(ctx aws.Context, input *DeleteRuleGroupInput, opts ...request.Option) (*DeleteRuleGroupOutput, error) {
+	req, out := c.DeleteRuleGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteSizeConstraintSet = "DeleteSizeConstraintSet"
 
 // DeleteSizeConstraintSetRequest generates a "aws/request.Request" representing the
@@ -3906,6 +4133,92 @@ func (c *WAF) GetRuleWithContext(ctx aws.Context, input *GetRuleInput, opts ...r
 	return out, req.Send()
 }
 
+const opGetRuleGroup = "GetRuleGroup"
+
+// GetRuleGroupRequest generates a "aws/request.Request" representing the
+// client's request for the GetRuleGroup operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetRuleGroup for more information on using the GetRuleGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetRuleGroupRequest method.
+//    req, resp := client.GetRuleGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRuleGroup
+func (c *WAF) GetRuleGroupRequest(input *GetRuleGroupInput) (req *request.Request, output *GetRuleGroupOutput) {
+	op := &request.Operation{
+		Name:       opGetRuleGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetRuleGroupInput{}
+	}
+
+	output = &GetRuleGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetRuleGroup API operation for AWS WAF.
+//
+// Returns the RuleGroup that is specified by the RuleGroupId that you included
+// in the GetRuleGroup request.
+//
+// To view the rules in a rule group, use ListActivatedRulesInRuleGroup.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation GetRuleGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalErrorException "InternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRuleGroup
+func (c *WAF) GetRuleGroup(input *GetRuleGroupInput) (*GetRuleGroupOutput, error) {
+	req, out := c.GetRuleGroupRequest(input)
+	return out, req.Send()
+}
+
+// GetRuleGroupWithContext is the same as GetRuleGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetRuleGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) GetRuleGroupWithContext(ctx aws.Context, input *GetRuleGroupInput, opts ...request.Option) (*GetRuleGroupOutput, error) {
+	req, out := c.GetRuleGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetSampledRequests = "GetSampledRequests"
 
 // GetSampledRequestsRequest generates a "aws/request.Request" representing the
@@ -4342,6 +4655,118 @@ func (c *WAF) GetXssMatchSet(input *GetXssMatchSetInput) (*GetXssMatchSetOutput,
 // for more information on using Contexts.
 func (c *WAF) GetXssMatchSetWithContext(ctx aws.Context, input *GetXssMatchSetInput, opts ...request.Option) (*GetXssMatchSetOutput, error) {
 	req, out := c.GetXssMatchSetRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListActivatedRulesInRuleGroup = "ListActivatedRulesInRuleGroup"
+
+// ListActivatedRulesInRuleGroupRequest generates a "aws/request.Request" representing the
+// client's request for the ListActivatedRulesInRuleGroup operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListActivatedRulesInRuleGroup for more information on using the ListActivatedRulesInRuleGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListActivatedRulesInRuleGroupRequest method.
+//    req, resp := client.ListActivatedRulesInRuleGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListActivatedRulesInRuleGroup
+func (c *WAF) ListActivatedRulesInRuleGroupRequest(input *ListActivatedRulesInRuleGroupInput) (req *request.Request, output *ListActivatedRulesInRuleGroupOutput) {
+	op := &request.Operation{
+		Name:       opListActivatedRulesInRuleGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListActivatedRulesInRuleGroupInput{}
+	}
+
+	output = &ListActivatedRulesInRuleGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListActivatedRulesInRuleGroup API operation for AWS WAF.
+//
+// Returns an array of ActivatedRule objects.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation ListActivatedRulesInRuleGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalErrorException "InternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   The operation failed because AWS WAF didn't recognize a parameter in the
+//   request. For example:
+//
+//      * You specified an invalid parameter name.
+//
+//      * You specified an invalid value.
+//
+//      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
+//      using an action other than INSERT or DELETE.
+//
+//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      BLOCK, or COUNT.
+//
+//      * You tried to create a RateBasedRule with a RateKey value other than
+//      IP.
+//
+//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      BLOCK, or COUNT.
+//
+//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      HEADER, METHOD, QUERY_STRING, URI, or BODY.
+//
+//      * You tried to update a ByteMatchSet with a Field of HEADER but no value
+//      for Data.
+//
+//      * Your request references an ARN that is malformed, or corresponds to
+//      a resource with which a web ACL cannot be associated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListActivatedRulesInRuleGroup
+func (c *WAF) ListActivatedRulesInRuleGroup(input *ListActivatedRulesInRuleGroupInput) (*ListActivatedRulesInRuleGroupOutput, error) {
+	req, out := c.ListActivatedRulesInRuleGroupRequest(input)
+	return out, req.Send()
+}
+
+// ListActivatedRulesInRuleGroupWithContext is the same as ListActivatedRulesInRuleGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListActivatedRulesInRuleGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) ListActivatedRulesInRuleGroupWithContext(ctx aws.Context, input *ListActivatedRulesInRuleGroupInput, opts ...request.Option) (*ListActivatedRulesInRuleGroupOutput, error) {
+	req, out := c.ListActivatedRulesInRuleGroupRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4851,6 +5276,86 @@ func (c *WAF) ListRegexPatternSetsWithContext(ctx aws.Context, input *ListRegexP
 	return out, req.Send()
 }
 
+const opListRuleGroups = "ListRuleGroups"
+
+// ListRuleGroupsRequest generates a "aws/request.Request" representing the
+// client's request for the ListRuleGroups operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListRuleGroups for more information on using the ListRuleGroups
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListRuleGroupsRequest method.
+//    req, resp := client.ListRuleGroupsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRuleGroups
+func (c *WAF) ListRuleGroupsRequest(input *ListRuleGroupsInput) (req *request.Request, output *ListRuleGroupsOutput) {
+	op := &request.Operation{
+		Name:       opListRuleGroups,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListRuleGroupsInput{}
+	}
+
+	output = &ListRuleGroupsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListRuleGroups API operation for AWS WAF.
+//
+// Returns an array of RuleGroup objects.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation ListRuleGroups for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalErrorException "InternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRuleGroups
+func (c *WAF) ListRuleGroups(input *ListRuleGroupsInput) (*ListRuleGroupsOutput, error) {
+	req, out := c.ListRuleGroupsRequest(input)
+	return out, req.Send()
+}
+
+// ListRuleGroupsWithContext is the same as ListRuleGroups with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListRuleGroups for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) ListRuleGroupsWithContext(ctx aws.Context, input *ListRuleGroupsInput, opts ...request.Option) (*ListRuleGroupsOutput, error) {
+	req, out := c.ListRuleGroupsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListRules = "ListRules"
 
 // ListRulesRequest generates a "aws/request.Request" representing the
@@ -5098,6 +5603,89 @@ func (c *WAF) ListSqlInjectionMatchSets(input *ListSqlInjectionMatchSetsInput) (
 // for more information on using Contexts.
 func (c *WAF) ListSqlInjectionMatchSetsWithContext(ctx aws.Context, input *ListSqlInjectionMatchSetsInput, opts ...request.Option) (*ListSqlInjectionMatchSetsOutput, error) {
 	req, out := c.ListSqlInjectionMatchSetsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListSubscribedRuleGroups = "ListSubscribedRuleGroups"
+
+// ListSubscribedRuleGroupsRequest generates a "aws/request.Request" representing the
+// client's request for the ListSubscribedRuleGroups operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListSubscribedRuleGroups for more information on using the ListSubscribedRuleGroups
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListSubscribedRuleGroupsRequest method.
+//    req, resp := client.ListSubscribedRuleGroupsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListSubscribedRuleGroups
+func (c *WAF) ListSubscribedRuleGroupsRequest(input *ListSubscribedRuleGroupsInput) (req *request.Request, output *ListSubscribedRuleGroupsOutput) {
+	op := &request.Operation{
+		Name:       opListSubscribedRuleGroups,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListSubscribedRuleGroupsInput{}
+	}
+
+	output = &ListSubscribedRuleGroupsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListSubscribedRuleGroups API operation for AWS WAF.
+//
+// Returns an array of RuleGroup objects that you are subscribed to.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation ListSubscribedRuleGroups for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+//   * ErrCodeInternalErrorException "InternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListSubscribedRuleGroups
+func (c *WAF) ListSubscribedRuleGroups(input *ListSubscribedRuleGroupsInput) (*ListSubscribedRuleGroupsOutput, error) {
+	req, out := c.ListSubscribedRuleGroupsRequest(input)
+	return out, req.Send()
+}
+
+// ListSubscribedRuleGroupsWithContext is the same as ListSubscribedRuleGroups with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListSubscribedRuleGroups for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) ListSubscribedRuleGroupsWithContext(ctx aws.Context, input *ListSubscribedRuleGroupsInput, opts ...request.Option) (*ListSubscribedRuleGroupsOutput, error) {
+	req, out := c.ListSubscribedRuleGroupsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6139,15 +6727,15 @@ func (c *WAF) UpdateRegexMatchSetRequest(input *UpdateRegexMatchSetInput) (req *
 
 // UpdateRegexMatchSet API operation for AWS WAF.
 //
-// Inserts or deletes RegexMatchSetUpdate objects (filters) in a RegexMatchSet.
+// Inserts or deletes RegexMatchTuple objects (filters) in a RegexMatchSet.
 // For each RegexMatchSetUpdate object, you specify the following values:
 //
 //    * Whether to insert or delete the object from the array. If you want to
 //    change a RegexMatchSetUpdate object, you delete the existing object and
 //    add a new one.
 //
-//    * The part of a web request that you want AWS WAF to inspect, such as
-//    a query string or the value of the User-Agent header.
+//    * The part of a web request that you want AWS WAF to inspectupdate, such
+//    as a query string or the value of the User-Agent header.
 //
 //    * The identifier of the pattern (a regular expression) that you want AWS
 //    WAF to look for. For more information, see RegexPatternSet.
@@ -6309,14 +6897,12 @@ func (c *WAF) UpdateRegexPatternSetRequest(input *UpdateRegexPatternSetInput) (r
 
 // UpdateRegexPatternSet API operation for AWS WAF.
 //
-// Inserts or deletes RegexMatchSetUpdate objects (filters) in a RegexPatternSet.
-// For each RegexPatternSet object, you specify the following values:
+// Inserts or deletes RegexPatternString objects in a RegexPatternSet. For each
+// RegexPatternString object, you specify the following values:
 //
-//    * Whether to insert or delete the object from the array. If you want to
-//    change a RegexPatternSet object, you delete the existing object and add
-//    a new one.
+//    * Whether to insert or delete the RegexPatternString.
 //
-//    * The regular expression pattern that you want AWS WAF to look for. For
+//    * The regular expression pattern that you want to insert or delete. For
 //    more information, see RegexPatternSet.
 //
 // For example, you can create a RegexPatternString such as B[a@]dB[o0]t. AWS
@@ -6364,6 +6950,9 @@ func (c *WAF) UpdateRegexPatternSetRequest(input *UpdateRegexPatternSetInput) (r
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
+//
+//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
 //
 //   * ErrCodeNonexistentContainerException "NonexistentContainerException"
 //   The operation failed because you tried to add an object to or delete an object
@@ -6629,6 +7218,187 @@ func (c *WAF) UpdateRule(input *UpdateRuleInput) (*UpdateRuleOutput, error) {
 // for more information on using Contexts.
 func (c *WAF) UpdateRuleWithContext(ctx aws.Context, input *UpdateRuleInput, opts ...request.Option) (*UpdateRuleOutput, error) {
 	req, out := c.UpdateRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateRuleGroup = "UpdateRuleGroup"
+
+// UpdateRuleGroupRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateRuleGroup operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateRuleGroup for more information on using the UpdateRuleGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateRuleGroupRequest method.
+//    req, resp := client.UpdateRuleGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRuleGroup
+func (c *WAF) UpdateRuleGroupRequest(input *UpdateRuleGroupInput) (req *request.Request, output *UpdateRuleGroupOutput) {
+	op := &request.Operation{
+		Name:       opUpdateRuleGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateRuleGroupInput{}
+	}
+
+	output = &UpdateRuleGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateRuleGroup API operation for AWS WAF.
+//
+// Inserts or deletes ActivatedRule objects in a RuleGroup.
+//
+// You can only insert REGULAR rules into a rule group.
+//
+// You can have a maximum of ten rules per rule group.
+//
+// To create and configure a RuleGroup, perform the following steps:
+//
+// Create and update the Rules that you want to include in the RuleGroup. See
+// CreateRule.
+//
+// Use GetChangeToken to get the change token that you provide in the ChangeToken
+// parameter of an UpdateRuleGroup request.
+//
+// Submit an UpdateRuleGroup request to add Rules to the RuleGroup.
+//
+// Create and update a WebACL that contains the RuleGroup. See CreateWebACL.
+//
+// If you want to replace one Rule with another, you delete the existing one
+// and add the new one.
+//
+// For more information about how to use the AWS WAF API to allow or block HTTP
+// requests, see the AWS WAF Developer Guide (http://docs.aws.amazon.com/waf/latest/developerguide/).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation UpdateRuleGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeStaleDataException "StaleDataException"
+//   The operation failed because you tried to create, update, or delete an object
+//   by using a change token that has already been used.
+//
+//   * ErrCodeInternalErrorException "InternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeNonexistentContainerException "NonexistentContainerException"
+//   The operation failed because you tried to add an object to or delete an object
+//   from another object that doesn't exist. For example:
+//
+//      * You tried to add a Rule to or delete a Rule from a WebACL that doesn't
+//      exist.
+//
+//      * You tried to add a ByteMatchSet to or delete a ByteMatchSet from a Rule
+//      that doesn't exist.
+//
+//      * You tried to add an IP address to or delete an IP address from an IPSet
+//      that doesn't exist.
+//
+//      * You tried to add a ByteMatchTuple to or delete a ByteMatchTuple from
+//      a ByteMatchSet that doesn't exist.
+//
+//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   The operation failed because there was nothing to do. For example:
+//
+//      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
+//      specified WebACL.
+//
+//      * You tried to remove an IP address from an IPSet, but the IP address
+//      isn't in the specified IPSet.
+//
+//      * You tried to remove a ByteMatchTuple from a ByteMatchSet, but the ByteMatchTuple
+//      isn't in the specified WebACL.
+//
+//      * You tried to add a Rule to a WebACL, but the Rule already exists in
+//      the specified WebACL.
+//
+//      * You tried to add an IP address to an IPSet, but the IP address already
+//      exists in the specified IPSet.
+//
+//      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
+//      already exists in the specified WebACL.
+//
+//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   The operation exceeds a resource limit, for example, the maximum number of
+//   WebACL objects that you can create for an AWS account. For more information,
+//   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
+//   in the AWS WAF Developer Guide.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   The operation failed because AWS WAF didn't recognize a parameter in the
+//   request. For example:
+//
+//      * You specified an invalid parameter name.
+//
+//      * You specified an invalid value.
+//
+//      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
+//      using an action other than INSERT or DELETE.
+//
+//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      BLOCK, or COUNT.
+//
+//      * You tried to create a RateBasedRule with a RateKey value other than
+//      IP.
+//
+//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      BLOCK, or COUNT.
+//
+//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      HEADER, METHOD, QUERY_STRING, URI, or BODY.
+//
+//      * You tried to update a ByteMatchSet with a Field of HEADER but no value
+//      for Data.
+//
+//      * Your request references an ARN that is malformed, or corresponds to
+//      a resource with which a web ACL cannot be associated.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRuleGroup
+func (c *WAF) UpdateRuleGroup(input *UpdateRuleGroupInput) (*UpdateRuleGroupOutput, error) {
+	req, out := c.UpdateRuleGroupRequest(input)
+	return out, req.Send()
+}
+
+// UpdateRuleGroupWithContext is the same as UpdateRuleGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateRuleGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) UpdateRuleGroupWithContext(ctx aws.Context, input *UpdateRuleGroupInput, opts ...request.Option) (*UpdateRuleGroupOutput, error) {
+	req, out := c.UpdateRuleGroupRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -7233,6 +8003,9 @@ func (c *WAF) UpdateWebACLRequest(input *UpdateWebACLInput) (req *request.Reques
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
 //
+//   * ErrCodeSubscriptionNotFoundException "SubscriptionNotFoundException"
+//   The specified subscription does not exist.
+//
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateWebACL
 func (c *WAF) UpdateWebACL(input *UpdateWebACLInput) (*UpdateWebACLOutput, error) {
 	req, out := c.UpdateWebACLRequest(input)
@@ -7471,8 +8244,26 @@ type ActivatedRule struct {
 	//    in the rule and then continues to inspect the web request based on the
 	//    remaining rules in the web ACL.
 	//
-	// Action is a required field
-	Action *WafAction `type:"structure" required:"true"`
+	// The Action data type within ActivatedRule is used only when submitting an
+	// UpdateWebACL request. ActivatedRule|Action is not applicable and therefore
+	// not available for UpdateRuleGroup.
+	Action *WafAction `type:"structure"`
+
+	// Use the OverrideAction to test your RuleGroup.
+	//
+	// Any rule in a RuleGroup can potentially block a request. If you set the OverrideAction
+	// to None, the RuleGroup will block a request if any individual rule in the
+	// RuleGroup matches the request and is configured to block that request. However
+	// if you first want to test the RuleGroup, set the OverrideAction to Count.
+	// The RuleGroup will then override any block action specified by individual
+	// rules contained within the group. Instead of blocking matching requests,
+	// those requests will be counted. You can view a record of counted requests
+	// using GetSampledRequests.
+	//
+	// The OverrideAction data type within ActivatedRule is used only when submitting
+	// an UpdateRuleGroup request. ActivatedRule|OverrideAction is not applicable
+	// and therefore not available for UpdateWebACL.
+	OverrideAction *WafOverrideAction `type:"structure"`
 
 	// Specifies the order in which the Rules in a WebACL are evaluated. Rules with
 	// a lower value for Priority are evaluated before Rules with a higher value.
@@ -7492,11 +8283,12 @@ type ActivatedRule struct {
 	// RuleId is a required field
 	RuleId *string `min:"1" type:"string" required:"true"`
 
-	// The rule type, either REGULAR, as defined by Rule, or RATE_BASED, as defined
-	// by RateBasedRule. The default is REGULAR. Although this field is optional,
-	// be aware that if you try to add a RATE_BASED rule to a web ACL without setting
-	// the type, the UpdateWebACL request will fail because the request tries to
-	// add a REGULAR rule with the specified ID, which does not exist.
+	// The rule type, either REGULAR, as defined by Rule, RATE_BASED, as defined
+	// by RateBasedRule, or GROUP, as defined by RuleGroup. The default is REGULAR.
+	// Although this field is optional, be aware that if you try to add a RATE_BASED
+	// rule to a web ACL without setting the type, the UpdateWebACL request will
+	// fail because the request tries to add a REGULAR rule with the specified ID,
+	// which does not exist.
 	Type *string `type:"string" enum:"WafRuleType"`
 }
 
@@ -7513,9 +8305,6 @@ func (s ActivatedRule) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ActivatedRule) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ActivatedRule"}
-	if s.Action == nil {
-		invalidParams.Add(request.NewErrParamRequired("Action"))
-	}
 	if s.Priority == nil {
 		invalidParams.Add(request.NewErrParamRequired("Priority"))
 	}
@@ -7530,6 +8319,11 @@ func (s *ActivatedRule) Validate() error {
 			invalidParams.AddNested("Action", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.OverrideAction != nil {
+		if err := s.OverrideAction.Validate(); err != nil {
+			invalidParams.AddNested("OverrideAction", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -7540,6 +8334,12 @@ func (s *ActivatedRule) Validate() error {
 // SetAction sets the Action field's value.
 func (s *ActivatedRule) SetAction(v *WafAction) *ActivatedRule {
 	s.Action = v
+	return s
+}
+
+// SetOverrideAction sets the OverrideAction field's value.
+func (s *ActivatedRule) SetOverrideAction(v *WafOverrideAction) *ActivatedRule {
+	s.OverrideAction = v
 	return s
 }
 
@@ -8608,6 +9408,118 @@ func (s *CreateRegexPatternSetOutput) SetRegexPatternSet(v *RegexPatternSet) *Cr
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRuleGroupRequest
+type CreateRuleGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// The value returned by the most recent call to GetChangeToken.
+	//
+	// ChangeToken is a required field
+	ChangeToken *string `min:"1" type:"string" required:"true"`
+
+	// A friendly name or description for the metrics for this RuleGroup. The name
+	// can contain only alphanumeric characters (A-Z, a-z, 0-9); the name can't
+	// contain whitespace. You can't change the name of the metric after you create
+	// the RuleGroup.
+	//
+	// MetricName is a required field
+	MetricName *string `type:"string" required:"true"`
+
+	// A friendly name or description of the RuleGroup. You can't change Name after
+	// you create a RuleGroup.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateRuleGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateRuleGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateRuleGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateRuleGroupInput"}
+	if s.ChangeToken == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChangeToken"))
+	}
+	if s.ChangeToken != nil && len(*s.ChangeToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChangeToken", 1))
+	}
+	if s.MetricName == nil {
+		invalidParams.Add(request.NewErrParamRequired("MetricName"))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChangeToken sets the ChangeToken field's value.
+func (s *CreateRuleGroupInput) SetChangeToken(v string) *CreateRuleGroupInput {
+	s.ChangeToken = &v
+	return s
+}
+
+// SetMetricName sets the MetricName field's value.
+func (s *CreateRuleGroupInput) SetMetricName(v string) *CreateRuleGroupInput {
+	s.MetricName = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateRuleGroupInput) SetName(v string) *CreateRuleGroupInput {
+	s.Name = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRuleGroupResponse
+type CreateRuleGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ChangeToken that you used to submit the CreateRuleGroup request. You
+	// can also use this value to query the status of the request. For more information,
+	// see GetChangeTokenStatus.
+	ChangeToken *string `min:"1" type:"string"`
+
+	// An empty RuleGroup.
+	RuleGroup *RuleGroup `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateRuleGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateRuleGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetChangeToken sets the ChangeToken field's value.
+func (s *CreateRuleGroupOutput) SetChangeToken(v string) *CreateRuleGroupOutput {
+	s.ChangeToken = &v
+	return s
+}
+
+// SetRuleGroup sets the RuleGroup field's value.
+func (s *CreateRuleGroupOutput) SetRuleGroup(v *RuleGroup) *CreateRuleGroupOutput {
+	s.RuleGroup = v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRuleRequest
 type CreateRuleInput struct {
 	_ struct{} `type:"structure"`
@@ -9653,6 +10565,92 @@ func (s DeleteRegexPatternSetOutput) GoString() string {
 
 // SetChangeToken sets the ChangeToken field's value.
 func (s *DeleteRegexPatternSetOutput) SetChangeToken(v string) *DeleteRegexPatternSetOutput {
+	s.ChangeToken = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRuleGroupRequest
+type DeleteRuleGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// The value returned by the most recent call to GetChangeToken.
+	//
+	// ChangeToken is a required field
+	ChangeToken *string `min:"1" type:"string" required:"true"`
+
+	// The RuleGroupId of the RuleGroup that you want to delete. RuleGroupId is
+	// returned by CreateRuleGroup and by ListRuleGroups.
+	//
+	// RuleGroupId is a required field
+	RuleGroupId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteRuleGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteRuleGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteRuleGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteRuleGroupInput"}
+	if s.ChangeToken == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChangeToken"))
+	}
+	if s.ChangeToken != nil && len(*s.ChangeToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChangeToken", 1))
+	}
+	if s.RuleGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RuleGroupId"))
+	}
+	if s.RuleGroupId != nil && len(*s.RuleGroupId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RuleGroupId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChangeToken sets the ChangeToken field's value.
+func (s *DeleteRuleGroupInput) SetChangeToken(v string) *DeleteRuleGroupInput {
+	s.ChangeToken = &v
+	return s
+}
+
+// SetRuleGroupId sets the RuleGroupId field's value.
+func (s *DeleteRuleGroupInput) SetRuleGroupId(v string) *DeleteRuleGroupInput {
+	s.RuleGroupId = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRuleGroupResponse
+type DeleteRuleGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ChangeToken that you used to submit the DeleteRuleGroup request. You
+	// can also use this value to query the status of the request. For more information,
+	// see GetChangeTokenStatus.
+	ChangeToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteRuleGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteRuleGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetChangeToken sets the ChangeToken field's value.
+func (s *DeleteRuleGroupOutput) SetChangeToken(v string) *DeleteRuleGroupOutput {
 	s.ChangeToken = &v
 	return s
 }
@@ -10995,6 +11993,73 @@ func (s *GetRegexPatternSetOutput) SetRegexPatternSet(v *RegexPatternSet) *GetRe
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRuleGroupRequest
+type GetRuleGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// The RuleGroupId of the RuleGroup that you want to get. RuleGroupId is returned
+	// by CreateRuleGroup and by ListRuleGroups.
+	//
+	// RuleGroupId is a required field
+	RuleGroupId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetRuleGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetRuleGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetRuleGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetRuleGroupInput"}
+	if s.RuleGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RuleGroupId"))
+	}
+	if s.RuleGroupId != nil && len(*s.RuleGroupId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RuleGroupId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetRuleGroupId sets the RuleGroupId field's value.
+func (s *GetRuleGroupInput) SetRuleGroupId(v string) *GetRuleGroupInput {
+	s.RuleGroupId = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRuleGroupResponse
+type GetRuleGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the RuleGroup that you specified in the GetRuleGroup request.
+	RuleGroup *RuleGroup `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetRuleGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetRuleGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetRuleGroup sets the RuleGroup field's value.
+func (s *GetRuleGroupOutput) SetRuleGroup(v *RuleGroup) *GetRuleGroupOutput {
+	s.RuleGroup = v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRuleRequest
 type GetRuleInput struct {
 	_ struct{} `type:"structure"`
@@ -11080,10 +12145,10 @@ type GetSampledRequestsInput struct {
 	// MaxItems is a required field
 	MaxItems *int64 `min:"1" type:"long" required:"true"`
 
-	// RuleId is one of two values:
+	// RuleId is one of three values:
 	//
-	//    * The RuleId of the Rule for which you want GetSampledRequests to return
-	//    a sample of requests.
+	//    * The RuleId of the Rule or the RuleGroupId of the RuleGroup for which
+	//    you want GetSampledRequests to return a sample of requests.
 	//
 	//    * Default_Action, which causes GetSampledRequests to return a sample of
 	//    the requests that didn't match any of the rules in the specified WebACL.
@@ -11894,6 +12959,108 @@ func (s *IPSetUpdate) SetIPSetDescriptor(v *IPSetDescriptor) *IPSetUpdate {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListActivatedRulesInRuleGroupRequest
+type ListActivatedRulesInRuleGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the number of ActivatedRules that you want AWS WAF to return for
+	// this request. If you have more ActivatedRules than the number that you specify
+	// for Limit, the response includes a NextMarker value that you can use to get
+	// another batch of ActivatedRules.
+	Limit *int64 `type:"integer"`
+
+	// If you specify a value for Limit and you have more ActivatedRules than the
+	// value of Limit, AWS WAF returns a NextMarker value in the response that allows
+	// you to list another group of ActivatedRules. For the second and subsequent
+	// ListActivatedRulesInRuleGroup requests, specify the value of NextMarker from
+	// the previous response to get information about another batch of ActivatedRules.
+	NextMarker *string `min:"1" type:"string"`
+
+	// The RuleGroupId of the RuleGroup for which you want to get a list of ActivatedRule
+	// objects.
+	RuleGroupId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListActivatedRulesInRuleGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListActivatedRulesInRuleGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListActivatedRulesInRuleGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListActivatedRulesInRuleGroupInput"}
+	if s.NextMarker != nil && len(*s.NextMarker) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextMarker", 1))
+	}
+	if s.RuleGroupId != nil && len(*s.RuleGroupId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RuleGroupId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLimit sets the Limit field's value.
+func (s *ListActivatedRulesInRuleGroupInput) SetLimit(v int64) *ListActivatedRulesInRuleGroupInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *ListActivatedRulesInRuleGroupInput) SetNextMarker(v string) *ListActivatedRulesInRuleGroupInput {
+	s.NextMarker = &v
+	return s
+}
+
+// SetRuleGroupId sets the RuleGroupId field's value.
+func (s *ListActivatedRulesInRuleGroupInput) SetRuleGroupId(v string) *ListActivatedRulesInRuleGroupInput {
+	s.RuleGroupId = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListActivatedRulesInRuleGroupResponse
+type ListActivatedRulesInRuleGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of ActivatedRules objects.
+	ActivatedRules []*ActivatedRule `type:"list"`
+
+	// If you have more ActivatedRules than the number that you specified for Limit
+	// in the request, the response includes a NextMarker value. To list more ActivatedRules,
+	// submit another ListActivatedRulesInRuleGroup request, and specify the NextMarker
+	// value from the response in the NextMarker value in the next request.
+	NextMarker *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListActivatedRulesInRuleGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListActivatedRulesInRuleGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetActivatedRules sets the ActivatedRules field's value.
+func (s *ListActivatedRulesInRuleGroupOutput) SetActivatedRules(v []*ActivatedRule) *ListActivatedRulesInRuleGroupOutput {
+	s.ActivatedRules = v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *ListActivatedRulesInRuleGroupOutput) SetNextMarker(v string) *ListActivatedRulesInRuleGroupOutput {
+	s.NextMarker = &v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListByteMatchSetsRequest
 type ListByteMatchSetsInput struct {
 	_ struct{} `type:"structure"`
@@ -12433,6 +13600,95 @@ func (s *ListRegexPatternSetsOutput) SetRegexPatternSets(v []*RegexPatternSetSum
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRuleGroupsRequest
+type ListRuleGroupsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the number of RuleGroups that you want AWS WAF to return for this
+	// request. If you have more RuleGroups than the number that you specify for
+	// Limit, the response includes a NextMarker value that you can use to get another
+	// batch of RuleGroups.
+	Limit *int64 `type:"integer"`
+
+	// If you specify a value for Limit and you have more RuleGroups than the value
+	// of Limit, AWS WAF returns a NextMarker value in the response that allows
+	// you to list another group of RuleGroups. For the second and subsequent ListRuleGroups
+	// requests, specify the value of NextMarker from the previous response to get
+	// information about another batch of RuleGroups.
+	NextMarker *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListRuleGroupsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListRuleGroupsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListRuleGroupsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListRuleGroupsInput"}
+	if s.NextMarker != nil && len(*s.NextMarker) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextMarker", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLimit sets the Limit field's value.
+func (s *ListRuleGroupsInput) SetLimit(v int64) *ListRuleGroupsInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *ListRuleGroupsInput) SetNextMarker(v string) *ListRuleGroupsInput {
+	s.NextMarker = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRuleGroupsResponse
+type ListRuleGroupsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// If you have more RuleGroups than the number that you specified for Limit
+	// in the request, the response includes a NextMarker value. To list more RuleGroups,
+	// submit another ListRuleGroups request, and specify the NextMarker value from
+	// the response in the NextMarker value in the next request.
+	NextMarker *string `min:"1" type:"string"`
+
+	// An array of RuleGroup objects.
+	RuleGroups []*RuleGroupSummary `type:"list"`
+}
+
+// String returns the string representation
+func (s ListRuleGroupsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListRuleGroupsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *ListRuleGroupsOutput) SetNextMarker(v string) *ListRuleGroupsOutput {
+	s.NextMarker = &v
+	return s
+}
+
+// SetRuleGroups sets the RuleGroups field's value.
+func (s *ListRuleGroupsOutput) SetRuleGroups(v []*RuleGroupSummary) *ListRuleGroupsOutput {
+	s.RuleGroups = v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRulesRequest
 type ListRulesInput struct {
 	_ struct{} `type:"structure"`
@@ -12701,6 +13957,96 @@ func (s *ListSqlInjectionMatchSetsOutput) SetNextMarker(v string) *ListSqlInject
 // SetSqlInjectionMatchSets sets the SqlInjectionMatchSets field's value.
 func (s *ListSqlInjectionMatchSetsOutput) SetSqlInjectionMatchSets(v []*SqlInjectionMatchSetSummary) *ListSqlInjectionMatchSetsOutput {
 	s.SqlInjectionMatchSets = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListSubscribedRuleGroupsRequest
+type ListSubscribedRuleGroupsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the number of subscribed rule groups that you want AWS WAF to return
+	// for this request. If you have more objects than the number you specify for
+	// Limit, the response includes a NextMarker value that you can use to get another
+	// batch of objects.
+	Limit *int64 `type:"integer"`
+
+	// If you specify a value for Limit and you have more ByteMatchSetssubscribed
+	// rule groups than the value of Limit, AWS WAF returns a NextMarker value in
+	// the response that allows you to list another group of subscribed rule groups.
+	// For the second and subsequent ListSubscribedRuleGroupsRequest requests, specify
+	// the value of NextMarker from the previous response to get information about
+	// another batch of subscribed rule groups.
+	NextMarker *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListSubscribedRuleGroupsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListSubscribedRuleGroupsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListSubscribedRuleGroupsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListSubscribedRuleGroupsInput"}
+	if s.NextMarker != nil && len(*s.NextMarker) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextMarker", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLimit sets the Limit field's value.
+func (s *ListSubscribedRuleGroupsInput) SetLimit(v int64) *ListSubscribedRuleGroupsInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *ListSubscribedRuleGroupsInput) SetNextMarker(v string) *ListSubscribedRuleGroupsInput {
+	s.NextMarker = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListSubscribedRuleGroupsResponse
+type ListSubscribedRuleGroupsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// If you have more objects than the number that you specified for Limit in
+	// the request, the response includes a NextMarker value. To list more objects,
+	// submit another ListSubscribedRuleGroups request, and specify the NextMarker
+	// value from the response in the NextMarker value in the next request.
+	NextMarker *string `min:"1" type:"string"`
+
+	// An array of RuleGroup objects.
+	RuleGroups []*SubscribedRuleGroupSummary `type:"list"`
+}
+
+// String returns the string representation
+func (s ListSubscribedRuleGroupsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListSubscribedRuleGroupsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *ListSubscribedRuleGroupsOutput) SetNextMarker(v string) *ListSubscribedRuleGroupsOutput {
+	s.NextMarker = &v
+	return s
+}
+
+// SetRuleGroups sets the RuleGroups field's value.
+func (s *ListSubscribedRuleGroupsOutput) SetRuleGroups(v []*SubscribedRuleGroupSummary) *ListSubscribedRuleGroupsOutput {
+	s.RuleGroups = v
 	return s
 }
 
@@ -13652,6 +14998,176 @@ func (s *Rule) SetRuleId(v string) *Rule {
 	return s
 }
 
+// A collection of predefined rules that you can add to a web ACL.
+//
+// Rule groups are subject to the following limits:
+//
+//    * Three rule groups per account. You can request an increase to this limit
+//    by contacting customer support.
+//
+//    * One rule group per web ACL.
+//
+//    * Ten rules per rule group.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RuleGroup
+type RuleGroup struct {
+	_ struct{} `type:"structure"`
+
+	// A friendly name or description for the metrics for this RuleGroup. The name
+	// can contain only alphanumeric characters (A-Z, a-z, 0-9); the name can't
+	// contain whitespace. You can't change the name of the metric after you create
+	// the RuleGroup.
+	MetricName *string `type:"string"`
+
+	// The friendly name or description for the RuleGroup. You can't change the
+	// name of a RuleGroup after you create it.
+	Name *string `min:"1" type:"string"`
+
+	// A unique identifier for a RuleGroup. You use RuleGroupId to get more information
+	// about a RuleGroup (see GetRuleGroup), update a RuleGroup (see UpdateRuleGroup),
+	// insert a RuleGroup into a WebACL or delete a one from a WebACL (see UpdateWebACL),
+	// or delete a RuleGroup from AWS WAF (see DeleteRuleGroup).
+	//
+	// RuleGroupId is returned by CreateRuleGroup and by ListRuleGroups.
+	//
+	// RuleGroupId is a required field
+	RuleGroupId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RuleGroup) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RuleGroup) GoString() string {
+	return s.String()
+}
+
+// SetMetricName sets the MetricName field's value.
+func (s *RuleGroup) SetMetricName(v string) *RuleGroup {
+	s.MetricName = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *RuleGroup) SetName(v string) *RuleGroup {
+	s.Name = &v
+	return s
+}
+
+// SetRuleGroupId sets the RuleGroupId field's value.
+func (s *RuleGroup) SetRuleGroupId(v string) *RuleGroup {
+	s.RuleGroupId = &v
+	return s
+}
+
+// Contains the identifier and the friendly name or description of the RuleGroup.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RuleGroupSummary
+type RuleGroupSummary struct {
+	_ struct{} `type:"structure"`
+
+	// A friendly name or description of the RuleGroup. You can't change the name
+	// of a RuleGroup after you create it.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// A unique identifier for a RuleGroup. You use RuleGroupId to get more information
+	// about a RuleGroup (see GetRuleGroup), update a RuleGroup (see UpdateRuleGroup),
+	// insert a RuleGroup into a WebACL or delete one from a WebACL (see UpdateWebACL),
+	// or delete a RuleGroup from AWS WAF (see DeleteRuleGroup).
+	//
+	// RuleGroupId is returned by CreateRuleGroup and by ListRuleGroups.
+	//
+	// RuleGroupId is a required field
+	RuleGroupId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RuleGroupSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RuleGroupSummary) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *RuleGroupSummary) SetName(v string) *RuleGroupSummary {
+	s.Name = &v
+	return s
+}
+
+// SetRuleGroupId sets the RuleGroupId field's value.
+func (s *RuleGroupSummary) SetRuleGroupId(v string) *RuleGroupSummary {
+	s.RuleGroupId = &v
+	return s
+}
+
+// Specifies an ActivatedRule and indicates whether you want to add it to a
+// RuleGroup or delete it from a RuleGroup.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RuleGroupUpdate
+type RuleGroupUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// Specify INSERT to add an ActivatedRule to a RuleGroup. Use DELETE to remove
+	// an ActivatedRule from a RuleGroup.
+	//
+	// Action is a required field
+	Action *string `type:"string" required:"true" enum:"ChangeAction"`
+
+	// The ActivatedRule object specifies a Rule that you want to insert or delete,
+	// the priority of the Rule in the WebACL, and the action that you want AWS
+	// WAF to take when a web request matches the Rule (ALLOW, BLOCK, or COUNT).
+	//
+	// ActivatedRule is a required field
+	ActivatedRule *ActivatedRule `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s RuleGroupUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RuleGroupUpdate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RuleGroupUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RuleGroupUpdate"}
+	if s.Action == nil {
+		invalidParams.Add(request.NewErrParamRequired("Action"))
+	}
+	if s.ActivatedRule == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActivatedRule"))
+	}
+	if s.ActivatedRule != nil {
+		if err := s.ActivatedRule.Validate(); err != nil {
+			invalidParams.AddNested("ActivatedRule", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAction sets the Action field's value.
+func (s *RuleGroupUpdate) SetAction(v string) *RuleGroupUpdate {
+	s.Action = &v
+	return s
+}
+
+// SetActivatedRule sets the ActivatedRule field's value.
+func (s *RuleGroupUpdate) SetActivatedRule(v *ActivatedRule) *RuleGroupUpdate {
+	s.ActivatedRule = v
+	return s
+}
+
 // Contains the identifier and the friendly name or description of the Rule.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RuleSummary
 type RuleSummary struct {
@@ -13773,6 +15289,12 @@ type SampledHTTPRequest struct {
 	// Request is a required field
 	Request *HTTPRequest `type:"structure" required:"true"`
 
+	// This value is returned if the GetSampledRequests request specifies the ID
+	// of a RuleGroup rather than the ID of an individual rule. RuleWithinRuleGroup
+	// is the rule within the specified RuleGroup that matched the request listed
+	// in the response.
+	RuleWithinRuleGroup *string `min:"1" type:"string"`
+
 	// The time at which AWS WAF received the request from your AWS resource, in
 	// Unix time format (in seconds).
 	Timestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
@@ -13805,6 +15327,12 @@ func (s *SampledHTTPRequest) SetAction(v string) *SampledHTTPRequest {
 // SetRequest sets the Request field's value.
 func (s *SampledHTTPRequest) SetRequest(v *HTTPRequest) *SampledHTTPRequest {
 	s.Request = v
+	return s
+}
+
+// SetRuleWithinRuleGroup sets the RuleWithinRuleGroup field's value.
+func (s *SampledHTTPRequest) SetRuleWithinRuleGroup(v string) *SampledHTTPRequest {
+	s.RuleWithinRuleGroup = &v
 	return s
 }
 
@@ -14467,6 +15995,59 @@ func (s *SqlInjectionMatchTuple) SetFieldToMatch(v *FieldToMatch) *SqlInjectionM
 // SetTextTransformation sets the TextTransformation field's value.
 func (s *SqlInjectionMatchTuple) SetTextTransformation(v string) *SqlInjectionMatchTuple {
 	s.TextTransformation = &v
+	return s
+}
+
+// A summary of the rule groups you are subscribed to.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/SubscribedRuleGroupSummary
+type SubscribedRuleGroupSummary struct {
+	_ struct{} `type:"structure"`
+
+	// A friendly name or description for the metrics for this RuleGroup. The name
+	// can contain only alphanumeric characters (A-Z, a-z, 0-9); the name can't
+	// contain whitespace. You can't change the name of the metric after you create
+	// the RuleGroup.
+	//
+	// MetricName is a required field
+	MetricName *string `type:"string" required:"true"`
+
+	// A friendly name or description of the RuleGroup. You can't change the name
+	// of a RuleGroup after you create it.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// A unique identifier for a RuleGroup.
+	//
+	// RuleGroupId is a required field
+	RuleGroupId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s SubscribedRuleGroupSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SubscribedRuleGroupSummary) GoString() string {
+	return s.String()
+}
+
+// SetMetricName sets the MetricName field's value.
+func (s *SubscribedRuleGroupSummary) SetMetricName(v string) *SubscribedRuleGroupSummary {
+	s.MetricName = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *SubscribedRuleGroupSummary) SetName(v string) *SubscribedRuleGroupSummary {
+	s.Name = &v
+	return s
+}
+
+// SetRuleGroupId sets the RuleGroupId field's value.
+func (s *SubscribedRuleGroupSummary) SetRuleGroupId(v string) *SubscribedRuleGroupSummary {
+	s.RuleGroupId = &v
 	return s
 }
 
@@ -15259,6 +16840,126 @@ func (s *UpdateRegexPatternSetOutput) SetChangeToken(v string) *UpdateRegexPatte
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRuleGroupRequest
+type UpdateRuleGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// The value returned by the most recent call to GetChangeToken.
+	//
+	// ChangeToken is a required field
+	ChangeToken *string `min:"1" type:"string" required:"true"`
+
+	// The RuleGroupId of the RuleGroup that you want to update. RuleGroupId is
+	// returned by CreateRuleGroup and by ListRuleGroups.
+	//
+	// RuleGroupId is a required field
+	RuleGroupId *string `min:"1" type:"string" required:"true"`
+
+	// An array of RuleGroupUpdate objects that you want to insert into or delete
+	// from a RuleGroup.
+	//
+	// You can only insert REGULAR rules into a rule group.
+	//
+	// The Action data type within ActivatedRule is used only when submitting an
+	// UpdateWebACL request. ActivatedRule|Action is not applicable and therefore
+	// not available for UpdateRuleGroup.
+	//
+	// Updates is a required field
+	Updates []*RuleGroupUpdate `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateRuleGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateRuleGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateRuleGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateRuleGroupInput"}
+	if s.ChangeToken == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChangeToken"))
+	}
+	if s.ChangeToken != nil && len(*s.ChangeToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChangeToken", 1))
+	}
+	if s.RuleGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RuleGroupId"))
+	}
+	if s.RuleGroupId != nil && len(*s.RuleGroupId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RuleGroupId", 1))
+	}
+	if s.Updates == nil {
+		invalidParams.Add(request.NewErrParamRequired("Updates"))
+	}
+	if s.Updates != nil && len(s.Updates) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Updates", 1))
+	}
+	if s.Updates != nil {
+		for i, v := range s.Updates {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Updates", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChangeToken sets the ChangeToken field's value.
+func (s *UpdateRuleGroupInput) SetChangeToken(v string) *UpdateRuleGroupInput {
+	s.ChangeToken = &v
+	return s
+}
+
+// SetRuleGroupId sets the RuleGroupId field's value.
+func (s *UpdateRuleGroupInput) SetRuleGroupId(v string) *UpdateRuleGroupInput {
+	s.RuleGroupId = &v
+	return s
+}
+
+// SetUpdates sets the Updates field's value.
+func (s *UpdateRuleGroupInput) SetUpdates(v []*RuleGroupUpdate) *UpdateRuleGroupInput {
+	s.Updates = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRuleGroupResponse
+type UpdateRuleGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ChangeToken that you used to submit the UpdateRuleGroup request. You
+	// can also use this value to query the status of the request. For more information,
+	// see GetChangeTokenStatus.
+	ChangeToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateRuleGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateRuleGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetChangeToken sets the ChangeToken field's value.
+func (s *UpdateRuleGroupOutput) SetChangeToken(v string) *UpdateRuleGroupOutput {
+	s.ChangeToken = &v
+	return s
+}
+
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRuleRequest
 type UpdateRuleInput struct {
 	_ struct{} `type:"structure"`
@@ -15642,7 +17343,10 @@ type UpdateWebACLInput struct {
 	//
 	//    * WebACLUpdate: Contains Action and ActivatedRule
 	//
-	//    * ActivatedRule: Contains Action, Priority, RuleId, and Type
+	//    * ActivatedRule: Contains Action, Priority, RuleId, and Type. The OverrideAction
+	//    data type within ActivatedRule is used only when submitting an UpdateRuleGroup
+	//    request. ActivatedRule|OverrideAction is not applicable and therefore
+	//    not available for UpdateWebACL.
 	//
 	//    * WafAction: Contains Type
 	Updates []*WebACLUpdate `type:"list"`
@@ -15923,6 +17627,47 @@ func (s *WafAction) Validate() error {
 
 // SetType sets the Type field's value.
 func (s *WafAction) SetType(v string) *WafAction {
+	s.Type = &v
+	return s
+}
+
+// The action to take if any rule within the RuleGroup matches a request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/WafOverrideAction
+type WafOverrideAction struct {
+	_ struct{} `type:"structure"`
+
+	// COUNT overrides the action specified by the individual rule within a RuleGroup
+	// . If set to NONE, the rule's action will take place.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true" enum:"WafOverrideActionType"`
+}
+
+// String returns the string representation
+func (s WafOverrideAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WafOverrideAction) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *WafOverrideAction) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "WafOverrideAction"}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetType sets the Type field's value.
+func (s *WafOverrideAction) SetType(v string) *WafOverrideAction {
 	s.Type = &v
 	return s
 }
@@ -17235,6 +18980,9 @@ const (
 	// ParameterExceptionFieldWafAction is a ParameterExceptionField enum value
 	ParameterExceptionFieldWafAction = "WAF_ACTION"
 
+	// ParameterExceptionFieldWafOverrideAction is a ParameterExceptionField enum value
+	ParameterExceptionFieldWafOverrideAction = "WAF_OVERRIDE_ACTION"
+
 	// ParameterExceptionFieldPredicateType is a ParameterExceptionField enum value
 	ParameterExceptionFieldPredicateType = "PREDICATE_TYPE"
 
@@ -17357,9 +19105,20 @@ const (
 )
 
 const (
+	// WafOverrideActionTypeNone is a WafOverrideActionType enum value
+	WafOverrideActionTypeNone = "NONE"
+
+	// WafOverrideActionTypeCount is a WafOverrideActionType enum value
+	WafOverrideActionTypeCount = "COUNT"
+)
+
+const (
 	// WafRuleTypeRegular is a WafRuleType enum value
 	WafRuleTypeRegular = "REGULAR"
 
 	// WafRuleTypeRateBased is a WafRuleType enum value
 	WafRuleTypeRateBased = "RATE_BASED"
+
+	// WafRuleTypeGroup is a WafRuleType enum value
+	WafRuleTypeGroup = "GROUP"
 )
