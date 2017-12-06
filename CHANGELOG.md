@@ -18,6 +18,7 @@ BUG FIXES:
 
 * resource/aws_elasticache_parameter_group: Add StateFunc to make name lowercase [GH-2426]
 * resource/aws_elasticache_replication_group: Modify validation, make replication_group_id lowercase [GH-2432]
+* resource/aws_ecs_cluster: Add arn attribute [GH-2552]
 
 ## 1.5.0 (November 29, 2017)
 
