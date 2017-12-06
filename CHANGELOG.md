@@ -19,6 +19,7 @@ BUG FIXES:
 * resource/aws_elasticache_parameter_group: Add StateFunc to make name lowercase [GH-2426]
 * resource/aws_elasticache_replication_group: Modify validation, make replication_group_id lowercase [GH-2432]
 * resource/aws_ecs_cluster: Add arn attribute [GH-2552]
+* resource/aws_db_instance: Treat `storage-optimization` as valid state [GH-2409]
 
 ## 1.5.0 (November 29, 2017)
 
