@@ -88,10 +88,10 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceRead(d *schema.ResourceData, m
 		return err
 	}
 
-	d.Set("arn", resp.Namespace.Description)
+	d.Set("description", resp.Namespace.Description)
 	d.Set("arn", resp.Namespace.Arn)
 	if resp.Namespace.Properties != nil {
-		d.Set("arn", resp.Namespace.Properties.DnsProperties.HostedZoneId)
+		d.Set("hosted_zone", resp.Namespace.Properties.DnsProperties.HostedZoneId)
 	}
 	return nil
 }

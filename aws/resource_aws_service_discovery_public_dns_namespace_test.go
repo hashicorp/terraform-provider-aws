@@ -64,7 +64,7 @@ func testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(name string) resour
 func testAccServiceDiscoveryPublicDnsNamespaceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_public_dns_namespace" "test" {
-  name = "tf-sd-%s"
+  name = "tf-sd-%s.terraform.com"
   description = "test"
 }
 `, rName)
