@@ -849,9 +849,11 @@ func (c *ElasticBeanstalk) CreateStorageLocationRequest(input *CreateStorageLoca
 
 // CreateStorageLocation API operation for AWS Elastic Beanstalk.
 //
-// Creates the Amazon S3 storage location for the account.
-//
-// This location is used to store user log files.
+// Creates a bucket in Amazon S3 to store application versions, logs, and other
+// files used by Elastic Beanstalk environments. The Elastic Beanstalk console
+// and EB CLI call this API the first time you create an environment in a region.
+// If the storage location already exists, CreateStorageLocation still returns
+// the bucket name but does not create a new bucket.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2565,7 +2567,9 @@ func (c *ElasticBeanstalk) ListTagsForResourceRequest(input *ListTagsForResource
 // Returns the tags applied to an AWS Elastic Beanstalk resource. The response
 // contains a list of tag key-value pairs.
 //
-// Currently, Elastic Beanstalk only supports tagging Elastic Beanstalk environments.
+// Currently, Elastic Beanstalk only supports tagging of Elastic Beanstalk environments.
+// For details about environment tagging, see Tagging Resources in Your Elastic
+// Beanstalk Environment (http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features.tagging.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3560,6 +3564,21 @@ func (c *ElasticBeanstalk) UpdateTagsForResourceRequest(input *UpdateTagsForReso
 // lists can be passed: TagsToAdd for tags to add or update, and TagsToRemove.
 //
 // Currently, Elastic Beanstalk only supports tagging of Elastic Beanstalk environments.
+// For details about environment tagging, see Tagging Resources in Your Elastic
+// Beanstalk Environment (http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features.tagging.html).
+//
+// If you create a custom IAM user policy to control permission to this operation,
+// specify one of the following two virtual actions (or both) instead of the
+// API operation name:
+//
+// elasticbeanstalk:AddTagsControls permission to call UpdateTagsForResource
+// and pass a list of tags to add in the TagsToAdd parameter.
+//
+// elasticbeanstalk:RemoveTagsControls permission to call UpdateTagsForResource
+// and pass a list of tag keys to remove in the TagsToRemove parameter.
+//
+// For details about creating a custom user policy, see Creating a Custom User
+// Policy (http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/AWSHowTo.iam.managed-policies.html#AWSHowTo.iam.policies).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5083,9 +5102,14 @@ type CreateApplicationVersionInput struct {
 	// Describes this version.
 	Description *string `type:"string"`
 
-	// Preprocesses and validates the environment manifest and configuration files
-	// in the source bundle. Validating configuration files can identify issues
-	// prior to deploying the application version to an environment.
+	// Preprocesses and validates the environment manifest (env.yaml) and configuration
+	// files (*.config files in the .ebextensions folder) in the source bundle.
+	// Validating configuration files can identify issues prior to deploying the
+	// application version to an environment.
+	//
+	// The Process option validates Elastic Beanstalk configuration files. It doesn't
+	// validate your application's configuration files, like proxy server or Docker
+	// configuration.
 	Process *bool `type:"boolean"`
 
 	// Specify a commit in an AWS CodeCommit Git repository to use as the source
@@ -5225,7 +5249,7 @@ type CreateConfigurationTemplateInput struct {
 	// solution stack or the source configuration template.
 	OptionSettings []*ConfigurationOptionSetting `type:"list"`
 
-	// The ARN of the custome platform.
+	// The ARN of the custom platform.
 	PlatformArn *string `type:"string"`
 
 	// The name of the solution stack used by this configuration. The solution stack
