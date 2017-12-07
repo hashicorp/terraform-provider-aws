@@ -112,30 +112,25 @@ func resourceAwsEcsService() *schema.Resource {
 			"network_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
 						"subnets": {
 							Type:     schema.TypeSet,
 							Required: true,
-							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
 						"assign_public_ip": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
-							ForceNew: true,
 							Default:  "DISABLED",
-							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -429,9 +424,10 @@ func expandEcsNetworkConfigration(nc []interface{}) *ecs.NetworkConfiguration {
 		awsVpcConfig.SecurityGroups = expandStringSet(val.(*schema.Set))
 	}
 	awsVpcConfig.Subnets = expandStringSet(raw["subnets"].(*schema.Set))
-
+	log.Printf("[DEBUG] assign_public_ip %s", raw["assign_public_ip"])
 	if val, ok := raw["assign_public_ip"].(string); ok {
 		awsVpcConfig.AssignPublicIp = aws.String(val)
+		log.Printf("[DEBUG] AssingPublicIp %s", awsVpcConfig.AssignPublicIp)
 	}
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
@@ -498,9 +494,8 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("network_configration") {
-		input.NetworkConfiguration = expandEcsNetworkConfigration(d.Get("network_configuration").([]interface{}))
-	}
+	//d.HasChange("network_configration") is not working, so explicity calling method.
+	input.NetworkConfiguration = expandEcsNetworkConfigration(d.Get("network_configuration").([]interface{}))
 
 	// Retry due to IAM & ECS eventual consistency
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {

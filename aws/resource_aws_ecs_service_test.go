@@ -1261,6 +1261,7 @@ resource "aws_ecs_service" "main" {
 	network_configuration {
 		security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
 		subnets = ["${aws_subnet.main.*.id}"]
+		assign_public_ip = "ENABLED"
 	}
 }
 `, rName, rName)
