@@ -101,8 +101,8 @@ The following arguments are supported:
 
 ##### String Attribute Constraints
 
-  * `max_value` (Optional) - The maximum length of an attribute value of the string type.
-  * `min_value` (Optional) - The minimum length of an attribute value of the string type.
+  * `max_length` (Optional) - The maximum length of an attribute value of the string type.
+  * `min_length` (Optional) - The minimum length of an attribute value of the string type.
 
 #### SMS Configuration
 
