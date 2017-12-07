@@ -995,7 +995,7 @@ var testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig = testAccKinesis
 resource "aws_elasticsearch_domain" "test_cluster" {
   domain_name = "es-test-%d"
   cluster_config {
-    instance_type = "r3.large.elasticsearch"
+    instance_type = "m3.medium.elasticsearch"
   }
 
   access_policies = <<CONFIG

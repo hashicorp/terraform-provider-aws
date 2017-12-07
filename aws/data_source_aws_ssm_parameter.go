@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -14,6 +15,10 @@ func dataSourceAwsSsmParameter() *schema.Resource {
 	return &schema.Resource{
 		Read: dataAwsSsmParameterRead,
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -57,6 +62,16 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 
 	param := resp.Parameters[0]
 	d.SetId(*param.Name)
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "ssm",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("parameter/%s", d.Id()),
+	}
+	d.Set("arn", arn.String())
+
 	d.Set("name", param.Name)
 	d.Set("type", param.Type)
 	d.Set("value", param.Value)

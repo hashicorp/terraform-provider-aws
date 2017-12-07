@@ -135,6 +135,7 @@ browser.
 The following attributes are exported:
 
 * `id` - The name of the ELB
+* `arn` - The ARN of the ELB
 * `name` - The name of the ELB
 * `dns_name` - The DNS name of the ELB
 * `instances` - The list of instances in the ELB

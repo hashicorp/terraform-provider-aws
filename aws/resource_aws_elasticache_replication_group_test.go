@@ -35,6 +35,27 @@ func TestAccAWSElasticacheReplicationGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticacheReplicationGroup_Uppercase(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	rStr := acctest.RandString(5)
+	rgName := fmt.Sprintf("TF-ELASTIRG-%s", rStr)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfig_Uppercase(rgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.bar", &rg),
+					resource.TestCheckResourceAttr(
+						"aws_elasticache_replication_group.bar", "replication_group_id", fmt.Sprintf("tf-elastirg-%s", rStr)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticacheReplicationGroup_updateDescription(t *testing.T) {
 	var rg elasticache.ReplicationGroup
 	rName := acctest.RandString(10)
@@ -474,6 +495,17 @@ resource "aws_elasticache_replication_group" "bar" {
     maintenance_window = "tue:06:30-tue:07:30"
     snapshot_window = "01:00-02:00"
 }`, rName, rName, rName)
+}
+
+func testAccAWSElasticacheReplicationGroupConfig_Uppercase(rgName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "bar" {
+  replication_group_id = "%s"
+  replication_group_description = "test description"
+  node_type = "cache.t2.micro"
+  number_cache_clusters = 1
+  port = 6379
+}`, rgName)
 }
 
 func testAccAWSElasticacheReplicationGroupConfigEnableSnapshotting(rName string) string {

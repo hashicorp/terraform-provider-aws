@@ -4,6 +4,15 @@ package ses
 
 const (
 
+	// ErrCodeAccountSendingPausedException for service response error code
+	// "AccountSendingPausedException".
+	//
+	// Indicates that email sending is disabled for your entire Amazon SES account.
+	//
+	// You can enable or disable email sending for your Amazon SES account using
+	// UpdateAccountSendingEnabled.
+	ErrCodeAccountSendingPausedException = "AccountSendingPausedException"
+
 	// ErrCodeAlreadyExistsException for service response error code
 	// "AlreadyExists".
 	//
@@ -28,6 +37,14 @@ const (
 	//
 	// Indicates that the configuration set does not exist.
 	ErrCodeConfigurationSetDoesNotExistException = "ConfigurationSetDoesNotExist"
+
+	// ErrCodeConfigurationSetSendingPausedException for service response error code
+	// "ConfigurationSetSendingPausedException".
+	//
+	// Indicates that email sending is disabled for the configuration set.
+	//
+	// You can enable or disable email sending for a configuration set using UpdateConfigurationSetSendingEnabled.
+	ErrCodeConfigurationSetSendingPausedException = "ConfigurationSetSendingPausedException"
 
 	// ErrCodeEventDestinationAlreadyExistsException for service response error code
 	// "EventDestinationAlreadyExists".

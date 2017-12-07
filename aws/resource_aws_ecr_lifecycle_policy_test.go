@@ -7,18 +7,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSEcrLifecyclePolicy_basic(t *testing.T) {
+	randString := acctest.RandString(10)
+	rName := fmt.Sprintf("tf-acc-test-lifecycle-%s", randString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEcrLifecyclePolicyConfig,
+				Config: testAccEcrLifecyclePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrLifecyclePolicyExists("aws_ecr_lifecycle_policy.foo"),
 				),
@@ -68,9 +72,10 @@ func testAccCheckAWSEcrLifecyclePolicyExists(name string) resource.TestCheckFunc
 	}
 }
 
-const testAccEcrLifecyclePolicyConfig = `
+func testAccEcrLifecyclePolicyConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_ecr_repository" "foo" {
-  name = "bar"
+  name = "%s"
 }
 resource "aws_ecr_lifecycle_policy" "foo" {
 	repository = "${aws_ecr_repository.foo.name}"
@@ -94,4 +99,5 @@ resource "aws_ecr_lifecycle_policy" "foo" {
 }
 EOF
 }
-`
+`, rName)
+}

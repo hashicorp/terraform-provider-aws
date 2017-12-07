@@ -27,7 +27,7 @@ resource "aws_elasticache_replication_group" "bar" {
 }
 ```
 
-### Native Redis Cluser 2 Masters 2 Replicas
+### Native Redis Cluster 2 Masters 2 Replicas
 
 ```hcl
 resource "aws_elasticache_replication_group" "baz" {
@@ -80,7 +80,7 @@ The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09
 SNS topic to send ElastiCache notifications to. Example:
 `arn:aws:sns:us-east-1:012345678999:my_sns_topic`
 * `snapshot_window` - (Optional, Redis only) The daily time range (in UTC) during which ElastiCache will
-begin taking a daily snapshot of your cache cluster. The minimum maintenance window is a 60 minute period. Example: `05:00-09:00`
+begin taking a daily snapshot of your cache cluster. The minimum snapshot window is a 60 minute period. Example: `05:00-09:00`
 * `snapshot_retention_limit` - (Optional, Redis only) The number of days for which ElastiCache will
 retain automatic cache cluster snapshots before deleting them. For example, if you set
 SnapshotRetentionLimit to 5, then a snapshot that was taken today will be retained for 5 days

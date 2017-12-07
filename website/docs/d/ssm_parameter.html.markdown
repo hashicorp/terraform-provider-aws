@@ -32,6 +32,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
+* `arn` - The ARN of the parameter.
 * `name` - (Required) The name of the parameter.
 * `type` - (Required) The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - (Required) The value of the parameter.

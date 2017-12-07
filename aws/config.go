@@ -31,6 +31,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
@@ -57,6 +58,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
@@ -129,6 +131,7 @@ type AWSClient struct {
 	cloudwatchlogsconn    *cloudwatchlogs.CloudWatchLogs
 	cloudwatcheventsconn  *cloudwatchevents.CloudWatchEvents
 	cognitoconn           *cognitoidentity.CognitoIdentity
+	cognitoidpconn        *cognitoidentityprovider.CognitoIdentityProvider
 	configconn            *configservice.ConfigService
 	devicefarmconn        *devicefarm.DeviceFarm
 	dmsconn               *databasemigrationservice.DatabaseMigrationService
@@ -170,6 +173,7 @@ type AWSClient struct {
 	elastictranscoderconn *elastictranscoder.ElasticTranscoder
 	lambdaconn            *lambda.Lambda
 	lightsailconn         *lightsail.Lightsail
+	mqconn                *mq.MQ
 	opsworksconn          *opsworks.OpsWorks
 	glacierconn           *glacier.Glacier
 	codebuildconn         *codebuild.CodeBuild
@@ -381,6 +385,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.codedeployconn = codedeploy.New(sess)
 	client.configconn = configservice.New(sess)
 	client.cognitoconn = cognitoidentity.New(sess)
+	client.cognitoidpconn = cognitoidentityprovider.New(sess)
 	client.dmsconn = databasemigrationservice.New(sess)
 	client.codepipelineconn = codepipeline.New(sess)
 	client.dsconn = directoryservice.New(sess)
@@ -403,6 +408,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.kmsconn = kms.New(awsKmsSess)
 	client.lambdaconn = lambda.New(sess)
 	client.lightsailconn = lightsail.New(sess)
+	client.mqconn = mq.New(sess)
 	client.opsworksconn = opsworks.New(sess)
 	client.r53conn = route53.New(r53Sess)
 	client.rdsconn = rds.New(awsRdsSess)
