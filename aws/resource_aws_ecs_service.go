@@ -424,10 +424,8 @@ func expandEcsNetworkConfigration(nc []interface{}) *ecs.NetworkConfiguration {
 		awsVpcConfig.SecurityGroups = expandStringSet(val.(*schema.Set))
 	}
 	awsVpcConfig.Subnets = expandStringSet(raw["subnets"].(*schema.Set))
-	log.Printf("[DEBUG] assign_public_ip %s", raw["assign_public_ip"])
 	if val, ok := raw["assign_public_ip"].(string); ok {
 		awsVpcConfig.AssignPublicIp = aws.String(val)
-		log.Printf("[DEBUG] AssingPublicIp %s", awsVpcConfig.AssignPublicIp)
 	}
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
