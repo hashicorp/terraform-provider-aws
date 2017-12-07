@@ -15,7 +15,6 @@ func resourceAwsMediaStoreContainer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsMediaStoreContainerCreate,
 		Read:   resourceAwsMediaStoreContainerRead,
-		Update: resourceAwsMediaStoreContainerUpdate,
 		Delete: resourceAwsMediaStoreContainerDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -30,12 +29,6 @@ func resourceAwsMediaStoreContainer() *schema.Resource {
 					}
 					return
 				},
-			},
-			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validateIAMPolicyJson,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -75,7 +68,7 @@ func resourceAwsMediaStoreContainerCreate(d *schema.ResourceData, meta interface
 	}
 
 	d.SetId(d.Get("name").(string))
-	return resourceAwsMediaStoreContainerUpdate(d, meta)
+	return resourceAwsMediaStoreContainerRead(d, meta)
 }
 
 func resourceAwsMediaStoreContainerRead(d *schema.ResourceData, meta interface{}) error {
@@ -91,24 +84,6 @@ func resourceAwsMediaStoreContainerRead(d *schema.ResourceData, meta interface{}
 	d.Set("arn", resp.Container.ARN)
 	d.Set("endpoint", resp.Container.Endpoint)
 	return nil
-}
-
-func resourceAwsMediaStoreContainerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediastoreconn
-
-	if !d.HasChange("policy") {
-		return resourceAwsMediaStoreContainerRead(d, meta)
-	}
-	input := &mediastore.PutContainerPolicyInput{
-		ContainerName: aws.String(d.Id()),
-		Policy:        aws.String(d.Get("policy").(string)),
-	}
-	_, err := conn.PutContainerPolicy(input)
-	if err != nil {
-		return err
-	}
-
-	return resourceAwsMediaStoreContainerRead(d, meta)
 }
 
 func resourceAwsMediaStoreContainerDelete(d *schema.ResourceData, meta interface{}) error {

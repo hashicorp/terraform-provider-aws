@@ -12,23 +12,15 @@ import (
 )
 
 func TestAccAwsMediaStoreContainer_basic(t *testing.T) {
-	rName := acctest.RandString(5)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMediaStoreContainerConfig(rName),
+				Config: testAccMediaStoreContainerConfig(acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaStoreContainerExists("aws_media_store_container.test"),
-				),
-			},
-			{
-				Config: testAccMediaStoreContainerConfig_Update(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaStoreContainerExists("aws_media_store_container.test"),
-					resource.TestCheckResourceAttrSet("aws_media_store_container.test", "policy"),
 				),
 			},
 		},
@@ -78,28 +70,4 @@ func testAccMediaStoreContainerConfig(rName string) string {
 resource "aws_media_store_container" "test" {
   name = "tf_mediastore_%s"
 }`, rName)
-}
-
-func testAccMediaStoreContainerConfig_Update(rName string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "test" {}
-
-resource "aws_media_store_container" "test" {
-  name = "tf_mediastore_%s"
-	policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "MediaStoreFullAccess",
-    "Action": [ "mediastore:*" ],
-    "Principal": {"AWS" : "*"},
-    "Effect": "Allow",
-    "Resource": "arn:aws:mediastore:us-west-2:${data.aws_caller_identity.test.account_id}:container/tf_mediastore_%s/*",
-    "Condition": {
-      "Bool": { "aws:SecureTransport": "true" }
-    }
-  }]
-}
-POLICY
-}`, rName, rName)
 }
