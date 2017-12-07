@@ -525,9 +525,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 				"[INFO] Waiting for DB Instance to be available")
 
 			stateConf := &resource.StateChangeConf{
-				Pending: []string{"creating", "backing-up", "modifying", "resetting-master-credentials",
-					"maintenance", "renaming", "rebooting", "upgrading"},
-				Target:     []string{"available"},
+				Pending:    resourceAwsDbInstanceCreatePendingStates,
+				Target:     []string{"available", "storage-optimization"},
 				Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
 				Timeout:    d.Timeout(schema.TimeoutCreate),
 				MinTimeout: 10 * time.Second,
@@ -687,9 +686,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		"[INFO] Waiting for DB Instance to be available")
 
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"creating", "backing-up", "modifying", "resetting-master-credentials",
-			"maintenance", "renaming", "rebooting", "upgrading", "configuring-enhanced-monitoring"},
-		Target:     []string{"available"},
+		Pending:    resourceAwsDbInstanceCreatePendingStates,
+		Target:     []string{"available", "storage-optimization"},
 		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
@@ -863,8 +861,7 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 	log.Println(
 		"[INFO] Waiting for DB Instance to be destroyed")
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"creating", "backing-up",
-			"modifying", "deleting", "available"},
+		Pending:    resourceAwsDbInstanceDeletePendingStates,
 		Target:     []string{},
 		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
@@ -1039,9 +1036,8 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		log.Println("[INFO] Waiting for DB Instance to be available")
 
 		stateConf := &resource.StateChangeConf{
-			Pending: []string{"creating", "backing-up", "modifying", "resetting-master-credentials",
-				"maintenance", "renaming", "rebooting", "upgrading", "configuring-enhanced-monitoring", "moving-to-vpc"},
-			Target:     []string{"available"},
+			Pending:    resourceAwsDbInstanceUpdatePendingStates,
+			Target:     []string{"available", "storage-optimization"},
 			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
@@ -1162,4 +1158,46 @@ func buildRDSARN(identifier, partition, accountid, region string) (string, error
 	}
 	arn := fmt.Sprintf("arn:%s:rds:%s:%s:db:%s", partition, region, accountid, identifier)
 	return arn, nil
+}
+
+// Database instance status: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Status.html
+var resourceAwsDbInstanceCreatePendingStates = []string{
+	"backing-up",
+	"configuring-enhanced-monitoring",
+	"creating",
+	"maintenance",
+	"modifying",
+	"rebooting",
+	"renaming",
+	"resetting-master-credentials",
+	"starting",
+	"stopping",
+	"upgrading",
+}
+
+var resourceAwsDbInstanceDeletePendingStates = []string{
+	"available",
+	"backing-up",
+	"configuring-enhanced-monitoring",
+	"creating",
+	"deleting",
+	"modifying",
+	"starting",
+	"stopping",
+	"storage-optimization",
+}
+
+var resourceAwsDbInstanceUpdatePendingStates = []string{
+	"backing-up",
+	"configuring-enhanced-monitoring",
+	"creating",
+	"maintenance",
+	"modifying",
+	"moving-to-vpc",
+	"rebooting",
+	"renaming",
+	"resetting-master-credentials",
+	"starting",
+	"stopping",
+	"upgrading",
 }

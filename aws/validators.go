@@ -282,6 +282,18 @@ func validateCloudWatchEventRuleName(v interface{}, k string) (ws []string, erro
 	return
 }
 
+func validateCloudWatchLogResourcePolicyDocument(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	// http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutResourcePolicy.html
+	if len(value) > 5120 || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("CloudWatch log resource policy document must be between 1 and 5120 characters."))
+	}
+	if _, err := normalizeJsonString(v); err != nil {
+		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
+	}
+	return
+}
+
 func validateMaxLength(length int) schema.SchemaValidateFunc {
 	return func(v interface{}, k string) (ws []string, errors []error) {
 		value := v.(string)
