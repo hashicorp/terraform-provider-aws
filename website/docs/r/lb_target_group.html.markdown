@@ -59,7 +59,7 @@ Health Check Blocks (`health_check`) support the following:
 * `path` - (Optional) The destination for the health check request. Default `/`.
 * `port` - (Optional) The port to use to connect with the target. Valid values are either ports 1-65536, or `traffic-port`. Defaults to `traffic-port`.
 * `protocol` - (Optional) The protocol to use to connect with the target. Defaults to `HTTP`.
-* `timeout` - (Optional) The amount of time, in seconds, during which no response means a failed health check. Defaults to 5 seconds.
+* `timeout` - (Optional) The amount of time, in seconds, during which no response means a failed health check. Defaults to 10 seconds.
 * `healthy_threshold` - (Optional) The number of consecutive health checks successes required before considering an unhealthy target healthy. Defaults to 3.
 * `unhealthy_threshold` - (Optional) The number of consecutive health check failures required before considering the target unhealthy. Defaults to 3.
 * `matcher` (Optional) The HTTP codes to use when checking for a successful response from a target. Defaults to `200`. You can specify multiple values (for example, "200,202") or a range of values (for example, "200-299").
