@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -202,12 +201,12 @@ func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading ELBs: %#v", input)
 	resp, err := elbconn.DescribeLoadBalancers(input)
 	if err != nil {
-		return errwrap.Wrapf("Error retrieving LB: {{err}}", err)
+		return fmt.Errorf("Error retrieving LB: %s", err)
 	}
 	if len(resp.LoadBalancerDescriptions) != 1 {
 		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(resp.LoadBalancerDescriptions))
 	}
 	d.SetId(*resp.LoadBalancerDescriptions[0].LoadBalancerName)
 
-	return flattenAwsELbResource(d, meta, resp.LoadBalancerDescriptions[0])
+	return flattenAwsELbResource(d, meta.(*AWSClient).ec2conn, elbconn, resp.LoadBalancerDescriptions[0])
 }

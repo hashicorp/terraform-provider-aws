@@ -9,23 +9,24 @@ import (
 )
 
 func TestAccDataSourceAWSELB_basic(t *testing.T) {
-	lbName := fmt.Sprintf("testaccawselb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	// Must be less than 32 characters for ELB name
+	rName := fmt.Sprintf("TestAccDataSourceAWSELB-%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSELBConfigBasic(lbName),
+				Config: testAccDataSourceAWSELBConfigBasic(rName, t.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_elb.elb_test", "name", lbName),
+					resource.TestCheckResourceAttr("data.aws_elb.elb_test", "name", rName),
 					resource.TestCheckResourceAttr("data.aws_elb.elb_test", "cross_zone_load_balancing", "true"),
 					resource.TestCheckResourceAttr("data.aws_elb.elb_test", "idle_timeout", "30"),
 					resource.TestCheckResourceAttr("data.aws_elb.elb_test", "internal", "true"),
 					resource.TestCheckResourceAttr("data.aws_elb.elb_test", "subnets.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_elb.elb_test", "security_groups.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_elb.elb_test", "tags.%", "1"),
-					resource.TestCheckResourceAttr("data.aws_elb.elb_test", "tags.TestName", "TestAccAWSELB_basic"),
+					resource.TestCheckResourceAttr("data.aws_elb.elb_test", "tags.TestName", t.Name()),
 					resource.TestCheckResourceAttrSet("data.aws_elb.elb_test", "dns_name"),
 					resource.TestCheckResourceAttrSet("data.aws_elb.elb_test", "zone_id"),
 				),
@@ -34,15 +35,15 @@ func TestAccDataSourceAWSELB_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSELBConfigBasic(lbName string) string {
-	return fmt.Sprintf(`resource "aws_elb" "elb_test" {
-  name            = "%s"
+func testAccDataSourceAWSELBConfigBasic(rName, testName string) string {
+	return fmt.Sprintf(`
+resource "aws_elb" "elb_test" {
+  name            = "%[1]s"
   internal        = true
   security_groups = ["${aws_security_group.elb_test.id}"]
   subnets         = ["${aws_subnet.elb_test.*.id}"]
 
   idle_timeout = 30
-  enable_deletion_protection = false
 
   listener {
     instance_port     = 80
@@ -52,7 +53,7 @@ func testAccDataSourceAWSELBConfigBasic(lbName string) string {
   }
 
   tags {
-    TestName = "TestAccAWSELB_basic"
+    TestName = "%[2]s"
   }
 }
 
@@ -67,7 +68,7 @@ resource "aws_vpc" "elb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSELB_basic"
+    TestName = "%[2]s"
   }
 }
 
@@ -79,13 +80,13 @@ resource "aws_subnet" "elb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSELB_basic"
+    TestName = "%[2]s"
   }
 }
 
 resource "aws_security_group" "elb_test" {
-  name        = "allow_all_elb_test"
-  description = "Used for ALB Testing"
+  name        = "%[1]s"
+  description = "%[2]s"
   vpc_id      = "${aws_vpc.elb_test.id}"
 
   ingress {
@@ -103,11 +104,11 @@ resource "aws_security_group" "elb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSELB_basic"
+    TestName = "%[2]s"
   }
 }
 
 data "aws_elb" "elb_test" {
 	name = "${aws_elb.elb_test.name}"
-}`, lbName)
+}`, rName, testName)
 }

@@ -348,13 +348,11 @@ func resourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
 	}
 
-	return flattenAwsELbResource(d, meta, describeResp.LoadBalancerDescriptions[0])
+	return flattenAwsELbResource(d, meta.(*AWSClient).ec2conn, elbconn, describeResp.LoadBalancerDescriptions[0])
 }
 
 // flattenAwsELbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
-func flattenAwsELbResource(d *schema.ResourceData, meta interface{}, lb *elb.LoadBalancerDescription) error {
-	elbconn := meta.(*AWSClient).elbconn
-
+func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *elb.ELB, lb *elb.LoadBalancerDescription) error {
 	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
 		LoadBalancerName: aws.String(d.Id()),
 	}
@@ -389,7 +387,7 @@ func flattenAwsELbResource(d *schema.ResourceData, meta interface{}, lb *elb.Loa
 		var elbVpc string
 		if lb.VPCId != nil {
 			elbVpc = *lb.VPCId
-			sgId, err := sourceSGIdByName(meta, *lb.SourceSecurityGroup.GroupName, elbVpc)
+			sgId, err := sourceSGIdByName(ec2conn, *lb.SourceSecurityGroup.GroupName, elbVpc)
 			if err != nil {
 				return fmt.Errorf("[WARN] Error looking up ELB Security Group ID: %s", err)
 			} else {
@@ -823,8 +821,7 @@ func isLoadBalancerNotFound(err error) bool {
 	return ok && elberr.Code() == "LoadBalancerNotFound"
 }
 
-func sourceSGIdByName(meta interface{}, sg, vpcId string) (string, error) {
-	conn := meta.(*AWSClient).ec2conn
+func sourceSGIdByName(conn *ec2.EC2, sg, vpcId string) (string, error) {
 	var filters []*ec2.Filter
 	var sgFilterName, sgFilterVPCID *ec2.Filter
 	sgFilterName = &ec2.Filter{
