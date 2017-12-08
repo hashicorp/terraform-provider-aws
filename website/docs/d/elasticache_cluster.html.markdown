@@ -6,7 +6,7 @@ description: |-
   Get information on an ElastiCache Cluster resource.
 ---
 
-# aws_elasticache_cluster
+# Data Source: aws_elasticache_cluster
 
 Use this data source to get information about an Elasticache Cluster
 

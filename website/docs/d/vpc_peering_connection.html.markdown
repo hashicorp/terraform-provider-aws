@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific VPC peering connection.
 ---
 
-# aws\_vpc\_peering\_connection
+# Data Source: aws\_vpc\_peering\_connection
 
 The VPC Peering Connection data source provides details about
 a specific VPC peering connection.

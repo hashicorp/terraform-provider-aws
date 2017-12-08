@@ -6,7 +6,7 @@ description: |-
   Provides a SSM Parameter datasource
 ---
 
-# aws\_ssm\_parameter
+# Data Source: aws\_ssm\_parameter
 
 Provides an SSM Parameter data source.
 
