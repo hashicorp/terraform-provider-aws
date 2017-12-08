@@ -855,9 +855,6 @@ func testAccReplicaInstanceConfig(val int) string {
 
 func testAccSnapshotInstanceConfig() string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 resource "aws_db_instance" "snapshot" {
 	identifier = "tf-test-%d"
 
@@ -868,7 +865,6 @@ resource "aws_db_instance" "snapshot" {
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
-	security_group_names = ["default"]
 	backup_retention_period = 1
 
 	publicly_accessible = true
@@ -882,9 +878,6 @@ resource "aws_db_instance" "snapshot" {
 
 func testAccSnapshotInstanceConfigWithSnapshot(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 resource "aws_db_instance" "snapshot" {
 	identifier = "tf-snapshot-%d"
 
@@ -896,7 +889,6 @@ resource "aws_db_instance" "snapshot" {
 	password = "barbarbarbar"
 	publicly_accessible = true
 	username = "foo"
-    	security_group_names = ["default"]
 	backup_retention_period = 1
 
 	parameter_group_name = "default.mysql5.6"
