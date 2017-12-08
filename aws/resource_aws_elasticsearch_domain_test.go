@@ -759,7 +759,7 @@ resource "aws_elasticsearch_domain" "example" {
   }
   log_publishing_options {
     log_type = "INDEX_SLOW_LOGS"
-    cloud_watch_logs_log_group_arn = "${aws_cloudwatch_log_group.example.arn}"
+    cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.example.arn}"
   }
 }
 `, randInt, randInt, randInt)
