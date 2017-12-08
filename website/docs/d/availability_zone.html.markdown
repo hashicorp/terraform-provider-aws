@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific availability zone
 ---
 
-# aws\_availability\_zone
+# aws_availability_zone
 
 `aws_availability_zone` provides details about a specific availability zone (AZ)
 in the current region.

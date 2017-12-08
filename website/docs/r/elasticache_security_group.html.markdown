@@ -6,7 +6,7 @@ description: |-
   Provides an ElastiCache Security Group to control access to one or more cache clusters.
 ---
 
-# aws\_elasticache\_security\_<wbr>group
+# aws_elasticache_security_<wbr>group
 
 Provides an ElastiCache Security Group to control access to one or more cache
 clusters.

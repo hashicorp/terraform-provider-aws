@@ -6,7 +6,7 @@ description: |-
   Provides an SES domain identity resource
 ---
 
-# aws\_ses\_domain_identity
+# aws_ses_domain_identity
 
 Provides an SES domain identity resource
 

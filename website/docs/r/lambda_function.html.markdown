@@ -6,7 +6,7 @@ description: |-
   Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS. The Lambda Function itself includes source code and runtime configuration.
 ---
 
-# aws\_lambda\_function
+# aws_lambda_function
 
 Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS. The Lambda Function itself includes source code and runtime configuration.
 
@@ -101,7 +101,7 @@ large files efficiently.
   from an upstream service. If no tracing header is received, Lambda will call
   X-Ray for a tracing decision.
 
-**vpc\_config** requires the following:
+**vpc_config** requires the following:
 
 * `subnet_ids` - (Required) A list of subnet IDs associated with the Lambda function.
 * `security_group_ids` - (Required) A list of security group IDs associated with the Lambda function.

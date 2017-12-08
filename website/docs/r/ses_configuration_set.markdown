@@ -6,7 +6,7 @@ description: |-
   Provides an SES configuration set
 ---
 
-# aws\_ses\_configuration_set
+# aws_ses_configuration_set
 
 Provides an SES configuration set resource
 

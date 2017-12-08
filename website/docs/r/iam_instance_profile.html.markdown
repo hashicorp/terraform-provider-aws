@@ -6,7 +6,7 @@ description: |-
   Provides an IAM instance profile.
 ---
 
-# aws\_iam\_instance\_profile
+# aws_iam_instance_profile
 
 Provides an IAM instance profile.
 

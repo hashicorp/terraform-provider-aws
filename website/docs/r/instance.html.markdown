@@ -6,7 +6,7 @@ description: |-
   Provides an EC2 instance resource. This allows instances to be created, updated, and deleted. Instances also support provisioning.
 ---
 
-# aws\_instance
+# aws_instance
 
 Provides an EC2 instance resource. This allows instances to be created, updated,
 and deleted. Instances also support [provisioning](/docs/provisioners/index.html).
