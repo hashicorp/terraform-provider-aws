@@ -349,7 +349,10 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		d.Set("auto_minor_version_upgrade", c.AutoMinorVersionUpgrade)
 		d.Set("at_rest_encryption_enabled", c.AtRestEncryptionEnabled)
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
-		d.Set("auth_token", c.TransitEncryptionEnabled)
+
+		if c.AuthTokenEnabled != nil && !*c.AuthTokenEnabled {
+			d.Set("auth_token", nil)
+		}
 	}
 
 	return nil
