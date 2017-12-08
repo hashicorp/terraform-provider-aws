@@ -370,7 +370,7 @@ func TestAccAWSElasticacheReplicationGroup_enableAtRestEncryption(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.bar", &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.bar", "at_rest_encryption", "true"),
+						"aws_elasticache_replication_group.bar", "at_rest_encryption_enabled", "true"),
 				),
 			},
 		},
