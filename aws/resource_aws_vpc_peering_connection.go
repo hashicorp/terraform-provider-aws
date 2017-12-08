@@ -287,6 +287,20 @@ func resourceAwsVPCPeeringDelete(d *schema.ResourceData, meta interface{}) error
 			VpcPeeringConnectionId: aws.String(d.Id()),
 		})
 
+	// Wait for the vpc peering connection to become available
+	log.Printf("[DEBUG] Waiting for VPC Peering Connection (%s) to delete.", d.Id())
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"deleting"},
+		Target:  []string{"rejecting", "deleted"},
+		Refresh: resourceAwsVPCPeeringConnectionStateRefreshFunc(conn, d.Id()),
+		Timeout: 1 * time.Minute,
+	}
+	if _, err := stateConf.WaitForState(); err != nil {
+		return errwrap.Wrapf(fmt.Sprintf(
+			"Error waiting for VPC Peering Connection (%s) to be deleted: {{err}}",
+			d.Id()), err)
+	}
+
 	return err
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
 
@@ -236,7 +237,7 @@ func testAccCheckAWSVpcPeeringConnectionDestroy(s *terraform.State) error {
 		}
 
 		if pc.Status != nil {
-			if *pc.Status.Code == "deleted" {
+			if *pc.Status.Code == "deleted" || *pc.Status.Code == "rejected" {
 				return nil
 			}
 			return fmt.Errorf("Found the VPC Peering Connection in an unexpected state: %s", pc)
@@ -333,13 +334,22 @@ func TestAccAWSVPCPeeringConnection_peerRegionAndAutoAccept(t *testing.T) {
 func TestAccAWSVPCPeeringConnection_region(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 
+	var providers []*schema.Provider
+	providerFactories := map[string]terraform.ResourceProviderFactory{
+		"aws": func() (terraform.ResourceProvider, error) {
+			p := Provider()
+			providers = append(providers, p.(*schema.Provider))
+			return p, nil
+		},
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_vpc_peering_connection.foo",
 		IDRefreshIgnore: []string{"auto_accept"},
 
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccVpcPeeringConfigRegion,
