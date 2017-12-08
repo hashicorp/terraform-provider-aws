@@ -16,6 +16,7 @@ IMPROVEMENTS:
 * resource/aws_ecs_service: Add `launch_type` (Fargate support) [GH-2483]
 * resource/aws_ecs_task_definition: Add `cpu`, `memory`, `execution_role_arn` & `requires_compatibilities` (Fargate support) [GH-2483]
 * resource/aws_ecs_cluster: Add arn attribute [GH-2552]
+* resource/aws_elasticache_security_group: Add import support [GH-2277]
 
 BUG FIXES:
 
