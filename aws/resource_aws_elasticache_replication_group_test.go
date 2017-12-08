@@ -351,7 +351,7 @@ func TestAccAWSElasticacheReplicationGroup_enableAuthTokenTransitEncryption(t *t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.bar", &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.bar", "transit_encryption", "true"),
+						"aws_elasticache_replication_group.bar", "transit_encryption_enabled", "true"),
 				),
 			},
 		},
@@ -1129,7 +1129,7 @@ resource "aws_elasticache_replication_group" "bar" {
     parameter_group_name = "default.redis3.2"
     availability_zones = ["us-west-2a"]
     engine_version = "3.2.6"
-		at_rest_encryption = true
+		at_rest_encryption_enabled = true
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
@@ -1181,7 +1181,7 @@ resource "aws_elasticache_replication_group" "bar" {
     parameter_group_name = "default.redis3.2"
     availability_zones = ["us-west-2a"]
     engine_version = "3.2.6"
-		transit_encryption = true
+		transit_encryption_enabled = true
 		auth_token = "%s"
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandInt(), acctest.RandString(10), acctest.RandString(16))
