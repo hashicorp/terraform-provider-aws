@@ -52,6 +52,7 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 
 func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 	var v rds.DBInstance
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -59,10 +60,12 @@ func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterInstanceConfig_namePrefix(acctest.RandInt()),
+				Config: testAccAWSClusterInstanceConfig_namePrefix(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.test", &v),
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster_instance.test", "db_subnet_group_name", fmt.Sprintf("tf-test-%d", rInt)),
 					resource.TestMatchResourceAttr(
 						"aws_rds_cluster_instance.test", "identifier", regexp.MustCompile("^tf-cluster-instance-")),
 				),
