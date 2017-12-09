@@ -6,7 +6,7 @@ description: |-
   Provides a SQS Queue Policy resource.
 ---
 
-# aws\_sqs\_queue\_policy
+# aws_sqs_queue_policy
 
 Allows you to set a policy of an SQS Queue
 while referencing ARN of the queue within the policy.

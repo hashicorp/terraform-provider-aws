@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Resource.
 ---
 
-# aws\_api\_gateway\_resource
+# aws_api_gateway_resource
 
 Provides an API Gateway Resource.
 

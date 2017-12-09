@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Load Balancer Attachment resource.
 ---
 
-# aws\_elb\_attachment
+# aws_elb_attachment
 
 Provides an Elastic Load Balancer Attachment resource.
 

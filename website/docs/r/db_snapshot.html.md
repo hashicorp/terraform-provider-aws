@@ -6,7 +6,7 @@ description: |-
   Provides an DB Instance.
 ---
 
-# aws\_db\_snapshot
+# aws_db_snapshot
 
 Creates a Snapshot of an DB Instance.
 

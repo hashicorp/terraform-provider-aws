@@ -6,7 +6,7 @@ description: |-
   Provides an ECS task definition.
 ---
 
-# aws\_ecs\_task\_definition
+# aws_ecs_task_definition
 
 Provides an ECS task definition to be used in `aws_ecs_service`.
 

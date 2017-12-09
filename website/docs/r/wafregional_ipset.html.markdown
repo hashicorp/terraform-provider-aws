@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF Regional IPSet resource for use with ALB.
 ---
 
-# aws\_wafregional\_ipset
+# aws_wafregional_ipset
 
 Provides a WAF Regional IPSet Resource for use with Application Load Balancer.
 

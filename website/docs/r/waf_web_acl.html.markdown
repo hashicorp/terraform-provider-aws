@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF web access control group (ACL) resource.
 ---
 
-# aws\_waf\_web\_acl
+# aws_waf_web_acl
 
 Provides a WAF Web ACL Resource
 

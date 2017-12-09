@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks stack resource.
 ---
 
-# aws\_opsworks\_stack
+# aws_opsworks_stack
 
 Provides an OpsWorks stack resource.
 

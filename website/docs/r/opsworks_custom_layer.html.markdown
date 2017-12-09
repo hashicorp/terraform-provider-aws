@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks custom layer resource.
 ---
 
-# aws\_opsworks\_custom\_layer
+# aws_opsworks_custom_layer
 
 Provides an OpsWorks custom layer resource.
 

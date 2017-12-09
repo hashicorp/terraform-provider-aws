@@ -6,7 +6,7 @@ description: |-
   Get AWS partition identifier
 ---
 
-# aws\_partition
+# aws_partition
 
 Use this data source to lookup current AWS partition in which Terraform is working
 

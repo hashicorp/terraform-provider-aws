@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic MapReduce Cluster
 ---
 
-# aws\_emr\_cluster
+# aws_emr_cluster
 
 Provides an Elastic MapReduce Cluster, a web service that makes it easy to
 process large amounts of data efficiently. See [Amazon Elastic MapReduce Documentation](https://aws.amazon.com/documentation/elastic-mapreduce/)
@@ -89,7 +89,7 @@ flow. Defined below
 * `tags` - (Optional) list of tags to apply to the EMR Cluster
 
 
-## ec2\_attributes
+## ec2_attributes
 
 Attributes for the Amazon EC2 instances running the job flow
 
@@ -120,7 +120,7 @@ Groups](http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-man-sec-groups
 for more information about the EMR-managed security group rules.
 
 
-## instance\_group
+## instance_group
 
 Attributes for each task instance group in the cluster
 
@@ -132,7 +132,7 @@ Attributes for each task instance group in the cluster
 * `ebs_config` - (Optional) A list of attributes for the EBS volumes attached to each instance in the instance group. Each `ebs_config` defined will result in additional EBS volumes being attached to _each_ instance in the instance group. Defined below
 
 
-## ebs\_config
+## ebs_config
 
 Attributes for the EBS volumes attached to each EC2 instance in the `instance_group`
 
@@ -142,7 +142,7 @@ Attributes for the EBS volumes attached to each EC2 instance in the `instance_gr
 * `volumes_per_instance` - (Optional) The number of EBS volumes with this configuration to attach to each EC2 instance in the instance group (default is 1)
 
 
-## bootstrap\_action
+## bootstrap_action
 
 * `name` - (Required) Name of the bootstrap action
 * `path` - (Required) Location of the script to run during a bootstrap action. Can be either a location in Amazon S3 or on a local file system

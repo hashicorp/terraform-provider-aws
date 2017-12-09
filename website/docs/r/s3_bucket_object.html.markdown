@@ -6,7 +6,7 @@ description: |-
   Provides a S3 bucket object resource.
 ---
 
-# aws\_s3\_bucket\_object
+# aws_s3_bucket_object
 
 Provides a S3 bucket object resource.
 
