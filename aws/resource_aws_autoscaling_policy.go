@@ -31,7 +31,7 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 			},
 			"adjustment_type": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"autoscaling_group_name": &schema.Schema{
 				Type:     schema.TypeString,
@@ -101,7 +101,7 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 						"predefined_metric_specification": &schema.Schema{
 							Type:          schema.TypeSet,
 							Optional:      true,
-							ConflictsWith: []string{"customized_metric_specification"},
+							ConflictsWith: []string{"target_tracking_configuration.customized_metric_specification"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"predefined_metric_type": &schema.Schema{
@@ -118,7 +118,7 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 						"customized_metric_specification": &schema.Schema{
 							Type:          schema.TypeSet,
 							Optional:      true,
-							ConflictsWith: []string{"predefined_metric_specification"},
+							ConflictsWith: []string{"target_tracking_configuration.predefined_metric_specification"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"metric_dimension": &schema.Schema{
@@ -423,17 +423,17 @@ func expandTargetTrackingConfiguration(config map[string]interface{}) *autoscali
 	if v, ok := config["disable_scale_in"]; ok {
 		result.DisableScaleIn = aws.Bool(v.(bool))
 	}
-	if v, ok := config["predefined_metric_specification"]; ok {
+	if v, ok := config["predefined_metric_specification"]; ok && len(v.(*schema.Set).List()) > 0 {
 		spec := v.(*schema.Set).List()[0].(map[string]interface{})
 		predSpec := &autoscaling.PredefinedMetricSpecification{
 			PredefinedMetricType: aws.String(spec["predefined_metric_type"].(string)),
 		}
-		if val, ok := spec["resource_label"]; ok {
+		if val, ok := spec["resource_label"]; ok && val.(string) != "" {
 			predSpec.ResourceLabel = aws.String(val.(string))
 		}
 		result.PredefinedMetricSpecification = predSpec
 	}
-	if v, ok := config["customized_metric_specification"]; ok {
+	if v, ok := config["customized_metric_specification"]; ok && len(v.(*schema.Set).List()) > 0 {
 		spec := v.(*schema.Set).List()[0].(map[string]interface{})
 		customSpec := &autoscaling.CustomizedMetricSpecification{
 			Namespace:  aws.String(spec["namespace"].(string)),
