@@ -67,6 +67,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					"dynamodb",
 					"mariadb",
 					"aurora",
+					"aurora-postgresql",
 					"redshift",
 					"sybase",
 					"sqlserver",
