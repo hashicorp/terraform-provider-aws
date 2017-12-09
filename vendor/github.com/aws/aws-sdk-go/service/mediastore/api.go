@@ -35,7 +35,7 @@ const opCreateContainer = "CreateContainer"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/CreateContainer
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/CreateContainer
 func (c *MediaStore) CreateContainerRequest(input *CreateContainerInput) (req *request.Request, output *CreateContainerOutput) {
 	op := &request.Operation{
 		Name:       opCreateContainer,
@@ -74,7 +74,7 @@ func (c *MediaStore) CreateContainerRequest(input *CreateContainerInput) (req *r
 //   * ErrCodeInternalServerError "InternalServerError"
 //   The service is temporarily unavailable.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/CreateContainer
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/CreateContainer
 func (c *MediaStore) CreateContainer(input *CreateContainerInput) (*CreateContainerOutput, error) {
 	req, out := c.CreateContainerRequest(input)
 	return out, req.Send()
@@ -121,7 +121,7 @@ const opDeleteContainer = "DeleteContainer"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainer
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainer
 func (c *MediaStore) DeleteContainerRequest(input *DeleteContainerInput) (req *request.Request, output *DeleteContainerOutput) {
 	op := &request.Operation{
 		Name:       opDeleteContainer,
@@ -161,7 +161,7 @@ func (c *MediaStore) DeleteContainerRequest(input *DeleteContainerInput) (req *r
 //   * ErrCodeInternalServerError "InternalServerError"
 //   The service is temporarily unavailable.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainer
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainer
 func (c *MediaStore) DeleteContainer(input *DeleteContainerInput) (*DeleteContainerOutput, error) {
 	req, out := c.DeleteContainerRequest(input)
 	return out, req.Send()
@@ -208,7 +208,7 @@ const opDeleteContainerPolicy = "DeleteContainerPolicy"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerPolicy
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerPolicy
 func (c *MediaStore) DeleteContainerPolicyRequest(input *DeleteContainerPolicyInput) (req *request.Request, output *DeleteContainerPolicyOutput) {
 	op := &request.Operation{
 		Name:       opDeleteContainerPolicy,
@@ -249,7 +249,7 @@ func (c *MediaStore) DeleteContainerPolicyRequest(input *DeleteContainerPolicyIn
 //   * ErrCodeInternalServerError "InternalServerError"
 //   The service is temporarily unavailable.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerPolicy
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerPolicy
 func (c *MediaStore) DeleteContainerPolicy(input *DeleteContainerPolicyInput) (*DeleteContainerPolicyOutput, error) {
 	req, out := c.DeleteContainerPolicyRequest(input)
 	return out, req.Send()
@@ -296,7 +296,7 @@ const opDescribeContainer = "DescribeContainer"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DescribeContainer
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DescribeContainer
 func (c *MediaStore) DescribeContainerRequest(input *DescribeContainerInput) (req *request.Request, output *DescribeContainerOutput) {
 	op := &request.Operation{
 		Name:       opDescribeContainer,
@@ -333,7 +333,7 @@ func (c *MediaStore) DescribeContainerRequest(input *DescribeContainerInput) (re
 //   * ErrCodeInternalServerError "InternalServerError"
 //   The service is temporarily unavailable.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DescribeContainer
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DescribeContainer
 func (c *MediaStore) DescribeContainer(input *DescribeContainerInput) (*DescribeContainerOutput, error) {
 	req, out := c.DescribeContainerRequest(input)
 	return out, req.Send()
@@ -380,7 +380,7 @@ const opGetContainerPolicy = "GetContainerPolicy"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetContainerPolicy
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetContainerPolicy
 func (c *MediaStore) GetContainerPolicyRequest(input *GetContainerPolicyInput) (req *request.Request, output *GetContainerPolicyOutput) {
 	op := &request.Operation{
 		Name:       opGetContainerPolicy,
@@ -423,7 +423,7 @@ func (c *MediaStore) GetContainerPolicyRequest(input *GetContainerPolicyInput) (
 //   * ErrCodeInternalServerError "InternalServerError"
 //   The service is temporarily unavailable.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetContainerPolicy
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetContainerPolicy
 func (c *MediaStore) GetContainerPolicy(input *GetContainerPolicyInput) (*GetContainerPolicyOutput, error) {
 	req, out := c.GetContainerPolicyRequest(input)
 	return out, req.Send()
@@ -470,7 +470,7 @@ const opListContainers = "ListContainers"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListContainers
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListContainers
 func (c *MediaStore) ListContainersRequest(input *ListContainersInput) (req *request.Request, output *ListContainersOutput) {
 	op := &request.Operation{
 		Name:       opListContainers,
@@ -511,7 +511,7 @@ func (c *MediaStore) ListContainersRequest(input *ListContainersInput) (req *req
 //   * ErrCodeInternalServerError "InternalServerError"
 //   The service is temporarily unavailable.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListContainers
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListContainers
 func (c *MediaStore) ListContainers(input *ListContainersInput) (*ListContainersOutput, error) {
 	req, out := c.ListContainersRequest(input)
 	return out, req.Send()
@@ -558,7 +558,7 @@ const opPutContainerPolicy = "PutContainerPolicy"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutContainerPolicy
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutContainerPolicy
 func (c *MediaStore) PutContainerPolicyRequest(input *PutContainerPolicyInput) (req *request.Request, output *PutContainerPolicyOutput) {
 	op := &request.Operation{
 		Name:       opPutContainerPolicy,
@@ -603,7 +603,7 @@ func (c *MediaStore) PutContainerPolicyRequest(input *PutContainerPolicyInput) (
 //   * ErrCodeInternalServerError "InternalServerError"
 //   The service is temporarily unavailable.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutContainerPolicy
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutContainerPolicy
 func (c *MediaStore) PutContainerPolicy(input *PutContainerPolicyInput) (*PutContainerPolicyOutput, error) {
 	req, out := c.PutContainerPolicyRequest(input)
 	return out, req.Send()
@@ -627,7 +627,7 @@ func (c *MediaStore) PutContainerPolicyWithContext(ctx aws.Context, input *PutCo
 
 // This section describes operations that you can perform on an AWS Elemental
 // MediaStore container.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/Container
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/Container
 type Container struct {
 	_ struct{} `type:"structure"`
 
@@ -696,7 +696,7 @@ func (s *Container) SetStatus(v string) *Container {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/CreateContainerInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/CreateContainerInput
 type CreateContainerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -741,7 +741,7 @@ func (s *CreateContainerInput) SetContainerName(v string) *CreateContainerInput 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/CreateContainerOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/CreateContainerOutput
 type CreateContainerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -781,7 +781,7 @@ func (s *CreateContainerOutput) SetContainer(v *Container) *CreateContainerOutpu
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerInput
 type DeleteContainerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -823,7 +823,7 @@ func (s *DeleteContainerInput) SetContainerName(v string) *DeleteContainerInput 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerOutput
 type DeleteContainerOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -838,7 +838,7 @@ func (s DeleteContainerOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerPolicyInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerPolicyInput
 type DeleteContainerPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -880,7 +880,7 @@ func (s *DeleteContainerPolicyInput) SetContainerName(v string) *DeleteContainer
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerPolicyOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerPolicyOutput
 type DeleteContainerPolicyOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -895,7 +895,7 @@ func (s DeleteContainerPolicyOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DescribeContainerInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DescribeContainerInput
 type DescribeContainerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -932,7 +932,7 @@ func (s *DescribeContainerInput) SetContainerName(v string) *DescribeContainerIn
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DescribeContainerOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DescribeContainerOutput
 type DescribeContainerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -956,7 +956,7 @@ func (s *DescribeContainerOutput) SetContainer(v *Container) *DescribeContainerO
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetContainerPolicyInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetContainerPolicyInput
 type GetContainerPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -998,7 +998,7 @@ func (s *GetContainerPolicyInput) SetContainerName(v string) *GetContainerPolicy
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetContainerPolicyOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetContainerPolicyOutput
 type GetContainerPolicyOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1024,7 +1024,7 @@ func (s *GetContainerPolicyOutput) SetPolicy(v string) *GetContainerPolicyOutput
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListContainersInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListContainersInput
 type ListContainersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1077,7 +1077,7 @@ func (s *ListContainersInput) SetNextToken(v string) *ListContainersInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListContainersOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListContainersOutput
 type ListContainersOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1114,7 +1114,7 @@ func (s *ListContainersOutput) SetNextToken(v string) *ListContainersOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutContainerPolicyInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutContainerPolicyInput
 type PutContainerPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1177,7 +1177,7 @@ func (s *PutContainerPolicyInput) SetPolicy(v string) *PutContainerPolicyInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutContainerPolicyOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutContainerPolicyOutput
 type PutContainerPolicyOutput struct {
 	_ struct{} `type:"structure"`
 }
