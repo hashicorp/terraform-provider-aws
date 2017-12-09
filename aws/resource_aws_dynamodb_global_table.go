@@ -88,7 +88,7 @@ func resourceAwsDynamoDbGlobalTableCreate(d *schema.ResourceData, meta interface
 			dynamodb.GlobalTableStatusActive,
 		},
 		Refresh:    resourceAwsDynamoDbGlobalTableStateRefreshFunc(d, meta),
-		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 	}
 	_, err = stateConf.WaitForState()
@@ -106,6 +106,7 @@ func resourceAwsDynamoDbGlobalTableRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 	if globalTableDescription == nil {
+		log.Printf("[WARN] DynamoDB Global Table %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}

@@ -201,9 +201,9 @@ resource "aws_dynamodb_global_table" "test" {
 
   name = "%s"
 
-	replica {
+  replica {
     region_name = "us-east-1"
-	}
+  }
 }`, testAccDynamoDbGlobalTableConfig_basic_dynamodb_tables(tableName), tableName)
 }
 
@@ -212,18 +212,18 @@ func testAccDynamoDbGlobalTableConfig_basic2(tableName string) string {
 %s
 
 resource "aws_dynamodb_global_table" "test" {
-	depends_on = ["aws_dynamodb_table.us-east-1", "aws_dynamodb_table.us-east-2"]
+  depends_on = ["aws_dynamodb_table.us-east-1", "aws_dynamodb_table.us-east-2"]
   provider = "aws.us-east-1"
 
   name = "%s"
 
-	replica {
+  replica {
     region_name = "us-east-1"
-	}
+  }
 
-	replica {
+  replica {
     region_name = "us-east-2"
-	}
+  }
 }`, testAccDynamoDbGlobalTableConfig_basic_dynamodb_tables(tableName), tableName)
 }
 
@@ -232,18 +232,18 @@ func testAccDynamoDbGlobalTableConfig_basic3(tableName string) string {
 %s
 
 resource "aws_dynamodb_global_table" "test" {
-	depends_on = ["aws_dynamodb_table.us-east-1", "aws_dynamodb_table.us-west-2"]
+  depends_on = ["aws_dynamodb_table.us-east-1", "aws_dynamodb_table.us-west-2"]
   provider = "aws.us-east-1"
 
   name = "%s"
 
-	replica {
+  replica {
     region_name = "us-east-1"
-	}
+  }
 
-	replica {
+  replica {
     region_name = "us-west-2"
-	}
+  }
 }`, testAccDynamoDbGlobalTableConfig_basic_dynamodb_tables(tableName), tableName)
 }
 
@@ -252,8 +252,8 @@ func testAccDynamoDbGlobalTableConfig_invalidName(tableName string) string {
 resource "aws_dynamodb_global_table" "test" {
   name = "%s"
 
-	replica {
+  replica {
     region_name = "us-east-1"
-	}
+  }
 }`, tableName)
 }
