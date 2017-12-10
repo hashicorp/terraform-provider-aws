@@ -411,6 +411,25 @@ func TestAccAWSDBInstance_diffSuppressInitialState(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_ec2Classic(t *testing.T) {
+	var v rds.DBInstance
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfigEc2Classic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSDBInstanceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).rdsconn
 
@@ -1337,6 +1356,29 @@ resource "aws_db_instance" "bar" {
 	skip_final_snapshot = true
 }
 `, acctest.RandInt())
+
+func testAccAWSDBInstanceConfigEc2Classic(rInt int) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_db_instance" "bar" {
+  identifier = "foobarbaz-test-terraform-%d"
+  allocated_storage = 10
+  engine = "mysql"
+  engine_version = "5.6"
+  instance_class = "db.m3.medium"
+  name = "baz"
+  password = "barbarbarbar"
+  username = "foo"
+  publicly_accessible = true
+  security_group_names = ["default"]
+  parameter_group_name = "default.mysql5.6"
+  skip_final_snapshot = true
+}
+`, rInt)
+}
 
 func testAccAWSDBInstanceConfigSuppressInitialState(rInt int) string {
 	return fmt.Sprintf(`
