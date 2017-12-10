@@ -497,6 +497,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_vpc":                                      resourceAwsVpc(),
 			"aws_vpc_endpoint":                             resourceAwsVpcEndpoint(),
 			"aws_vpc_endpoint_route_table_association":     resourceAwsVpcEndpointRouteTableAssociation(),
+			"aws_vpc_endpoint_subnet_association":          resourceAwsVpcEndpointSubnetAssociation(),
 			"aws_vpn_connection":                           resourceAwsVpnConnection(),
 			"aws_vpn_connection_route":                     resourceAwsVpnConnectionRoute(),
 			"aws_vpn_gateway":                              resourceAwsVpnGateway(),

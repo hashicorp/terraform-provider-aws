@@ -11,30 +11,30 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsVpcEndpointRouteTableAssociation_basic(t *testing.T) {
+func TestAccAwsVpcEndpointSubnetAssociation_basic(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVpcEndpointRouteTableAssociationDestroy,
+		CheckDestroy: testAccCheckVpcEndpointSubnetAssociationDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccVpcEndpointRouteTableAssociationConfig,
+				Config: testAccVpcEndpointSubnetAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointRouteTableAssociationExists(
-						"aws_vpc_endpoint_route_table_association.a", &vpce),
+					testAccCheckVpcEndpointSubnetAssociationExists(
+						"aws_vpc_endpoint_subnet_association.a", &vpce),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckVpcEndpointRouteTableAssociationDestroy(s *terraform.State) error {
+func testAccCheckVpcEndpointSubnetAssociationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpc_endpoint_route_table_association" {
+		if rs.Type != "aws_vpc_endpoint_subnet_association" {
 			continue
 		}
 
@@ -55,16 +55,16 @@ func testAccCheckVpcEndpointRouteTableAssociationDestroy(s *terraform.State) err
 		}
 
 		vpce := resp.VpcEndpoints[0]
-		if len(vpce.RouteTableIds) > 0 {
+		if len(vpce.SubnetIds) > 0 {
 			return fmt.Errorf(
-				"VPC endpoint %s has route tables", *vpce.VpcEndpointId)
+				"Vpc endpoint %s has subnets", *vpce.VpcEndpointId)
 		}
 	}
 
 	return nil
 }
 
-func testAccCheckVpcEndpointRouteTableAssociationExists(n string, vpce *ec2.VpcEndpoint) resource.TestCheckFunc {
+func testAccCheckVpcEndpointSubnetAssociationExists(n string, vpce *ec2.VpcEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -83,49 +83,55 @@ func testAccCheckVpcEndpointRouteTableAssociationExists(n string, vpce *ec2.VpcE
 			return err
 		}
 		if len(resp.VpcEndpoints) == 0 {
-			return fmt.Errorf("VPC endpoint not found")
+			return fmt.Errorf("Vpc endpoint not found")
 		}
 
 		*vpce = *resp.VpcEndpoints[0]
 
-		if len(vpce.RouteTableIds) == 0 {
-			return fmt.Errorf("no route table associations")
+		if len(vpce.SubnetIds) == 0 {
+			return fmt.Errorf("no subnet associations")
 		}
 
-		for _, id := range vpce.RouteTableIds {
-			if *id == rs.Primary.Attributes["route_table_id"] {
+		for _, id := range vpce.SubnetIds {
+			if aws.StringValue(id) == rs.Primary.Attributes["subnet_id"] {
 				return nil
 			}
 		}
 
-		return fmt.Errorf("route table association not found")
+		return fmt.Errorf("subnet association not found")
 	}
 }
 
-const testAccVpcEndpointRouteTableAssociationConfig = `
+const testAccVpcEndpointSubnetAssociationConfig_basic = `
 provider "aws" {
-    region = "us-west-2"
+  region = "us-west-2"
 }
 
 resource "aws_vpc" "foo" {
-    cidr_block = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 }
 
-resource "aws_vpc_endpoint" "s3" {
-    vpc_id = "${aws_vpc.foo.id}"
-    service_name = "com.amazonaws.us-west-2.s3"
+data "aws_security_group" "default" {
+  vpc_id = "${aws_vpc.foo.id}"
+  name = "default"
 }
 
-resource "aws_route_table" "rt" {
-    vpc_id = "${aws_vpc.foo.id}"
-
-    tags {
-        Name = "test"
-    }
+resource "aws_vpc_endpoint" "ec2" {
+  vpc_id = "${aws_vpc.foo.id}"
+  vpc_endpoint_type = "Interface"
+  service_name = "com.amazonaws.us-west-2.ec2"
+  security_group_ids = ["${data.aws_security_group.default.id}"]
+  private_dns_enabled = false
 }
 
-resource "aws_vpc_endpoint_route_table_association" "a" {
-	vpc_endpoint_id = "${aws_vpc_endpoint.s3.id}"
-	route_table_id  = "${aws_route_table.rt.id}"
+resource "aws_subnet" "sn" {
+  vpc_id = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2a"
+  cidr_block = "10.0.0.0/17"
+}
+
+resource "aws_vpc_endpoint_subnet_association" "a" {
+  vpc_endpoint_id = "${aws_vpc_endpoint.ec2.id}"
+  subnet_id  = "${aws_subnet.sn.id}"
 }
 `
