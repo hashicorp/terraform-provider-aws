@@ -194,7 +194,7 @@ func TestAccAWSDBInstance_iamAuth(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBInstanceReplica(t *testing.T) {
+func TestAccAWSDBInstance_replica(t *testing.T) {
 	var s, r rds.DBInstance
 
 	resource.Test(t, resource.TestCase{
@@ -214,7 +214,7 @@ func TestAccAWSDBInstanceReplica(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBInstanceNoSnapshot(t *testing.T) {
+func TestAccAWSDBInstance_noSnapshot(t *testing.T) {
 	var snap rds.DBInstance
 
 	resource.Test(t, resource.TestCase{
@@ -232,7 +232,7 @@ func TestAccAWSDBInstanceNoSnapshot(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBInstanceSnapshot(t *testing.T) {
+func TestAccAWSDBInstance_snapshot(t *testing.T) {
 	var snap rds.DBInstance
 	rInt := acctest.RandInt()
 
