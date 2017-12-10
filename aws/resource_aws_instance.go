@@ -433,6 +433,22 @@ func resourceAwsInstance() *schema.Resource {
 					},
 				},
 			},
+
+			"credit_specification": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cpu_credits": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -475,6 +491,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		SecurityGroups:                    instanceOpts.SecurityGroups,
 		SubnetId:                          instanceOpts.SubnetID,
 		UserData:                          instanceOpts.UserData64,
+		CreditSpecification:               instanceOpts.CreditSpecification,
 	}
 
 	_, ipv6CountOk := d.GetOk("ipv6_address_count")
@@ -783,6 +800,13 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
+	{
+		creditSpecifications, err := getCreditSpecifications(conn, d.Id())
+		if err != nil {
+			return err
+		}
+		d.Set("credit_specification", creditSpecifications)
+	}
 
 	if d.Get("get_password_data").(bool) {
 		passwordData, err := getAwsEc2InstancePasswordData(*instance.InstanceId, conn)
@@ -1076,6 +1100,26 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 		if mErr != nil {
 			return fmt.Errorf("[WARN] Error updating Instance monitoring: %s", mErr)
+		}
+	}
+
+	if d.HasChange("credit_specification") {
+		creditSpecifications := d.Get("credit_specification").([]interface{})
+		if len(creditSpecifications) == 1 {
+			creditSpecification := creditSpecifications[0].(map[string]interface{})
+			log.Printf("[DEBUG] Modifying credit specification for Instance (%s)", d.Id())
+
+			_, err := conn.ModifyInstanceCreditSpecification(&ec2.ModifyInstanceCreditSpecificationInput{
+				InstanceCreditSpecifications: []*ec2.InstanceCreditSpecificationRequest{
+					{
+						InstanceId: aws.String(d.Id()),
+						CpuCredits: aws.String(creditSpecification["cpu_credits"].(string)),
+					},
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("[WARN] Error updating Instance credit specification: %s", err)
+			}
 		}
 	}
 
@@ -1631,6 +1675,7 @@ type awsInstanceOpts struct {
 	SpotPlacement                     *ec2.SpotPlacement
 	SubnetID                          *string
 	UserData64                        *string
+	CreditSpecification               *ec2.CreditSpecificationRequest
 }
 
 func buildAwsInstanceOpts(
@@ -1642,6 +1687,18 @@ func buildAwsInstanceOpts(
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
 		ImageID:               aws.String(d.Get("ami").(string)),
 		InstanceType:          aws.String(d.Get("instance_type").(string)),
+	}
+
+	if v, ok := d.GetOk("credit_specification"); ok {
+		cs := v.([]interface{})
+		for _, csValue := range cs {
+			creditSpecification := csValue.(map[string]interface{})
+			if cpuCredits, ok := creditSpecification["cpu_credits"].(string); ok {
+				opts.CreditSpecification = &ec2.CreditSpecificationRequest{
+					CpuCredits: aws.String(cpuCredits),
+				}
+			}
+		}
 	}
 
 	if v := d.Get("instance_initiated_shutdown_behavior").(string); v != "" {
@@ -1832,4 +1889,22 @@ func getAwsInstanceVolumeIds(conn *ec2.EC2, d *schema.ResourceData) ([]*string, 
 	}
 
 	return volumeIds, nil
+}
+
+func getCreditSpecifications(conn *ec2.EC2, instanceId string) ([]map[string]interface{}, error) {
+	var creditSpecifications []map[string]interface{}
+	creditSpecification := make(map[string]interface{})
+
+	attr, err := conn.DescribeInstanceCreditSpecifications(&ec2.DescribeInstanceCreditSpecificationsInput{
+		InstanceIds: []*string{aws.String(instanceId)},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if attr.InstanceCreditSpecifications != nil {
+		creditSpecification["cpu_credits"] = *attr.InstanceCreditSpecifications[0].CpuCredits
+		creditSpecifications = append(creditSpecifications, creditSpecification)
+	}
+
+	return creditSpecifications, nil
 }
