@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -27,6 +28,8 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 				Config: testAccAWSAppautoscalingTargetConfig(randClusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingTargetExists("aws_appautoscaling_target.bar", &target),
+					resource.TestMatchResourceAttr("aws_appautoscaling_target.bar", "role_arn",
+						regexp.MustCompile(fmt.Sprintf("^arn:aws:iam::[0-9]{12}:role/autoscalerole%s$", randClusterName))),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "service_namespace", "ecs"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "scalable_dimension", "ecs:service:DesiredCount"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "min_capacity", "1"),
@@ -40,6 +43,8 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 					testAccCheckAWSAppautoscalingTargetExists("aws_appautoscaling_target.bar", &target),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "min_capacity", "2"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "max_capacity", "8"),
+					resource.TestMatchResourceAttr("aws_appautoscaling_target.bar", "role_arn",
+						regexp.MustCompile(fmt.Sprintf("^arn:aws:iam::[0-9]{12}:role/autoscaleroleupdate%s$", randClusterName))),
 				),
 			},
 		},
@@ -288,7 +293,7 @@ func testAccAWSAppautoscalingTargetConfigUpdate(
 	randClusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "autoscale_role" {
-	name = "autoscalerole%s"
+	name = "autoscaleroleupdate%s"
 	path = "/"
 
 	assume_role_policy = <<EOF

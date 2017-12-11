@@ -72,8 +72,8 @@ func resourceAwsAppautoscalingTargetCreate(d *schema.ResourceData, meta interfac
 		_, err = conn.RegisterScalableTarget(&targetOpts)
 
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ValidationException" {
-				log.Printf("[DEBUG] Retrying creation of Application Autoscaling Scalable Target due to possible issues with IAM: %s", awsErr)
+			if isAWSErr(err, "ValidationException", "Unable to assume IAM role") {
+				log.Printf("[DEBUG] Retrying creation of Application Autoscaling Scalable Target due to possible issues with IAM: %s", err)
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -138,9 +138,22 @@ func resourceAwsAppautoscalingTargetUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	log.Printf("[DEBUG] Updating Application Autoscaling Target: %#v", input)
-	_, err := conn.RegisterScalableTarget(input)
+	var err error
+	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err = conn.RegisterScalableTarget(input)
+
+		if err != nil {
+			if isAWSErr(err, "ValidationException", "Unable to assume IAM role") {
+				log.Printf("[DEBUG] Retrying creation of Application Autoscaling Scalable Target due to possible issues with IAM: %s", err)
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 	if err != nil {
-		return err
+		return fmt.Errorf("Error updating application autoscaling target: %s", err)
 	}
 
 	return resourceAwsAppautoscalingTargetRead(d, meta)
