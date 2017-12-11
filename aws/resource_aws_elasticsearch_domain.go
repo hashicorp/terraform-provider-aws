@@ -89,6 +89,24 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 					},
 				},
 			},
+			"encrypt_at_rest": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+							ForceNew: true,
+						},
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"cluster_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -288,6 +306,21 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 
 			s := options[0].(map[string]interface{})
 			input.EBSOptions = expandESEBSOptions(s)
+		}
+	}
+
+	if v, ok := d.GetOk("encrypt_at_rest"); ok {
+		options := v.([]interface{})
+
+		if len(options) > 1 {
+			return fmt.Errorf("Only a single encrypt_at_rest block is expected")
+		} else if len(options) == 1 {
+			if options[0] == nil {
+				return fmt.Errorf("At least one field is expected inside encrypt_at_rest")
+			}
+
+			s := options[0].(map[string]interface{})
+			input.EncryptionAtRestOptions = expandESEncryptAtRestOptions(s)
 		}
 	}
 

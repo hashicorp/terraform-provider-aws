@@ -261,6 +261,24 @@ func TestAccAWSElasticSearchDomain_policy(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_encrypt_at_rest(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfigWithEncryptAtRest(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	var td elasticsearch.ListTagsOutput
@@ -411,6 +429,7 @@ func testAccESDomainConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
+
   ebs_options {
     ebs_enabled = true
     volume_size = 10
@@ -502,6 +521,36 @@ data "aws_iam_policy_document" "instance-assume-role-policy" {
   }
 }
 `, randESId, randRoleId)
+}
+
+func testAccESDomainConfigWithEncryptAtRest(randESId int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "es" {
+  description             = "kms-key-for-tf-test-%d"
+  deletion_window_in_days = 7
+}
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+  elasticsearch_version = "6.0"
+
+  # Encrypt at rest requires m4/c4/r4/i2 instances. See http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html
+  cluster_config {
+    instance_type = "m4.large.elasticsearch"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  encrypt_at_rest {
+    enabled    = true
+    kms_key_id = "${aws_kms_key.es.key_id}"
+  }
+}
+`, randESId, randESId)
 }
 
 func testAccESDomainConfig_complex(randInt int) string {
