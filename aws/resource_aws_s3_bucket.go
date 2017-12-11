@@ -1680,10 +1680,8 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 		}
 
 		ruleDestination := &s3.Destination{}
-		if destination, ok := rr["destination"]; ok {
-			dest := destination.(*schema.Set).List()
-
-			bd := dest[0].(map[string]interface{})
+		if dest, ok := rr["destination"].(*schema.Set); ok && dest.Len() > 0 {
+			bd := dest.List()[0].(map[string]interface{})
 			ruleDestination.Bucket = aws.String(bd["bucket"].(string))
 
 			if storageClass, ok := bd["storage_class"]; ok && storageClass != "" {
@@ -2085,6 +2083,9 @@ func rulesHash(v interface{}) int {
 	}
 	if v, ok := m["status"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["destination"].(*schema.Set); ok && v.Len() > 0 {
+		buf.WriteString(fmt.Sprintf("%d-", destinationHash(v.List()[0])))
 	}
 	return hashcode.String(buf.String())
 }
