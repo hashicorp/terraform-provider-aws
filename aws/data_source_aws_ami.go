@@ -375,7 +375,9 @@ type rootVolumeInfo struct {
 
 // Returns the root volume info for an image
 func amiRootVolumeInfo(image *ec2.Image) rootVolumeInfo {
+	log.Printf("[DEBUG] aws_ami - rootVolumeInfo: %v", image)
 	if image.RootDeviceName == nil {
+		log.Printf("[DEBUG] aws_ami - image.RootDeviceName == nil")
 		return rootVolumeInfo{
 			snapshotId: "",
 			volumeSize: 0,
@@ -386,12 +388,14 @@ func amiRootVolumeInfo(image *ec2.Image) rootVolumeInfo {
 			continue
 		}
 		if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
+			log.Printf("[DEBUG] aws_ami - bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil")
 			return rootVolumeInfo{
 				snapshotId: *bdm.Ebs.SnapshotId,
 				volumeSize: *bdm.Ebs.VolumeSize,
 			}
 		}
 	}
+	log.Printf("[DEBUG] aws_ami - fall through")
 	return rootVolumeInfo{
 		snapshotId: "",
 		volumeSize: 0,
