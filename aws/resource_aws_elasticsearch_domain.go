@@ -169,6 +169,38 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 					},
 				},
 			},
+			"log_publishing_options": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"log_type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+								value := v.(string)
+								validLogTypes := []string{"INDEX_SLOW_LOGS", "SEARCH_SLOW_LOGS"}
+								for _, str := range validLogTypes {
+									if value == str {
+										return
+									}
+								}
+								errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validLogTypes, value))
+								return
+							},
+						},
+						"cloudwatch_log_group_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+					},
+				},
+			},
 			"elasticsearch_version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -306,6 +338,18 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 
 		s := options[0].(map[string]interface{})
 		input.VPCOptions = expandESVPCOptions(s)
+	}
+
+	if v, ok := d.GetOk("log_publishing_options"); ok {
+		input.LogPublishingOptions = make(map[string]*elasticsearch.LogPublishingOption)
+		options := v.(*schema.Set).List()
+		for _, vv := range options {
+			lo := vv.(map[string]interface{})
+			input.LogPublishingOptions[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{
+				CloudWatchLogsLogGroupArn: aws.String(lo["cloudwatch_log_group_arn"].(string)),
+				Enabled:                   aws.Bool(lo["enabled"].(bool)),
+			}
+		}
 	}
 
 	log.Printf("[DEBUG] Creating ElasticSearch domain: %s", input)
@@ -448,6 +492,18 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if ds.LogPublishingOptions != nil {
+		m := make([]map[string]interface{}, 0)
+		for k, val := range ds.LogPublishingOptions {
+			mm := map[string]interface{}{}
+			mm["log_type"] = k
+			mm["cloudwatch_log_group_arn"] = *val.CloudWatchLogsLogGroupArn
+			mm["enabled"] = *val.Enabled
+			m = append(m, mm)
+		}
+		d.Set("log_publishing_options", m)
+	}
+
 	d.Set("arn", ds.ARN)
 
 	listOut, err := conn.ListTags(&elasticsearch.ListTagsInput{
@@ -533,6 +589,18 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		options := d.Get("vpc_options").([]interface{})
 		s := options[0].(map[string]interface{})
 		input.VPCOptions = expandESVPCOptions(s)
+	}
+
+	if d.HasChange("log_publishing_options") {
+		input.LogPublishingOptions = make(map[string]*elasticsearch.LogPublishingOption)
+		options := d.Get("log_publishing_options").(*schema.Set).List()
+		for _, vv := range options {
+			lo := vv.(map[string]interface{})
+			input.LogPublishingOptions[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{
+				CloudWatchLogsLogGroupArn: aws.String(lo["cloudwatch_log_group_arn"].(string)),
+				Enabled:                   aws.Bool(lo["enabled"].(bool)),
+			}
+		}
 	}
 
 	_, err := conn.UpdateElasticsearchDomainConfig(&input)
