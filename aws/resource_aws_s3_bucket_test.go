@@ -787,6 +787,38 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 					),
 				),
 			},
+			{
+				Config: testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjects(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc("us-west-2", &providers)),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "1"),
+					resource.TestMatchResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.role", regexp.MustCompile(fmt.Sprintf("^arn:aws:iam::[\\d+]+:role/tf-iam-role-replication-%d", rInt))),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.#", "1"),
+					testAccCheckAWSS3BucketReplicationRules(
+						"aws_s3_bucket.bucket",
+						&providers,
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("foobar"),
+								Destination: &s3.Destination{
+									Bucket:       aws.String(fmt.Sprintf("arn:aws:s3:::tf-test-bucket-destination-%d", rInt)),
+									StorageClass: aws.String(s3.ObjectStorageClassStandard),
+									EncryptionConfiguration: &s3.EncryptionConfiguration{
+										ReplicaKmsKeyID: aws.String("${aws_kms_key.replica.arn}"),
+									},
+								},
+								Prefix: aws.String("foo"),
+								Status: aws.String(s3.ReplicationRuleStatusEnabled),
+								SourceSelectionCriteria: &s3.SourceSelectionCriteria{
+									SseKmsEncryptedObjects: &s3.SseKmsEncryptedObjects{
+										Status: aws.String(s3.SseKmsEncryptedObjectsStatusEnabled),
+									},
+								},
+							},
+						},
+					),
+				),
+			},
 		},
 	})
 }
@@ -1214,6 +1246,16 @@ func testAccCheckAWSS3BucketLogging(n, b, p string) resource.TestCheckFunc {
 func testAccCheckAWSS3BucketReplicationRules(n string, providers *[]*schema.Provider, rules []*s3.ReplicationRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, _ := s.RootModule().Resources[n]
+		for _, rule := range rules {
+			if dest := rule.Destination; dest != nil {
+				if ec := dest.EncryptionConfiguration; ec != nil {
+					if ec.ReplicaKmsKeyID != nil {
+						key_arn := s.RootModule().Resources["aws_kms_key.replica"].Primary.Attributes["arn"]
+						ec.ReplicaKmsKeyID = aws.String(strings.Replace(*ec.ReplicaKmsKeyID, "${aws_kms_key.replica.arn}", key_arn, -1))
+					}
+				}
+			}
+		}
 		for _, provider := range *providers {
 			// Ignore if Meta is empty, this can happen for validation providers
 			if provider.Meta() == nil {
@@ -1824,6 +1866,57 @@ resource "aws_s3_bucket" "bucket" {
             destination {
                 bucket        = "${aws_s3_bucket.destination.arn}"
                 storage_class = "STANDARD"
+            }
+        }
+    }
+}
+
+resource "aws_s3_bucket" "destination" {
+    provider = "aws.euwest"
+    bucket   = "tf-test-bucket-destination-%d"
+    region   = "eu-west-1"
+
+    versioning {
+        enabled = true
+    }
+}
+`, randInt, randInt, randInt)
+}
+
+func testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjects(randInt int) string {
+	return fmt.Sprintf(testAccAWSS3BucketConfigReplicationBasic+`
+resource "aws_kms_key" "replica" {
+  provider                = "aws.euwest"
+  description             = "TF Acceptance Test S3 repl KMS key"
+  deletion_window_in_days = 7
+}
+
+resource "aws_s3_bucket" "bucket" {
+    provider = "aws.uswest2"
+    bucket   = "tf-test-bucket-%d"
+    acl      = "private"
+
+    versioning {
+        enabled = true
+    }
+
+    replication_configuration {
+        role = "${aws_iam_role.role.arn}"
+        rules {
+            id     = "foobar"
+            prefix = "foo"
+            status = "Enabled"
+
+            destination {
+                bucket        = "${aws_s3_bucket.destination.arn}"
+                storage_class = "STANDARD"
+                replica_kms_key_id = "${aws_kms_key.replica.arn}"
+            }
+
+            source_selection_criteria {
+                sse_kms_encrypted_objects {
+                  enabled = true
+                }
             }
         }
     }
