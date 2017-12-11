@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -46,9 +47,11 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespace() *schema.Resource {
 func resourceAwsServiceDiscoveryPrivateDnsNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
 
+	requestId := resource.PrefixedUniqueId(fmt.Sprintf("tf-%s", d.Get("name").(string)))
 	input := &servicediscovery.CreatePrivateDnsNamespaceInput{
-		Name: aws.String(d.Get("name").(string)),
-		Vpc:  aws.String(d.Get("vpc").(string)),
+		Name:             aws.String(d.Get("name").(string)),
+		Vpc:              aws.String(d.Get("vpc").(string)),
+		CreatorRequestId: aws.String(requestId),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -61,12 +64,10 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespaceCreate(d *schema.ResourceData
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{servicediscovery.OperationStatusSubmitted, servicediscovery.OperationStatusPending},
-		Target:     []string{servicediscovery.OperationStatusSuccess},
-		Refresh:    servicediscoveryOperationRefreshStatusFunc(conn, *resp.OperationId),
-		Timeout:    5 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Pending: []string{servicediscovery.OperationStatusSubmitted, servicediscovery.OperationStatusPending},
+		Target:  []string{servicediscovery.OperationStatusSuccess},
+		Refresh: servicediscoveryOperationRefreshStatusFunc(conn, *resp.OperationId),
+		Timeout: 5 * time.Minute,
 	}
 
 	opresp, err := stateConf.WaitForState()
@@ -75,7 +76,7 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespaceCreate(d *schema.ResourceData
 	}
 
 	d.SetId(*opresp.(*servicediscovery.GetOperationOutput).Operation.Targets["NAMESPACE"])
-	return nil
+	return resourceAwsServiceDiscoveryPrivateDnsNamespaceRead(d, meta)
 }
 
 func resourceAwsServiceDiscoveryPrivateDnsNamespaceRead(d *schema.ResourceData, meta interface{}) error {
@@ -111,20 +112,14 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespaceDelete(d *schema.ResourceData
 
 	resp, err := conn.DeleteNamespace(input)
 	if err != nil {
-		if isAWSErr(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
-			d.SetId("")
-			return nil
-		}
 		return err
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{servicediscovery.OperationStatusSubmitted, servicediscovery.OperationStatusPending},
-		Target:     []string{servicediscovery.OperationStatusSuccess},
-		Refresh:    servicediscoveryOperationRefreshStatusFunc(conn, *resp.OperationId),
-		Timeout:    5 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Pending: []string{servicediscovery.OperationStatusSubmitted, servicediscovery.OperationStatusPending},
+		Target:  []string{servicediscovery.OperationStatusSuccess},
+		Refresh: servicediscoveryOperationRefreshStatusFunc(conn, *resp.OperationId),
+		Timeout: 5 * time.Minute,
 	}
 
 	_, err = stateConf.WaitForState()

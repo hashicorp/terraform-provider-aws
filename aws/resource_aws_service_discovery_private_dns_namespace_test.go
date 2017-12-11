@@ -21,6 +21,8 @@ func TestAccAwsServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists("aws_service_discovery_private_dns_namespace.test"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "arn"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "hosted_zone"),
 				),
 			},
 		},
