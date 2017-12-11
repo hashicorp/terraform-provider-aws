@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -41,8 +42,10 @@ func resourceAwsServiceDiscoveryPublicDnsNamespace() *schema.Resource {
 func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
 
+	requestId := resource.PrefixedUniqueId(fmt.Sprintf("tf-%s", d.Get("name").(string)))
 	input := &servicediscovery.CreatePublicDnsNamespaceInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name:             aws.String(d.Get("name").(string)),
+		CreatorRequestId: aws.String(requestId),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -55,12 +58,10 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData,
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{servicediscovery.OperationStatusSubmitted, servicediscovery.OperationStatusPending},
-		Target:     []string{servicediscovery.OperationStatusSuccess},
-		Refresh:    servicediscoveryOperationRefreshStatusFunc(conn, *resp.OperationId),
-		Timeout:    5 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Pending: []string{servicediscovery.OperationStatusSubmitted, servicediscovery.OperationStatusPending},
+		Target:  []string{servicediscovery.OperationStatusSuccess},
+		Refresh: servicediscoveryOperationRefreshStatusFunc(conn, *resp.OperationId),
+		Timeout: 5 * time.Minute,
 	}
 
 	opresp, err := stateConf.WaitForState()
@@ -69,7 +70,7 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData,
 	}
 
 	d.SetId(*opresp.(*servicediscovery.GetOperationOutput).Operation.Targets["NAMESPACE"])
-	return nil
+	return resourceAwsServiceDiscoveryPublicDnsNamespaceRead(d, meta)
 }
 
 func resourceAwsServiceDiscoveryPublicDnsNamespaceRead(d *schema.ResourceData, meta interface{}) error {
@@ -113,12 +114,10 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceDelete(d *schema.ResourceData,
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{servicediscovery.OperationStatusSubmitted, servicediscovery.OperationStatusPending},
-		Target:     []string{servicediscovery.OperationStatusSuccess},
-		Refresh:    servicediscoveryOperationRefreshStatusFunc(conn, *resp.OperationId),
-		Timeout:    5 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Pending: []string{servicediscovery.OperationStatusSubmitted, servicediscovery.OperationStatusPending},
+		Target:  []string{servicediscovery.OperationStatusSuccess},
+		Refresh: servicediscoveryOperationRefreshStatusFunc(conn, *resp.OperationId),
+		Timeout: 5 * time.Minute,
 	}
 
 	_, err = stateConf.WaitForState()
