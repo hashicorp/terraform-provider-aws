@@ -18,6 +18,7 @@ IMPROVEMENTS:
 * resource/aws_ecs_cluster: Add arn attribute [GH-2552]
 * resource/aws_elasticache_security_group: Add import support [GH-2277]
 * resource/aws_sqs_queue_policy: Support import by queue URL [GH-2544]
+* resource/aws_elasticsearch_domain: Add `log_publishing_options` [GH-2285]
 
 BUG FIXES:
 
