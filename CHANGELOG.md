@@ -7,6 +7,7 @@ FEATURES:
 * **New Resource:** `aws_dx_connection_association` [GH-2360]
 * **New Resource:** `aws_appautoscaling_scheduled_action` [GH-2231]
 * **New Resource:** `aws_cloudwatch_log_resource_policy` [GH-2243]
+* **New Resource:** `aws_media_store_container` [GH-2448]
 
 IMPROVEMENTS:
 
