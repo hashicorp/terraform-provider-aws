@@ -66,8 +66,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Required: true,
 						},
 						"role_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 						"state_reason": {
 							Type:     schema.TypeString,
@@ -124,8 +125,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Required: true,
 						},
 						"role_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -164,8 +166,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Optional: true,
 						},
 						"role_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 						"table_name": {
 							Type:     schema.TypeString,
@@ -192,8 +195,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Required: true,
 						},
 						"role_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 						"type": {
 							Type:     schema.TypeString,
@@ -212,8 +216,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Required: true,
 						},
 						"role_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -228,8 +233,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Required: true,
 						},
 						"role_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 						"stream_name": {
 							Type:     schema.TypeString,
@@ -244,8 +250,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"function_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -256,8 +263,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"role_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 						"topic": {
 							Type:     schema.TypeString,
@@ -280,8 +288,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Required: true,
 						},
 						"role_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -296,12 +305,14 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Required: true,
 						},
 						"target_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 						"role_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -316,8 +327,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Required: true,
 						},
 						"role_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 						"use_base64": {
 							Type:     schema.TypeBool,
@@ -327,8 +339,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 				},
 			},
 			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Computed:     true,
+				ValidateFunc: validateArn,
 			},
 		},
 	}
