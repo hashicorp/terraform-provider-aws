@@ -1,7 +1,6 @@
 package aws
 
 import (
-	//"log"
 	"fmt"
 	"regexp"
 	"strings"
@@ -18,7 +17,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 		Update: resourceAwsIotTopicRuleUpdate,
 		Delete: resourceAwsIotTopicRuleDelete,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: func(v interface{}, s string) ([]string, []error) {
@@ -40,40 +39,40 @@ func resourceAwsIotTopicRule() *schema.Resource {
 					return nil, nil
 				},
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"enabled": &schema.Schema{
+			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"sql": &schema.Schema{
+			"sql": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"sql_version": &schema.Schema{
+			"sql_version": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"cloudwatch_alarm": &schema.Schema{
+			"cloudwatch_alarm": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"alarm_name": &schema.Schema{
+						"alarm_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"role_arn": &schema.Schema{
+						"role_arn": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"state_reason": &schema.Schema{
+						"state_reason": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"state_value": &schema.Schema{
+						"state_value": {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: func(v interface{}, s string) ([]string, []error) {
@@ -91,235 +90,235 @@ func resourceAwsIotTopicRule() *schema.Resource {
 					},
 				},
 			},
-			"cloudwatch_metric": &schema.Schema{
+			"cloudwatch_metric": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"metric_name": &schema.Schema{
+						"metric_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"metric_namespace": &schema.Schema{
+						"metric_namespace": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"metric_timestamp": &schema.Schema{
+						"metric_timestamp": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"metric_unit": &schema.Schema{
+						"metric_unit": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"metric_value": &schema.Schema{
+						"metric_value": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"role_arn": &schema.Schema{
+						"role_arn": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"dynamodb": &schema.Schema{
+			"dynamodb": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"hash_key_field": &schema.Schema{
+						"hash_key_field": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"hash_key_value": &schema.Schema{
+						"hash_key_value": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"hash_key_type": &schema.Schema{
+						"hash_key_type": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"payload_field": &schema.Schema{
+						"payload_field": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"range_key_field": &schema.Schema{
+						"range_key_field": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"range_key_value": &schema.Schema{
+						"range_key_value": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"range_key_type": &schema.Schema{
+						"range_key_type": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"role_arn": &schema.Schema{
+						"role_arn": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"table_name": &schema.Schema{
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"elasticsearch": &schema.Schema{
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"endpoint": &schema.Schema{
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"id": &schema.Schema{
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"index": &schema.Schema{
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": &schema.Schema{
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"type": &schema.Schema{
+						"table_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"firehose": &schema.Schema{
+			"elasticsearch": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delivery_stream_name": &schema.Schema{
+						"endpoint": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"role_arn": &schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"index": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"role_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"kinesis": &schema.Schema{
+			"firehose": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"partition_key": &schema.Schema{
+						"delivery_stream_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"role_arn": &schema.Schema{
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"stream_name": &schema.Schema{
+						"role_arn": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"lambda": &schema.Schema{
+			"kinesis": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"function_arn": &schema.Schema{
+						"partition_key": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"role_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"stream_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"republish": &schema.Schema{
+			"lambda": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"role_arn": &schema.Schema{
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"topic": &schema.Schema{
+						"function_arn": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"s3": &schema.Schema{
+			"republish": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": &schema.Schema{
+						"role_arn": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"key": &schema.Schema{
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": &schema.Schema{
+						"topic": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"sns": &schema.Schema{
+			"s3": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"message_format": &schema.Schema{
+						"bucket_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"target_arn": &schema.Schema{
+						"key": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"role_arn": &schema.Schema{
+						"role_arn": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"sqs": &schema.Schema{
+			"sns": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"queue_url": &schema.Schema{
+						"message_format": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"role_arn": &schema.Schema{
+						"target_arn": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"use_base64": &schema.Schema{
+						"role_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"sqs": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"queue_url": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"role_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"use_base64": {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
 					},
 				},
 			},
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
