@@ -36,7 +36,7 @@ func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
 
 func TestAccAWSCloudWatchMetricAlarm_datapointsToAlarm(t *testing.T) {
 	var alarm cloudwatch.MetricAlarm
-	rName := fmt.Sprintf("%s-%s", t.Name(), acctest.RandInt())
+	rName := fmt.Sprintf("%s-%d", t.Name(), acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
