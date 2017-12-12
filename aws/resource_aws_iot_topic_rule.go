@@ -76,6 +76,17 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"state_value": &schema.Schema{
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: func(v interface{}, s string) ([]string, []error) {
+								switch v.(string) {
+								case
+									"OK",
+									"ALARM",
+									"INSUFFICIENT_DATA":
+									return nil, nil
+								}
+
+								return nil, []error{fmt.Errorf("State must be one of OK, ALARM, or INSUFFICIENT_DATA")}
+							},
 						},
 					},
 				},
