@@ -412,6 +412,24 @@ func TestAccAWSS3Bucket_WebsiteRoutingRules(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3Bucket_enableDefaultEncryption_whenTypical(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketEnableDefaultEncryption(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("aws_s3_bucket.arbitrary"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 // Test TestAccAWSS3Bucket_shouldFailNotFound is designed to fail with a "plan
 // not empty" error in Terraform, to check against regresssions.
 // See https://github.com/hashicorp/terraform/pull/2925
@@ -1421,6 +1439,27 @@ resource "aws_s3_bucket" "bucket" {
 	acl = "public-read"
 }
 `, randInt)
+}
+
+func testAccAWSS3BucketEnableDefaultEncryption(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "arbitrary" {
+  description             = "KMS Key for Bucket Testing %d"
+  deletion_window_in_days = 10
+}
+
+resource "aws_s3_bucket" "arbitrary" {
+  bucket = "tf-test-bucket-%d"
+  server_side_encryption_configuration {
+	rule {
+	  apply_server_side_encryption_by_default {
+		kms_master_key_id = "${aws_kms_key.arbitrary.arn}"
+	  	sse_algorithm     = "aws:kms"
+	  }
+	}
+  }
+}
+`, randInt, randInt)
 }
 
 func testAccAWSS3BucketConfigWithEmptyPolicy(randInt int) string {

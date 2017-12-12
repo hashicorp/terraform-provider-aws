@@ -1587,10 +1587,10 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(s3conn *s3.S3, d
 	rules := []*s3.ServerSideEncryptionRule{}
 	for _, v := range rcRules {
 		rr := v.(map[string]interface{})
-		rrDefault := rr["apply_server_side_encryption_by_default"].(map[string]interface{})
+		rrDefault := rr["apply_server_side_encryption_by_default"].([]interface{})
 		rcDefaultRule := &s3.ServerSideEncryptionByDefault{
-			SSEAlgorithm:   aws.String(rrDefault["sse_algorithm"].(string)),
-			KMSMasterKeyID: aws.String(rrDefault["kms_master_key_id"].(string)),
+			SSEAlgorithm:   aws.String(rrDefault[0].(map[string]interface{})["sse_algorithm"].(string)),
+			KMSMasterKeyID: aws.String(rrDefault[0].(map[string]interface{})["kms_master_key_id"].(string)),
 		}
 		rcRule := &s3.ServerSideEncryptionRule{
 			ApplyServerSideEncryptionByDefault: rcDefaultRule,
