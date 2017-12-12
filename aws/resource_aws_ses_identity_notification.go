@@ -17,18 +17,21 @@ func resourceAwsSesNotification() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"topic_arn": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: false,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"notification_type": &schema.Schema{
-				Type:     schema.TypeSet,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateNotificationType,
 			},
 
 			"identity": &schema.Schema{
-				Type:     schema.TypeSet,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateIdentity,
 			},
 		},
 	}
@@ -46,7 +49,9 @@ func resourceAwsSesNotificationSet(d *schema.ResourceData, meta interface{}) err
 		SnsTopic:         aws.String(topic),
 	}
 
-	_, err := conn.SetIdentityNotificationTopicRequest(setOpts).Send()
+	log.Printf("[DEBUG] Setting SES Identity Notification: %#v", setOpts)
+
+	_, err := conn.SetIdentityNotificationTopic(setOpts).Send()
 
 	if err != nil {
 		return fmt.Errorf("Error setting SES Identity Notification: %s", err)
@@ -64,6 +69,8 @@ func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) er
 		Identities: []*string{aws.String(identity)},
 	}
 
+	log.Printf("[DEBUG] Reading SES Identity Notification Attributes: %#v", getOpts)
+
 	response, err := conn.GetIdentityNotificationAttributes(getOpts)
 
 	if err != nil {
@@ -72,16 +79,16 @@ func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) er
 
 	notificationAttributes := response.NotificationAttributes[identity]
 	switch notification {
-	case "Bounce":
-		if err := d.Set("topic", notificationAttributes.BounceTopic); err != nil {
+	case ses.NotificationTypeBounce:
+		if err := d.Set("topic_arn", notificationAttributes.BounceTopic); err != nil {
 			return err
 		}
-	case "Complain":
-		if err := d.Set("topic", notificationAttributes.ComplaintTopic); err != nil {
+	case ses.NotificationTypeComplaint:
+		if err := d.Set("topic_arn", notificationAttributes.ComplaintTopic); err != nil {
 			return err
 		}
-	case "Delivery":
-		if err := d.Set("topic", notificationAttributes.DeliveryTopic); err != nil {
+	case ses.NotificationTypeDelivery:
+		if err := d.Set("topic_arn", notificationAttributes.DeliveryTopic); err != nil {
 			return err
 		}
 	}
@@ -90,6 +97,42 @@ func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSesNotificationDelete(d *schema.ResourceData, meta interface{}) error {
-	d.Set("topic_arn", nil)
-	return resourceAwsSesNotificationSet(d, meta)
+	notification := d.Get("notification_type").(string)
+	identity := d.Get("identity").(string)
+
+	setOpts := &ses.SetIdentityNotificationTopicInput{
+		Identity:         aws.String(identity),
+		NotificationType: aws.String(notification),
+		SnsTopic:         nil,
+	}
+
+	log.Printf("[DEBUG] Deleting SES Identity Notification: %#v", setOpts)
+
+	_, err := conn.SetIdentityNotificationTopic(setOpts).Send()
+
+	if err != nil {
+		return fmt.Errorf("Error deleting SES Identity Notification: %s", err)
+	}
+
+	return resourceAwsSesNotificationRead(d, meta)
+}
+
+func validateNotificationType(v interface{}, k string) (ws []string, errors []error) {
+	value := strings.Title(strings.ToLower(v.(string)))
+	if value == "Bounce" || value == "Complaint" || value == "Delivery" {
+		return
+	}
+
+	errors = append(errors, fmt.Errorf("%q must be either %q, %q or %q", k, "Bounce", "Complaint", "Delivery"))
+	return
+}
+
+func validateIdentity(v interface{}, k string) (ws []string, errors []error) {
+	value := strings.ToLower(v.(string))
+	if value != "" {
+		return
+	}
+
+	errors = append(errors, fmt.Errorf("%q must not be empty", k))
+	return
 }
