@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -106,6 +107,13 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"metric_timestamp": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: func(v interface{}, s string) ([]string, []error) {
+								dateString := v.(string)
+								if _, err := time.Parse(time.RFC3339, dateString); err != nil {
+									return nil, []error{err}
+								}
+								return nil, nil
+							},
 						},
 						"metric_unit": {
 							Type:     schema.TypeString,
