@@ -1045,6 +1045,19 @@ func expandESEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 	return &options
 }
 
+func flattenESEncryptAtRestOptions(o *elasticsearch.EncryptionAtRestOptions) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if o.Enabled != nil {
+		m["enabled"] = *o.Enabled
+	}
+	if o.KmsKeyId != nil {
+		m["kms_key_id"] = *o.KmsKeyId
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func expandESEncryptAtRestOptions(m map[string]interface{}) *elasticsearch.EncryptionAtRestOptions {
 	options := elasticsearch.EncryptionAtRestOptions{}
 

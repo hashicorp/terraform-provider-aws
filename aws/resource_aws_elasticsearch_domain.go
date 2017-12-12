@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"strings"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -101,8 +102,11 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							ForceNew: true,
 						},
 						"kms_key_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							DiffSuppressFunc: suppressEquivalentKmsKeyIds,
 						},
 					},
 				},
@@ -494,6 +498,10 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
+	err = d.Set("encrypt_at_rest", flattenESEncryptAtRestOptions(ds.EncryptionAtRestOptions))
+	if err != nil {
+		return err
+	}
 	err = d.Set("cluster_config", flattenESClusterConfig(ds.ElasticsearchClusterConfig))
 	if err != nil {
 		return err
@@ -706,4 +714,11 @@ func resourceAwsElasticSearchDomainDelete(d *schema.ResourceData, meta interface
 	d.SetId("")
 
 	return err
+}
+
+func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {
+	// The Elasticsearch API accepts a short KMS key id but always returns the ARN of the key.
+	// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'.
+	// These should be treated as equivalent.
+	return strings.Contains(old, new)
 }
