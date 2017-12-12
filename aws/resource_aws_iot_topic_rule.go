@@ -2,6 +2,9 @@ package aws
 
 import (
 	//"log"
+	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -18,6 +21,24 @@ func resourceAwsIotTopicRule() *schema.Resource {
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: func(v interface{}, s string) ([]string, []error) {
+					name := v.(string)
+					if len(name) < 1 || len(name) > 128 {
+						return nil, []error{fmt.Errorf("Name must between 1 and 128 characters long")}
+					}
+
+					matched, err := regexp.MatchReader("^[a-zA-Z0-9_]+$", strings.NewReader(name))
+
+					if err != nil {
+						return nil, []error{err}
+					}
+
+					if !matched {
+						return nil, []error{fmt.Errorf("Name must match the pattern ^[a-zA-Z0-9_]+$")}
+					}
+
+					return nil, nil
+				},
 			},
 			"description": &schema.Schema{
 				Type:     schema.TypeString,
