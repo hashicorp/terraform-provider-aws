@@ -51,8 +51,8 @@ func testAccCheckAwsSESIdentityNotificationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if response.VerificationAttributes[identity] != nil {
-			return fmt.Errorf("SES Identity Notification %s still exists. Failing!", domain)
+		if response.NotificationAttributes[identity] != nil {
+			return fmt.Errorf("SES Identity Notification %s still exists. Failing!", identity)
 		}
 	}
 
@@ -82,7 +82,7 @@ func testAccCheckAwsSESIdentityNotificationExists(n string) resource.TestCheckFu
 			return err
 		}
 
-		if response.VerificationAttributes[identity] == nil {
+		if response.NotificationAttributes[identity] == nil {
 			return fmt.Errorf("SES Identity Notification %s not found in AWS", identity)
 		}
 
