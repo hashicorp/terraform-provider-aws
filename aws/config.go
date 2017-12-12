@@ -66,6 +66,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/simpledb"
@@ -181,6 +182,7 @@ type AWSClient struct {
 	codedeployconn        *codedeploy.CodeDeploy
 	codecommitconn        *codecommit.CodeCommit
 	codepipelineconn      *codepipeline.CodePipeline
+	sdconn                *servicediscovery.ServiceDiscovery
 	sfnconn               *sfn.SFN
 	ssmconn               *ssm.SSM
 	wafconn               *waf.WAF
@@ -418,6 +420,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.simpledbconn = simpledb.New(sess)
 	client.s3conn = s3.New(awsS3Sess)
 	client.scconn = servicecatalog.New(sess)
+	client.sdconn = servicediscovery.New(sess)
 	client.sesConn = ses.New(sess)
 	client.sfnconn = sfn.New(sess)
 	client.snsconn = sns.New(awsSnsSess)
