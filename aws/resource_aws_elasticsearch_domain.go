@@ -102,7 +102,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 						},
 						"kms_key_id": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 					},
 				},

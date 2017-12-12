@@ -261,7 +261,7 @@ func TestAccAWSElasticSearchDomain_policy(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticSearchDomain_encrypt_at_rest(t *testing.T) {
+func TestAccAWSElasticSearchDomain_encrypt_at_rest_default_key(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
 	resource.Test(t, resource.TestCase{
@@ -270,9 +270,29 @@ func TestAccAWSElasticSearchDomain_encrypt_at_rest(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfigWithEncryptAtRest(acctest.RandInt()),
+				Config: testAccESDomainConfigWithEncryptAtRestDefaultKey(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESEncrypted(true, &domain),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_encrypt_at_rest_specify_key(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfigWithEncryptAtRestWithKey(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESEncrypted(true, &domain),
 				),
 			},
 		},
@@ -352,6 +372,16 @@ func testAccCheckESNumberOfInstances(numberOfInstances int, status *elasticsearc
 		conf := status.ElasticsearchClusterConfig
 		if *conf.InstanceCount != int64(numberOfInstances) {
 			return fmt.Errorf("Number of instances differ. Given: %d, Expected: %d", *conf.InstanceCount, numberOfInstances)
+		}
+		return nil
+	}
+}
+
+func testAccCheckESEncrypted(encrypted bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conf := status.EncryptionAtRestOptions
+		if *conf.Enabled != encrypted {
+			return fmt.Errorf("Encrypt at rest not set properly. Given: %t, Expected: %t", *conf.Enabled, encrypted)
 		}
 		return nil
 	}
@@ -523,7 +553,32 @@ data "aws_iam_policy_document" "instance-assume-role-policy" {
 `, randESId, randRoleId)
 }
 
-func testAccESDomainConfigWithEncryptAtRest(randESId int) string {
+func testAccESDomainConfigWithEncryptAtRestDefaultKey(randESId int) string {
+	return fmt.Sprintf(`
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+  elasticsearch_version = "6.0"
+
+  # Encrypt at rest requires m4/c4/r4/i2 instances. See http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html
+  cluster_config {
+    instance_type = "m4.large.elasticsearch"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  encrypt_at_rest {
+    enabled    = true
+  }
+}
+`, randESId)
+}
+
+func testAccESDomainConfigWithEncryptAtRestWithKey(randESId int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "es" {
   description             = "kms-key-for-tf-test-%d"
