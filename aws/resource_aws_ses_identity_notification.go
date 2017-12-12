@@ -53,9 +53,7 @@ func resourceAwsSesNotificationSet(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[DEBUG] Setting SES Identity Notification: %#v", setOpts)
 
-	_, err := conn.SetIdentityNotificationTopic(setOpts).Send()
-
-	if err != nil {
+	if _, err := conn.SetIdentityNotificationTopic(setOpts); err != nil {
 		return fmt.Errorf("Error setting SES Identity Notification: %s", err)
 	}
 
@@ -111,9 +109,7 @@ func resourceAwsSesNotificationDelete(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[DEBUG] Deleting SES Identity Notification: %#v", setOpts)
 
-	_, err := conn.SetIdentityNotificationTopic(setOpts).Send()
-
-	if err != nil {
+	if _, err := conn.SetIdentityNotificationTopic(setOpts); err != nil {
 		return fmt.Errorf("Error deleting SES Identity Notification: %s", err)
 	}
 
