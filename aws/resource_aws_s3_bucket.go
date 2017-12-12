@@ -998,6 +998,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	} else {
 		encryption := encryptionResponse.(*s3.GetBucketEncryptionOutput)
+		log.Printf("[DEBUG] S3 Bucket: %s, read encryption configuration: %v", d.Id(), encryption)
 		if c := encryption.ServerSideEncryptionConfiguration; c != nil {
 			if err := d.Set("server_side_encryption_configuration", flatternAwsS3ServerSideEncryptionConfiguration(c)); err != nil {
 				log.Printf("[DEBUG] Error setting server side encryption configuration: %s", err)
@@ -1561,8 +1562,8 @@ func resourceAwsS3BucketRequestPayerUpdate(s3conn *s3.S3, d *schema.ResourceData
 func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(s3conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	serverSideEncryptionConfiguration := d.Get("server_side_encryption_configuration").([]interface{})
-
 	if len(serverSideEncryptionConfiguration) == 0 {
+		log.Printf("[DEBUG] Delete server side encryption configuration: %#v", serverSideEncryptionConfiguration)
 		i := &s3.DeleteBucketEncryptionInput{
 			Bucket: aws.String(bucket),
 		}
@@ -1584,7 +1585,7 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(s3conn *s3.S3, d
 	rc := &s3.ServerSideEncryptionConfiguration{}
 
 	rcRules := c["rule"].([]interface{})
-	rules := []*s3.ServerSideEncryptionRule{}
+	var rules []*s3.ServerSideEncryptionRule
 	for _, v := range rcRules {
 		rr := v.(map[string]interface{})
 		rrDefault := rr["apply_server_side_encryption_by_default"].([]interface{})
@@ -1863,18 +1864,21 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 }
 
 func flatternAwsS3ServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionConfiguration) []map[string]interface{} {
-	encryptionConfiguration := make([]map[string]interface{}, 0, 1)
+	var encryptionConfiguration []map[string]interface{}
 	rules := make([]interface{}, 0, len(c.Rules))
 	for _, v := range c.Rules {
 		if v.ApplyServerSideEncryptionByDefault != nil {
 			r := make(map[string]interface{})
 			d := make(map[string]interface{})
-			d["kms_master_key_id"] = *v.ApplyServerSideEncryptionByDefault.KMSMasterKeyID
-			d["sse_algorithm"] = *v.ApplyServerSideEncryptionByDefault.SSEAlgorithm
-			r["apply_server_side_encryption_by_default"] = d
+			d["kms_master_key_id"] = aws.StringValue(v.ApplyServerSideEncryptionByDefault.KMSMasterKeyID)
+			d["sse_algorithm"] = aws.StringValue(v.ApplyServerSideEncryptionByDefault.SSEAlgorithm)
+			r["apply_server_side_encryption_by_default"] = []map[string]interface{}{d}
 			rules = append(rules, r)
 		}
 	}
+	encryptionConfiguration = append(encryptionConfiguration, map[string]interface{}{
+		"rule": rules,
+	})
 	return encryptionConfiguration
 }
 
