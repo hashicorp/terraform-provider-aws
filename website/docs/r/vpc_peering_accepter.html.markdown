@@ -6,7 +6,7 @@ description: |-
   Manage the accepter's side of a cross-account VPC Peering Connection.
 ---
 
-# aws\_vpc\_peering\_connection\_accepter
+# aws_vpc_peering_connection_accepter
 
 Provides a resource to manage the accepter's side of a cross-account VPC Peering Connection.
 

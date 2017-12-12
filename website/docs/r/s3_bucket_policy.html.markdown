@@ -6,7 +6,7 @@ description: |-
   Attaches a policy to an S3 bucket resource.
 ---
 
-# aws\_s3\_bucket\_policy
+# aws_s3_bucket_policy
 
 Attaches a policy to an S3 bucket resource.
 

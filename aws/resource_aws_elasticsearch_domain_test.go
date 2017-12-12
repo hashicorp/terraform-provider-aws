@@ -216,6 +216,23 @@ func TestAccAWSElasticSearchDomain_internetToVpcEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_LogPublishingOptions(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckESNumberOfSecurityGroups(numberOfSecurityGroups int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		count := len(status.VPCOptions.SecurityGroupIds)
@@ -414,7 +431,7 @@ resource "aws_elasticsearch_domain" "example" {
   ebs_options {
     ebs_enabled = true
 		volume_size = 10
-		
+
   }
 
   cluster_config {
@@ -703,4 +720,47 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt)
+}
+
+func testAccESDomainConfig_LogPublishingOptions(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "example" {
+  name = "tf-test-%d"
+}
+
+resource "aws_cloudwatch_log_resource_policy" "example" {
+  policy_name = "tf-cwlp-%d"
+  policy_document = <<CONFIG
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "es.amazonaws.com"
+      },
+      "Action": [
+        "logs:PutLogEvents",
+        "logs:PutLogEventsBatch",
+        "logs:CreateLogStream"
+      ],
+      "Resource": "arn:aws:logs:*"
+    }
+  ]
+}
+CONFIG
+}
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+  log_publishing_options {
+    log_type = "INDEX_SLOW_LOGS"
+    cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.example.arn}"
+  }
+}
+`, randInt, randInt, randInt)
 }

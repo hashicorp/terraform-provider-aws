@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF Byte Match Set resource.
 ---
 
-# aws\_waf\_byte\_match\_set
+# aws_waf_byte_match_set
 
 Provides a WAF Byte Match Set Resource
 

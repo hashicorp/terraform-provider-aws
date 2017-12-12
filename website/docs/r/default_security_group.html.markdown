@@ -6,7 +6,7 @@ description: |-
   Manage the default Security Group resource.
 ---
 
-# aws\_default\_security\_group
+# aws_default_security_group
 
 Provides a resource to manage the default AWS Security Group.
 

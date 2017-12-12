@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic IP resource.
 ---
 
-# aws\_eip
+# aws_eip
 
 Provides an Elastic IP resource.
 

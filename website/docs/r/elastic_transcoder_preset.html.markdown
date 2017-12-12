@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Transcoder preset resource.
 ---
 
-# aws\_elastictranscoder\_preset
+# aws_elastictranscoder_preset
 
 Provides an Elastic Transcoder preset resource.
 

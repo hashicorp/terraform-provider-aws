@@ -36,7 +36,7 @@ const opBatchCreatePartition = "BatchCreatePartition"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchCreatePartition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchCreatePartition
 func (c *Glue) BatchCreatePartitionRequest(input *BatchCreatePartitionInput) (req *request.Request, output *BatchCreatePartitionOutput) {
 	op := &request.Operation{
 		Name:       opBatchCreatePartition,
@@ -83,7 +83,7 @@ func (c *Glue) BatchCreatePartitionRequest(input *BatchCreatePartitionInput) (re
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchCreatePartition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchCreatePartition
 func (c *Glue) BatchCreatePartition(input *BatchCreatePartitionInput) (*BatchCreatePartitionOutput, error) {
 	req, out := c.BatchCreatePartitionRequest(input)
 	return out, req.Send()
@@ -130,7 +130,7 @@ const opBatchDeleteConnection = "BatchDeleteConnection"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteConnection
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteConnection
 func (c *Glue) BatchDeleteConnectionRequest(input *BatchDeleteConnectionInput) (req *request.Request, output *BatchDeleteConnectionOutput) {
 	op := &request.Operation{
 		Name:       opBatchDeleteConnection,
@@ -165,7 +165,7 @@ func (c *Glue) BatchDeleteConnectionRequest(input *BatchDeleteConnectionInput) (
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteConnection
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteConnection
 func (c *Glue) BatchDeleteConnection(input *BatchDeleteConnectionInput) (*BatchDeleteConnectionOutput, error) {
 	req, out := c.BatchDeleteConnectionRequest(input)
 	return out, req.Send()
@@ -212,7 +212,7 @@ const opBatchDeletePartition = "BatchDeletePartition"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeletePartition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeletePartition
 func (c *Glue) BatchDeletePartitionRequest(input *BatchDeletePartitionInput) (req *request.Request, output *BatchDeletePartitionOutput) {
 	op := &request.Operation{
 		Name:       opBatchDeletePartition,
@@ -253,7 +253,7 @@ func (c *Glue) BatchDeletePartitionRequest(input *BatchDeletePartitionInput) (re
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeletePartition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeletePartition
 func (c *Glue) BatchDeletePartition(input *BatchDeletePartitionInput) (*BatchDeletePartitionOutput, error) {
 	req, out := c.BatchDeletePartitionRequest(input)
 	return out, req.Send()
@@ -300,7 +300,7 @@ const opBatchDeleteTable = "BatchDeleteTable"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteTable
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteTable
 func (c *Glue) BatchDeleteTableRequest(input *BatchDeleteTableInput) (req *request.Request, output *BatchDeleteTableOutput) {
 	op := &request.Operation{
 		Name:       opBatchDeleteTable,
@@ -341,7 +341,7 @@ func (c *Glue) BatchDeleteTableRequest(input *BatchDeleteTableInput) (req *reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteTable
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteTable
 func (c *Glue) BatchDeleteTable(input *BatchDeleteTableInput) (*BatchDeleteTableOutput, error) {
 	req, out := c.BatchDeleteTableRequest(input)
 	return out, req.Send()
@@ -388,7 +388,7 @@ const opBatchGetPartition = "BatchGetPartition"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetPartition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetPartition
 func (c *Glue) BatchGetPartitionRequest(input *BatchGetPartitionInput) (req *request.Request, output *BatchGetPartitionOutput) {
 	op := &request.Operation{
 		Name:       opBatchGetPartition,
@@ -429,7 +429,7 @@ func (c *Glue) BatchGetPartitionRequest(input *BatchGetPartitionInput) (req *req
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   An internal service error occurred.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetPartition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetPartition
 func (c *Glue) BatchGetPartition(input *BatchGetPartitionInput) (*BatchGetPartitionOutput, error) {
 	req, out := c.BatchGetPartitionRequest(input)
 	return out, req.Send()
@@ -476,7 +476,7 @@ const opBatchStopJobRun = "BatchStopJobRun"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchStopJobRun
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchStopJobRun
 func (c *Glue) BatchStopJobRunRequest(input *BatchStopJobRunInput) (req *request.Request, output *BatchStopJobRunOutput) {
 	op := &request.Operation{
 		Name:       opBatchStopJobRun,
@@ -514,7 +514,7 @@ func (c *Glue) BatchStopJobRunRequest(input *BatchStopJobRunInput) (req *request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchStopJobRun
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchStopJobRun
 func (c *Glue) BatchStopJobRun(input *BatchStopJobRunInput) (*BatchStopJobRunOutput, error) {
 	req, out := c.BatchStopJobRunRequest(input)
 	return out, req.Send()
@@ -561,7 +561,7 @@ const opCreateClassifier = "CreateClassifier"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateClassifier
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateClassifier
 func (c *Glue) CreateClassifierRequest(input *CreateClassifierInput) (req *request.Request, output *CreateClassifierOutput) {
 	op := &request.Operation{
 		Name:       opCreateClassifier,
@@ -600,7 +600,7 @@ func (c *Glue) CreateClassifierRequest(input *CreateClassifierInput) (req *reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateClassifier
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateClassifier
 func (c *Glue) CreateClassifier(input *CreateClassifierInput) (*CreateClassifierOutput, error) {
 	req, out := c.CreateClassifierRequest(input)
 	return out, req.Send()
@@ -647,7 +647,7 @@ const opCreateConnection = "CreateConnection"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateConnection
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateConnection
 func (c *Glue) CreateConnectionRequest(input *CreateConnectionInput) (req *request.Request, output *CreateConnectionOutput) {
 	op := &request.Operation{
 		Name:       opCreateConnection,
@@ -685,7 +685,7 @@ func (c *Glue) CreateConnectionRequest(input *CreateConnectionInput) (req *reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateConnection
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateConnection
 func (c *Glue) CreateConnection(input *CreateConnectionInput) (*CreateConnectionOutput, error) {
 	req, out := c.CreateConnectionRequest(input)
 	return out, req.Send()
@@ -732,7 +732,7 @@ const opCreateCrawler = "CreateCrawler"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateCrawler
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateCrawler
 func (c *Glue) CreateCrawlerRequest(input *CreateCrawlerInput) (req *request.Request, output *CreateCrawlerOutput) {
 	op := &request.Operation{
 		Name:       opCreateCrawler,
@@ -775,7 +775,7 @@ func (c *Glue) CreateCrawlerRequest(input *CreateCrawlerInput) (req *request.Req
 //   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
 //   A resource numerical limit was exceeded.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateCrawler
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateCrawler
 func (c *Glue) CreateCrawler(input *CreateCrawlerInput) (*CreateCrawlerOutput, error) {
 	req, out := c.CreateCrawlerRequest(input)
 	return out, req.Send()
@@ -822,7 +822,7 @@ const opCreateDatabase = "CreateDatabase"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDatabase
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDatabase
 func (c *Glue) CreateDatabaseRequest(input *CreateDatabaseInput) (req *request.Request, output *CreateDatabaseOutput) {
 	op := &request.Operation{
 		Name:       opCreateDatabase,
@@ -866,7 +866,7 @@ func (c *Glue) CreateDatabaseRequest(input *CreateDatabaseInput) (req *request.R
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDatabase
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDatabase
 func (c *Glue) CreateDatabase(input *CreateDatabaseInput) (*CreateDatabaseOutput, error) {
 	req, out := c.CreateDatabaseRequest(input)
 	return out, req.Send()
@@ -913,7 +913,7 @@ const opCreateDevEndpoint = "CreateDevEndpoint"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDevEndpoint
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDevEndpoint
 func (c *Glue) CreateDevEndpointRequest(input *CreateDevEndpointInput) (req *request.Request, output *CreateDevEndpointOutput) {
 	op := &request.Operation{
 		Name:       opCreateDevEndpoint,
@@ -966,7 +966,7 @@ func (c *Glue) CreateDevEndpointRequest(input *CreateDevEndpointInput) (req *req
 //   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
 //   A resource numerical limit was exceeded.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDevEndpoint
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDevEndpoint
 func (c *Glue) CreateDevEndpoint(input *CreateDevEndpointInput) (*CreateDevEndpointOutput, error) {
 	req, out := c.CreateDevEndpointRequest(input)
 	return out, req.Send()
@@ -1013,7 +1013,7 @@ const opCreateJob = "CreateJob"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateJob
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateJob
 func (c *Glue) CreateJobRequest(input *CreateJobInput) (req *request.Request, output *CreateJobOutput) {
 	op := &request.Operation{
 		Name:       opCreateJob,
@@ -1060,7 +1060,7 @@ func (c *Glue) CreateJobRequest(input *CreateJobInput) (req *request.Request, ou
 //   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
 //   A resource numerical limit was exceeded.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateJob
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateJob
 func (c *Glue) CreateJob(input *CreateJobInput) (*CreateJobOutput, error) {
 	req, out := c.CreateJobRequest(input)
 	return out, req.Send()
@@ -1107,7 +1107,7 @@ const opCreatePartition = "CreatePartition"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreatePartition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreatePartition
 func (c *Glue) CreatePartitionRequest(input *CreatePartitionInput) (req *request.Request, output *CreatePartitionOutput) {
 	op := &request.Operation{
 		Name:       opCreatePartition,
@@ -1154,7 +1154,7 @@ func (c *Glue) CreatePartitionRequest(input *CreatePartitionInput) (req *request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreatePartition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreatePartition
 func (c *Glue) CreatePartition(input *CreatePartitionInput) (*CreatePartitionOutput, error) {
 	req, out := c.CreatePartitionRequest(input)
 	return out, req.Send()
@@ -1201,7 +1201,7 @@ const opCreateScript = "CreateScript"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateScript
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateScript
 func (c *Glue) CreateScriptRequest(input *CreateScriptInput) (req *request.Request, output *CreateScriptOutput) {
 	op := &request.Operation{
 		Name:       opCreateScript,
@@ -1239,7 +1239,7 @@ func (c *Glue) CreateScriptRequest(input *CreateScriptInput) (req *request.Reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateScript
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateScript
 func (c *Glue) CreateScript(input *CreateScriptInput) (*CreateScriptOutput, error) {
 	req, out := c.CreateScriptRequest(input)
 	return out, req.Send()
@@ -1286,7 +1286,7 @@ const opCreateTable = "CreateTable"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTable
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTable
 func (c *Glue) CreateTableRequest(input *CreateTableInput) (req *request.Request, output *CreateTableOutput) {
 	op := &request.Operation{
 		Name:       opCreateTable,
@@ -1333,7 +1333,7 @@ func (c *Glue) CreateTableRequest(input *CreateTableInput) (req *request.Request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTable
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTable
 func (c *Glue) CreateTable(input *CreateTableInput) (*CreateTableOutput, error) {
 	req, out := c.CreateTableRequest(input)
 	return out, req.Send()
@@ -1380,7 +1380,7 @@ const opCreateTrigger = "CreateTrigger"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTrigger
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTrigger
 func (c *Glue) CreateTriggerRequest(input *CreateTriggerInput) (req *request.Request, output *CreateTriggerOutput) {
 	op := &request.Operation{
 		Name:       opCreateTrigger,
@@ -1424,7 +1424,7 @@ func (c *Glue) CreateTriggerRequest(input *CreateTriggerInput) (req *request.Req
 //   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
 //   A resource numerical limit was exceeded.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTrigger
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTrigger
 func (c *Glue) CreateTrigger(input *CreateTriggerInput) (*CreateTriggerOutput, error) {
 	req, out := c.CreateTriggerRequest(input)
 	return out, req.Send()
@@ -1471,7 +1471,7 @@ const opCreateUserDefinedFunction = "CreateUserDefinedFunction"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateUserDefinedFunction
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateUserDefinedFunction
 func (c *Glue) CreateUserDefinedFunctionRequest(input *CreateUserDefinedFunctionInput) (req *request.Request, output *CreateUserDefinedFunctionOutput) {
 	op := &request.Operation{
 		Name:       opCreateUserDefinedFunction,
@@ -1515,7 +1515,7 @@ func (c *Glue) CreateUserDefinedFunctionRequest(input *CreateUserDefinedFunction
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateUserDefinedFunction
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateUserDefinedFunction
 func (c *Glue) CreateUserDefinedFunction(input *CreateUserDefinedFunctionInput) (*CreateUserDefinedFunctionOutput, error) {
 	req, out := c.CreateUserDefinedFunctionRequest(input)
 	return out, req.Send()
@@ -1562,7 +1562,7 @@ const opDeleteClassifier = "DeleteClassifier"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteClassifier
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteClassifier
 func (c *Glue) DeleteClassifierRequest(input *DeleteClassifierInput) (req *request.Request, output *DeleteClassifierOutput) {
 	op := &request.Operation{
 		Name:       opDeleteClassifier,
@@ -1597,7 +1597,7 @@ func (c *Glue) DeleteClassifierRequest(input *DeleteClassifierInput) (req *reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteClassifier
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteClassifier
 func (c *Glue) DeleteClassifier(input *DeleteClassifierInput) (*DeleteClassifierOutput, error) {
 	req, out := c.DeleteClassifierRequest(input)
 	return out, req.Send()
@@ -1644,7 +1644,7 @@ const opDeleteConnection = "DeleteConnection"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteConnection
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteConnection
 func (c *Glue) DeleteConnectionRequest(input *DeleteConnectionInput) (req *request.Request, output *DeleteConnectionOutput) {
 	op := &request.Operation{
 		Name:       opDeleteConnection,
@@ -1679,7 +1679,7 @@ func (c *Glue) DeleteConnectionRequest(input *DeleteConnectionInput) (req *reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteConnection
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteConnection
 func (c *Glue) DeleteConnection(input *DeleteConnectionInput) (*DeleteConnectionOutput, error) {
 	req, out := c.DeleteConnectionRequest(input)
 	return out, req.Send()
@@ -1726,7 +1726,7 @@ const opDeleteCrawler = "DeleteCrawler"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteCrawler
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteCrawler
 func (c *Glue) DeleteCrawlerRequest(input *DeleteCrawlerInput) (req *request.Request, output *DeleteCrawlerOutput) {
 	op := &request.Operation{
 		Name:       opDeleteCrawler,
@@ -1768,7 +1768,7 @@ func (c *Glue) DeleteCrawlerRequest(input *DeleteCrawlerInput) (req *request.Req
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteCrawler
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteCrawler
 func (c *Glue) DeleteCrawler(input *DeleteCrawlerInput) (*DeleteCrawlerOutput, error) {
 	req, out := c.DeleteCrawlerRequest(input)
 	return out, req.Send()
@@ -1815,7 +1815,7 @@ const opDeleteDatabase = "DeleteDatabase"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDatabase
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDatabase
 func (c *Glue) DeleteDatabaseRequest(input *DeleteDatabaseInput) (req *request.Request, output *DeleteDatabaseOutput) {
 	op := &request.Operation{
 		Name:       opDeleteDatabase,
@@ -1856,7 +1856,7 @@ func (c *Glue) DeleteDatabaseRequest(input *DeleteDatabaseInput) (req *request.R
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDatabase
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDatabase
 func (c *Glue) DeleteDatabase(input *DeleteDatabaseInput) (*DeleteDatabaseOutput, error) {
 	req, out := c.DeleteDatabaseRequest(input)
 	return out, req.Send()
@@ -1903,7 +1903,7 @@ const opDeleteDevEndpoint = "DeleteDevEndpoint"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDevEndpoint
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDevEndpoint
 func (c *Glue) DeleteDevEndpointRequest(input *DeleteDevEndpointInput) (req *request.Request, output *DeleteDevEndpointOutput) {
 	op := &request.Operation{
 		Name:       opDeleteDevEndpoint,
@@ -1944,7 +1944,7 @@ func (c *Glue) DeleteDevEndpointRequest(input *DeleteDevEndpointInput) (req *req
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The input provided was not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDevEndpoint
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDevEndpoint
 func (c *Glue) DeleteDevEndpoint(input *DeleteDevEndpointInput) (*DeleteDevEndpointOutput, error) {
 	req, out := c.DeleteDevEndpointRequest(input)
 	return out, req.Send()
@@ -1991,7 +1991,7 @@ const opDeleteJob = "DeleteJob"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteJob
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteJob
 func (c *Glue) DeleteJobRequest(input *DeleteJobInput) (req *request.Request, output *DeleteJobOutput) {
 	op := &request.Operation{
 		Name:       opDeleteJob,
@@ -2029,7 +2029,7 @@ func (c *Glue) DeleteJobRequest(input *DeleteJobInput) (req *request.Request, ou
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteJob
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteJob
 func (c *Glue) DeleteJob(input *DeleteJobInput) (*DeleteJobOutput, error) {
 	req, out := c.DeleteJobRequest(input)
 	return out, req.Send()
@@ -2076,7 +2076,7 @@ const opDeletePartition = "DeletePartition"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeletePartition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeletePartition
 func (c *Glue) DeletePartitionRequest(input *DeletePartitionInput) (req *request.Request, output *DeletePartitionOutput) {
 	op := &request.Operation{
 		Name:       opDeletePartition,
@@ -2117,7 +2117,7 @@ func (c *Glue) DeletePartitionRequest(input *DeletePartitionInput) (req *request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeletePartition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeletePartition
 func (c *Glue) DeletePartition(input *DeletePartitionInput) (*DeletePartitionOutput, error) {
 	req, out := c.DeletePartitionRequest(input)
 	return out, req.Send()
@@ -2164,7 +2164,7 @@ const opDeleteTable = "DeleteTable"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTable
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTable
 func (c *Glue) DeleteTableRequest(input *DeleteTableInput) (req *request.Request, output *DeleteTableOutput) {
 	op := &request.Operation{
 		Name:       opDeleteTable,
@@ -2205,7 +2205,7 @@ func (c *Glue) DeleteTableRequest(input *DeleteTableInput) (req *request.Request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTable
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTable
 func (c *Glue) DeleteTable(input *DeleteTableInput) (*DeleteTableOutput, error) {
 	req, out := c.DeleteTableRequest(input)
 	return out, req.Send()
@@ -2252,7 +2252,7 @@ const opDeleteTrigger = "DeleteTrigger"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTrigger
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTrigger
 func (c *Glue) DeleteTriggerRequest(input *DeleteTriggerInput) (req *request.Request, output *DeleteTriggerOutput) {
 	op := &request.Operation{
 		Name:       opDeleteTrigger,
@@ -2290,7 +2290,7 @@ func (c *Glue) DeleteTriggerRequest(input *DeleteTriggerInput) (req *request.Req
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTrigger
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTrigger
 func (c *Glue) DeleteTrigger(input *DeleteTriggerInput) (*DeleteTriggerOutput, error) {
 	req, out := c.DeleteTriggerRequest(input)
 	return out, req.Send()
@@ -2337,7 +2337,7 @@ const opDeleteUserDefinedFunction = "DeleteUserDefinedFunction"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteUserDefinedFunction
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteUserDefinedFunction
 func (c *Glue) DeleteUserDefinedFunctionRequest(input *DeleteUserDefinedFunctionInput) (req *request.Request, output *DeleteUserDefinedFunctionOutput) {
 	op := &request.Operation{
 		Name:       opDeleteUserDefinedFunction,
@@ -2378,7 +2378,7 @@ func (c *Glue) DeleteUserDefinedFunctionRequest(input *DeleteUserDefinedFunction
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteUserDefinedFunction
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteUserDefinedFunction
 func (c *Glue) DeleteUserDefinedFunction(input *DeleteUserDefinedFunctionInput) (*DeleteUserDefinedFunctionOutput, error) {
 	req, out := c.DeleteUserDefinedFunctionRequest(input)
 	return out, req.Send()
@@ -2425,7 +2425,7 @@ const opGetCatalogImportStatus = "GetCatalogImportStatus"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCatalogImportStatus
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCatalogImportStatus
 func (c *Glue) GetCatalogImportStatusRequest(input *GetCatalogImportStatusInput) (req *request.Request, output *GetCatalogImportStatusOutput) {
 	op := &request.Operation{
 		Name:       opGetCatalogImportStatus,
@@ -2460,7 +2460,7 @@ func (c *Glue) GetCatalogImportStatusRequest(input *GetCatalogImportStatusInput)
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCatalogImportStatus
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCatalogImportStatus
 func (c *Glue) GetCatalogImportStatus(input *GetCatalogImportStatusInput) (*GetCatalogImportStatusOutput, error) {
 	req, out := c.GetCatalogImportStatusRequest(input)
 	return out, req.Send()
@@ -2507,7 +2507,7 @@ const opGetClassifier = "GetClassifier"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifier
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifier
 func (c *Glue) GetClassifierRequest(input *GetClassifierInput) (req *request.Request, output *GetClassifierOutput) {
 	op := &request.Operation{
 		Name:       opGetClassifier,
@@ -2542,7 +2542,7 @@ func (c *Glue) GetClassifierRequest(input *GetClassifierInput) (req *request.Req
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifier
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifier
 func (c *Glue) GetClassifier(input *GetClassifierInput) (*GetClassifierOutput, error) {
 	req, out := c.GetClassifierRequest(input)
 	return out, req.Send()
@@ -2589,7 +2589,7 @@ const opGetClassifiers = "GetClassifiers"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifiers
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifiers
 func (c *Glue) GetClassifiersRequest(input *GetClassifiersInput) (req *request.Request, output *GetClassifiersOutput) {
 	op := &request.Operation{
 		Name:       opGetClassifiers,
@@ -2627,7 +2627,7 @@ func (c *Glue) GetClassifiersRequest(input *GetClassifiersInput) (req *request.R
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifiers
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifiers
 func (c *Glue) GetClassifiers(input *GetClassifiersInput) (*GetClassifiersOutput, error) {
 	req, out := c.GetClassifiersRequest(input)
 	return out, req.Send()
@@ -2724,7 +2724,7 @@ const opGetConnection = "GetConnection"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnection
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnection
 func (c *Glue) GetConnectionRequest(input *GetConnectionInput) (req *request.Request, output *GetConnectionOutput) {
 	op := &request.Operation{
 		Name:       opGetConnection,
@@ -2759,7 +2759,7 @@ func (c *Glue) GetConnectionRequest(input *GetConnectionInput) (req *request.Req
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnection
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnection
 func (c *Glue) GetConnection(input *GetConnectionInput) (*GetConnectionOutput, error) {
 	req, out := c.GetConnectionRequest(input)
 	return out, req.Send()
@@ -2806,7 +2806,7 @@ const opGetConnections = "GetConnections"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnections
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnections
 func (c *Glue) GetConnectionsRequest(input *GetConnectionsInput) (req *request.Request, output *GetConnectionsOutput) {
 	op := &request.Operation{
 		Name:       opGetConnections,
@@ -2847,7 +2847,7 @@ func (c *Glue) GetConnectionsRequest(input *GetConnectionsInput) (req *request.R
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnections
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnections
 func (c *Glue) GetConnections(input *GetConnectionsInput) (*GetConnectionsOutput, error) {
 	req, out := c.GetConnectionsRequest(input)
 	return out, req.Send()
@@ -2944,7 +2944,7 @@ const opGetCrawler = "GetCrawler"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawler
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawler
 func (c *Glue) GetCrawlerRequest(input *GetCrawlerInput) (req *request.Request, output *GetCrawlerOutput) {
 	op := &request.Operation{
 		Name:       opGetCrawler,
@@ -2979,7 +2979,7 @@ func (c *Glue) GetCrawlerRequest(input *GetCrawlerInput) (req *request.Request, 
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawler
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawler
 func (c *Glue) GetCrawler(input *GetCrawlerInput) (*GetCrawlerOutput, error) {
 	req, out := c.GetCrawlerRequest(input)
 	return out, req.Send()
@@ -3026,7 +3026,7 @@ const opGetCrawlerMetrics = "GetCrawlerMetrics"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlerMetrics
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlerMetrics
 func (c *Glue) GetCrawlerMetricsRequest(input *GetCrawlerMetricsInput) (req *request.Request, output *GetCrawlerMetricsOutput) {
 	op := &request.Operation{
 		Name:       opGetCrawlerMetrics,
@@ -3064,7 +3064,7 @@ func (c *Glue) GetCrawlerMetricsRequest(input *GetCrawlerMetricsInput) (req *req
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlerMetrics
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlerMetrics
 func (c *Glue) GetCrawlerMetrics(input *GetCrawlerMetricsInput) (*GetCrawlerMetricsOutput, error) {
 	req, out := c.GetCrawlerMetricsRequest(input)
 	return out, req.Send()
@@ -3161,7 +3161,7 @@ const opGetCrawlers = "GetCrawlers"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlers
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlers
 func (c *Glue) GetCrawlersRequest(input *GetCrawlersInput) (req *request.Request, output *GetCrawlersOutput) {
 	op := &request.Operation{
 		Name:       opGetCrawlers,
@@ -3199,7 +3199,7 @@ func (c *Glue) GetCrawlersRequest(input *GetCrawlersInput) (req *request.Request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlers
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlers
 func (c *Glue) GetCrawlers(input *GetCrawlersInput) (*GetCrawlersOutput, error) {
 	req, out := c.GetCrawlersRequest(input)
 	return out, req.Send()
@@ -3296,7 +3296,7 @@ const opGetDatabase = "GetDatabase"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabase
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabase
 func (c *Glue) GetDatabaseRequest(input *GetDatabaseInput) (req *request.Request, output *GetDatabaseOutput) {
 	op := &request.Operation{
 		Name:       opGetDatabase,
@@ -3337,7 +3337,7 @@ func (c *Glue) GetDatabaseRequest(input *GetDatabaseInput) (req *request.Request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabase
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabase
 func (c *Glue) GetDatabase(input *GetDatabaseInput) (*GetDatabaseOutput, error) {
 	req, out := c.GetDatabaseRequest(input)
 	return out, req.Send()
@@ -3384,7 +3384,7 @@ const opGetDatabases = "GetDatabases"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabases
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabases
 func (c *Glue) GetDatabasesRequest(input *GetDatabasesInput) (req *request.Request, output *GetDatabasesOutput) {
 	op := &request.Operation{
 		Name:       opGetDatabases,
@@ -3428,7 +3428,7 @@ func (c *Glue) GetDatabasesRequest(input *GetDatabasesInput) (req *request.Reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabases
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabases
 func (c *Glue) GetDatabases(input *GetDatabasesInput) (*GetDatabasesOutput, error) {
 	req, out := c.GetDatabasesRequest(input)
 	return out, req.Send()
@@ -3525,7 +3525,7 @@ const opGetDataflowGraph = "GetDataflowGraph"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataflowGraph
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataflowGraph
 func (c *Glue) GetDataflowGraphRequest(input *GetDataflowGraphInput) (req *request.Request, output *GetDataflowGraphOutput) {
 	op := &request.Operation{
 		Name:       opGetDataflowGraph,
@@ -3563,7 +3563,7 @@ func (c *Glue) GetDataflowGraphRequest(input *GetDataflowGraphInput) (req *reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataflowGraph
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataflowGraph
 func (c *Glue) GetDataflowGraph(input *GetDataflowGraphInput) (*GetDataflowGraphOutput, error) {
 	req, out := c.GetDataflowGraphRequest(input)
 	return out, req.Send()
@@ -3610,7 +3610,7 @@ const opGetDevEndpoint = "GetDevEndpoint"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpoint
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpoint
 func (c *Glue) GetDevEndpointRequest(input *GetDevEndpointInput) (req *request.Request, output *GetDevEndpointOutput) {
 	op := &request.Operation{
 		Name:       opGetDevEndpoint,
@@ -3651,7 +3651,7 @@ func (c *Glue) GetDevEndpointRequest(input *GetDevEndpointInput) (req *request.R
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The input provided was not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpoint
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpoint
 func (c *Glue) GetDevEndpoint(input *GetDevEndpointInput) (*GetDevEndpointOutput, error) {
 	req, out := c.GetDevEndpointRequest(input)
 	return out, req.Send()
@@ -3698,7 +3698,7 @@ const opGetDevEndpoints = "GetDevEndpoints"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpoints
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpoints
 func (c *Glue) GetDevEndpointsRequest(input *GetDevEndpointsInput) (req *request.Request, output *GetDevEndpointsOutput) {
 	op := &request.Operation{
 		Name:       opGetDevEndpoints,
@@ -3745,7 +3745,7 @@ func (c *Glue) GetDevEndpointsRequest(input *GetDevEndpointsInput) (req *request
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The input provided was not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpoints
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpoints
 func (c *Glue) GetDevEndpoints(input *GetDevEndpointsInput) (*GetDevEndpointsOutput, error) {
 	req, out := c.GetDevEndpointsRequest(input)
 	return out, req.Send()
@@ -3842,7 +3842,7 @@ const opGetJob = "GetJob"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJob
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJob
 func (c *Glue) GetJobRequest(input *GetJobInput) (req *request.Request, output *GetJobOutput) {
 	op := &request.Operation{
 		Name:       opGetJob,
@@ -3883,7 +3883,7 @@ func (c *Glue) GetJobRequest(input *GetJobInput) (req *request.Request, output *
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJob
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJob
 func (c *Glue) GetJob(input *GetJobInput) (*GetJobOutput, error) {
 	req, out := c.GetJobRequest(input)
 	return out, req.Send()
@@ -3930,7 +3930,7 @@ const opGetJobRun = "GetJobRun"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRun
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRun
 func (c *Glue) GetJobRunRequest(input *GetJobRunInput) (req *request.Request, output *GetJobRunOutput) {
 	op := &request.Operation{
 		Name:       opGetJobRun,
@@ -3971,7 +3971,7 @@ func (c *Glue) GetJobRunRequest(input *GetJobRunInput) (req *request.Request, ou
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRun
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRun
 func (c *Glue) GetJobRun(input *GetJobRunInput) (*GetJobRunOutput, error) {
 	req, out := c.GetJobRunRequest(input)
 	return out, req.Send()
@@ -4018,7 +4018,7 @@ const opGetJobRuns = "GetJobRuns"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRuns
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRuns
 func (c *Glue) GetJobRunsRequest(input *GetJobRunsInput) (req *request.Request, output *GetJobRunsOutput) {
 	op := &request.Operation{
 		Name:       opGetJobRuns,
@@ -4065,7 +4065,7 @@ func (c *Glue) GetJobRunsRequest(input *GetJobRunsInput) (req *request.Request, 
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRuns
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRuns
 func (c *Glue) GetJobRuns(input *GetJobRunsInput) (*GetJobRunsOutput, error) {
 	req, out := c.GetJobRunsRequest(input)
 	return out, req.Send()
@@ -4162,7 +4162,7 @@ const opGetJobs = "GetJobs"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobs
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobs
 func (c *Glue) GetJobsRequest(input *GetJobsInput) (req *request.Request, output *GetJobsOutput) {
 	op := &request.Operation{
 		Name:       opGetJobs,
@@ -4209,7 +4209,7 @@ func (c *Glue) GetJobsRequest(input *GetJobsInput) (req *request.Request, output
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobs
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobs
 func (c *Glue) GetJobs(input *GetJobsInput) (*GetJobsOutput, error) {
 	req, out := c.GetJobsRequest(input)
 	return out, req.Send()
@@ -4306,7 +4306,7 @@ const opGetMapping = "GetMapping"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetMapping
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetMapping
 func (c *Glue) GetMappingRequest(input *GetMappingInput) (req *request.Request, output *GetMappingOutput) {
 	op := &request.Operation{
 		Name:       opGetMapping,
@@ -4347,7 +4347,7 @@ func (c *Glue) GetMappingRequest(input *GetMappingInput) (req *request.Request, 
 //   * ErrCodeEntityNotFoundException "EntityNotFoundException"
 //   A specified entity does not exist
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetMapping
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetMapping
 func (c *Glue) GetMapping(input *GetMappingInput) (*GetMappingOutput, error) {
 	req, out := c.GetMappingRequest(input)
 	return out, req.Send()
@@ -4394,7 +4394,7 @@ const opGetPartition = "GetPartition"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartition
 func (c *Glue) GetPartitionRequest(input *GetPartitionInput) (req *request.Request, output *GetPartitionOutput) {
 	op := &request.Operation{
 		Name:       opGetPartition,
@@ -4435,7 +4435,7 @@ func (c *Glue) GetPartitionRequest(input *GetPartitionInput) (req *request.Reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartition
 func (c *Glue) GetPartition(input *GetPartitionInput) (*GetPartitionOutput, error) {
 	req, out := c.GetPartitionRequest(input)
 	return out, req.Send()
@@ -4482,7 +4482,7 @@ const opGetPartitions = "GetPartitions"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitions
 func (c *Glue) GetPartitionsRequest(input *GetPartitionsInput) (req *request.Request, output *GetPartitionsOutput) {
 	op := &request.Operation{
 		Name:       opGetPartitions,
@@ -4529,7 +4529,7 @@ func (c *Glue) GetPartitionsRequest(input *GetPartitionsInput) (req *request.Req
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   An internal service error occurred.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitions
 func (c *Glue) GetPartitions(input *GetPartitionsInput) (*GetPartitionsOutput, error) {
 	req, out := c.GetPartitionsRequest(input)
 	return out, req.Send()
@@ -4626,7 +4626,7 @@ const opGetPlan = "GetPlan"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPlan
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPlan
 func (c *Glue) GetPlanRequest(input *GetPlanInput) (req *request.Request, output *GetPlanOutput) {
 	op := &request.Operation{
 		Name:       opGetPlan,
@@ -4664,7 +4664,7 @@ func (c *Glue) GetPlanRequest(input *GetPlanInput) (req *request.Request, output
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPlan
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPlan
 func (c *Glue) GetPlan(input *GetPlanInput) (*GetPlanOutput, error) {
 	req, out := c.GetPlanRequest(input)
 	return out, req.Send()
@@ -4711,7 +4711,7 @@ const opGetTable = "GetTable"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTable
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTable
 func (c *Glue) GetTableRequest(input *GetTableInput) (req *request.Request, output *GetTableOutput) {
 	op := &request.Operation{
 		Name:       opGetTable,
@@ -4752,7 +4752,7 @@ func (c *Glue) GetTableRequest(input *GetTableInput) (req *request.Request, outp
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTable
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTable
 func (c *Glue) GetTable(input *GetTableInput) (*GetTableOutput, error) {
 	req, out := c.GetTableRequest(input)
 	return out, req.Send()
@@ -4799,7 +4799,7 @@ const opGetTableVersions = "GetTableVersions"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersions
 func (c *Glue) GetTableVersionsRequest(input *GetTableVersionsInput) (req *request.Request, output *GetTableVersionsOutput) {
 	op := &request.Operation{
 		Name:       opGetTableVersions,
@@ -4847,7 +4847,7 @@ func (c *Glue) GetTableVersionsRequest(input *GetTableVersionsInput) (req *reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersions
 func (c *Glue) GetTableVersions(input *GetTableVersionsInput) (*GetTableVersionsOutput, error) {
 	req, out := c.GetTableVersionsRequest(input)
 	return out, req.Send()
@@ -4944,7 +4944,7 @@ const opGetTables = "GetTables"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTables
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTables
 func (c *Glue) GetTablesRequest(input *GetTablesInput) (req *request.Request, output *GetTablesOutput) {
 	op := &request.Operation{
 		Name:       opGetTables,
@@ -4991,7 +4991,7 @@ func (c *Glue) GetTablesRequest(input *GetTablesInput) (req *request.Request, ou
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   An internal service error occurred.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTables
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTables
 func (c *Glue) GetTables(input *GetTablesInput) (*GetTablesOutput, error) {
 	req, out := c.GetTablesRequest(input)
 	return out, req.Send()
@@ -5088,7 +5088,7 @@ const opGetTrigger = "GetTrigger"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTrigger
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTrigger
 func (c *Glue) GetTriggerRequest(input *GetTriggerInput) (req *request.Request, output *GetTriggerOutput) {
 	op := &request.Operation{
 		Name:       opGetTrigger,
@@ -5129,7 +5129,7 @@ func (c *Glue) GetTriggerRequest(input *GetTriggerInput) (req *request.Request, 
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTrigger
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTrigger
 func (c *Glue) GetTrigger(input *GetTriggerInput) (*GetTriggerOutput, error) {
 	req, out := c.GetTriggerRequest(input)
 	return out, req.Send()
@@ -5176,7 +5176,7 @@ const opGetTriggers = "GetTriggers"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTriggers
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTriggers
 func (c *Glue) GetTriggersRequest(input *GetTriggersInput) (req *request.Request, output *GetTriggersOutput) {
 	op := &request.Operation{
 		Name:       opGetTriggers,
@@ -5223,7 +5223,7 @@ func (c *Glue) GetTriggersRequest(input *GetTriggersInput) (req *request.Request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTriggers
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTriggers
 func (c *Glue) GetTriggers(input *GetTriggersInput) (*GetTriggersOutput, error) {
 	req, out := c.GetTriggersRequest(input)
 	return out, req.Send()
@@ -5320,7 +5320,7 @@ const opGetUserDefinedFunction = "GetUserDefinedFunction"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunction
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunction
 func (c *Glue) GetUserDefinedFunctionRequest(input *GetUserDefinedFunctionInput) (req *request.Request, output *GetUserDefinedFunctionOutput) {
 	op := &request.Operation{
 		Name:       opGetUserDefinedFunction,
@@ -5361,7 +5361,7 @@ func (c *Glue) GetUserDefinedFunctionRequest(input *GetUserDefinedFunctionInput)
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunction
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunction
 func (c *Glue) GetUserDefinedFunction(input *GetUserDefinedFunctionInput) (*GetUserDefinedFunctionOutput, error) {
 	req, out := c.GetUserDefinedFunctionRequest(input)
 	return out, req.Send()
@@ -5408,7 +5408,7 @@ const opGetUserDefinedFunctions = "GetUserDefinedFunctions"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunctions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunctions
 func (c *Glue) GetUserDefinedFunctionsRequest(input *GetUserDefinedFunctionsInput) (req *request.Request, output *GetUserDefinedFunctionsOutput) {
 	op := &request.Operation{
 		Name:       opGetUserDefinedFunctions,
@@ -5455,7 +5455,7 @@ func (c *Glue) GetUserDefinedFunctionsRequest(input *GetUserDefinedFunctionsInpu
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   An internal service error occurred.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunctions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunctions
 func (c *Glue) GetUserDefinedFunctions(input *GetUserDefinedFunctionsInput) (*GetUserDefinedFunctionsOutput, error) {
 	req, out := c.GetUserDefinedFunctionsRequest(input)
 	return out, req.Send()
@@ -5552,7 +5552,7 @@ const opImportCatalogToGlue = "ImportCatalogToGlue"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ImportCatalogToGlue
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ImportCatalogToGlue
 func (c *Glue) ImportCatalogToGlueRequest(input *ImportCatalogToGlueInput) (req *request.Request, output *ImportCatalogToGlueOutput) {
 	op := &request.Operation{
 		Name:       opImportCatalogToGlue,
@@ -5587,7 +5587,7 @@ func (c *Glue) ImportCatalogToGlueRequest(input *ImportCatalogToGlueInput) (req 
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ImportCatalogToGlue
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ImportCatalogToGlue
 func (c *Glue) ImportCatalogToGlue(input *ImportCatalogToGlueInput) (*ImportCatalogToGlueOutput, error) {
 	req, out := c.ImportCatalogToGlueRequest(input)
 	return out, req.Send()
@@ -5634,7 +5634,7 @@ const opResetJobBookmark = "ResetJobBookmark"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ResetJobBookmark
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ResetJobBookmark
 func (c *Glue) ResetJobBookmarkRequest(input *ResetJobBookmarkInput) (req *request.Request, output *ResetJobBookmarkOutput) {
 	op := &request.Operation{
 		Name:       opResetJobBookmark,
@@ -5675,7 +5675,7 @@ func (c *Glue) ResetJobBookmarkRequest(input *ResetJobBookmarkInput) (req *reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ResetJobBookmark
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ResetJobBookmark
 func (c *Glue) ResetJobBookmark(input *ResetJobBookmarkInput) (*ResetJobBookmarkOutput, error) {
 	req, out := c.ResetJobBookmarkRequest(input)
 	return out, req.Send()
@@ -5722,7 +5722,7 @@ const opStartCrawler = "StartCrawler"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawler
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawler
 func (c *Glue) StartCrawlerRequest(input *StartCrawlerInput) (req *request.Request, output *StartCrawlerOutput) {
 	op := &request.Operation{
 		Name:       opStartCrawler,
@@ -5761,7 +5761,7 @@ func (c *Glue) StartCrawlerRequest(input *StartCrawlerInput) (req *request.Reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawler
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawler
 func (c *Glue) StartCrawler(input *StartCrawlerInput) (*StartCrawlerOutput, error) {
 	req, out := c.StartCrawlerRequest(input)
 	return out, req.Send()
@@ -5808,7 +5808,7 @@ const opStartCrawlerSchedule = "StartCrawlerSchedule"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawlerSchedule
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawlerSchedule
 func (c *Glue) StartCrawlerScheduleRequest(input *StartCrawlerScheduleInput) (req *request.Request, output *StartCrawlerScheduleOutput) {
 	op := &request.Operation{
 		Name:       opStartCrawlerSchedule,
@@ -5853,7 +5853,7 @@ func (c *Glue) StartCrawlerScheduleRequest(input *StartCrawlerScheduleInput) (re
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawlerSchedule
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawlerSchedule
 func (c *Glue) StartCrawlerSchedule(input *StartCrawlerScheduleInput) (*StartCrawlerScheduleOutput, error) {
 	req, out := c.StartCrawlerScheduleRequest(input)
 	return out, req.Send()
@@ -5900,7 +5900,7 @@ const opStartJobRun = "StartJobRun"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartJobRun
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartJobRun
 func (c *Glue) StartJobRunRequest(input *StartJobRunInput) (req *request.Request, output *StartJobRunOutput) {
 	op := &request.Operation{
 		Name:       opStartJobRun,
@@ -5947,7 +5947,7 @@ func (c *Glue) StartJobRunRequest(input *StartJobRunInput) (req *request.Request
 //   * ErrCodeConcurrentRunsExceededException "ConcurrentRunsExceededException"
 //   Too many jobs are being run concurrently.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartJobRun
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartJobRun
 func (c *Glue) StartJobRun(input *StartJobRunInput) (*StartJobRunOutput, error) {
 	req, out := c.StartJobRunRequest(input)
 	return out, req.Send()
@@ -5994,7 +5994,7 @@ const opStartTrigger = "StartTrigger"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartTrigger
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartTrigger
 func (c *Glue) StartTriggerRequest(input *StartTriggerInput) (req *request.Request, output *StartTriggerOutput) {
 	op := &request.Operation{
 		Name:       opStartTrigger,
@@ -6041,7 +6041,7 @@ func (c *Glue) StartTriggerRequest(input *StartTriggerInput) (req *request.Reque
 //   * ErrCodeConcurrentRunsExceededException "ConcurrentRunsExceededException"
 //   Too many jobs are being run concurrently.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartTrigger
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartTrigger
 func (c *Glue) StartTrigger(input *StartTriggerInput) (*StartTriggerOutput, error) {
 	req, out := c.StartTriggerRequest(input)
 	return out, req.Send()
@@ -6088,7 +6088,7 @@ const opStopCrawler = "StopCrawler"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawler
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawler
 func (c *Glue) StopCrawlerRequest(input *StopCrawlerInput) (req *request.Request, output *StopCrawlerOutput) {
 	op := &request.Operation{
 		Name:       opStopCrawler,
@@ -6129,7 +6129,7 @@ func (c *Glue) StopCrawlerRequest(input *StopCrawlerInput) (req *request.Request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawler
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawler
 func (c *Glue) StopCrawler(input *StopCrawlerInput) (*StopCrawlerOutput, error) {
 	req, out := c.StopCrawlerRequest(input)
 	return out, req.Send()
@@ -6176,7 +6176,7 @@ const opStopCrawlerSchedule = "StopCrawlerSchedule"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawlerSchedule
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawlerSchedule
 func (c *Glue) StopCrawlerScheduleRequest(input *StopCrawlerScheduleInput) (req *request.Request, output *StopCrawlerScheduleOutput) {
 	op := &request.Operation{
 		Name:       opStopCrawlerSchedule,
@@ -6218,7 +6218,7 @@ func (c *Glue) StopCrawlerScheduleRequest(input *StopCrawlerScheduleInput) (req 
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawlerSchedule
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawlerSchedule
 func (c *Glue) StopCrawlerSchedule(input *StopCrawlerScheduleInput) (*StopCrawlerScheduleOutput, error) {
 	req, out := c.StopCrawlerScheduleRequest(input)
 	return out, req.Send()
@@ -6265,7 +6265,7 @@ const opStopTrigger = "StopTrigger"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopTrigger
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopTrigger
 func (c *Glue) StopTriggerRequest(input *StopTriggerInput) (req *request.Request, output *StopTriggerOutput) {
 	op := &request.Operation{
 		Name:       opStopTrigger,
@@ -6306,7 +6306,7 @@ func (c *Glue) StopTriggerRequest(input *StopTriggerInput) (req *request.Request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopTrigger
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopTrigger
 func (c *Glue) StopTrigger(input *StopTriggerInput) (*StopTriggerOutput, error) {
 	req, out := c.StopTriggerRequest(input)
 	return out, req.Send()
@@ -6353,7 +6353,7 @@ const opUpdateClassifier = "UpdateClassifier"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateClassifier
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateClassifier
 func (c *Glue) UpdateClassifierRequest(input *UpdateClassifierInput) (req *request.Request, output *UpdateClassifierOutput) {
 	op := &request.Operation{
 		Name:       opUpdateClassifier,
@@ -6394,7 +6394,7 @@ func (c *Glue) UpdateClassifierRequest(input *UpdateClassifierInput) (req *reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateClassifier
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateClassifier
 func (c *Glue) UpdateClassifier(input *UpdateClassifierInput) (*UpdateClassifierOutput, error) {
 	req, out := c.UpdateClassifierRequest(input)
 	return out, req.Send()
@@ -6441,7 +6441,7 @@ const opUpdateConnection = "UpdateConnection"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateConnection
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateConnection
 func (c *Glue) UpdateConnectionRequest(input *UpdateConnectionInput) (req *request.Request, output *UpdateConnectionOutput) {
 	op := &request.Operation{
 		Name:       opUpdateConnection,
@@ -6479,7 +6479,7 @@ func (c *Glue) UpdateConnectionRequest(input *UpdateConnectionInput) (req *reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateConnection
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateConnection
 func (c *Glue) UpdateConnection(input *UpdateConnectionInput) (*UpdateConnectionOutput, error) {
 	req, out := c.UpdateConnectionRequest(input)
 	return out, req.Send()
@@ -6526,7 +6526,7 @@ const opUpdateCrawler = "UpdateCrawler"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawler
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawler
 func (c *Glue) UpdateCrawlerRequest(input *UpdateCrawlerInput) (req *request.Request, output *UpdateCrawlerOutput) {
 	op := &request.Operation{
 		Name:       opUpdateCrawler,
@@ -6571,7 +6571,7 @@ func (c *Glue) UpdateCrawlerRequest(input *UpdateCrawlerInput) (req *request.Req
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawler
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawler
 func (c *Glue) UpdateCrawler(input *UpdateCrawlerInput) (*UpdateCrawlerOutput, error) {
 	req, out := c.UpdateCrawlerRequest(input)
 	return out, req.Send()
@@ -6618,7 +6618,7 @@ const opUpdateCrawlerSchedule = "UpdateCrawlerSchedule"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawlerSchedule
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawlerSchedule
 func (c *Glue) UpdateCrawlerScheduleRequest(input *UpdateCrawlerScheduleInput) (req *request.Request, output *UpdateCrawlerScheduleOutput) {
 	op := &request.Operation{
 		Name:       opUpdateCrawlerSchedule,
@@ -6662,7 +6662,7 @@ func (c *Glue) UpdateCrawlerScheduleRequest(input *UpdateCrawlerScheduleInput) (
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawlerSchedule
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawlerSchedule
 func (c *Glue) UpdateCrawlerSchedule(input *UpdateCrawlerScheduleInput) (*UpdateCrawlerScheduleOutput, error) {
 	req, out := c.UpdateCrawlerScheduleRequest(input)
 	return out, req.Send()
@@ -6709,7 +6709,7 @@ const opUpdateDatabase = "UpdateDatabase"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDatabase
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDatabase
 func (c *Glue) UpdateDatabaseRequest(input *UpdateDatabaseInput) (req *request.Request, output *UpdateDatabaseOutput) {
 	op := &request.Operation{
 		Name:       opUpdateDatabase,
@@ -6750,7 +6750,7 @@ func (c *Glue) UpdateDatabaseRequest(input *UpdateDatabaseInput) (req *request.R
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDatabase
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDatabase
 func (c *Glue) UpdateDatabase(input *UpdateDatabaseInput) (*UpdateDatabaseOutput, error) {
 	req, out := c.UpdateDatabaseRequest(input)
 	return out, req.Send()
@@ -6797,7 +6797,7 @@ const opUpdateDevEndpoint = "UpdateDevEndpoint"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDevEndpoint
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDevEndpoint
 func (c *Glue) UpdateDevEndpointRequest(input *UpdateDevEndpointInput) (req *request.Request, output *UpdateDevEndpointOutput) {
 	op := &request.Operation{
 		Name:       opUpdateDevEndpoint,
@@ -6841,7 +6841,7 @@ func (c *Glue) UpdateDevEndpointRequest(input *UpdateDevEndpointInput) (req *req
 //   * ErrCodeValidationException "ValidationException"
 //   A value could not be validated.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDevEndpoint
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDevEndpoint
 func (c *Glue) UpdateDevEndpoint(input *UpdateDevEndpointInput) (*UpdateDevEndpointOutput, error) {
 	req, out := c.UpdateDevEndpointRequest(input)
 	return out, req.Send()
@@ -6888,7 +6888,7 @@ const opUpdateJob = "UpdateJob"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateJob
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateJob
 func (c *Glue) UpdateJobRequest(input *UpdateJobInput) (req *request.Request, output *UpdateJobOutput) {
 	op := &request.Operation{
 		Name:       opUpdateJob,
@@ -6929,7 +6929,7 @@ func (c *Glue) UpdateJobRequest(input *UpdateJobInput) (req *request.Request, ou
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateJob
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateJob
 func (c *Glue) UpdateJob(input *UpdateJobInput) (*UpdateJobOutput, error) {
 	req, out := c.UpdateJobRequest(input)
 	return out, req.Send()
@@ -6976,7 +6976,7 @@ const opUpdatePartition = "UpdatePartition"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdatePartition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdatePartition
 func (c *Glue) UpdatePartitionRequest(input *UpdatePartitionInput) (req *request.Request, output *UpdatePartitionOutput) {
 	op := &request.Operation{
 		Name:       opUpdatePartition,
@@ -7017,7 +7017,7 @@ func (c *Glue) UpdatePartitionRequest(input *UpdatePartitionInput) (req *request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdatePartition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdatePartition
 func (c *Glue) UpdatePartition(input *UpdatePartitionInput) (*UpdatePartitionOutput, error) {
 	req, out := c.UpdatePartitionRequest(input)
 	return out, req.Send()
@@ -7064,7 +7064,7 @@ const opUpdateTable = "UpdateTable"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTable
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTable
 func (c *Glue) UpdateTableRequest(input *UpdateTableInput) (req *request.Request, output *UpdateTableOutput) {
 	op := &request.Operation{
 		Name:       opUpdateTable,
@@ -7108,7 +7108,7 @@ func (c *Glue) UpdateTableRequest(input *UpdateTableInput) (req *request.Request
 //   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
 //   Two processes are trying to modify a resource simultaneously.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTable
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTable
 func (c *Glue) UpdateTable(input *UpdateTableInput) (*UpdateTableOutput, error) {
 	req, out := c.UpdateTableRequest(input)
 	return out, req.Send()
@@ -7155,7 +7155,7 @@ const opUpdateTrigger = "UpdateTrigger"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTrigger
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTrigger
 func (c *Glue) UpdateTriggerRequest(input *UpdateTriggerInput) (req *request.Request, output *UpdateTriggerOutput) {
 	op := &request.Operation{
 		Name:       opUpdateTrigger,
@@ -7196,7 +7196,7 @@ func (c *Glue) UpdateTriggerRequest(input *UpdateTriggerInput) (req *request.Req
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTrigger
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTrigger
 func (c *Glue) UpdateTrigger(input *UpdateTriggerInput) (*UpdateTriggerOutput, error) {
 	req, out := c.UpdateTriggerRequest(input)
 	return out, req.Send()
@@ -7243,7 +7243,7 @@ const opUpdateUserDefinedFunction = "UpdateUserDefinedFunction"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateUserDefinedFunction
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateUserDefinedFunction
 func (c *Glue) UpdateUserDefinedFunctionRequest(input *UpdateUserDefinedFunctionInput) (req *request.Request, output *UpdateUserDefinedFunctionOutput) {
 	op := &request.Operation{
 		Name:       opUpdateUserDefinedFunction,
@@ -7284,7 +7284,7 @@ func (c *Glue) UpdateUserDefinedFunctionRequest(input *UpdateUserDefinedFunction
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateUserDefinedFunction
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateUserDefinedFunction
 func (c *Glue) UpdateUserDefinedFunction(input *UpdateUserDefinedFunctionInput) (*UpdateUserDefinedFunctionOutput, error) {
 	req, out := c.UpdateUserDefinedFunctionRequest(input)
 	return out, req.Send()
@@ -7307,7 +7307,7 @@ func (c *Glue) UpdateUserDefinedFunctionWithContext(ctx aws.Context, input *Upda
 }
 
 // Defines an action to be initiated by a trigger.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Action
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Action
 type Action struct {
 	_ struct{} `type:"structure"`
 
@@ -7353,7 +7353,7 @@ func (s *Action) SetJobName(v string) *Action {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchCreatePartitionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchCreatePartitionRequest
 type BatchCreatePartitionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7449,7 +7449,7 @@ func (s *BatchCreatePartitionInput) SetTableName(v string) *BatchCreatePartition
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchCreatePartitionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchCreatePartitionResponse
 type BatchCreatePartitionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7473,7 +7473,7 @@ func (s *BatchCreatePartitionOutput) SetErrors(v []*PartitionError) *BatchCreate
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteConnectionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteConnectionRequest
 type BatchDeleteConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7525,7 +7525,7 @@ func (s *BatchDeleteConnectionInput) SetConnectionNameList(v []*string) *BatchDe
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteConnectionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteConnectionResponse
 type BatchDeleteConnectionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7559,7 +7559,7 @@ func (s *BatchDeleteConnectionOutput) SetSucceeded(v []*string) *BatchDeleteConn
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeletePartitionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeletePartitionRequest
 type BatchDeletePartitionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7655,7 +7655,7 @@ func (s *BatchDeletePartitionInput) SetTableName(v string) *BatchDeletePartition
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeletePartitionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeletePartitionResponse
 type BatchDeletePartitionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7679,7 +7679,7 @@ func (s *BatchDeletePartitionOutput) SetErrors(v []*PartitionError) *BatchDelete
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteTableRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteTableRequest
 type BatchDeleteTableInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7748,7 +7748,7 @@ func (s *BatchDeleteTableInput) SetTablesToDelete(v []*string) *BatchDeleteTable
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteTableResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteTableResponse
 type BatchDeleteTableOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7772,7 +7772,7 @@ func (s *BatchDeleteTableOutput) SetErrors(v []*TableError) *BatchDeleteTableOut
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetPartitionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetPartitionRequest
 type BatchGetPartitionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7868,7 +7868,7 @@ func (s *BatchGetPartitionInput) SetTableName(v string) *BatchGetPartitionInput 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetPartitionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetPartitionResponse
 type BatchGetPartitionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7904,7 +7904,7 @@ func (s *BatchGetPartitionOutput) SetUnprocessedKeys(v []*PartitionValueList) *B
 
 // Details about the job run and the error that occurred while trying to submit
 // it for stopping.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchStopJobRunError
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchStopJobRunError
 type BatchStopJobRunError struct {
 	_ struct{} `type:"structure"`
 
@@ -7946,7 +7946,7 @@ func (s *BatchStopJobRunError) SetJobRunId(v string) *BatchStopJobRunError {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchStopJobRunRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchStopJobRunRequest
 type BatchStopJobRunInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8005,7 +8005,7 @@ func (s *BatchStopJobRunInput) SetJobRunIds(v []*string) *BatchStopJobRunInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchStopJobRunResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchStopJobRunResponse
 type BatchStopJobRunOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8040,7 +8040,7 @@ func (s *BatchStopJobRunOutput) SetSuccessfulSubmissions(v []*BatchStopJobRunSuc
 }
 
 // Details about the job run which is submitted successfully for stopping.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchStopJobRunSuccessfulSubmission
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchStopJobRunSuccessfulSubmission
 type BatchStopJobRunSuccessfulSubmission struct {
 	_ struct{} `type:"structure"`
 
@@ -8074,7 +8074,7 @@ func (s *BatchStopJobRunSuccessfulSubmission) SetJobRunId(v string) *BatchStopJo
 }
 
 // Specifies a table definition in the Data Catalog.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CatalogEntry
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CatalogEntry
 type CatalogEntry struct {
 	_ struct{} `type:"structure"`
 
@@ -8134,7 +8134,7 @@ func (s *CatalogEntry) SetTableName(v string) *CatalogEntry {
 }
 
 // A structure containing migration status information.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CatalogImportStatus
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CatalogImportStatus
 type CatalogImportStatus struct {
 	_ struct{} `type:"structure"`
 
@@ -8184,7 +8184,7 @@ func (s *CatalogImportStatus) SetImportedBy(v string) *CatalogImportStatus {
 //
 // A classifier can be either a grok classifier or an XML classifier, specified
 // in one or the other field of the Classifier object.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Classifier
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Classifier
 type Classifier struct {
 	_ struct{} `type:"structure"`
 
@@ -8218,7 +8218,7 @@ func (s *Classifier) SetXMLClassifier(v *XMLClassifier) *Classifier {
 }
 
 // Represents a directional edge in a directed acyclic graph (DAG).
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CodeGenEdge
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CodeGenEdge
 type CodeGenEdge struct {
 	_ struct{} `type:"structure"`
 
@@ -8287,7 +8287,7 @@ func (s *CodeGenEdge) SetTargetParameter(v string) *CodeGenEdge {
 }
 
 // Represents a node in a directed acyclic graph (DAG)
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CodeGenNode
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CodeGenNode
 type CodeGenNode struct {
 	_ struct{} `type:"structure"`
 
@@ -8377,7 +8377,7 @@ func (s *CodeGenNode) SetNodeType(v string) *CodeGenNode {
 }
 
 // An argument or property of a node.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CodeGenNodeArg
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CodeGenNodeArg
 type CodeGenNodeArg struct {
 	_ struct{} `type:"structure"`
 
@@ -8440,7 +8440,7 @@ func (s *CodeGenNodeArg) SetValue(v string) *CodeGenNodeArg {
 }
 
 // A column in a Table.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Column
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Column
 type Column struct {
 	_ struct{} `type:"structure"`
 
@@ -8501,7 +8501,7 @@ func (s *Column) SetType(v string) *Column {
 }
 
 // Defines a condition under which a trigger fires.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Condition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Condition
 type Condition struct {
 	_ struct{} `type:"structure"`
 
@@ -8557,7 +8557,7 @@ func (s *Condition) SetState(v string) *Condition {
 }
 
 // Defines a connection to a data source.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Connection
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Connection
 type Connection struct {
 	_ struct{} `type:"structure"`
 
@@ -8656,7 +8656,7 @@ func (s *Connection) SetPhysicalConnectionRequirements(v *PhysicalConnectionRequ
 }
 
 // A structure used to specify a connection to create or update.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ConnectionInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ConnectionInput
 type ConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8746,7 +8746,7 @@ func (s *ConnectionInput) SetPhysicalConnectionRequirements(v *PhysicalConnectio
 }
 
 // Specifies the connections used by a job.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ConnectionsList
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ConnectionsList
 type ConnectionsList struct {
 	_ struct{} `type:"structure"`
 
@@ -8773,7 +8773,7 @@ func (s *ConnectionsList) SetConnections(v []*string) *ConnectionsList {
 // Specifies a crawler program that examines a data source and uses classifiers
 // to try to determine its schema. If successful, the crawler records metadata
 // concerning the data source in the AWS Glue Data Catalog.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Crawler
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Crawler
 type Crawler struct {
 	_ struct{} `type:"structure"`
 
@@ -8942,7 +8942,7 @@ func (s *Crawler) SetVersion(v int64) *Crawler {
 }
 
 // Metrics for a specified crawler.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CrawlerMetrics
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CrawlerMetrics
 type CrawlerMetrics struct {
 	_ struct{} `type:"structure"`
 
@@ -9031,7 +9031,7 @@ func (s *CrawlerMetrics) SetTimeLeftSeconds(v float64) *CrawlerMetrics {
 }
 
 // Specifies data stores to crawl.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CrawlerTargets
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CrawlerTargets
 type CrawlerTargets struct {
 	_ struct{} `type:"structure"`
 
@@ -9064,7 +9064,7 @@ func (s *CrawlerTargets) SetS3Targets(v []*S3Target) *CrawlerTargets {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateClassifierRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateClassifierRequest
 type CreateClassifierInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9117,7 +9117,7 @@ func (s *CreateClassifierInput) SetXMLClassifier(v *CreateXMLClassifierRequest) 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateClassifierResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateClassifierResponse
 type CreateClassifierOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -9132,7 +9132,7 @@ func (s CreateClassifierOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateConnectionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateConnectionRequest
 type CreateConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9189,7 +9189,7 @@ func (s *CreateConnectionInput) SetConnectionInput(v *ConnectionInput) *CreateCo
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateConnectionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateConnectionResponse
 type CreateConnectionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -9204,7 +9204,7 @@ func (s CreateConnectionOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateCrawlerRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateCrawlerRequest
 type CreateCrawlerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9353,7 +9353,7 @@ func (s *CreateCrawlerInput) SetTargets(v *CrawlerTargets) *CreateCrawlerInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateCrawlerResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateCrawlerResponse
 type CreateCrawlerOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -9368,7 +9368,7 @@ func (s CreateCrawlerOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDatabaseRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDatabaseRequest
 type CreateDatabaseInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9425,7 +9425,7 @@ func (s *CreateDatabaseInput) SetDatabaseInput(v *DatabaseInput) *CreateDatabase
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDatabaseResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDatabaseResponse
 type CreateDatabaseOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -9440,7 +9440,7 @@ func (s CreateDatabaseOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDevEndpointRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDevEndpointRequest
 type CreateDevEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9559,7 +9559,7 @@ func (s *CreateDevEndpointInput) SetSubnetId(v string) *CreateDevEndpointInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDevEndpointResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDevEndpointResponse
 type CreateDevEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9703,7 +9703,7 @@ func (s *CreateDevEndpointOutput) SetZeppelinRemoteSparkInterpreterPort(v int64)
 }
 
 // Specifies a grok classifier for CreateClassifier to create.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateGrokClassifierRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateGrokClassifierRequest
 type CreateGrokClassifierRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -9786,7 +9786,7 @@ func (s *CreateGrokClassifierRequest) SetName(v string) *CreateGrokClassifierReq
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateJobRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateJobRequest
 type CreateJobInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9920,7 +9920,7 @@ func (s *CreateJobInput) SetRole(v string) *CreateJobInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateJobResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateJobResponse
 type CreateJobOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9944,7 +9944,7 @@ func (s *CreateJobOutput) SetName(v string) *CreateJobOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreatePartitionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreatePartitionRequest
 type CreatePartitionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10035,7 +10035,7 @@ func (s *CreatePartitionInput) SetTableName(v string) *CreatePartitionInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreatePartitionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreatePartitionResponse
 type CreatePartitionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10050,7 +10050,7 @@ func (s CreatePartitionOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateScriptRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateScriptRequest
 type CreateScriptInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10113,7 +10113,7 @@ func (s *CreateScriptInput) SetDagNodes(v []*CodeGenNode) *CreateScriptInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateScriptResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateScriptResponse
 type CreateScriptOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10137,7 +10137,7 @@ func (s *CreateScriptOutput) SetPythonScript(v string) *CreateScriptOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTableRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTableRequest
 type CreateTableInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10211,7 +10211,7 @@ func (s *CreateTableInput) SetTableInput(v *TableInput) *CreateTableInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTableResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTableResponse
 type CreateTableOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10226,7 +10226,7 @@ func (s CreateTableOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTriggerRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTriggerRequest
 type CreateTriggerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10341,7 +10341,7 @@ func (s *CreateTriggerInput) SetType(v string) *CreateTriggerInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTriggerResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTriggerResponse
 type CreateTriggerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10365,7 +10365,7 @@ func (s *CreateTriggerOutput) SetName(v string) *CreateTriggerOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateUserDefinedFunctionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateUserDefinedFunctionRequest
 type CreateUserDefinedFunctionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10439,7 +10439,7 @@ func (s *CreateUserDefinedFunctionInput) SetFunctionInput(v *UserDefinedFunction
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateUserDefinedFunctionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateUserDefinedFunctionResponse
 type CreateUserDefinedFunctionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10455,7 +10455,7 @@ func (s CreateUserDefinedFunctionOutput) GoString() string {
 }
 
 // Specifies an XML classifier for CreateClassifier to create.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateXMLClassifierRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateXMLClassifierRequest
 type CreateXMLClassifierRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -10524,7 +10524,7 @@ func (s *CreateXMLClassifierRequest) SetRowTag(v string) *CreateXMLClassifierReq
 
 // The Database object represents a logical grouping of tables that may reside
 // in a Hive metastore or an RDBMS.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Database
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Database
 type Database struct {
 	_ struct{} `type:"structure"`
 
@@ -10587,7 +10587,7 @@ func (s *Database) SetParameters(v map[string]*string) *Database {
 }
 
 // The structure used to create or updata a database.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DatabaseInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DatabaseInput
 type DatabaseInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10659,7 +10659,7 @@ func (s *DatabaseInput) SetParameters(v map[string]*string) *DatabaseInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteClassifierRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteClassifierRequest
 type DeleteClassifierInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10701,7 +10701,7 @@ func (s *DeleteClassifierInput) SetName(v string) *DeleteClassifierInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteClassifierResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteClassifierResponse
 type DeleteClassifierOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10716,7 +10716,7 @@ func (s DeleteClassifierOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteConnectionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteConnectionRequest
 type DeleteConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10771,7 +10771,7 @@ func (s *DeleteConnectionInput) SetConnectionName(v string) *DeleteConnectionInp
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteConnectionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteConnectionResponse
 type DeleteConnectionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10786,7 +10786,7 @@ func (s DeleteConnectionOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteCrawlerRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteCrawlerRequest
 type DeleteCrawlerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10828,7 +10828,7 @@ func (s *DeleteCrawlerInput) SetName(v string) *DeleteCrawlerInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteCrawlerResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteCrawlerResponse
 type DeleteCrawlerOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10843,7 +10843,7 @@ func (s DeleteCrawlerOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDatabaseRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDatabaseRequest
 type DeleteDatabaseInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10898,7 +10898,7 @@ func (s *DeleteDatabaseInput) SetName(v string) *DeleteDatabaseInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDatabaseResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDatabaseResponse
 type DeleteDatabaseOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10913,7 +10913,7 @@ func (s DeleteDatabaseOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDevEndpointRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDevEndpointRequest
 type DeleteDevEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10952,7 +10952,7 @@ func (s *DeleteDevEndpointInput) SetEndpointName(v string) *DeleteDevEndpointInp
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDevEndpointResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDevEndpointResponse
 type DeleteDevEndpointOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10967,7 +10967,7 @@ func (s DeleteDevEndpointOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteJobRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteJobRequest
 type DeleteJobInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11009,7 +11009,7 @@ func (s *DeleteJobInput) SetJobName(v string) *DeleteJobInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteJobResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteJobResponse
 type DeleteJobOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11033,7 +11033,7 @@ func (s *DeleteJobOutput) SetJobName(v string) *DeleteJobOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeletePartitionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeletePartitionRequest
 type DeletePartitionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11119,7 +11119,7 @@ func (s *DeletePartitionInput) SetTableName(v string) *DeletePartitionInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeletePartitionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeletePartitionResponse
 type DeletePartitionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -11134,7 +11134,7 @@ func (s DeletePartitionOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTableRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTableRequest
 type DeleteTableInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11206,7 +11206,7 @@ func (s *DeleteTableInput) SetName(v string) *DeleteTableInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTableResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTableResponse
 type DeleteTableOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -11221,7 +11221,7 @@ func (s DeleteTableOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTriggerRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTriggerRequest
 type DeleteTriggerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11263,7 +11263,7 @@ func (s *DeleteTriggerInput) SetName(v string) *DeleteTriggerInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTriggerResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTriggerResponse
 type DeleteTriggerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11287,7 +11287,7 @@ func (s *DeleteTriggerOutput) SetName(v string) *DeleteTriggerOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteUserDefinedFunctionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteUserDefinedFunctionRequest
 type DeleteUserDefinedFunctionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11359,7 +11359,7 @@ func (s *DeleteUserDefinedFunctionInput) SetFunctionName(v string) *DeleteUserDe
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteUserDefinedFunctionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteUserDefinedFunctionResponse
 type DeleteUserDefinedFunctionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -11375,7 +11375,7 @@ func (s DeleteUserDefinedFunctionOutput) GoString() string {
 }
 
 // A development endpoint where a developer can remotely debug ETL scripts.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DevEndpoint
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DevEndpoint
 type DevEndpoint struct {
 	_ struct{} `type:"structure"`
 
@@ -11563,7 +11563,7 @@ func (s *DevEndpoint) SetZeppelinRemoteSparkInterpreterPort(v int64) *DevEndpoin
 }
 
 // Custom libraries to be loaded into a DevEndpoint.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DevEndpointCustomLibraries
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DevEndpointCustomLibraries
 type DevEndpointCustomLibraries struct {
 	_ struct{} `type:"structure"`
 
@@ -11607,7 +11607,7 @@ func (s *DevEndpointCustomLibraries) SetExtraPythonLibsS3Path(v string) *DevEndp
 }
 
 // Contains details about an error.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ErrorDetail
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ErrorDetail
 type ErrorDetail struct {
 	_ struct{} `type:"structure"`
 
@@ -11641,7 +11641,7 @@ func (s *ErrorDetail) SetErrorMessage(v string) *ErrorDetail {
 }
 
 // An execution property of a job.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ExecutionProperty
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ExecutionProperty
 type ExecutionProperty struct {
 	_ struct{} `type:"structure"`
 
@@ -11665,7 +11665,7 @@ func (s *ExecutionProperty) SetMaxConcurrentRuns(v int64) *ExecutionProperty {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCatalogImportStatusRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCatalogImportStatusRequest
 type GetCatalogImportStatusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11703,7 +11703,7 @@ func (s *GetCatalogImportStatusInput) SetCatalogId(v string) *GetCatalogImportSt
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCatalogImportStatusResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCatalogImportStatusResponse
 type GetCatalogImportStatusOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11727,7 +11727,7 @@ func (s *GetCatalogImportStatusOutput) SetImportStatus(v *CatalogImportStatus) *
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifierRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifierRequest
 type GetClassifierInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11769,7 +11769,7 @@ func (s *GetClassifierInput) SetName(v string) *GetClassifierInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifierResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifierResponse
 type GetClassifierOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11793,7 +11793,7 @@ func (s *GetClassifierOutput) SetClassifier(v *Classifier) *GetClassifierOutput 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifiersRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifiersRequest
 type GetClassifiersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11839,7 +11839,7 @@ func (s *GetClassifiersInput) SetNextToken(v string) *GetClassifiersInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifiersResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifiersResponse
 type GetClassifiersOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11872,7 +11872,7 @@ func (s *GetClassifiersOutput) SetNextToken(v string) *GetClassifiersOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnectionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnectionRequest
 type GetConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11927,7 +11927,7 @@ func (s *GetConnectionInput) SetName(v string) *GetConnectionInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnectionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnectionResponse
 type GetConnectionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11952,7 +11952,7 @@ func (s *GetConnectionOutput) SetConnection(v *Connection) *GetConnectionOutput 
 }
 
 // Filters the connection definitions returned by the GetConnections API.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnectionsFilter
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnectionsFilter
 type GetConnectionsFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -11987,7 +11987,7 @@ func (s *GetConnectionsFilter) SetMatchCriteria(v []*string) *GetConnectionsFilt
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnectionsRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnectionsRequest
 type GetConnectionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12055,7 +12055,7 @@ func (s *GetConnectionsInput) SetNextToken(v string) *GetConnectionsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnectionsResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnectionsResponse
 type GetConnectionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12089,7 +12089,7 @@ func (s *GetConnectionsOutput) SetNextToken(v string) *GetConnectionsOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlerRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlerRequest
 type GetCrawlerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12131,7 +12131,7 @@ func (s *GetCrawlerInput) SetName(v string) *GetCrawlerInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlerMetricsRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlerMetricsRequest
 type GetCrawlerMetricsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12186,7 +12186,7 @@ func (s *GetCrawlerMetricsInput) SetNextToken(v string) *GetCrawlerMetricsInput 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlerMetricsResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlerMetricsResponse
 type GetCrawlerMetricsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12220,7 +12220,7 @@ func (s *GetCrawlerMetricsOutput) SetNextToken(v string) *GetCrawlerMetricsOutpu
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlerResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlerResponse
 type GetCrawlerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12244,7 +12244,7 @@ func (s *GetCrawlerOutput) SetCrawler(v *Crawler) *GetCrawlerOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlersRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlersRequest
 type GetCrawlersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12290,7 +12290,7 @@ func (s *GetCrawlersInput) SetNextToken(v string) *GetCrawlersInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlersResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlersResponse
 type GetCrawlersOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12324,7 +12324,7 @@ func (s *GetCrawlersOutput) SetNextToken(v string) *GetCrawlersOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabaseRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabaseRequest
 type GetDatabaseInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12379,7 +12379,7 @@ func (s *GetDatabaseInput) SetName(v string) *GetDatabaseInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabaseResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabaseResponse
 type GetDatabaseOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12403,7 +12403,7 @@ func (s *GetDatabaseOutput) SetDatabase(v *Database) *GetDatabaseOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabasesRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabasesRequest
 type GetDatabasesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12462,7 +12462,7 @@ func (s *GetDatabasesInput) SetNextToken(v string) *GetDatabasesInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabasesResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabasesResponse
 type GetDatabasesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12498,7 +12498,7 @@ func (s *GetDatabasesOutput) SetNextToken(v string) *GetDatabasesOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataflowGraphRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataflowGraphRequest
 type GetDataflowGraphInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12522,7 +12522,7 @@ func (s *GetDataflowGraphInput) SetPythonScript(v string) *GetDataflowGraphInput
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataflowGraphResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataflowGraphResponse
 type GetDataflowGraphOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12555,7 +12555,7 @@ func (s *GetDataflowGraphOutput) SetDagNodes(v []*CodeGenNode) *GetDataflowGraph
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpointRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpointRequest
 type GetDevEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12594,7 +12594,7 @@ func (s *GetDevEndpointInput) SetEndpointName(v string) *GetDevEndpointInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpointResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpointResponse
 type GetDevEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12618,7 +12618,7 @@ func (s *GetDevEndpointOutput) SetDevEndpoint(v *DevEndpoint) *GetDevEndpointOut
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpointsRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpointsRequest
 type GetDevEndpointsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12664,7 +12664,7 @@ func (s *GetDevEndpointsInput) SetNextToken(v string) *GetDevEndpointsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpointsResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpointsResponse
 type GetDevEndpointsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12697,7 +12697,7 @@ func (s *GetDevEndpointsOutput) SetNextToken(v string) *GetDevEndpointsOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRequest
 type GetJobInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12739,7 +12739,7 @@ func (s *GetJobInput) SetJobName(v string) *GetJobInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobResponse
 type GetJobOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12763,7 +12763,7 @@ func (s *GetJobOutput) SetJob(v *Job) *GetJobOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRunRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRunRequest
 type GetJobRunInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12831,7 +12831,7 @@ func (s *GetJobRunInput) SetRunId(v string) *GetJobRunInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRunResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRunResponse
 type GetJobRunOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12855,7 +12855,7 @@ func (s *GetJobRunOutput) SetJobRun(v *JobRun) *GetJobRunOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRunsRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRunsRequest
 type GetJobRunsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12918,7 +12918,7 @@ func (s *GetJobRunsInput) SetNextToken(v string) *GetJobRunsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRunsResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRunsResponse
 type GetJobRunsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12951,7 +12951,7 @@ func (s *GetJobRunsOutput) SetNextToken(v string) *GetJobRunsOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobsRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobsRequest
 type GetJobsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12997,7 +12997,7 @@ func (s *GetJobsInput) SetNextToken(v string) *GetJobsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobsResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobsResponse
 type GetJobsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13030,7 +13030,7 @@ func (s *GetJobsOutput) SetNextToken(v string) *GetJobsOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetMappingRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetMappingRequest
 type GetMappingInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13107,7 +13107,7 @@ func (s *GetMappingInput) SetSource(v *CatalogEntry) *GetMappingInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetMappingResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetMappingResponse
 type GetMappingOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13133,7 +13133,7 @@ func (s *GetMappingOutput) SetMapping(v []*MappingEntry) *GetMappingOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitionRequest
 type GetPartitionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13219,7 +13219,7 @@ func (s *GetPartitionInput) SetTableName(v string) *GetPartitionInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitionResponse
 type GetPartitionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13243,7 +13243,7 @@ func (s *GetPartitionOutput) SetPartition(v *Partition) *GetPartitionOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitionsRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitionsRequest
 type GetPartitionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13359,7 +13359,7 @@ func (s *GetPartitionsInput) SetTableName(v string) *GetPartitionsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitionsResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitionsResponse
 type GetPartitionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13393,7 +13393,7 @@ func (s *GetPartitionsOutput) SetPartitions(v []*Partition) *GetPartitionsOutput
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPlanRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPlanRequest
 type GetPlanInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13484,7 +13484,7 @@ func (s *GetPlanInput) SetSource(v *CatalogEntry) *GetPlanInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPlanResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPlanResponse
 type GetPlanOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13508,7 +13508,7 @@ func (s *GetPlanOutput) SetPythonScript(v string) *GetPlanOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableRequest
 type GetTableInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13580,7 +13580,7 @@ func (s *GetTableInput) SetName(v string) *GetTableInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableResponse
 type GetTableOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13604,7 +13604,7 @@ func (s *GetTableOutput) SetTable(v *Table) *GetTableOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersionsRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersionsRequest
 type GetTableVersionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13697,7 +13697,7 @@ func (s *GetTableVersionsInput) SetTableName(v string) *GetTableVersionsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersionsResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersionsResponse
 type GetTableVersionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13731,7 +13731,7 @@ func (s *GetTableVersionsOutput) SetTableVersions(v []*TableVersion) *GetTableVe
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTablesRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTablesRequest
 type GetTablesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13817,7 +13817,7 @@ func (s *GetTablesInput) SetNextToken(v string) *GetTablesInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTablesResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTablesResponse
 type GetTablesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13850,7 +13850,7 @@ func (s *GetTablesOutput) SetTableList(v []*Table) *GetTablesOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTriggerRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTriggerRequest
 type GetTriggerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13892,7 +13892,7 @@ func (s *GetTriggerInput) SetName(v string) *GetTriggerInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTriggerResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTriggerResponse
 type GetTriggerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13916,7 +13916,7 @@ func (s *GetTriggerOutput) SetTrigger(v *Trigger) *GetTriggerOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTriggersRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTriggersRequest
 type GetTriggersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13974,7 +13974,7 @@ func (s *GetTriggersInput) SetNextToken(v string) *GetTriggersInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTriggersResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTriggersResponse
 type GetTriggersOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14007,7 +14007,7 @@ func (s *GetTriggersOutput) SetTriggers(v []*Trigger) *GetTriggersOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunctionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunctionRequest
 type GetUserDefinedFunctionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14079,7 +14079,7 @@ func (s *GetUserDefinedFunctionInput) SetFunctionName(v string) *GetUserDefinedF
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunctionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunctionResponse
 type GetUserDefinedFunctionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14103,7 +14103,7 @@ func (s *GetUserDefinedFunctionOutput) SetUserDefinedFunction(v *UserDefinedFunc
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunctionsRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunctionsRequest
 type GetUserDefinedFunctionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14197,7 +14197,7 @@ func (s *GetUserDefinedFunctionsInput) SetPattern(v string) *GetUserDefinedFunct
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunctionsResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunctionsResponse
 type GetUserDefinedFunctionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14232,7 +14232,7 @@ func (s *GetUserDefinedFunctionsOutput) SetUserDefinedFunctions(v []*UserDefined
 }
 
 // A classifier that uses grok patterns.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GrokClassifier
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GrokClassifier
 type GrokClassifier struct {
 	_ struct{} `type:"structure"`
 
@@ -14319,7 +14319,7 @@ func (s *GrokClassifier) SetVersion(v int64) *GrokClassifier {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ImportCatalogToGlueRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ImportCatalogToGlueRequest
 type ImportCatalogToGlueInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14357,7 +14357,7 @@ func (s *ImportCatalogToGlueInput) SetCatalogId(v string) *ImportCatalogToGlueIn
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ImportCatalogToGlueResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ImportCatalogToGlueResponse
 type ImportCatalogToGlueOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -14373,7 +14373,7 @@ func (s ImportCatalogToGlueOutput) GoString() string {
 }
 
 // Specifies a JDBC data store to crawl.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/JdbcTarget
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/JdbcTarget
 type JdbcTarget struct {
 	_ struct{} `type:"structure"`
 
@@ -14417,7 +14417,7 @@ func (s *JdbcTarget) SetPath(v string) *JdbcTarget {
 }
 
 // Specifies a job in the Data Catalog.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Job
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Job
 type Job struct {
 	_ struct{} `type:"structure"`
 
@@ -14542,7 +14542,7 @@ func (s *Job) SetRole(v string) *Job {
 }
 
 // Defines a point which a job can resume processing.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/JobBookmarkEntry
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/JobBookmarkEntry
 type JobBookmarkEntry struct {
 	_ struct{} `type:"structure"`
 
@@ -14603,7 +14603,7 @@ func (s *JobBookmarkEntry) SetVersion(v int64) *JobBookmarkEntry {
 }
 
 // Specifies code that executes a job.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/JobCommand
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/JobCommand
 type JobCommand struct {
 	_ struct{} `type:"structure"`
 
@@ -14637,7 +14637,7 @@ func (s *JobCommand) SetScriptLocation(v string) *JobCommand {
 }
 
 // Contains information about a job run.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/JobRun
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/JobRun
 type JobRun struct {
 	_ struct{} `type:"structure"`
 
@@ -14770,7 +14770,7 @@ func (s *JobRun) SetTriggerName(v string) *JobRun {
 }
 
 // Specifies information used to update an existing job.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/JobUpdate
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/JobUpdate
 type JobUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -14868,7 +14868,7 @@ func (s *JobUpdate) SetRole(v string) *JobUpdate {
 }
 
 // Status and error information about the most recent crawl.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/LastCrawlInfo
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/LastCrawlInfo
 type LastCrawlInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -14938,7 +14938,7 @@ func (s *LastCrawlInfo) SetStatus(v string) *LastCrawlInfo {
 }
 
 // The location of resources.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Location
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Location
 type Location struct {
 	_ struct{} `type:"structure"`
 
@@ -15002,7 +15002,7 @@ func (s *Location) SetS3(v []*CodeGenNodeArg) *Location {
 }
 
 // Defines a mapping.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/MappingEntry
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/MappingEntry
 type MappingEntry struct {
 	_ struct{} `type:"structure"`
 
@@ -15072,7 +15072,7 @@ func (s *MappingEntry) SetTargetType(v string) *MappingEntry {
 }
 
 // Specifies the sort order of a sorted column.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Order
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Order
 type Order struct {
 	_ struct{} `type:"structure"`
 
@@ -15130,7 +15130,7 @@ func (s *Order) SetSortOrder(v int64) *Order {
 }
 
 // Represents a slice of table data.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Partition
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Partition
 type Partition struct {
 	_ struct{} `type:"structure"`
 
@@ -15218,7 +15218,7 @@ func (s *Partition) SetValues(v []*string) *Partition {
 }
 
 // Contains information about a partition error.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/PartitionError
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/PartitionError
 type PartitionError struct {
 	_ struct{} `type:"structure"`
 
@@ -15252,7 +15252,7 @@ func (s *PartitionError) SetPartitionValues(v []*string) *PartitionError {
 }
 
 // The structure used to create and update a partion.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/PartitionInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/PartitionInput
 type PartitionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15328,7 +15328,7 @@ func (s *PartitionInput) SetValues(v []*string) *PartitionInput {
 }
 
 // Contains a list of values defining partitions.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/PartitionValueList
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/PartitionValueList
 type PartitionValueList struct {
 	_ struct{} `type:"structure"`
 
@@ -15368,7 +15368,7 @@ func (s *PartitionValueList) SetValues(v []*string) *PartitionValueList {
 }
 
 // Specifies the physical requirements for a connection.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/PhysicalConnectionRequirements
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/PhysicalConnectionRequirements
 type PhysicalConnectionRequirements struct {
 	_ struct{} `type:"structure"`
 
@@ -15427,7 +15427,7 @@ func (s *PhysicalConnectionRequirements) SetSubnetId(v string) *PhysicalConnecti
 }
 
 // A job run that preceded this one.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Predecessor
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Predecessor
 type Predecessor struct {
 	_ struct{} `type:"structure"`
 
@@ -15461,7 +15461,7 @@ func (s *Predecessor) SetRunId(v string) *Predecessor {
 }
 
 // Defines the predicate of the trigger, which determines when it fires.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Predicate
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Predicate
 type Predicate struct {
 	_ struct{} `type:"structure"`
 
@@ -15514,7 +15514,7 @@ func (s *Predicate) SetLogical(v string) *Predicate {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ResetJobBookmarkRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ResetJobBookmarkRequest
 type ResetJobBookmarkInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15553,7 +15553,7 @@ func (s *ResetJobBookmarkInput) SetJobName(v string) *ResetJobBookmarkInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ResetJobBookmarkResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ResetJobBookmarkResponse
 type ResetJobBookmarkOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -15578,7 +15578,7 @@ func (s *ResetJobBookmarkOutput) SetJobBookmarkEntry(v *JobBookmarkEntry) *Reset
 }
 
 // URIs for function resources.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ResourceUri
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ResourceUri
 type ResourceUri struct {
 	_ struct{} `type:"structure"`
 
@@ -15625,7 +15625,7 @@ func (s *ResourceUri) SetUri(v string) *ResourceUri {
 }
 
 // Specifies a data store in Amazon S3.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/S3Target
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/S3Target
 type S3Target struct {
 	_ struct{} `type:"structure"`
 
@@ -15660,7 +15660,7 @@ func (s *S3Target) SetPath(v string) *S3Target {
 }
 
 // A scheduling object using a cron statement to schedule an event.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Schedule
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Schedule
 type Schedule struct {
 	_ struct{} `type:"structure"`
 
@@ -15697,7 +15697,7 @@ func (s *Schedule) SetState(v string) *Schedule {
 }
 
 // Crawler policy for update and deletion behavior.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/SchemaChangePolicy
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/SchemaChangePolicy
 type SchemaChangePolicy struct {
 	_ struct{} `type:"structure"`
 
@@ -15732,7 +15732,7 @@ func (s *SchemaChangePolicy) SetUpdateBehavior(v string) *SchemaChangePolicy {
 
 // Defines a non-overlapping region of a table's partitions, allowing multiple
 // requests to be executed in parallel.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Segment
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Segment
 type Segment struct {
 	_ struct{} `type:"structure"`
 
@@ -15792,7 +15792,7 @@ func (s *Segment) SetTotalSegments(v int64) *Segment {
 
 // Information about a serialization/deserialization program (SerDe) which serves
 // as an extractor and loader.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/SerDeInfo
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/SerDeInfo
 type SerDeInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -15852,7 +15852,7 @@ func (s *SerDeInfo) SetSerializationLibrary(v string) *SerDeInfo {
 
 // Specifies skewed values in a table. Skewed are ones that occur with very
 // high frequency.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/SkewedInfo
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/SkewedInfo
 type SkewedInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -15894,7 +15894,7 @@ func (s *SkewedInfo) SetSkewedColumnValues(v []*string) *SkewedInfo {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawlerRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawlerRequest
 type StartCrawlerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15936,7 +15936,7 @@ func (s *StartCrawlerInput) SetName(v string) *StartCrawlerInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawlerResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawlerResponse
 type StartCrawlerOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -15951,7 +15951,7 @@ func (s StartCrawlerOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawlerScheduleRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawlerScheduleRequest
 type StartCrawlerScheduleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15993,7 +15993,7 @@ func (s *StartCrawlerScheduleInput) SetCrawlerName(v string) *StartCrawlerSchedu
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawlerScheduleResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawlerScheduleResponse
 type StartCrawlerScheduleOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -16008,7 +16008,7 @@ func (s StartCrawlerScheduleOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartJobRunRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartJobRunRequest
 type StartJobRunInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16080,7 +16080,7 @@ func (s *StartJobRunInput) SetJobRunId(v string) *StartJobRunInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartJobRunResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartJobRunResponse
 type StartJobRunOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16104,7 +16104,7 @@ func (s *StartJobRunOutput) SetJobRunId(v string) *StartJobRunOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartTriggerRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartTriggerRequest
 type StartTriggerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16146,7 +16146,7 @@ func (s *StartTriggerInput) SetName(v string) *StartTriggerInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartTriggerResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartTriggerResponse
 type StartTriggerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16170,7 +16170,7 @@ func (s *StartTriggerOutput) SetName(v string) *StartTriggerOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawlerRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawlerRequest
 type StopCrawlerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16212,7 +16212,7 @@ func (s *StopCrawlerInput) SetName(v string) *StopCrawlerInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawlerResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawlerResponse
 type StopCrawlerOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -16227,7 +16227,7 @@ func (s StopCrawlerOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawlerScheduleRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawlerScheduleRequest
 type StopCrawlerScheduleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16269,7 +16269,7 @@ func (s *StopCrawlerScheduleInput) SetCrawlerName(v string) *StopCrawlerSchedule
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawlerScheduleResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawlerScheduleResponse
 type StopCrawlerScheduleOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -16284,7 +16284,7 @@ func (s StopCrawlerScheduleOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopTriggerRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopTriggerRequest
 type StopTriggerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16326,7 +16326,7 @@ func (s *StopTriggerInput) SetName(v string) *StopTriggerInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopTriggerResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopTriggerResponse
 type StopTriggerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16351,7 +16351,7 @@ func (s *StopTriggerOutput) SetName(v string) *StopTriggerOutput {
 }
 
 // Describes the physical storage of table data.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StorageDescriptor
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StorageDescriptor
 type StorageDescriptor struct {
 	_ struct{} `type:"structure"`
 
@@ -16516,7 +16516,7 @@ func (s *StorageDescriptor) SetStoredAsSubDirectories(v bool) *StorageDescriptor
 }
 
 // Represents a collection of related data organized in columns and rows.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Table
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Table
 type Table struct {
 	_ struct{} `type:"structure"`
 
@@ -16681,7 +16681,7 @@ func (s *Table) SetViewOriginalText(v string) *Table {
 }
 
 // An error record for table operations.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/TableError
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/TableError
 type TableError struct {
 	_ struct{} `type:"structure"`
 
@@ -16715,7 +16715,7 @@ func (s *TableError) SetTableName(v string) *TableError {
 }
 
 // Structure used to create or update the table.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/TableInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/TableInput
 type TableInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16877,7 +16877,7 @@ func (s *TableInput) SetViewOriginalText(v string) *TableInput {
 }
 
 // Specifies a version of a table.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/TableVersion
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/TableVersion
 type TableVersion struct {
 	_ struct{} `type:"structure"`
 
@@ -16911,7 +16911,7 @@ func (s *TableVersion) SetVersionId(v string) *TableVersion {
 }
 
 // Information about a specific trigger.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Trigger
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/Trigger
 type Trigger struct {
 	_ struct{} `type:"structure"`
 
@@ -17002,7 +17002,7 @@ func (s *Trigger) SetType(v string) *Trigger {
 }
 
 // A structure used to provide information used to updata a trigger.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/TriggerUpdate
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/TriggerUpdate
 type TriggerUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -17093,7 +17093,7 @@ func (s *TriggerUpdate) SetSchedule(v string) *TriggerUpdate {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateClassifierRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateClassifierRequest
 type UpdateClassifierInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17146,7 +17146,7 @@ func (s *UpdateClassifierInput) SetXMLClassifier(v *UpdateXMLClassifierRequest) 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateClassifierResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateClassifierResponse
 type UpdateClassifierOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -17161,7 +17161,7 @@ func (s UpdateClassifierOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateConnectionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateConnectionRequest
 type UpdateConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17235,7 +17235,7 @@ func (s *UpdateConnectionInput) SetName(v string) *UpdateConnectionInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateConnectionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateConnectionResponse
 type UpdateConnectionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -17250,7 +17250,7 @@ func (s UpdateConnectionOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawlerRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawlerRequest
 type UpdateCrawlerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17385,7 +17385,7 @@ func (s *UpdateCrawlerInput) SetTargets(v *CrawlerTargets) *UpdateCrawlerInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawlerResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawlerResponse
 type UpdateCrawlerOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -17400,7 +17400,7 @@ func (s UpdateCrawlerOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawlerScheduleRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawlerScheduleRequest
 type UpdateCrawlerScheduleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17454,7 +17454,7 @@ func (s *UpdateCrawlerScheduleInput) SetSchedule(v string) *UpdateCrawlerSchedul
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawlerScheduleResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawlerScheduleResponse
 type UpdateCrawlerScheduleOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -17469,7 +17469,7 @@ func (s UpdateCrawlerScheduleOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDatabaseRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDatabaseRequest
 type UpdateDatabaseInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17544,7 +17544,7 @@ func (s *UpdateDatabaseInput) SetName(v string) *UpdateDatabaseInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDatabaseResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDatabaseResponse
 type UpdateDatabaseOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -17559,7 +17559,7 @@ func (s UpdateDatabaseOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDevEndpointRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDevEndpointRequest
 type UpdateDevEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17626,7 +17626,7 @@ func (s *UpdateDevEndpointInput) SetUpdateEtlLibraries(v bool) *UpdateDevEndpoin
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDevEndpointResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDevEndpointResponse
 type UpdateDevEndpointOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -17642,7 +17642,7 @@ func (s UpdateDevEndpointOutput) GoString() string {
 }
 
 // Specifies a grok classifier to update when passed to UpdateClassifier.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateGrokClassifierRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateGrokClassifierRequest
 type UpdateGrokClassifierRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -17715,7 +17715,7 @@ func (s *UpdateGrokClassifierRequest) SetName(v string) *UpdateGrokClassifierReq
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateJobRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateJobRequest
 type UpdateJobInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17771,7 +17771,7 @@ func (s *UpdateJobInput) SetJobUpdate(v *JobUpdate) *UpdateJobInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateJobResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateJobResponse
 type UpdateJobOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17795,7 +17795,7 @@ func (s *UpdateJobOutput) SetJobName(v string) *UpdateJobOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdatePartitionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdatePartitionRequest
 type UpdatePartitionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17900,7 +17900,7 @@ func (s *UpdatePartitionInput) SetTableName(v string) *UpdatePartitionInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdatePartitionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdatePartitionResponse
 type UpdatePartitionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -17915,7 +17915,7 @@ func (s UpdatePartitionOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTableRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTableRequest
 type UpdateTableInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17989,7 +17989,7 @@ func (s *UpdateTableInput) SetTableInput(v *TableInput) *UpdateTableInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTableResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTableResponse
 type UpdateTableOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -18004,7 +18004,7 @@ func (s UpdateTableOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTriggerRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTriggerRequest
 type UpdateTriggerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18065,7 +18065,7 @@ func (s *UpdateTriggerInput) SetTriggerUpdate(v *TriggerUpdate) *UpdateTriggerIn
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTriggerResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTriggerResponse
 type UpdateTriggerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -18089,7 +18089,7 @@ func (s *UpdateTriggerOutput) SetTrigger(v *Trigger) *UpdateTriggerOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateUserDefinedFunctionRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateUserDefinedFunctionRequest
 type UpdateUserDefinedFunctionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18180,7 +18180,7 @@ func (s *UpdateUserDefinedFunctionInput) SetFunctionName(v string) *UpdateUserDe
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateUserDefinedFunctionResponse
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateUserDefinedFunctionResponse
 type UpdateUserDefinedFunctionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -18196,7 +18196,7 @@ func (s UpdateUserDefinedFunctionOutput) GoString() string {
 }
 
 // Specifies an XML classifier to be updated.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateXMLClassifierRequest
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateXMLClassifierRequest
 type UpdateXMLClassifierRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -18259,7 +18259,7 @@ func (s *UpdateXMLClassifierRequest) SetRowTag(v string) *UpdateXMLClassifierReq
 }
 
 // Represents the equivalent of a Hive user-defined function (UDF) definition.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UserDefinedFunction
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UserDefinedFunction
 type UserDefinedFunction struct {
 	_ struct{} `type:"structure"`
 
@@ -18329,7 +18329,7 @@ func (s *UserDefinedFunction) SetResourceUris(v []*ResourceUri) *UserDefinedFunc
 }
 
 // A structure used to create or updata a user-defined function.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UserDefinedFunctionInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UserDefinedFunctionInput
 type UserDefinedFunctionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18419,7 +18419,7 @@ func (s *UserDefinedFunctionInput) SetResourceUris(v []*ResourceUri) *UserDefine
 }
 
 // A classifier for XML content.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/XMLClassifier
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/XMLClassifier
 type XMLClassifier struct {
 	_ struct{} `type:"structure"`
 
