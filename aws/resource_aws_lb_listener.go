@@ -64,6 +64,13 @@ func resourceAwsLbListener() *schema.Resource {
 				Optional: true,
 			},
 
+			"additional_certificate_arns": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+
 			"default_action": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -147,7 +154,38 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 		return errors.New("Error creating LB Listener: no listeners returned in response")
 	}
 
-	d.SetId(*resp.Listeners[0].ListenerArn)
+	larn := *resp.Listeners[0].ListenerArn
+
+	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+		if carns, ok := d.GetOk("additional_certificate_arns"); ok {
+			for _, carn := range expandStringList(carns.(*schema.Set).List()) {
+				_, err := elbconn.AddListenerCertificates(&elbv2.AddListenerCertificatesInput{
+					Certificates: []*elbv2.Certificate{&elbv2.Certificate{
+						CertificateArn: carn,
+					}},
+					ListenerArn: aws.String(larn),
+				})
+				if awsErr, ok := err.(awserr.Error); ok {
+					if awsErr.Code() == "TooManyCertificates" || awsErr.Code() == "CertificateNotFound" {
+						log.Printf("[WARN] Got an error while trying to add certificate to listener with ARN: %s: %s", lbArn, err)
+						return resource.RetryableError(err)
+					}
+				}
+
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return errwrap.Wrapf("Error adding certificates to LB Listener: {{err}}", err)
+	}
+
+	d.SetId(larn)
 
 	return resourceAwsLbListenerRead(d, meta)
 }
@@ -181,6 +219,23 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 
 	if listener.Certificates != nil && len(listener.Certificates) == 1 {
 		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
+	}
+
+	certs, err := elbconn.DescribeListenerCertificates(&elbv2.DescribeListenerCertificatesInput{
+		ListenerArn: aws.String(d.Id()),
+	})
+	if err != nil {
+		return errwrap.Wrapf("Error retrieving ListenerCertficates: {{err}}", err)
+	}
+
+	if certs.Certificates != nil && len(certs.Certificates) > 0 {
+		cl := make([]string, 0)
+		for _, cert := range certs.Certificates {
+			if !*cert.IsDefault {
+				cl = append(cl, *cert.CertificateArn)
+			}
+		}
+		d.Set("additional_certificate_arns", cl)
 	}
 
 	defaultActions := make([]map[string]interface{}, 0)
@@ -234,6 +289,62 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 	_, err := elbconn.ModifyListener(params)
 	if err != nil {
 		return errwrap.Wrapf("Error modifying LB Listener: {{err}}", err)
+	}
+
+	var carnList []*string
+	if carns, ok := d.GetOk("additional_certificate_arns"); ok {
+		carnList = expandStringList(carns.(*schema.Set).List())
+	}
+
+	awsCerts, err := elbconn.DescribeListenerCertificates(&elbv2.DescribeListenerCertificatesInput{
+		ListenerArn: aws.String(d.Id()),
+	})
+	if err != nil {
+		return errwrap.Wrapf("Error retrieving ListenerCertficates: {{err}}", err)
+	}
+	var awsCarnList []*string
+	if awsCerts.Certificates != nil {
+		for _, cert := range awsCerts.Certificates {
+			if !*cert.IsDefault {
+				awsCarnList = append(awsCarnList, cert.CertificateArn)
+			}
+		}
+	}
+
+	stringInSlice := func(a *string, list []*string) bool {
+		for _, b := range list {
+			if b == a {
+				return true
+			}
+		}
+		return false
+	}
+
+	for _, carn := range awsCarnList {
+		if !stringInSlice(carn, carnList) {
+			_, err := elbconn.RemoveListenerCertificates(&elbv2.RemoveListenerCertificatesInput{
+				Certificates: []*elbv2.Certificate{&elbv2.Certificate{
+					CertificateArn: carn,
+				}},
+				ListenerArn: aws.String(d.Id()),
+			})
+			if err != nil {
+				return errwrap.Wrapf("Error modifying LB Listener: {{err}}", err)
+			}
+		}
+	}
+	for _, carn := range carnList {
+		if !stringInSlice(carn, awsCarnList) {
+			_, err := elbconn.AddListenerCertificates(&elbv2.AddListenerCertificatesInput{
+				Certificates: []*elbv2.Certificate{&elbv2.Certificate{
+					CertificateArn: carn,
+				}},
+				ListenerArn: aws.String(d.Id()),
+			})
+			if err != nil {
+				return errwrap.Wrapf("Error modifying LB Listener: {{err}}", err)
+			}
+		}
 	}
 
 	return resourceAwsLbListenerRead(d, meta)

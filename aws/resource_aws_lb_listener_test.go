@@ -94,6 +94,7 @@ func TestAccAWSLBListener_https(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener.front_end", "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener.front_end", "default_action.0.target_group_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener.front_end", "certificate_arn"),
+					resource.TestCheckResourceAttr("aws_lb_listener.front_end", "additional_certificate_arns.#", "2"),
 					resource.TestCheckResourceAttr("aws_lb_listener.front_end", "ssl_policy", "ELBSecurityPolicy-2015-05"),
 				),
 			},
@@ -355,12 +356,17 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerConfig_https(lbName, targetGroupName string) string {
+	n := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
 	return fmt.Sprintf(`resource "aws_lb_listener" "front_end" {
    load_balancer_arn = "${aws_lb.alb_test.id}"
    protocol = "HTTPS"
    port = "443"
    ssl_policy = "ELBSecurityPolicy-2015-05"
-   certificate_arn = "${aws_iam_server_certificate.test_cert.arn}"
+   certificate_arn = "${aws_iam_server_certificate.test_cert1.arn}"
+   additional_certificate_arns = [
+     "${aws_iam_server_certificate.test_cert2.arn}",
+     "${aws_iam_server_certificate.test_cert3.arn}",
+   ]
 
    default_action {
      target_group_arn = "${aws_lb_target_group.test.id}"
@@ -459,19 +465,31 @@ resource "aws_security_group" "alb_test" {
   }
 }
 
-resource "aws_iam_server_certificate" "test_cert" {
-  name = "terraform-test-cert-%d"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-  private_key      = "${tls_private_key.example.private_key_pem}"
+resource "aws_iam_server_certificate" "test_cert1" {
+  name = "terraform-test-cert-1-%d"
+  certificate_body = "${tls_self_signed_cert.example1.cert_pem}"
+  private_key      = "${tls_private_key.example1.private_key_pem}"
 }
 
-resource "tls_private_key" "example" {
+resource "aws_iam_server_certificate" "test_cert2" {
+  name = "terraform-test-cert-2-%d"
+  certificate_body = "${tls_self_signed_cert.example2.cert_pem}"
+  private_key      = "${tls_private_key.example2.private_key_pem}"
+}
+
+resource "aws_iam_server_certificate" "test_cert3" {
+  name = "terraform-test-cert-3-%d"
+  certificate_body = "${tls_self_signed_cert.example3.cert_pem}"
+  private_key      = "${tls_private_key.example3.private_key_pem}"
+}
+
+resource "tls_private_key" "example1" {
   algorithm = "RSA"
 }
 
-resource "tls_self_signed_cert" "example" {
+resource "tls_self_signed_cert" "example1" {
   key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
+  private_key_pem = "${tls_private_key.example1.private_key_pem}"
 
   subject {
     common_name  = "example.com"
@@ -486,5 +504,49 @@ resource "tls_self_signed_cert" "example" {
     "server_auth",
   ]
 }
-`, lbName, targetGroupName, rand.New(rand.NewSource(time.Now().UnixNano())).Int())
+
+resource "tls_private_key" "example2" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "example2" {
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.example2.private_key_pem}"
+
+  subject {
+    common_name  = "sub.example.com"
+    organization = "ACME Examples, Inc"
+  }
+
+  validity_period_hours = 12
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "tls_private_key" "example3" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "example3" {
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.example3.private_key_pem}"
+
+  subject {
+    common_name  = "test.example.com"
+    organization = "ACME Examples, Inc"
+  }
+
+  validity_period_hours = 12
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+`, lbName, targetGroupName, n, n, n)
 }

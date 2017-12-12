@@ -36,6 +36,13 @@ func dataSourceAwsLbListener() *schema.Resource {
 				Computed: true,
 			},
 
+			"additional_certificate_arns": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+
 			"default_action": {
 				Type:     schema.TypeList,
 				Computed: true,

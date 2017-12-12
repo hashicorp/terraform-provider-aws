@@ -25,11 +25,15 @@ resource "aws_lb_target_group" "front_end" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.front_end.arn}"
-  port              = "443"
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2015-05"
-  certificate_arn   = "arn:aws:iam::187416307283:server-certificate/test_cert_rab3wuqwgja25ct3n4jdj2tzu4"
+  load_balancer_arn           = "${aws_lb.front_end.arn}"
+  port                        = "443"
+  protocol                    = "HTTPS"
+  ssl_policy                  = "ELBSecurityPolicy-2015-05"
+  certificate_arn             = "arn:aws:iam::187416307283:server-certificate/test_cert_rab3wuqwgja25ct3n4jdj2tzu4"
+  additional_certificate_arns = [
+    "arn:aws:iam::187416307283:server-certificate/21fa6f1b-d0e0-4644-80aa-0d1f34f0329f",
+    "arn:aws:iam::187416307283:server-certificate/cc2b8c75-7362-4a90-b4d6-35b15d7e3914",
+  ]
 
   default_action {
     target_group_arn = "${aws_lb_target_group.front_end.arn}"
@@ -47,6 +51,7 @@ The following arguments are supported:
 * `protocol` - (Optional) The protocol for connections from clients to the load balancer. Valid values are `TCP`, `HTTP` and `HTTPS`. Defaults to `HTTP`.
 * `ssl_policy` - (Optional) The name of the SSL Policy for the listener. Required if `protocol` is `HTTPS`.
 * `certificate_arn` - (Optional) The ARN of the SSL server certificate. Exactly one certificate is required if the protocol is HTTPS.
+* `additional_certificate_arns` - (Optional) A list of ARNs for additional certificates to be added. These are used in conjunction with SNI by the load balancer and can only be set if the protocol is HTTPS.
 * `default_action` - (Required) An Action block. Action blocks are documented below.
 
 Action Blocks (for `default_action`) support the following:
