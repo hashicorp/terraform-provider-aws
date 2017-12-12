@@ -42,7 +42,7 @@ func testAccCheckAwsSESIdentityNotificationDestroy(s *terraform.State) error {
 		}
 
 		identity := rs.Primary.ID
-		params := &ses.GetIdentityVerificationAttributesInput{
+		params := &ses.GetIdentityNotificationAttributesInput{
 			Identities: []*string{aws.String(identity)},
 		}
 
