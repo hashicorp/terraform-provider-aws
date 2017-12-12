@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -547,6 +548,8 @@ func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) err
 
 	ruleName := d.Get("name").(string)
 
+	log.Printf("Creating IoT Topic Rule %q", ruleName)
+
 	_, err := conn.CreateTopicRule(&iot.CreateTopicRuleInput{
 		RuleName:         aws.String(ruleName),
 		TopicRulePayload: createTopicRulePayload(d),
@@ -563,6 +566,8 @@ func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
+
+	log.Printf("Reading IoT Topic Rule with id=%q", d.Id())
 
 	out, err := conn.GetTopicRule(&iot.GetTopicRuleInput{
 		RuleName: aws.String(d.Id()),
