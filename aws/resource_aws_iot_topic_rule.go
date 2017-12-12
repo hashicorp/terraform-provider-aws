@@ -106,7 +106,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						},
 						"metric_timestamp": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ValidateFunc: func(v interface{}, s string) ([]string, []error) {
 								dateString := v.(string)
 								if _, err := time.Parse(time.RFC3339, dateString); err != nil {
