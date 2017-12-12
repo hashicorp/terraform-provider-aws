@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF Regional ByteMatchSet resource for use with ALB.
 ---
 
-# aws\_wafregional\_byte\_match\_set
+# aws_wafregional_byte_match_set
 
 Provides a WAF Regional Byte Match Set Resource for use with Application Load Balancer.
 

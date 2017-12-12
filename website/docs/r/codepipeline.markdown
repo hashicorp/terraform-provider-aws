@@ -6,7 +6,7 @@ description: |-
   Provides a CodePipeline
 ---
 
-# aws\_codepipeline
+# aws_codepipeline
 
 Provides a CodePipeline.
 

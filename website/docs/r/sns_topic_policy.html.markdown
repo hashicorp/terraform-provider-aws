@@ -6,7 +6,7 @@ description: |-
   Provides an SNS topic policy resource.
 ---
 
-# aws\_sns\_topic\_policy
+# aws_sns_topic_policy
 
 Provides an SNS topic policy resource
 

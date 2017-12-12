@@ -87,6 +87,28 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 	resourceSchema["engine"].Default = "redis"
 	resourceSchema["engine"].ValidateFunc = validateAwsElastiCacheReplicationGroupEngine
 
+	resourceSchema["at_rest_encryption_enabled"] = &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		ForceNew: true,
+	}
+
+	resourceSchema["transit_encryption_enabled"] = &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		ForceNew: true,
+	}
+
+	resourceSchema["auth_token"] = &schema.Schema{
+		Type:         schema.TypeString,
+		Optional:     true,
+		Sensitive:    true,
+		ForceNew:     true,
+		ValidateFunc: validateAwsElastiCacheReplicationGroupAuthToken,
+	}
+
 	return &schema.Resource{
 		Create: resourceAwsElasticacheReplicationGroupCreate,
 		Read:   resourceAwsElasticacheReplicationGroupRead,
@@ -166,6 +188,18 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("snapshot_name"); ok {
 		params.SnapshotName = aws.String(v.(string))
+	}
+
+	if _, ok := d.GetOk("transit_encryption_enabled"); ok {
+		params.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
+	}
+
+	if _, ok := d.GetOk("at_rest_encryption_enabled"); ok {
+		params.AtRestEncryptionEnabled = aws.Bool(d.Get("at_rest_encryption_enabled").(bool))
+	}
+
+	if v, ok := d.GetOk("auth_token"); ok {
+		params.AuthToken = aws.String(v.(string))
 	}
 
 	clusterMode, clusterModeOk := d.GetOk("cluster_mode")
@@ -313,6 +347,12 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		}
 
 		d.Set("auto_minor_version_upgrade", c.AutoMinorVersionUpgrade)
+		d.Set("at_rest_encryption_enabled", c.AtRestEncryptionEnabled)
+		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
+
+		if c.AuthTokenEnabled != nil && !*c.AuthTokenEnabled {
+			d.Set("auth_token", nil)
+		}
 	}
 
 	return nil

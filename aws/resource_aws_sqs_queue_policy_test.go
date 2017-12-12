@@ -28,6 +28,28 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSQSQueuePolicy_import(t *testing.T) {
+	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(5))
+	resourceName := "aws_sqs_queue_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSSQSPolicyConfig_basic(queueName),
+			},
+
+			resource.TestStep{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAWSSQSPolicyConfig_basic(r string) string {
 	return fmt.Sprintf(testAccAWSSQSPolicyConfig_basic_tpl, r)
 }

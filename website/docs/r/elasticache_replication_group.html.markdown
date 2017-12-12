@@ -6,7 +6,7 @@ description: |-
   Provides an ElastiCache Replication Group resource.
 ---
 
-# aws\_elasticache\_replication\_group
+# aws_elasticache_replication_group
 
 Provides an ElastiCache Replication Group resource.
 

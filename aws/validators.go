@@ -282,6 +282,18 @@ func validateCloudWatchEventRuleName(v interface{}, k string) (ws []string, erro
 	return
 }
 
+func validateCloudWatchLogResourcePolicyDocument(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	// http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutResourcePolicy.html
+	if len(value) > 5120 || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("CloudWatch log resource policy document must be between 1 and 5120 characters."))
+	}
+	if _, err := normalizeJsonString(v); err != nil {
+		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
+	}
+	return
+}
+
 func validateMaxLength(length int) schema.SchemaValidateFunc {
 	return func(v interface{}, k string) (ws []string, errors []error) {
 		value := v.(string)
@@ -1970,5 +1982,18 @@ func validateDxConnectionBandWidth(v interface{}, k string) (ws []string, errors
 	}
 
 	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validBandWidth, val))
+	return
+}
+
+func validateAwsElastiCacheReplicationGroupAuthToken(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) < 16) || (len(value) > 128) {
+		errors = append(errors, fmt.Errorf(
+			"%q must contain from 16 to 128 alphanumeric characters or symbols (excluding @, \", and /)", k))
+	}
+	if !regexp.MustCompile(`^[^@"\/]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters or symbols (excluding @, \", and /) allowed in %q", k))
+	}
 	return
 }

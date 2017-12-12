@@ -3372,8 +3372,7 @@ func (c *IoT) DescribeCertificateRequest(input *DescribeCertificateInput) (req *
 
 // DescribeCertificate API operation for AWS IoT.
 //
-// Gets information about the specified certificate. You may specify the certificate
-// using either its ID or PEM.
+// Gets information about the specified certificate.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -22540,6 +22539,9 @@ type TopicRule struct {
 	// The description of the rule.
 	Description *string `locationName:"description" type:"string"`
 
+	// The action to perform when an error occurs.
+	ErrorAction *Action `locationName:"errorAction" type:"structure"`
+
 	// Specifies whether the rule is disabled.
 	RuleDisabled *bool `locationName:"ruleDisabled" type:"boolean"`
 
@@ -22582,6 +22584,12 @@ func (s *TopicRule) SetCreatedAt(v time.Time) *TopicRule {
 // SetDescription sets the Description field's value.
 func (s *TopicRule) SetDescription(v string) *TopicRule {
 	s.Description = &v
+	return s
+}
+
+// SetErrorAction sets the ErrorAction field's value.
+func (s *TopicRule) SetErrorAction(v *Action) *TopicRule {
+	s.ErrorAction = v
 	return s
 }
 
@@ -22678,6 +22686,9 @@ type TopicRulePayload struct {
 	// The description of the rule.
 	Description *string `locationName:"description" type:"string"`
 
+	// The action to take when an error occurs.
+	ErrorAction *Action `locationName:"errorAction" type:"structure"`
+
 	// Specifies whether the rule is disabled.
 	RuleDisabled *bool `locationName:"ruleDisabled" type:"boolean"`
 
@@ -22718,6 +22729,11 @@ func (s *TopicRulePayload) Validate() error {
 			}
 		}
 	}
+	if s.ErrorAction != nil {
+		if err := s.ErrorAction.Validate(); err != nil {
+			invalidParams.AddNested("ErrorAction", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -22740,6 +22756,12 @@ func (s *TopicRulePayload) SetAwsIotSqlVersion(v string) *TopicRulePayload {
 // SetDescription sets the Description field's value.
 func (s *TopicRulePayload) SetDescription(v string) *TopicRulePayload {
 	s.Description = &v
+	return s
+}
+
+// SetErrorAction sets the ErrorAction field's value.
+func (s *TopicRulePayload) SetErrorAction(v *Action) *TopicRulePayload {
+	s.ErrorAction = v
 	return s
 }
 

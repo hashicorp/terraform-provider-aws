@@ -4,7 +4,7 @@ page_title: "AWS: aws_rds_cluster_parameter_group"
 sidebar_current: "docs-aws-resource-rds-cluster-parameter-group"
 ---
 
-# aws\_rds\_cluster\_parameter\_group
+# aws_rds_cluster_parameter_group
 
 Provides an RDS DB cluster parameter group resource.
 

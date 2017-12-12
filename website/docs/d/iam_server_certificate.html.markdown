@@ -6,7 +6,7 @@ description: |-
   Get information about a server certificate
 ---
 
-# aws\_iam\_server\_certificate
+# aws_iam_server_certificate
 
 Use this data source to lookup information about IAM Server Certificates.
 

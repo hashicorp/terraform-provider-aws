@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Deployment.
 ---
 
-# aws\_api\_gateway\_deployment
+# aws_api_gateway_deployment
 
 Provides an API Gateway Deployment.
 

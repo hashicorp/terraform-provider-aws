@@ -6,7 +6,7 @@ description: |-
   Provides a DMS (Data Migration Service) replication instance resource.
 ---
 
-# aws\_dms\_replication\_instance
+# aws_dms_replication_instance
 
 Provides a DMS (Data Migration Service) replication instance resource. DMS replication instances can be created, updated, deleted, and imported.
 
