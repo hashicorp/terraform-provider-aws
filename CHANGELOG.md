@@ -9,6 +9,7 @@ FEATURES:
 * **New Resource:** `aws_cloudwatch_log_resource_policy` [GH-2243]
 * **New Resource:** `aws_media_store_container` [GH-2448]
 * **New Resource:** `aws_service_discovery_public_dns_namespace` [GH-2569]
+* **New Resource:** `aws_service_discovery_private_dns_namespace` [GH-2589]
 
 IMPROVEMENTS:
 
