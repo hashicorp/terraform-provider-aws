@@ -64,8 +64,8 @@ func resourceAwsSesNotificationSet(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesConn
-	notification := d.Get("notification_type").(*schema.Set)
-	identity := d.Get("identity").(*schema.Set)
+	notification := d.Get("notification_type").(string)
+	identity := d.Get("identity").(string)
 
 	getOpts := &ses.GetIdentityNotificationAttributesInput{
 		Identities: []*string{aws.String(identity)},
