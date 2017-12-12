@@ -11423,6 +11423,7 @@ type AdminGetUserOutput struct {
 	// Specifies the options for MFA (e.g., email or phone number).
 	MFAOptions []*MFAOptionType `type:"list"`
 
+	// The user's preferred MFA setting.
 	PreferredMfaSetting *string `type:"string"`
 
 	// An array of name-value pairs representing user attributes.
@@ -11434,6 +11435,7 @@ type AdminGetUserOutput struct {
 	// The date the user was last modified.
 	UserLastModifiedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
+	// The list of the user's MFA settings.
 	UserMFASettingList []*string `type:"list"`
 
 	// The user status. Can be one of the following:
@@ -17653,6 +17655,7 @@ type GetUserOutput struct {
 	// Specifies the options for MFA (e.g., email or phone number).
 	MFAOptions []*MFAOptionType `type:"list"`
 
+	// The user's preferred MFA setting.
 	PreferredMfaSetting *string `type:"string"`
 
 	// An array of name-value pairs representing user attributes.
@@ -17663,6 +17666,7 @@ type GetUserOutput struct {
 	// UserAttributes is a required field
 	UserAttributes []*AttributeType `type:"list" required:"true"`
 
+	// The list of the user's MFA settings.
 	UserMFASettingList []*string `type:"list"`
 
 	// The user name of the user you wish to retrieve from the get user request.
@@ -23425,6 +23429,9 @@ type UserPoolType struct {
 	// The device configuration.
 	DeviceConfiguration *DeviceConfigurationType `type:"structure"`
 
+	// Holds the domain prefix if the user pool has a domain associated with it.
+	Domain *string `min:"1" type:"string"`
+
 	// The email configuration.
 	EmailConfiguration *EmailConfigurationType `type:"structure"`
 
@@ -23536,6 +23543,12 @@ func (s *UserPoolType) SetCreationDate(v time.Time) *UserPoolType {
 // SetDeviceConfiguration sets the DeviceConfiguration field's value.
 func (s *UserPoolType) SetDeviceConfiguration(v *DeviceConfigurationType) *UserPoolType {
 	s.DeviceConfiguration = v
+	return s
+}
+
+// SetDomain sets the Domain field's value.
+func (s *UserPoolType) SetDomain(v string) *UserPoolType {
+	s.Domain = &v
 	return s
 }
 
