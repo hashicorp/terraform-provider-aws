@@ -993,6 +993,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if isAWSErr(err, "ServerSideEncryptionConfigurationNotFoundError", "encryption configuration was not found") {
 			log.Printf("[DEBUG] Default encryption is not enabled for %s", d.Id())
+			d.Set("server_side_encryption_configuration", []map[string]interface{}{})
 		} else {
 			return err
 		}
