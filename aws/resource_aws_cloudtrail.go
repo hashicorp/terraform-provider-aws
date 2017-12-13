@@ -99,7 +99,7 @@ func resourceAwsCloudTrail() *schema.Resource {
 									"type": &schema.Schema{
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"AWS::S3::Object"}, false),
+										ValidateFunc: validation.StringInSlice([]string{"AWS::S3::Object", "AWS::Lambda::Function"}, false),
 									},
 									"values": &schema.Schema{
 										Type:     schema.TypeList,
