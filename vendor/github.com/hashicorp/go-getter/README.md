@@ -232,6 +232,9 @@ The options below are available to all protocols:
   * `checksum` - Checksum to verify the downloaded file or archive. See
     the entire section on checksumming above for format and more details.
 
+  * `filename` - When in file download mode, allows specifying the name of the
+    downloaded file on disk. Has no effect in directory mode.
+
 ### Local Files (`file`)
 
 None

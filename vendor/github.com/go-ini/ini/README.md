@@ -1,4 +1,4 @@
-INI [![Build Status](https://travis-ci.org/go-ini/ini.svg?branch=master)](https://travis-ci.org/go-ini/ini)
+INI [![Build Status](https://travis-ci.org/go-ini/ini.svg?branch=master)](https://travis-ci.org/go-ini/ini) [![Sourcegraph](https://sourcegraph.com/github.com/go-ini/ini/-/badge.svg)](https://sourcegraph.com/github.com/go-ini/ini?badge)
 ===
 
 ![](https://avatars0.githubusercontent.com/u/10216035?v=3&s=200)
@@ -83,8 +83,8 @@ sec1, err := cfg.GetSection("Section")
 sec2, err := cfg.GetSection("SecTIOn")
 
 // key1 and key2 are the exactly same key object
-key1, err := cfg.GetKey("Key")
-key2, err := cfg.GetKey("KeY")
+key1, err := sec1.GetKey("Key")
+key2, err := sec2.GetKey("KeY")
 ```
 
 #### MySQL-like boolean key 
@@ -101,10 +101,16 @@ skip-name-resolve
 By default, this is considered as missing value. But if you know you're going to deal with those cases, you can assign advanced load options:
 
 ```go
-cfg, err := LoadSources(LoadOptions{AllowBooleanKeys: true}, "my.cnf"))
+cfg, err := ini.LoadSources(ini.LoadOptions{AllowBooleanKeys: true}, "my.cnf"))
 ```
 
 The value of those keys are always `true`, and when you save to a file, it will keep in the same foramt as you read.
+
+To generate such keys in your program, you could use `NewBooleanKey`:
+
+```go
+key, err := sec.NewBooleanKey("skip-host-cache")
+```
 
 #### Comment
 
@@ -115,6 +121,12 @@ Take care that following format will be treated as comment:
 3. Words after section name (i.e words after `[some section name]`)
 
 If you want to save a value with `#` or `;`, please quote them with ``` ` ``` or ``` """ ```.
+
+Alternatively, you can use following `LoadOptions` to completely ignore inline comments:
+
+```go
+cfg, err := ini.LoadSources(ini.LoadOptions{IgnoreInlineComment: true}, "app.ini"))
+```
 
 ### Working with sections
 
@@ -317,6 +329,20 @@ foo = "some value" // foo: some value
 bar = 'some value' // bar: some value
 ```
 
+Sometimes you downloaded file from [Crowdin](https://crowdin.com/) has values like the following (value is surrounded by double quotes and quotes in the value are escaped):
+
+```ini
+create_repo="created repository <a href=\"%s\">%s</a>"
+```
+
+How do you transform this to regular format automatically?
+
+```go
+cfg, err := ini.LoadSources(ini.LoadOptions{UnescapeValueDoubleQuotes: true}, "en-US.ini"))
+cfg.Section("<name of your section>").Key("create_repo").String() 
+// You got: created repository <a href="%s">%s</a>
+```
+
 That's all? Hmm, no.
 
 #### Helper methods of working with values
@@ -468,7 +494,7 @@ cfg.Section("package.sub").ParentKeys() // ["CLONE_URL"]
 Sometimes, you have sections that do not contain key-value pairs but raw content, to handle such case, you can use `LoadOptions.UnparsableSections`:
 
 ```go
-cfg, err := LoadSources(LoadOptions{UnparseableSections: []string{"COMMENTS"}}, `[COMMENTS]
+cfg, err := ini.LoadSources(ini.LoadOptions{UnparseableSections: []string{"COMMENTS"}}, `[COMMENTS]
 <1><L.Slide#2> This slide has the fuel listed in the wrong units <e.1>`))
 
 body := cfg.Section("COMMENTS").Body()
@@ -561,7 +587,7 @@ Why not?
 
 ```go
 type Embeded struct {
-	Dates  []time.Time `delim:"|"`
+	Dates  []time.Time `delim:"|" comment:"Time data"`
 	Places []string    `ini:"places,omitempty"`
 	None   []int       `ini:",omitempty"`
 }
@@ -569,10 +595,10 @@ type Embeded struct {
 type Author struct {
 	Name      string `ini:"NAME"`
 	Male      bool
-	Age       int
+	Age       int `comment:"Author's age"`
 	GPA       float64
 	NeverMind string `ini:"-"`
-	*Embeded
+	*Embeded `comment:"Embeded section"`
 }
 
 func main() {
@@ -593,10 +619,13 @@ So, what do I get?
 ```ini
 NAME = Unknwon
 Male = true
+; Author's age
 Age = 21
 GPA = 2.8
 
+; Embeded section
 [Embeded]
+; Time data
 Dates = 2015-08-07T22:14:22+08:00|2015-08-07T22:14:22+08:00
 places = HangZhou,Boston
 ```

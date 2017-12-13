@@ -1,0 +1,24 @@
+sudo: required
+dist: trusty
+
+language: go
+
+services:
+  - docker
+
+go:
+  - 1.9.1
+
+matrix:
+  allow_failures:
+    - go: tip
+
+branches:
+  only:
+    - master
+    - travis-testing
+
+script:
+  - make bootstrap
+  - travis_wait 75 make test
+  - travis_wait 75 make testrace

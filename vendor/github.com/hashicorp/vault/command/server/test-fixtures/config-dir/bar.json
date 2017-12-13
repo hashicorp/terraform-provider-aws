@@ -1,0 +1,11 @@
+{
+    "ui":false,
+
+    "listener": {
+        "tcp": {
+            "address": "127.0.0.1:443"
+        }
+    },
+
+    "max_lease_ttl": "10h"
+}

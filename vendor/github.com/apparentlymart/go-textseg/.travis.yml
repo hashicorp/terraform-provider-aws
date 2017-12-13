@@ -1,0 +1,19 @@
+language: go
+
+go:
+  - 1.8.x
+  - tip
+
+matrix:
+  fast_finish: true
+  allow_failures:
+  - go: tip
+
+before_install:
+  - go get -t -v ./...
+
+script:
+  - go test -coverprofile=coverage.txt -covermode=atomic ./textseg
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

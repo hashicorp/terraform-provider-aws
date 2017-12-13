@@ -1,0 +1,12 @@
+os:
+  - linux
+language: go
+go:
+  - 1.6
+notifications:
+  slack:
+    rooms:
+      secure: W5hUm0MPWJ3v2VGRAq9fxgroVvqFOkwnbrxllEX3Zadf3e909fwQzm7KEUvSEd9fhsKrdBxPrphCZd1UCq5cXjCkfokKFojnbgnYPKZYgL4M7GWqiURCfIUY7r0gQCDnFzIIANacIbhT8089IkQva8QWCdfX4zVycTKOvMC0msE=
+branches:
+  only:
+    - master

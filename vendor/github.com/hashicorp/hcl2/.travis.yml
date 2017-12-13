@@ -1,0 +1,13 @@
+language: go
+
+go:
+  - 1.9.x
+
+before_install:
+  - go get -t -v ./...
+
+script:
+  - ./.travis.sh
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
