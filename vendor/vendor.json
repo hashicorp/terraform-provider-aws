@@ -749,6 +749,14 @@
 			"versionExact": "v1.12.46"
 		},
 		{
+			"checksumSHA1": "HluEcyZNywrbKnj/aR3tXbu29d8=",
+			"path": "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice",
+			"revision": "25ef42b41b82230caae56ab23d872c81fb5c0eae",
+			"revisionTime": "2017-12-12T20:57:05Z",
+			"version": "v1.12.46",
+			"versionExact": "v1.12.46"
+		},
+		{
 			"checksumSHA1": "wjs9YBsHx0YQH0zKBA7Ibd1UV5Y=",
 			"path": "github.com/aws/aws-sdk-go/service/lightsail",
 			"revision": "25ef42b41b82230caae56ab23d872c81fb5c0eae",
