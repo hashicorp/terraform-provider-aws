@@ -25,6 +25,7 @@ func TestAccAwsServiceDiscoveryService_private(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.dns_records.#", "1"),
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.dns_records.0.type", "A"),
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.dns_records.0.ttl", "5"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_service.test", "arn"),
 				),
 			},
 			{
@@ -36,6 +37,7 @@ func TestAccAwsServiceDiscoveryService_private(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.dns_records.0.ttl", "10"),
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.dns_records.1.type", "AAAA"),
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.dns_records.1.ttl", "5"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_service.test", "arn"),
 				),
 			},
 		},
@@ -56,6 +58,7 @@ func TestAccAwsServiceDiscoveryService_public(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.type", "HTTP"),
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.failure_threshold", "5"),
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.resource_path", "path"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_service.test", "arn"),
 				),
 			},
 			{
@@ -65,6 +68,7 @@ func TestAccAwsServiceDiscoveryService_public(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.type", "HTTP"),
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.failure_threshold", "3"),
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.resource_path", "update"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_service.test", "arn"),
 				),
 			},
 		},
