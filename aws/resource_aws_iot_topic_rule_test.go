@@ -5,18 +5,21 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSIoTTopicRule_basic(t *testing.T) {
+	uniqueId := acctest.RandInt()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSIoTTopicRule_basic,
+				Config: testAccAWSIoTTopicRule_basic(uniqueId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
 				),
@@ -61,9 +64,10 @@ func testAccCheckAWSIoTTopicRuleExists_basic(name string) resource.TestCheckFunc
 	}
 }
 
-var testAccAWSIoTTopicRule_basic = `
+func testAccAWSIoTTopicRule_basic(unique_id int) string {
+	return fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
-  name = "MyRule"
+  name = "test_rule_%[1]d"
   description = "Example rule"
   enabled = true
   sql = "SELECT * FROM 'topic/test'"
@@ -80,7 +84,7 @@ resource "aws_iot_topic_rule" "rule" {
   }
 }
 resource "aws_iam_role" "iot_role" {
-    name = "iot"
+    name = "test_role_%[1]d"
     assume_role_policy = <<EOF
 {
     "Version":"2012-10-17",
@@ -95,7 +99,7 @@ resource "aws_iam_role" "iot_role" {
 EOF
 }
 resource "aws_iam_policy" "policy" {
-    name = "test_policy"
+    name = "test_policy_%[1]d"
     path = "/"
     description = "My test policy"
     policy = <<EOF
@@ -110,8 +114,9 @@ resource "aws_iam_policy" "policy" {
 EOF
 }
 resource "aws_iam_policy_attachment" "attach_policy" {
-    name = "attach_policy"
+    name = "test_policy_attachment_%[1]d"
     roles = ["${aws_iam_role.iot_role.name}"]
     policy_arn = "${aws_iam_policy.policy.arn}"
 }
-`
+`, unique_id)
+}
