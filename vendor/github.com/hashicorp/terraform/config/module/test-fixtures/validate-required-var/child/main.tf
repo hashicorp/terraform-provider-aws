@@ -1,0 +1,2 @@
+variable "memory" {}
+variable "feature" {}

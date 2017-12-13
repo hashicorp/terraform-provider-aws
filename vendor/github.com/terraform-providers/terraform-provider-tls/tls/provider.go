@@ -32,35 +32,34 @@ func hashForState(value string) string {
 func nameFromResourceData(nameMap map[string]interface{}) (*pkix.Name, error) {
 	result := &pkix.Name{}
 
-	if value := nameMap["common_name"]; value != nil {
+	if value := nameMap["common_name"]; value != "" {
 		result.CommonName = value.(string)
 	}
-	if value := nameMap["organization"]; value != nil {
+	if value := nameMap["organization"]; value != "" {
 		result.Organization = []string{value.(string)}
 	}
-	if value := nameMap["organizational_unit"]; value != nil {
+	if value := nameMap["organizational_unit"]; value != "" {
 		result.OrganizationalUnit = []string{value.(string)}
 	}
-	if value := nameMap["street_address"]; value != nil {
-		valueI := value.([]interface{})
-		result.StreetAddress = make([]string, len(valueI))
-		for i, vi := range valueI {
+	if value := nameMap["street_address"].([]interface{}); len(value) > 0 {
+		result.StreetAddress = make([]string, len(value))
+		for i, vi := range value {
 			result.StreetAddress[i] = vi.(string)
 		}
 	}
-	if value := nameMap["locality"]; value != nil {
+	if value := nameMap["locality"]; value != "" {
 		result.Locality = []string{value.(string)}
 	}
-	if value := nameMap["province"]; value != nil {
+	if value := nameMap["province"]; value != "" {
 		result.Province = []string{value.(string)}
 	}
-	if value := nameMap["country"]; value != nil {
+	if value := nameMap["country"]; value != "" {
 		result.Country = []string{value.(string)}
 	}
-	if value := nameMap["postal_code"]; value != nil {
+	if value := nameMap["postal_code"]; value != "" {
 		result.PostalCode = []string{value.(string)}
 	}
-	if value := nameMap["serial_number"]; value != nil {
+	if value := nameMap["serial_number"]; value != "" {
 		result.SerialNumber = value.(string)
 	}
 

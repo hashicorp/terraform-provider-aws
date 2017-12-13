@@ -51,7 +51,20 @@ var (
 	// underlying connections within the specified timeout.
 	// DEPRECATED: Please use context.DeadlineExceeded instead.
 	ErrClientConnTimeout = errors.New("grpc: timed out when dialing")
+	// errConnDrain indicates that the connection starts to be drained and does not accept any new RPCs.
+	errConnDrain = errors.New("grpc: the connection is drained")
+	// errConnClosing indicates that the connection is closing.
+	errConnClosing = errors.New("grpc: the connection is closing")
+	// errConnUnavailable indicates that the connection is unavailable.
+	errConnUnavailable = errors.New("grpc: the connection is unavailable")
+	// errBalancerClosed indicates that the balancer is closed.
+	errBalancerClosed = errors.New("grpc: balancer is closed")
+	// minimum time to give a connection to complete
+	minConnectTimeout = 20 * time.Second
+)
 
+// The following errors are returned from Dial and DialContext
+var (
 	// errNoTransportSecurity indicates that there is no transport security
 	// being set for ClientConn. Users should either set one or explicitly
 	// call WithInsecure DialOption to disable security.
@@ -65,16 +78,6 @@ var (
 	errCredentialsConflict = errors.New("grpc: transport credentials are set for an insecure connection (grpc.WithTransportCredentials() and grpc.WithInsecure() are both called)")
 	// errNetworkIO indicates that the connection is down due to some network I/O error.
 	errNetworkIO = errors.New("grpc: failed with network I/O error")
-	// errConnDrain indicates that the connection starts to be drained and does not accept any new RPCs.
-	errConnDrain = errors.New("grpc: the connection is drained")
-	// errConnClosing indicates that the connection is closing.
-	errConnClosing = errors.New("grpc: the connection is closing")
-	// errConnUnavailable indicates that the connection is unavailable.
-	errConnUnavailable = errors.New("grpc: the connection is unavailable")
-	// errBalancerClosed indicates that the balancer is closed.
-	errBalancerClosed = errors.New("grpc: balancer is closed")
-	// minimum time to give a connection to complete
-	minConnectTimeout = 20 * time.Second
 )
 
 // dialOptions configure a Dial call. dialOptions are set by the DialOption
@@ -155,16 +158,26 @@ func WithCodec(c Codec) DialOption {
 	}
 }
 
-// WithCompressor returns a DialOption which sets a CompressorGenerator for generating message
-// compressor.
+// WithCompressor returns a DialOption which sets a Compressor to use for
+// message compression. It has lower priority than the compressor set by
+// the UseCompressor CallOption.
+//
+// Deprecated: use UseCompressor instead.
 func WithCompressor(cp Compressor) DialOption {
 	return func(o *dialOptions) {
 		o.cp = cp
 	}
 }
 
-// WithDecompressor returns a DialOption which sets a DecompressorGenerator for generating
-// message decompressor.
+// WithDecompressor returns a DialOption which sets a Decompressor to use for
+// incoming message decompression.  If incoming response messages are encoded
+// using the decompressor's Type(), it will be used.  Otherwise, the message
+// encoding will be used to look up the compressor registered via
+// encoding.RegisterCompressor, which will then be used to decompress the
+// message.  If no compressor is registered for the encoding, an Unimplemented
+// status error will be returned.
+//
+// Deprecated: use encoding.RegisterCompressor instead.
 func WithDecompressor(dc Decompressor) DialOption {
 	return func(o *dialOptions) {
 		o.dc = dc
@@ -630,8 +643,6 @@ func (cc *ClientConn) handleResolvedAddrs(addrs []resolver.Address, err error) {
 
 // switchBalancer starts the switching from current balancer to the balancer with name.
 func (cc *ClientConn) switchBalancer(name string) {
-	cc.mu.Lock()
-	defer cc.mu.Unlock()
 	if cc.conns == nil {
 		return
 	}
@@ -805,6 +816,9 @@ func (cc *ClientConn) handleServiceConfig(js string) error {
 	cc.mu.Lock()
 	cc.scRaw = js
 	cc.sc = sc
+	if sc.LB != nil {
+		cc.switchBalancer(*sc.LB)
+	}
 	cc.mu.Unlock()
 	return nil
 }
@@ -867,7 +881,7 @@ type addrConn struct {
 // receiving a GoAway.
 func (ac *addrConn) adjustParams(r transport.GoAwayReason) {
 	switch r {
-	case transport.TooManyPings:
+	case transport.GoAwayTooManyPings:
 		v := 2 * ac.dopts.copts.KeepaliveParams.Time
 		ac.cc.mu.Lock()
 		if v > ac.cc.mkp.Time {
@@ -951,6 +965,12 @@ func (ac *addrConn) resetTransport() error {
 			newTransport, err := transport.NewClientTransport(ac.cc.ctx, sinfo, copts, timeout)
 			if err != nil {
 				if e, ok := err.(transport.ConnectionError); ok && !e.Temporary() {
+					ac.mu.Lock()
+					if ac.state != connectivity.Shutdown {
+						ac.state = connectivity.TransientFailure
+						ac.cc.handleSubConnStateChange(ac.acbw, ac.state)
+					}
+					ac.mu.Unlock()
 					return err
 				}
 				grpclog.Warningf("grpc: addrConn.resetTransport failed to create client transport: %v; Reconnecting to %v", err, addr)
@@ -1025,6 +1045,10 @@ func (ac *addrConn) transportMonitor() {
 		default:
 		}
 		ac.mu.Lock()
+		if ac.state == connectivity.Shutdown {
+			ac.mu.Unlock()
+			return
+		}
 		// Set connectivity state to TransientFailure before calling
 		// resetTransport. Transition READY->CONNECTING is not valid.
 		ac.state = connectivity.TransientFailure

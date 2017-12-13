@@ -1,0 +1,82 @@
+
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#  name = "github.com/x/y"
+#  version = "2.4.0"
+
+
+[[constraint]]
+  name = "github.com/aws/aws-sdk-go"
+  version = "1.12.46"
+
+[[constraint]]
+  name = "github.com/beevik/etree"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/davecgh/go-spew"
+  version = "1.1.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/hashicorp/errwrap"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/hashicorp/go-cleanhttp"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/hashicorp/go-multierror"
+
+[[constraint]]
+  name = "github.com/hashicorp/terraform"
+  version = "0.11.1"
+
+[[constraint]]
+  name = "github.com/hashicorp/vault"
+  version = "0.9.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/jen20/awspolicyequivalence"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mitchellh/copystructure"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mitchellh/go-homedir"
+
+[[constraint]]
+  name = "github.com/satori/uuid"
+  version = "1.1.0"
+
+[[constraint]]
+  name = "github.com/terraform-providers/terraform-provider-template"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/terraform-providers/terraform-provider-tls"
+  version = "1.0.1"
+
+[[constraint]]
+  branch = "v2"
+  name = "gopkg.in/yaml.v2"

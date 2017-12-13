@@ -1,0 +1,22 @@
+# zcl User Functions Extension
+
+This zcl extension allows a calling application to support user-defined
+functions.
+
+Functions are defined via a specific block type, like this:
+
+```zcl
+function "add" {
+  params = ["a", "b"]
+  result = a + b
+}
+```
+
+The extension is implemented as a pre-processor for `cty.Body` objects. Given
+a body that may contain functions, the `DecodeUserFunctions` function searches
+for blocks that define functions and returns a functions map suitable for
+inclusion in a `hcl.EvalContext`. It also returns a new `cty.Body` that
+contains the remainder of the content from the given body, allowing for
+further processing of remaining content.
+
+For more information, see [the godoc reference](http://godoc.org/github.com/zclconf/go-zcl/ext/userfunc).
