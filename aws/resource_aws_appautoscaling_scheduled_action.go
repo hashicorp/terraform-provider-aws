@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -154,6 +155,7 @@ func resourceAwsAppautoscalingScheduledActionRead(d *schema.ResourceData, meta i
 		return err
 	}
 	if len(resp.ScheduledActions) < 1 {
+		log.Printf("[WARN] Application Autoscaling Scheduled Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -181,6 +183,7 @@ func resourceAwsAppautoscalingScheduledActionDelete(d *schema.ResourceData, meta
 	_, err := conn.DeleteScheduledAction(input)
 	if err != nil {
 		if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+			log.Printf("[WARN] Application Autoscaling Scheduled Action (%s) already gone, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}

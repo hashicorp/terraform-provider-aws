@@ -103,7 +103,7 @@ func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 	if t == nil {
-		log.Printf("[INFO] Application AutoScaling Target %q not found", d.Id())
+		log.Printf("[WARN] Application AutoScaling Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
