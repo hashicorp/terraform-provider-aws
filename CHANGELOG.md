@@ -8,6 +8,8 @@ FEATURES:
 * **New Resource:** `aws_appautoscaling_scheduled_action` [GH-2231]
 * **New Resource:** `aws_cloudwatch_log_resource_policy` [GH-2243]
 * **New Resource:** `aws_media_store_container` [GH-2448]
+* **New Resource:** `aws_service_discovery_public_dns_namespace` [GH-2569]
+* **New Resource:** `aws_service_discovery_private_dns_namespace` [GH-2589]
 
 IMPROVEMENTS:
 
@@ -21,6 +23,7 @@ IMPROVEMENTS:
 * resource/aws_sqs_queue_policy: Support import by queue URL [GH-2544]
 * resource/aws_elasticsearch_domain: Add `log_publishing_options` [GH-2285]
 * resource/aws_athena_database: Add `force_destroy` field [GH-2363]
+* resource/aws_elasticache_replication_group: Add support for Redis auth, in-transit and at-rest encryption [GH-2090]
 
 BUG FIXES:
 
@@ -28,6 +31,7 @@ BUG FIXES:
 * resource/aws_elasticache_parameter_group: Add StateFunc to make name lowercase [GH-2426]
 * resource/aws_elasticache_replication_group: Modify validation, make replication_group_id lowercase [GH-2432]
 * resource/aws_db_instance: Treat `storage-optimization` as valid state [GH-2409]
+* resource/aws_dynamodb_table: Ensure `ttl` is properly read [GH-2452]
 
 ## 1.5.0 (November 29, 2017)
 
