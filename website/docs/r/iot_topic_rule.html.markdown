@@ -6,7 +6,7 @@ description: |-
     Creates and manages an AWS IoT topic rule
 ---
 
-# aws\_iot\_topic_rule
+# aws_iot_topic_rule
 
 ## Example Usage
 
