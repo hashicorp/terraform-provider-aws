@@ -33,6 +33,7 @@ func resourceAwsLbListenerCertificate() *schema.Resource {
 
 func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
+
 	params := &elbv2.AddListenerCertificatesInput{
 		ListenerArn: aws.String(d.Get("listener_arn").(string)),
 		Certificates: []*elbv2.Certificate{
@@ -42,6 +43,7 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 		},
 	}
 
+	log.Printf("[DEBUG] Adding certificate: %s of listener: %s", d.Get("certificate_arn").(string), d.Get("listener_arn").(string))
 	resp, err := conn.AddListenerCertificates(params)
 	if err != nil {
 		return errwrap.Wrapf("Error creating LB Listener Certificate: {{err}}", err)
@@ -58,6 +60,8 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 
 func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
+	log.Printf("[DEBUG] Reading certificate: %s of listener: %s", d.Get("certificate_arn").(string), d.Get("listener_arn").(string))
+
 	params := &elbv2.DescribeListenerCertificatesInput{
 		ListenerArn: aws.String(d.Get("listener_arn").(string)),
 		PageSize:    aws.Int64(400),
@@ -68,7 +72,7 @@ func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface
 	for morePages && !found {
 		resp, err := conn.DescribeListenerCertificates(params)
 		if err != nil {
-			return errwrap.Wrapf("Error describing LB Listener Certificates: {{err}}", err)
+			return err
 		}
 
 		for _, cert := range resp.Certificates {
@@ -82,7 +86,7 @@ func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface
 			}
 		}
 
-		if *resp.NextMarker != "" {
+		if resp.NextMarker != nil {
 			params.Marker = resp.NextMarker
 		} else {
 			morePages = false
@@ -100,6 +104,8 @@ func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface
 
 func resourceAwsLbListenerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
+	log.Printf("[DEBUG] Deleting certificate: %s of listener: %s", d.Get("certificate_arn").(string), d.Get("listener_arn").(string))
+
 	params := &elbv2.RemoveListenerCertificatesInput{
 		ListenerArn: aws.String(d.Get("listener_arn").(string)),
 		Certificates: []*elbv2.Certificate{
@@ -109,7 +115,6 @@ func resourceAwsLbListenerCertificateDelete(d *schema.ResourceData, meta interfa
 		},
 	}
 
-	// Returns no useful response.
 	_, err := conn.RemoveListenerCertificates(params)
 	if err != nil {
 		return errwrap.Wrapf("Error removing LB Listener Certificate: {{err}}", err)
