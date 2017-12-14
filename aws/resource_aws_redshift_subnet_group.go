@@ -116,7 +116,6 @@ func resourceAwsRedshiftSubnetGroupUpdate(d *schema.ResourceData, meta interface
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("subnetgroup:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
 	if tagErr := setTagsRedshift(conn, d, arn); tagErr != nil {
 		return tagErr
 	}
