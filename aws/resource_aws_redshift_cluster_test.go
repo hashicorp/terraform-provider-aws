@@ -5,7 +5,6 @@ import (
 	"log"
 	"math/rand"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -503,11 +502,6 @@ func testAccCheckAWSRedshiftClusterSnapshot(rInt int) resource.TestCheckFunc {
 			conn := testAccProvider.Meta().(*AWSClient).redshiftconn
 
 			snapshot_identifier := fmt.Sprintf("tf-acctest-snapshot-%d", rInt)
-			arn, err := buildRedshiftARN(snapshot_identifier, testAccProvider.Meta().(*AWSClient).partition, testAccProvider.Meta().(*AWSClient).accountid, testAccProvider.Meta().(*AWSClient).region)
-			tagsARN := strings.Replace(arn, ":cluster:", ":snapshot:", 1)
-			if err != nil {
-				return fmt.Errorf("Error building ARN for tags check with ARN (%s): %s", tagsARN, err)
-			}
 
 			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
 			_, snapDeleteErr := conn.DeleteClusterSnapshot(
