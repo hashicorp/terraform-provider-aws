@@ -528,117 +528,117 @@ func TestAccAWSLBTargetGroup_updateSticknessEnabled(t *testing.T) {
 				),
 			},
 		},
-        })
+	})
 }
 
 func TestAccAWSLBTargetGroup_defaults_application(t *testing.T) {
-        var conf elbv2.TargetGroup
-        targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	var conf elbv2.TargetGroup
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-        resource.Test(t, resource.TestCase{
-                PreCheck:      func() { testAccPreCheck(t) },
-                IDRefreshName: "aws_lb_target_group.test",
-                Providers:     testAccProviders,
-                CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
-                Steps: []resource.TestStep{
-                        {
-                                Config: testAccALB_defaults(targetGroupName),
-                                Check: resource.ComposeAggregateTestCheckFunc(
-                                        testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &conf),
-                                        resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "arn"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "name", targetGroupName),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "port", "443"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "HTTP"),
-                                        resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "10"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.port", "8081"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.protocol", "HTTP"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.timeout", "5"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.healthy_threshold", "3"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.unhealthy_threshold", "3"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.%", "1"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.Name", "TestAccAWSLBTargetGroup_application_LB_defaults"),
-                                ),
-                        },
-                },
-        })
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccALB_defaults(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "name", targetGroupName),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "port", "443"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "HTTP"),
+					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "10"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.port", "8081"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.protocol", "HTTP"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.timeout", "5"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.unhealthy_threshold", "3"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.Name", "TestAccAWSLBTargetGroup_application_LB_defaults"),
+				),
+			},
+		},
+	})
 }
 
 func TestAccAWSLBTargetGroup_defaults_network(t *testing.T) {
-        var conf elbv2.TargetGroup
-        targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-        healthCheckInvalid1 := `
+	var conf elbv2.TargetGroup
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	healthCheckInvalid1 := `
     path = "/health"
     interval = 10
     port     = 8081
     protocol = "TCP"
         `
-        healthCheckInvalid2 := `
+	healthCheckInvalid2 := `
     interval = 10
     port     = 8081
     protocol = "TCP"
                 matcher = "200"
         `
-        healthCheckInvalid3 := `
+	healthCheckInvalid3 := `
     interval = 10
     port     = 8081
     protocol = "TCP"
                 timeout = 4
         `
-        healthCheckValid := `
+	healthCheckValid := `
     interval = 10
     port     = 8081
     protocol = "TCP"
         `
 
-        resource.Test(t, resource.TestCase{
-                PreCheck:      func() { testAccPreCheck(t) },
-                IDRefreshName: "aws_lb_target_group.test",
-                Providers:     testAccProviders,
-                CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
-                Steps: []resource.TestStep{
-                        {
-                                Config:      testAccNLB_defaults(targetGroupName, healthCheckInvalid1),
-                                ExpectError: regexp.MustCompile("custom path is not supported for target_groups with TCP protocol"),
-                        },
-                        {
-                                Config:      testAccNLB_defaults(targetGroupName, healthCheckInvalid2),
-                                ExpectError: regexp.MustCompile("custom matcher is not supported for target_groups with TCP protocol"),
-                        },
-                        {
-                                Config:      testAccNLB_defaults(targetGroupName, healthCheckInvalid3),
-                                ExpectError: regexp.MustCompile("custom timeout is not supported for target_groups with TCP protocol"),
-                        },
-                        {
-                                Config: testAccNLB_defaults(targetGroupName, healthCheckValid),
-                                Check: resource.ComposeAggregateTestCheckFunc(
-                                        testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &conf),
-                                        resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "arn"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "name", targetGroupName),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "port", "443"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "TCP"),
-                                        resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "10"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.port", "8081"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.protocol", "TCP"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.timeout", "10"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.healthy_threshold", "3"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.unhealthy_threshold", "3"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.%", "1"),
-                                        resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.Name", "TestAccAWSLBTargetGroup_application_LB_defaults"),
-                                ),
-                        },
-                },
-        })
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccNLB_defaults(targetGroupName, healthCheckInvalid1),
+				ExpectError: regexp.MustCompile("custom path is not supported for target_groups with TCP protocol"),
+			},
+			{
+				Config:      testAccNLB_defaults(targetGroupName, healthCheckInvalid2),
+				ExpectError: regexp.MustCompile("custom matcher is not supported for target_groups with TCP protocol"),
+			},
+			{
+				Config:      testAccNLB_defaults(targetGroupName, healthCheckInvalid3),
+				ExpectError: regexp.MustCompile("custom timeout is not supported for target_groups with TCP protocol"),
+			},
+			{
+				Config: testAccNLB_defaults(targetGroupName, healthCheckValid),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "name", targetGroupName),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "port", "443"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "TCP"),
+					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "10"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.port", "8081"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.protocol", "TCP"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.timeout", "10"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.unhealthy_threshold", "3"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.Name", "TestAccAWSLBTargetGroup_application_LB_defaults"),
+				),
+			},
+		},
+	})
 }
 
 func testAccCheckAWSLBTargetGroupExists(n string, res *elbv2.TargetGroup) resource.TestCheckFunc {
-        return func(s *terraform.State) error {
-                rs, ok := s.RootModule().Resources[n]
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
@@ -750,11 +750,11 @@ func testAccCheckAWSLBTargetGroupDestroy(s *terraform.State) error {
 		}
 	}
 
-        return nil
+	return nil
 }
 
 func testAccALB_defaults(name string) string {
-        return fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = "%s"
   port     = 443
@@ -791,7 +791,7 @@ resource "aws_vpc" "test" {
 }
 
 func testAccNLB_defaults(name, healthCheckBlock string) string {
-        return fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = "%s"
   port     = 443
