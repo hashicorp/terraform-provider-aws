@@ -630,7 +630,6 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
 	if tagErr := setTagsRedshift(conn, d, arn); tagErr != nil {
 		return tagErr
 	} else {
