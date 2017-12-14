@@ -14,7 +14,6 @@ import (
 )
 
 func TestAccAWSBeanstalkAppVersion_basic(t *testing.T) {
-
 	var appVersion elasticbeanstalk.ApplicationVersionDescription
 
 	resource.Test(t, resource.TestCase{
@@ -32,6 +31,26 @@ func TestAccAWSBeanstalkAppVersion_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSBeanstalkAppVersion_duplicateLabels(t *testing.T) {
+	var firstAppVersion elasticbeanstalk.ApplicationVersionDescription
+	var secondAppVersion elasticbeanstalk.ApplicationVersionDescription
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckApplicationVersionDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccBeanstalkApplicationVersionConfig_duplicateLabel(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationVersionExists("aws_elastic_beanstalk_application_version.first", &firstAppVersion),
+					testAccCheckApplicationVersionExists("aws_elastic_beanstalk_application_version.second", &secondAppVersion),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckApplicationVersionDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
 
@@ -41,7 +60,8 @@ func testAccCheckApplicationVersionDestroy(s *terraform.State) error {
 		}
 
 		describeApplicationVersionOpts := &elasticbeanstalk.DescribeApplicationVersionsInput{
-			VersionLabels: []*string{aws.String(rs.Primary.ID)},
+			ApplicationName: aws.String(rs.Primary.Attributes["application"]),
+			VersionLabels:   []*string{aws.String(rs.Primary.ID)},
 		}
 		resp, err := conn.DescribeApplicationVersions(describeApplicationVersionOpts)
 		if err == nil {
@@ -76,7 +96,8 @@ func testAccCheckApplicationVersionExists(n string, app *elasticbeanstalk.Applic
 
 		conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
 		describeApplicationVersionOpts := &elasticbeanstalk.DescribeApplicationVersionsInput{
-			VersionLabels: []*string{aws.String(rs.Primary.ID)},
+			ApplicationName: aws.String(rs.Primary.Attributes["application"]),
+			VersionLabels:   []*string{aws.String(rs.Primary.ID)},
 		}
 
 		log.Printf("[DEBUG] Elastic Beanstalk Application Version TEST describe opts: %s", describeApplicationVersionOpts)
@@ -114,9 +135,47 @@ resource "aws_elastic_beanstalk_application" "default" {
 
 resource "aws_elastic_beanstalk_application_version" "default" {
   application = "${aws_elastic_beanstalk_application.default.name}"
-  name = "tf-test-version-label"
+  name = "tf-test-version-label-%d"
   bucket = "${aws_s3_bucket.default.id}"
   key = "${aws_s3_bucket_object.default.id}"
- }
- `, randInt, randInt)
+}
+ `, randInt, randInt, randInt)
+}
+
+func testAccBeanstalkApplicationVersionConfig_duplicateLabel(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "default" {
+  bucket = "tftest.applicationversion.bucket-%d"
+}
+
+resource "aws_s3_bucket_object" "default" {
+  bucket = "${aws_s3_bucket.default.id}"
+  key = "beanstalk/python-v1.zip"
+  source = "test-fixtures/python-v1.zip"
+}
+
+resource "aws_elastic_beanstalk_application" "first" {
+  name = "tf-test-name-%d-first"
+  description = "tf-test-desc"
+}
+
+resource "aws_elastic_beanstalk_application_version" "first" {
+  application = "${aws_elastic_beanstalk_application.first.name}"
+  name = "tf-test-version-label-%d"
+  bucket = "${aws_s3_bucket.default.id}"
+  key = "${aws_s3_bucket_object.default.id}"
+}
+
+resource "aws_elastic_beanstalk_application" "second" {
+  name = "tf-test-name-%d-second"
+  description = "tf-test-desc"
+}
+
+resource "aws_elastic_beanstalk_application_version" "second" {
+  application = "${aws_elastic_beanstalk_application.second.name}"
+  name = "tf-test-version-label-%d"
+  bucket = "${aws_s3_bucket.default.id}"
+  key = "${aws_s3_bucket_object.default.id}"
+}
+ `, randInt, randInt, randInt, randInt, randInt)
 }

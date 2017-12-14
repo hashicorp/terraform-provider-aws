@@ -26,6 +26,10 @@ func TestAccDataSourceAwsVpc_basic(t *testing.T) {
 					testAccDataSourceAwsVpcCheck("data.aws_vpc.by_cidr", cidr, tag),
 					testAccDataSourceAwsVpcCheck("data.aws_vpc.by_tag", cidr, tag),
 					testAccDataSourceAwsVpcCheck("data.aws_vpc.by_filter", cidr, tag),
+					resource.TestCheckResourceAttr(
+						"data.aws_vpc.by_id", "enable_dns_support", "true"),
+					resource.TestCheckResourceAttr(
+						"data.aws_vpc.by_id", "enable_dns_hostnames", "false"),
 				),
 			},
 		},

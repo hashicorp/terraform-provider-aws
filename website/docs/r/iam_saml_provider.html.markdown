@@ -6,7 +6,7 @@ description: |-
   Provides an IAM SAML provider.
 ---
 
-# aws\_iam\_saml\_provider
+# aws_iam_saml_provider
 
 Provides an IAM SAML provider.
 

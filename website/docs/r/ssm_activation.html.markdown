@@ -6,7 +6,7 @@ description: |-
   Registers an on-premises server or virtual machine with Amazon EC2 so that it can be managed using Run Command.
 ---
 
-# aws\_ssm\_activation
+# aws_ssm_activation
 
 Registers an on-premises server or virtual machine with Amazon EC2 so that it can be managed using Run Command.
 
@@ -56,6 +56,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
+* `activation_code` - The code the system generates when it processes the activation.
 * `name` - The default name of the registerd managed instance.
 * `description` - The description of the resource that was registered.
 * `expired` - If the current activation has expired.

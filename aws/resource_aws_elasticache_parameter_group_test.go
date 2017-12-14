@@ -63,7 +63,7 @@ func TestAccAWSElasticacheParameterGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheParameterGroupOnly(t *testing.T) {
+func TestAccAWSElasticacheParameterGroup_only(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
@@ -81,6 +81,64 @@ func TestAccAWSElasticacheParameterGroupOnly(t *testing.T) {
 						"aws_elasticache_parameter_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
 						"aws_elasticache_parameter_group.bar", "family", "redis2.8"),
+				),
+			},
+		},
+	})
+}
+
+// Regression for https://github.com/terraform-providers/terraform-provider-aws/issues/116
+func TestAccAWSElasticacheParameterGroup_removeParam(t *testing.T) {
+	var v elasticache.CacheParameterGroup
+	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheParameterGroupAddParametersConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheParameterGroupExists("aws_elasticache_parameter_group.bar", &v),
+					testAccCheckAWSElasticacheParameterGroupAttributes(&v, rName),
+					resource.TestCheckResourceAttr(
+						"aws_elasticache_parameter_group.bar", "name", rName),
+					resource.TestCheckResourceAttr(
+						"aws_elasticache_parameter_group.bar", "family", "redis2.8"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheParameterGroupOnlyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheParameterGroupExists("aws_elasticache_parameter_group.bar", &v),
+					testAccCheckAWSElasticacheParameterGroupAttributes(&v, rName),
+					resource.TestCheckResourceAttr(
+						"aws_elasticache_parameter_group.bar", "name", rName),
+					resource.TestCheckResourceAttr(
+						"aws_elasticache_parameter_group.bar", "family", "redis2.8"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheParameterGroup_UppercaseName(t *testing.T) {
+	var v elasticache.CacheParameterGroup
+	rInt := acctest.RandInt()
+	rName := fmt.Sprintf("TF-ELASTIPG-%d", rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSElasticacheParameterGroupConfig_UppercaseName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheParameterGroupExists("aws_elasticache_parameter_group.bar", &v),
+					resource.TestCheckResourceAttr(
+						"aws_elasticache_parameter_group.bar", "name", fmt.Sprintf("tf-elastipg-%d", rInt)),
 				),
 			},
 		},
@@ -205,5 +263,17 @@ resource "aws_elasticache_parameter_group" "bar" {
 	name = "%s"
 	family = "redis2.8"
 	description = "Test parameter group for terraform"
+}`, rName)
+}
+
+func testAccAWSElasticacheParameterGroupConfig_UppercaseName(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_parameter_group" "bar" {
+  name = "%s"
+  family = "redis2.8"
+  parameter {
+    name = "appendonly"
+    value = "yes"
+  }
 }`, rName)
 }

@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"regexp"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -11,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/jen20/awspolicyequivalence"
-	"regexp"
 )
 
 func TestAccAWSSQSQueue_basic(t *testing.T) {
@@ -37,6 +39,58 @@ func TestAccAWSSQSQueue_basic(t *testing.T) {
 				Config: testAccAWSSQSConfigWithDefaults(queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_tags(t *testing.T) {
+	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigWithTags(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.Usage", "original"),
+				),
+			},
+			{
+				Config: testAccAWSSQSConfigWithTagsChanged(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.Usage", "changed"),
+				),
+			},
+			{
+				Config: testAccAWSSQSConfigWithDefaults(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+					resource.TestCheckNoResourceAttr("aws_sqs_queue.queue", "tags"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_namePrefix(t *testing.T) {
+	prefix := "acctest-sqs-queue"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigWithNamePrefix(prefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+					testAccCheckAWSSQSGeneratedNamePrefix("aws_sqs_queue.queue", "acctest-sqs-queue"),
 				),
 			},
 		},
@@ -299,6 +353,23 @@ func testAccCheckAWSSQSExistsWithDefaults(n string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckAWSSQSGeneratedNamePrefix(resource, prefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		r, ok := s.RootModule().Resources[resource]
+		if !ok {
+			return fmt.Errorf("Resource not found")
+		}
+		name, ok := r.Primary.Attributes["name"]
+		if !ok {
+			return fmt.Errorf("Name attr not found: %#v", r.Primary.Attributes)
+		}
+		if !strings.HasPrefix(name, prefix) {
+			return fmt.Errorf("Name: %q, does not have prefix: %q", name, prefix)
+		}
+		return nil
+	}
+}
+
 func testAccCheckAWSSQSExistsWithOverrides(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -349,10 +420,36 @@ func testAccCheckAWSSQSExistsWithOverrides(n string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccAWSSQSQueue_Encryption(t *testing.T) {
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigWithEncryption(acctest.RandString(10)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExists("aws_sqs_queue.queue"),
+					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "kms_master_key_id", "alias/aws/sqs"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSSQSConfigWithDefaults(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "queue" {
-    name = "%s"
+  name = "%s"
+}
+`, r)
+}
+
+func testAccAWSSQSConfigWithNamePrefix(r string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "queue" {
+  name_prefix = "%s"
 }
 `, r)
 }
@@ -360,8 +457,8 @@ resource "aws_sqs_queue" "queue" {
 func testAccAWSSQSFifoConfigWithDefaults(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "queue" {
-    name = "%s.fifo"
-    fifo_queue = true
+  name = "%s.fifo"
+  fifo_queue = true
 }
 `, r)
 }
@@ -387,8 +484,8 @@ resource "aws_sqs_queue" "my_queue" {
 
   redrive_policy = <<EOF
 {
-    "maxReceiveCount": 3,
-    "deadLetterTargetArn": "${aws_sqs_queue.my_dead_letter_queue.arn}"
+  "maxReceiveCount": 3,
+  "deadLetterTargetArn": "${aws_sqs_queue.my_dead_letter_queue.arn}"
 }
 EOF
 }
@@ -487,4 +584,39 @@ resource "aws_sqs_queue" "queue" {
   content_based_deduplication = true
 }
 `, queue)
+}
+
+func testAccAWSSQSConfigWithEncryption(queue string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "queue" {
+  name                              = "%s"
+  kms_master_key_id                 = "alias/aws/sqs"
+  kms_data_key_reuse_period_seconds = 300
+}
+`, queue)
+}
+
+func testAccAWSSQSConfigWithTags(r string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "queue" {
+  name = "%s"
+
+  tags {
+    Environment = "production"
+    Usage = "original"
+  }
+}
+`, r)
+}
+
+func testAccAWSSQSConfigWithTagsChanged(r string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "queue" {
+  name = "%s"
+
+  tags {
+    Usage = "changed"
+  }
+}
+`, r)
 }

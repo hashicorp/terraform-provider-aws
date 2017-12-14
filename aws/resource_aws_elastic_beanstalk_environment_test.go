@@ -6,7 +6,9 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -15,6 +17,97 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+// initialize sweeper
+func init() {
+	resource.AddTestSweepers("aws_beanstalk_environment", &resource.Sweeper{
+		Name: "aws_beanstalk_environment",
+		F:    testSweepBeanstalkEnvironments,
+	})
+}
+
+func testSweepBeanstalkEnvironments(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	beanstalkconn := client.(*AWSClient).elasticbeanstalkconn
+
+	resp, err := beanstalkconn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
+		IncludeDeleted: aws.Bool(false),
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving beanstalk environment: %s", err)
+	}
+
+	if len(resp.Environments) == 0 {
+		log.Print("[DEBUG] No aws beanstalk environments to sweep")
+		return nil
+	}
+
+	for _, bse := range resp.Environments {
+		var testOptGroup bool
+		for _, testName := range []string{
+			"terraform-",
+			"tf-test-",
+			"tf_acc_",
+			"tf-acc-",
+		} {
+			if strings.HasPrefix(*bse.EnvironmentName, testName) {
+				testOptGroup = true
+			}
+		}
+
+		if !testOptGroup {
+			log.Printf("Skipping (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
+			continue
+		}
+
+		log.Printf("Trying to terminate (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
+
+		_, err := beanstalkconn.TerminateEnvironment(
+			&elasticbeanstalk.TerminateEnvironmentInput{
+				EnvironmentId:      bse.EnvironmentId,
+				TerminateResources: aws.Bool(true),
+			})
+
+		if err != nil {
+			elasticbeanstalkerr, ok := err.(awserr.Error)
+			if ok && (elasticbeanstalkerr.Code() == "InvalidConfiguration.NotFound" || elasticbeanstalkerr.Code() == "ValidationError") {
+				log.Printf("[DEBUG] beanstalk environment (%s) not found", *bse.EnvironmentName)
+				return nil
+			}
+
+			return err
+		}
+
+		waitForReadyTimeOut, _ := time.ParseDuration("5m")
+		pollInterval, _ := time.ParseDuration("10s")
+
+		// poll for deletion
+		t := time.Now()
+		stateConf := &resource.StateChangeConf{
+			Pending:      []string{"Terminating"},
+			Target:       []string{"Terminated"},
+			Refresh:      environmentStateRefreshFunc(beanstalkconn, *bse.EnvironmentId, t),
+			Timeout:      waitForReadyTimeOut,
+			Delay:        10 * time.Second,
+			PollInterval: pollInterval,
+			MinTimeout:   3 * time.Second,
+		}
+
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf(
+				"Error waiting for Elastic Beanstalk Environment (%s) to become terminated: %s",
+				*bse.EnvironmentId, err)
+		}
+		log.Printf("> Terminated (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
+	}
+
+	return nil
+}
 
 func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
@@ -281,6 +374,24 @@ func TestAccAWSBeanstalkEnv_version_label(t *testing.T) {
 				Config: testAccBeanstalkEnvApplicationVersionConfigUpdate(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkApplicationVersionDeployed("aws_elastic_beanstalk_environment.default", &app),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSBeanstalkEnv_settingWithJsonValue(t *testing.T) {
+	var app elasticbeanstalk.EnvironmentDescription
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccBeanstalkEnvSettingJsonValue(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.default", &app),
 				),
 			},
 		},
@@ -946,7 +1057,7 @@ resource "aws_elastic_beanstalk_application" "default" {
 
 resource "aws_elastic_beanstalk_application_version" "default" {
   application = "${aws_elastic_beanstalk_application.default.name}"
-  name = "tf-test-version-label"
+  name = "tf-test-version-label-%d"
   bucket = "${aws_s3_bucket.default.id}"
   key = "${aws_s3_bucket_object.default.id}"
 }
@@ -957,7 +1068,7 @@ resource "aws_elastic_beanstalk_environment" "default" {
   version_label = "${aws_elastic_beanstalk_application_version.default.name}"
   solution_stack_name = "64bit Amazon Linux running Python"
 }
-`, randInt, randInt, randInt)
+`, randInt, randInt, randInt, randInt)
 }
 
 func testAccBeanstalkEnvApplicationVersionConfigUpdate(randInt int) string {
@@ -979,7 +1090,7 @@ resource "aws_elastic_beanstalk_application" "default" {
 
 resource "aws_elastic_beanstalk_application_version" "default" {
   application = "${aws_elastic_beanstalk_application.default.name}"
-  name = "tf-test-version-label-v2"
+  name = "tf-test-version-label-%d-v2"
   bucket = "${aws_s3_bucket.default.id}"
   key = "${aws_s3_bucket_object.default.id}"
 }
@@ -990,5 +1101,216 @@ resource "aws_elastic_beanstalk_environment" "default" {
   version_label = "${aws_elastic_beanstalk_application_version.default.name}"
   solution_stack_name = "64bit Amazon Linux running Python"
 }
-`, randInt, randInt, randInt)
+`, randInt, randInt, randInt, randInt)
+}
+
+func testAccBeanstalkEnvSettingJsonValue(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_elastic_beanstalk_application" "app" {
+  name = "tf-acc-test-%d"
+  description = "This is a description"
+}
+
+resource "aws_sqs_queue" "test" {
+  name = "tf-acc-test-%d"
+}
+
+resource "aws_key_pair" "test" {
+  key_name   = "tf-acc-test-%d"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 email@example.com"
+}
+
+resource "aws_iam_instance_profile" "app" {
+  name  = "tf-acc-test-%d"
+  role = "${aws_iam_role.test.name}"
+}
+
+resource "aws_iam_role" "test" {
+  name = "tf_acc_test_%d"
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "sts:AssumeRole",
+            "Principal": {
+               "Service": "ec2.amazonaws.com"
+            },
+            "Effect": "Allow",
+            "Sid": ""
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = "test_policy"
+  role = "${aws_iam_role.test.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "dynamodb:*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_elastic_beanstalk_environment" "default" {
+  name = "tf-acc-test-%d"
+  application = "${aws_elastic_beanstalk_application.app.name}"
+  tier = "Worker"
+  solution_stack_name = "64bit Amazon Linux 2016.03 v2.1.0 running Docker 1.9.1"
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:command"
+    name = "BatchSize"
+    value = "30"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:command"
+    name = "BatchSizeType"
+    value = "Percentage"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:command"
+    name = "DeploymentPolicy"
+    value = "Rolling"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:sns:topics"
+    name = "Notification Endpoint"
+    value = "example@example.com"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:sqsd"
+    name = "ErrorVisibilityTimeout"
+    value = "2"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:sqsd"
+    name = "HttpPath"
+    value = "/event-message"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:sqsd"
+    name = "WorkerQueueURL"
+    value = "${aws_sqs_queue.test.id}"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:sqsd"
+    name = "VisibilityTimeout"
+    value = "300"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:sqsd"
+    name = "HttpConnections"
+    value = "10"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:sqsd"
+    name = "InactivityTimeout"
+    value = "299"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:sqsd"
+    name = "MimeType"
+    value = "application/json"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:environment"
+    name = "ServiceRole"
+    value = "aws-elasticbeanstalk-service-role"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:environment"
+    name = "EnvironmentType"
+    value = "LoadBalanced"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:application"
+    name = "Application Healthcheck URL"
+    value = "/health"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:healthreporting:system"
+    name = "SystemType"
+    value = "enhanced"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:healthreporting:system"
+    name = "HealthCheckSuccessThreshold"
+    value = "Ok"
+  }
+
+  setting = {
+    namespace = "aws:autoscaling:launchconfiguration"
+    name = "IamInstanceProfile"
+    value = "${aws_iam_instance_profile.app.name}"
+  }
+
+  setting = {
+    namespace = "aws:autoscaling:launchconfiguration"
+    name = "InstanceType"
+    value = "t2.micro"
+  }
+
+  setting = {
+    namespace = "aws:autoscaling:launchconfiguration"
+    name = "EC2KeyName"
+    value = "${aws_key_pair.test.key_name}"
+  }
+
+  setting = {
+    namespace = "aws:autoscaling:updatepolicy:rollingupdate"
+    name = "RollingUpdateEnabled"
+    value = "false"
+  }
+
+  setting = {
+    namespace = "aws:elasticbeanstalk:healthreporting:system"
+    name = "ConfigDocument"
+    value = <<EOF
+{
+	"Version": 1,
+	"CloudWatchMetrics": {
+		"Instance": {
+			"ApplicationRequestsTotal": 60
+		},
+		"Environment": {
+			"ApplicationRequests5xx": 60,
+			"ApplicationRequests4xx": 60,
+			"ApplicationRequests2xx": 60
+		}
+	}
+}
+EOF
+  }
+}
+`, randInt, randInt, randInt, randInt, randInt, randInt)
 }

@@ -6,7 +6,7 @@ description: |-
   Creates a Lambda function permission.
 ---
 
-# aws\_lambda\_permission
+# aws_lambda_permission
 
 Creates a Lambda permission to allow external sources invoking the Lambda function
 (e.g. CloudWatch Event Rule, SNS or S3).
@@ -66,7 +66,7 @@ EOF
 resource "aws_lambda_permission" "with_sns" {
   statement_id  = "AllowExecutionFromSNS"
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.my-func.function_name}"
+  function_name = "${aws_lambda_function.func.function_name}"
   principal     = "sns.amazonaws.com"
   source_arn    = "${aws_sns_topic.default.arn}"
 }

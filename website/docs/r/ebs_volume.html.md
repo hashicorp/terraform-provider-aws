@@ -6,7 +6,7 @@ description: |-
   Provides an elastic block storage resource.
 ---
 
-# aws\_ebs\_volume
+# aws_ebs_volume
 
 Manages a single EBS volume.
 
@@ -37,11 +37,14 @@ The following arguments are supported:
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `encrypted` needs to be set to true.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
+~> **NOTE**: When changing the `size`, `iops` or `type` of an instance, there are [considerations](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/considerations.html) to be aware of that Amazon have written about this.
+
 ## Attributes Reference
 
 The following attributes are exported:
 
 * `id` - The volume ID (e.g. vol-59fcb34e).
+* `arn` - The volume ARN (e.g. arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
 
 
 ## Import

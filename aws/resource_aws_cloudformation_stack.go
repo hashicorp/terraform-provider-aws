@@ -21,6 +21,16 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 		Update: resourceAwsCloudFormationStackUpdate,
 		Delete: resourceAwsCloudFormationStackDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -94,7 +104,6 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 			"tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				ForceNew: true,
 			},
 			"iam_role_arn": {
 				Type:     schema.TypeString,
@@ -105,7 +114,6 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 }
 
 func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface{}) error {
-	retryTimeout := int64(30)
 	conn := meta.(*AWSClient).cfconn
 
 	input := cloudformation.CreateStackInput{
@@ -152,10 +160,6 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 	if v, ok := d.GetOk("timeout_in_minutes"); ok {
 		m := int64(v.(int))
 		input.TimeoutInMinutes = aws.Int64(m)
-		if m > retryTimeout {
-			retryTimeout = m + 5
-			log.Printf("[DEBUG] CloudFormation timeout: %d", retryTimeout)
-		}
 	}
 	if v, ok := d.GetOk("iam_role_arn"); ok {
 		input.RoleARN = aws.String(v.(string))
@@ -184,7 +188,7 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 			"ROLLBACK_COMPLETE",
 			"ROLLBACK_FAILED",
 		},
-		Timeout:    time.Duration(retryTimeout) * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 1 * time.Second,
 		Refresh: func() (interface{}, string, error) {
 			resp, err := conn.DescribeStacks(&cloudformation.DescribeStacksInput{
@@ -349,7 +353,6 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface{}) error {
-	retryTimeout := int64(30)
 	conn := meta.(*AWSClient).cfconn
 
 	input := &cloudformation.UpdateStackInput{
@@ -380,6 +383,10 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 	// Parameters must be present whether they are changed or not
 	if v, ok := d.GetOk("parameters"); ok {
 		input.Parameters = expandCloudFormationParameters(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = expandCloudFormationTags(v.(map[string]interface{}))
 	}
 
 	if d.HasChange("policy_body") {
@@ -416,13 +423,6 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	if v, ok := d.GetOk("timeout_in_minutes"); ok {
-		m := int64(v.(int))
-		if m > retryTimeout {
-			retryTimeout = m + 5
-			log.Printf("[DEBUG] CloudFormation timeout: %d", retryTimeout)
-		}
-	}
 	var lastStatus string
 	var stackId string
 	wait := resource.StateChangeConf{
@@ -438,7 +438,7 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 			"UPDATE_ROLLBACK_COMPLETE",
 			"UPDATE_ROLLBACK_FAILED",
 		},
-		Timeout:    time.Duration(retryTimeout) * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		MinTimeout: 5 * time.Second,
 		Refresh: func() (interface{}, string, error) {
 			resp, err := conn.DescribeStacks(&cloudformation.DescribeStacksInput{
@@ -508,7 +508,7 @@ func resourceAwsCloudFormationStackDelete(d *schema.ResourceData, meta interface
 			"DELETE_COMPLETE",
 			"DELETE_FAILED",
 		},
-		Timeout:    30 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 5 * time.Second,
 		Refresh: func() (interface{}, string, error) {
 			resp, err := conn.DescribeStacks(&cloudformation.DescribeStacksInput{

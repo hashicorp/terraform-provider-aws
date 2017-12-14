@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific Security Group
 ---
 
-# aws\_security\_group
+# aws_security_group
 
 `aws_security_group` provides details about a specific Security Group.
 
@@ -23,7 +23,7 @@ and use this data source to obtain the data necessary to create a subnet.
 variable "security_group_id" {}
 
 data "aws_security_group" "selected" {
-  id = "${var.security_group}"
+  id = "${var.security_group_id}"
 }
 
 resource "aws_subnet" "subnet" {

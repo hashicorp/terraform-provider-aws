@@ -38,7 +38,7 @@ func TestALBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := albTargetGroupSuffixFromARN(tc.arn)
+		actual := lbTargetGroupSuffixFromARN(tc.arn)
 		if actual != tc.suffix {
 			t.Fatalf("bad suffix: %q\nExpected: %s\n     Got: %s", tc.name, tc.suffix, actual)
 		}
@@ -65,6 +65,7 @@ func TestAccAWSALBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "target_type", "instance"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.#", "1"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.type", "lb_cookie"),

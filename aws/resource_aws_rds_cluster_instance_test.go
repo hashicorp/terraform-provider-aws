@@ -32,6 +32,10 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "preferred_maintenance_window"),
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "preferred_backup_window"),
+					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "dbi_resource_id"),
+					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "availability_zone"),
+					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "engine_version"),
+					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "engine", "aurora"),
 				),
 			},
 			{
@@ -239,7 +243,7 @@ resource "aws_rds_cluster" "default" {
 resource "aws_rds_cluster_instance" "cluster_instances" {
   identifier              = "tf-cluster-instance-%d"
   cluster_identifier      = "${aws_rds_cluster.default.id}"
-  instance_class          = "db.r3.large"
+  instance_class          = "db.t2.small"
   db_parameter_group_name = "${aws_db_parameter_group.bar.name}"
   promotion_tier          = "3"
 }
@@ -275,7 +279,7 @@ resource "aws_rds_cluster" "default" {
 resource "aws_rds_cluster_instance" "cluster_instances" {
   identifier                 = "tf-cluster-instance-%d"
   cluster_identifier         = "${aws_rds_cluster.default.id}"
-  instance_class             = "db.r3.large"
+  instance_class             = "db.t2.small"
   db_parameter_group_name    = "${aws_db_parameter_group.bar.name}"
   auto_minor_version_upgrade = false
   promotion_tier             = "3"
@@ -303,7 +307,7 @@ func testAccAWSClusterInstanceConfig_namePrefix(n int) string {
 resource "aws_rds_cluster_instance" "test" {
   identifier_prefix = "tf-cluster-instance-"
   cluster_identifier = "${aws_rds_cluster.test.id}"
-  instance_class = "db.r3.large"
+  instance_class = "db.t2.small"
 }
 
 resource "aws_rds_cluster" "test" {
@@ -344,7 +348,7 @@ func testAccAWSClusterInstanceConfig_generatedName(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
   cluster_identifier = "${aws_rds_cluster.test.id}"
-  instance_class = "db.r3.large"
+  instance_class = "db.t2.small"
 }
 
 resource "aws_rds_cluster" "test" {
@@ -419,7 +423,7 @@ resource "aws_rds_cluster" "default" {
 resource "aws_rds_cluster_instance" "cluster_instances" {
   identifier              = "tf-cluster-instance-%d"
   cluster_identifier      = "${aws_rds_cluster.default.id}"
-  instance_class          = "db.r3.large"
+  instance_class          = "db.t2.small"
   db_parameter_group_name = "${aws_db_parameter_group.bar.name}"
 }
 
@@ -454,7 +458,7 @@ resource "aws_rds_cluster" "default" {
 resource "aws_rds_cluster_instance" "cluster_instances" {
   identifier              = "tf-cluster-instance-%d"
   cluster_identifier      = "${aws_rds_cluster.default.id}"
-  instance_class          = "db.r3.large"
+  instance_class          = "db.t2.small"
   db_parameter_group_name = "${aws_db_parameter_group.bar.name}"
   monitoring_interval     = "60"
   monitoring_role_arn     = "${aws_iam_role.tf_enhanced_monitor_role.arn}"
@@ -480,9 +484,44 @@ EOF
 }
 
 resource "aws_iam_policy_attachment" "rds_m_attach" {
-    name = "AmazonRDSEnhancedMonitoringRole"
+    name = "tf-enhanced-monitoring-attachment-%d"
     roles = ["${aws_iam_role.tf_enhanced_monitor_role.name}"]
-    policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+    policy_arn = "${aws_iam_policy.test.arn}"
+}
+
+resource "aws_iam_policy" "test" {
+  name   = "tf-enhanced-monitoring-policy-%d"
+  policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogGroups",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:PutRetentionPolicy"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:RDS*"
+            ]
+        },
+        {
+            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogStreams",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams",
+                "logs:GetLogEvents"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:RDS*:log-stream:*"
+            ]
+        }
+    ]
+}
+POLICY
 }
 
 resource "aws_db_parameter_group" "bar" {
@@ -499,5 +538,5 @@ resource "aws_db_parameter_group" "bar" {
     foo = "bar"
   }
 }
-`, n, n, n, n)
+`, n, n, n, n, n, n)
 }

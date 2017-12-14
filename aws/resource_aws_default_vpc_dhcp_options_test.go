@@ -1,4 +1,3 @@
-// make testacc TEST=./builtin/providers/aws/ TESTARGS='-run=TestAccAWSDefaultVpc_'
 package aws
 
 import (

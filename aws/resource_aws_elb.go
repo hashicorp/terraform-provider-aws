@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
@@ -36,12 +37,27 @@ func resourceAwsElb() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateElbName,
+				// This is to work around an unexpected schema behaviour returning diff
+				// for an empty field when it has a pre-computed value from previous run
+				// (e.g. from name_prefix)
+				// TODO: Revisit after we find the real root cause
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if new == "" {
+						return true
+					}
+					return false
+				},
 			},
 			"name_prefix": &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validateElbNamePrefix,
+			},
+
+			"arn": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"internal": &schema.Schema{
@@ -104,7 +120,7 @@ func resourceAwsElb() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      60,
-				ValidateFunc: validateIntegerInRange(1, 3600),
+				ValidateFunc: validateIntegerInRange(1, 4000),
 			},
 
 			"connection_draining": &schema.Schema{
@@ -178,8 +194,9 @@ func resourceAwsElb() *schema.Resource {
 						},
 
 						"ssl_certificate_id": &schema.Schema{
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -329,6 +346,15 @@ func resourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbconn
 	elbName := d.Id()
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "elasticloadbalancing",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("loadbalancer/%s", d.Id()),
+	}
+	d.Set("arn", arn.String())
+
 	// Retrieve the ELB properties for updating the state
 	describeElbOpts := &elb.DescribeLoadBalancersInput{
 		LoadBalancerNames: []*string{aws.String(elbName)},
@@ -348,23 +374,20 @@ func resourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
 	}
 
+	return flattenAwsELbResource(d, meta.(*AWSClient).ec2conn, elbconn, describeResp.LoadBalancerDescriptions[0])
+}
+
+// flattenAwsELbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
+func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *elb.ELB, lb *elb.LoadBalancerDescription) error {
 	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
-		LoadBalancerName: aws.String(elbName),
+		LoadBalancerName: aws.String(d.Id()),
 	}
 	describeAttrsResp, err := elbconn.DescribeLoadBalancerAttributes(describeAttrsOpts)
 	if err != nil {
-		if isLoadBalancerNotFound(err) {
-			// The ELB is gone now, so just remove it from the state
-			d.SetId("")
-			return nil
-		}
-
 		return fmt.Errorf("Error retrieving ELB: %s", err)
 	}
 
 	lbAttrs := describeAttrsResp.LoadBalancerAttributes
-
-	lb := describeResp.LoadBalancerDescriptions[0]
 
 	d.Set("name", lb.LoadBalancerName)
 	d.Set("dns_name", lb.DNSName)
@@ -390,7 +413,7 @@ func resourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 		var elbVpc string
 		if lb.VPCId != nil {
 			elbVpc = *lb.VPCId
-			sgId, err := sourceSGIdByName(meta, *lb.SourceSecurityGroup.GroupName, elbVpc)
+			sgId, err := sourceSGIdByName(ec2conn, *lb.SourceSecurityGroup.GroupName, elbVpc)
 			if err != nil {
 				return fmt.Errorf("[WARN] Error looking up ELB Security Group ID: %s", err)
 			} else {
@@ -792,6 +815,13 @@ func resourceAwsElbDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error deleting ELB: %s", err)
 	}
 
+	name := d.Get("name").(string)
+
+	err := cleanupELBNetworkInterfaces(meta.(*AWSClient).ec2conn, name)
+	if err != nil {
+		log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %#v", name, err)
+	}
+
 	return nil
 }
 
@@ -817,8 +847,7 @@ func isLoadBalancerNotFound(err error) bool {
 	return ok && elberr.Code() == "LoadBalancerNotFound"
 }
 
-func sourceSGIdByName(meta interface{}, sg, vpcId string) (string, error) {
-	conn := meta.(*AWSClient).ec2conn
+func sourceSGIdByName(conn *ec2.EC2, sg, vpcId string) (string, error) {
 	var filters []*ec2.Filter
 	var sgFilterName, sgFilterVPCID *ec2.Filter
 	sgFilterName = &ec2.Filter{
@@ -973,4 +1002,104 @@ func isValidProtocol(s string) bool {
 	}
 
 	return true
+}
+
+// ELB automatically creates ENI(s) on creation
+// but the cleanup is asynchronous and may take time
+// which then blocks IGW, SG or VPC on deletion
+// So we make the cleanup "synchronous" here
+func cleanupELBNetworkInterfaces(conn *ec2.EC2, name string) error {
+	out, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("attachment.instance-owner-id"),
+				Values: []*string{aws.String("amazon-elb")},
+			},
+			{
+				Name:   aws.String("description"),
+				Values: []*string{aws.String("ELB " + name)},
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[DEBUG] Found %d ENIs to cleanup for ELB %q",
+		len(out.NetworkInterfaces), name)
+
+	if len(out.NetworkInterfaces) == 0 {
+		// Nothing to cleanup
+		return nil
+	}
+
+	err = detachNetworkInterfaces(conn, out.NetworkInterfaces)
+	if err != nil {
+		return err
+	}
+
+	err = deleteNetworkInterfaces(conn, out.NetworkInterfaces)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func detachNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {
+	log.Printf("[DEBUG] Trying to detach %d leftover ENIs", len(nis))
+	for _, ni := range nis {
+		if ni.Attachment == nil {
+			log.Printf("[DEBUG] ENI %s is already detached", *ni.NetworkInterfaceId)
+			continue
+		}
+		_, err := conn.DetachNetworkInterface(&ec2.DetachNetworkInterfaceInput{
+			AttachmentId: ni.Attachment.AttachmentId,
+			Force:        aws.Bool(true),
+		})
+		if err != nil {
+			awsErr, ok := err.(awserr.Error)
+			if ok && awsErr.Code() == "InvalidAttachmentID.NotFound" {
+				log.Printf("[DEBUG] ENI %s is already detached", *ni.NetworkInterfaceId)
+				continue
+			}
+			return err
+		}
+
+		log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", *ni.NetworkInterfaceId)
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"true"},
+			Target:  []string{"false"},
+			Refresh: networkInterfaceAttachmentRefreshFunc(conn, *ni.NetworkInterfaceId),
+			Timeout: 10 * time.Minute,
+		}
+
+		if _, err := stateConf.WaitForState(); err != nil {
+			awsErr, ok := err.(awserr.Error)
+			if ok && awsErr.Code() == "InvalidNetworkInterfaceID.NotFound" {
+				continue
+			}
+			return fmt.Errorf(
+				"Error waiting for ENI (%s) to become detached: %s", *ni.NetworkInterfaceId, err)
+		}
+	}
+	return nil
+}
+
+func deleteNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {
+	log.Printf("[DEBUG] Trying to delete %d leftover ENIs", len(nis))
+	for _, ni := range nis {
+		_, err := conn.DeleteNetworkInterface(&ec2.DeleteNetworkInterfaceInput{
+			NetworkInterfaceId: ni.NetworkInterfaceId,
+		})
+		if err != nil {
+			awsErr, ok := err.(awserr.Error)
+			if ok && awsErr.Code() == "InvalidNetworkInterfaceID.NotFound" {
+				log.Printf("[DEBUG] ENI %s is already deleted", *ni.NetworkInterfaceId)
+				continue
+			}
+			return err
+		}
+	}
+	return nil
 }

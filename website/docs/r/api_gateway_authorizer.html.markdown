@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Authorizer.
 ---
 
-# aws\_api\_gateway\_authorizer
+# aws_api_gateway_authorizer
 
 Provides an API Gateway Authorizer.
 
@@ -16,7 +16,7 @@ Provides an API Gateway Authorizer.
 resource "aws_api_gateway_authorizer" "demo" {
   name                   = "demo"
   rest_api_id            = "${aws_api_gateway_rest_api.demo.id}"
-  authorizer_uri         = "arn:aws:apigateway:region:lambda:path/2015-03-31/functions/${aws_lambda_function.authorizer.arn}/invocations"
+  authorizer_uri         = "${aws_lambda_function.authorizer.invoke_arn}"
   authorizer_credentials = "${aws_iam_role.invocation_role.arn}"
 }
 
@@ -98,7 +98,7 @@ The following arguments are supported:
 
 * `authorizer_uri` - (Required) The authorizer's Uniform Resource Identifier (URI).
 	For `TOKEN` type, this must be a well-formed Lambda function URI in the form of
-	`arn:aws:apigateway:{region}:lambda:path/{service_api}`. e.g. `arn:aws:apigateway:region:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:012345678912:function:my-function/invocations`
+	`arn:aws:apigateway:{region}:lambda:path/{service_api}`. e.g. `arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:012345678912:function:my-function/invocations`
 * `name` - (Required) The name of the authorizer
 * `rest_api_id` - (Required) The ID of the associated REST API
 * `identity_source` - (Optional) The source of the identity in an incoming request.

@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific prefix list
 ---
 
-# aws\_prefix\_list
+# aws_prefix_list
 
 `aws_prefix_list` provides details about a specific prefix list (PL)
 in the current region.

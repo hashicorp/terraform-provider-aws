@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
@@ -44,6 +45,33 @@ func TestValidateEcrRepositoryName(t *testing.T) {
 		_, errors := validateEcrRepositoryName(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid ECR repository name", v)
+		}
+	}
+}
+
+func TestValidateCloudWatchDashboardName(t *testing.T) {
+	validNames := []string{
+		"HelloWorl_d",
+		"hello-world",
+		"hello-world-012345",
+	}
+	for _, v := range validNames {
+		_, errors := validateCloudWatchDashboardName(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid CloudWatch dashboard name: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"special@character",
+		"slash/in-the-middle",
+		"dot.in-the-middle",
+		strings.Repeat("W", 256), // > 255
+	}
+	for _, v := range invalidNames {
+		_, errors := validateCloudWatchDashboardName(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid CloudWatch dashboard name", v)
 		}
 	}
 }
@@ -491,6 +519,60 @@ func TestValidateS3BucketLifecycleTimestamp(t *testing.T) {
 		_, errors := validateS3BucketLifecycleTimestamp(v, "date")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be invalid date", v)
+		}
+	}
+}
+
+func TestValidateS3BucketLifecycleExpirationDays(t *testing.T) {
+	validDays := []int{
+		1,
+		31,
+		1024,
+	}
+
+	for _, v := range validDays {
+		_, errors := validateS3BucketLifecycleExpirationDays(v, "days")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be valid days: %q", v, errors)
+		}
+	}
+
+	invalidDays := []int{
+		-1,
+		0,
+	}
+
+	for _, v := range invalidDays {
+		_, errors := validateS3BucketLifecycleExpirationDays(v, "date")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be invalid days", v)
+		}
+	}
+}
+
+func TestValidateS3BucketLifecycleTransitionDays(t *testing.T) {
+	validDays := []int{
+		0,
+		1,
+		31,
+		1024,
+	}
+
+	for _, v := range validDays {
+		_, errors := validateS3BucketLifecycleTransitionDays(v, "days")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be valid days: %q", v, errors)
+		}
+	}
+
+	invalidDays := []int{
+		-1,
+	}
+
+	for _, v := range invalidDays {
+		_, errors := validateS3BucketLifecycleTransitionDays(v, "date")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be invalid days", v)
 		}
 	}
 }
@@ -1023,6 +1105,7 @@ func TestValidateSNSSubscriptionProtocol(t *testing.T) {
 		"application",
 		"http",
 		"https",
+		"sms",
 	}
 	for _, v := range validProtocols {
 		if _, errors := validateSNSSubscriptionProtocol(v, "protocol"); len(errors) > 0 {
@@ -1035,8 +1118,6 @@ func TestValidateSNSSubscriptionProtocol(t *testing.T) {
 		"email",
 		"Email-JSON",
 		"email-json",
-		"SMS",
-		"sms",
 	}
 	for _, v := range invalidProtocols {
 		if _, errors := validateSNSSubscriptionProtocol(v, "protocol"); len(errors) == 0 {
@@ -1172,6 +1253,7 @@ func TestValidateRoute53RecordType(t *testing.T) {
 		"SPF",
 		"SRV",
 		"NS",
+		"CAA",
 	}
 
 	invalidTypes := []string{
@@ -2239,6 +2321,122 @@ func TestValidateCognitoIdentityProvidersProviderName(t *testing.T) {
 	}
 }
 
+func TestValidateCognitoUserPoolEmailVerificationMessage(t *testing.T) {
+	validValues := []string{
+		"{####}",
+		"Foo {####}",
+		"{####} Bar",
+		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
+		"{####}" + strings.Repeat("W", 1994), // = 2000
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoUserPoolEmailVerificationMessage(s, "email_verification_message")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool email verification message: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"Foo",
+		"{###}",
+		"{####}" + strings.Repeat("W", 1995), // > 2000
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoUserPoolEmailVerificationMessage(s, "email_verification_message")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool email verification message: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateCognitoUserPoolEmailVerificationSubject(t *testing.T) {
+	validValues := []string{
+		"FooBar",
+		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\" '(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
+		"Foo Bar", // special whitespace character
+		strings.Repeat("W", 140),
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoUserPoolEmailVerificationSubject(s, "email_verification_subject")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool email verification subject: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"Foo",
+		strings.Repeat("W", 141),
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoUserPoolEmailVerificationSubject(s, "email_verification_subject")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool email verification subject: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateCognitoUserPoolSmsAuthenticationMessage(t *testing.T) {
+	validValues := []string{
+		"{####}",
+		"Foo {####}",
+		"{####} Bar",
+		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
+		"{####}" + strings.Repeat("W", 134), // = 140
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoUserPoolSmsAuthenticationMessage(s, "sms_authentication_message")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool sms authentication message: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"Foo",
+		"{####}" + strings.Repeat("W", 135),
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoUserPoolSmsAuthenticationMessage(s, "sms_authentication_message")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool sms authentication message: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateCognitoUserPoolSmsVerificationMessage(t *testing.T) {
+	validValues := []string{
+		"{####}",
+		"Foo {####}",
+		"{####} Bar",
+		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
+		"{####}" + strings.Repeat("W", 134), // = 140
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoUserPoolSmsVerificationMessage(s, "sms_verification_message")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool sms authentication message: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"Foo",
+		"{####}" + strings.Repeat("W", 135),
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoUserPoolSmsVerificationMessage(s, "sms_verification_message")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool sms authentication message: %v", s, errors)
+		}
+	}
+}
+
 func TestValidateWafMetricName(t *testing.T) {
 	validNames := []string{
 		"testrule",
@@ -2293,6 +2491,31 @@ func TestValidateIamRoleDescription(t *testing.T) {
 	}
 }
 
+func TestValidateAwsSSMName(t *testing.T) {
+	validNames := []string{
+		".foo-bar_123",
+		strings.Repeat("W", 128),
+	}
+	for _, v := range validNames {
+		_, errors := validateAwsSSMName(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid SSM Name: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"foo+bar",
+		"tf",
+		strings.Repeat("W", 129), // > 128
+	}
+	for _, v := range invalidNames {
+		_, errors := validateAwsSSMName(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid SSM Name: %q", v, errors)
+		}
+	}
+}
+
 func TestValidateSsmParameterType(t *testing.T) {
 	validTypes := []string{
 		"String",
@@ -2315,6 +2538,304 @@ func TestValidateSsmParameterType(t *testing.T) {
 		_, errors := validateSsmParameterType(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid SSM parameter type", v)
+		}
+	}
+}
+
+func TestValidateBatchName(t *testing.T) {
+	validNames := []string{
+		strings.Repeat("W", 128), // <= 128
+	}
+	for _, v := range validNames {
+		_, errors := validateBatchName(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Batch name: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"s@mple",
+		strings.Repeat("W", 129), // >= 129
+	}
+	for _, v := range invalidNames {
+		_, errors := validateBatchName(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be a invalid Batch name: %q", v, errors)
+		}
+	}
+}
+
+func TestValidateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(t *testing.T) {
+	cases := []struct {
+		AmbiguousRoleResolution interface{}
+		Type                    string
+		ErrCount                int
+	}{
+		{
+			AmbiguousRoleResolution: nil,
+			Type:     cognitoidentity.RoleMappingTypeToken,
+			ErrCount: 1,
+		},
+		{
+			AmbiguousRoleResolution: "foo",
+			Type:     cognitoidentity.RoleMappingTypeToken,
+			ErrCount: 0, // 0 as it should be defined, the value isn't validated here
+		},
+		{
+			AmbiguousRoleResolution: cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
+			Type:     cognitoidentity.RoleMappingTypeToken,
+			ErrCount: 0,
+		},
+		{
+			AmbiguousRoleResolution: cognitoidentity.AmbiguousRoleResolutionTypeDeny,
+			Type:     cognitoidentity.RoleMappingTypeToken,
+			ErrCount: 0,
+		},
+	}
+
+	for _, tc := range cases {
+		m := make(map[string]interface{})
+		// Reproducing the undefined ambiguous_role_resolution
+		if tc.AmbiguousRoleResolution != nil {
+			m["ambiguous_role_resolution"] = tc.AmbiguousRoleResolution
+		}
+		m["type"] = tc.Type
+
+		errors := validateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(m)
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Cognito Role Mappings validation failed: %v, expected err count %d, got %d, for config %#v", errors, tc.ErrCount, len(errors), m)
+		}
+	}
+}
+
+func TestValidateCognitoRoleMappingsAmbiguousRoleResolution(t *testing.T) {
+	validValues := []string{
+		cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
+		cognitoidentity.AmbiguousRoleResolutionTypeDeny,
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoRoleMappingsAmbiguousRoleResolution(s, "ambiguous_role_resolution")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito Ambiguous Role Resolution type: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"foo",
+		"123",
+		"foo-bar",
+		"foo_bar123",
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoRoleMappingsAmbiguousRoleResolution(s, "ambiguous_role_resolution")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito Ambiguous Role Resolution type: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateCognitoRoleMappingsRulesMatchType(t *testing.T) {
+	validValues := []string{
+		cognitoidentity.MappingRuleMatchTypeEquals,
+		cognitoidentity.MappingRuleMatchTypeContains,
+		cognitoidentity.MappingRuleMatchTypeStartsWith,
+		cognitoidentity.MappingRuleMatchTypeNotEqual,
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoRoleMappingsRulesMatchType(s, "match_type")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito Role Mappings Rules Match Type: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"foo",
+		"123",
+		"foo-bar",
+		"foo_bar123",
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoRoleMappingsRulesMatchType(s, "match_type")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito Role Mappings Rules Match Type: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateSecurityGroupRuleDescription(t *testing.T) {
+	validDescriptions := []string{
+		"testrule",
+		"testRule",
+		"testRule 123",
+		`testRule 123 ._-:/()#,@[]+=;{}!$*`,
+	}
+	for _, v := range validDescriptions {
+		_, errors := validateSecurityGroupRuleDescription(v, "description")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid security group rule description: %q", v, errors)
+		}
+	}
+
+	invalidDescriptions := []string{
+		"`",
+		"%%",
+	}
+	for _, v := range invalidDescriptions {
+		_, errors := validateSecurityGroupRuleDescription(v, "description")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid security group rule description", v)
+		}
+	}
+}
+
+func TestValidateCognitoRoleMappingsType(t *testing.T) {
+	validValues := []string{
+		cognitoidentity.RoleMappingTypeToken,
+		cognitoidentity.RoleMappingTypeRules,
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoRoleMappingsType(s, "match_type")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito Role Mappings Type: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"foo",
+		"123",
+		"foo-bar",
+		"foo_bar123",
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoRoleMappingsType(s, "match_type")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito Role Mappings Type: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateCognitoRoles(t *testing.T) {
+	validValues := []map[string]interface{}{
+		map[string]interface{}{"authenticated": "hoge"},
+		map[string]interface{}{"unauthenticated": "hoge"},
+		map[string]interface{}{"authenticated": "hoge", "unauthenticated": "hoge"},
+	}
+
+	for _, s := range validValues {
+		errors := validateCognitoRoles(s, "roles")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito Roles: %v", s, errors)
+		}
+	}
+
+	invalidValues := []map[string]interface{}{
+		map[string]interface{}{},
+		map[string]interface{}{"invalid": "hoge"},
+	}
+
+	for _, s := range invalidValues {
+		errors := validateCognitoRoles(s, "roles")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito Roles: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateDxConnectionBandWidth(t *testing.T) {
+	validValues := []string{
+		"1Gbps",
+		"10Gbps",
+	}
+
+	for _, s := range validValues {
+		_, errors := validateDxConnectionBandWidth(s, "match_type")
+		if len(errors) > 0 {
+			t.Fatalf("%s should be a valid Direct Connect Connection Bandwidth: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"1gbps",
+		"10GBPS",
+		"invalid character",
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateDxConnectionBandWidth(s, "match_type")
+		if len(errors) == 0 {
+			t.Fatalf("%s should not be a valid Direct Connect Connection Bandwidth: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateCognitoUserPoolReplyEmailAddress(t *testing.T) {
+	validTypes := []string{
+		"foo@gmail.com",
+		"foo@bar",
+		"foo bar@gmail.com",
+		"foo+bar.baz@gmail.com",
+	}
+	for _, v := range validTypes {
+		_, errors := validateCognitoUserPoolReplyEmailAddress(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool Reply Email Address: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"foo",
+		"@bar.baz",
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateCognitoUserPoolReplyEmailAddress(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Cognito User Pool Reply Email Address", v)
+		}
+	}
+}
+
+func TestResourceAWSElastiCacheReplicationGroupAuthTokenValidation(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "this-is-valid!#%()^",
+			ErrCount: 0,
+		},
+		{
+			Value:    "this-is-not",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid\"",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid@",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid/",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(129),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateAwsElastiCacheReplicationGroupAuthToken(tc.Value, "aws_elasticache_replication_group_auth_token")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the ElastiCache Replication Group AuthToken to trigger a validation error")
 		}
 	}
 }

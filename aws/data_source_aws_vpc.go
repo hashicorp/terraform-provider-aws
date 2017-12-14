@@ -61,6 +61,16 @@ func dataSourceAwsVpc() *schema.Resource {
 				Computed: true,
 			},
 
+			"enable_dns_hostnames": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
+			"enable_dns_support": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"tags": tagsSchemaComputed(),
 		},
 	}
@@ -71,8 +81,13 @@ func dataSourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	req := &ec2.DescribeVpcsInput{}
 
-	if id := d.Get("id"); id != "" {
-		req.VpcIds = []*string{aws.String(id.(string))}
+	var id string
+	if cid, ok := d.GetOk("id"); ok {
+		id = cid.(string)
+	}
+
+	if id != "" {
+		req.VpcIds = []*string{aws.String(id)}
 	}
 
 	// We specify "default" as boolean, but EC2 filters want
@@ -119,7 +134,6 @@ func dataSourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	vpc := resp.Vpcs[0]
 
 	d.SetId(*vpc.VpcId)
-	d.Set("id", vpc.VpcId)
 	d.Set("cidr_block", vpc.CidrBlock)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
@@ -131,6 +145,18 @@ func dataSourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("ipv6_association_id", vpc.Ipv6CidrBlockAssociationSet[0].AssociationId)
 		d.Set("ipv6_cidr_block", vpc.Ipv6CidrBlockAssociationSet[0].Ipv6CidrBlock)
 	}
+
+	attResp, err := awsVpcDescribeVpcAttribute("enableDnsSupport", *vpc.VpcId, conn)
+	if err != nil {
+		return err
+	}
+	d.Set("enable_dns_support", attResp.EnableDnsSupport.Value)
+
+	attResp, err = awsVpcDescribeVpcAttribute("enableDnsHostnames", *vpc.VpcId, conn)
+	if err != nil {
+		return err
+	}
+	d.Set("enable_dns_hostnames", attResp.EnableDnsHostnames.Value)
 
 	return nil
 }

@@ -6,7 +6,7 @@ description: |-
   Get information on an EBS Snapshot.
 ---
 
-# aws\_ebs\_snapshot
+# aws_ebs_snapshot
 
 Use this data source to get information about an EBS Snapshot for use when provisioning EBS Volumes
 
@@ -43,7 +43,7 @@ The following arguments are supported:
 
 * `filter` - (Optional) One or more name/value pairs to filter off of. There are
 several valid keys, for a full reference, check out
-[describe-volumes in the AWS CLI reference][1].
+[describe-snapshots in the AWS CLI reference][1].
 
 
 ## Attributes Reference

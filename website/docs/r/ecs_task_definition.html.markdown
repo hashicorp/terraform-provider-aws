@@ -6,7 +6,7 @@ description: |-
   Provides an ECS task definition.
 ---
 
-# aws\_ecs\_task\_definition
+# aws_ecs_task_definition
 
 Provides an ECS task definition to be used in `aws_ecs_service`.
 
@@ -67,7 +67,7 @@ contains only a small subset of the available parameters.
 
 ## Argument Reference
 
-The following arguments are supported:
+### Top-Level Arguments
 
 * `family` - (Required) A unique name for your task definition.
 * `container_definitions` - (Required) A list of valid [container definitions]
@@ -77,20 +77,21 @@ definition document. For a detailed description of what parameters are available
 (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html) section from the
 official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide).
 * `task_role_arn` - (Optional) The ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
-* `network_mode` - (Optional) The Docker networking mode to use for the containers in the task. The valid values are `none`, `bridge`, and `host`.
-* `volume` - (Optional) A volume block. See below for details about what arguments are supported.
-* `placement_constraints` - (Optional) rules that are taken into consideration during task placement. Maximum number of
-`placement_constraints` is `10`. Defined below.
+* `execution_role_arn` - (Optional) The Amazon Resource Name (ARN) of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
+* `network_mode` - (Optional) The Docker networking mode to use for the containers in the task. The valid values are `none`, `bridge`, `awsvpc`, and `host`.
+* `volume` - (Optional) A set of [volume blocks](#volume-block-arguments) that containers in your task may use.
+* `placement_constraints` - (Optional) A set of [placement constraints](#placement-constraints-arguments) rules that are taken into consideration during task placement. Maximum number of `placement_constraints` is `10`.
+* `cpu` - (Optional) The number of cpu units used by the task. If the `launch_type` is `FARGATE` this field is required.
+* `memory` - (Optional) The amount (in MiB) of memory used by the task. If the `launch_type` is `FARGATE` this field is required.
+* `requires_compatibilities` - (Optional) A set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
 
-Volume block supports the following arguments:
+#### Volume Block Arguments
 
 * `name` - (Required) The name of the volume. This name is referenced in the `sourceVolume`
 parameter of container definition in the `mountPoints` section.
 * `host_path` - (Optional) The path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
 
-## placement_constraints
-
-`placement_constraints` support the following:
+#### Placement Constraints Arguments
 
 * `type` - (Required) The type of constraint. Use `memberOf` to restrict selection to a group of valid candidates.
 Note that `distinctInstance` is not supported in task definitions.

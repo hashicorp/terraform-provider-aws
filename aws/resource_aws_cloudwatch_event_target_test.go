@@ -108,6 +108,43 @@ func TestAccAWSCloudWatchEventTarget_ssmDocument(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchEventTarget_ecs(t *testing.T) {
+	var target events.Target
+	rName := acctest.RandomWithPrefix("tf_ecs_target")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventTargetConfigEcs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.test", &target),
+				),
+			},
+		},
+	})
+}
+func TestAccAWSCloudWatchEventTarget_input_transformer(t *testing.T) {
+	var target events.Target
+	rName := acctest.RandomWithPrefix("tf_input_transformer")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventTargetConfigInputTransformer(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.test", &target),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCloudWatchEventTargetExists(n string, rule *events.Target) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -352,4 +389,146 @@ resource "aws_iam_role_policy" "test_policy" {
 }
 EOF
 }`, rName, rName, rName, rName)
+}
+
+func testAccAWSCloudWatchEventTargetConfigEcs(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "schedule" {
+  name        = "%s"
+  description = "schedule_ecs_test"
+
+	schedule_expression = "rate(5 minutes)"
+}
+
+resource "aws_cloudwatch_event_target" "test" {
+	arn = "${aws_ecs_cluster.test.id}"
+  rule = "${aws_cloudwatch_event_rule.schedule.id}"
+  role_arn = "${aws_iam_role.test_role.arn}"
+
+  ecs_target {
+    task_count = 1
+    task_definition_arn = "${aws_ecs_task_definition.task.arn}"
+  }
+}
+
+resource "aws_iam_role" "test_role" {
+  name = "%s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "events.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test_policy" {
+  name = "%s"
+  role = "${aws_iam_role.test_role.id}"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ecs:RunTask"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "task" {
+  family                = "%s"
+  container_definitions = <<EOF
+[
+  {
+    "name": "first",
+    "image": "service-first",
+    "cpu": 10,
+    "memory": 512,
+    "essential": true
+  }
+]
+EOF
+}`, rName, rName, rName, rName, rName)
+}
+
+func testAccAWSCloudWatchEventTargetConfigInputTransformer(rName string) string {
+	return fmt.Sprintf(`
+
+	resource "aws_iam_role" "iam_for_lambda" {
+  name = "tf_acc_input_transformer"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lambda_function" "lambda" {
+	function_name = "tf_acc_input_transformer"
+	filename = "test-fixtures/lambdatest.zip"
+  source_code_hash = "${base64sha256(file("test-fixtures/lambdatest.zip"))}"
+  role = "${aws_iam_role.iam_for_lambda.arn}"
+  handler = "exports.example"
+	runtime = "nodejs4.3"
+}
+
+resource "aws_cloudwatch_event_rule" "schedule" {
+  name        = "%s"
+  description = "test_input_transformer"
+
+	schedule_expression = "rate(5 minutes)"
+}
+
+resource "aws_cloudwatch_event_target" "test" {
+	arn = "${aws_lambda_function.lambda.arn}"
+  rule = "${aws_cloudwatch_event_rule.schedule.id}"
+
+  input_transformer {
+    input_paths {
+      time = "$.time"
+    }
+
+    input_template = <<EOF
+{
+  "detail-type": "Scheduled Event",
+  "source": "aws.events",
+  "time": <time>,
+  "region": "eu-west-1",
+  "detail": {}
+}
+EOF
+  }
+}`, rName)
 }

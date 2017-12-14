@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Group resource.
 ---
 
-# aws\_autoscaling\_group
+# aws_autoscaling_group
 
 Provides an AutoScaling Group resource.
 
@@ -50,6 +50,10 @@ EOF
     key                 = "foo"
     value               = "bar"
     propagate_at_launch = true
+  }
+
+  timeouts {
+    delete = "15m"
   }
 
   tag {
@@ -217,6 +221,15 @@ autoscaling group has been created, and depending on your
 been launched, creating unintended behavior. If you need hooks to run on all
 instances, add them with `initial_lifecycle_hook` here, but take
 care to not duplicate these hooks in `aws_autoscaling_lifecycle_hook`.
+
+<a id="timeouts"></a>
+## Timeouts
+
+`autoscaling_group` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `delete` - (Default `5 minutes`) Used for destroying ASG.
+
 
 ## Waiting for Capacity
 

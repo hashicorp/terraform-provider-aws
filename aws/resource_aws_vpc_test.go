@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,64 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+// add sweeper to delete known test vpcs
+func init() {
+	resource.AddTestSweepers("aws_vpc", &resource.Sweeper{
+		Name: "aws_vpc",
+		Dependencies: []string{
+			"aws_security_group",
+			"aws_subnet",
+			"aws_vpn_gateway",
+		},
+		F: testSweepVPCs,
+	})
+}
+
+func testSweepVPCs(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	req := &ec2.DescribeVpcsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name: aws.String("tag-value"),
+				Values: []*string{
+					aws.String("tf-acc-revoke*"),
+					aws.String("terraform-testacc-vpc-data-source-*"),
+					aws.String("terraform-testacc-subnet-data-source*"),
+					aws.String("terraform-testacc-vpn-gateway*"),
+				},
+			},
+		},
+	}
+	resp, err := conn.DescribeVpcs(req)
+	if err != nil {
+		return fmt.Errorf("Error describing vpcs: %s", err)
+	}
+
+	if len(resp.Vpcs) == 0 {
+		log.Print("[DEBUG] No aws vpcs to sweep")
+		return nil
+	}
+
+	for _, vpc := range resp.Vpcs {
+		// delete the vpc
+		_, err := conn.DeleteVpc(&ec2.DeleteVpcInput{
+			VpcId: vpc.VpcId,
+		})
+		if err != nil {
+			return fmt.Errorf(
+				"Error deleting VPC (%s): %s",
+				*vpc.VpcId, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSVpc_basic(t *testing.T) {
 	var vpc ec2.Vpc
@@ -298,6 +357,23 @@ func TestAccAWSVpc_classiclinkOptionSet(t *testing.T) {
 	})
 }
 
+func TestAccAWSVpc_classiclinkDnsSupportOptionSet(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcConfig_ClassiclinkDnsSupportOption,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"aws_vpc.bar", "enable_classiclink_dns_support", "true"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVpcConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
@@ -381,5 +457,14 @@ resource "aws_vpc" "bar" {
 	cidr_block = "172.2.0.0/16"
 
 	enable_classiclink = true
+}
+`
+
+const testAccVpcConfig_ClassiclinkDnsSupportOption = `
+resource "aws_vpc" "bar" {
+	cidr_block = "172.2.0.0/16"
+
+	enable_classiclink = true
+	enable_classiclink_dns_support = true
 }
 `

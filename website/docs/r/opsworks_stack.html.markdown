@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks stack resource.
 ---
 
-# aws\_opsworks\_stack
+# aws_opsworks_stack
 
 Provides an OpsWorks stack resource.
 
@@ -18,6 +18,10 @@ resource "aws_opsworks_stack" "main" {
   region                       = "us-west-1"
   service_role_arn             = "${aws_iam_role.opsworks.arn}"
   default_instance_profile_arn = "${aws_iam_instance_profile.opsworks.arn}"
+
+  tags {
+    Name = "foobar-terraform-stack"
+  }
 
   custom_json = <<EOT
 {
@@ -44,7 +48,7 @@ The following arguments are supported:
 * `default_availability_zone` - (Optional) Name of the availability zone where instances will be created
   by default. This is required unless you set `vpc_id`.
 * `configuration_manager_name` - (Optional) Name of the configuration manager to use. Defaults to "Chef".
-* `configuration_manager_version` - (Optional) Version of the configuratino manager to use. Defaults to "11.4".
+* `configuration_manager_version` - (Optional) Version of the configuration manager to use. Defaults to "11.4".
 * `custom_cookbooks_source` - (Optional) When `use_custom_cookbooks` is set, provide this sub-object as
   described below.
 * `custom_json` - (Optional) User defined JSON passed to "Chef". Use a "here doc" for multiline JSON.
@@ -56,6 +60,7 @@ The following arguments are supported:
 * `hostname_theme` - (Optional) Keyword representing the naming scheme that will be used for instance hostnames
   within this stack.
 * `manage_berkshelf` - (Optional) Boolean value controlling whether Opsworks will run Berkshelf for this stack.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 * `use_custom_cookbooks` - (Optional) Boolean value controlling whether the custom cookbook settings are
   enabled.
 * `use_opsworks_security_groups` - (Optional) Boolean value controlling whether the standard OpsWorks

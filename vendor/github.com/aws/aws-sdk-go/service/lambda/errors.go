@@ -50,6 +50,12 @@ const (
 	// The request body could not be parsed as JSON.
 	ErrCodeInvalidRequestContentException = "InvalidRequestContentException"
 
+	// ErrCodeInvalidRuntimeException for service response error code
+	// "InvalidRuntimeException".
+	//
+	// The runtime or runtime version specified is not supported.
+	ErrCodeInvalidRuntimeException = "InvalidRuntimeException"
+
 	// ErrCodeInvalidSecurityGroupIDException for service response error code
 	// "InvalidSecurityGroupIDException".
 	//
@@ -138,6 +144,15 @@ const (
 
 	// ErrCodeTooManyRequestsException for service response error code
 	// "TooManyRequestsException".
+	//
+	// You will get this exception for the following reasons. ConcurrentInvocationLimitExceeded
+	// is returned if you have no functions with reserved-concurrency and have exceeded
+	// your account concurrent limit or if a function without reserved concurrency
+	// exceeds the account's unreserved concurrency limit. ReservedFunctionConcurrentInvocationLimitExceeded
+	// is returned when a function with reserved concurrency exceeds its configured
+	// concurrent limit. CallerRateLimitExceeded is returned when your account limit
+	// is exceeded and you have not reserved concurrency on any function. For more
+	// information, see concurrent-executions
 	ErrCodeTooManyRequestsException = "TooManyRequestsException"
 
 	// ErrCodeUnsupportedMediaTypeException for service response error code

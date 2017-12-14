@@ -13,6 +13,7 @@ import (
 	awsCredentials "github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
+	"github.com/aws/aws-sdk-go/aws/defaults"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -108,7 +109,7 @@ func parseAccountInfoFromArn(arn string) (string, string, error) {
 // environment in the case that they're not explicitly specified
 // in the Terraform configuration.
 func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
-	// build a chain provider, lazy-evaulated by aws-sdk
+	// build a chain provider, lazy-evaluated by aws-sdk
 	providers := []awsCredentials.Provider{
 		&awsCredentials.StaticProvider{Value: awsCredentials.Value{
 			AccessKeyID:     c.AccessKey,
@@ -125,12 +126,35 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 	// Build isolated HTTP client to avoid issues with globally-shared settings
 	client := cleanhttp.DefaultClient()
 
-	// Keep the timeout low as we don't want to wait in non-EC2 environments
+	// Keep the default timeout (100ms) low as we don't want to wait in non-EC2 environments
 	client.Timeout = 100 * time.Millisecond
+
+	const userTimeoutEnvVar = "AWS_METADATA_TIMEOUT"
+	userTimeout := os.Getenv(userTimeoutEnvVar)
+	if userTimeout != "" {
+		newTimeout, err := time.ParseDuration(userTimeout)
+		if err == nil {
+			if newTimeout.Nanoseconds() > 0 {
+				client.Timeout = newTimeout
+			} else {
+				log.Printf("[WARN] Non-positive value of %s (%s) is meaningless, ignoring", userTimeoutEnvVar, newTimeout.String())
+			}
+		} else {
+			log.Printf("[WARN] Error converting %s to time.Duration: %s", userTimeoutEnvVar, err)
+		}
+	}
+
+	log.Printf("[INFO] Setting AWS metadata API timeout to %s", client.Timeout.String())
 	cfg := &aws.Config{
 		HTTPClient: client,
 	}
 	usedEndpoint := setOptionalEndpoint(cfg)
+
+	// Add the default AWS provider for ECS Task Roles if the relevant env variable is set
+	if uri := os.Getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"); len(uri) > 0 {
+		providers = append(providers, defaults.RemoteCredProvider(*cfg, defaults.Handlers()))
+		log.Print("[INFO] ECS container credentials detected, RemoteCredProvider added to auth chain")
+	}
 
 	if !c.SkipMetadataApiCheck {
 		// Real AWS should reply to a simple metadata request.

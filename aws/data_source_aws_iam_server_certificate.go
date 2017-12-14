@@ -38,9 +38,9 @@ func dataSourceAwsIAMServerCertificate() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(string)
-					if len(value) > 30 {
+					if len(value) > 102 {
 						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 30 characters, name is limited to 128", k))
+							"%q cannot be longer than 102 characters, name is limited to 128", k))
 					}
 					return
 				},
@@ -54,11 +54,6 @@ func dataSourceAwsIAMServerCertificate() *schema.Resource {
 			},
 
 			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -130,7 +125,6 @@ func dataSourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interfac
 	d.SetId(*metadata.ServerCertificateId)
 	d.Set("arn", *metadata.Arn)
 	d.Set("path", *metadata.Path)
-	d.Set("id", *metadata.ServerCertificateId)
 	d.Set("name", *metadata.ServerCertificateName)
 	if metadata.Expiration != nil {
 		d.Set("expiration_date", metadata.Expiration.Format("2006-01-02T15:04:05"))

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -76,7 +77,11 @@ func resourceAwsKmsAliasCreate(d *schema.ResourceData, meta interface{}) error {
 		AliasName:   aws.String(name),
 		TargetKeyId: aws.String(targetKeyId),
 	}
-	_, err := conn.CreateAlias(req)
+
+	// KMS is eventually consistent
+	_, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
+		return conn.CreateAlias(req)
+	})
 	if err != nil {
 		return err
 	}
@@ -87,7 +92,13 @@ func resourceAwsKmsAliasCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
-	alias, err := findKmsAliasByName(conn, d.Id(), nil)
+	var alias *kms.AliasListEntry
+	var err error
+	if d.IsNewResource() {
+		alias, err = retryFindKmsAliasByName(conn, d.Id())
+	} else {
+		alias, err = findKmsAliasByName(conn, d.Id(), nil)
+	}
 	if err != nil {
 		return err
 	}
@@ -146,6 +157,22 @@ func resourceAwsKmsAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] KMS Alias: (%s) deleted.", d.Id())
 	d.SetId("")
 	return nil
+}
+
+func retryFindKmsAliasByName(conn *kms.KMS, name string) (*kms.AliasListEntry, error) {
+	var resp *kms.AliasListEntry
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		resp, err = findKmsAliasByName(conn, name, nil)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		if resp == nil {
+			return resource.RetryableError(err)
+		}
+		return nil
+	})
+	return resp, err
 }
 
 // API by default limits results to 50 aliases

@@ -6,7 +6,7 @@ description: |-
   Provides a Spot Fleet Request resource.
 ---
 
-# aws\_spot\_fleet\_request
+# aws_spot_fleet_request
 
 Provides an EC2 Spot Fleet Request resource. This allows a fleet of Spot
 instances to be requested on the Spot market.
@@ -41,6 +41,10 @@ resource "aws_spot_fleet_request" "cheap_compute" {
     root_block_device {
       volume_size = "300"
       volume_type = "gp2"
+    }
+
+    tags {
+      Name = "spot-fleet-example"
     }
   }
 }
@@ -90,11 +94,13 @@ across different markets and instance types.
 
     **Note:** This takes in similar but not
     identical inputs as [`aws_instance`](instance.html).  There are limitations on
-    what you can specify (tags, for example, are not supported). See the
-    list of officially supported inputs in the
+    what you can specify. See the list of officially supported inputs in the
     [reference documentation](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetLaunchSpecification.html). Any normal [`aws_instance`](instance.html) parameter that corresponds to those inputs may be used.
 
 * `spot_price` - (Required) The bid price per unit hour.
+* `wait_for_fulfillment` - (Optional; Default: false) If set, Terraform will
+  wait for the Spot Request to be fulfilled, and will throw an error if the
+  timeout of 10m is reached.
 * `target_capacity` - The number of units to request. You can choose to set the
   target capacity in terms of instances or a performance characteristic that is
 important to your application workload, such as vCPUs, memory, or I/O.
@@ -106,9 +112,18 @@ lowestPrice.
   request is decreased below the current size of the Spot fleet.
 * `terminate_instances_with_expiration` - Indicates whether running Spot
   instances should be terminated when the Spot fleet request expires.
+* `instance_interruption_behavior` - (Optional) Indicates whether a Spot
+  instance stops or terminates when it is interrupted. Default is
+  `terminate`.
 * `valid_until` - The end date and time of the request, in UTC ISO8601 format
   (for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance
 requests are placed or enabled to fulfill the request. Defaults to 24 hours.
+
+### Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+
+* `create` - (Defaults to 10 mins) Used when requesting the spot instance (only valid if `wait_for_fulfillment = true`)
 
 ## Attributes Reference
 

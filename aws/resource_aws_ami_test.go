@@ -3,9 +3,12 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -27,6 +30,8 @@ func TestAccAWSAMI_basic(t *testing.T) {
 					testAccCheckAmiExists("aws_ami.foo", &ami),
 					resource.TestCheckResourceAttr(
 						"aws_ami.foo", "name", fmt.Sprintf("tf-testing-%d", rInt)),
+					resource.TestMatchResourceAttr(
+						"aws_ami.foo", "root_snapshot_id", regexp.MustCompile("^snap-")),
 				),
 			},
 		},
@@ -109,13 +114,30 @@ func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		opts := &ec2.DescribeImagesInput{
-			ImageIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeImages(opts)
+
+		var resp *ec2.DescribeImagesOutput
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			opts := &ec2.DescribeImagesInput{
+				ImageIds: []*string{aws.String(rs.Primary.ID)},
+			}
+			var err error
+			resp, err = conn.DescribeImages(opts)
+			if err != nil {
+				// This can be just eventual consistency
+				awsErr, ok := err.(awserr.Error)
+				if ok && awsErr.Code() == "InvalidAMIID.NotFound" {
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
 		if err != nil {
-			return err
+			return fmt.Errorf("Unable to find AMI after retries: %s", err)
 		}
+
 		if len(resp.Images) == 0 {
 			return fmt.Errorf("AMI not found")
 		}
@@ -183,12 +205,14 @@ func testAccCheckAmiEbsBlockDevice(bd *ec2.BlockDeviceMapping, ed *ec2.EbsBlockD
 
 func testAccAmiConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
 resource "aws_ebs_volume" "foo" {
- 	availability_zone = "us-west-2a"
- 	size = 8
- 	tags {
- 	  Name = "testAccAmiConfig_basic"
- 	}
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  size = 8
+  tags {
+    Name = "testAccAmiConfig_basic"
+  }
 }
 
 resource "aws_ebs_snapshot" "foo" {
@@ -213,12 +237,14 @@ resource "aws_ami" "foo" {
 
 func testAccAmiConfig_snapshotSize(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
 resource "aws_ebs_volume" "foo" {
- 	availability_zone = "us-west-2a"
- 	size = 20
- 	tags {
- 	  Name = "testAccAmiConfig_snapshotSize"
- 	}
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  size = 20
+  tags {
+    Name = "testAccAmiConfig_snapshotSize"
+  }
 }
 
 resource "aws_ebs_snapshot" "foo" {

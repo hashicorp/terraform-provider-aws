@@ -38,6 +38,11 @@ func dataSourceAwsSecurityGroup() *schema.Resource {
 			},
 
 			"tags": tagsSchemaComputed(),
+
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -46,7 +51,7 @@ func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*AWSClient).ec2conn
 	req := &ec2.DescribeSecurityGroupsInput{}
 
-	if id, idExists := d.GetOk("id"); idExists {
+	if id, ok := d.GetOk("id"); ok {
 		req.GroupIds = []*string{aws.String(id.(string))}
 	}
 
@@ -82,12 +87,11 @@ func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 	sg := resp.SecurityGroups[0]
 
 	d.SetId(*sg.GroupId)
-	d.Set("id", sg.VpcId)
 	d.Set("name", sg.GroupName)
 	d.Set("description", sg.Description)
 	d.Set("vpc_id", sg.VpcId)
 	d.Set("tags", tagsToMap(sg.Tags))
-	d.Set("arn", fmt.Sprintf("arn:%s:ec2:%s:%s/security-group/%s",
+	d.Set("arn", fmt.Sprintf("arn:%s:ec2:%s:%s:security-group/%s",
 		meta.(*AWSClient).partition, meta.(*AWSClient).region, *sg.OwnerId, *sg.GroupId))
 
 	return nil

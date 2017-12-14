@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/hil"
 	"github.com/hashicorp/hil/ast"
 	"github.com/hashicorp/terraform/helper/hilmapstructure"
+	"github.com/hashicorp/terraform/plugin/discovery"
 	"github.com/mitchellh/reflectwalk"
 )
 
@@ -33,6 +33,7 @@ type Config struct {
 	ProviderConfigs []*ProviderConfig
 	Resources       []*Resource
 	Variables       []*Variable
+	Locals          []*Local
 	Outputs         []*Output
 
 	// The fields below can be filled in by loaders for validation
@@ -54,6 +55,8 @@ type AtlasConfig struct {
 type Module struct {
 	Name      string
 	Source    string
+	Version   string
+	Providers map[string]string
 	RawConfig *RawConfig
 }
 
@@ -64,7 +67,17 @@ type Module struct {
 type ProviderConfig struct {
 	Name      string
 	Alias     string
+	Version   string
 	RawConfig *RawConfig
+
+	// Path records where the Provider was declared in a module tree, so that
+	// it can be copied into child module providers yet still interpolated in
+	// the correct scope.
+	Path []string
+
+	// Inherited is used to skip validation of this config, since any
+	// interpolated variables won't be declared at this level.
+	Inherited bool
 }
 
 // A resource represents a single Terraform resource in the configuration.
@@ -145,12 +158,18 @@ func (p *Provisioner) Copy() *Provisioner {
 	}
 }
 
-// Variable is a variable defined within the configuration.
+// Variable is a module argument defined within the configuration.
 type Variable struct {
 	Name         string
 	DeclaredType string `mapstructure:"type"`
 	Default      interface{}
 	Description  string
+}
+
+// Local is a local value defined within the configuration.
+type Local struct {
+	Name      string
+	RawConfig *RawConfig
 }
 
 // Output is an output defined within the configuration. An output is
@@ -236,6 +255,33 @@ func (r *Resource) Id() string {
 	default:
 		panic(fmt.Errorf("unknown resource mode %s", r.Mode))
 	}
+}
+
+// ProviderFullName returns the full name of the provider for this resource,
+// which may either be specified explicitly using the "provider" meta-argument
+// or implied by the prefix on the resource type name.
+func (r *Resource) ProviderFullName() string {
+	return ResourceProviderFullName(r.Type, r.Provider)
+}
+
+// ResourceProviderFullName returns the full (dependable) name of the
+// provider for a hypothetical resource with the given resource type and
+// explicit provider string. If the explicit provider string is empty then
+// the provider name is inferred from the resource type name.
+func ResourceProviderFullName(resourceType, explicitProvider string) string {
+	if explicitProvider != "" {
+		return explicitProvider
+	}
+
+	idx := strings.IndexRune(resourceType, '_')
+	if idx == -1 {
+		// If no underscores, the resource name is assumed to be
+		// also the provider name, e.g. if the provider exposes
+		// only a single resource of each type.
+		return resourceType
+	}
+
+	return resourceType[:idx]
 }
 
 // Validate does some basic semantic checking of the configuration.
@@ -349,7 +395,8 @@ func (c *Config) Validate() error {
 		}
 	}
 
-	// Check that providers aren't declared multiple times.
+	// Check that providers aren't declared multiple times and that their
+	// version constraints, where present, are syntactically valid.
 	providerSet := make(map[string]struct{})
 	for _, p := range c.ProviderConfigs {
 		name := p.FullName()
@@ -358,6 +405,16 @@ func (c *Config) Validate() error {
 				"provider.%s: declared multiple times, you can only declare a provider once",
 				name))
 			continue
+		}
+
+		if p.Version != "" {
+			_, err := discovery.ConstraintStr(p.Version).Parse()
+			if err != nil {
+				errs = append(errs, fmt.Errorf(
+					"provider.%s: invalid version constraint %q: %s",
+					name, p.Version, err,
+				))
+			}
 		}
 
 		providerSet[name] = struct{}{}
@@ -510,6 +567,7 @@ func (c *Config) Validate() error {
 			case *ResourceVariable:
 			case *TerraformVariable:
 			case *UserVariable:
+			case *LocalVariable:
 
 			default:
 				errs = append(errs, fmt.Errorf(
@@ -518,22 +576,7 @@ func (c *Config) Validate() error {
 			}
 		}
 
-		// Interpolate with a fixed number to verify that its a number.
-		r.RawCount.interpolate(func(root ast.Node) (interface{}, error) {
-			// Execute the node but transform the AST so that it returns
-			// a fixed value of "5" for all interpolations.
-			result, err := hil.Eval(
-				hil.FixedValueTransform(
-					root, &ast.LiteralNode{Value: "5", Typex: ast.TypeString}),
-				nil)
-			if err != nil {
-				return "", err
-			}
-
-			return result.Value, nil
-		})
-		_, err := strconv.ParseInt(r.RawCount.Value().(string), 0, 0)
-		if err != nil {
+		if !r.RawCount.couldBeInteger() {
 			errs = append(errs, fmt.Errorf(
 				"%s: resource count must be an integer",
 				n))
@@ -636,6 +679,29 @@ func (c *Config) Validate() error {
 					id,
 					rv.FullKey()))
 				continue
+			}
+		}
+	}
+
+	// Check that all locals are valid
+	{
+		found := make(map[string]struct{})
+		for _, l := range c.Locals {
+			if _, ok := found[l.Name]; ok {
+				errs = append(errs, fmt.Errorf(
+					"%s: duplicate local. local value names must be unique",
+					l.Name,
+				))
+				continue
+			}
+			found[l.Name] = struct{}{}
+
+			for _, v := range l.RawConfig.Variables {
+				if _, ok := v.(*CountVariable); ok {
+					errs = append(errs, fmt.Errorf(
+						"local %s: count variables are only valid within resources", l.Name,
+					))
+				}
 			}
 		}
 	}
@@ -751,6 +817,10 @@ func (c *Config) rawConfigs() map[string]*RawConfig {
 	}
 
 	for _, pc := range c.ProviderConfigs {
+		// this was an inherited config, so we don't validate it at this level.
+		if pc.Inherited {
+			continue
+		}
 		source := fmt.Sprintf("provider config '%s'", pc.Name)
 		result[source] = pc.RawConfig
 	}

@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccAWSSSMParameter_basic(t *testing.T) {
+	var param ssm.Parameter
 	name := acctest.RandString(10)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,15 +22,38 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 			{
 				Config: testAccAWSSSMParameterBasicConfig(name, "bar"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterHasValue("aws_ssm_parameter.foo", "bar"),
-					testAccCheckAWSSSMParameterType("aws_ssm_parameter.foo", "String"),
+					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.foo", &param),
+					resource.TestCheckResourceAttrSet("aws_ssm_parameter.foo", "arn"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "value", "bar"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "type", "String"),
 				),
 			},
 		},
 	})
 }
 
+func TestAccAWSSSMParameter_disappears(t *testing.T) {
+	var param ssm.Parameter
+	name := acctest.RandString(10)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterBasicConfig(name, "bar"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.foo", &param),
+					testAccCheckAWSSSMParameterDisappears(&param),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMParameter_update(t *testing.T) {
+	var param ssm.Parameter
 	name := acctest.RandString(10)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -40,10 +64,37 @@ func TestAccAWSSSMParameter_update(t *testing.T) {
 				Config: testAccAWSSSMParameterBasicConfig(name, "bar"),
 			},
 			{
-				Config: testAccAWSSSMParameterBasicConfig(name, "baz"),
+				Config: testAccAWSSSMParameterBasicConfigOverwrite(name, "baz1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterHasValue("aws_ssm_parameter.foo", "baz"),
-					testAccCheckAWSSSMParameterType("aws_ssm_parameter.foo", "String"),
+					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.foo", &param),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "value", "baz1"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "type", "String"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMParameter_changeNameForcesNew(t *testing.T) {
+	var beforeParam, afterParam ssm.Parameter
+	before := acctest.RandString(10)
+	after := acctest.RandString(10)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterBasicConfig(before, "bar"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.foo", &beforeParam),
+				),
+			},
+			{
+				Config: testAccAWSSSMParameterBasicConfig(after, "bar"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.foo", &afterParam),
+					testAccCheckAWSSSMParameterRecreated(t, &beforeParam, &afterParam),
 				),
 			},
 		},
@@ -51,6 +102,7 @@ func TestAccAWSSSMParameter_update(t *testing.T) {
 }
 
 func TestAccAWSSSMParameter_secure(t *testing.T) {
+	var param ssm.Parameter
 	name := acctest.RandString(10)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -60,8 +112,9 @@ func TestAccAWSSSMParameter_secure(t *testing.T) {
 			{
 				Config: testAccAWSSSMParameterSecureConfig(name, "secret"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterHasValue("aws_ssm_parameter.secret_foo", "secret"),
-					testAccCheckAWSSSMParameterType("aws_ssm_parameter.secret_foo", "SecureString"),
+					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.secret_foo", &param),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.secret_foo", "value", "secret"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.secret_foo", "type", "SecureString"),
 				),
 			},
 		},
@@ -69,6 +122,7 @@ func TestAccAWSSSMParameter_secure(t *testing.T) {
 }
 
 func TestAccAWSSSMParameter_secure_with_key(t *testing.T) {
+	var param ssm.Parameter
 	name := acctest.RandString(10)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -78,69 +132,71 @@ func TestAccAWSSSMParameter_secure_with_key(t *testing.T) {
 			{
 				Config: testAccAWSSSMParameterSecureConfigWithKey(name, "secret"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterHasValue("aws_ssm_parameter.secret_foo", "secret"),
-					testAccCheckAWSSSMParameterType("aws_ssm_parameter.secret_foo", "SecureString"),
+					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.secret_foo", &param),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.secret_foo", "value", "secret"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.secret_foo", "type", "SecureString"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSSSMGetParameter(s *terraform.State, n string) ([]*ssm.Parameter, error) {
-	rs, ok := s.RootModule().Resources[n]
-	if !ok {
-		return []*ssm.Parameter{}, fmt.Errorf("Not found: %s", n)
+func testAccCheckAWSSSMParameterRecreated(t *testing.T,
+	before, after *ssm.Parameter) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *before.Name == *after.Name {
+			t.Fatalf("Expected change of SSM Param Names, but both were %v", *before.Name)
+		}
+		return nil
 	}
-
-	if rs.Primary.ID == "" {
-		return []*ssm.Parameter{}, fmt.Errorf("No SSM Parameter ID is set")
-	}
-
-	conn := testAccProvider.Meta().(*AWSClient).ssmconn
-
-	paramInput := &ssm.GetParametersInput{
-		Names: []*string{
-			aws.String(rs.Primary.Attributes["name"]),
-		},
-		WithDecryption: aws.Bool(true),
-	}
-
-	resp, _ := conn.GetParameters(paramInput)
-
-	if len(resp.Parameters) == 0 {
-		return resp.Parameters, fmt.Errorf("Expected AWS SSM Parameter to be created, but wasn't found")
-	}
-	return resp.Parameters, nil
 }
 
-func testAccCheckAWSSSMParameterHasValue(n string, v string) resource.TestCheckFunc {
+func testAccCheckAWSSSMParameterExists(n string, param *ssm.Parameter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		parameters, err := testAccCheckAWSSSMGetParameter(s, n)
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No SSM Parameter ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ssmconn
+
+		paramInput := &ssm.GetParametersInput{
+			Names: []*string{
+				aws.String(rs.Primary.Attributes["name"]),
+			},
+			WithDecryption: aws.Bool(true),
+		}
+
+		resp, err := conn.GetParameters(paramInput)
 		if err != nil {
 			return err
 		}
 
-		parameterValue := parameters[0].Value
-
-		if *parameterValue != v {
-			return fmt.Errorf("Expected AWS SSM Parameter to have value %s but had %s", v, *parameterValue)
+		if len(resp.Parameters) == 0 {
+			return fmt.Errorf("Expected AWS SSM Parameter to be created, but wasn't found")
 		}
+
+		*param = *resp.Parameters[0]
 
 		return nil
 	}
 }
 
-func testAccCheckAWSSSMParameterType(n string, v string) resource.TestCheckFunc {
+func testAccCheckAWSSSMParameterDisappears(param *ssm.Parameter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		parameters, err := testAccCheckAWSSSMGetParameter(s, n)
-		if err != nil {
-			return err
+		conn := testAccProvider.Meta().(*AWSClient).ssmconn
+
+		paramInput := &ssm.DeleteParameterInput{
+			Name: param.Name,
 		}
 
-		parameterValue := parameters[0].Type
-
-		if *parameterValue != v {
-			return fmt.Errorf("Expected AWS SSM Parameter to have type %s but had %s", v, *parameterValue)
+		_, err := conn.DeleteParameter(paramInput)
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -170,7 +226,7 @@ func testAccCheckAWSSSMParameterDestroy(s *terraform.State) error {
 		return nil
 	}
 
-	return fmt.Errorf("Default error in SSM Parameter Test")
+	return nil
 }
 
 func testAccAWSSSMParameterBasicConfig(rName string, value string) string {
@@ -179,6 +235,17 @@ resource "aws_ssm_parameter" "foo" {
   name  = "test_parameter-%s"
   type  = "String"
   value = "%s"
+}
+`, rName, value)
+}
+
+func testAccAWSSSMParameterBasicConfigOverwrite(rName string, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "foo" {
+  name  = "test_parameter-%s"
+  type  = "String"
+  value = "%s"
+  overwrite = true
 }
 `, rName, value)
 }

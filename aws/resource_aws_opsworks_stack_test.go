@@ -101,6 +101,36 @@ func TestAccAWSOpsworksStackVpc(t *testing.T) {
 	})
 }
 
+func TestAccAWSOpsworksStackNoVpcCreateTags(t *testing.T) {
+	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
+	var opsstack opsworks.Stack
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOpsworksStackConfigNoVpcCreateTags(stackName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSOpsworksStackExists(
+						"aws_opsworks_stack.tf-acc", false, &opsstack),
+					resource.TestCheckResourceAttr("aws_opsworks_stack.tf-acc", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_opsworks_stack.tf-acc", "tags.foo", "bar"),
+				),
+			},
+			{
+				Config: testAccAwsOpsworksStackConfigNoVpcUpdateTags(stackName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSOpsworksStackExists(
+						"aws_opsworks_stack.tf-acc", false, &opsstack),
+					resource.TestCheckResourceAttr("aws_opsworks_stack.tf-acc", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_opsworks_stack.tf-acc", "tags.wut", "asdf"),
+				),
+			},
+		},
+	})
+}
+
 // Tests the addition of regional endpoints and supporting the classic link used
 // to create Stack's prior to v0.9.0.
 // See https://github.com/hashicorp/terraform/issues/12842
@@ -594,6 +624,180 @@ resource "aws_opsworks_stack" "tf-acc" {
   custom_json = "{\"key\": \"value\"}"
   configuration_manager_version = "11.10"
   use_opsworks_security_groups = false
+}
+
+resource "aws_iam_role" "opsworks_service" {
+    name = "%s_opsworks_service"
+    assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "opsworks.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOT
+}
+
+resource "aws_iam_role_policy" "opsworks_service" {
+    name = "%s_opsworks_service"
+    role = "${aws_iam_role.opsworks_service.id}"
+    policy = <<EOT
+{
+  "Statement": [
+    {
+      "Action": [
+        "ec2:*",
+        "iam:PassRole",
+        "cloudwatch:GetMetricStatistics",
+        "elasticloadbalancing:*",
+        "rds:*"
+      ],
+      "Effect": "Allow",
+      "Resource": ["*"]
+    }
+  ]
+}
+EOT
+}
+
+resource "aws_iam_role" "opsworks_instance" {
+    name = "%s_opsworks_instance"
+    assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOT
+}
+
+resource "aws_iam_instance_profile" "opsworks_instance" {
+    name = "%s_opsworks_instance"
+    roles = ["${aws_iam_role.opsworks_instance.name}"]
+}`, name, name, name, name, name)
+}
+
+func testAccAwsOpsworksStackConfigNoVpcCreateTags(name string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-west-2"
+}
+resource "aws_opsworks_stack" "tf-acc" {
+  name = "%s"
+  region = "us-west-2"
+  service_role_arn = "${aws_iam_role.opsworks_service.arn}"
+  default_instance_profile_arn = "${aws_iam_instance_profile.opsworks_instance.arn}"
+  default_availability_zone = "us-west-2a"
+  default_os = "Amazon Linux 2016.09"
+  default_root_device_type = "ebs"
+  custom_json = "{\"key\": \"value\"}"
+  configuration_manager_version = "11.10"
+  use_opsworks_security_groups = false
+  tags {
+    foo = "bar"
+  }
+}
+
+resource "aws_iam_role" "opsworks_service" {
+    name = "%s_opsworks_service"
+    assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "opsworks.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOT
+}
+
+resource "aws_iam_role_policy" "opsworks_service" {
+    name = "%s_opsworks_service"
+    role = "${aws_iam_role.opsworks_service.id}"
+    policy = <<EOT
+{
+  "Statement": [
+    {
+      "Action": [
+        "ec2:*",
+        "iam:PassRole",
+        "cloudwatch:GetMetricStatistics",
+        "elasticloadbalancing:*",
+        "rds:*"
+      ],
+      "Effect": "Allow",
+      "Resource": ["*"]
+    }
+  ]
+}
+EOT
+}
+
+resource "aws_iam_role" "opsworks_instance" {
+    name = "%s_opsworks_instance"
+    assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOT
+}
+
+resource "aws_iam_instance_profile" "opsworks_instance" {
+    name = "%s_opsworks_instance"
+    roles = ["${aws_iam_role.opsworks_instance.name}"]
+}`, name, name, name, name, name)
+}
+
+func testAccAwsOpsworksStackConfigNoVpcUpdateTags(name string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-west-2"
+}
+resource "aws_opsworks_stack" "tf-acc" {
+  name = "%s"
+  region = "us-west-2"
+  service_role_arn = "${aws_iam_role.opsworks_service.arn}"
+  default_instance_profile_arn = "${aws_iam_instance_profile.opsworks_instance.arn}"
+  default_availability_zone = "us-west-2a"
+  default_os = "Amazon Linux 2016.09"
+  default_root_device_type = "ebs"
+  custom_json = "{\"key\": \"value\"}"
+  configuration_manager_version = "11.10"
+  use_opsworks_security_groups = false
+  tags {
+    wut = "asdf"
+  }
 }
 
 resource "aws_iam_role" "opsworks_service" {

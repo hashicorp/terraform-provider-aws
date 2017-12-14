@@ -4,7 +4,7 @@ page_title: "AWS: aws_redshift_cluster"
 sidebar_current: "docs-aws-resource-redshift-cluster"
 ---
 
-# aws\_redshift\_cluster
+# aws_redshift_cluster
 
 Provides a Redshift Cluster Resource.
 
@@ -61,18 +61,30 @@ string.
 * `enhanced_vpc_routing` - (Optional) If true , enhanced VPC routing is enabled.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `encrypted` needs to be set to true.
 * `elastic_ip` - (Optional) The Elastic IP (EIP) address for the cluster.
-* `skip_final_snapshot` - (Optional) Determines whether a final snapshot of the cluster is created before Amazon Redshift deletes the cluster. If true , a final cluster snapshot is not created. If false , a final cluster snapshot is created before the cluster is deleted. Default is true.
+* `skip_final_snapshot` - (Optional) Determines whether a final snapshot of the cluster is created before Amazon Redshift deletes the cluster. If true , a final cluster snapshot is not created. If false , a final cluster snapshot is created before the cluster is deleted. Default is false.
 * `final_snapshot_identifier` - (Optional) The identifier of the final snapshot that is to be created immediately before deleting the cluster. If this parameter is provided, `skip_final_snapshot` must be false.
 * `snapshot_identifier` - (Optional) The name of the snapshot from which to create the new cluster.
 * `snapshot_cluster_identifier` - (Optional) The name of the cluster the source snapshot was created from.
 * `owner_account` - (Optional) The AWS customer account used to create or copy the snapshot. Required if you are restoring a snapshot you do not own, optional if you own the snapshot.
 * `iam_roles` - (Optional) A list of IAM Role ARNs to associate with the cluster. A Maximum of 10 can be associated to the cluster at any time.
-* `enable_logging` - (Optional) Enables logging information such as queries and connection attempts, for the specified Amazon Redshift cluster. Defaults to `false`.
+* `logging` - (Optional) Logging, documented below.
+* `snapshot_copy` - (Optional) Configuration of automatic copy of snapshots from one region to another. Documented below.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
+
+### Nested Blocks
+
+#### `logging`
+
+* `enable` - (Required) Enables logging information such as queries and connection attempts, for the specified Amazon Redshift cluster.
 * `bucket_name` - (Optional, required when `enable_logging` is `true`) The name of an existing S3 bucket where the log files are to be stored. Must be in the same region as the cluster and the cluster must have read bucket and put object permissions.
 For more information on the permissions required for the bucket, please read the AWS [documentation](http://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-enable-logging)
 * `s3_key_prefix` - (Optional) The prefix applied to the log file names.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
 
+#### `snapshot_copy`
+
+* `destination_region` - (Required) The destination region that you want to copy snapshots to.
+* `retention_period` - (Optional) The number of days to retain automated snapshots in the destination region after they are copied from the source region. Defaults to `7`.
+* `grant_name` - (Optional) The name of the snapshot copy grant to use when snapshots of an AWS KMS-encrypted cluster are copied to the destination region.
 
 ## Attributes Reference
 

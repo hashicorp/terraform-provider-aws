@@ -20,6 +20,7 @@ func TestAccAWSEcsDataSource_ecsCluster(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "pending_tasks_count", "0"),
 					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "running_tasks_count", "0"),
 					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "registered_container_instances_count", "0"),
+					resource.TestCheckResourceAttrSet("data.aws_ecs_cluster.default", "arn"),
 				),
 			},
 		},

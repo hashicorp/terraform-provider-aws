@@ -31,6 +31,12 @@ func resourceAwsAmi() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAmiCreate,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(AWSAMIRetryTimeout),
+			Update: schema.DefaultTimeout(AWSAMIRetryTimeout),
+			Delete: schema.DefaultTimeout(AWSAMIDeleteRetryTimeout),
+		},
+
 		Schema: resourceSchema,
 
 		// The Read, Update and Delete operations are shared with aws_ami_copy
@@ -110,14 +116,12 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 
 	id := *res.ImageId
 	d.SetId(id)
-	d.Partial(true) // make sure we record the id even if the rest of this gets interrupted
-	d.Set("id", id)
+	d.Partial(true)
 	d.Set("manage_ebs_block_devices", false)
-	d.SetPartial("id")
 	d.SetPartial("manage_ebs_block_devices")
 	d.Partial(false)
 
-	_, err = resourceAwsAmiWaitForAvailable(id, client)
+	_, err = resourceAwsAmiWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, client)
 	if err != nil {
 		return err
 	}
@@ -133,15 +137,27 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 		ImageIds: []*string{aws.String(id)},
 	}
 
-	res, err := client.DescribeImages(req)
-	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidAMIID.NotFound" {
-			log.Printf("[DEBUG] %s no longer exists, so we'll drop it from the state", id)
-			d.SetId("")
-			return nil
-		}
+	var res *ec2.DescribeImagesOutput
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		res, err = client.DescribeImages(req)
+		if err != nil {
+			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidAMIID.NotFound" {
+				if d.IsNewResource() {
+					return resource.RetryableError(err)
+				}
 
-		return err
+				log.Printf("[DEBUG] %s no longer exists, so we'll drop it from the state", id)
+				d.SetId("")
+				return nil
+			}
+
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("Unable to find AMI after retries: %s", err)
 	}
 
 	if len(res.Images) != 1 {
@@ -158,7 +174,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 		// before we continue. We should never take this branch in normal
 		// circumstances since we would've waited for availability during
 		// the "Create" step.
-		image, err = resourceAwsAmiWaitForAvailable(id, client)
+		image, err = resourceAwsAmiWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, client)
 		if err != nil {
 			return err
 		}
@@ -181,6 +197,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kernel_id", image.KernelId)
 	d.Set("ramdisk_id", image.RamdiskId)
 	d.Set("root_device_name", image.RootDeviceName)
+	d.Set("root_snapshot_id", amiRootSnapshotId(image))
 	d.Set("sriov_net_support", image.SriovNetSupport)
 	d.Set("virtualization_type", image.VirtualizationType)
 
@@ -290,7 +307,7 @@ func resourceAwsAmiDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Verify that the image is actually removed, if not we need to wait for it to be removed
-	if err := resourceAwsAmiWaitForDestroy(d.Id(), client); err != nil {
+	if err := resourceAwsAmiWaitForDestroy(d.Timeout(schema.TimeoutDelete), d.Id(), client); err != nil {
 		return err
 	}
 
@@ -323,16 +340,16 @@ func AMIStateRefreshFunc(client *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
-func resourceAwsAmiWaitForDestroy(id string, client *ec2.EC2) error {
+func resourceAwsAmiWaitForDestroy(timeout time.Duration, id string, client *ec2.EC2) error {
 	log.Printf("Waiting for AMI %s to be deleted...", id)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"available", "pending", "failed"},
 		Target:     []string{"destroyed"},
 		Refresh:    AMIStateRefreshFunc(client, id),
-		Timeout:    AWSAMIDeleteRetryTimeout,
+		Timeout:    timeout,
 		Delay:      AWSAMIRetryDelay,
-		MinTimeout: AWSAMIRetryTimeout,
+		MinTimeout: AWSAMIRetryMinTimeout,
 	}
 
 	_, err := stateConf.WaitForState()
@@ -343,14 +360,14 @@ func resourceAwsAmiWaitForDestroy(id string, client *ec2.EC2) error {
 	return nil
 }
 
-func resourceAwsAmiWaitForAvailable(id string, client *ec2.EC2) (*ec2.Image, error) {
+func resourceAwsAmiWaitForAvailable(timeout time.Duration, id string, client *ec2.EC2) (*ec2.Image, error) {
 	log.Printf("Waiting for AMI %s to become available...", id)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"pending"},
 		Target:     []string{"available"},
 		Refresh:    AMIStateRefreshFunc(client, id),
-		Timeout:    AWSAMIRetryTimeout,
+		Timeout:    timeout,
 		Delay:      AWSAMIRetryDelay,
 		MinTimeout: AWSAMIRetryMinTimeout,
 	}
@@ -385,10 +402,6 @@ func resourceAwsAmiCommonSchema(computed bool) map[string]*schema.Schema {
 	}
 
 	return map[string]*schema.Schema{
-		"id": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
 		"image_location": {
 			Type:     schema.TypeString,
 			Optional: !computed,
@@ -428,6 +441,10 @@ func resourceAwsAmiCommonSchema(computed bool) map[string]*schema.Schema {
 			Optional: !computed,
 			Computed: computed,
 			ForceNew: !computed,
+		},
+		"root_snapshot_id": {
+			Type:     schema.TypeString,
+			Computed: true,
 		},
 		"sriov_net_support": {
 			Type:     schema.TypeString,

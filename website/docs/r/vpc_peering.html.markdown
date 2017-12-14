@@ -6,7 +6,7 @@ description: |-
   Manage a VPC Peering Connection resource.
 ---
 
-# aws\_vpc\_peering\_connection
+# aws_vpc_peering_connection
 
 Provides a resource to manage a VPC Peering Connection resource.
 
@@ -74,7 +74,7 @@ more information.
 
 The following arguments are supported:
 
-* `peer_owner_id` - (Required) The AWS account ID of the owner of the peer VPC.
+* `peer_owner_id` - (Optional) The AWS account ID of the owner of the peer VPC.
    Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `peer_vpc_id` - (Required) The ID of the VPC with which you are creating the VPC Peering Connection.
 * `vpc_id` - (Required) The ID of the requester VPC.

@@ -6,7 +6,7 @@ description: |-
   Provides an ECR Repository Policy.
 ---
 
-# aws\_ecr\_repository\_policy
+# aws_ecr_repository_policy
 
 Provides an ECR repository policy.
 

@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Scaling Group resource.
 ---
 
-# aws\_autoscaling\_policy
+# aws_autoscaling_policy
 
 Provides an AutoScaling Scaling Policy resource.
 
@@ -44,7 +44,7 @@ resource "aws_autoscaling_group" "bar" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the policy.
-* `autoscaling_group_name` - (Required) The name or ARN of the group.
+* `autoscaling_group_name` - (Required) The name of the autoscaling group.
 * `adjustment_type` - (Required) Specifies whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity`, and `PercentChangeInCapacity`.
 * `policy_type` - (Optional) The policy type, either "SimpleScaling" or "StepScaling". If this value isn't provided, AWS will default to "SimpleScaling."
 

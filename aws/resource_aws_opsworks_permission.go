@@ -20,10 +20,6 @@ func resourceAwsOpsworksPermission() *schema.Resource {
 		Read:   resourceAwsOpsworksPermissionRead,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"allow_ssh": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -104,7 +100,6 @@ func resourceAwsOpsworksPermissionRead(d *schema.ResourceData, meta interface{})
 		if d.Get("user_arn").(string)+d.Get("stack_id").(string) == id {
 			found = true
 			d.SetId(id)
-			d.Set("id", id)
 			d.Set("allow_ssh", permission.AllowSsh)
 			d.Set("allow_sudo", permission.AllowSudo)
 			d.Set("user_arn", permission.IamUserArn)
@@ -128,9 +123,12 @@ func resourceAwsOpsworksSetPermission(d *schema.ResourceData, meta interface{}) 
 	req := &opsworks.SetPermissionInput{
 		AllowSudo:  aws.Bool(d.Get("allow_sudo").(bool)),
 		AllowSsh:   aws.Bool(d.Get("allow_ssh").(bool)),
-		Level:      aws.String(d.Get("level").(string)),
 		IamUserArn: aws.String(d.Get("user_arn").(string)),
 		StackId:    aws.String(d.Get("stack_id").(string)),
+	}
+
+	if v, ok := d.GetOk("level"); ok {
+		req.Level = aws.String(v.(string))
 	}
 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {

@@ -60,9 +60,11 @@ provider "aws" {
 
 You can provide your credentials via the `AWS_ACCESS_KEY_ID` and
 `AWS_SECRET_ACCESS_KEY`, environment variables, representing your AWS
-Access Key and AWS Secret Key, respectively.  The `AWS_DEFAULT_REGION`
-and `AWS_SESSION_TOKEN` environment variables are also used, if
-applicable:
+Access Key and AWS Secret Key, respectively.  Note that setting your
+AWS credentials using either these (or legacy) environment variables
+will override the use of `AWS_SHARED_CREDENTIALS_FILE` and `AWS_PROFILE`.
+The `AWS_DEFAULT_REGION` and `AWS_SESSION_TOKEN` environment variables
+are also used, if applicable:
 
 ```hcl
 provider "aws" {}
@@ -99,6 +101,13 @@ provider "aws" {
 }
 ```
 
+### ECS and CodeBuild Task Roles
+
+If you're running Terraform on ECS or CodeBuild and you have configured an [IAM Task Role](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html),
+Terraform will use the container's Task Role. Terraform looks for the presence of the `AWS_CONTAINER_CREDENTIALS_RELATIVE_URI`
+environment variable that AWS injects when a Task Role is configured. If you have not defined a Task Role for your container
+or CodeBuild job, Terraform will continue to use the [EC2 Role](#ec2-role).
+
 ### EC2 Role
 
 If you're running Terraform from an EC2 instance with IAM Instance Profile
@@ -110,8 +119,16 @@ This is a preferred approach over any other when running in EC2 as you can avoid
 hard coding credentials. Instead these are leased on-the-fly by Terraform
 which reduces the chance of leakage.
 
-You can provide the custom metadata API endpoint via the `AWS_METADATA_ENDPOINT` variable
+You can provide the custom metadata API endpoint via the `AWS_METADATA_URL` variable
 which expects the endpoint URL, including the version, and defaults to `http://169.254.169.254:80/latest`.
+
+The default deadline for the EC2 metadata API endpoint is 100 milliseconds,
+which can be overidden by setting the `AWS_METADATA_TIMEOUT` environment
+variable. The variable expects a positive golang Time.Duration string, which is
+a sequence of decimal numbers and a unit suffix; valid suffixes are `ns`
+(nanoseconds), `us` (microseconds), `ms` (milliseconds), `s` (seconds), `m`
+(minutes), and `h` (hours). Examples of valid inputs: `100ms`, `250ms`, `1s`,
+`2.5s`, `2.5m`, `1m30s`.
 
 ### Assume role
 

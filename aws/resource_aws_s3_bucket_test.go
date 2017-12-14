@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
 	"testing"
+	"text/template"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -51,6 +53,20 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "bucket_domain_name", testAccBucketDomainName(rInt)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3MultiBucket_withTags(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3MultiBucketConfigWithTags(rInt),
 			},
 		},
 	})
@@ -322,7 +338,7 @@ func TestAccAWSS3Bucket_WebsiteRedirect(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
 					testAccCheckAWSS3BucketWebsite(
-						"aws_s3_bucket.bucket", "", "", "", "hashicorp.com"),
+						"aws_s3_bucket.bucket", "", "", "", "hashicorp.com?my=query"),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "website_endpoint", testAccWebsiteEndpoint(rInt)),
 				),
@@ -332,7 +348,7 @@ func TestAccAWSS3Bucket_WebsiteRedirect(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
 					testAccCheckAWSS3BucketWebsite(
-						"aws_s3_bucket.bucket", "", "", "https", "hashicorp.com"),
+						"aws_s3_bucket.bucket", "", "", "https", "hashicorp.com?my=query"),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "website_endpoint", testAccWebsiteEndpoint(rInt)),
 				),
@@ -594,6 +610,20 @@ func TestAccAWSS3Bucket_Lifecycle(t *testing.T) {
 						"aws_s3_bucket.bucket", "lifecycle_rule.1.expiration.2855832418.days", "0"),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "lifecycle_rule.1.expiration.2855832418.expired_object_delete_marker", "false"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.2.id", "id3"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.2.prefix", "path3/"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.2.transition.460947558.days", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.3.id", "id4"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.3.prefix", "path4/"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.3.tags.tagKey", "tagValue"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.3.tags.terraform", "hashicorp"),
 				),
 			},
 			{
@@ -624,6 +654,14 @@ func TestAccAWSS3Bucket_Lifecycle(t *testing.T) {
 						"aws_s3_bucket.bucket", "lifecycle_rule.1.enabled", "false"),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "lifecycle_rule.1.noncurrent_version_expiration.80908210.days", "365"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.2.id", "id3"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.2.prefix", "path3/"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.2.noncurrent_version_transition.3732708140.days", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.2.noncurrent_version_transition.3732708140.storage_class", "GLACIER"),
 				),
 			},
 			{
@@ -1152,6 +1190,74 @@ resource "aws_s3_bucket" "bucket" {
 `, randInt)
 }
 
+func testAccAWSS3MultiBucketConfigWithTags(randInt int) string {
+	t := template.Must(template.New("t1").
+		Parse(`
+resource "aws_s3_bucket" "bucket1" {
+	bucket = "tf-test-bucket-1-{{.GUID}}"
+	acl = "private"
+	force_destroy = true
+	tags {
+		Name = "tf-test-bucket-1-{{.GUID}}"
+		Environment = "{{.GUID}}"
+	}
+}
+
+resource "aws_s3_bucket" "bucket2" {
+	bucket = "tf-test-bucket-2-{{.GUID}}"
+	acl = "private"
+	force_destroy = true
+	tags {
+		Name = "tf-test-bucket-2-{{.GUID}}"
+		Environment = "{{.GUID}}"
+	}
+}
+
+resource "aws_s3_bucket" "bucket3" {
+	bucket = "tf-test-bucket-3-{{.GUID}}"
+	acl = "private"
+	force_destroy = true
+	tags {
+		Name = "tf-test-bucket-3-{{.GUID}}"
+		Environment = "{{.GUID}}"
+	}
+}
+
+resource "aws_s3_bucket" "bucket4" {
+	bucket = "tf-test-bucket-4-{{.GUID}}"
+	acl = "private"
+	force_destroy = true
+	tags {
+		Name = "tf-test-bucket-4-{{.GUID}}"
+		Environment = "{{.GUID}}"
+	}
+}
+
+resource "aws_s3_bucket" "bucket5" {
+	bucket = "tf-test-bucket-5-{{.GUID}}"
+	acl = "private"
+	force_destroy = true
+	tags {
+		Name = "tf-test-bucket-5-{{.GUID}}"
+		Environment = "{{.GUID}}"
+	}
+}
+
+resource "aws_s3_bucket" "bucket6" {
+	bucket = "tf-test-bucket-6-{{.GUID}}"
+	acl = "private"
+	force_destroy = true
+	tags {
+		Name = "tf-test-bucket-6-{{.GUID}}"
+		Environment = "{{.GUID}}"
+	}
+}
+`))
+	var doc bytes.Buffer
+	t.Execute(&doc, struct{ GUID int }{GUID: randInt})
+	return doc.String()
+}
+
 func testAccAWSS3BucketConfigWithRegion(randInt int) string {
 	return fmt.Sprintf(`
 provider "aws" {
@@ -1201,7 +1307,7 @@ resource "aws_s3_bucket" "bucket" {
 	acl = "public-read"
 
 	website {
-		redirect_all_requests_to = "hashicorp.com"
+		redirect_all_requests_to = "hashicorp.com?my=query"
 	}
 }
 `, randInt)
@@ -1214,7 +1320,7 @@ resource "aws_s3_bucket" "bucket" {
 	acl = "public-read"
 
 	website {
-		redirect_all_requests_to = "https://hashicorp.com"
+		redirect_all_requests_to = "https://hashicorp.com?my=query"
 	}
 }
 `, randInt)
@@ -1430,6 +1536,30 @@ resource "aws_s3_bucket" "bucket" {
 			date = "2016-01-12"
 		}
 	}
+	lifecycle_rule {
+		id = "id3"
+		prefix = "path3/"
+		enabled = true
+
+		transition {
+			days = 0
+			storage_class = "GLACIER"
+		}
+	}
+	lifecycle_rule {
+		id = "id4"
+		prefix = "path4/"
+		enabled = true
+
+		tags {
+			"tagKey" = "tagValue"
+			"terraform" = "hashicorp"
+		}
+
+		expiration {
+			date = "2016-01-12"
+		}
+	}
 }
 `, randInt)
 }
@@ -1466,6 +1596,16 @@ resource "aws_s3_bucket" "bucket" {
 
 		noncurrent_version_expiration {
 			days = 365
+		}
+	}
+	lifecycle_rule {
+		id = "id3"
+		prefix = "path3/"
+		enabled = true
+
+		noncurrent_version_transition {
+			days = 0
+			storage_class = "GLACIER"
 		}
 	}
 }

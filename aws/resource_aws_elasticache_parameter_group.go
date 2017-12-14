@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/hashcode"
@@ -29,6 +30,9 @@ func resourceAwsElasticacheParameterGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
+				StateFunc: func(val interface{}) string {
+					return strings.ToLower(val.(string))
+				},
 			},
 			"family": &schema.Schema{
 				Type:     schema.TypeString,
@@ -44,7 +48,6 @@ func resourceAwsElasticacheParameterGroup() *schema.Resource {
 			"parameter": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": &schema.Schema{
@@ -73,7 +76,7 @@ func resourceAwsElasticacheParameterGroupCreate(d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Create Cache Parameter Group: %#v", createOpts)
-	_, err := conn.CreateCacheParameterGroup(&createOpts)
+	resp, err := conn.CreateCacheParameterGroup(&createOpts)
 	if err != nil {
 		return fmt.Errorf("Error creating Cache Parameter Group: %s", err)
 	}
@@ -84,7 +87,7 @@ func resourceAwsElasticacheParameterGroupCreate(d *schema.ResourceData, meta int
 	d.SetPartial("description")
 	d.Partial(false)
 
-	d.SetId(*createOpts.CacheParameterGroupName)
+	d.SetId(*resp.CacheParameterGroup.CacheParameterGroupName)
 	log.Printf("[INFO] Cache Parameter Group ID: %s", d.Id())
 
 	return resourceAwsElasticacheParameterGroupUpdate(d, meta)
@@ -144,24 +147,71 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		// Expand the "parameter" set to aws-sdk-go compat []elasticacheconn.Parameter
-		parameters, err := expandElastiCacheParameters(ns.Difference(os).List())
+		toRemove, err := expandElastiCacheParameters(os.Difference(ns).List())
 		if err != nil {
 			return err
 		}
 
-		if len(parameters) > 0 {
-			modifyOpts := elasticache.ModifyCacheParameterGroupInput{
+		log.Printf("[DEBUG] Parameters to remove: %#v", toRemove)
+
+		toAdd, err := expandElastiCacheParameters(ns.Difference(os).List())
+		if err != nil {
+			return err
+		}
+
+		log.Printf("[DEBUG] Parameters to add: %#v", toAdd)
+
+		// We can only modify 20 parameters at a time, so walk them until
+		// we've got them all.
+		maxParams := 20
+
+		for len(toRemove) > 0 {
+			paramsToModify := make([]*elasticache.ParameterNameValue, 0)
+			if len(toRemove) <= maxParams {
+				paramsToModify, toRemove = toRemove[:], nil
+			} else {
+				paramsToModify, toRemove = toRemove[:maxParams], toRemove[maxParams:]
+			}
+			resetOpts := elasticache.ResetCacheParameterGroupInput{
 				CacheParameterGroupName: aws.String(d.Get("name").(string)),
-				ParameterNameValues:     parameters,
+				ParameterNameValues:     paramsToModify,
 			}
 
-			log.Printf("[DEBUG] Modify Cache Parameter Group: %#v", modifyOpts)
+			log.Printf("[DEBUG] Reset Cache Parameter Group: %s", resetOpts)
+			err := resource.Retry(30*time.Second, func() *resource.RetryError {
+				_, err = conn.ResetCacheParameterGroup(&resetOpts)
+				if err != nil {
+					if isAWSErr(err, "InvalidCacheParameterGroupState", " has pending changes") {
+						return resource.RetryableError(err)
+					}
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+			if err != nil {
+				return fmt.Errorf("Error resetting Cache Parameter Group: %s", err)
+			}
+		}
+
+		for len(toAdd) > 0 {
+			paramsToModify := make([]*elasticache.ParameterNameValue, 0)
+			if len(toAdd) <= maxParams {
+				paramsToModify, toAdd = toAdd[:], nil
+			} else {
+				paramsToModify, toAdd = toAdd[:maxParams], toAdd[maxParams:]
+			}
+			modifyOpts := elasticache.ModifyCacheParameterGroupInput{
+				CacheParameterGroupName: aws.String(d.Get("name").(string)),
+				ParameterNameValues:     paramsToModify,
+			}
+
+			log.Printf("[DEBUG] Modify Cache Parameter Group: %s", modifyOpts)
 			_, err = conn.ModifyCacheParameterGroup(&modifyOpts)
 			if err != nil {
 				return fmt.Errorf("Error modifying Cache Parameter Group: %s", err)
 			}
 		}
+
 		d.SetPartial("parameter")
 	}
 

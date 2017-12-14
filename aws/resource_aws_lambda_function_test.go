@@ -34,6 +34,82 @@ func TestAccAWSLambdaFunction_basic(t *testing.T) {
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, rName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+rName),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_concurrency(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rSt := acctest.RandString(5)
+	rName := fmt.Sprintf("tf_test_%s", rSt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigBasicConcurrency(rName, rSt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, rName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+rName),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "111"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaConfigConcurrencyUpdate(rName, rSt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, rName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+rName),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "222"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_concurrencyCycle(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rSt := acctest.RandString(5)
+	rName := fmt.Sprintf("tf_test_%s", rSt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigBasic(rName, rSt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, rName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+rName),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "0"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaConfigConcurrencyUpdate(rName, rSt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, rName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+rName),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "222"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaConfigBasic(rName, rSt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, rName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+rName),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "0"),
 				),
 			},
 		},
@@ -232,6 +308,39 @@ func TestAccAWSLambdaFunction_DeadLetterConfig(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaFunction_DeadLetterConfigUpdated(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rSt := acctest.RandString(5)
+	rName := fmt.Sprintf("tf_test_%s", rSt)
+	rNameUpdated := fmt.Sprintf("tf_test_%s_updated", rSt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigWithDeadLetterConfig(rName, rSt),
+			},
+			{
+				Config: testAccAWSLambdaConfigWithDeadLetterConfigUpdated(rName, rSt, rNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
+					func(s *terraform.State) error {
+						if !strings.HasSuffix(*conf.Configuration.DeadLetterConfig.TargetArn, ":"+rNameUpdated) {
+							return fmt.Errorf(
+								"Expected DeadLetterConfig.TargetArn %s to have suffix %s", *conf.Configuration.DeadLetterConfig.TargetArn, ":"+rNameUpdated,
+							)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLambdaFunction_nilDeadLetterConfig(t *testing.T) {
 	rSt := acctest.RandString(5)
 	rName := fmt.Sprintf("tf_test_%s", rSt)
@@ -305,6 +414,45 @@ func TestAccAWSLambdaFunction_VPC(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestMatchResourceAttr("aws_lambda_function.lambda_function_test", "vpc_config.0.vpc_id", regexp.MustCompile("^vpc-")),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_VPCUpdate(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rSt := acctest.RandString(5)
+	rName := fmt.Sprintf("tf_test_%s", rSt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigWithVPC(rName, rSt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, rName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+rName),
+					testAccCheckAWSLambdaFunctionVersion(&conf, "$LATEST"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "vpc_config.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "vpc_config.0.security_group_ids.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaConfigWithVPCUpdated(rName, rSt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, rName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+rName),
+					testAccCheckAWSLambdaFunctionVersion(&conf, "$LATEST"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "vpc_config.0.security_group_ids.#", "2"),
 				),
 			},
 		},
@@ -997,6 +1145,32 @@ resource "aws_lambda_function" "lambda_function_test" {
 `, rName)
 }
 
+func testAccAWSLambdaConfigBasicConcurrency(rName, rSt string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(rSt)+`
+resource "aws_lambda_function" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs4.3"
+    reserved_concurrent_executions = 111
+}
+`, rName)
+}
+
+func testAccAWSLambdaConfigConcurrencyUpdate(rName, rSt string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(rSt)+`
+resource "aws_lambda_function" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs4.3"
+    reserved_concurrent_executions = 222
+}
+`, rName)
+}
+
 func testAccAWSLambdaConfigBasicUpdateRuntime(rName, rSt string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(rSt)+`
 resource "aws_lambda_function" "lambda_function_test" {
@@ -1191,6 +1365,31 @@ resource "aws_sns_topic" "lambda_function_test" {
 `, rName, rName)
 }
 
+func testAccAWSLambdaConfigWithDeadLetterConfigUpdated(rName, rSt, rNameUpdated string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(rSt)+`
+resource "aws_lambda_function" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs4.3"
+
+    dead_letter_config {
+        target_arn = "${aws_sns_topic.lambda_function_test_2.arn}"
+    }
+}
+
+resource "aws_sns_topic" "lambda_function_test" {
+	name = "%s"
+}
+
+resource "aws_sns_topic" "lambda_function_test_2" {
+	name = "%s"
+}
+
+`, rName, rName, rNameUpdated)
+}
+
 func testAccAWSLambdaConfigWithNilDeadLetterConfig(rName, rSt string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(rSt)+`
 resource "aws_lambda_function" "lambda_function_test" {
@@ -1221,6 +1420,54 @@ resource "aws_lambda_function" "lambda_function_test" {
         security_group_ids = ["${aws_security_group.sg_for_lambda.id}"]
     }
 }`, rName)
+}
+
+func testAccAWSLambdaConfigWithVPCUpdated(rName, rSt string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(rSt)+`
+resource "aws_lambda_function" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs4.3"
+
+    vpc_config = {
+        subnet_ids = ["${aws_subnet.subnet_for_lambda.id}", "${aws_subnet.subnet_for_lambda_2.id}"]
+        security_group_ids = ["${aws_security_group.sg_for_lambda.id}", "${aws_security_group.sg_for_lambda_2.id}"]
+    }
+}
+
+resource "aws_subnet" "subnet_for_lambda_2" {
+    vpc_id = "${aws_vpc.vpc_for_lambda.id}"
+    cidr_block = "10.0.2.0/24"
+
+    tags {
+        Name = "lambda"
+    }
+}
+
+resource "aws_security_group" "sg_for_lambda_2" {
+  name = "sg_for_lambda_%s"
+  description = "Allow all inbound traffic for lambda test"
+  vpc_id = "${aws_vpc.vpc_for_lambda.id}"
+
+  ingress {
+      from_port = 80
+      to_port = 80
+      protocol = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+      from_port = 0
+      to_port = 0
+      protocol = "-1"
+      cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+
+`, rName, rName)
 }
 
 func testAccAWSLambdaConfigS3(rName, rSt string) string {

@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic MapReduce Cluster Instance Group
 ---
 
-# aws\_emr\_instance\_group
+# aws_emr_instance_group
 
 Provides an Elastic MapReduce Cluster Instance Group configuration.
 See [Amazon Elastic MapReduce Documentation](https://aws.amazon.com/documentation/emr/) for more information.
@@ -29,6 +29,7 @@ resource "aws_emr_instance_group" "task" {
 ## Argument Reference
 
 The following arguments are supported:
+
 * `name` (Required) Human friendly name given to the instance group. Changing this forces a new resource to be created.
 * `cluster_id` (Required) ID of the EMR Cluster to attach to. Changing this forces a new resource to be created.
 * `instance_type` (Required) The EC2 instance type for all instances in the instance group. Changing this forces a new resource to be created.
@@ -37,6 +38,7 @@ The following arguments are supported:
 * `ebs_config` (Optional) One or more `ebs_config` blocks as defined below. Changing this forces a new resource to be created.
 
 `ebs_config` supports the following:
+
 * `iops` - (Optional) The number of I/O operations per second (IOPS) that the volume supports.
 * `size` - (Optional) The volume size, in gibibytes (GiB). This can be a number from 1 - 1024. If the volume type is EBS-optimized, the minimum value is 10.
 * `type` - (Optional) The volume type. Valid options are 'gp2', 'io1' and 'standard'.
@@ -47,7 +49,5 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - The EMR Instance ID
-
 * `running_instance_count` The number of instances currently running in this instance group.
-
 * `status` The current status of the instance group.

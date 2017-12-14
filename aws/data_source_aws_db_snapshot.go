@@ -135,7 +135,7 @@ func dataSourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error
 	snapshotIdentifier, snapshotIdentifierOk := d.GetOk("db_snapshot_identifier")
 
 	if !instanceIdentifierOk && !snapshotIdentifierOk {
-		return fmt.Errorf("One of db_snapshot_indentifier or db_instance_identifier must be assigned")
+		return fmt.Errorf("One of db_snapshot_identifier or db_instance_identifier must be assigned")
 	}
 
 	params := &rds.DescribeDBSnapshotsInput{
@@ -192,10 +192,11 @@ func mostRecentDbSnapshot(snapshots []*rds.DBSnapshot) *rds.DBSnapshot {
 }
 
 func dbSnapshotDescriptionAttributes(d *schema.ResourceData, snapshot *rds.DBSnapshot) error {
-	d.SetId(*snapshot.DBInstanceIdentifier)
+	d.SetId(*snapshot.DBSnapshotIdentifier)
 	d.Set("db_instance_identifier", snapshot.DBInstanceIdentifier)
 	d.Set("db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
 	d.Set("snapshot_type", snapshot.SnapshotType)
+	d.Set("storage_type", snapshot.StorageType)
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
 	d.Set("availability_zone", snapshot.AvailabilityZone)
 	d.Set("db_snapshot_arn", snapshot.DBSnapshotArn)
@@ -211,7 +212,9 @@ func dbSnapshotDescriptionAttributes(d *schema.ResourceData, snapshot *rds.DBSna
 	d.Set("source_region", snapshot.SourceRegion)
 	d.Set("status", snapshot.Status)
 	d.Set("vpc_id", snapshot.VpcId)
-	d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
+	if snapshot.SnapshotCreateTime != nil {
+		d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
+	}
 
 	return nil
 }

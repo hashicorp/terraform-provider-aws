@@ -6,7 +6,7 @@ description: |-
   Connects a custom domain with a deployed API
 ---
 
-# aws\_api\_gateway\_base\_path\_mapping
+# aws_api_gateway_base_path_mapping
 
 Connects a custom domain name registered via `aws_api_gateway_domain_name`
 with a deployed API so that its methods can be called via the
