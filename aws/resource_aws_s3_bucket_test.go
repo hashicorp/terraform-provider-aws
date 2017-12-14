@@ -434,6 +434,28 @@ func TestAccAWSS3Bucket_enableDefaultEncryption_whenTypical(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3Bucket_enableDefaultEncryption_whenAES256IsUsed(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketEnableDefaultEncryptionWithAES256(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("aws_s3_bucket.arbitrary"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "AES256"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSS3Bucket_disableDefaultEncryption_whenDefaultEncryptionIsEnabled(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.Test(t, resource.TestCase{
@@ -1488,6 +1510,21 @@ resource "aws_s3_bucket" "arbitrary" {
   }
 }
 `, randInt, randInt)
+}
+
+func testAccAWSS3BucketEnableDefaultEncryptionWithAES256(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "arbitrary" {
+  bucket = "tf-test-bucket-%d"
+  server_side_encryption_configuration {
+	rule {
+	  apply_server_side_encryption_by_default {
+	  	sse_algorithm     = "AES256"
+	  }
+	}
+  }
+}
+`, randInt)
 }
 
 func testAccAWSS3BucketEnableDefaultEncryptionWithDefaultKey(randInt int) string {
