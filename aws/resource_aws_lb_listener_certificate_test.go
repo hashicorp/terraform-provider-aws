@@ -217,7 +217,7 @@ variable "subnets" {
 }
 
 resource "aws_subnet" "test" {
-  count             = 2
+  count             = "${length(var.subnets)}"
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "${element(var.subnets, count.index)}"
   availability_zone = "${element(data.aws_availability_zones.available.names, count.index)}"

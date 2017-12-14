@@ -68,7 +68,7 @@ func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface
 	for morePages && !found {
 		resp, err := conn.DescribeListenerCertificates(params)
 		if err != nil {
-			return errwrap.Wrapf("Error describing LB Listener Certificates: {{err}}", err)
+			return err
 		}
 
 		for _, cert := range resp.Certificates {
@@ -82,7 +82,7 @@ func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface
 			}
 		}
 
-		if *resp.NextMarker != "" {
+		if resp.NextMarker != nil {
 			params.Marker = resp.NextMarker
 		} else {
 			morePages = false
@@ -109,7 +109,6 @@ func resourceAwsLbListenerCertificateDelete(d *schema.ResourceData, meta interfa
 		},
 	}
 
-	// Returns no useful response.
 	_, err := conn.RemoveListenerCertificates(params)
 	if err != nil {
 		return errwrap.Wrapf("Error removing LB Listener Certificate: {{err}}", err)
