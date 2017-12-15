@@ -34,7 +34,7 @@ which is shown below, and its content is going to be passed directly into the
 `container_definitions` attribute as a string. Please note that this example
 contains only a small subset of the available parameters.
 
-```
+```json
 [
   {
     "name": "first",
