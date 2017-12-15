@@ -566,6 +566,7 @@ resource "aws_rds_cluster" "default" {
 }
 
 resource "aws_rds_cluster_instance" "cluster_instances" {
+  engine                  = "aurora-postgresql"
   identifier              = "tf-cluster-instance-%d"
   cluster_identifier      = "${aws_rds_cluster.default.id}"
   instance_class          = "db.r3.large"
