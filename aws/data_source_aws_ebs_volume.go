@@ -74,6 +74,7 @@ func dataSourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error 
 		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
 	}
 
+	log.Printf("[DEBUG] Reading EBS Volume: %s", params)
 	resp, err := conn.DescribeVolumes(params)
 	if err != nil {
 		return err

@@ -198,7 +198,7 @@ func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 		LoadBalancerNames: []*string{aws.String(lbName)},
 	}
 
-	log.Printf("[DEBUG] Reading ELBs: %#v", input)
+	log.Printf("[DEBUG] Reading ELB: %s", input)
 	resp, err := elbconn.DescribeLoadBalancers(input)
 	if err != nil {
 		return fmt.Errorf("Error retrieving LB: %s", err)

@@ -103,6 +103,7 @@ func dataSourceAwsVpcPeeringConnectionRead(d *schema.ResourceData, meta interfac
 		req.Filters = nil
 	}
 
+	log.Printf("[DEBUG] Reading VPC Peering Connection: %s", req)
 	resp, err := conn.DescribeVpcPeeringConnections(req)
 	if err != nil {
 		return err

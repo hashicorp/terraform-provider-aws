@@ -233,7 +233,7 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		)...)
 	}
 
-	// Perform the lookup
+	log.Printf("[DEBUG] Reading IAM Instance: %s", params)
 	resp, err := conn.DescribeInstances(params)
 	if err != nil {
 		return err

@@ -41,8 +41,6 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 
-	log.Printf("[DEBUG] Reading SSM Parameter: %q", name)
-
 	paramInput := &ssm.GetParametersInput{
 		Names: []*string{
 			aws.String(name),
@@ -50,6 +48,7 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 		WithDecryption: aws.Bool(true),
 	}
 
+	log.Printf("[DEBUG] Reading SSM Parameter: %s", paramInput)
 	resp, err := ssmconn.GetParameters(paramInput)
 
 	if err != nil {
