@@ -176,7 +176,7 @@ boot an example EMR Cluster. It is not meant to display best practices. Please
 use at your own risk.
 
 
-```
+```hcl
 provider "aws" {
   region = "us-west-2"
 }

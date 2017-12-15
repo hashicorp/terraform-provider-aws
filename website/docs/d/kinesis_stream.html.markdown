@@ -15,7 +15,7 @@ For more details, see the [Amazon Kinesis Documentation][1].
 
 ## Example Usage
 
-```
+```hcl
 data "aws_kinesis_stream" "stream" {
   name = "stream-name"
 }

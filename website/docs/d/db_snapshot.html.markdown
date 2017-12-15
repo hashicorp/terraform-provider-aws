@@ -14,7 +14,7 @@ Use this data source to get information about a DB Snapshot for use when provisi
 
 ## Example Usage
 
-```
+```hcl
 resource "aws_db_instance" "default" {
   allocated_storage    = 10
   engine               = "mysql"
