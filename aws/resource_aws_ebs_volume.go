@@ -66,6 +66,10 @@ func resourceAwsEbsVolume() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"termination_snapshot_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -279,6 +283,43 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+
+	tsn := d.Get("termination_snapshot_name")
+	if tsn != "" {
+		log.Println("[DEBUG] Termination snapshot configured - waiting for snapshot to complete before deleting the volume")
+
+		opts := ec2.CreateSnapshotInput{
+			VolumeId:    aws.String(d.Id()),
+			Description: aws.String(tsn.(string)),
+		}
+
+		res, err := conn.CreateSnapshot(&opts)
+		if err != nil {
+			return err
+		}
+
+		tags := ec2.CreateTagsInput{
+			Resources: []*string{res.SnapshotId},
+			Tags: []*ec2.Tag{
+				{
+					Key:   aws.String("Name"),
+					Value: aws.String(tsn.(string)),
+				},
+			},
+		}
+
+		_, err = conn.CreateTags(&tags)
+		if err != nil {
+			return err
+		}
+
+		rd := &schema.ResourceData{}
+		rd.SetId(*res.SnapshotId)
+		err = resourceAwsEbsSnapshotWaitForAvailable(rd, conn)
+		if err != nil {
+			return err
+		}
+	}
 
 	input := &ec2.DeleteVolumeInput{
 		VolumeId: aws.String(d.Id()),
