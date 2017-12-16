@@ -18,11 +18,10 @@ func resourceAwsElastiCacheCommonSchema() map[string]*schema.Schema {
 
 	return map[string]*schema.Schema{
 		"availability_zones": {
-			Type:     schema.TypeSet,
+			Type:     schema.TypeList,
 			Optional: true,
 			ForceNew: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
-			Set:      schema.HashString,
 		},
 		"node_type": {
 			Type:     schema.TypeString,
@@ -289,7 +288,7 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 		req.PreferredAvailabilityZone = aws.String(v.(string))
 	}
 
-	preferred_azs := d.Get("availability_zones").(*schema.Set).List()
+	preferred_azs := d.Get("availability_zones").([]interface{})
 	if len(preferred_azs) > 0 {
 		azs := expandStringList(preferred_azs)
 		req.PreferredAvailabilityZones = azs
