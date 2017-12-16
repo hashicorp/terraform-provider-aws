@@ -18805,8 +18805,8 @@ type Integration struct {
 
 	// The type of the network connection to the integration endpoint. The valid
 	// value is INTERNET for connections through the public routable internet or
-	// VPC_LINK for private connections between API Gateway and an network load
-	// balancer in a VPC. The default value is INTERNET.
+	// VPC_LINK for private connections between API Gateway and a network load balancer
+	// in a VPC. The default value is INTERNET.
 	ConnectionType *string `locationName:"connectionType" type:"string" enum:"ConnectionType"`
 
 	// Specifies how to handle request payload content type conversions. Supported
@@ -19211,6 +19211,15 @@ type Method struct {
 	// method.
 	ApiKeyRequired *bool `locationName:"apiKeyRequired" type:"boolean"`
 
+	// A list authorization scopes configured on the method used with a COGNITO_USER_POOL
+	// authorizer to authorize the method invocation by matching them against the
+	// scopes parsed from the access token in the incoming request. The method invocation
+	// is authorized if any method scopes matches a claimed scope in the access
+	// token. Otherwise, the invocation is not authorized. When the method scope
+	// is configured, the client must provide an access token instead of an identity
+	// token for authorizatinon purposes.
+	AuthorizationScopes []*string `locationName:"authorizationScopes" type:"list"`
+
 	// The method's authorization type. Valid values are NONE for open access, AWS_IAM
 	// for using AWS IAM permissions, CUSTOM for using a custom authorizer, or COGNITO_USER_POOLS
 	// for using a Cognito user pool.
@@ -19332,6 +19341,12 @@ func (s Method) GoString() string {
 // SetApiKeyRequired sets the ApiKeyRequired field's value.
 func (s *Method) SetApiKeyRequired(v bool) *Method {
 	s.ApiKeyRequired = &v
+	return s
+}
+
+// SetAuthorizationScopes sets the AuthorizationScopes field's value.
+func (s *Method) SetAuthorizationScopes(v []*string) *Method {
+	s.AuthorizationScopes = v
 	return s
 }
 
@@ -19895,8 +19910,8 @@ type PutIntegrationInput struct {
 
 	// The type of the network connection to the integration endpoint. The valid
 	// value is INTERNET for connections through the public routable internet or
-	// VPC_LINK for private connections between API Gateway and an network load
-	// balancer in a VPC. The default value is INTERNET.
+	// VPC_LINK for private connections between API Gateway and a network load balancer
+	// in a VPC. The default value is INTERNET.
 	ConnectionType *string `locationName:"connectionType" type:"string" enum:"ConnectionType"`
 
 	// Specifies how to handle request payload content type conversions. Supported
@@ -20271,6 +20286,15 @@ type PutMethodInput struct {
 	// Specifies whether the method required a valid ApiKey.
 	ApiKeyRequired *bool `locationName:"apiKeyRequired" type:"boolean"`
 
+	// A list authorization scopes configured on the method used with a COGNITO_USER_POOL
+	// authorizer to authorize the method invocation by matching them against the
+	// scopes parsed from the access token in the incoming request. The method invocation
+	// is authorized if any method scopes matches a claimed scope in the access
+	// token. Otherwise, the invocation is not authorized. When the method scope
+	// is configured, the client must provide an access token instead of an identity
+	// token for authorizatinon purposes.
+	AuthorizationScopes []*string `locationName:"authorizationScopes" type:"list"`
+
 	// The method's authorization type. Valid values are NONE for open access, AWS_IAM
 	// for using AWS IAM permissions, CUSTOM for using a custom authorizer, or COGNITO_USER_POOLS
 	// for using a Cognito user pool.
@@ -20356,6 +20380,12 @@ func (s *PutMethodInput) Validate() error {
 // SetApiKeyRequired sets the ApiKeyRequired field's value.
 func (s *PutMethodInput) SetApiKeyRequired(v bool) *PutMethodInput {
 	s.ApiKeyRequired = &v
+	return s
+}
+
+// SetAuthorizationScopes sets the AuthorizationScopes field's value.
+func (s *PutMethodInput) SetAuthorizationScopes(v []*string) *PutMethodInput {
+	s.AuthorizationScopes = v
 	return s
 }
 
@@ -22137,7 +22167,7 @@ func (s *UpdateGatewayResponseInput) SetRestApiId(v string) *UpdateGatewayRespon
 //
 // Request
 //
-// This example shows how to get a gateway response of the MISSING_AUTHNETICATION_TOKEN
+// This example shows how to get a gateway response of the MISSING_AUTHENTICATION_TOKEN
 // type.
 //
 // GET /restapis/o81lxisefl/gatewayresponses/MISSING_AUTHENTICATION_TOKEN HTTP/1.1
@@ -23120,7 +23150,7 @@ func (s *UpdateVpcLinkInput) SetVpcLinkId(v string) *UpdateVpcLinkInput {
 // To enable access to a resource in an Amazon Virtual Private Cloud through
 // Amazon API Gateway, you, as an API developer, create a VpcLink resource targeted
 // for one or more network load balancers of the VPC and then integrate an API
-// method with a private integration that uses the VpcLink. The private integraiton
+// method with a private integration that uses the VpcLink. The private integration
 // has an integration type of HTTP or HTTP_PROXY and has a connection type of
 // VPC_LINK. The integration uses the connectionId property to identify the
 // VpcLink used.
