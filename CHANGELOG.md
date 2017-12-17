@@ -35,6 +35,7 @@ BUG FIXES:
 * resource/aws_dynamodb_table: Ensure `ttl` is properly read [GH-2452]
 * resource/aws_lb_target_group: fixes to behavior based on protocol type [GH-2380]
 * resource/aws_mq_broker: Fix crash in hashing function [GH-2598]
+* resource/aws_ebs_volume_attachment: Allow attachments to instances which are stopped [GH-1444]
 
 ## 1.5.0 (November 29, 2017)
 
