@@ -24,6 +24,7 @@ IMPROVEMENTS:
 * resource/aws_elasticsearch_domain: Add `log_publishing_options` [GH-2285]
 * resource/aws_athena_database: Add `force_destroy` field [GH-2363]
 * resource/aws_elasticache_replication_group: Add support for Redis auth, in-transit and at-rest encryption [GH-2090]
+* resource/aws_s3_bucket: Add `server_side_encryption_configuration` block [GH-2472]
 
 BUG FIXES:
 
