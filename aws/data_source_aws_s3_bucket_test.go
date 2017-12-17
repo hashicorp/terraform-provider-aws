@@ -77,6 +77,104 @@ func TestAccDataSourceS3Bucket_whenDefaultEncryptionNotEnabled(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceS3Bucket_whenDefaultEncryptionEnabledWithAES256(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDataSourceS3BucketConfigWithDefaultEncryptionAES256(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"data.aws_s3_bucket.bucket", "server_side_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(
+						"data.aws_s3_bucket.bucket", "server_side_encryption_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(
+						"data.aws_s3_bucket.bucket", "server_side_encryption_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(
+						"data.aws_s3_bucket.bucket", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
+					resource.TestCheckResourceAttr(
+						"data.aws_s3_bucket.bucket", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "AES256"),
+					resource.TestCheckResourceAttr(
+						"data.aws_s3_bucket.bucket", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceS3Bucket_whenDefaultEncryptionEnabledWithAWSKMS(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDataSourceS3BucketConfigWithDefaultEncryptionAWSKMS(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"data.aws_s3_bucket.bucket", "server_side_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(
+						"data.aws_s3_bucket.bucket", "server_side_encryption_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(
+						"data.aws_s3_bucket.bucket", "server_side_encryption_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(
+						"data.aws_s3_bucket.bucket", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
+					resource.TestCheckResourceAttr(
+						"data.aws_s3_bucket.bucket", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "aws:kms"),
+					resource.TestMatchResourceAttr(
+						"data.aws_s3_bucket.bucket", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", regexp.MustCompile("^arn")),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSDataSourceS3BucketConfigWithDefaultEncryptionAWSKMS(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "arbitrary" {
+  description             = "KMS Key for Bucket Testing %d"
+  deletion_window_in_days = 10
+}
+
+resource "aws_s3_bucket" "arbitrary" {
+  bucket = "tf-test-bucket-%d"
+  server_side_encryption_configuration {
+	rule {
+	  apply_server_side_encryption_by_default {
+		kms_master_key_id = "${aws_kms_key.arbitrary.arn}"
+	  	sse_algorithm     = "aws:kms"
+	  }
+	}
+  }
+}
+
+data "aws_s3_bucket" "bucket" {
+  bucket = "${aws_s3_bucket.arbitrary.id}"
+}`, randInt, randInt)
+}
+
+func testAccAWSDataSourceS3BucketConfigWithDefaultEncryptionAES256(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = "tf-test-bucket-%d"
+  server_side_encryption_configuration {
+	rule {
+	  apply_server_side_encryption_by_default {
+	  	sse_algorithm = "AES256"
+	  }
+	}
+  }
+}
+
+data "aws_s3_bucket" "bucket" {
+  bucket = "${aws_s3_bucket.bucket.id}"
+}`, randInt)
+}
+
 func testAccAWSDataSourceS3BucketConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {

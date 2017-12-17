@@ -139,13 +139,21 @@ func bucketEncryption(data *schema.ResourceData, bucket string, conn *s3.S3) err
 	}
 	defaultRuleConfiguration := output.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault
 	defaultRule := make([]map[string]interface{}, 1)
-	defaultRule[0]["kms_master_key_id"] = aws.StringValue(defaultRuleConfiguration.KMSMasterKeyID)
+	defaultRule[0] = make(map[string]interface{})
+	masterKmsKeyId := ""
+	if defaultRuleConfiguration.KMSMasterKeyID != nil {
+		masterKmsKeyId = aws.StringValue(defaultRuleConfiguration.KMSMasterKeyID)
+	}
+	defaultRule[0]["kms_master_key_id"] = masterKmsKeyId
 	defaultRule[0]["sse_algorithm"] = aws.StringValue(defaultRuleConfiguration.SSEAlgorithm)
 
 	encryptionConfiguration := make([]map[string]interface{}, 1)
+	encryptionConfiguration[0] = make(map[string]interface{})
 	encryptionConfiguration[0]["enabled"] = true
-	encryptionConfiguration[0]["rule"] = make([]map[string]interface{}, 1)
-	encryptionConfiguration[0]["rule"].(map[string]interface{})["apply_server_side_encryption_by_default"] = defaultRule
+	rule := make([]map[string]interface{}, 1)
+	encryptionConfiguration[0]["rule"] = rule
+	rule[0] = make(map[string]interface{})
+	rule[0]["apply_server_side_encryption_by_default"] = defaultRule
 
 	data.Set("server_side_encryption_configuration", encryptionConfiguration)
 	return nil
