@@ -36,6 +36,7 @@ BUG FIXES:
 * resource/aws_lb_target_group: fixes to behavior based on protocol type [GH-2380]
 * resource/aws_mq_broker: Fix crash in hashing function [GH-2598]
 * resource/aws_ebs_volume_attachment: Allow attachments to instances which are stopped [GH-1444]
+* resource/aws_ssm_parameter: Path names with a leading '/' no longer generate incorrect ARNs [GH-2604]
 
 ## 1.5.0 (November 29, 2017)
 
