@@ -203,6 +203,21 @@ func resourceAwsInstance() *schema.Resource {
 			"instance_state": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Optional: true,
+				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
+					s := v.(string)
+					validState := map[string]bool{
+						"stopped": true,
+						"running": true,
+					}
+
+					if !validState[s] {
+						errs = append(errs, fmt.Errorf(
+							"%q contains an invalid value, %q. Valid states are: %q and %q.",
+							name, s, "stopped", "running"))
+					}
+					return
+				},
 			},
 
 			"private_dns": {
@@ -453,6 +468,10 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		SecurityGroups:                    instanceOpts.SecurityGroups,
 		SubnetId:                          instanceOpts.SubnetID,
 		UserData:                          instanceOpts.UserData64,
+	}
+
+	if err := validateInstanceState(conn, d); err != nil {
+		return err
 	}
 
 	_, ipv6CountOk := d.GetOk("ipv6_address_count")
@@ -770,6 +789,12 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	d.Partial(true)
 
+	if !d.IsNewResource() {
+		if err := validateInstanceState(conn, d); err != nil {
+			return err
+		}
+	}
+
 	restricted := meta.(*AWSClient).IsGovCloud() || meta.(*AWSClient).IsChinaCloud()
 
 	if d.HasChange("tags") {
@@ -928,28 +953,12 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("instance_type") && !d.IsNewResource() {
-		log.Printf("[INFO] Stopping Instance %q for instance_type change", d.Id())
-		_, err := conn.StopInstances(&ec2.StopInstancesInput{
-			InstanceIds: []*string{aws.String(d.Id())},
-		})
-
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
-			Target:     []string{"stopped"},
-			Refresh:    InstanceStateRefreshFunc(conn, d.Id(), ""),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf(
-				"Error waiting for instance (%s) to stop: %s", d.Id(), err)
+		if err := awsStopInstance(conn, d, "instance_type"); err != nil {
+			return err
 		}
 
 		log.Printf("[INFO] Modifying instance type %s", d.Id())
-		_, err = conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
+		_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
 			InstanceId: aws.String(d.Id()),
 			InstanceType: &ec2.AttributeValue{
 				Value: aws.String(d.Get("instance_type").(string)),
@@ -959,25 +968,8 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		log.Printf("[INFO] Starting Instance %q after instance_type change", d.Id())
-		_, err = conn.StartInstances(&ec2.StartInstancesInput{
-			InstanceIds: []*string{aws.String(d.Id())},
-		})
-
-		stateConf = &resource.StateChangeConf{
-			Pending:    []string{"pending", "stopped"},
-			Target:     []string{"running"},
-			Refresh:    InstanceStateRefreshFunc(conn, d.Id(), "terminated"),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf(
-				"Error waiting for instance (%s) to become ready: %s",
-				d.Id(), err)
+		if err := awsStartInstance(conn, d, "instance_type"); err != nil {
+			return err
 		}
 	}
 
@@ -1024,6 +1016,20 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("instance_state") {
+		instance_state := d.Get("instance_state").(string)
+		if instance_state == "stopped" {
+			if err := awsStopInstance(conn, d, "instance_state"); err != nil {
+				return err
+			}
+		}
+		if instance_state == "running" {
+			if err := awsStartInstance(conn, d, "instance_state"); err != nil {
+				return err
+			}
+		}
+	}
+
 	// TODO(mitchellh): wait for the attributes we modified to
 	// persist the change...
 
@@ -1035,7 +1041,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if err := awsTerminateInstance(conn, d.Id(), d); err != nil {
+	if err := awsTerminateInstance(conn, d); err != nil {
 		return err
 	}
 
@@ -1680,7 +1686,55 @@ func buildAwsInstanceOpts(
 	return opts, nil
 }
 
-func awsTerminateInstance(conn *ec2.EC2, id string, d *schema.ResourceData) error {
+func awsStartInstance(conn *ec2.EC2, d *schema.ResourceData, f string) error {
+	log.Printf("[INFO] Starting Instance %q after %q change", d.Id(), f)
+	_, err := conn.StartInstances(&ec2.StartInstancesInput{
+		InstanceIds: []*string{aws.String(d.Id())},
+	})
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"pending", "stopped"},
+		Target:     []string{"running"},
+		Refresh:    InstanceStateRefreshFunc(conn, d.Id(), "terminated"),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf(
+			"Error waiting for instance (%s) to become ready: %s",
+			d.Id(), err)
+	}
+	return nil
+}
+
+func awsStopInstance(conn *ec2.EC2, d *schema.ResourceData, f string) error {
+	log.Printf("[INFO] Stopping Instance %q for %q change", d.Id(), f)
+	_, err := conn.StopInstances(&ec2.StopInstancesInput{
+		InstanceIds: []*string{aws.String(d.Id())},
+	})
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
+		Target:     []string{"stopped"},
+		Refresh:    InstanceStateRefreshFunc(conn, d.Id(), ""),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf(
+			"Error waiting for instance (%s) to stop: %s", d.Id(), err)
+	}
+	return nil
+}
+
+func awsTerminateInstance(conn *ec2.EC2, d *schema.ResourceData) error {
+	id := d.Id()
 	log.Printf("[INFO] Terminating instance: %s", id)
 	req := &ec2.TerminateInstancesInput{
 		InstanceIds: []*string{aws.String(id)},
@@ -1752,4 +1806,26 @@ func getAwsInstanceVolumeIds(conn *ec2.EC2, d *schema.ResourceData) ([]*string, 
 	}
 
 	return volumeIds, nil
+}
+
+func validateInstanceState(conn *ec2.EC2, d *schema.ResourceData) error {
+	log.Printf("[DEBUG] Checking whether instance can be stopped.")
+	imageId, imageIdOk := d.GetOk("ami")
+	instanceState, instanceStateOk := d.GetOk("instance_state")
+	if imageIdOk && instanceStateOk && instanceState == "stopped" {
+		resp, err := conn.DescribeImages(&ec2.DescribeImagesInput{
+			ImageIds: []*string{aws.String(imageId.(string))},
+		})
+		if err != nil {
+			return err
+		}
+		if len(resp.Images) == 0 {
+			return fmt.Errorf("The image id '%s' does not exist.", imageId)
+		}
+		image := resp.Images[0]
+		if *image.RootDeviceType == ec2.DeviceTypeInstanceStore {
+			return fmt.Errorf("AMIs with an 'instance-store' root device cannot be stopped.")
+		}
+	}
+	return nil
 }
