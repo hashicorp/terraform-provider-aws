@@ -616,6 +616,16 @@ func validateS3BucketReplicationRulePrefix(v interface{}, k string) (ws []string
 	return
 }
 
+func validateS3BucketServerSideEncryptionAlgorithm(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if value != s3.ServerSideEncryptionAes256 && value != s3.ServerSideEncryptionAwsKms {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of %q or %q", k, s3.ServerSideEncryptionAwsKms, s3.ServerSideEncryptionAes256))
+	}
+
+	return
+}
+
 func validateS3BucketReplicationDestinationStorageClass(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if value != s3.StorageClassStandard && value != s3.StorageClassStandardIa && value != s3.StorageClassReducedRedundancy {

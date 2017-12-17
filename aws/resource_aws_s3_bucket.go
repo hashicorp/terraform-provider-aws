@@ -415,8 +415,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 													Optional: true,
 												},
 												"sse_algorithm": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validateS3BucketServerSideEncryptionAlgorithm,
 												},
 											},
 										},
@@ -1001,7 +1002,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		encryption := encryptionResponse.(*s3.GetBucketEncryptionOutput)
 		log.Printf("[DEBUG] S3 Bucket: %s, read encryption configuration: %v", d.Id(), encryption)
 		if c := encryption.ServerSideEncryptionConfiguration; c != nil {
-			if err := d.Set("server_side_encryption_configuration", flatternAwsS3ServerSideEncryptionConfiguration(c)); err != nil {
+			if err := d.Set("server_side_encryption_configuration", flattenAwsS3ServerSideEncryptionConfiguration(c)); err != nil {
 				log.Printf("[DEBUG] Error setting server side encryption configuration: %s", err)
 				return err
 			}
@@ -1868,7 +1869,7 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 	return nil
 }
 
-func flatternAwsS3ServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionConfiguration) []map[string]interface{} {
+func flattenAwsS3ServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionConfiguration) []map[string]interface{} {
 	var encryptionConfiguration []map[string]interface{}
 	rules := make([]interface{}, 0, len(c.Rules))
 	for _, v := range c.Rules {
