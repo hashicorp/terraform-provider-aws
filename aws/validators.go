@@ -1465,8 +1465,8 @@ func validateCognitoUserPoolEmailVerificationMessage(v interface{}, k string) (w
 		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
 	}
 
-	if len(value) > 2000 {
-		es = append(es, fmt.Errorf("%q cannot be longer than 2000 characters", k))
+	if len(value) > 20000 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 20000 characters", k))
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`).MatchString(value) {

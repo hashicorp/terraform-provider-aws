@@ -2327,7 +2327,7 @@ func TestValidateCognitoUserPoolEmailVerificationMessage(t *testing.T) {
 		"Foo {####}",
 		"{####} Bar",
 		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
-		"{####}" + strings.Repeat("W", 1994), // = 2000
+		"{####}" + strings.Repeat("W", 19994), // = 20000
 	}
 
 	for _, s := range validValues {
@@ -2340,7 +2340,7 @@ func TestValidateCognitoUserPoolEmailVerificationMessage(t *testing.T) {
 	invalidValues := []string{
 		"Foo",
 		"{###}",
-		"{####}" + strings.Repeat("W", 1995), // > 2000
+		"{####}" + strings.Repeat("W", 19995), // > 20000
 	}
 
 	for _, s := range invalidValues {
