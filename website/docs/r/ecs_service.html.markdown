@@ -100,7 +100,7 @@ Guide](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-
 `network_configuration` support the following:
 * `subnets` - (Required) The subnets associated with the task or service.
 * `security_groups` - (Optional) The security groups associated with the task or service. If you do not specify a security group, the default security group for the VPC is used.
-For more information, see [Task Networking](http://docs.aws.amazon.com/AmazonECS/latest/developerguidetask-networking.html)
+For more information, see [Task Networking](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-networking.html)
 
 ## Attributes Reference
 
