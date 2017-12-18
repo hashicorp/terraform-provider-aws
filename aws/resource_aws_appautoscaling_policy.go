@@ -292,6 +292,7 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 	if p == nil {
+		log.Printf("[WARN] Application AutoScaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
