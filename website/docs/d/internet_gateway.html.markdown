@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific Internet Gateway
 ---
 
-# Data Source: aws\_internet\_gateway
+# Data Source: aws_internetgateway
 
 `aws_internet_gateway` provides details about a specific Internet Gateway.
 

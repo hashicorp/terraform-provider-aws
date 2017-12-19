@@ -6,7 +6,7 @@ description: |-
   Generates an IAM policy document in JSON format
 ---
 
-# Data Source: aws\_iam\_policy\_document
+# Data Source: aws_iampolicy_document
 
 Generates an IAM policy document in JSON format.
 

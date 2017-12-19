@@ -6,7 +6,7 @@ description: |-
     Provides details about an ecs task definition
 ---
 
-# Data Source: aws\_ecs\_task\_definition
+# Data Source: aws_ecstask_definition
 
 The ECS task definition data source allows access to details of
 a specific AWS ECS task definition.

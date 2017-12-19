@@ -6,7 +6,7 @@ description: |-
   Get information on an RDS Database Instance.
 ---
 
-# Data Source: aws\_db\_instance
+# Data Source: aws_dbinstance
 
 Use this data source to get information about an RDS instance
 

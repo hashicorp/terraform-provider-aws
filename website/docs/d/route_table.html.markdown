@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific Route Table
 ---
 
-# Data Source: aws\_route\_table
+# Data Source: aws_routetable
 
 `aws_route_table` provides details about a specific Route Table.
 

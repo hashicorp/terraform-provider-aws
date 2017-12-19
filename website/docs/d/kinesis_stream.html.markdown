@@ -6,7 +6,7 @@ description: |-
   Provides a Kinesis Stream data source.
 ---
 
-# Data Source: aws\_kinesis\_stream
+# Data Source: aws_kinesisstream
 
 Use this data source to get information about a Kinesis Stream for use in other
 resources.

@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific VPC endpoint.
 ---
 
-# Data Source: aws\_vpc\_endpoint
+# Data Source: aws_vpcendpoint
 
 The VPC Endpoint data source provides details about
 a specific VPC endpoint.

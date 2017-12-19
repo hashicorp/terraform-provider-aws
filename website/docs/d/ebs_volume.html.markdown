@@ -6,7 +6,7 @@ description: |-
   Get information on an EBS volume.
 ---
 
-# Data Source: aws\_ebs\_volume
+# Data Source: aws_ebsvolume
 
 Use this data source to get information about an EBS volume for use in other
 resources.

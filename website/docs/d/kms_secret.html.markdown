@@ -6,7 +6,7 @@ description: |-
     Provides secret data encrypted with the KMS service
 ---
 
-# Data Source: aws\_kms\_secret
+# Data Source: aws_kmssecret
 
 The KMS secret data source allows you to use data encrypted with the AWS KMS
 service within your resource definitions.
