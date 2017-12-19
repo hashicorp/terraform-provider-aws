@@ -68,6 +68,7 @@ func resourceAwsVpcEndpointSubnetAssociationRead(d *schema.ResourceData, meta in
 	vpce, err := findResourceVpcEndpoint(conn, endpointId)
 	if err != nil {
 		if isAWSErr(err, "InvalidVpcEndpointId.NotFound", "") {
+			log.Printf("[WARN] Vpc Endpoint (%s) not found, removing Vpc Endpoint/Subnet association (%s) from state", endpointId, d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -83,7 +84,7 @@ func resourceAwsVpcEndpointSubnetAssociationRead(d *schema.ResourceData, meta in
 		}
 	}
 	if !found {
-		// The association no longer exists.
+		log.Printf("[WARN] Vpc Endpoint/Subnet association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}

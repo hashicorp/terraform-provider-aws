@@ -68,6 +68,7 @@ func resourceAwsVpcEndpointRouteTableAssociationRead(d *schema.ResourceData, met
 	vpce, err := findResourceVpcEndpoint(conn, endpointId)
 	if err != nil {
 		if isAWSErr(err, "InvalidVpcEndpointId.NotFound", "") {
+			log.Printf("[WARN] VPC Endpoint (%s) not found, removing VPC Endpoint/Route Table association (%s) from state", endpointId, d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -83,7 +84,7 @@ func resourceAwsVpcEndpointRouteTableAssociationRead(d *schema.ResourceData, met
 		}
 	}
 	if !found {
-		// The association no longer exists.
+		log.Printf("[WARN] VPC Endpoint/Route Table association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
