@@ -52,14 +52,14 @@ func dataSourceAwsRedshiftServiceAccountRead(d *schema.ResourceData, meta interf
 
 	if accid, ok := redshiftServiceAccountPerRegionMap[region]; ok {
 		d.SetId(accid)
-
 		arn := arn.ARN{
 			Partition: meta.(*AWSClient).partition,
 			Service:   "iam",
 			AccountID: accid,
 			Resource:  "user/logs",
-		}
-		d.Set("arn", arn.String())
+		}.String()
+		d.Set("arn", arn)
+
 		return nil
 	}
 

@@ -87,8 +87,8 @@ func resourceAwsCloudFrontOriginAccessIdentityRead(d *schema.ResourceData, meta 
 		Service:   "iam",
 		AccountID: "cloudfront",
 		Resource:  fmt.Sprintf("user/CloudFront Origin Access Identity %s", *resp.CloudFrontOriginAccessIdentity.Id),
-	}
-	d.Set("iam_arn", iamArn.String())
+	}.String()
+	d.Set("iam_arn", iamArn)
 	return nil
 }
 

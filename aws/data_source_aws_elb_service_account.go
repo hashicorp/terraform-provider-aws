@@ -54,14 +54,13 @@ func dataSourceAwsElbServiceAccountRead(d *schema.ResourceData, meta interface{}
 
 	if accid, ok := elbAccountIdPerRegionMap[region]; ok {
 		d.SetId(accid)
-
 		arn := arn.ARN{
 			Partition: meta.(*AWSClient).partition,
 			Service:   "iam",
 			AccountID: accid,
 			Resource:  "root",
-		}
-		d.Set("arn", arn.String())
+		}.String()
+		d.Set("arn", arn)
 
 		return nil
 	}

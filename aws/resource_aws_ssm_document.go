@@ -226,8 +226,8 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		Service:   "ssm",
 		Region:    meta.(*AWSClient).region,
 		Resource:  fmt.Sprintf("document/%s", *doc.Name),
-	}
-	if err := d.Set("arn", arn.String()); err != nil {
+	}.String()
+	if err := d.Set("arn", arn); err != nil {
 		return fmt.Errorf("[DEBUG] Error setting arn error: %#v", err)
 	}
 

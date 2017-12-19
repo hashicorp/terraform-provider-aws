@@ -92,8 +92,8 @@ func resourceAwsSesDomainIdentityRead(d *schema.ResourceData, meta interface{}) 
 		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("identity/%s", d.Id()),
-	}
-	d.Set("arn", arn.String())
+	}.String()
+	d.Set("arn", arn)
 	d.Set("verification_token", verificationAttrs.VerificationToken)
 	return nil
 }

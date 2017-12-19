@@ -1113,8 +1113,8 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		Partition: meta.(*AWSClient).partition,
 		Service:   "s3",
 		Resource:  d.Id(),
-	}
-	d.Set("arn", arn.String())
+	}.String()
+	d.Set("arn", arn)
 
 	return nil
 }

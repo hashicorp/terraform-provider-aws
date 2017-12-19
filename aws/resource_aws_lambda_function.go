@@ -535,8 +535,8 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		Region:    meta.(*AWSClient).region,
 		AccountID: "lambda",
 		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", *function.FunctionArn),
-	}
-	d.Set("invoke_arn", invokeArn.String())
+	}.String()
+	d.Set("invoke_arn", invokeArn)
 
 	if getFunctionOutput.Concurrency != nil {
 		d.Set("reserved_concurrent_executions", getFunctionOutput.Concurrency.ReservedConcurrentExecutions)
