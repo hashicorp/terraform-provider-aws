@@ -251,7 +251,7 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 			"rebooting", "renaming", "resetting-master-credentials",
 			"starting", "upgrading"},
 		Target:     []string{"available"},
-		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
+		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -267,7 +267,7 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	db, err := resourceAwsDbInstanceRetrieve(d, meta)
+	db, err := resourceAwsDbInstanceRetrieve(d.Id(), meta.(*AWSClient).rdsconn)
 	// Errors from this helper are always reportable
 	if err != nil {
 		return fmt.Errorf("[WARN] Error on retrieving RDS Cluster Instance (%s): %s", d.Id(), err)
@@ -422,7 +422,7 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 				"rebooting", "renaming", "resetting-master-credentials",
 				"starting", "upgrading"},
 			Target:     []string{"available"},
-			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
+			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -462,7 +462,7 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"modifying", "deleting"},
 		Target:     []string{},
-		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
+		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting

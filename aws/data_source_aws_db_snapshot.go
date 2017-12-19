@@ -152,6 +152,7 @@ func dataSourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error
 		params.DBSnapshotIdentifier = aws.String(snapshotIdentifier.(string))
 	}
 
+	log.Printf("[DEBUG] Reading DB Snapshot: %s", params)
 	resp, err := conn.DescribeDBSnapshots(params)
 	if err != nil {
 		return err

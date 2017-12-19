@@ -60,6 +60,7 @@ The following arguments are supported:
 * `cluster_config` - (Optional) Cluster configuration of the domain, see below.
 * `snapshot_options` - (Optional) Snapshot related options, see below.
 * `vpc_options` - (Optional) VPC related options, see below. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-vpc-limitations)).
+* `log_publishing_options` - (Optional) Options for publishing slow logs to CloudWatch Logs.
 * `elasticsearch_version` - (Optional) The version of ElasticSearch to deploy. Defaults to `1.5`
 * `tags` - (Optional) A mapping of tags to assign to the resource
 
@@ -95,6 +96,11 @@ Security Groups and Subnets referenced in these attributes must all be within th
 * `automated_snapshot_start_hour` - (Required) Hour during which the service takes an automated daily
 	snapshot of the indices in the domain.
 
+**log_publishing_options** supports the following attribute:
+
+* `log_type` - (Required) A type of Elasticsearch log. Valid values: INDEX_SLOW_LOGS, SEARCH_SLOW_LOGS
+* `cloudwatch_log_group_arn` - (Required) ARN of the Cloudwatch log group to which log needs to be published.
+* `enabled` - (Optional, Default: true) Specifies whether given log publishing option is enabled or not.
 
 ## Attributes Reference
 

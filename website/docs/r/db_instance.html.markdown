@@ -6,7 +6,7 @@ description: |-
   Provides an RDS instance resource.
 ---
 
-# aws\_db\_instance
+# aws_db_instance
 
 Provides an RDS instance resource.  A DB instance is an isolated database
 environment in the cloud.  A DB instance can contain multiple user-created

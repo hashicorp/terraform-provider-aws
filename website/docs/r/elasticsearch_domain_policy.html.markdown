@@ -6,7 +6,7 @@ description: |-
   Provides an ElasticSearch Domain.
 ---
 
-# aws\_elasticsearch\_domain\_policy
+# aws_elasticsearch_domain_policy
 
 Allows setting policy to an ElasticSearch domain while referencing domain attributes (e.g. ARN)
 

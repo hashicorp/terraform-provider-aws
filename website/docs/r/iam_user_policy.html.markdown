@@ -6,7 +6,7 @@ description: |-
   Provides an IAM policy attached to a user.
 ---
 
-# aws\_iam\_user\_policy
+# aws_iam_user_policy
 
 Provides an IAM policy attached to a user.
 

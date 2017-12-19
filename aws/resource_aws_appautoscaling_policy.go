@@ -262,6 +262,9 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 		var err error
 		resp, err = conn.PutScalingPolicy(&params)
 		if err != nil {
+			if isAWSErr(err, "FailedResourceAccessException", "Rate exceeded") {
+				return resource.RetryableError(err)
+			}
 			if isAWSErr(err, "FailedResourceAccessException", "is not authorized to perform") {
 				return resource.RetryableError(err)
 			}
@@ -289,6 +292,7 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 	if p == nil {
+		log.Printf("[WARN] Application AutoScaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}

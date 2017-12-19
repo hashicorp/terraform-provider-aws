@@ -6,7 +6,7 @@ description: |-
   Provides an RDS Cluster Resource Instance
 ---
 
-# aws\_rds\_cluster\_instance
+# aws_rds_cluster_instance
 
 Provides an RDS Cluster Resource Instance. A Cluster Instance Resource defines
 attributes that are specific to a single instance in a [RDS Cluster][3],

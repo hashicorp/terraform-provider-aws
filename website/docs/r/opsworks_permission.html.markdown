@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks permission resource.
 ---
 
-# aws\_opsworks\_permission
+# aws_opsworks_permission
 
 Provides an OpsWorks permission resource.
 

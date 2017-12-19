@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 
@@ -98,6 +99,7 @@ func dataSourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interfac
 	}
 
 	var metadatas = []*iam.ServerCertificateMetadata{}
+	log.Printf("[DEBUG] Reading IAM Server Certificate")
 	err := iamconn.ListServerCertificatesPages(&iam.ListServerCertificatesInput{}, func(p *iam.ListServerCertificatesOutput, lastPage bool) bool {
 		for _, cert := range p.ServerCertificateMetadataList {
 			if matcher(cert) {

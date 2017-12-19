@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific Internet Gateway
 ---
 
-# aws\_internet\_gateway
+# aws_internet_gateway
 
 `aws_internet_gateway` provides details about a specific Internet Gateway.
 

@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Scaling Group resource.
 ---
 
-# aws\_autoscaling\_policy
+# aws_autoscaling_policy
 
 Provides an AutoScaling Scaling Policy resource.
 

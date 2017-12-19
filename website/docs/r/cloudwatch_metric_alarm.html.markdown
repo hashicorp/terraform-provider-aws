@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Scaling Group resource.
 ---
 
-# aws\_cloudwatch\_metric\_alarm
+# aws_cloudwatch_metric_alarm
 
 Provides a CloudWatch Metric Alarm resource.
 

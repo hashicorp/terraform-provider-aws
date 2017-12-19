@@ -34,6 +34,82 @@ func TestAccAWSLambdaFunction_basic(t *testing.T) {
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, rName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+rName),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_concurrency(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rSt := acctest.RandString(5)
+	rName := fmt.Sprintf("tf_test_%s", rSt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigBasicConcurrency(rName, rSt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, rName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+rName),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "111"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaConfigConcurrencyUpdate(rName, rSt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, rName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+rName),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "222"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_concurrencyCycle(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rSt := acctest.RandString(5)
+	rName := fmt.Sprintf("tf_test_%s", rSt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigBasic(rName, rSt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, rName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+rName),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "0"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaConfigConcurrencyUpdate(rName, rSt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, rName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+rName),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "222"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaConfigBasic(rName, rSt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", rName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, rName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+rName),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "0"),
 				),
 			},
 		},
@@ -1065,6 +1141,32 @@ resource "aws_lambda_function" "lambda_function_test" {
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
     runtime = "nodejs4.3"
+}
+`, rName)
+}
+
+func testAccAWSLambdaConfigBasicConcurrency(rName, rSt string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(rSt)+`
+resource "aws_lambda_function" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs4.3"
+    reserved_concurrent_executions = 111
+}
+`, rName)
+}
+
+func testAccAWSLambdaConfigConcurrencyUpdate(rName, rSt string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(rSt)+`
+resource "aws_lambda_function" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs4.3"
+    reserved_concurrent_executions = 222
 }
 `, rName)
 }

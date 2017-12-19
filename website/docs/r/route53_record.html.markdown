@@ -6,7 +6,7 @@ description: |-
   Provides a Route53 record resource.
 ---
 
-# aws\_route53\_record
+# aws_route53_record
 
 Provides a Route53 record resource.
 

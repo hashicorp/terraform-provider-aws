@@ -6,13 +6,13 @@ description: |-
   Provides an DB Instance.
 ---
 
-# aws\_db\_snapshot
+# aws_db_snapshot
 
 Creates a Snapshot of an DB Instance.
 
 ## Example Usage
 
-```
+```hcl
 resource "aws_db_instance" "bar" {
 	allocated_storage = 10
 	engine = "MySQL"

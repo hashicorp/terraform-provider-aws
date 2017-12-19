@@ -366,8 +366,8 @@ resource "aws_emr_cluster" "test" {
   release_label        = "emr-5.0.0"
   applications         = ["Hadoop", "Hive"]
   log_uri              = "s3n://terraform/testlog/"
-  master_instance_type = "m4.large"
-  core_instance_type   = "m1.small"
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
   core_instance_count  = 1
   service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
 
@@ -678,8 +678,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  master_instance_type = "m3.xlarge"
-  core_instance_type   = "m3.xlarge"
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
   core_instance_count  = 1
 
   tags {
@@ -985,8 +985,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  master_instance_type = "m3.xlarge"
-  core_instance_type   = "m3.xlarge"
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
   core_instance_count  = 1
 
   security_configuration = "${aws_emr_security_configuration.foo.name}"
@@ -1338,7 +1338,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   instance_group = [
     {
       instance_role = "CORE"
-      instance_type = "m3.xlarge"
+      instance_type = "c4.large"
       instance_count = "1"
       ebs_config {
         size = "40"
@@ -1349,7 +1349,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     },
     {
       instance_role = "MASTER"
-      instance_type = "m3.xlarge"
+      instance_type = "c4.large"
       instance_count = 1
     }
   ]
@@ -1657,8 +1657,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  master_instance_type = "m3.xlarge"
-  core_instance_type   = "m3.xlarge"
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
   core_instance_count  = 1
 
   tags {
@@ -1964,8 +1964,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  master_instance_type = "m3.xlarge"
-  core_instance_type   = "m3.xlarge"
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
   core_instance_count  = 1
 
   tags {
@@ -2271,8 +2271,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  master_instance_type = "m3.xlarge"
-  core_instance_type   = "m3.xlarge"
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
   core_instance_count  = 1
 
   tags {
@@ -2577,8 +2577,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  master_instance_type = "m3.xlarge"
-  core_instance_type   = "m3.xlarge"
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
   core_instance_count  = 1
 
   tags {
@@ -2920,8 +2920,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   termination_protection = false
   keep_job_flow_alive_when_no_steps = true
 
-  master_instance_type = "m1.medium"
-  core_instance_type   = "m1.medium"
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
   core_instance_count  = 1
 
   log_uri = "s3://${aws_s3_bucket.test.bucket}/"
