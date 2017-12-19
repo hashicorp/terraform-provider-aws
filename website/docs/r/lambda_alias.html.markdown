@@ -6,7 +6,7 @@ description: |-
   Creates a Lambda function alias.
 ---
 
-# aws\_lambda\_alias
+# aws_lambda_alias
 
 Creates a Lambda function alias. Creates an alias that points to the specified Lambda function version.
 

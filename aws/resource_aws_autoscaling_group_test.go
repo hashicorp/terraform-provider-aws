@@ -1663,6 +1663,7 @@ resource "aws_lb_target_group" "test" {
     healthy_threshold = "2"
     timeout           = "2"
     interval          = "5"
+    matcher           = "200"
   }
 
   tags {

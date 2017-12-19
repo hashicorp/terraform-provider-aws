@@ -2720,6 +2720,33 @@ func TestValidateCognitoRoleMappingsType(t *testing.T) {
 	}
 }
 
+func TestValidateCognitoRoles(t *testing.T) {
+	validValues := []map[string]interface{}{
+		map[string]interface{}{"authenticated": "hoge"},
+		map[string]interface{}{"unauthenticated": "hoge"},
+		map[string]interface{}{"authenticated": "hoge", "unauthenticated": "hoge"},
+	}
+
+	for _, s := range validValues {
+		errors := validateCognitoRoles(s, "roles")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito Roles: %v", s, errors)
+		}
+	}
+
+	invalidValues := []map[string]interface{}{
+		map[string]interface{}{},
+		map[string]interface{}{"invalid": "hoge"},
+	}
+
+	for _, s := range invalidValues {
+		errors := validateCognitoRoles(s, "roles")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito Roles: %v", s, errors)
+		}
+	}
+}
+
 func TestValidateDxConnectionBandWidth(t *testing.T) {
 	validValues := []string{
 		"1Gbps",
@@ -2769,6 +2796,46 @@ func TestValidateCognitoUserPoolReplyEmailAddress(t *testing.T) {
 		_, errors := validateCognitoUserPoolReplyEmailAddress(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Cognito User Pool Reply Email Address", v)
+		}
+	}
+}
+
+func TestResourceAWSElastiCacheReplicationGroupAuthTokenValidation(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "this-is-valid!#%()^",
+			ErrCount: 0,
+		},
+		{
+			Value:    "this-is-not",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid\"",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid@",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid/",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(129),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateAwsElastiCacheReplicationGroupAuthToken(tc.Value, "aws_elasticache_replication_group_auth_token")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the ElastiCache Replication Group AuthToken to trigger a validation error")
 		}
 	}
 }

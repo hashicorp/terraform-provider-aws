@@ -6,7 +6,7 @@ description: |-
   Get information on an EBS Snapshot.
 ---
 
-# aws\_ebs\_snapshot
+# aws_ebs_snapshot
 
 Use this data source to get information about an EBS Snapshot for use when provisioning EBS Volumes
 

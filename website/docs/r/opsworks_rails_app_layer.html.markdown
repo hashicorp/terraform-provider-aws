@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks Ruby on Rails application layer resource.
 ---
 
-# aws\_opsworks\_rails\_app\_layer
+# aws_opsworks_rails_app_layer
 
 Provides an OpsWorks Ruby on Rails application layer resource.
 

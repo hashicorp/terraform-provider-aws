@@ -6,7 +6,7 @@ description: |-
   Provides a CodeDeploy deployment config.
 ---
 
-# aws\_codedeploy\_deployment\_config
+# aws_codedeploy_deployment_config
 
 Provides a CodeDeploy deployment config for an application
 

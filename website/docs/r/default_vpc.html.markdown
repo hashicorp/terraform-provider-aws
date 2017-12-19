@@ -6,7 +6,7 @@ description: |-
   Manage the default VPC resource.
 ---
 
-# aws\_default\_vpc
+# aws_default_vpc
 
 Provides a resource to manage the [default AWS VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html)
 in the current region.
@@ -23,7 +23,7 @@ into management.
 
 Basic usage with tags:
 
-```
+```hcl
 resource "aws_default_vpc" "default" {
 	tags {
 		Name = "Default VPC"

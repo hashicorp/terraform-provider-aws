@@ -6,7 +6,7 @@ description: |-
   Provides an SES event destination
 ---
 
-# aws\_ses\_event_destination
+# aws_ses_event_destination
 
 Provides an SES event destination
 

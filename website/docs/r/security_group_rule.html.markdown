@@ -6,7 +6,7 @@ description: |-
   Provides an security group rule resource.
 ---
 
-# aws\_security\_group\_rule
+# aws_security_group_rule
 
 Provides a security group rule resource. Represents a single `ingress` or
 `egress` group rule, which can be added to external Security Groups.

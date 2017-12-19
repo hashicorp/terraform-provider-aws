@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic IP resource.
 ---
 
-# aws\_eip
+# aws_eip
 
 Provides an Elastic IP resource.
 
@@ -78,7 +78,7 @@ resource "aws_eip" "bar" {
 
   instance                  = "${aws_instance.foo.id}"
   associate_with_private_ip = "10.0.0.12"
-  depends_on                = ["${aws_internet_gateway.gw}"]
+  depends_on                = ["aws_internet_gateway.gw"]
 }
 ```
 
