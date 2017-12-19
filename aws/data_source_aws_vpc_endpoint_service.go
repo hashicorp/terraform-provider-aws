@@ -82,7 +82,7 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 		ServiceNames: aws.StringSlice([]string{serviceName}),
 	}
 
-	log.Printf("[DEBUG] Reading VPC Endpoint Service: %s", req)
+	log.Printf("[DEBUG] Reading VPC Endpoint Services: %s", req)
 	resp, err := conn.DescribeVpcEndpointServices(req)
 	if err != nil {
 		return fmt.Errorf("Error fetching VPC Endpoint Services: %s", err)

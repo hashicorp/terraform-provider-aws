@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -63,6 +64,7 @@ func resourceAwsVpcEndpointServiceAllowedPrincipalRead(d *schema.ResourceData, m
 	principals, err := findResourceVpcEndpointServiceAllowedPrincipals(conn, svcId)
 	if err != nil {
 		if isAWSErr(err, "InvalidVpcEndpointServiceId.NotFound", "") {
+			log.Printf("[WARN]VPC Endpoint Service (%s) not found, removing VPC Endpoint Service allowed principal (%s) from state", svcId, d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -78,7 +80,7 @@ func resourceAwsVpcEndpointServiceAllowedPrincipalRead(d *schema.ResourceData, m
 		}
 	}
 	if !found {
-		// The allowed principal no longer exists.
+		log.Printf("[WARN] VPC Endpoint Service allowed principal (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
