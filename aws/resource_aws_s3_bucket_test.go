@@ -412,6 +412,74 @@ func TestAccAWSS3Bucket_WebsiteRoutingRules(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3Bucket_enableDefaultEncryption_whenTypical(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketEnableDefaultEncryption(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("aws_s3_bucket.arbitrary"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "aws:kms"),
+					resource.TestMatchResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", regexp.MustCompile("^arn")),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3Bucket_enableDefaultEncryption_whenAES256IsUsed(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketEnableDefaultEncryptionWithAES256(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("aws_s3_bucket.arbitrary"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "AES256"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3Bucket_disableDefaultEncryption_whenDefaultEncryptionIsEnabled(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketEnableDefaultEncryptionWithDefaultKey(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("aws_s3_bucket.arbitrary"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketDisableDefaultEncryption(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("aws_s3_bucket.arbitrary"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "server_side_encryption_configuration.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 // Test TestAccAWSS3Bucket_shouldFailNotFound is designed to fail with a "plan
 // not empty" error in Terraform, to check against regresssions.
 // See https://github.com/hashicorp/terraform/pull/2925
@@ -1419,6 +1487,65 @@ func testAccAWSS3BucketDestroyedConfig(randInt int) string {
 resource "aws_s3_bucket" "bucket" {
 	bucket = "tf-test-bucket-%d"
 	acl = "public-read"
+}
+`, randInt)
+}
+
+func testAccAWSS3BucketEnableDefaultEncryption(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "arbitrary" {
+  description             = "KMS Key for Bucket Testing %d"
+  deletion_window_in_days = 10
+}
+
+resource "aws_s3_bucket" "arbitrary" {
+  bucket = "tf-test-bucket-%d"
+  server_side_encryption_configuration {
+	rule {
+	  apply_server_side_encryption_by_default {
+		kms_master_key_id = "${aws_kms_key.arbitrary.arn}"
+	  	sse_algorithm     = "aws:kms"
+	  }
+	}
+  }
+}
+`, randInt, randInt)
+}
+
+func testAccAWSS3BucketEnableDefaultEncryptionWithAES256(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "arbitrary" {
+  bucket = "tf-test-bucket-%d"
+  server_side_encryption_configuration {
+	rule {
+	  apply_server_side_encryption_by_default {
+	  	sse_algorithm     = "AES256"
+	  }
+	}
+  }
+}
+`, randInt)
+}
+
+func testAccAWSS3BucketEnableDefaultEncryptionWithDefaultKey(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "arbitrary" {
+  bucket = "tf-test-bucket-%d"
+  server_side_encryption_configuration {
+	rule {
+	  apply_server_side_encryption_by_default {
+	  	sse_algorithm     = "aws:kms"
+	  }
+	}
+  }
+}
+`, randInt)
+}
+
+func testAccAWSS3BucketDisableDefaultEncryption(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "arbitrary" {
+  bucket = "tf-test-bucket-%d"
 }
 `, randInt)
 }

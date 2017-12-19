@@ -6,7 +6,7 @@ description: |-
   Provides a VPN connection connected to a VPC. These objects can be connected to customer gateways, and allow you to establish tunnels between your network and the VPC.
 ---
 
-# aws\_vpn\_connection
+# aws_vpn_connection
 
 
 Provides a VPN connection connected to a VPC. These objects can be connected to customer gateways, and allow you to establish tunnels between your network and the VPC.

@@ -6,7 +6,7 @@ description: |-
   Provides a Spot Fleet Request resource.
 ---
 
-# aws\_spot\_fleet\_request
+# aws_spot_fleet_request
 
 Provides an EC2 Spot Fleet Request resource. This allows a fleet of Spot
 instances to be requested on the Spot market.

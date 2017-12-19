@@ -57,8 +57,6 @@ func dataSourceAwsVpcEndpoint() *schema.Resource {
 func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	log.Printf("[DEBUG] Reading VPC Endpoints.")
-
 	req := &ec2.DescribeVpcEndpointsInput{}
 
 	if id, ok := d.GetOk("id"); ok {
@@ -77,6 +75,7 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 		req.Filters = nil
 	}
 
+	log.Printf("[DEBUG] Reading VPC Endpoint: %s", req)
 	resp, err := conn.DescribeVpcEndpoints(req)
 	if err != nil {
 		return err

@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic File System (EFS) resource.
 ---
 
-# aws\_efs\_file\_system
+# aws_efs_file_system
 
 Provides an Elastic File System (EFS) resource.
 

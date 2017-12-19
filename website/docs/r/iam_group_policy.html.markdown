@@ -6,7 +6,7 @@ description: |-
   Provides an IAM policy attached to a group.
 ---
 
-# aws\_iam\_group\_policy
+# aws_iam_group_policy
 
 Provides an IAM policy attached to a group.
 

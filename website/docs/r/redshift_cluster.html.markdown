@@ -4,7 +4,7 @@ page_title: "AWS: aws_redshift_cluster"
 sidebar_current: "docs-aws-resource-redshift-cluster"
 ---
 
-# aws\_redshift\_cluster
+# aws_redshift_cluster
 
 Provides a Redshift Cluster Resource.
 

@@ -6,7 +6,7 @@ description: |-
   Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis and DynamoDB.
 ---
 
-# aws\_lambda\_event\_source\_mapping
+# aws_lambda_event_source_mapping
 
 Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis and DynamoDB.
 

@@ -181,6 +181,48 @@ func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsTaskDefinition_Fargate(t *testing.T) {
+	var conf ecs.TaskDefinition
+	familyName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionFargate(familyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.fargate", &conf),
+					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "requires_compatibilities.#", "1"),
+					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "cpu", "256"),
+					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "memory", "512"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskDefinition_ExecutionRole(t *testing.T) {
+	var conf ecs.TaskDefinition
+	familyName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionExecutionRole(familyName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.fargate", &conf),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckEcsTaskDefinitionRecreated(t *testing.T,
 	before, after *ecs.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -551,6 +593,99 @@ TASK_DEFINITION
   }
 }
 `, familyName)
+}
+
+func testAccAWSEcsTaskDefinitionFargate(familyName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "fargate" {
+  family                   = "%s"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+}
+`, familyName)
+}
+
+func testAccAWSEcsTaskDefinitionExecutionRole(familyName string, rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role" {
+  name = "test-role-%d"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "policy" {
+  name        = "test-policy-%d"
+  description = "A test policy"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  role       = "${aws_iam_role.role.name}"
+  policy_arn = "${aws_iam_policy.policy.arn}"
+}
+
+resource "aws_ecs_task_definition" "fargate" {
+  family                   = "%s"
+  execution_role_arn       = "${aws_iam_role.role.arn}"
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+}
+`, rInt, rInt, familyName)
 }
 
 var testAccAWSEcsTaskDefinitionWithScratchVolume = `

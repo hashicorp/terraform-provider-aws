@@ -6,7 +6,7 @@ description: |-
   Attaches a Managed IAM Policy to an IAM user
 ---
 
-# aws\_iam\_user\_policy\_attachment
+# aws_iam_user_policy_attachment
 
 Attaches a Managed IAM Policy to an IAM user
 

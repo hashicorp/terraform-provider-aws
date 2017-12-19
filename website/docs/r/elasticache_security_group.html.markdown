@@ -6,7 +6,7 @@ description: |-
   Provides an ElastiCache Security Group to control access to one or more cache clusters.
 ---
 
-# aws\_elasticache\_security\_<wbr>group
+# aws_elasticache_security_group
 
 Provides an ElastiCache Security Group to control access to one or more cache
 clusters.
@@ -45,3 +45,11 @@ The following attributes are exported:
 * `description`
 * `name`
 * `security_group_names`
+
+## Import
+
+ElastiCache Security Groups can be imported by name, e.g.
+
+```
+$ terraform import aws_elasticache_security_group.my_ec_security_group ec-security-group-1
+```
