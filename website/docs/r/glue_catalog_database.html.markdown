@@ -29,13 +29,13 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+The following additional attributes are exported:
 
 * `create_time` - The time at which the metadata database was created in the catalog.
 
 ## Import
 
-Glue Catalog Databasess can be imported using the `name`, e.g.
+Glue Catalog Databases can be imported using the `name`, e.g.
 
 ```
 $ terraform import aws_glue_catalog_database.database my_database
