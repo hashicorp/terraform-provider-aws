@@ -28,8 +28,8 @@ func dataSourceAwsBillingServiceAccountRead(d *schema.ResourceData, meta interfa
 		Service:   "iam",
 		AccountID: billingAccountId,
 		Resource:  "root",
-	}
-	d.Set("arn", arn.String())
+	}.String()
+	d.Set("arn", arn)
 
 	return nil
 }

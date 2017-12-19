@@ -68,8 +68,8 @@ func dataSourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		Partition: meta.(*AWSClient).partition,
 		Service:   "s3",
 		Resource:  bucket,
-	}
-	d.Set("arn", arn.String())
+	}.String()
+	d.Set("arn", arn)
 	d.Set("bucket_domain_name", bucketDomainName(bucket))
 
 	if err := bucketLocation(d, bucket, conn); err != nil {

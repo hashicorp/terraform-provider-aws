@@ -128,8 +128,8 @@ func resourceAwsApiGatewayDeploymentRead(d *schema.ResourceData, meta interface{
 		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("%s/%s", restApiId, stageName),
-	}
-	d.Set("execution_arn", executionArn.String())
+	}.String()
+	d.Set("execution_arn", executionArn)
 
 	if err := d.Set("created_date", out.CreatedDate.Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Error setting created_date: %s", err)

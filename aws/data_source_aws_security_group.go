@@ -98,8 +98,8 @@ func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 		Region:    meta.(*AWSClient).region,
 		AccountID: *sg.OwnerId,
 		Resource:  fmt.Sprintf("security-group/%s", *sg.GroupId),
-	}
-	d.Set("arn", arn.String())
+	}.String()
+	d.Set("arn", arn)
 
 	return nil
 }
