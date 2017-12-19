@@ -1,4 +1,9 @@
 ## 1.6.1 (Unreleased)
+
+BUG FIXES:
+
+* resource/cognito_user_pool: Update Cognito email message length to 20,000 [GH-2692]
+
 ## 1.6.0 (December 18, 2017)
 
 FEATURES:
