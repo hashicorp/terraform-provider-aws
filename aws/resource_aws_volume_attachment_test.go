@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -62,6 +64,62 @@ func TestAccAWSVolumeAttachment_skipDestroy(t *testing.T) {
 	})
 }
 
+func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
+	var i ec2.Instance
+	var v ec2.Volume
+
+	stopInstance := func() {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		_, err := conn.StopInstances(&ec2.StopInstancesInput{
+			InstanceIds: []*string{aws.String(*i.InstanceId)},
+		})
+
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"pending", "running", "stopping"},
+			Target:     []string{"stopped"},
+			Refresh:    InstanceStateRefreshFunc(conn, *i.InstanceId, ""),
+			Timeout:    10 * time.Minute,
+			Delay:      10 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			t.Fatalf("Error waiting for instance(%s) to stop: %s", *i.InstanceId, err)
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVolumeAttachmentConfigInstanceOnly,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"aws_instance.web", &i),
+				),
+			},
+			{
+				PreConfig: stopInstance,
+				Config:    testAccVolumeAttachmentConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"aws_volume_attachment.ebs_att", "device_name", "/dev/sdh"),
+					testAccCheckInstanceExists(
+						"aws_instance.web", &i),
+					testAccCheckVolumeExists(
+						"aws_ebs_volume.example", &v),
+					testAccCheckVolumeAttachmentExists(
+						"aws_volume_attachment.ebs_att", &i, &v),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVolumeAttachmentExists(n string, i *ec2.Instance, v *ec2.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -95,6 +153,17 @@ func testAccCheckVolumeAttachmentDestroy(s *terraform.State) error {
 	}
 	return nil
 }
+
+const testAccVolumeAttachmentConfigInstanceOnly = `
+resource "aws_instance" "web" {
+	ami = "ami-21f78e11"
+  availability_zone = "us-west-2a"
+	instance_type = "t1.micro"
+	tags {
+		Name = "HelloWorld"
+	}
+}
+`
 
 const testAccVolumeAttachmentConfig = `
 resource "aws_instance" "web" {

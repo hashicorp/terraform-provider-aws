@@ -6,7 +6,7 @@ description: |-
   Provides a DMS (Data Migration Service) endpoint resource.
 ---
 
-# aws\_dms\_endpoint
+# aws_dms_endpoint
 
 Provides a DMS (Data Migration Service) endpoint resource. DMS endpoints can be created, updated, deleted, and imported.
 

@@ -6,7 +6,7 @@ description: |-
   Provides an ElastiCache Cluster resource.
 ---
 
-# aws\_elasticache\_cluster
+# aws_elasticache_cluster
 
 Provides an ElastiCache Cluster resource.
 

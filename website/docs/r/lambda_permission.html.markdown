@@ -6,7 +6,7 @@ description: |-
   Creates a Lambda function permission.
 ---
 
-# aws\_lambda\_permission
+# aws_lambda_permission
 
 Creates a Lambda permission to allow external sources invoking the Lambda function
 (e.g. CloudWatch Event Rule, SNS or S3).

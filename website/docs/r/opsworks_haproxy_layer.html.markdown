@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks HAProxy layer resource.
 ---
 
-# aws\_opsworks\_haproxy\_layer
+# aws_opsworks_haproxy_layer
 
 Provides an OpsWorks haproxy layer resource.
 

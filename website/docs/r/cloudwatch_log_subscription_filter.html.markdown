@@ -6,7 +6,7 @@ description: |-
   Provides a CloudWatch Logs subscription filter.
 ---
 
-# aws\_cloudwatch\_log\_subscription\_filter
+# aws_cloudwatch_log_subscription_filter
 
 Provides a CloudWatch Logs subscription filter resource.
 

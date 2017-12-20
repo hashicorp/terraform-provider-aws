@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Method Settings, e.g. logging or monitoring.
 ---
 
-# aws\_api\_gateway\_method\_settings
+# aws_api_gateway_method_settings
 
 Provides an API Gateway Method Settings, e.g. logging or monitoring.
 

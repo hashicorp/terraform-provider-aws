@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -20,6 +21,8 @@ func TestAccAWSEcsCluster_basic(t *testing.T) {
 				Config: testAccAWSEcsCluster,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists("aws_ecs_cluster.foo"),
+					resource.TestMatchResourceAttr("aws_ecs_cluster.foo", "arn",
+						regexp.MustCompile("^arn:aws:ecs:[a-z0-9-]+:[0-9]{12}:cluster/red-grapes$")),
 				),
 			},
 		},

@@ -6,7 +6,7 @@ description: |-
   Provides a resource to manage AWS EMR Security Configurations
 ---
 
-# aws\_emr\_security\_configuration
+# aws_emr_security_configuration
 
 Provides a resource to manage AWS EMR Security Configurations
 

@@ -6,7 +6,7 @@ description: |-
   Provides a VPC DHCP Options Association resource.
 ---
 
-# aws\_vpc\_dhcp\_options\_<wbr>association
+# aws_vpc_dhcp_options_association
 
 Provides a VPC DHCP Options Association resource.
 

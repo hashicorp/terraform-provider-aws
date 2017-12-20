@@ -7,7 +7,7 @@ description: |-
   connection to AWS.
 ---
 
-# aws\_caller\_identity
+# aws_caller_identity
 
 Use this data source to get the access to the effective Account ID, User ID, and ARN in
 which Terraform is authorized.

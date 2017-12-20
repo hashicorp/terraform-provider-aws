@@ -6,7 +6,7 @@ description: |-
   Manage a VPC Peering Connection resource.
 ---
 
-# aws\_vpc\_peering\_connection
+# aws_vpc_peering_connection
 
 Provides a resource to manage a VPC Peering Connection resource.
 

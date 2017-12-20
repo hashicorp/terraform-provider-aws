@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Beanstalk Environment Resource
 ---
 
-# aws\_elastic\_beanstalk\_<wbr>environment
+# aws_elastic_beanstalk_environment
 
 Provides an Elastic Beanstalk Environment Resource. Elastic Beanstalk allows
 you to deploy and manage applications in the AWS cloud without worrying about

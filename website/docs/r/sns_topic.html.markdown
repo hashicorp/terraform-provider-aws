@@ -6,7 +6,7 @@ description: |-
   Provides an SNS topic resource.
 ---
 
-# aws\_sns\_topic
+# aws_sns_topic
 
 Provides an SNS topic resource
 
