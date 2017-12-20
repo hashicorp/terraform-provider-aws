@@ -79,7 +79,7 @@ func resourceAwsVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error
 		if _, ok := d.GetOk("auto_accept"); ok {
 			return fmt.Errorf("peer_region cannot be set whilst auto_accept is true when creating a vpc peering connection")
 		}
-		createOpts.SetPeerRegion(v.(string))
+		createOpts.PeerRegion = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] VPC Peering Create options: %#v", createOpts)
