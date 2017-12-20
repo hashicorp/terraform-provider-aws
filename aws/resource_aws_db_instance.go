@@ -431,6 +431,123 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
+	} else if _, ok := d.GetOk("backup_s3"); ok {
+		opts := rds.RestoreDBInstanceFromDBSnapshotInput{
+			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
+			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
+			S3BucketName:            aws.String(d.Get("backup_s3").Get("bucket_name").(string)),
+			S3Prefix:                aws.String(d.Get("backup_s3").Get("bucket_prefix").(string)),
+			S3IngestionRoleArn:      aws.String(d.Get("backup_s3").Get("role_arn").(string)),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+			Tags:                    tags,
+			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+		}
+
+		if attr, ok := d.GetOk("name"); ok {
+			// "Note: This parameter [DBName] doesn't apply to the MySQL, PostgreSQL, or MariaDB engines."
+			// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html
+			switch strings.ToLower(d.Get("engine").(string)) {
+			case "mysql", "postgres", "mariadb":
+				// skip
+			default:
+				opts.DBName = aws.String(attr.(string))
+			}
+		}
+
+		if attr, ok := d.GetOk("availability_zone"); ok {
+			opts.AvailabilityZone = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
+			opts.DBSubnetGroupName = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("engine"); ok {
+			opts.Engine = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("iops"); ok {
+			opts.Iops = aws.Int64(int64(attr.(int)))
+		}
+
+		if attr, ok := d.GetOk("license_model"); ok {
+			opts.LicenseModel = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("multi_az"); ok {
+			opts.MultiAZ = aws.Bool(attr.(bool))
+		}
+
+		if attr, ok := d.GetOk("option_group_name"); ok {
+			opts.OptionGroupName = aws.String(attr.(string))
+
+		}
+
+		if attr, ok := d.GetOk("port"); ok {
+			opts.Port = aws.Int64(int64(attr.(int)))
+		}
+
+		if attr, ok := d.GetOk("tde_credential_arn"); ok {
+			opts.TdeCredentialArn = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("storage_type"); ok {
+			opts.StorageType = aws.String(attr.(string))
+		}
+
+		log.Printf("[DEBUG] DB Instance restore from snapshot configuration: %s", opts)
+		_, err := conn.RestoreDBInstanceFromDBSnapshot(&opts)
+		if err != nil {
+			return fmt.Errorf("Error creating DB Instance: %s", err)
+		}
+
+		var sgUpdate bool
+		var passwordUpdate bool
+
+		if _, ok := d.GetOk("password"); ok {
+			passwordUpdate = true
+		}
+
+		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
+			sgUpdate = true
+		}
+		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
+			sgUpdate = true
+		}
+		if sgUpdate || passwordUpdate {
+			log.Printf("[INFO] DB is restoring from snapshot with default security, but custom security should be set, will now update after snapshot is restored!")
+
+			// wait for instance to get up and then modify security
+			d.SetId(d.Get("identifier").(string))
+
+			log.Printf("[INFO] DB Instance ID: %s", d.Id())
+
+			log.Println(
+				"[INFO] Waiting for DB Instance to be available")
+
+			stateConf := &resource.StateChangeConf{
+				Pending: []string{"creating", "backing-up", "modifying", "resetting-master-credentials",
+					"maintenance", "renaming", "rebooting", "upgrading"},
+				Target:     []string{"available"},
+				Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
+				Timeout:    d.Timeout(schema.TimeoutCreate),
+				MinTimeout: 10 * time.Second,
+				Delay:      30 * time.Second, // Wait 30 secs before starting
+			}
+
+			// Wait, catching any errors
+			_, err := stateConf.WaitForState()
+			if err != nil {
+				return err
+			}
+
+			err = resourceAwsDbInstanceUpdate(d, meta)
+			if err != nil {
+				return err
+			}
+
+		}
 	} else if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := rds.RestoreDBInstanceFromDBSnapshotInput{
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
