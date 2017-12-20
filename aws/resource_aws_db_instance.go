@@ -236,8 +236,9 @@ func resourceAwsDbInstance() *schema.Resource {
 						},
 						"bucket_prefix": {
 							Type:     schema.TypeString,
-							Required: true,
-							Optional: false,
+							Required: false,
+							Optional: true,
+                            Default: "",
 						},
 						"ingestion_role": {
 							Type:     schema.TypeString,
