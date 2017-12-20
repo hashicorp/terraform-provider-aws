@@ -1,12 +1,12 @@
 package aws
 
 import (
+	"fmt"
+	"os"
 	"testing"
 
-	"fmt"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
-	"os"
 )
 
 func TestAccAWSKinesisFirehoseDeliveryStream_importBasic(t *testing.T) {

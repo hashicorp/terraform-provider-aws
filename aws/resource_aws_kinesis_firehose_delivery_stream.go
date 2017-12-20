@@ -1,12 +1,12 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"bytes"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
