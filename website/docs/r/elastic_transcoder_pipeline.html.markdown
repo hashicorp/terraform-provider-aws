@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Transcoder pipeline resource.
 ---
 
-# aws\_elastictranscoder\_pipeline
+# aws_elastictranscoder_pipeline
 
 Provides an Elastic Transcoder pipeline resource.
 

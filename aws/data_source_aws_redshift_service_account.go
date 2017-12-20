@@ -29,7 +29,7 @@ func dataSourceAwsRedshiftServiceAccount() *schema.Resource {
 		Read: dataSourceAwsRedshiftServiceAccountRead,
 
 		Schema: map[string]*schema.Schema{
-			"region": &schema.Schema{
+			"region": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

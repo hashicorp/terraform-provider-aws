@@ -6,7 +6,7 @@ description: |-
   Provides a CodeCommit Repository Resource.
 ---
 
-# aws\_codecommit\_repository
+# aws_codecommit_repository
 
 Provides a CodeCommit Repository Resource.
 

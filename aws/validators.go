@@ -616,6 +616,16 @@ func validateS3BucketReplicationRulePrefix(v interface{}, k string) (ws []string
 	return
 }
 
+func validateS3BucketServerSideEncryptionAlgorithm(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if value != s3.ServerSideEncryptionAes256 && value != s3.ServerSideEncryptionAwsKms {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of %q or %q", k, s3.ServerSideEncryptionAwsKms, s3.ServerSideEncryptionAes256))
+	}
+
+	return
+}
+
 func validateS3BucketReplicationDestinationStorageClass(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if value != s3.StorageClassStandard && value != s3.StorageClassStandardIa && value != s3.StorageClassReducedRedundancy {
@@ -1455,8 +1465,8 @@ func validateCognitoUserPoolEmailVerificationMessage(v interface{}, k string) (w
 		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
 	}
 
-	if len(value) > 2000 {
-		es = append(es, fmt.Errorf("%q cannot be longer than 2000 characters", k))
+	if len(value) > 20000 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 20000 characters", k))
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`).MatchString(value) {
@@ -1982,5 +1992,18 @@ func validateDxConnectionBandWidth(v interface{}, k string) (ws []string, errors
 	}
 
 	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validBandWidth, val))
+	return
+}
+
+func validateAwsElastiCacheReplicationGroupAuthToken(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) < 16) || (len(value) > 128) {
+		errors = append(errors, fmt.Errorf(
+			"%q must contain from 16 to 128 alphanumeric characters or symbols (excluding @, \", and /)", k))
+	}
+	if !regexp.MustCompile(`^[^@"\/]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters or symbols (excluding @, \", and /) allowed in %q", k))
+	}
 	return
 }

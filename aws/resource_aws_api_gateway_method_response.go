@@ -123,7 +123,7 @@ func resourceAwsApiGatewayMethodResponseCreate(d *schema.ResourceData, meta inte
 func resourceAwsApiGatewayMethodResponseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigateway
 
-	log.Printf("[DEBUG] Reading API Gateway Method %s", d.Id())
+	log.Printf("[DEBUG] Reading API Gateway Method Response %s", d.Id())
 	methodResponse, err := conn.GetMethodResponse(&apigateway.GetMethodResponseInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get("resource_id").(string)),
@@ -132,13 +132,14 @@ func resourceAwsApiGatewayMethodResponseRead(d *schema.ResourceData, meta interf
 	})
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NotFoundException" {
+			log.Printf("[WARN] API Gateway Response (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 		return err
 	}
 
-	log.Printf("[DEBUG] Received API Gateway Method: %s", methodResponse)
+	log.Printf("[DEBUG] Received API Gateway Method Response: %s", methodResponse)
 	d.Set("response_models", aws.StringValueMap(methodResponse.ResponseModels))
 	d.Set("response_parameters", aws.BoolValueMap(methodResponse.ResponseParameters))
 	d.Set("response_parameters_in_json", aws.BoolValueMap(methodResponse.ResponseParameters))

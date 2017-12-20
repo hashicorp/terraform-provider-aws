@@ -6,7 +6,7 @@ description: |-
   Provides an ECS task definition.
 ---
 
-# aws\_ecs\_task\_definition
+# aws_ecs_task_definition
 
 Provides an ECS task definition to be used in `aws_ecs_service`.
 
@@ -34,7 +34,7 @@ which is shown below, and its content is going to be passed directly into the
 `container_definitions` attribute as a string. Please note that this example
 contains only a small subset of the available parameters.
 
-```
+```json
 [
   {
     "name": "first",
@@ -76,6 +76,9 @@ single valid JSON document. Please note that you should only provide values that
 definition document. For a detailed description of what parameters are available, see the [Task Definition Parameters]
 (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html) section from the
 official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide).
+
+~> **NOTE**: Proper escaping is required for JSON field values containing quotes (`"`) such as `environment` values. If directly setting the JSON, they should be escaped as `\"` in the JSON,  e.g. `"value": "I \"love\" escaped quotes"`. If using a Terraform variable value, they should be escaped as `\\\"` in the variable, e.g. `value = "I \\\"love\\\" escaped quotes"` in the variable and `"value": "${var.myvariable}"` in the JSON.
+
 * `task_role_arn` - (Optional) The ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
 * `execution_role_arn` - (Optional) The Amazon Resource Name (ARN) of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
 * `network_mode` - (Optional) The Docker networking mode to use for the containers in the task. The valid values are `none`, `bridge`, `awsvpc`, and `host`.

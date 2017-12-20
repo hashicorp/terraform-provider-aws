@@ -30,8 +30,8 @@ The following arguments are supported:
 * `device_configuration` (Optional) - The configuration for the [user pool's device tracking](#device-configuration).
 * `email_configuration` (Optional) - The [Email Configuration](#email-configuration).
 * `name` - (Required) The name of the user pool.
-* `email_verification_subject` - (Optional) A string representing the email verification subject.
-* `email_verification_message` - (Optional) A string representing the email verification message. Must contain the `{####}` placeholder.
+* `email_verification_subject` - (Optional) A string representing the email verification subject. **NOTE:** - If `email_verification_subject` and `verification_message_template.email_subject` are specified and the values are different, either one is prioritized and updated.
+* `email_verification_message` - (Optional) A string representing the email verification message. Must contain the `{####}` placeholder. **NOTE:** - If `email_verification_message` and `verification_message_template.email_message` are specified and the values are different, either one is prioritized and updated.
 * `lambda_config` (Optional) - A container for the AWS [Lambda triggers](#lambda-configuration) associated with the user pool.
 * `mfa_configuration` - (Optional, Default: OFF) Set to enable multi-factor authentication. Must be one of the following values (ON, OFF, OPTIONAL)
 * `password_policy` (Optional) - A container for information about the [user pool password policy](#password-policy).
@@ -101,8 +101,8 @@ The following arguments are supported:
 
 ##### String Attribute Constraints
 
-  * `max_value` (Optional) - The maximum length of an attribute value of the string type.
-  * `min_value` (Optional) - The minimum length of an attribute value of the string type.
+  * `max_length` (Optional) - The maximum length of an attribute value of the string type.
+  * `min_length` (Optional) - The minimum length of an attribute value of the string type.
 
 #### SMS Configuration
 
@@ -112,9 +112,9 @@ The following arguments are supported:
 #### Verification Message Template
 
   * `default_email_option` (Optional) - The default email option. Must be either `CONFIRM_WITH_CODE` or `CONFIRM_WITH_LINK`. Defaults to `CONFIRM_WITH_CODE`.
-  * `email_message` (Optional) - The email message template. Must contain the `{####}` placeholder.
+  * `email_message` (Optional) - The email message template. Must contain the `{####}` placeholder. **NOTE:** - If `email_verification_message` and `verification_message_template.email_message` are specified and the values are different, either one is prioritized and updated.
   * `email_message_by_link` (Optional) - The email message template for sending a confirmation link to the user.
-  * `email_subject` (Optional) - The subject line for the email message template.
+  * `email_subject` (Optional) - The subject line for the email message template. **NOTE:** - If `email_verification_subject` and `verification_message_template.email_subject` are specified and the values are different, either one is prioritized and updated.
   * `email_subject_by_link` (Optional) - The subject line for the email message template for sending a confirmation link to the user.
   * `sms_message` (Optional) - The SMS message template. Must contain the `{####}` placeholder.
 

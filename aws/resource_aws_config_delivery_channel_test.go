@@ -205,8 +205,9 @@ resource "aws_s3_bucket" "b" {
 }
 
 resource "aws_config_delivery_channel" "foo" {
-  name = "tf-acc-test-awsconfig-%d"
+  name           = "tf-acc-test-awsconfig-%d"
   s3_bucket_name = "${aws_s3_bucket.b.bucket}"
+  depends_on     = ["aws_config_configuration_recorder.foo"]
 }`, randInt, randInt, randInt, randInt, randInt)
 }
 
@@ -268,12 +269,13 @@ resource "aws_sns_topic" "t" {
 }
 
 resource "aws_config_delivery_channel" "foo" {
-  name = "tf-acc-test-awsconfig-%d"
+  name           = "tf-acc-test-awsconfig-%d"
   s3_bucket_name = "${aws_s3_bucket.b.bucket}"
-  s3_key_prefix = "one/two/three"
-  sns_topic_arn = "${aws_sns_topic.t.arn}"
+  s3_key_prefix  = "one/two/three"
+  sns_topic_arn  = "${aws_sns_topic.t.arn}"
   snapshot_delivery_properties {
   	delivery_frequency = "Six_Hours"
   }
+  depends_on     = ["aws_config_configuration_recorder.foo"]
 }`, randInt, randInt, randInt, randInt, randInt, randInt)
 }

@@ -6,7 +6,7 @@ description: |-
   Provides a DMS (Data Migration Service) certificate resource.
 ---
 
-# aws\_dms\_certificate
+# aws_dms_certificate
 
 Provides a DMS (Data Migration Service) certificate resource. DMS certificates can be created, deleted, and imported.
 

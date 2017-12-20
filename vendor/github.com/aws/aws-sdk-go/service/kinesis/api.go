@@ -38,7 +38,7 @@ const opAddTagsToStream = "AddTagsToStream"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/AddTagsToStream
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/AddTagsToStream
 func (c *Kinesis) AddTagsToStreamRequest(input *AddTagsToStreamInput) (req *request.Request, output *AddTagsToStreamOutput) {
 	op := &request.Operation{
 		Name:       opAddTagsToStream,
@@ -89,7 +89,7 @@ func (c *Kinesis) AddTagsToStreamRequest(input *AddTagsToStreamInput) (req *requ
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/AddTagsToStream
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/AddTagsToStream
 func (c *Kinesis) AddTagsToStream(input *AddTagsToStreamInput) (*AddTagsToStreamOutput, error) {
 	req, out := c.AddTagsToStreamRequest(input)
 	return out, req.Send()
@@ -136,7 +136,7 @@ const opCreateStream = "CreateStream"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/CreateStream
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/CreateStream
 func (c *Kinesis) CreateStreamRequest(input *CreateStreamInput) (req *request.Request, output *CreateStreamOutput) {
 	op := &request.Operation{
 		Name:       opCreateStream,
@@ -216,7 +216,7 @@ func (c *Kinesis) CreateStreamRequest(input *CreateStreamInput) (req *request.Re
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/CreateStream
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/CreateStream
 func (c *Kinesis) CreateStream(input *CreateStreamInput) (*CreateStreamOutput, error) {
 	req, out := c.CreateStreamRequest(input)
 	return out, req.Send()
@@ -263,7 +263,7 @@ const opDecreaseStreamRetentionPeriod = "DecreaseStreamRetentionPeriod"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DecreaseStreamRetentionPeriod
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DecreaseStreamRetentionPeriod
 func (c *Kinesis) DecreaseStreamRetentionPeriodRequest(input *DecreaseStreamRetentionPeriodInput) (req *request.Request, output *DecreaseStreamRetentionPeriodOutput) {
 	op := &request.Operation{
 		Name:       opDecreaseStreamRetentionPeriod,
@@ -312,7 +312,7 @@ func (c *Kinesis) DecreaseStreamRetentionPeriodRequest(input *DecreaseStreamRete
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DecreaseStreamRetentionPeriod
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DecreaseStreamRetentionPeriod
 func (c *Kinesis) DecreaseStreamRetentionPeriod(input *DecreaseStreamRetentionPeriodInput) (*DecreaseStreamRetentionPeriodOutput, error) {
 	req, out := c.DecreaseStreamRetentionPeriodRequest(input)
 	return out, req.Send()
@@ -359,7 +359,7 @@ const opDeleteStream = "DeleteStream"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DeleteStream
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DeleteStream
 func (c *Kinesis) DeleteStreamRequest(input *DeleteStreamInput) (req *request.Request, output *DeleteStreamOutput) {
 	op := &request.Operation{
 		Name:       opDeleteStream,
@@ -417,7 +417,7 @@ func (c *Kinesis) DeleteStreamRequest(input *DeleteStreamInput) (req *request.Re
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DeleteStream
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DeleteStream
 func (c *Kinesis) DeleteStream(input *DeleteStreamInput) (*DeleteStreamOutput, error) {
 	req, out := c.DeleteStreamRequest(input)
 	return out, req.Send()
@@ -464,7 +464,7 @@ const opDescribeLimits = "DescribeLimits"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeLimits
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeLimits
 func (c *Kinesis) DescribeLimitsRequest(input *DescribeLimitsInput) (req *request.Request, output *DescribeLimitsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeLimits,
@@ -502,7 +502,7 @@ func (c *Kinesis) DescribeLimitsRequest(input *DescribeLimitsInput) (req *reques
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeLimits
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeLimits
 func (c *Kinesis) DescribeLimits(input *DescribeLimitsInput) (*DescribeLimitsOutput, error) {
 	req, out := c.DescribeLimitsRequest(input)
 	return out, req.Send()
@@ -549,7 +549,7 @@ const opDescribeStream = "DescribeStream"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStream
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStream
 func (c *Kinesis) DescribeStreamRequest(input *DescribeStreamInput) (req *request.Request, output *DescribeStreamOutput) {
 	op := &request.Operation{
 		Name:       opDescribeStream,
@@ -610,7 +610,7 @@ func (c *Kinesis) DescribeStreamRequest(input *DescribeStreamInput) (req *reques
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStream
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStream
 func (c *Kinesis) DescribeStream(input *DescribeStreamInput) (*DescribeStreamOutput, error) {
 	req, out := c.DescribeStreamRequest(input)
 	return out, req.Send()
@@ -707,7 +707,7 @@ const opDescribeStreamSummary = "DescribeStreamSummary"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStreamSummary
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStreamSummary
 func (c *Kinesis) DescribeStreamSummaryRequest(input *DescribeStreamSummaryInput) (req *request.Request, output *DescribeStreamSummaryOutput) {
 	op := &request.Operation{
 		Name:       opDescribeStreamSummary,
@@ -749,7 +749,7 @@ func (c *Kinesis) DescribeStreamSummaryRequest(input *DescribeStreamSummaryInput
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStreamSummary
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStreamSummary
 func (c *Kinesis) DescribeStreamSummary(input *DescribeStreamSummaryInput) (*DescribeStreamSummaryOutput, error) {
 	req, out := c.DescribeStreamSummaryRequest(input)
 	return out, req.Send()
@@ -796,7 +796,7 @@ const opDisableEnhancedMonitoring = "DisableEnhancedMonitoring"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DisableEnhancedMonitoring
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DisableEnhancedMonitoring
 func (c *Kinesis) DisableEnhancedMonitoringRequest(input *DisableEnhancedMonitoringInput) (req *request.Request, output *EnhancedMonitoringOutput) {
 	op := &request.Operation{
 		Name:       opDisableEnhancedMonitoring,
@@ -841,7 +841,7 @@ func (c *Kinesis) DisableEnhancedMonitoringRequest(input *DisableEnhancedMonitor
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DisableEnhancedMonitoring
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DisableEnhancedMonitoring
 func (c *Kinesis) DisableEnhancedMonitoring(input *DisableEnhancedMonitoringInput) (*EnhancedMonitoringOutput, error) {
 	req, out := c.DisableEnhancedMonitoringRequest(input)
 	return out, req.Send()
@@ -888,7 +888,7 @@ const opEnableEnhancedMonitoring = "EnableEnhancedMonitoring"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/EnableEnhancedMonitoring
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/EnableEnhancedMonitoring
 func (c *Kinesis) EnableEnhancedMonitoringRequest(input *EnableEnhancedMonitoringInput) (req *request.Request, output *EnhancedMonitoringOutput) {
 	op := &request.Operation{
 		Name:       opEnableEnhancedMonitoring,
@@ -933,7 +933,7 @@ func (c *Kinesis) EnableEnhancedMonitoringRequest(input *EnableEnhancedMonitorin
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/EnableEnhancedMonitoring
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/EnableEnhancedMonitoring
 func (c *Kinesis) EnableEnhancedMonitoring(input *EnableEnhancedMonitoringInput) (*EnhancedMonitoringOutput, error) {
 	req, out := c.EnableEnhancedMonitoringRequest(input)
 	return out, req.Send()
@@ -980,7 +980,7 @@ const opGetRecords = "GetRecords"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetRecords
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetRecords
 func (c *Kinesis) GetRecordsRequest(input *GetRecordsInput) (req *request.Request, output *GetRecordsOutput) {
 	op := &request.Operation{
 		Name:       opGetRecords,
@@ -1105,7 +1105,7 @@ func (c *Kinesis) GetRecordsRequest(input *GetRecordsInput) (req *request.Reques
 //   throttling, see Limits (http://docs.aws.amazon.com/kms/latest/developerguide/limits.html#requests-per-second)
 //   in the AWS Key Management Service Developer Guide.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetRecords
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetRecords
 func (c *Kinesis) GetRecords(input *GetRecordsInput) (*GetRecordsOutput, error) {
 	req, out := c.GetRecordsRequest(input)
 	return out, req.Send()
@@ -1152,7 +1152,7 @@ const opGetShardIterator = "GetShardIterator"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetShardIterator
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetShardIterator
 func (c *Kinesis) GetShardIteratorRequest(input *GetShardIteratorInput) (req *request.Request, output *GetShardIteratorOutput) {
 	op := &request.Operation{
 		Name:       opGetShardIterator,
@@ -1235,7 +1235,7 @@ func (c *Kinesis) GetShardIteratorRequest(input *GetShardIteratorInput) (req *re
 //   Backoff in AWS (http://docs.aws.amazon.com/general/latest/gr/api-retries.html)
 //   in the AWS General Reference.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetShardIterator
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetShardIterator
 func (c *Kinesis) GetShardIterator(input *GetShardIteratorInput) (*GetShardIteratorOutput, error) {
 	req, out := c.GetShardIteratorRequest(input)
 	return out, req.Send()
@@ -1282,7 +1282,7 @@ const opIncreaseStreamRetentionPeriod = "IncreaseStreamRetentionPeriod"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/IncreaseStreamRetentionPeriod
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/IncreaseStreamRetentionPeriod
 func (c *Kinesis) IncreaseStreamRetentionPeriodRequest(input *IncreaseStreamRetentionPeriodInput) (req *request.Request, output *IncreaseStreamRetentionPeriodOutput) {
 	op := &request.Operation{
 		Name:       opIncreaseStreamRetentionPeriod,
@@ -1335,7 +1335,7 @@ func (c *Kinesis) IncreaseStreamRetentionPeriodRequest(input *IncreaseStreamRete
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/IncreaseStreamRetentionPeriod
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/IncreaseStreamRetentionPeriod
 func (c *Kinesis) IncreaseStreamRetentionPeriod(input *IncreaseStreamRetentionPeriodInput) (*IncreaseStreamRetentionPeriodOutput, error) {
 	req, out := c.IncreaseStreamRetentionPeriodRequest(input)
 	return out, req.Send()
@@ -1382,7 +1382,7 @@ const opListStreams = "ListStreams"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListStreams
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListStreams
 func (c *Kinesis) ListStreamsRequest(input *ListStreamsInput) (req *request.Request, output *ListStreamsOutput) {
 	op := &request.Operation{
 		Name:       opListStreams,
@@ -1436,7 +1436,7 @@ func (c *Kinesis) ListStreamsRequest(input *ListStreamsInput) (req *request.Requ
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListStreams
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListStreams
 func (c *Kinesis) ListStreams(input *ListStreamsInput) (*ListStreamsOutput, error) {
 	req, out := c.ListStreamsRequest(input)
 	return out, req.Send()
@@ -1533,7 +1533,7 @@ const opListTagsForStream = "ListTagsForStream"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListTagsForStream
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListTagsForStream
 func (c *Kinesis) ListTagsForStreamRequest(input *ListTagsForStreamInput) (req *request.Request, output *ListTagsForStreamOutput) {
 	op := &request.Operation{
 		Name:       opListTagsForStream,
@@ -1574,7 +1574,7 @@ func (c *Kinesis) ListTagsForStreamRequest(input *ListTagsForStreamInput) (req *
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListTagsForStream
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListTagsForStream
 func (c *Kinesis) ListTagsForStream(input *ListTagsForStreamInput) (*ListTagsForStreamOutput, error) {
 	req, out := c.ListTagsForStreamRequest(input)
 	return out, req.Send()
@@ -1621,7 +1621,7 @@ const opMergeShards = "MergeShards"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/MergeShards
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/MergeShards
 func (c *Kinesis) MergeShardsRequest(input *MergeShardsInput) (req *request.Request, output *MergeShardsOutput) {
 	op := &request.Operation{
 		Name:       opMergeShards,
@@ -1702,7 +1702,7 @@ func (c *Kinesis) MergeShardsRequest(input *MergeShardsInput) (req *request.Requ
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/MergeShards
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/MergeShards
 func (c *Kinesis) MergeShards(input *MergeShardsInput) (*MergeShardsOutput, error) {
 	req, out := c.MergeShardsRequest(input)
 	return out, req.Send()
@@ -1749,7 +1749,7 @@ const opPutRecord = "PutRecord"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecord
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecord
 func (c *Kinesis) PutRecordRequest(input *PutRecordInput) (req *request.Request, output *PutRecordOutput) {
 	op := &request.Operation{
 		Name:       opPutRecord,
@@ -1858,7 +1858,7 @@ func (c *Kinesis) PutRecordRequest(input *PutRecordInput) (req *request.Request,
 //   throttling, see Limits (http://docs.aws.amazon.com/kms/latest/developerguide/limits.html#requests-per-second)
 //   in the AWS Key Management Service Developer Guide.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecord
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecord
 func (c *Kinesis) PutRecord(input *PutRecordInput) (*PutRecordOutput, error) {
 	req, out := c.PutRecordRequest(input)
 	return out, req.Send()
@@ -1905,7 +1905,7 @@ const opPutRecords = "PutRecords"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecords
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecords
 func (c *Kinesis) PutRecordsRequest(input *PutRecordsInput) (req *request.Request, output *PutRecordsOutput) {
 	op := &request.Operation{
 		Name:       opPutRecords,
@@ -2034,7 +2034,7 @@ func (c *Kinesis) PutRecordsRequest(input *PutRecordsInput) (req *request.Reques
 //   throttling, see Limits (http://docs.aws.amazon.com/kms/latest/developerguide/limits.html#requests-per-second)
 //   in the AWS Key Management Service Developer Guide.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecords
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecords
 func (c *Kinesis) PutRecords(input *PutRecordsInput) (*PutRecordsOutput, error) {
 	req, out := c.PutRecordsRequest(input)
 	return out, req.Send()
@@ -2081,7 +2081,7 @@ const opRemoveTagsFromStream = "RemoveTagsFromStream"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/RemoveTagsFromStream
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/RemoveTagsFromStream
 func (c *Kinesis) RemoveTagsFromStreamRequest(input *RemoveTagsFromStreamInput) (req *request.Request, output *RemoveTagsFromStreamOutput) {
 	op := &request.Operation{
 		Name:       opRemoveTagsFromStream,
@@ -2131,7 +2131,7 @@ func (c *Kinesis) RemoveTagsFromStreamRequest(input *RemoveTagsFromStreamInput) 
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/RemoveTagsFromStream
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/RemoveTagsFromStream
 func (c *Kinesis) RemoveTagsFromStream(input *RemoveTagsFromStreamInput) (*RemoveTagsFromStreamOutput, error) {
 	req, out := c.RemoveTagsFromStreamRequest(input)
 	return out, req.Send()
@@ -2178,7 +2178,7 @@ const opSplitShard = "SplitShard"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/SplitShard
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/SplitShard
 func (c *Kinesis) SplitShardRequest(input *SplitShardInput) (req *request.Request, output *SplitShardOutput) {
 	op := &request.Operation{
 		Name:       opSplitShard,
@@ -2269,7 +2269,7 @@ func (c *Kinesis) SplitShardRequest(input *SplitShardInput) (req *request.Reques
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/SplitShard
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/SplitShard
 func (c *Kinesis) SplitShard(input *SplitShardInput) (*SplitShardOutput, error) {
 	req, out := c.SplitShardRequest(input)
 	return out, req.Send()
@@ -2316,7 +2316,7 @@ const opStartStreamEncryption = "StartStreamEncryption"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StartStreamEncryption
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StartStreamEncryption
 func (c *Kinesis) StartStreamEncryptionRequest(input *StartStreamEncryptionInput) (req *request.Request, output *StartStreamEncryptionOutput) {
 	op := &request.Operation{
 		Name:       opStartStreamEncryption,
@@ -2406,7 +2406,7 @@ func (c *Kinesis) StartStreamEncryptionRequest(input *StartStreamEncryptionInput
 //   throttling, see Limits (http://docs.aws.amazon.com/kms/latest/developerguide/limits.html#requests-per-second)
 //   in the AWS Key Management Service Developer Guide.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StartStreamEncryption
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StartStreamEncryption
 func (c *Kinesis) StartStreamEncryption(input *StartStreamEncryptionInput) (*StartStreamEncryptionOutput, error) {
 	req, out := c.StartStreamEncryptionRequest(input)
 	return out, req.Send()
@@ -2453,7 +2453,7 @@ const opStopStreamEncryption = "StopStreamEncryption"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StopStreamEncryption
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StopStreamEncryption
 func (c *Kinesis) StopStreamEncryptionRequest(input *StopStreamEncryptionInput) (req *request.Request, output *StopStreamEncryptionOutput) {
 	op := &request.Operation{
 		Name:       opStopStreamEncryption,
@@ -2517,7 +2517,7 @@ func (c *Kinesis) StopStreamEncryptionRequest(input *StopStreamEncryptionInput) 
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StopStreamEncryption
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StopStreamEncryption
 func (c *Kinesis) StopStreamEncryption(input *StopStreamEncryptionInput) (*StopStreamEncryptionOutput, error) {
 	req, out := c.StopStreamEncryptionRequest(input)
 	return out, req.Send()
@@ -2564,7 +2564,7 @@ const opUpdateShardCount = "UpdateShardCount"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/UpdateShardCount
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/UpdateShardCount
 func (c *Kinesis) UpdateShardCountRequest(input *UpdateShardCountInput) (req *request.Request, output *UpdateShardCountOutput) {
 	op := &request.Operation{
 		Name:       opUpdateShardCount,
@@ -2642,7 +2642,7 @@ func (c *Kinesis) UpdateShardCountRequest(input *UpdateShardCountInput) (req *re
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/UpdateShardCount
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/UpdateShardCount
 func (c *Kinesis) UpdateShardCount(input *UpdateShardCountInput) (*UpdateShardCountOutput, error) {
 	req, out := c.UpdateShardCountRequest(input)
 	return out, req.Send()
@@ -2665,7 +2665,7 @@ func (c *Kinesis) UpdateShardCountWithContext(ctx aws.Context, input *UpdateShar
 }
 
 // Represents the input for AddTagsToStream.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/AddTagsToStreamInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/AddTagsToStreamInput
 type AddTagsToStreamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2724,7 +2724,7 @@ func (s *AddTagsToStreamInput) SetTags(v map[string]*string) *AddTagsToStreamInp
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/AddTagsToStreamOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/AddTagsToStreamOutput
 type AddTagsToStreamOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2740,7 +2740,7 @@ func (s AddTagsToStreamOutput) GoString() string {
 }
 
 // Represents the input for CreateStream.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/CreateStreamInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/CreateStreamInput
 type CreateStreamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2807,7 +2807,7 @@ func (s *CreateStreamInput) SetStreamName(v string) *CreateStreamInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/CreateStreamOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/CreateStreamOutput
 type CreateStreamOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2823,7 +2823,7 @@ func (s CreateStreamOutput) GoString() string {
 }
 
 // Represents the input for DecreaseStreamRetentionPeriod.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DecreaseStreamRetentionPeriodInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DecreaseStreamRetentionPeriodInput
 type DecreaseStreamRetentionPeriodInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2883,7 +2883,7 @@ func (s *DecreaseStreamRetentionPeriodInput) SetStreamName(v string) *DecreaseSt
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DecreaseStreamRetentionPeriodOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DecreaseStreamRetentionPeriodOutput
 type DecreaseStreamRetentionPeriodOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2899,7 +2899,7 @@ func (s DecreaseStreamRetentionPeriodOutput) GoString() string {
 }
 
 // Represents the input for DeleteStream.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DeleteStreamInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DeleteStreamInput
 type DeleteStreamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2941,7 +2941,7 @@ func (s *DeleteStreamInput) SetStreamName(v string) *DeleteStreamInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DeleteStreamOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DeleteStreamOutput
 type DeleteStreamOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2956,7 +2956,7 @@ func (s DeleteStreamOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeLimitsInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeLimitsInput
 type DescribeLimitsInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2971,7 +2971,7 @@ func (s DescribeLimitsInput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeLimitsOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeLimitsOutput
 type DescribeLimitsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3009,7 +3009,7 @@ func (s *DescribeLimitsOutput) SetShardLimit(v int64) *DescribeLimitsOutput {
 }
 
 // Represents the input for DescribeStream.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStreamInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStreamInput
 type DescribeStreamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3077,7 +3077,7 @@ func (s *DescribeStreamInput) SetStreamName(v string) *DescribeStreamInput {
 }
 
 // Represents the output for DescribeStream.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStreamOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStreamOutput
 type DescribeStreamOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3104,7 +3104,7 @@ func (s *DescribeStreamOutput) SetStreamDescription(v *StreamDescription) *Descr
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStreamSummaryInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStreamSummaryInput
 type DescribeStreamSummaryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3146,7 +3146,7 @@ func (s *DescribeStreamSummaryInput) SetStreamName(v string) *DescribeStreamSumm
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStreamSummaryOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DescribeStreamSummaryOutput
 type DescribeStreamSummaryOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3173,7 +3173,7 @@ func (s *DescribeStreamSummaryOutput) SetStreamDescriptionSummary(v *StreamDescr
 }
 
 // Represents the input for DisableEnhancedMonitoring.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DisableEnhancedMonitoringInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/DisableEnhancedMonitoringInput
 type DisableEnhancedMonitoringInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3256,7 +3256,7 @@ func (s *DisableEnhancedMonitoringInput) SetStreamName(v string) *DisableEnhance
 }
 
 // Represents the input for EnableEnhancedMonitoring.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/EnableEnhancedMonitoringInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/EnableEnhancedMonitoringInput
 type EnableEnhancedMonitoringInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3339,7 +3339,7 @@ func (s *EnableEnhancedMonitoringInput) SetStreamName(v string) *EnableEnhancedM
 }
 
 // Represents enhanced metrics types.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/EnhancedMetrics
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/EnhancedMetrics
 type EnhancedMetrics struct {
 	_ struct{} `type:"structure"`
 
@@ -3387,7 +3387,7 @@ func (s *EnhancedMetrics) SetShardLevelMetrics(v []*string) *EnhancedMetrics {
 }
 
 // Represents the output for EnableEnhancedMonitoring and DisableEnhancedMonitoring.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/EnhancedMonitoringOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/EnhancedMonitoringOutput
 type EnhancedMonitoringOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3432,7 +3432,7 @@ func (s *EnhancedMonitoringOutput) SetStreamName(v string) *EnhancedMonitoringOu
 }
 
 // Represents the input for GetRecords.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetRecordsInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetRecordsInput
 type GetRecordsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3490,7 +3490,7 @@ func (s *GetRecordsInput) SetShardIterator(v string) *GetRecordsInput {
 }
 
 // Represents the output for GetRecords.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetRecordsOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetRecordsOutput
 type GetRecordsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3540,7 +3540,7 @@ func (s *GetRecordsOutput) SetRecords(v []*Record) *GetRecordsOutput {
 }
 
 // Represents the input for GetShardIterator.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetShardIteratorInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetShardIteratorInput
 type GetShardIteratorInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3657,7 +3657,7 @@ func (s *GetShardIteratorInput) SetTimestamp(v time.Time) *GetShardIteratorInput
 }
 
 // Represents the output for GetShardIterator.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetShardIteratorOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/GetShardIteratorOutput
 type GetShardIteratorOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3685,7 +3685,7 @@ func (s *GetShardIteratorOutput) SetShardIterator(v string) *GetShardIteratorOut
 
 // The range of possible hash key values for the shard, which is a set of ordered
 // contiguous positive integers.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/HashKeyRange
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/HashKeyRange
 type HashKeyRange struct {
 	_ struct{} `type:"structure"`
 
@@ -3723,7 +3723,7 @@ func (s *HashKeyRange) SetStartingHashKey(v string) *HashKeyRange {
 }
 
 // Represents the input for IncreaseStreamRetentionPeriod.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/IncreaseStreamRetentionPeriodInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/IncreaseStreamRetentionPeriodInput
 type IncreaseStreamRetentionPeriodInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3783,7 +3783,7 @@ func (s *IncreaseStreamRetentionPeriodInput) SetStreamName(v string) *IncreaseSt
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/IncreaseStreamRetentionPeriodOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/IncreaseStreamRetentionPeriodOutput
 type IncreaseStreamRetentionPeriodOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -3799,7 +3799,7 @@ func (s IncreaseStreamRetentionPeriodOutput) GoString() string {
 }
 
 // Represents the input for ListStreams.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListStreamsInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListStreamsInput
 type ListStreamsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3849,7 +3849,7 @@ func (s *ListStreamsInput) SetLimit(v int64) *ListStreamsInput {
 }
 
 // Represents the output for ListStreams.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListStreamsOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListStreamsOutput
 type ListStreamsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3888,7 +3888,7 @@ func (s *ListStreamsOutput) SetStreamNames(v []*string) *ListStreamsOutput {
 }
 
 // Represents the input for ListTagsForStream.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListTagsForStreamInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListTagsForStreamInput
 type ListTagsForStreamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3958,7 +3958,7 @@ func (s *ListTagsForStreamInput) SetStreamName(v string) *ListTagsForStreamInput
 }
 
 // Represents the output for ListTagsForStream.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListTagsForStreamOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/ListTagsForStreamOutput
 type ListTagsForStreamOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3998,7 +3998,7 @@ func (s *ListTagsForStreamOutput) SetTags(v []*Tag) *ListTagsForStreamOutput {
 }
 
 // Represents the input for MergeShards.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/MergeShardsInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/MergeShardsInput
 type MergeShardsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4074,7 +4074,7 @@ func (s *MergeShardsInput) SetStreamName(v string) *MergeShardsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/MergeShardsOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/MergeShardsOutput
 type MergeShardsOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4090,7 +4090,7 @@ func (s MergeShardsOutput) GoString() string {
 }
 
 // Represents the input for PutRecord.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecordInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecordInput
 type PutRecordInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4199,7 +4199,7 @@ func (s *PutRecordInput) SetStreamName(v string) *PutRecordInput {
 }
 
 // Represents the output for PutRecord.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecordOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecordOutput
 type PutRecordOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4255,7 +4255,7 @@ func (s *PutRecordOutput) SetShardId(v string) *PutRecordOutput {
 }
 
 // A PutRecords request.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecordsInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecordsInput
 type PutRecordsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4325,7 +4325,7 @@ func (s *PutRecordsInput) SetStreamName(v string) *PutRecordsInput {
 }
 
 // PutRecords results.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecordsOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecordsOutput
 type PutRecordsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4380,7 +4380,7 @@ func (s *PutRecordsOutput) SetRecords(v []*PutRecordsResultEntry) *PutRecordsOut
 }
 
 // Represents the output for PutRecords.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecordsRequestEntry
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecordsRequestEntry
 type PutRecordsRequestEntry struct {
 	_ struct{} `type:"structure"`
 
@@ -4462,7 +4462,7 @@ func (s *PutRecordsRequestEntry) SetPartitionKey(v string) *PutRecordsRequestEnt
 // A record that is successfully added to a stream includes SequenceNumber and
 // ShardId in the result. A record that fails to be added to the stream includes
 // ErrorCode and ErrorMessage in the result.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecordsResultEntry
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/PutRecordsResultEntry
 type PutRecordsResultEntry struct {
 	_ struct{} `type:"structure"`
 
@@ -4519,7 +4519,7 @@ func (s *PutRecordsResultEntry) SetShardId(v string) *PutRecordsResultEntry {
 
 // The unit of data of the Kinesis stream, which is composed of a sequence number,
 // a partition key, and a data blob.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/Record
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/Record
 type Record struct {
 	_ struct{} `type:"structure"`
 
@@ -4598,7 +4598,7 @@ func (s *Record) SetSequenceNumber(v string) *Record {
 }
 
 // Represents the input for RemoveTagsFromStream.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/RemoveTagsFromStreamInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/RemoveTagsFromStreamInput
 type RemoveTagsFromStreamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4657,7 +4657,7 @@ func (s *RemoveTagsFromStreamInput) SetTagKeys(v []*string) *RemoveTagsFromStrea
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/RemoveTagsFromStreamOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/RemoveTagsFromStreamOutput
 type RemoveTagsFromStreamOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4673,7 +4673,7 @@ func (s RemoveTagsFromStreamOutput) GoString() string {
 }
 
 // The range of possible sequence numbers for the shard.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/SequenceNumberRange
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/SequenceNumberRange
 type SequenceNumberRange struct {
 	_ struct{} `type:"structure"`
 
@@ -4710,7 +4710,7 @@ func (s *SequenceNumberRange) SetStartingSequenceNumber(v string) *SequenceNumbe
 }
 
 // A uniquely identified group of data records in a Kinesis stream.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/Shard
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/Shard
 type Shard struct {
 	_ struct{} `type:"structure"`
 
@@ -4778,7 +4778,7 @@ func (s *Shard) SetShardId(v string) *Shard {
 }
 
 // Represents the input for SplitShard.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/SplitShardInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/SplitShardInput
 type SplitShardInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4857,7 +4857,7 @@ func (s *SplitShardInput) SetStreamName(v string) *SplitShardInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/SplitShardOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/SplitShardOutput
 type SplitShardOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4872,7 +4872,7 @@ func (s SplitShardOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StartStreamEncryptionInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StartStreamEncryptionInput
 type StartStreamEncryptionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4958,7 +4958,7 @@ func (s *StartStreamEncryptionInput) SetStreamName(v string) *StartStreamEncrypt
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StartStreamEncryptionOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StartStreamEncryptionOutput
 type StartStreamEncryptionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4973,7 +4973,7 @@ func (s StartStreamEncryptionOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StopStreamEncryptionInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StopStreamEncryptionInput
 type StopStreamEncryptionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5059,7 +5059,7 @@ func (s *StopStreamEncryptionInput) SetStreamName(v string) *StopStreamEncryptio
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StopStreamEncryptionOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StopStreamEncryptionOutput
 type StopStreamEncryptionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5075,7 +5075,7 @@ func (s StopStreamEncryptionOutput) GoString() string {
 }
 
 // Represents the output for DescribeStream.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StreamDescription
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StreamDescription
 type StreamDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -5231,7 +5231,7 @@ func (s *StreamDescription) SetStreamStatus(v string) *StreamDescription {
 }
 
 // Represents the output for DescribeStreamSummary
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StreamDescriptionSummary
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/StreamDescriptionSummary
 type StreamDescriptionSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -5374,7 +5374,7 @@ func (s *StreamDescriptionSummary) SetStreamStatus(v string) *StreamDescriptionS
 }
 
 // Metadata assigned to the stream, consisting of a key-value pair.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/Tag
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/Tag
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -5412,7 +5412,7 @@ func (s *Tag) SetValue(v string) *Tag {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/UpdateShardCountInput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/UpdateShardCountInput
 type UpdateShardCountInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5485,7 +5485,7 @@ func (s *UpdateShardCountInput) SetTargetShardCount(v int64) *UpdateShardCountIn
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/UpdateShardCountOutput
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02/UpdateShardCountOutput
 type UpdateShardCountOutput struct {
 	_ struct{} `type:"structure"`
 
