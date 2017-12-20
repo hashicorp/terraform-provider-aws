@@ -221,6 +221,7 @@ func resourceAwsDbInstance() *schema.Resource {
 			"s3_import": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				MaxItems: 1,
 				ConflictsWith: []string{
 					"snapshot_identifier",
 					"replicate_source_db",
@@ -242,6 +243,18 @@ func resourceAwsDbInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							Optional: false,
+						},
+						"source_engine": {
+							Type:     schema.TypeString,
+							Required: false,
+							Optional: true,
+							Default:  "mysql",
+						},
+						"source_engine_version": {
+							Type:     schema.TypeString,
+							Required: false,
+							Optional: true,
+							Default:  "5.6",
 						},
 					},
 				},
@@ -460,15 +473,19 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
-	} else if _, ok := d.GetOk("backup_s3"); ok {
-
-		record := d.Get("s3_import").(map[string]interface{})
+	} else if v, ok := d.GetOk("s3_import"); ok {
+		record := v.(*schema.Set).List()[0].(map[string]interface{})
 		opts := rds.RestoreDBInstanceFromS3Input{
+			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
 			S3BucketName:            aws.String(record["bucket_name"].(string)),
 			S3Prefix:                aws.String(record["bucket_prefix"].(string)),
-			S3IngestionRoleArn:      aws.String(record["role_arn"].(string)),
+			S3IngestionRoleArn:      aws.String(record["ingestion_role"].(string)),
+			MasterUsername:          aws.String(d.Get("username").(string)),
+			MasterUserPassword:      aws.String(d.Get("password").(string)),
+			SourceEngine:            aws.String(record["source_engine"].(string)),
+			SourceEngineVersion:     aws.String(record["source_engine_version"].(string)),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			Tags:                    tags,
@@ -485,6 +502,28 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 				opts.DBName = aws.String(attr.(string))
 			}
 		}
+        attr := d.Get("backup_retention_period")
+        opts.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
+        if attr, ok := d.GetOk("backup_window"); ok {
+            opts.PreferredBackupWindow = aws.String(attr.(string))
+        }
+
+        if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
+			var s []*string
+			for _, v := range attr.List() {
+				s = append(s, aws.String(v.(string)))
+			}
+			opts.VpcSecurityGroupIds = s
+		}
+
+		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
+			var s []*string
+			for _, v := range attr.List() {
+				s = append(s, aws.String(v.(string)))
+			}
+			opts.DBSecurityGroups = s
+		}
+
 
 		if attr, ok := d.GetOk("availability_zone"); ok {
 			opts.AvailabilityZone = aws.String(attr.(string))

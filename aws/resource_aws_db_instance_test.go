@@ -312,6 +312,29 @@ func TestAccAWSDBInstance_snapshot(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_s3(t *testing.T) {
+	var snap rds.DBInstance
+	bucket := acctest.RandString(5)
+	prefix := acctest.RandString(5)
+	role := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		// testAccCheckAWSDBInstanceSnapshot verifies a database snapshot is
+		// created, and subequently deletes it
+		CheckDestroy: testAccCheckAWSDBInstanceNoSnapshot,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnapshotInstanceConfigWithS3Import(bucket, prefix, role),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.s3", &snap),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_enhancedMonitoring(t *testing.T) {
 	var dbInstance rds.DBInstance
 	rName := acctest.RandString(5)
@@ -952,6 +975,34 @@ resource "aws_db_instance" "snapshot" {
 	skip_final_snapshot = true
 	final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-1"
 }`, acctest.RandInt())
+}
+
+func testAccSnapshotInstanceConfigWithS3Import(name string, prefix string, role string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "s3" {
+	identifier = "test-db-instance-from-s3-import"
+
+	allocated_storage = 5
+	engine = "mysql"
+	engine_version = "5.6.35"
+	instance_class = "db.t2.micro"
+	name = "baz"
+	password = "barbarbarbar"
+	publicly_accessible = true
+	username = "foo"
+	backup_retention_period = 1
+
+	parameter_group_name = "default.mysql5.6"
+
+	copy_tags_to_snapshot = true
+	final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-%d"
+	s3_import {
+		bucket_name = "%s"
+		bucket_prefix = "%s"
+		ingestion_role = "%s"
+	}
+}
+`, name, prefix, role)
 }
 
 func testAccSnapshotInstanceConfigWithSnapshot(rInt int) string {
