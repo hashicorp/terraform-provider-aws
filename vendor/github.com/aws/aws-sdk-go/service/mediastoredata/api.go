@@ -141,7 +141,7 @@ func (c *MediaStoreData) DescribeObjectRequest(input *DescribeObjectInput) (req 
 
 // DescribeObject API operation for AWS Elemental MediaStore Data Plane.
 //
-// Gets the header for an object at the specified path.
+// Gets the headers for an object at the specified path.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -682,15 +682,7 @@ func (s *GetObjectInput) SetRange(v string) *GetObjectInput {
 type GetObjectOutput struct {
 	_ struct{} `type:"structure" payload:"Body"`
 
-	// The path to the file outside of the container. The file name can include
-	// or omit an extension.
-	//
-	// Example 1: If the file is stored on a remote server that has been mounted
-	// to the workstation on which the REST API command is being run, the path could
-	// be the absolute path  \mount\assets\mlaw.avi or the relative path ..\..\mount\assets\movies\premium\mlaw.avi.
-	//
-	// Example 2: If the file is stored on a remote server that is not mounted,
-	// the path could be https:\\192.0.2.15\movies\premium\mlaw.avi.
+	// The bytes of the object.
 	Body io.ReadCloser `type:"blob"`
 
 	// An optional CacheControl header that allows the caller to control the object's
@@ -945,15 +937,7 @@ func (s *ListItemsOutput) SetNextToken(v string) *ListItemsOutput {
 type PutObjectInput struct {
 	_ struct{} `type:"structure" payload:"Body"`
 
-	// The path to the file outside of the container. The file name can include
-	// or omit an extension.
-	//
-	// Example 1: If the file is stored on a remote server that has been mounted
-	// to the workstation on which the REST API command is being run, the path could
-	// be the absolute path  \mount\assets\mlaw.avi or the relative path ..\..\mount\assets\movies\premium\mlaw.avi.
-	//
-	// Example 2: If the file is stored on a remote server that is not mounted,
-	// the path could be https:\\192.0.2.15\movies\premium\mlaw.avi.
+	// The bytes to be stored.
 	//
 	// Body is a required field
 	Body io.ReadSeeker `type:"blob" required:"true"`
