@@ -5,6 +5,7 @@ BUG FIXES:
 * resource/cognito_user_pool: Update Cognito email message length to 20,000 [GH-2692]
 * resource/aws_volume_attachment: Changing device name without changing volume or instance ID now correctly produces a diff [GH-2720]
 * resource/aws_cognito_user_pool: The ARN for the pool is now computed and exposed as an attribute [GH-2723]
+* resource/aws_s3_bucket_object: Object tagging is now supported in GovCloud [GH-2665]
 
 ## 1.6.0 (December 18, 2017)
 
