@@ -25,6 +25,9 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// Name of ENV variable which (if not empty) prefers panic over error
+const PanicOnErr = "TF_SCHEMA_PANIC_ON_ERROR"
+
 // type used for schema package context keys
 type contextKey string
 
@@ -293,8 +296,7 @@ func (s *Schema) ZeroValue() interface{} {
 	}
 }
 
-func (s *Schema) finalizeDiff(
-	d *terraform.ResourceAttrDiff) *terraform.ResourceAttrDiff {
+func (s *Schema) finalizeDiff(d *terraform.ResourceAttrDiff, customized bool) *terraform.ResourceAttrDiff {
 	if d == nil {
 		return d
 	}
@@ -334,14 +336,21 @@ func (s *Schema) finalizeDiff(
 		return d
 	}
 
-	if s.Computed && !d.NewComputed {
-		if d.Old != "" && d.New == "" {
-			// This is a computed value with an old value set already,
-			// just let it go.
-			return nil
+	if s.Computed {
+		// FIXME: This is where the customized bool from getChange finally
+		//        comes into play.  It allows the previously incorrect behavior
+		//        of an empty string being used as "unset" when the value is
+		//        computed. This should be removed once we can properly
+		//        represent an unset/nil value from the configuration.
+		if !customized {
+			if d.Old != "" && d.New == "" {
+				// This is a computed value with an old value set already,
+				// just let it go.
+				return nil
+			}
 		}
 
-		if d.New == "" {
+		if d.New == "" && !d.NewComputed {
 			// Computed attribute without a new value set
 			d.NewComputed = true
 		}
@@ -358,6 +367,13 @@ func (s *Schema) finalizeDiff(
 // schemaMap is a wrapper that adds nice functions on top of schemas.
 type schemaMap map[string]*Schema
 
+func (m schemaMap) panicOnError() bool {
+	if os.Getenv(PanicOnErr) != "" {
+		return true
+	}
+	return false
+}
+
 // Data returns a ResourceData for the given schema, state, and diff.
 //
 // The diff is optional.
@@ -365,9 +381,10 @@ func (m schemaMap) Data(
 	s *terraform.InstanceState,
 	d *terraform.InstanceDiff) (*ResourceData, error) {
 	return &ResourceData{
-		schema: m,
-		state:  s,
-		diff:   d,
+		schema:       m,
+		state:        s,
+		diff:         d,
+		panicOnError: m.panicOnError(),
 	}, nil
 }
 
@@ -397,9 +414,10 @@ func (m schemaMap) Diff(
 	}
 
 	d := &ResourceData{
-		schema: m,
-		state:  s,
-		config: c,
+		schema:       m,
+		state:        s,
+		config:       c,
+		panicOnError: m.panicOnError(),
 	}
 
 	for k, schema := range m {
@@ -732,7 +750,7 @@ func isValidFieldName(name string) bool {
 // This helps facilitate diff logic for both ResourceData and ResoureDiff with
 // minimal divergence in code.
 type resourceDiffer interface {
-	diffChange(string) (interface{}, interface{}, bool, bool)
+	diffChange(string) (interface{}, interface{}, bool, bool, bool)
 	Get(string) interface{}
 	GetChange(string) (interface{}, interface{})
 	GetOk(string) (interface{}, bool)
@@ -785,7 +803,7 @@ func (m schemaMap) diffList(
 	diff *terraform.InstanceDiff,
 	d resourceDiffer,
 	all bool) error {
-	o, n, _, computedList := d.diffChange(k)
+	o, n, _, computedList, customized := d.diffChange(k)
 	if computedList {
 		n = nil
 	}
@@ -852,10 +870,13 @@ func (m schemaMap) diffList(
 			oldStr = ""
 		}
 
-		diff.Attributes[k+".#"] = countSchema.finalizeDiff(&terraform.ResourceAttrDiff{
-			Old: oldStr,
-			New: newStr,
-		})
+		diff.Attributes[k+".#"] = countSchema.finalizeDiff(
+			&terraform.ResourceAttrDiff{
+				Old: oldStr,
+				New: newStr,
+			},
+			customized,
+		)
 	}
 
 	// Figure out the maximum
@@ -908,7 +929,7 @@ func (m schemaMap) diffMap(
 
 	// First get all the values from the state
 	var stateMap, configMap map[string]string
-	o, n, _, nComputed := d.diffChange(k)
+	o, n, _, nComputed, customized := d.diffChange(k)
 	if err := mapstructure.WeakDecode(o, &stateMap); err != nil {
 		return fmt.Errorf("%s: %s", k, err)
 	}
@@ -960,6 +981,7 @@ func (m schemaMap) diffMap(
 				Old: oldStr,
 				New: newStr,
 			},
+			customized,
 		)
 	}
 
@@ -977,16 +999,22 @@ func (m schemaMap) diffMap(
 			continue
 		}
 
-		diff.Attributes[prefix+k] = schema.finalizeDiff(&terraform.ResourceAttrDiff{
-			Old: old,
-			New: v,
-		})
+		diff.Attributes[prefix+k] = schema.finalizeDiff(
+			&terraform.ResourceAttrDiff{
+				Old: old,
+				New: v,
+			},
+			customized,
+		)
 	}
 	for k, v := range stateMap {
-		diff.Attributes[prefix+k] = schema.finalizeDiff(&terraform.ResourceAttrDiff{
-			Old:        v,
-			NewRemoved: true,
-		})
+		diff.Attributes[prefix+k] = schema.finalizeDiff(
+			&terraform.ResourceAttrDiff{
+				Old:        v,
+				NewRemoved: true,
+			},
+			customized,
+		)
 	}
 
 	return nil
@@ -999,7 +1027,7 @@ func (m schemaMap) diffSet(
 	d resourceDiffer,
 	all bool) error {
 
-	o, n, _, computedSet := d.diffChange(k)
+	o, n, _, computedSet, customized := d.diffChange(k)
 	if computedSet {
 		n = nil
 	}
@@ -1058,20 +1086,26 @@ func (m schemaMap) diffSet(
 			countStr = ""
 		}
 
-		diff.Attributes[k+".#"] = countSchema.finalizeDiff(&terraform.ResourceAttrDiff{
-			Old:         countStr,
-			NewComputed: true,
-		})
+		diff.Attributes[k+".#"] = countSchema.finalizeDiff(
+			&terraform.ResourceAttrDiff{
+				Old:         countStr,
+				NewComputed: true,
+			},
+			customized,
+		)
 		return nil
 	}
 
 	// If the counts are not the same, then record that diff
 	changed := oldLen != newLen
 	if changed || all {
-		diff.Attributes[k+".#"] = countSchema.finalizeDiff(&terraform.ResourceAttrDiff{
-			Old: oldStr,
-			New: newStr,
-		})
+		diff.Attributes[k+".#"] = countSchema.finalizeDiff(
+			&terraform.ResourceAttrDiff{
+				Old: oldStr,
+				New: newStr,
+			},
+			customized,
+		)
 	}
 
 	// Build the list of codes that will make up our set. This is the
@@ -1121,7 +1155,7 @@ func (m schemaMap) diffString(
 	all bool) error {
 	var originalN interface{}
 	var os, ns string
-	o, n, _, computed := d.diffChange(k)
+	o, n, _, computed, customized := d.diffChange(k)
 	if schema.StateFunc != nil && n != nil {
 		originalN = n
 		n = schema.StateFunc(n)
@@ -1158,13 +1192,16 @@ func (m schemaMap) diffString(
 		return nil
 	}
 
-	diff.Attributes[k] = schema.finalizeDiff(&terraform.ResourceAttrDiff{
-		Old:         os,
-		New:         ns,
-		NewExtra:    originalN,
-		NewRemoved:  removed,
-		NewComputed: computed,
-	})
+	diff.Attributes[k] = schema.finalizeDiff(
+		&terraform.ResourceAttrDiff{
+			Old:         os,
+			New:         ns,
+			NewExtra:    originalN,
+			NewRemoved:  removed,
+			NewComputed: computed,
+		},
+		customized,
+	)
 
 	return nil
 }
