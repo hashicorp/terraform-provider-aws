@@ -22,7 +22,8 @@ const (
 	//    have any common name servers. You tried to create a hosted zone that has
 	//    the same name as an existing hosted zone or that's the parent or child
 	//    of an existing hosted zone, and you specified a delegation set that shares
-	//    one or more name servers with the existing hosted zone.
+	//    one or more name servers with the existing hosted zone. For more information,
+	//    see CreateReusableDelegationSet.
 	//
 	//    * Private hosted zone: You specified an Amazon VPC that you're already
 	//    using for another hosted zone, and the domain that you specified for one

@@ -101,7 +101,8 @@ func (c *Route53) AssociateVPCWithHostedZoneRequest(input *AssociateVPCWithHoste
 //      have any common name servers. You tried to create a hosted zone that has
 //      the same name as an existing hosted zone or that's the parent or child
 //      of an existing hosted zone, and you specified a delegation set that shares
-//      one or more name servers with the existing hosted zone.
+//      one or more name servers with the existing hosted zone. For more information,
+//      see CreateReusableDelegationSet.
 //
 //      * Private hosted zone: You specified an Amazon VPC that you're already
 //      using for another hosted zone, and the domain that you specified for one
@@ -689,7 +690,8 @@ func (c *Route53) CreateHostedZoneRequest(input *CreateHostedZoneInput) (req *re
 //      have any common name servers. You tried to create a hosted zone that has
 //      the same name as an existing hosted zone or that's the parent or child
 //      of an existing hosted zone, and you specified a delegation set that shares
-//      one or more name servers with the existing hosted zone.
+//      one or more name servers with the existing hosted zone. For more information,
+//      see CreateReusableDelegationSet.
 //
 //      * Private hosted zone: You specified an Amazon VPC that you're already
 //      using for another hosted zone, and the domain that you specified for one
@@ -972,12 +974,48 @@ func (c *Route53) CreateReusableDelegationSetRequest(input *CreateReusableDelega
 //
 // Creates a delegation set (a group of four name servers) that can be reused
 // by multiple hosted zones. If a hosted zoned ID is specified, CreateReusableDelegationSet
-// marks the delegation set associated with that zone as reusable
+// marks the delegation set associated with that zone as reusable.
 //
-// A reusable delegation set can't be associated with a private hosted zone.
+// You can't associate a reusable delegation set with a private hosted zone.
 //
-// For information on how to use a reusable delegation set to configure white
+// For information about using a reusable delegation set to configure white
 // label name servers, see Configuring White Label Name Servers (http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/white-label-name-servers.html).
+//
+// The process for migrating existing hosted zones to use a reusable delegation
+// set is comparable to the process for configuring white label name servers.
+// You need to perform the following steps:
+//
+// Create a reusable delegation set.
+//
+// Recreate hosted zones, and reduce the TTL to 60 seconds or less.
+//
+// Recreate resource record sets in the new hosted zones.
+//
+// Change the registrar's name servers to use the name servers for the new hosted
+// zones.
+//
+// Monitor traffic for the website or application.
+//
+// Change TTLs back to their original values.
+//
+// If you want to migrate existing hosted zones to use a reusable delegation
+// set, the existing hosted zones can't use any of the name servers that are
+// assigned to the reusable delegation set. If one or more hosted zones do use
+// one or more name servers that are assigned to the reusable delegation set,
+// you can do one of the following:
+//
+//    * For small numbers of hosted zones—up to a few hundred—it's relatively
+//    easy to create reusable delegation sets until you get one that has four
+//    name servers that don't overlap with any of the name servers in your hosted
+//    zones.
+//
+//    * For larger numbers of hosted zones, the easiest solution is to use more
+//    than one reusable delegation set.
+//
+//    * For larger numbers of hosted zones, you can also migrate hosted zones
+//    that have overlapping name servers to hosted zones that don't have overlapping
+//    name servers, then migrate the hosted zones again to use the reusable
+//    delegation set.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8873,6 +8911,10 @@ type GetHealthCheckLastFailureReasonInput struct {
 	// you created the health check, CreateHealthCheck returned the ID in the response,
 	// in the HealthCheckId element.
 	//
+	// If you want to get the last failure reason for a calculated health check,
+	// you must use the Amazon Route 53 console or the CloudWatch console. You can't
+	// use GetHealthCheckLastFailureReason for a calculated health check.
+	//
 	// HealthCheckId is a required field
 	HealthCheckId *string `location:"uri" locationName:"HealthCheckId" type:"string" required:"true"`
 }
@@ -9138,7 +9180,7 @@ type GetHostedZoneLimitInput struct {
 	//    * MAX_RRSETS_BY_ZONE: The maximum number of records that you can create
 	//    in the specified hosted zone.
 	//
-	//    * MAX_VPCS_ASSOCIATED_BY_TYPE: The maximum number of Amazon VPCs that
+	//    * MAX_VPCS_ASSOCIATED_BY_ZONE: The maximum number of Amazon VPCs that
 	//    you can associate with the specified private hosted zone.
 	//
 	// Type is a required field
@@ -10394,7 +10436,7 @@ type HostedZoneLimit struct {
 	//    * MAX_RRSETS_BY_ZONE: The maximum number of records that you can create
 	//    in the specified hosted zone.
 	//
-	//    * MAX_VPCS_ASSOCIATED_BY_TYPE: The maximum number of Amazon VPCs that
+	//    * MAX_VPCS_ASSOCIATED_BY_ZONE: The maximum number of Amazon VPCs that
 	//    you can associate with the specified private hosted zone.
 	//
 	// Type is a required field
@@ -14751,6 +14793,9 @@ const (
 	// CloudWatchRegionEuWest2 is a CloudWatchRegion enum value
 	CloudWatchRegionEuWest2 = "eu-west-2"
 
+	// CloudWatchRegionEuWest3 is a CloudWatchRegion enum value
+	CloudWatchRegionEuWest3 = "eu-west-3"
+
 	// CloudWatchRegionApSouth1 is a CloudWatchRegion enum value
 	CloudWatchRegionApSouth1 = "ap-south-1"
 
@@ -14934,6 +14979,9 @@ const (
 	// ResourceRecordSetRegionEuWest2 is a ResourceRecordSetRegion enum value
 	ResourceRecordSetRegionEuWest2 = "eu-west-2"
 
+	// ResourceRecordSetRegionEuWest3 is a ResourceRecordSetRegion enum value
+	ResourceRecordSetRegionEuWest3 = "eu-west-3"
+
 	// ResourceRecordSetRegionEuCentral1 is a ResourceRecordSetRegion enum value
 	ResourceRecordSetRegionEuCentral1 = "eu-central-1"
 
@@ -14954,6 +15002,9 @@ const (
 
 	// ResourceRecordSetRegionCnNorth1 is a ResourceRecordSetRegion enum value
 	ResourceRecordSetRegionCnNorth1 = "cn-north-1"
+
+	// ResourceRecordSetRegionCnNorthwest1 is a ResourceRecordSetRegion enum value
+	ResourceRecordSetRegionCnNorthwest1 = "cn-northwest-1"
 
 	// ResourceRecordSetRegionApSouth1 is a ResourceRecordSetRegion enum value
 	ResourceRecordSetRegionApSouth1 = "ap-south-1"
@@ -15007,6 +15058,9 @@ const (
 
 	// VPCRegionEuWest2 is a VPCRegion enum value
 	VPCRegionEuWest2 = "eu-west-2"
+
+	// VPCRegionEuWest3 is a VPCRegion enum value
+	VPCRegionEuWest3 = "eu-west-3"
 
 	// VPCRegionEuCentral1 is a VPCRegion enum value
 	VPCRegionEuCentral1 = "eu-central-1"
