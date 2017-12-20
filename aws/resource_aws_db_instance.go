@@ -238,7 +238,7 @@ func resourceAwsDbInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: false,
 							Optional: true,
-                            Default: "",
+							Default:  "",
 						},
 						"ingestion_role": {
 							Type:     schema.TypeString,
