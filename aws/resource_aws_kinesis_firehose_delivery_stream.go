@@ -311,7 +311,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				resARN, err := arn.Parse(d.Id())
 				if err != nil {
-					return []*schema.ResourceData{}, err
+					return nil, err
 				}
 				d.Set("name", strings.Split(resARN.Resource, "/")[1])
 				return []*schema.ResourceData{d}, nil
