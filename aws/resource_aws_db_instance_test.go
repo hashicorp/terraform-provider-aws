@@ -995,7 +995,7 @@ resource "aws_db_instance" "s3" {
 	parameter_group_name = "default.mysql5.6"
 
 	copy_tags_to_snapshot = true
-	final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-%d"
+	final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot"
 	s3_import {
 		bucket_name = "%s"
 		bucket_prefix = "%s"
