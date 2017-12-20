@@ -218,6 +218,35 @@ func resourceAwsDbInstance() *schema.Resource {
 				},
 			},
 
+			"s3_import": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ConflictsWith: []string{
+					"snapshot_identifier",
+					"replicate_source_db",
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bucket_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							Optional: false,
+							ForceNew: true,
+						},
+						"bucket_prefix": {
+							Type:     schema.TypeString,
+							Required: true,
+							Optional: false,
+						},
+						"ingestion_role": {
+							Type:     schema.TypeString,
+							Required: true,
+							Optional: false,
+						},
+					},
+				},
+			},
+
 			"skip_final_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -432,12 +461,14 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
 	} else if _, ok := d.GetOk("backup_s3"); ok {
-		opts := rds.RestoreDBInstanceFromDBSnapshotInput{
+
+		record := d.Get("s3_import").(map[string]interface{})
+		opts := rds.RestoreDBInstanceFromS3Input{
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
-			S3BucketName:            aws.String(d.Get("backup_s3").Get("bucket_name").(string)),
-			S3Prefix:                aws.String(d.Get("backup_s3").Get("bucket_prefix").(string)),
-			S3IngestionRoleArn:      aws.String(d.Get("backup_s3").Get("role_arn").(string)),
+			S3BucketName:            aws.String(record["bucket_name"].(string)),
+			S3Prefix:                aws.String(record["bucket_prefix"].(string)),
+			S3IngestionRoleArn:      aws.String(record["role_arn"].(string)),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			Tags:                    tags,
@@ -488,16 +519,12 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.Port = aws.Int64(int64(attr.(int)))
 		}
 
-		if attr, ok := d.GetOk("tde_credential_arn"); ok {
-			opts.TdeCredentialArn = aws.String(attr.(string))
-		}
-
 		if attr, ok := d.GetOk("storage_type"); ok {
 			opts.StorageType = aws.String(attr.(string))
 		}
 
 		log.Printf("[DEBUG] DB Instance restore from snapshot configuration: %s", opts)
-		_, err := conn.RestoreDBInstanceFromDBSnapshot(&opts)
+		_, err := conn.RestoreDBInstanceFromS3(&opts)
 		if err != nil {
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
@@ -527,10 +554,9 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 				"[INFO] Waiting for DB Instance to be available")
 
 			stateConf := &resource.StateChangeConf{
-				Pending: []string{"creating", "backing-up", "modifying", "resetting-master-credentials",
-					"maintenance", "renaming", "rebooting", "upgrading"},
-				Target:     []string{"available"},
-				Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
+				Pending:    resourceAwsDbInstanceCreatePendingStates,
+				Target:     []string{"available", "storage-optimization"},
+				Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 				Timeout:    d.Timeout(schema.TimeoutCreate),
 				MinTimeout: 10 * time.Second,
 				Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -602,7 +628,6 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		if attr, ok := d.GetOk("port"); ok {
 			opts.Port = aws.Int64(int64(attr.(int)))
 		}
-
 		if attr, ok := d.GetOk("tde_credential_arn"); ok {
 			opts.TdeCredentialArn = aws.String(attr.(string))
 		}
