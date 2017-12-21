@@ -1,5 +1,9 @@
 ## 1.6.1 (Unreleased)
 
+FEATURES:
+
+* **New Region**: `eu-west-3` is now supported [GH-2707]
+
 ENHANCEMENTS:
 
 * resource/aws_kinesis_firehose_delivery_stream: Import is now supported [GH-2707]
