@@ -144,7 +144,7 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 		log.Printf("[DEBUG] Created new Lambda permission, but no Statement was included")
 	}
 
-	d.SetId(d.Get("statement_id").(string))
+	d.SetId(statementId)
 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		// IAM is eventually cosistent :/
