@@ -194,7 +194,7 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 			{
 				Config: testAccAWSLambdaPermissionConfig_withRawFunctionName,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaPermissionExists("aws_lambda_permission.", &statement),
+					testAccCheckLambdaPermissionExists("aws_lambda_permission.with_raw_func_name", &statement),
 					resource.TestCheckResourceAttr("aws_lambda_permission.with_raw_func_name", "action", "lambda:InvokeFunction"),
 					resource.TestCheckResourceAttr("aws_lambda_permission.with_raw_func_name", "principal", "events.amazonaws.com"),
 					resource.TestCheckResourceAttr("aws_lambda_permission.with_raw_func_name", "statement_id", "AllowExecutionWithRawFuncName"),
