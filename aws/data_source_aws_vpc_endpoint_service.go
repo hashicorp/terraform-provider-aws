@@ -17,13 +17,15 @@ func dataSourceAwsVpcEndpointService() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"service": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"service_name"},
 			},
 			"service_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"service"},
 			},
 			"service_type": {
 				Type:     schema.TypeString,
@@ -64,18 +66,14 @@ func dataSourceAwsVpcEndpointService() *schema.Resource {
 func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	svc, svcOk := d.GetOk("service")
-	svcName, svcNameOk := d.GetOk("service_name")
-	if svcOk == svcNameOk {
+	var serviceName string
+	if v, ok := d.GetOk("service_name"); ok {
+		serviceName = v.(string)
+	} else if v, ok := d.GetOk("service"); ok {
+		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*AWSClient).region, v.(string))
+	} else {
 		return fmt.Errorf(
 			"One of ['service', 'service_name'] must be set to query VPC Endpoint Services")
-	}
-
-	var serviceName string
-	if svcNameOk {
-		serviceName = svcName.(string)
-	} else {
-		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*AWSClient).region, svc.(string))
 	}
 
 	req := &ec2.DescribeVpcEndpointServicesInput{

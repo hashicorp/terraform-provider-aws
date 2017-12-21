@@ -21,14 +21,16 @@ func resourceAwsVpcEndpointConnectionNotification() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"vpc_endpoint_service_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"vpc_endpoint_id"},
 			},
 			"vpc_endpoint_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"vpc_endpoint_service_id"},
 			},
 			"connection_notification_arn": {
 				Type:         schema.TypeString,
@@ -57,22 +59,17 @@ func resourceAwsVpcEndpointConnectionNotification() *schema.Resource {
 func resourceAwsVpcEndpointConnectionNotificationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	svcId, svcIdOk := d.GetOk("vpc_endpoint_service_id")
-	vpceId, vpceIdOk := d.GetOk("vpc_endpoint_id")
-	if svcIdOk == vpceIdOk {
-		return fmt.Errorf(
-			"One of ['vpc_endpoint_service_id', 'vpc_endpoint_id'] must be set to create a VPC Endpoint connection notification")
-	}
-
 	req := &ec2.CreateVpcEndpointConnectionNotificationInput{
 		ConnectionNotificationArn: aws.String(d.Get("connection_notification_arn").(string)),
 		ConnectionEvents:          expandStringSet(d.Get("connection_events").(*schema.Set)),
 	}
-	if svcIdOk {
-		req.ServiceId = aws.String(svcId.(string))
-	}
-	if vpceIdOk {
-		req.VpcEndpointId = aws.String(vpceId.(string))
+	if v, ok := d.GetOk("vpc_endpoint_service_id"); ok {
+		req.ServiceId = aws.String(v.(string))
+	} else if v, ok := d.GetOk("vpc_endpoint_id"); ok {
+		req.VpcEndpointId = aws.String(v.(string))
+	} else {
+		return fmt.Errorf(
+			"One of ['vpc_endpoint_service_id', 'vpc_endpoint_id'] must be set to create a VPC Endpoint connection notification")
 	}
 
 	log.Printf("[DEBUG] Creating VPC Endpoint connection notification: %#v", req)
