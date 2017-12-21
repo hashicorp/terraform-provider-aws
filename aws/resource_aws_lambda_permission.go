@@ -60,12 +60,12 @@ func resourceAwsLambdaPermission() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 			"statement_id": {
-				Type:         schema.TypeString,
+				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"statement_id_prefix"},
-				ValidateFunc: validatePolicyStatementId,
+				ValidateFunc:  validatePolicyStatementId,
 			},
 			"statement_id_prefix": {
 				Type:         schema.TypeString,

@@ -205,7 +205,6 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 	})
 }
 
-
 func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 	var statement LambdaPolicyStatement
 	endsWithFuncName := regexp.MustCompile(":function:lambda_function_name_perm$")
@@ -594,8 +593,6 @@ resource "aws_iam_role" "iam_for_lambda" {
 EOF
 }
 `
-
-
 
 var testAccAWSLambdaPermissionConfig_withStatementIdPrefix = `
 resource "aws_lambda_permission" "with_statement_id_prefix" {
