@@ -243,7 +243,7 @@ func TestAccAWSRDSClusterInstance_withInstancePerformanceInsights(t *testing.T) 
 					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &v),
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(
-						"aws_rds_cluster_instance.cluster_instances", "enabled_performance_insights", "true"),
+						"aws_rds_cluster_instance.cluster_instances", "performance_insights_enabled", "true"),
 					resource.TestMatchResourceAttr(
 						"aws_rds_cluster_instance.cluster_instances", "performance_insights_kms_key_id", keyRegex),
 				),
@@ -571,7 +571,7 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
   cluster_identifier      = "${aws_rds_cluster.default.id}"
   instance_class          = "db.r4.large"
   db_parameter_group_name = "${aws_db_parameter_group.bar.name}"
-  enabled_performance_insights = true
+  performance_insights_enabled = true
   performance_insights_kms_key_id = "${aws_kms_key.foo.arn}"
 }
 

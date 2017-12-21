@@ -179,7 +179,7 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"enabled_performance_insights": {
+			"performance_insights_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -238,7 +238,7 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if attr, _ := d.GetOk("engine"); attr == "aurora-postgresql" {
-		if attr, ok := d.GetOk("enabled_performance_insights"); ok {
+		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
 			createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
 		}
 
@@ -349,7 +349,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
 	d.Set("availability_zone", db.AvailabilityZone)
-	d.Set("enabled_performance_insights", db.PerformanceInsightsEnabled)
+	d.Set("performance_insights_enabled", db.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
 
 	if db.MonitoringInterval != nil {
@@ -402,9 +402,9 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 		requestUpdate = true
 	}
 
-	if d.HasChange("enabled_performance_insights") {
-		d.SetPartial("enabled_performance_insights")
-		req.EnablePerformanceInsights = aws.Bool(d.Get("enabled_performance_insights").(bool))
+	if d.HasChange("performance_insights_enabled") {
+		d.SetPartial("performance_insights_enabled")
+		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
 		requestUpdate = true
 	}
 
