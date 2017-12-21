@@ -569,7 +569,7 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
   engine                  = "aurora-postgresql"
   identifier              = "tf-cluster-instance-%d"
   cluster_identifier      = "${aws_rds_cluster.default.id}"
-  instance_class          = "db.r3.large"
+  instance_class          = "db.r4.large"
   db_parameter_group_name = "${aws_db_parameter_group.bar.name}"
   enabled_performance_insights = true
   performance_insights_kms_key_id = "${aws_kms_key.foo.arn}"
