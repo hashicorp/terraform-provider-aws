@@ -3,10 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/jen20/awspolicyequivalence"
 )
 
 func resourceAwsSqsQueuePolicy() *schema.Resource {
@@ -40,16 +43,49 @@ func resourceAwsSqsQueuePolicy() *schema.Resource {
 
 func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sqsconn
+	policy := d.Get("policy").(string)
 	url := d.Get("queue_url").(string)
 
 	_, err := conn.SetQueueAttributes(&sqs.SetQueueAttributesInput{
 		QueueUrl: aws.String(url),
 		Attributes: aws.StringMap(map[string]string{
-			"Policy": d.Get("policy").(string),
+			"Policy": policy,
 		}),
 	})
 	if err != nil {
 		return fmt.Errorf("Error updating SQS attributes: %s", err)
+	}
+
+	// https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SetQueueAttributes.html
+	// When you change a queue's attributes, the change can take up to 60 seconds
+	// for most of the attributes to propagate throughout the Amazon SQS system.
+	wait := resource.StateChangeConf{
+		Pending:    []string{""},
+		Target:     []string{"SQS queue policy updated"},
+		Timeout:    1 * time.Minute,
+		MinTimeout: 1 * time.Second,
+		Refresh: func() (interface{}, string, error) {
+			out, err := conn.GetQueueAttributes(&sqs.GetQueueAttributesInput{
+				QueueUrl:       aws.String(url),
+				AttributeNames: []*string{aws.String("Policy")},
+			})
+			if err != nil {
+				return out, "", err
+			}
+			queuePolicy, ok := out.Attributes["Policy"]
+			if ok {
+				equivalent, err := awspolicy.PoliciesAreEquivalent(*queuePolicy, policy)
+				if err != nil || !equivalent {
+					return out, "", nil
+				}
+				return out, "SQS queue policy updated", nil
+			}
+			return out, "", nil
+		},
+	}
+	_, err = wait.WaitForState()
+	if err != nil {
+		return err
 	}
 
 	d.SetId(url)
@@ -77,11 +113,12 @@ func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	policy, ok := out.Attributes["Policy"]
-	if !ok {
-		return fmt.Errorf("SQS Queue policy not found for %s", d.Id())
+	if ok {
+		d.Set("policy", policy)
+	} else {
+		d.Set("policy", "")
 	}
 
-	d.Set("policy", policy)
 	d.Set("queue_url", d.Id())
 
 	return nil
