@@ -100,6 +100,7 @@ type Config struct {
 	AllowedAccountIds   []interface{}
 	ForbiddenAccountIds []interface{}
 
+	ApigatewayEndpoint       string
 	CloudFormationEndpoint   string
 	CloudWatchEndpoint       string
 	CloudWatchEventsEndpoint string
@@ -111,6 +112,7 @@ type Config struct {
 	IamEndpoint              string
 	KinesisEndpoint          string
 	KmsEndpoint              string
+	LambdaEndpoint           string
 	RdsEndpoint              string
 	S3Endpoint               string
 	SnsEndpoint              string
@@ -318,6 +320,7 @@ func (c *Config) Client() (interface{}, error) {
 	r53Sess := sess.Copy(&aws.Config{Region: aws.String("us-east-1")})
 
 	// Some services have user-configurable endpoints
+	awsApigatewaySess := sess.Copy(&aws.Config{Endpoint: aws.String(c.ApigatewayEndpoint)})
 	awsCfSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.CloudFormationEndpoint)})
 	awsCwSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.CloudWatchEndpoint)})
 	awsCweSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.CloudWatchEventsEndpoint)})
@@ -326,6 +329,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsEc2Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.Ec2Endpoint)})
 	awsElbSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.ElbEndpoint)})
 	awsIamSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.IamEndpoint)})
+	awsLambdaSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.LambdaEndpoint)})
 	awsKinesisSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisEndpoint)})
 	awsKmsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KmsEndpoint)})
 	awsRdsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.RdsEndpoint)})
@@ -375,7 +379,7 @@ func (c *Config) Client() (interface{}, error) {
 	}
 
 	client.acmconn = acm.New(sess)
-	client.apigateway = apigateway.New(sess)
+	client.apigateway = apigateway.New(awsApigatewaySess)
 	client.appautoscalingconn = applicationautoscaling.New(sess)
 	client.autoscalingconn = autoscaling.New(sess)
 	client.cfconn = cloudformation.New(awsCfSess)
@@ -410,7 +414,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.iotconn = iot.New(sess)
 	client.kinesisconn = kinesis.New(awsKinesisSess)
 	client.kmsconn = kms.New(awsKmsSess)
-	client.lambdaconn = lambda.New(sess)
+	client.lambdaconn = lambda.New(awsLambdaSess)
 	client.lightsailconn = lightsail.New(sess)
 	client.mqconn = mq.New(sess)
 	client.opsworksconn = opsworks.New(sess)
