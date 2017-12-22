@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -123,21 +122,16 @@ func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.GetGraphqlApi(input)
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case appsync.ErrCodeNotFoundException:
-				d.SetId("")
-				return nil
-			}
+		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+			d.SetId("")
+			return nil
 		}
 		return err
 	}
 
 	d.Set("authentication_type", resp.GraphqlApi.AuthenticationType)
 	d.Set("name", resp.GraphqlApi.Name)
-	if err := d.Set("user_pool_config", flattenAppsyncGraphqlApiUserPoolConfig(resp.GraphqlApi.UserPoolConfig)); err != nil {
-		return fmt.Errorf("Failed setting user_pool_config: %s", err)
-	}
+	d.Set("user_pool_config", flattenAppsyncGraphqlApiUserPoolConfig(resp.GraphqlApi.UserPoolConfig))
 	d.Set("arn", resp.GraphqlApi.Arn)
 	return nil
 }
@@ -159,12 +153,9 @@ func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.UpdateGraphqlApi(input)
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case appsync.ErrCodeNotFoundException:
-				d.SetId("")
-				return nil
-			}
+		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+			d.SetId("")
+			return nil
 		}
 		return err
 	}
@@ -176,16 +167,13 @@ func resourceAwsAppsyncGraphqlApiDelete(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).appsyncconn
 
 	input := &appsync.DeleteGraphqlApiInput{
-		AppId: aws.String(d.Id()),
+		ApiId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteGraphqlApi(input)
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case appsync.ErrCodeNotFoundException:
-				d.SetId("")
-				return nil
-			}
+		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+			d.SetId("")
+			return nil
 		}
 		return err
 	}
