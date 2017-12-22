@@ -228,7 +228,7 @@ func resourceAwsCloudWatchEventRuleDelete(d *schema.ResourceData, meta interface
 }
 
 func buildPutRuleInputStruct(d *schema.ResourceData) (*events.PutRuleInput, error) {
-	var name String
+	var name string
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
