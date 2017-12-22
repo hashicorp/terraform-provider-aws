@@ -23,8 +23,15 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validateDbEventSubscriptionName,
+			},
+			"name_prefix": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validateDbEventSubscriptionName,
 			},
@@ -66,7 +73,14 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 
 func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	rdsconn := meta.(*AWSClient).rdsconn
-	name := d.Get("name").(string)
+	var name string
+	if v, ok := d.GetOk("name"); ok {
+		name = v.(string)
+	} else if v, ok := d.GetOk("name_prefix"); ok {
+		name = resource.PrefixedUniqueId(v.(string))
+	} else {
+		name = resource.UniqueId()
+	}
 	tags := tagsFromMapRDS(d.Get("tags").(map[string]interface{}))
 
 	sourceIdsSet := d.Get("source_ids").(*schema.Set)
