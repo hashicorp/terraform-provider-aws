@@ -235,7 +235,7 @@ resource "aws_db_event_subscription" "bar" {
   tags {
     Name = "name"
   }
-}`, rInt, rInt)
+}`, rInt)
 }
 
 func testAccAWSDBEventSubscriptionConfigUpdate(rInt int) string {
