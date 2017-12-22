@@ -577,12 +577,11 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
 
 resource "aws_db_parameter_group" "bar" {
   name   = "tfcluster-test-group-%d"
-  family = "aurora5.6"
+  family = "aurora-postgresql9.6"
 
   parameter {
-    name         = "back_log"
-    value        = "32767"
-    apply_method = "pending-reboot"
+    name  = "authentication_timeout"
+    value = "10"
   }
 
   tags {
