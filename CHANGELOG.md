@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * resource/aws_cognito_user_pool: The ARN for the pool is now computed and exposed as an attribute [GH-2723]
 * resource/aws_directory_service_directory: Add security_group_id field [GH-2688]
 * resource/aws_rds_cluster_instance: Support Performance Insights [GH-2331]
+* config: Allow API Gateway and Lambda endpoints configuration [GH-2641]
 
 BUG FIXES:
 
