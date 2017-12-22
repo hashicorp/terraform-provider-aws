@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"testing"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
