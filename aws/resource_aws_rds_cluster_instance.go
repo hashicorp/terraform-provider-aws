@@ -335,6 +335,10 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 		d.Set("port", db.Endpoint.Port)
 	}
 
+	if db.DBSubnetGroup != nil {
+		d.Set("db_subnet_group_name", db.DBSubnetGroup.DBSubnetGroupName)
+	}
+
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("engine", db.Engine)
