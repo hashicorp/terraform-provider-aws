@@ -107,7 +107,7 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 	}
 
 	d.Set("arn", out.RuleArn)
-	d.SetId(input.Name)
+	d.SetId(*input.Name)
 
 	log.Printf("[INFO] CloudWatch Event Rule %q created", *out.RuleArn)
 
