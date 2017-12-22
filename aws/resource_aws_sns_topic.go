@@ -41,7 +41,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 			},
 			"name_prefix": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"display_name": &schema.Schema{
