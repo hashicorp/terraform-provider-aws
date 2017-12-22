@@ -52,7 +52,6 @@ func TestAccAWSDBEventSubscription_basicUpdate(t *testing.T) {
 	})
 }
 
-
 func TestAccAWSDBEventSubscription_withPrefix(t *testing.T) {
 	var v rds.EventSubscription
 	rInt := acctest.RandInt()
@@ -215,7 +214,6 @@ resource "aws_db_event_subscription" "bar" {
   }
 }`, rInt, rInt)
 }
-
 
 func testAccAWSDBEventSubscriptionConfigWithPrefix(rInt int) string {
 	return fmt.Sprintf(`
