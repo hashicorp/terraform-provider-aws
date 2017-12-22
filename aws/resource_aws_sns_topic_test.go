@@ -33,6 +33,26 @@ func TestAccAWSSNSTopic_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSNSTopic_prefix(t *testing.T) {
+	startsWithPrefix := regexp.MustCompile("^terraform-test-topic-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_sns_topic.test_topic",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSSNSTopicConfig_withPrefix(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
+					resource.TestMatchResourceAttr("aws_sns_topic.test_topic", "name", startsWithPrefix),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSNSTopic_policy(t *testing.T) {
 	rName := acctest.RandString(10)
 	expectedPolicy := `{"Statement":[{"Sid":"Stmt1445931846145","Effect":"Allow","Principal":{"AWS":"*"},"Action":"sns:Publish","Resource":"arn:aws:sns:us-west-2::example"}],"Version":"2012-10-17","Id":"Policy1445931846145"}`
@@ -256,6 +276,14 @@ resource "aws_sns_topic" "test_topic" {
     name = "terraform-test-topic-%s"
 }
 `, r)
+}
+
+func testAccAWSSNSTopicConfig_withPrefix() string {
+	return `
+resource "aws_sns_topic" "test_topic" {
+    name_prefix = "terraform-test-topic-"
+}
+`
 }
 
 func testAccAWSSNSTopicWithPolicy(r string) string {
