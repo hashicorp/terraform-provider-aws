@@ -78,7 +78,7 @@ func TestAccAwsAppsyncDatasource_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppsyncDatasourceConfig_lambda(rName),
+				Config: testAccAppsyncDatasourceConfig_update_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncDatasourceExists("aws_appsync_datasource.test"),
 					resource.TestCheckResourceAttrSet("aws_appsync_datasource.test", "arn"),
@@ -347,6 +347,93 @@ resource "aws_appsync_datasource" "test" {
     arn = "${aws_lambda_function.test.arn}"
   }
   service_role = "${aws_iam_role.test.arn}"
+}
+`, rName, rName, rName, rName, rName, rName)
+}
+
+func testAccAppsyncDatasourceConfig_update_lambda(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name = "tf_appsync_%s"
+}
+
+resource "aws_iam_role" "test_lambda" {
+  name = "tf-lambdarole-%s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lambda_function" "test" {
+  function_name = "tf-lambda-%s"
+  filename = "test-fixtures/lambdatest.zip"
+  role = "${aws_iam_role.test_lambda.arn}"
+  handler = "exports.test"
+  runtime = "nodejs6.10"
+}
+
+resource "aws_iam_role" "test_applambda" {
+  name = "tf-approle-%s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "appsync.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test_applambda" {
+  name = "tf-approlepolicy-%s"
+  role = "${aws_iam_role.test_applambda.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "lambda:*"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_lambda_function.test.arn}"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_appsync_datasource" "test" {
+  api_id = "${aws_appsync_graphql_api.test.id}"
+  name = "tf_appsync_%s"
+  type = "AWS_LAMBDA"
+  lambda_config {
+    arn = "${aws_lambda_function.test.arn}"
+  }
+  service_role = "${aws_iam_role.test_applambda.arn}"
 }
 `, rName, rName, rName, rName, rName, rName)
 }
