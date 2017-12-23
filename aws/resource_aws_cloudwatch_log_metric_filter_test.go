@@ -56,6 +56,7 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 						MetricName:      aws.String("AccessDeniedCount"),
 						MetricNamespace: aws.String("MyNamespace"),
 						MetricValue:     aws.String("2"),
+						DefaultValue:    aws.Float64(1),
 					}),
 				),
 			},
@@ -107,6 +108,19 @@ func testAccCheckCloudWatchLogMetricFilterTransformation(mf *cloudwatchlogs.Metr
 		if *given.MetricValue != *expected.MetricValue {
 			return fmt.Errorf("Expected metric value: %q, received: %q",
 				*expected.MetricValue, *given.MetricValue)
+		}
+
+		if expected.DefaultValue != nil && given.DefaultValue != nil {
+			if *given.DefaultValue != *expected.DefaultValue {
+				return fmt.Errorf("Expected default value: %g, received: %g",
+					*expected.DefaultValue, *given.DefaultValue)
+			}
+		} else if expected.DefaultValue == nil {
+			return fmt.Errorf("Expected default value: nil, received: %g",
+				*given.DefaultValue)
+		} else {
+			return fmt.Errorf("Expected default value: %g, received: nil",
+				*expected.DefaultValue)
 		}
 
 		return nil

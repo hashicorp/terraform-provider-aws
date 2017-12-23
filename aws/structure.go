@@ -1541,7 +1541,7 @@ func expandCloudWachLogMetricTransformations(m map[string]interface{}) ([]*cloud
 		MetricValue:     aws.String(m["value"].(string)),
 	}
 
-	if m["default_value"] != "" {
+	if m["default_value"] != nil {
 		transformation.DefaultValue = aws.Float64(m["default_value"].(float64))
 	}
 

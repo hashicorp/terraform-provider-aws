@@ -72,6 +72,7 @@ func resourceAwsCloudWatchLogMetricFilter() *schema.Resource {
 						"default_value": {
 							Type:     schema.TypeFloat,
 							Optional: true,
+							Default:  nil,
 						},
 					},
 				},
