@@ -30,3 +30,11 @@ The following additional attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the cluster
 * `arn` - The Amazon Resource Name (ARN) that identifies the cluster
+
+## Import
+
+ECS clusters can be imported using the `name`, e.g.
+
+```
+$ terraform import aws_ecs_cluster.stateless stateless-app
+```
