@@ -15,6 +15,15 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+func validateInstanceUserDataSize(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if len(value) > 16384 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 16384 bytes", k))
+	}
+	return
+}
+
 func validateRdsIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
