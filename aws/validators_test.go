@@ -9,6 +9,30 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+func TestValidateInstanceUserDataSize(t *testing.T) {
+	validValues := []string{
+		"#!/bin/bash",
+		"#!/bin/bash\n" + strings.Repeat("#", 16372), // = 16384
+	}
+
+	for _, s := range validValues {
+		_, errors := validateInstanceUserDataSize(s, "user_data")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be valid user data with limited size: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"#!/bin/bash\n" + strings.Repeat("#", 16373), // = 16385
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateInstanceUserDataSize(s, "user_data")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be valid user data with limited size: %v", s, errors)
+		}
+	}
+}
 func TestValidateEcrRepositoryName(t *testing.T) {
 	validNames := []string{
 		"nginx-web-app",
