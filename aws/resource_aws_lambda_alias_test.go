@@ -14,7 +14,13 @@ import (
 
 func TestAccAWSLambdaAlias_basic(t *testing.T) {
 	var conf lambda.AliasConfiguration
-	rInt := acctest.RandInt()
+
+	rString := acctest.RandString(8)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_alias_basic_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_alias_basic_%s", rString)
+	attachmentName := fmt.Sprintf("tf_acc_attachment_%s", rString)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_alias_basic_%s", rString)
+	aliasName := fmt.Sprintf("tf_acc_lambda_alias_basic_%s", rString)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,11 +28,12 @@ func TestAccAWSLambdaAlias_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAwsLambdaAliasConfig(rInt),
+				Config: testAccAwsLambdaAliasConfig(roleName, policyName, attachmentName, funcName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaAliasExists("aws_lambda_alias.lambda_alias_test", &conf),
 					testAccCheckAwsLambdaAttributes(&conf),
-					resource.TestMatchResourceAttr("aws_lambda_alias.lambda_alias_test", "arn", regexp.MustCompile(`^arn:aws:lambda:[a-z]+-[a-z]+-[0-9]+:\d{12}:function:example_lambda_name_create:testalias$`)),
+					resource.TestMatchResourceAttr("aws_lambda_alias.lambda_alias_test", "arn",
+						regexp.MustCompile(`^arn:aws:lambda:[a-z]+-[a-z]+-[0-9]+:\d{12}:function:`+funcName+`:`+aliasName+`$`)),
 				),
 			},
 		},
@@ -69,7 +76,7 @@ func testAccCheckAwsLambdaAliasExists(n string, mapping *lambda.AliasConfigurati
 
 		params := &lambda.GetAliasInput{
 			FunctionName: aws.String(rs.Primary.ID),
-			Name:         aws.String("testalias"),
+			Name:         aws.String(rs.Primary.Attributes["name"]),
 		}
 
 		getAliasConfiguration, err := conn.GetAlias(params)
@@ -97,10 +104,10 @@ func testAccCheckAwsLambdaAttributes(mapping *lambda.AliasConfiguration) resourc
 	}
 }
 
-func testAccAwsLambdaAliasConfig(rInt int) string {
+func testAccAwsLambdaAliasConfig(roleName, policyName, attachmentName, funcName, aliasName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "iam_for_lambda_%d"
+  name = "%s"
 
   assume_role_policy = <<EOF
 {
@@ -120,7 +127,7 @@ EOF
 }
 
 resource "aws_iam_policy" "policy_for_role" {
-  name        = "policy_for_role_%d"
+  name        = "%s"
   path        = "/"
   description = "IAM policy for for Lamda alias testing"
 
@@ -141,23 +148,23 @@ EOF
 }
 
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
-  name       = "policy_attachment_for_role_%d"
+  name       = "%s"
   roles      = ["${aws_iam_role.iam_for_lambda.name}"]
   policy_arn = "${aws_iam_policy.policy_for_role.arn}"
 }
 
 resource "aws_lambda_function" "lambda_function_test_create" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "example_lambda_name_create"
+  function_name = "%s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "exports.example"
   runtime       = "nodejs4.3"
 }
 
 resource "aws_lambda_alias" "lambda_alias_test" {
-  name             = "testalias"
+  name             = "%s"
   description      = "a sample description"
   function_name    = "${aws_lambda_function.lambda_function_test_create.arn}"
   function_version = "$LATEST"
-}`, rInt, rInt, rInt)
+}`, roleName, policyName, attachmentName, funcName, aliasName)
 }
