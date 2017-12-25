@@ -6,20 +6,16 @@ description: |-
   Provides an AppSync GraphQL API.
 ---
 
-# aws_athena_database
+# aws_appsync_graphql_api
 
 Provides an AppSync GraphQL API.
 
 ## Example Usage
 
 ```hcl
-resource "aws_s3_bucket" "hoge" {
-  bucket = "hoge"
-}
-
-resource "aws_athena_database" "hoge" {
-  name = "database_name"
-  bucket = "${aws_s3_bucket.hoge.bucket}"
+resource "aws_appsync_graphql_api" "example" {
+  authentication_type = "API_KEY"
+  name = "example"
 }
 ```
 
