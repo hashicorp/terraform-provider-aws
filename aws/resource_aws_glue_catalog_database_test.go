@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/glue"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -68,7 +67,7 @@ func testAccCheckGlueDatabaseDestroy(s *terraform.State) error {
 		}
 		if _, err := conn.GetDatabase(input); err != nil {
 			//Verify the error is what we want
-			if ae, ok := err.(awserr.Error); ok && ae.Code() == "EntityNotFoundException" {
+			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
 				continue
 			}
 
