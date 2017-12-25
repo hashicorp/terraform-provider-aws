@@ -120,12 +120,14 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3ConfigUpdates(t *testing.T) {
 }
 
 func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3basic(t *testing.T) {
-	rSt := acctest.RandString(5)
-	rName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rSt)
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
 
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
-	config := testAccFirehoseAWSLambdaConfigBasic(rName, rSt) +
+	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3basic,
 			ri, ri, ri, ri)
 
@@ -146,12 +148,13 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3basic(t *testing.T) {
 }
 
 func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3InvalidProcessorType(t *testing.T) {
-
-	rSt := acctest.RandString(5)
-	rName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rSt)
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
 
 	ri := acctest.RandInt()
-	config := testAccFirehoseAWSLambdaConfigBasic(rName, rSt) +
+	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3InvalidProcessorType,
 			ri, ri, ri, ri)
 
@@ -169,12 +172,13 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3InvalidProcessorType(t *t
 }
 
 func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3InvalidParameterName(t *testing.T) {
-
-	rSt := acctest.RandString(5)
-	rName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rSt)
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
 
 	ri := acctest.RandInt()
-	config := testAccFirehoseAWSLambdaConfigBasic(rName, rSt) +
+	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3InvalidParameterName,
 			ri, ri, ri, ri)
 
@@ -192,17 +196,18 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3InvalidParameterName(t *t
 }
 
 func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
-
-	rSt := acctest.RandString(5)
-	rName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rSt)
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
 
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
 
-	preConfig := testAccFirehoseAWSLambdaConfigBasic(rName, rSt) +
+	preConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3basic,
 			ri, ri, ri, ri)
-	postConfig := testAccFirehoseAWSLambdaConfigBasic(rName, rSt) +
+	postConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3Updates,
 			ri, ri, ri, ri)
 
@@ -524,10 +529,10 @@ func testAccCheckFirehoseLambdaFunctionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func baseAccFirehoseAWSLambdaConfig(rst string) string {
+func baseAccFirehoseAWSLambdaConfig(policyName, roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-    name = "iam_policy_for_lambda_%s"
+    name = "%s"
     role = "${aws_iam_role.iam_for_lambda.id}"
     policy = <<EOF
 {
@@ -557,7 +562,7 @@ EOF
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "iam_for_lambda_%s"
+    name = "%s"
     assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -574,11 +579,11 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
-`, rst, rst)
+`, policyName, roleName)
 }
 
-func testAccFirehoseAWSLambdaConfigBasic(rName, rSt string) string {
-	return fmt.Sprintf(baseAccFirehoseAWSLambdaConfig(rSt)+`
+func testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName string) string {
+	return fmt.Sprintf(baseAccFirehoseAWSLambdaConfig(policyName, roleName)+`
 resource "aws_lambda_function" "lambda_function_test" {
     filename = "test-fixtures/lambdatest.zip"
     function_name = "%s"
@@ -586,7 +591,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     handler = "exports.example"
     runtime = "nodejs4.3"
 }
-`, rName)
+`, funcName)
 }
 
 const testAccKinesisFirehoseDeliveryStreamBaseConfig = `

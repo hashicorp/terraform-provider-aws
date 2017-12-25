@@ -38,7 +38,7 @@ resource "aws_s3_bucket" "examplebucket" {
 
 resource "aws_s3_bucket_object" "examplebucket_object" {
   key        = "someobject"
-  bucket     = "${aws_s3_bucket.examplebucket.bucket}"
+  bucket     = "${aws_s3_bucket.examplebucket.id}"
   source     = "index.html"
   kms_key_id = "${aws_kms_key.examplekms.arn}"
 }
@@ -54,7 +54,7 @@ resource "aws_s3_bucket" "examplebucket" {
 
 resource "aws_s3_bucket_object" "examplebucket_object" {
   key                    = "someobject"
-  bucket                 = "${aws_s3_bucket.examplebucket.bucket}"
+  bucket                 = "${aws_s3_bucket.examplebucket.id}"
   source                 = "index.html"
   server_side_encryption = "aws:kms"
 }

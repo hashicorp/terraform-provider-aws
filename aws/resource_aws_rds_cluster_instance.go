@@ -179,6 +179,19 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"performance_insights_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+
+			"performance_insights_kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateArn,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -222,6 +235,16 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 
 	if attr, ok := d.GetOk("monitoring_role_arn"); ok {
 		createOpts.MonitoringRoleArn = aws.String(attr.(string))
+	}
+
+	if attr, _ := d.GetOk("engine"); attr == "aurora-postgresql" {
+		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
+			createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
+		}
+
+		if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			createOpts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
+		}
 	}
 
 	if attr, ok := d.GetOk("preferred_backup_window"); ok {
@@ -312,6 +335,10 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 		d.Set("port", db.Endpoint.Port)
 	}
 
+	if db.DBSubnetGroup != nil {
+		d.Set("db_subnet_group_name", db.DBSubnetGroup.DBSubnetGroupName)
+	}
+
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("engine", db.Engine)
@@ -326,6 +353,8 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
 	d.Set("availability_zone", db.AvailabilityZone)
+	d.Set("performance_insights_enabled", db.PerformanceInsightsEnabled)
+	d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
 
 	if db.MonitoringInterval != nil {
 		d.Set("monitoring_interval", db.MonitoringInterval)
@@ -374,6 +403,18 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("monitoring_role_arn") {
 		d.SetPartial("monitoring_role_arn")
 		req.MonitoringRoleArn = aws.String(d.Get("monitoring_role_arn").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("performance_insights_enabled") {
+		d.SetPartial("performance_insights_enabled")
+		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("performance_insights_kms_key_id") {
+		d.SetPartial("performance_insights_kms_key_id")
+		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
 		requestUpdate = true
 	}
 

@@ -565,6 +565,8 @@ func init() {
 			"being executed. If the API request still fails, an error is\n" +
 			"thrown.",
 
+		"apigateway_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"cloudformation_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"cloudwatch_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
@@ -584,6 +586,8 @@ func init() {
 		"kms_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"iam_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
+		"lambda_endpoint": "Use this to override the default endpoint URL constructed from the `region`\n",
 
 		"ec2_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
@@ -679,6 +683,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 	for _, endpointsSetI := range endpointsSet.List() {
 		endpoints := endpointsSetI.(map[string]interface{})
+		config.ApigatewayEndpoint = endpoints["apigateway"].(string)
 		config.CloudFormationEndpoint = endpoints["cloudformation"].(string)
 		config.CloudWatchEndpoint = endpoints["cloudwatch"].(string)
 		config.CloudWatchEventsEndpoint = endpoints["cloudwatchevents"].(string)
@@ -690,6 +695,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.IamEndpoint = endpoints["iam"].(string)
 		config.KinesisEndpoint = endpoints["kinesis"].(string)
 		config.KmsEndpoint = endpoints["kms"].(string)
+		config.LambdaEndpoint = endpoints["lambda"].(string)
 		config.RdsEndpoint = endpoints["rds"].(string)
 		config.S3Endpoint = endpoints["s3"].(string)
 		config.SnsEndpoint = endpoints["sns"].(string)
@@ -751,6 +757,12 @@ func endpointsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"apigateway": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["apigateway_endpoint"],
+				},
 				"cloudwatch": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -819,6 +831,12 @@ func endpointsSchema() *schema.Schema {
 					Default:     "",
 					Description: descriptions["kms_endpoint"],
 				},
+				"lambda": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["lambda_endpoint"],
+				},
 				"rds": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -852,6 +870,7 @@ func endpointsSchema() *schema.Schema {
 func endpointsToHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["apigateway"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["cloudwatch"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["cloudwatchevents"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["cloudwatchlogs"].(string)))
@@ -863,6 +882,7 @@ func endpointsToHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["elb"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kinesis"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kms"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["lambda"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["rds"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["s3"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["sns"].(string)))
