@@ -22656,7 +22656,7 @@ type Address struct {
 	PublicIp *string `locationName:"publicIp" type:"string"`
 
 	// Any tags assigned to the Elastic IP address.
-	Tags []*Tag `locationName:"tags" locationNameList:"item" type:"list"`
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
