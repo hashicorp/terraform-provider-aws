@@ -116,6 +116,7 @@ func resourceAwsInstance() *schema.Resource {
 						return ""
 					}
 				},
+				ValidateFunc: validateInstanceUserDataSize,
 			},
 
 			"user_data_base64": {
