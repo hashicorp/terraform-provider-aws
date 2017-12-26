@@ -37,15 +37,18 @@ func resourceAwsGlueCatalogDatabase() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"location_uri": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"parameters": {
 				Type:     schema.TypeMap,
 				Elem:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}

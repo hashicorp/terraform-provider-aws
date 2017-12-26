@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSGlueCatalogDatabase_basic(t *testing.T) {
+func TestAccAWSGlueCatalogDatabase_full(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -20,7 +20,34 @@ func TestAccAWSGlueCatalogDatabase_basic(t *testing.T) {
 		CheckDestroy: testAccCheckGlueDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGlueCatalogDatabase_basic(rInt, "A test catalog from terraform"),
+				Config:  testAccGlueCatalogDatabase_basic(rInt),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogDatabaseExists("aws_glue_catalog_database.test"),
+					resource.TestCheckResourceAttr(
+						"aws_glue_catalog_database.test",
+						"name",
+						fmt.Sprintf("my_test_catalog_database_%d", rInt),
+					),
+					resource.TestCheckResourceAttr(
+						"aws_glue_catalog_database.test",
+						"description",
+						"",
+					),
+					resource.TestCheckResourceAttr(
+						"aws_glue_catalog_database.test",
+						"location_uri",
+						"",
+					),
+					resource.TestCheckResourceAttr(
+						"aws_glue_catalog_database.test",
+						"parameters.#",
+						"0",
+					),
+				),
+			},
+			{
+				Config:  testAccGlueCatalogDatabase_full(rInt, "A test catalog from terraform"),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogDatabaseExists("aws_glue_catalog_database.test"),
@@ -52,7 +79,7 @@ func TestAccAWSGlueCatalogDatabase_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlueCatalogDatabase_basic(rInt, "An updated test catalog from terraform"),
+				Config: testAccGlueCatalogDatabase_full(rInt, "An updated test catalog from terraform"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogDatabaseExists("aws_glue_catalog_database.test"),
 					resource.TestCheckResourceAttr(
@@ -113,7 +140,15 @@ func testAccCheckGlueDatabaseDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccGlueCatalogDatabase_basic(rInt int, desc string) string {
+func testAccGlueCatalogDatabase_basic(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = "my_test_catalog_database_%d"
+}
+`, rInt)
+}
+
+func testAccGlueCatalogDatabase_full(rInt int, desc string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = "my_test_catalog_database_%d"
