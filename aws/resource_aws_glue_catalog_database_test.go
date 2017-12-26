@@ -50,6 +50,18 @@ func TestAccAWSGlueCatalogDatabase_basic(t *testing.T) {
 					),
 				),
 			},
+			{
+				Config:             testAccGlueCatalogDatabase_basic(rInt, "An updated test catalog from terraform"),
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogDatabaseExists("aws_glue_catalog_database.test"),
+					resource.TestCheckResourceAttr(
+						"aws_glue_catalog_database.test",
+						"description",
+						"An updated test catalog from terraform",
+					),
+				),
+			},
 		},
 	})
 }
