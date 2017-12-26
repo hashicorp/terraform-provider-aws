@@ -45,3 +45,11 @@ Additionally, the following attributes are exported:
 * `ip_owner_id` - The ID of the Elastic IP address owner.
 * `public_dns_name` - The public DNS name.
 * `public_ip` - The address of the Elastic IP address bound to the network interface.
+
+## Import
+
+Elastic Network Interfaces can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_network_interface.test eni-12345
+```
