@@ -41,7 +41,7 @@ func TestAccAWSGlueCatalogDatabase_full(t *testing.T) {
 					),
 					resource.TestCheckResourceAttr(
 						"aws_glue_catalog_database.test",
-						"parameters.#",
+						"parameters.%",
 						"0",
 					),
 				),
