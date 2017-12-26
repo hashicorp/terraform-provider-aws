@@ -73,6 +73,8 @@ func resourceAwsEip() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -111,6 +113,13 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] EIP ID: %s (domain: %v)", d.Id(), *allocResp.Domain)
+
+	if _, ok := d.GetOk("tags"); ok {
+		if err := setTags(ec2conn, d); err != nil {
+			return fmt.Errorf("Error creating EIP tags: %s", err)
+		}
+	}
+
 	return resourceAwsEipUpdate(d, meta)
 }
 
@@ -206,6 +215,8 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(*address.AllocationId)
 	}
 
+	d.Set("tags", tagsToMap(address.Tags))
+
 	return nil
 }
 
@@ -267,6 +278,12 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 			d.Set("instance", "")
 			d.Set("network_interface", "")
 			return fmt.Errorf("Failure associating EIP: %s", err)
+		}
+	}
+
+	if _, ok := d.GetOk("tags"); ok {
+		if err := setTags(ec2conn, d); err != nil {
+			return fmt.Errorf("Error updating EIP tags: %s", err)
 		}
 	}
 
