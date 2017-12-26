@@ -23,15 +23,15 @@ resource "aws_glue_catalog_database" "aws_glue_catalog_database" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the database.
-* `catalogID` - (Optional) ID of the Glue Catalog to create the database in. If omitted, this defaults to the AWS Account Id.
+* `catalog_id` - (Optional) ID of the Glue Catalog to create the database in. If omitted, this defaults to the AWS Account Id.
 * `description` - (Optional) Description of the database.
 * `location_uri` - (Optional) The location of the database (for example, an HDFS path).
 * `parameters` - (Optional) A list of key-value pairs that define parameters and properties of the database.
 
 ## Import
 
-Glue Catalog Databases can be imported using the `name`, e.g.
+Glue Catalog Databases can be imported using the `catalog_id:name`. If you have not set a Catalog ID specify the AWS Account ID that the database is in, e.g.
 
 ```
-$ terraform import aws_glue_catalog_database.database my_database
+$ terraform import aws_glue_catalog_database.database 123456789012:my_database
 ```
