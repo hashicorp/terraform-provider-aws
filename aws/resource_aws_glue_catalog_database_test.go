@@ -19,8 +19,8 @@ func TestAccAWSGlueCatalogDatabase_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueDatabaseDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccGlueCatalogDatabase_basic(rInt),
+			{
+				Config: testAccGlueCatalogDatabase_basic(rInt, "A test catalog from terraform"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogDatabaseExists("aws_glue_catalog_database.test"),
 					resource.TestCheckResourceAttr(
@@ -78,11 +78,11 @@ func testAccCheckGlueDatabaseDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccGlueCatalogDatabase_basic(rInt int) string {
+func testAccGlueCatalogDatabase_basic(rInt int, desc string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = "my_test_catalog_database_%d"
-  description = "A test catalog from terraform"
+  description = "%s"
   location_uri = "my-location"
   parameters {
 	param1 = "value1"
@@ -90,7 +90,7 @@ resource "aws_glue_catalog_database" "test" {
 	param3 = 50
   }
 }
-`, rInt)
+`, rInt, desc)
 }
 
 func testAccCheckGlueCatalogDatabaseExists(name string) resource.TestCheckFunc {
@@ -104,9 +104,12 @@ func testAccCheckGlueCatalogDatabaseExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
+		catalogId, dbName := readAwsGlueCatalogID(rs.Primary.ID)
+
 		glueconn := testAccProvider.Meta().(*AWSClient).glueconn
 		out, err := glueconn.GetDatabase(&glue.GetDatabaseInput{
-			Name: aws.String(rs.Primary.ID),
+			CatalogId: aws.String(catalogId),
+			Name:      aws.String(dbName),
 		})
 
 		if err != nil {
@@ -117,9 +120,9 @@ func testAccCheckGlueCatalogDatabaseExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No Glue Database Found")
 		}
 
-		if *out.Database.Name != rs.Primary.ID {
+		if *out.Database.Name != dbName {
 			return fmt.Errorf("Glue Database Mismatch - existing: %q, state: %q",
-				*out.Database, rs.Primary.ID)
+				*out.Database.Name, dbName)
 		}
 
 		return nil
