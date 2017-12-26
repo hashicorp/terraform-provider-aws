@@ -25,6 +25,7 @@ func resourceAwsGlueCatalogDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -72,38 +73,25 @@ func resourceAwsGlueCatalogDatabaseCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsGlueCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
 	glueconn := meta.(*AWSClient).glueconn
-	doUpdate := false
 
 	catalogID, name := readAwsGlueCatalogID(d.Id())
 	input := &glue.UpdateDatabaseInput{
 		CatalogId: aws.String(catalogID),
 		DatabaseInput: &glue.DatabaseInput{
-			Name: aws.String(name),
+			Name:        aws.String(name),
+			Description: aws.String(d.Get("description").(string)),
+			LocationUri: aws.String(d.Get("location_uri").(string)),
+			Parameters:  make(map[string]*string),
 		},
 		Name: aws.String(name),
 	}
-
-	if ok := d.HasChange("description"); ok {
-		doUpdate = true
-		input.DatabaseInput.Description = aws.String(
-			d.Get("description").(string),
-		)
+	for key, value := range d.Get("parameters").(map[string]interface{}) {
+		input.DatabaseInput.Parameters[key] = aws.String(value.(string))
 	}
 
-	if ok := d.HasChange("location_uri"); ok {
-		doUpdate = true
-		input.DatabaseInput.LocationUri = aws.String(
-			d.Get("location_uri").(string),
-		)
-	}
-
-	if ok := d.HasChange("parameters"); ok {
-		doUpdate = true
-		input.DatabaseInput.Parameters = make(map[string]*string)
-		for key, value := range d.Get("parameters").(map[string]interface{}) {
-			input.DatabaseInput.Parameters[key] = aws.String(value.(string))
-		}
-	}
+	doUpdate := d.HasChange("description")
+	doUpdate = doUpdate || d.HasChange("location_uri")
+	doUpdate = doUpdate || d.HasChange("parameters")
 
 	if doUpdate {
 		if _, err := glueconn.UpdateDatabase(input); err != nil {

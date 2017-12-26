@@ -20,7 +20,8 @@ func TestAccAWSGlueCatalogDatabase_basic(t *testing.T) {
 		CheckDestroy: testAccCheckGlueDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCatalogDatabase_basic(rInt, "A test catalog from terraform"),
+				Config:  testAccGlueCatalogDatabase_basic(rInt, "A test catalog from terraform"),
+				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogDatabaseExists("aws_glue_catalog_database.test"),
 					resource.TestCheckResourceAttr(
@@ -58,6 +59,26 @@ func TestAccAWSGlueCatalogDatabase_basic(t *testing.T) {
 						"aws_glue_catalog_database.test",
 						"description",
 						"An updated test catalog from terraform",
+					),
+					resource.TestCheckResourceAttr(
+						"aws_glue_catalog_database.test",
+						"location_uri",
+						"my-location",
+					),
+					resource.TestCheckResourceAttr(
+						"aws_glue_catalog_database.test",
+						"parameters.param1",
+						"value1",
+					),
+					resource.TestCheckResourceAttr(
+						"aws_glue_catalog_database.test",
+						"parameters.param2",
+						"1",
+					),
+					resource.TestCheckResourceAttr(
+						"aws_glue_catalog_database.test",
+						"parameters.param3",
+						"50",
 					),
 				),
 			},
