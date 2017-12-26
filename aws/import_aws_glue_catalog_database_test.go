@@ -17,7 +17,7 @@ func TestAccAWSGlueCatalogDatabase_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckGlueDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCatalogDatabase_basic(rInt, "A test catalog from terraform"),
+				Config: testAccGlueCatalogDatabase_full(rInt, "A test catalog from terraform"),
 			},
 			{
 				ResourceName:      resourceName,
