@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAWSGlueCatalogDatabaseVault_importBasic(t *testing.T) {
+func TestAccAWSGlueCatalogDatabase_importBasic(t *testing.T) {
 	resourceName := "aws_glue_catalog_database.test"
 	rInt := acctest.RandInt()
 
