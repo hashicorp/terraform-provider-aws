@@ -51,8 +51,7 @@ func TestAccAWSGlueCatalogDatabase_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:             testAccGlueCatalogDatabase_basic(rInt, "An updated test catalog from terraform"),
-				ExpectNonEmptyPlan: true,
+				Config: testAccGlueCatalogDatabase_basic(rInt, "An updated test catalog from terraform"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogDatabaseExists("aws_glue_catalog_database.test"),
 					resource.TestCheckResourceAttr(
@@ -74,8 +73,11 @@ func testAccCheckGlueDatabaseDestroy(s *terraform.State) error {
 			continue
 		}
 
+		catalogId, dbName := readAwsGlueCatalogID(rs.Primary.ID)
+
 		input := &glue.GetDatabaseInput{
-			Name: aws.String(rs.Primary.ID),
+			CatalogId: aws.String(catalogId),
+			Name:      aws.String(dbName),
 		}
 		if _, err := conn.GetDatabase(input); err != nil {
 			//Verify the error is what we want

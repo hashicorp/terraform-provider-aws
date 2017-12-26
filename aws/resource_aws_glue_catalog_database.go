@@ -44,10 +44,6 @@ func resourceAwsGlueCatalogDatabase() *schema.Resource {
 				Elem:     schema.TypeString,
 				Optional: true,
 			},
-			"create_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -135,7 +131,6 @@ func resourceAwsGlueCatalogDatabaseRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("name", out.Database.Name)
 	d.Set("catalog_id", catalogID)
-	d.Set("create_time", out.Database.CreateTime)
 	d.Set("description", out.Database.Description)
 	d.Set("location_uri", out.Database.LocationUri)
 
