@@ -14,7 +14,7 @@ Provides information about a RDS cluster.
 
 ```hcl
 data "aws_rds_cluster" "clusterName" {
-  name = "clusterName"
+  cluster_identifier = "clusterName"
 }
 ```
 
