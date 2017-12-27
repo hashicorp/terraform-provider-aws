@@ -29,12 +29,12 @@ func TestAwsBudget_basic(t *testing.T) {
 		IncludeRefund:            "false",
 		IncludeSubscription:      "false",
 		IncludeSupport:           "false",
-		IncludeTax:               "true",
+		IncludeTax:               "false",
 		IncludeUpfront:           "false",
 		UseBlended:               "false",
 		TimeUnit:                 "MONTHLY",
 		TimePeriodStart:          "2017-01-01_12:00",
-		TimePeriodEnd:            "2018-01-01_12:00",
+		TimePeriodEnd:            "2087-06-15_12:00",
 	}
 	configBasicUpdate := budgetTestConfig{
 		BudgetName:               name,
@@ -65,7 +65,7 @@ func TestAwsBudget_basic(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testBudgetHCLBasic(configBasic),
+				Config: testBudgetHCLBasicUseDefaults(configBasic),
 				Check:  newComposedBudgetTestCheck(configBasic, testAccProvider),
 			},
 
@@ -84,6 +84,7 @@ func newComposedBudgetTestCheck(config budgetTestConfig, provider *schema.Provid
 		resource.TestCheckResourceAttr("aws_budget.foo", "limit_amount", config.LimitAmount),
 		resource.TestCheckResourceAttr("aws_budget.foo", "limit_unit", config.LimitUnit),
 		resource.TestCheckResourceAttr("aws_budget.foo", "time_period_start", config.TimePeriodStart),
+		resource.TestCheckResourceAttr("aws_budget.foo", "time_period_end", config.TimePeriodEnd),
 		resource.TestCheckResourceAttr("aws_budget.foo", "time_unit", config.TimeUnit),
 		testBudgetExists(config, provider),
 	)
@@ -183,6 +184,26 @@ type budgetTestConfig struct {
 	TimePeriodEnd            string
 	FilterKey                string
 	FilterValue              string
+}
+
+func testBudgetHCLBasicUseDefaults(budgetConfig budgetTestConfig) string {
+	t := template.Must(template.New("t1").
+		Parse(`
+resource "aws_budget" "foo" {
+	budget_name = "{{.BudgetName}}"
+	budget_type = "{{.BudgetType}}"
+ 	limit_amount = "{{.LimitAmount}}"
+ 	limit_unit = "{{.LimitUnit}}"
+	time_period_start = "{{.TimePeriodStart}}" 
+ 	time_unit = "{{.TimeUnit}}"
+	cost_filters {
+		{{.FilterKey}} = "{{.FilterValue}}"
+	}
+}
+`))
+	var doc bytes.Buffer
+	t.Execute(&doc, budgetConfig)
+	return doc.String()
 }
 
 func testBudgetHCLBasic(budgetConfig budgetTestConfig) string {
