@@ -24,6 +24,11 @@ func resourceAwsCodePipeline() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -459,6 +464,7 @@ func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error
 		}
 		return fmt.Errorf("[ERROR] Error retreiving Pipeline: %q", err)
 	}
+	metadata := resp.Metadata
 	pipeline := resp.Pipeline
 
 	if err := d.Set("artifact_store", flattenAwsCodePipelineArtifactStore(pipeline.ArtifactStore)); err != nil {
@@ -469,6 +475,7 @@ func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
+	d.Set("arn", metadata.PipelineArn)
 	d.Set("name", pipeline.Name)
 	d.Set("role_arn", pipeline.RoleArn)
 	return nil
