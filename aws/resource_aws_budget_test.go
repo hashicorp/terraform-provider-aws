@@ -1,9 +1,13 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
+	"strconv"
 	"testing"
+	"text/template"
 
+	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -12,11 +16,46 @@ import (
 
 func TestAwsBudget_basic(t *testing.T) {
 	name := fmt.Sprintf("test-budget-%d", acctest.RandInt())
-	controlLimitA := "100"
-	controlLimitB := "500"
-	filterKey := "AZ"
-	filterValueA := "us-east-1"
-	filterValueB := "us-east-2"
+	configBasic := budgetTestConfig{
+		BudgetName:               name,
+		BudgetType:               "COST",
+		LimitAmount:              "100",
+		LimitUnit:                "USD",
+		FilterKey:                "AZ",
+		FilterValue:              "us-east-1",
+		IncludeCredit:            "false",
+		IncludeOtherSubscription: "false",
+		IncludeRecurring:         "false",
+		IncludeRefund:            "false",
+		IncludeSubscription:      "false",
+		IncludeSupport:           "false",
+		IncludeTax:               "true",
+		IncludeUpfront:           "false",
+		UseBlended:               "false",
+		TimeUnit:                 "MONTHLY",
+		TimePeriodStart:          "2017-01-01_12:00",
+		TimePeriodEnd:            "2018-01-01_12:00",
+	}
+	configBasicUpdate := budgetTestConfig{
+		BudgetName:               name,
+		BudgetType:               "COST",
+		LimitAmount:              "500",
+		LimitUnit:                "USD",
+		FilterKey:                "AZ",
+		FilterValue:              "us-east-2",
+		IncludeCredit:            "false",
+		IncludeOtherSubscription: "false",
+		IncludeRecurring:         "false",
+		IncludeRefund:            "false",
+		IncludeSubscription:      "false",
+		IncludeSupport:           "false",
+		IncludeTax:               "true",
+		IncludeUpfront:           "false",
+		UseBlended:               "false",
+		TimeUnit:                 "MONTHLY",
+		TimePeriodStart:          "2017-01-01_12:00",
+		TimePeriodEnd:            "2018-01-01_12:00",
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -26,37 +65,33 @@ func TestAwsBudget_basic(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testBudgetConfig_basic(name, controlLimitA, filterKey, filterValueA),
-				Check:  newComposedBudgetTestCheck(name, controlLimitA, filterKey, filterValueA, testAccProvider),
+				Config: testBudgetHCLBasic(configBasic),
+				Check:  newComposedBudgetTestCheck(configBasic, testAccProvider),
 			},
 
 			{
-				Config: testBudgetConfig_basic(name, controlLimitB, filterKey, filterValueB),
-				Check:  newComposedBudgetTestCheck(name, controlLimitB, filterKey, filterValueB, testAccProvider),
+				Config: testBudgetHCLBasic(configBasicUpdate),
+				Check:  newComposedBudgetTestCheck(configBasicUpdate, testAccProvider),
 			},
 		},
 	})
 }
 
-func newComposedBudgetTestCheck(name, limit, filterKey, filterValue string, provider *schema.Provider) resource.TestCheckFunc {
+func newComposedBudgetTestCheck(config budgetTestConfig, provider *schema.Provider) resource.TestCheckFunc {
 	return resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttr("aws_budget.foo", "budget_name", name),
-		resource.TestCheckResourceAttr("aws_budget.foo", "budget_type", "COST"),
-		resource.TestCheckResourceAttr("aws_budget.foo", "limit_amount", limit),
-		resource.TestCheckResourceAttr("aws_budget.foo", "limit_unit", "USD"),
-		resource.TestCheckResourceAttr("aws_budget.foo", "include_tax", "true"),
-		resource.TestCheckResourceAttr("aws_budget.foo", "include_subscriptions", "false"),
-		resource.TestCheckResourceAttr("aws_budget.foo", "include_blended", "false"),
-		resource.TestCheckResourceAttr("aws_budget.foo", "time_period_start", "2017-01-01_12:00"),
-		resource.TestCheckResourceAttr("aws_budget.foo", "time_period_end", "2018-01-01_12:00"),
-		resource.TestCheckResourceAttr("aws_budget.foo", "time_unit", "MONTHLY"),
-		testBudgetExists(name, limit, filterKey, filterValue, provider),
+		resource.TestCheckResourceAttr("aws_budget.foo", "budget_name", config.BudgetName),
+		resource.TestCheckResourceAttr("aws_budget.foo", "budget_type", config.BudgetType),
+		resource.TestCheckResourceAttr("aws_budget.foo", "limit_amount", config.LimitAmount),
+		resource.TestCheckResourceAttr("aws_budget.foo", "limit_unit", config.LimitUnit),
+		resource.TestCheckResourceAttr("aws_budget.foo", "time_period_start", config.TimePeriodStart),
+		resource.TestCheckResourceAttr("aws_budget.foo", "time_unit", config.TimeUnit),
+		testBudgetExists(config, provider),
 	)
 }
 
-func testBudgetExists(budgetName, limit, filterKey, filterValue string, provider *schema.Provider) resource.TestCheckFunc {
+func testBudgetExists(config budgetTestConfig, provider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		b, err := describeBudget(budgetName, provider.Meta())
+		b, err := describeBudget(config.BudgetName, provider.Meta())
 		if err != nil {
 			return fmt.Errorf("Describebudget error: %v", err)
 		}
@@ -65,15 +100,60 @@ func testBudgetExists(budgetName, limit, filterKey, filterValue string, provider
 			return fmt.Errorf("No budget returned %v in %v", b.Budget, b)
 		}
 
-		if *b.Budget.BudgetLimit.Amount != limit {
-			return fmt.Errorf("budget limit incorrectly set %v != %v", limit, *b.Budget.BudgetLimit.Amount)
+		if *b.Budget.BudgetLimit.Amount != config.LimitAmount {
+			return fmt.Errorf("budget limit incorrectly set %v != %v", config.LimitAmount, *b.Budget.BudgetLimit.Amount)
 		}
 
-		if v, ok := b.Budget.CostFilters[filterKey]; !ok || *v[len(v)-1] != filterValue {
+		if err := checkBudgetCostTypes(config, *b.Budget.CostTypes); err != nil {
+			return err
+		}
+
+		if v, ok := b.Budget.CostFilters[config.FilterKey]; !ok || *v[len(v)-1] != config.FilterValue {
 			return fmt.Errorf("cost filter not set properly: %v", b.Budget.CostFilters)
 		}
+
 		return nil
 	}
+}
+
+func checkBudgetCostTypes(config budgetTestConfig, costTypes budgets.CostTypes) error {
+	if strconv.FormatBool(*costTypes.IncludeCredit) != config.IncludeCredit {
+		return fmt.Errorf("IncludeCredit not set properly '%v' should be '%v'", *costTypes.IncludeCredit, config.IncludeCredit)
+	}
+
+	if strconv.FormatBool(*costTypes.IncludeOtherSubscription) != config.IncludeOtherSubscription {
+		return fmt.Errorf("IncludeOtherSubscription not set properly '%v' should be '%v'", *costTypes.IncludeOtherSubscription, config.IncludeOtherSubscription)
+	}
+
+	if strconv.FormatBool(*costTypes.IncludeRecurring) != config.IncludeRecurring {
+		return fmt.Errorf("IncludeRecurring not set properly  '%v' should be '%v'", *costTypes.IncludeRecurring, config.IncludeRecurring)
+	}
+
+	if strconv.FormatBool(*costTypes.IncludeRefund) != config.IncludeRefund {
+		return fmt.Errorf("IncludeRefund not set properly '%v' should be '%v'", *costTypes.IncludeRefund, config.IncludeRefund)
+	}
+
+	if strconv.FormatBool(*costTypes.IncludeSubscription) != config.IncludeSubscription {
+		return fmt.Errorf("IncludeSubscription not set properly '%v' should be '%v'", *costTypes.IncludeSubscription, config.IncludeSubscription)
+	}
+
+	if strconv.FormatBool(*costTypes.IncludeSupport) != config.IncludeSupport {
+		return fmt.Errorf("IncludeSupport not set properly '%v' should be '%v'", *costTypes.IncludeSupport, config.IncludeSupport)
+	}
+
+	if strconv.FormatBool(*costTypes.IncludeTax) != config.IncludeTax {
+		return fmt.Errorf("IncludeTax not set properly '%v' should be '%v'", *costTypes.IncludeTax, config.IncludeTax)
+	}
+
+	if strconv.FormatBool(*costTypes.IncludeUpfront) != config.IncludeUpfront {
+		return fmt.Errorf("IncludeUpfront not set properly '%v' should be '%v'", *costTypes.IncludeUpfront, config.IncludeUpfront)
+	}
+
+	if strconv.FormatBool(*costTypes.UseBlended) != config.UseBlended {
+		return fmt.Errorf("UseBlended not set properly '%v' should be '%v'", *costTypes.UseBlended, config.UseBlended)
+	}
+
+	return nil
 }
 
 func testCheckBudgetDestroy(budgetName string, provider *schema.Provider) error {
@@ -84,21 +164,47 @@ func testCheckBudgetDestroy(budgetName string, provider *schema.Provider) error 
 	return nil
 }
 
-func testBudgetConfig_basic(name, limit, filterKey, filterValue string) string {
-	return fmt.Sprintf(`
+type budgetTestConfig struct {
+	BudgetName               string
+	BudgetType               string
+	LimitAmount              string
+	LimitUnit                string
+	IncludeCredit            string
+	IncludeOtherSubscription string
+	IncludeRecurring         string
+	IncludeRefund            string
+	IncludeSubscription      string
+	IncludeSupport           string
+	IncludeTax               string
+	IncludeUpfront           string
+	UseBlended               string
+	TimeUnit                 string
+	TimePeriodStart          string
+	TimePeriodEnd            string
+	FilterKey                string
+	FilterValue              string
+}
+
+func testBudgetHCLBasic(budgetConfig budgetTestConfig) string {
+	t := template.Must(template.New("t1").
+		Parse(`
 resource "aws_budget" "foo" {
-	budget_name = "%s"
-	budget_type = "COST"
- 	limit_amount = "%s"
- 	limit_unit = "USD"
-	include_tax = "true"
-	include_subscriptions = "false"
-	include_blended = "false"
-	time_period_start = "2017-01-01_12:00" 
-	time_period_end = "2018-01-01_12:00"
- 	time_unit = "MONTHLY"
+	budget_name = "{{.BudgetName}}"
+	budget_type = "{{.BudgetType}}"
+ 	limit_amount = "{{.LimitAmount}}"
+ 	limit_unit = "{{.LimitUnit}}"
+	include_tax = "{{.IncludeTax}}"
+	include_subscription = "{{.IncludeSubscription}}"
+	use_blended = "{{.UseBlended}}"
+	time_period_start = "{{.TimePeriodStart}}" 
+	time_period_end = "{{.TimePeriodEnd}}"
+ 	time_unit = "{{.TimeUnit}}"
 	cost_filters {
-		%s = "%s"
+		{{.FilterKey}} = "{{.FilterValue}}"
 	}
-}`, name, limit, filterKey, filterValue)
+}
+`))
+	var doc bytes.Buffer
+	t.Execute(&doc, budgetConfig)
+	return doc.String()
 }

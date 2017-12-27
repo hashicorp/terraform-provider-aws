@@ -38,17 +38,41 @@ func resourceAwsBudgetSchema() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"include_credit": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
+		"include_other_subscription": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
+		"include_recurring": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
+		"include_refund": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
+		"include_subscription": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
+		"include_support": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
 		"include_tax": {
 			Type:     schema.TypeBool,
-			Required: true,
+			Optional: true,
 		},
-		"include_subscriptions": {
+		"include_upfront": {
 			Type:     schema.TypeBool,
-			Required: true,
+			Optional: true,
 		},
-		"include_blended": {
+		"use_blended": {
 			Type:     schema.TypeBool,
-			Required: true,
+			Optional: true,
 		},
 		"time_period_start": {
 			Type:     schema.TypeString,
@@ -106,9 +130,15 @@ func resourceAwsBudgetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("budget_type", describeBudgetOutput.Budget.BudgetType)
 	d.Set("limit_amount", describeBudgetOutput.Budget.BudgetLimit.Amount)
 	d.Set("limit_unit", describeBudgetOutput.Budget.BudgetLimit.Unit)
+	d.Set("include_credit", describeBudgetOutput.Budget.CostTypes.IncludeCredit)
+	d.Set("include_other_subscription", describeBudgetOutput.Budget.CostTypes.IncludeOtherSubscription)
+	d.Set("include_recurring", describeBudgetOutput.Budget.CostTypes.IncludeRecurring)
+	d.Set("include_refund", describeBudgetOutput.Budget.CostTypes.IncludeRefund)
+	d.Set("include_subscription", describeBudgetOutput.Budget.CostTypes.IncludeSubscription)
+	d.Set("include_support", describeBudgetOutput.Budget.CostTypes.IncludeSupport)
 	d.Set("include_tax", describeBudgetOutput.Budget.CostTypes.IncludeTax)
-	d.Set("include_subscriptions", describeBudgetOutput.Budget.CostTypes.IncludeSubscription)
-	d.Set("include_blended", describeBudgetOutput.Budget.CostTypes.UseBlended)
+	d.Set("include_upfront", describeBudgetOutput.Budget.CostTypes.IncludeUpfront)
+	d.Set("use_blended", describeBudgetOutput.Budget.CostTypes.UseBlended)
 	d.Set("time_period_start", describeBudgetOutput.Budget.TimePeriod.Start)
 	d.Set("time_period_end", describeBudgetOutput.Budget.TimePeriod.End)
 	d.Set("time_unit", describeBudgetOutput.Budget.TimeUnit)
@@ -160,9 +190,15 @@ func newBudget(d *schema.ResourceData) (*budgets.Budget, error) {
 	budgetType := d.Get("budget_type").(string)
 	budgetLimitAmount := d.Get("limit_amount").(string)
 	budgetLimitUnit := d.Get("limit_unit").(string)
+	budgetIncludeCredit := d.Get("include_credit").(bool)
+	budgetIncludeOtherSubscription := d.Get("include_other_subscription").(bool)
+	budgetIncludeRecurring := d.Get("include_recurring").(bool)
+	budgetIncludeRefund := d.Get("include_refund").(bool)
+	budgetIncludeSubscription := d.Get("include_subscription").(bool)
+	budgetIncludeSupport := d.Get("include_support").(bool)
 	budgetIncludeTax := d.Get("include_tax").(bool)
-	budgetIncludeSubscriptions := d.Get("include_subscriptions").(bool)
-	budgetIncludeBlended := d.Get("include_blended").(bool)
+	budgetIncludeUpfront := d.Get("include_upfront").(bool)
+	budgetUseBlended := d.Get("use_blended").(bool)
 	budgetTimeUnit := d.Get("time_unit").(string)
 	budgetCostFilters := make(map[string][]*string)
 	for k, v := range d.Get("cost_filters").(map[string]interface{}) {
@@ -188,9 +224,15 @@ func newBudget(d *schema.ResourceData) (*budgets.Budget, error) {
 		Unit:   &budgetLimitUnit,
 	})
 	budget.SetCostTypes(&budgets.CostTypes{
-		IncludeSubscription: &budgetIncludeSubscriptions,
-		IncludeTax:          &budgetIncludeTax,
-		UseBlended:          &budgetIncludeBlended,
+		IncludeCredit:            &budgetIncludeCredit,
+		IncludeOtherSubscription: &budgetIncludeOtherSubscription,
+		IncludeRecurring:         &budgetIncludeRecurring,
+		IncludeRefund:            &budgetIncludeRefund,
+		IncludeSubscription:      &budgetIncludeSubscription,
+		IncludeSupport:           &budgetIncludeSupport,
+		IncludeTax:               &budgetIncludeTax,
+		IncludeUpfront:           &budgetIncludeUpfront,
+		UseBlended:               &budgetUseBlended,
 	})
 	budget.SetTimePeriod(&budgets.TimePeriod{
 		End:   &budgetTimePeriodEnd,
