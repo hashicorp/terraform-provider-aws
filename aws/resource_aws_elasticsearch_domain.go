@@ -497,7 +497,9 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		for k, val := range ds.LogPublishingOptions {
 			mm := map[string]interface{}{}
 			mm["log_type"] = k
-			mm["cloudwatch_log_group_arn"] = *val.CloudWatchLogsLogGroupArn
+			if val.CloudWatchLogsLogGroupArn != nil {
+				mm["cloudwatch_log_group_arn"] = *val.CloudWatchLogsLogGroupArn
+			}
 			mm["enabled"] = *val.Enabled
 			m = append(m, mm)
 		}
