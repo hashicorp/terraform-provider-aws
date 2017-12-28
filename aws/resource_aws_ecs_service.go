@@ -49,6 +49,12 @@ func resourceAwsEcsService() *schema.Resource {
 				Optional: true,
 			},
 
+			"health_check_grace_period_seconds": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validateAwsEcsServiceHealthCheckGracePeriodSeconds,
+			},
+
 			"launch_type": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -213,6 +219,10 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		input.Cluster = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("health_check_grace_period_seconds"); ok {
+		input.HealthCheckGracePeriodSeconds = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("launch_type"); ok {
 		input.LaunchType = aws.String(v.(string))
 	}
@@ -352,7 +362,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("desired_count", service.DesiredCount)
-
+	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
 	d.Set("launch_type", service.LaunchType)
 
 	// Save cluster in the same format
@@ -468,6 +478,10 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("desired_count") {
 		_, n := d.GetChange("desired_count")
 		input.DesiredCount = aws.Int64(int64(n.(int)))
+	}
+	if d.HasChange("health_check_grace_period_seconds") {
+		_, n := d.GetChange("health_check_grace_period_seconds")
+		input.HealthCheckGracePeriodSeconds = aws.Int64(int64(n.(int)))
 	}
 	if d.HasChange("task_definition") {
 		_, n := d.GetChange("task_definition")
@@ -645,4 +659,12 @@ func parseTaskDefinition(taskDefinition string) (string, string, error) {
 	}
 
 	return matches[0][1], matches[0][2], nil
+}
+
+func validateAwsEcsServiceHealthCheckGracePeriodSeconds(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(int)
+	if (value < 0) || (value > 1800) {
+		errors = append(errors, fmt.Errorf("%q must be between 0 and 1800", k))
+	}
+	return
 }

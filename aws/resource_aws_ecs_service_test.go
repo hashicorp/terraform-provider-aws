@@ -182,6 +182,41 @@ func TestAccAWSEcsServiceWithRenamedCluster(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_ecs_service.with_alb"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSEcsService_healthCheckGracePeriodSeconds(rName, t.Name(), -1),
+				ExpectError: regexp.MustCompile(`must be between 0 and 1800`),
+			},
+			{
+				Config:      testAccAWSEcsService_healthCheckGracePeriodSeconds(rName, t.Name(), 1801),
+				ExpectError: regexp.MustCompile(`must be between 0 and 1800`),
+			},
+			{
+				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(rName, t.Name(), 300),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "300"),
+				),
+			},
+			{
+				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(rName, t.Name(), 600),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "600"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsService_withIamRole(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -696,6 +731,138 @@ resource "aws_ecs_service" "main" {
   }
 }
 `, rInt, rInt, rInt, rInt)
+}
+
+func testAccAWSEcsService_healthCheckGracePeriodSeconds(rName string, testName string, healthCheckGracePeriodSeconds int) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.10.0.0/16"
+	tags {
+		Name = "%[2]s"
+	}
+}
+
+resource "aws_subnet" "main" {
+  count = 2
+  cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  vpc_id = "${aws_vpc.main.id}"
+}
+
+resource "aws_ecs_cluster" "main" {
+  name = "%[1]s"
+}
+
+resource "aws_ecs_task_definition" "with_lb_changes" {
+  family = "%[1]s"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "ghost:latest",
+    "memory": 512,
+    "name": "ghost",
+    "portMappings": [
+      {
+        "containerPort": 2368,
+        "hostPort": 8080
+      }
+    ]
+  }
+]
+DEFINITION
+}
+
+resource "aws_iam_role" "ecs_service" {
+    name = "%[1]s"
+    assume_role_policy = <<EOF
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ecs.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "ecs_service" {
+    name = "%[1]s"
+    role = "${aws_iam_role.ecs_service.name}"
+    policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:Describe*",
+        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+        "elasticloadbalancing:DeregisterTargets",
+        "elasticloadbalancing:Describe*",
+        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+        "elasticloadbalancing:RegisterTargets"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lb_target_group" "test" {
+  name = "%[1]s"
+  port = 80
+  protocol = "HTTP"
+  vpc_id = "${aws_vpc.main.id}"
+}
+
+resource "aws_lb" "main" {
+  name            = "%[1]s"
+  internal        = true
+  subnets         = ["${aws_subnet.main.*.id}"]
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = "${aws_lb.main.id}"
+  port = "80"
+  protocol = "HTTP"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type = "forward"
+  }
+}
+
+resource "aws_ecs_service" "with_alb" {
+  name = "%[1]s"
+  cluster = "${aws_ecs_cluster.main.id}"
+  task_definition = "${aws_ecs_task_definition.with_lb_changes.arn}"
+  desired_count = 1
+  health_check_grace_period_seconds = %[3]d
+  iam_role = "${aws_iam_role.ecs_service.name}"
+
+  load_balancer {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    container_name = "ghost"
+    container_port = "2368"
+  }
+
+  depends_on = [
+    "aws_iam_role_policy.ecs_service",
+    "aws_lb_listener.front_end"
+  ]
+}
+`, rName, testName, healthCheckGracePeriodSeconds)
 }
 
 var testAccAWSEcsService_withIamRole = `
