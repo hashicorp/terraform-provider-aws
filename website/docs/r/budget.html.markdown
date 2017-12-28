@@ -38,9 +38,15 @@ The following arguments are supported:
 * `budget_name` - The name of a budget. Unique within accounts.
 * `budget_type` - Whether this budget tracks monetary cost or usage.
 * `cost_filters` - Map of [CostFilters](#CostFilters) key/value pairs to apply to the budget.
-* `include_blended` - Boolean value indicating whether the budget uses blended rate. Defaults to `false`.
-* `include_subscriptions` - Boolean value indicating whether the budget includes subscriptions. Defaults to `false`.
-* `include_tax` - Boolean value indicating whether to include tax in budget. Defaults to `true`.
+* `include_credit` - 	A boolean value whether to include credits in the cost budget. Defaults to `true`
+* `include_other_subscription` - 	A boolean value whether to include other subscription costs in the cost budget. Defaults to `true`
+* `include_recurring` - A boolean value whether to include recurring costs in the cost budget. Defaults to `true`
+* `include_refund` - A boolean value whether to include refunds in the cost budget. Defaults to `true`
+* `include_subscription` - A boolean value whether to include subscriptions in the cost budget. Defaults to `true`
+* `include_support` - A boolean value whether to include support costs in the cost budget. Defaults to `true`
+* `include_tax` - A boolean value whether to include tax in the cost budget. Defaults to `true`
+* `include_upfront` - A boolean value whether to include upfront costs in the cost budget. Defaults to `true`
+* `use_blended` - A boolean value whether to use blended costs in the cost budget. Defaults to `false`
 * `limit_amount` - The amount of cost or usage being measured for a budget.
 * `limit_unit` - The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend ](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
 * `time_period_end` - The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
@@ -54,9 +60,15 @@ The following attributes are exported:
 * `budget_name` - The name of the budget.
 * `budget_type` - The type of the budget.
 * `cost_filters` - Map of cost filters applied to the budget. See [CostFilters](#CostFilters) for possible options.
-* `include_blended` - whether the budget uses blended rate
-* `include_subscriptions` - whether the budget includes subscriptions
-* `include_tax` - Whether tax is included in the budget.
+* `include_credit` - whether to include credits in the cost budget
+* `include_other_subscription` - whether to include other subscription costs in the cost budget
+* `include_recurring` - whether to include recurring costs in the cost budget
+* `include_refund` - whether to include refunds in the cost budget
+* `include_subscription` - whether to include subscriptions in the cost budget
+* `include_support` - whether to include support costs in the cost budget
+* `include_tax` - whether to include tax in the cost budget
+* `include_upfront` - whether to include upfront costs in the cost budget
+* `use_blended` - whether to use blended costs in the cost budget
 * `limit_amount` - The amount of cost or usage being measured
 * `limit_unit` - The unit of measurement used, such as dollars or GB.
 * `time_period_end` - The end of the time period covered by the budget

@@ -48,38 +48,47 @@ func resourceAwsBudgetSchema() map[string]*schema.Schema {
 		"include_credit": {
 			Type:     schema.TypeBool,
 			Optional: true,
+			Default:  true,
 		},
 		"include_other_subscription": {
 			Type:     schema.TypeBool,
 			Optional: true,
+			Default:  true,
 		},
 		"include_recurring": {
 			Type:     schema.TypeBool,
 			Optional: true,
+			Default:  true,
 		},
 		"include_refund": {
 			Type:     schema.TypeBool,
 			Optional: true,
+			Default:  true,
 		},
 		"include_subscription": {
 			Type:     schema.TypeBool,
 			Optional: true,
+			Default:  true,
 		},
 		"include_support": {
 			Type:     schema.TypeBool,
 			Optional: true,
+			Default:  true,
 		},
 		"include_tax": {
 			Type:     schema.TypeBool,
 			Optional: true,
+			Default:  true,
 		},
 		"include_upfront": {
 			Type:     schema.TypeBool,
 			Optional: true,
+			Default:  true,
 		},
 		"use_blended": {
 			Type:     schema.TypeBool,
 			Optional: true,
+			Default:  false,
 		},
 		"time_period_start": {
 			Type:     schema.TypeString,
