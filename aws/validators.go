@@ -351,7 +351,7 @@ func validateLambdaFunctionName(v interface{}, k string) (ws []string, errors []
 	value := v.(string)
 	if len(value) > 64 {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 140 characters: %q", k, value))
+			"%q cannot be longer than 64 characters: %q", k, value))
 	}
 	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
 	pattern := `^[a-zA-Z0-9-_]+$`
