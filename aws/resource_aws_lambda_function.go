@@ -75,9 +75,9 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				},
 			},
 			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateLambdaFunctionName,
 			},
 			"handler": {
