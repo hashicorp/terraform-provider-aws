@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/errwrap"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -33,11 +34,36 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"wait_until_present": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"wait_until_present_timeout": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "5m",
+			},
 		},
 	}
 }
 
 func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) error {
+	if d.Get("wait_until_present").(bool) {
+
+		timeout, err := time.ParseDuration(d.Get("wait_until_present_timeout").(string))
+		if err != nil {
+			return err
+		}
+		return resource.Retry(timeout, func() *resource.RetryError {
+			return dataSourceAwsAcmGetCertificate(d, meta)
+		})
+	} else {
+		return dataSourceAwsAcmGetCertificate(d, meta).Err
+	}
+}
+
+func dataSourceAwsAcmGetCertificate(d *schema.ResourceData, meta interface{}) *resource.RetryError {
 	conn := meta.(*AWSClient).acmconn
 
 	params := &acm.ListCertificatesInput{}
@@ -62,7 +88,10 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		return true
 	})
 	if err != nil {
-		return errwrap.Wrapf("Error describing certificates: {{err}}", err)
+		return &resource.RetryError{
+			Err:       errwrap.Wrapf("Error describing certificates: {{err}}", err),
+			Retryable: false,
+		}
 	}
 
 	// filter based on certificate type (imported or aws-issued)
@@ -76,7 +105,10 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 
 			description, err := conn.DescribeCertificate(params)
 			if err != nil {
-				return errwrap.Wrapf("Error describing certificates: {{err}}", err)
+				return &resource.RetryError{
+					Err:       errwrap.Wrapf("Error describing certificates: {{err}}", err),
+					Retryable: false,
+				}
 			}
 
 			for _, certType := range typesStrings {
@@ -91,10 +123,16 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if len(arns) == 0 {
-		return fmt.Errorf("No certificate for domain %q found in this region.", target)
+		return &resource.RetryError{
+			Err:       fmt.Errorf("No certificate for domain %q found in this region.", target),
+			Retryable: true,
+		}
 	}
 	if len(arns) > 1 {
-		return fmt.Errorf("Multiple certificates for domain %q found in this region.", target)
+		return &resource.RetryError{
+			Err:       fmt.Errorf("Multiple certificates for domain %q found in this region.", target),
+			Retryable: true,
+		}
 	}
 
 	d.SetId(time.Now().UTC().String())

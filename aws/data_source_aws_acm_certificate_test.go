@@ -32,6 +32,21 @@ func TestAccAwsAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 	})
 }
 
+func TestAccAwsAcmCertificateDataSource_wait_until_issued(t *testing.T) {
+	domain := "certtest.hashicorp.com"
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckAwsAcmCertificateDataSourceConfigWaitingForIssued(domain),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsAcmCertificateDataSourceConfig(domain string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
@@ -54,6 +69,17 @@ func testAccCheckAwsAcmCertificateDataSourceConfigWithTypes(domain string) strin
 data "aws_acm_certificate" "test" {
 	domain = "%s"
 	types = ["IMPORTED"]
+}
+`, domain)
+}
+
+func testAccCheckAwsAcmCertificateDataSourceConfigWaitingForIssued(domain string) string {
+	return fmt.Sprintf(`
+data "aws_acm_certificate" "test" {
+	domain = "%s"
+	statuses = ["ISSUED"]
+	wait_until_present = true
+	wait_until_present_timeout = "1m"
 }
 `, domain)
 }
