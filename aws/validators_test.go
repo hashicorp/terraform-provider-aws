@@ -129,6 +129,35 @@ func TestValidateCloudWatchEventRuleName(t *testing.T) {
 
 func TestValidateLambdaFunctionName(t *testing.T) {
 	validNames := []string{
+		"FunctionName",
+		"function-name",
+		"function_name",
+	}
+	for _, v := range validNames {
+		_, errors := validateLambdaFunctionName(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Lambda function name: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"/FunctionNameWithSlash",
+		":FunctionNameWithSlash",
+		"arn:aws:lambda:us-west-2:123456789012:function:ARNFunctionName",
+		// length > 64
+		"TooLooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo" +
+			"ooooooooooooooooongFunctionName",
+	}
+	for _, v := range invalidNames {
+		_, errors := validateLambdaFunctionName(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Lambda function name", v)
+		}
+	}
+}
+
+func TestValidateLambdaFunctionNameArn(t *testing.T) {
+	validNames := []string{
 		"arn:aws:lambda:us-west-2:123456789012:function:ThumbNail",
 		"arn:aws-us-gov:lambda:us-west-2:123456789012:function:ThumbNail",
 		"arn:aws-us-gov:lambda:us-gov-west-1:123456789012:function:ThumbNail",
@@ -136,7 +165,7 @@ func TestValidateLambdaFunctionName(t *testing.T) {
 		"function-name",
 	}
 	for _, v := range validNames {
-		_, errors := validateLambdaFunctionName(v, "name")
+		_, errors := validateLambdaFunctionNameArn(v, "name")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Lambda function name: %q", v, errors)
 		}
@@ -151,7 +180,7 @@ func TestValidateLambdaFunctionName(t *testing.T) {
 			"ooooooooooooooooongFunctionName",
 	}
 	for _, v := range invalidNames {
-		_, errors := validateLambdaFunctionName(v, "name")
+		_, errors := validateLambdaFunctionNameArn(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Lambda function name", v)
 		}
