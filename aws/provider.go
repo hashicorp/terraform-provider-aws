@@ -682,6 +682,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 	for _, endpointsSetI := range endpointsSet.List() {
 		endpoints := endpointsSetI.(map[string]interface{})
+		config.AcmEndpoint = endpoints["acm"].(string)
 		config.ApigatewayEndpoint = endpoints["apigateway"].(string)
 		config.CloudFormationEndpoint = endpoints["cloudformation"].(string)
 		config.CloudWatchEndpoint = endpoints["cloudwatch"].(string)
@@ -690,15 +691,19 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.DeviceFarmEndpoint = endpoints["devicefarm"].(string)
 		config.DynamoDBEndpoint = endpoints["dynamodb"].(string)
 		config.Ec2Endpoint = endpoints["ec2"].(string)
+		config.EcrEndpoint = endpoints["ecr"].(string)
+		config.EcsEndpoint = endpoints["ecs"].(string)
 		config.ElbEndpoint = endpoints["elb"].(string)
 		config.IamEndpoint = endpoints["iam"].(string)
 		config.KinesisEndpoint = endpoints["kinesis"].(string)
 		config.KmsEndpoint = endpoints["kms"].(string)
 		config.LambdaEndpoint = endpoints["lambda"].(string)
+		config.R53Endpoint = endpoints["r53"].(string)
 		config.RdsEndpoint = endpoints["rds"].(string)
 		config.S3Endpoint = endpoints["s3"].(string)
 		config.SnsEndpoint = endpoints["sns"].(string)
 		config.SqsEndpoint = endpoints["sqs"].(string)
+		config.StsEndpoint = endpoints["sts"].(string)
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok {
@@ -756,6 +761,12 @@ func endpointsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"acm": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["acm_endpoint"],
+				},
 				"apigateway": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -812,6 +823,20 @@ func endpointsSchema() *schema.Schema {
 					Description: descriptions["ec2_endpoint"],
 				},
 
+				"ecr": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["ecr_endpoint"],
+				},
+
+				"ecs": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["ecs_endpoint"],
+				},
+
 				"elb": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -836,6 +861,12 @@ func endpointsSchema() *schema.Schema {
 					Default:     "",
 					Description: descriptions["lambda_endpoint"],
 				},
+				"r53": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["r53_endpoint"],
+				},
 				"rds": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -859,6 +890,12 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["sqs_endpoint"],
+				},
+				"sts": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["sts_endpoint"],
 				},
 			},
 		},
