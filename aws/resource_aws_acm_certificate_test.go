@@ -11,10 +11,11 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAcmCertificate_basic(t *testing.T) {
+func TestAccAcmCertificateIssuingFlow(t *testing.T) {
 	var conf acm.DescribeCertificateOutput
 
-	domain := "certtest.hashicorp.com"
+	root_zone_domain := "sandbox.sellmayr.net"
+	domain := "certtest.sandbox.sellmayr.net"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,14 +23,25 @@ func TestAccAcmCertificate_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAcmCertificateConfig(domain),
+				Config: testAccAcmCertificateConfig(root_zone_domain, domain),
+				// expect non-empty plan that's triggered by the depends_on; see https://github.com/hashicorp/terraform/issues/11806
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcmCertificateExists("aws_acm_certificate.cert", &conf),
+					testAccCheckAcmCertificateWasIssued(&conf),
 					testAccCheckAcmCertificateAttributes("aws_acm_certificate.cert", &conf, domain),
 				),
 			},
 		},
 	})
+}
+func testAccCheckAcmCertificateWasIssued(output *acm.DescribeCertificateOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *output.Certificate.Status != "ISSUED" {
+			return fmt.Errorf("Expected certificate to be issued but was in status %s", output.Certificate.Status)
+		}
+		return nil
+	}
 }
 
 func testAccCheckAcmCertificateExists(n string, res *acm.DescribeCertificateOutput) resource.TestCheckFunc {
@@ -54,7 +66,7 @@ func testAccCheckAcmCertificateExists(n string, res *acm.DescribeCertificateOutp
 		acmconn := testAccProvider.Meta().(*AWSClient).acmconn
 
 		resp, err := acmconn.DescribeCertificate(&acm.DescribeCertificateInput{
-			CertificateArn: aws.String(rs.Primary.ID),
+			CertificateArn: aws.String(rs.Primary.Attributes["certificate_arn"]),
 		})
 
 		if err != nil {
@@ -76,7 +88,7 @@ func testAccCheckAcmCertificateAttributes(n string, cert *acm.DescribeCertificat
 		attrs := rs.Primary.Attributes
 
 		if *cert.Certificate.DomainName != domain {
-			return fmt.Errorf("Domain name is %s but expected %s", cert.Certificate.DomainName, domain)
+			return fmt.Errorf("Domain name is %s but expected %s", *cert.Certificate.DomainName, domain)
 		}
 		if attrs["domain_name"] != domain {
 			return fmt.Errorf("Domain name in state is %s but expected %s", attrs["domain_name"], domain)
@@ -88,13 +100,34 @@ func testAccCheckAcmCertificateAttributes(n string, cert *acm.DescribeCertificat
 	}
 }
 
-func testAccAcmCertificateConfig(domain string) string {
+func testAccAcmCertificateConfig(rootZoneDomain string, domain string) string {
 	return fmt.Sprintf(`
+
+data "aws_route53_zone" "zone" {
+  name = "%s."
+  private_zone = false
+}
+
 resource "aws_acm_certificate" "cert" {
     domain_name = "%s"
 	validation_method = "DNS"
 }
-`, domain)
+resource "aws_route53_record" "cert_validation" {
+  name = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_name}"
+  type = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_type}"
+  zone_id = "${data.aws_route53_zone.zone.id}"
+  records = ["${aws_acm_certificate.cert.domain_validation_options.0.resource_record_value}"]
+  ttl = 60
+}
+
+data "aws_acm_certificate" "cert" {
+  arn = "${aws_acm_certificate.cert.certificate_arn}"
+  statuses = ["ISSUED"]
+  wait_until_present = true
+  depends_on = ["aws_route53_record.cert_validation"]
+}
+
+`, rootZoneDomain, domain)
 }
 
 func testAccCheckAcmCertificateDestroy(s *terraform.State) error {

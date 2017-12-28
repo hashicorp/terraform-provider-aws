@@ -18,11 +18,13 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"domain": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Optional: true,
 			},
 			"statuses": {
 				Type:     schema.TypeList,
@@ -42,7 +44,7 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 			"wait_until_present_timeout": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "5m",
+				Default:  "45m",
 			},
 		},
 	}
@@ -67,7 +69,14 @@ func dataSourceAwsAcmGetCertificate(d *schema.ResourceData, meta interface{}) *r
 	conn := meta.(*AWSClient).acmconn
 
 	params := &acm.ListCertificatesInput{}
-	target := d.Get("domain")
+
+	targetDomain, _ := d.GetOk("domain")
+	targetArn, _ := d.GetOk("arn")
+
+	if targetArn == nil && targetDomain == nil {
+		return resource.NonRetryableError(fmt.Errorf("Need to specify either domain or arn"))
+	}
+
 	statuses, ok := d.GetOk("statuses")
 	if ok {
 		statusStrings := statuses.([]interface{})
@@ -80,7 +89,10 @@ func dataSourceAwsAcmGetCertificate(d *schema.ResourceData, meta interface{}) *r
 	log.Printf("[DEBUG] Reading ACM Certificate: %s", params)
 	err := conn.ListCertificatesPages(params, func(page *acm.ListCertificatesOutput, lastPage bool) bool {
 		for _, cert := range page.CertificateSummaryList {
-			if *cert.DomainName == target {
+			if targetDomain != nil && *cert.DomainName == targetDomain {
+				arns = append(arns, *cert.CertificateArn)
+			}
+			if targetArn != nil && *cert.CertificateArn == targetArn {
 				arns = append(arns, *cert.CertificateArn)
 			}
 		}
@@ -122,15 +134,20 @@ func dataSourceAwsAcmGetCertificate(d *schema.ResourceData, meta interface{}) *r
 		arns = matchedArns
 	}
 
+	targetValue := targetArn
+	if targetValue == nil {
+		targetValue = targetDomain
+	}
+
 	if len(arns) == 0 {
 		return &resource.RetryError{
-			Err:       fmt.Errorf("No certificate for domain %q found in this region.", target),
+			Err:       fmt.Errorf("No certificate for domain %q found in this region.", targetValue),
 			Retryable: true,
 		}
 	}
 	if len(arns) > 1 {
 		return &resource.RetryError{
-			Err:       fmt.Errorf("Multiple certificates for domain %q found in this region.", target),
+			Err:       fmt.Errorf("Multiple certificates for domain %q found in this region.", targetValue),
 			Retryable: true,
 		}
 	}
