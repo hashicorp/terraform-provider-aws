@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * resource/aws_rds_cluster_instance: Set db_subnet_group_name in state on read if available [GH-2606]
 * resource/aws_eip: Tagging is now supported [GH-2768]
 * resource/aws_codepipeline: ARN is now exposed as an attribute [GH-2773]
+* resource/elasticsearch_domain: Fixed a crash when no Cloudwatch log group is configured [GH-2787]
 
 BUG FIXES:
 
