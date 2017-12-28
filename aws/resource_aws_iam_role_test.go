@@ -151,6 +151,7 @@ func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
 				Config: testAccAWSIAMRoleConfig_force_detach_policies(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists("aws_iam_role.test", &conf),
+					testAccAddAwsIAMRolePolicy("aws_iam_role.test"),
 				),
 			},
 		},
@@ -226,6 +227,37 @@ func testAccCheckAWSRoleGeneratedNamePrefix(resource, prefix string) resource.Te
 			return fmt.Errorf("Name: %q, does not have prefix: %q", name, prefix)
 		}
 		return nil
+	}
+}
+
+// Attach inline policy outside of terraform CRUD.
+func testAccAddAwsIAMRolePolicy(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Resource not found")
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Role name is set")
+		}
+
+		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		input := &iam.PutRolePolicyInput{
+			RoleName: aws.String(rs.Primary.ID),
+			PolicyDocument: aws.String(`{
+			  "Version": "2012-10-17",
+			  "Statement": {
+			    "Effect": "Allow",
+			    "Action": "*",
+			    "Resource": "*"
+			  }
+			}`),
+			PolicyName: aws.String(resource.UniqueId()),
+		}
+
+		_, err := iamconn.PutRolePolicy(input)
+		return err
 	}
 }
 
