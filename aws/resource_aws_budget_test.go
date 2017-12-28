@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 	"text/template"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -109,12 +110,28 @@ func testBudgetExists(config budgetTestConfig, provider *schema.Provider) resour
 			return err
 		}
 
+		if err := checkBudgetTimePeriod(config, *b.Budget.TimePeriod); err != nil {
+			return err
+		}
+
 		if v, ok := b.Budget.CostFilters[config.FilterKey]; !ok || *v[len(v)-1] != config.FilterValue {
 			return fmt.Errorf("cost filter not set properly: %v", b.Budget.CostFilters)
 		}
 
 		return nil
 	}
+}
+
+func checkBudgetTimePeriod(config budgetTestConfig, timePeriod budgets.TimePeriod) error {
+	if end, _ := time.Parse("2006-01-02_15:04", config.TimePeriodEnd); *timePeriod.End != end {
+		return fmt.Errorf("TimePeriodEnd not set properly '%v' should be '%v'", *timePeriod.End, end)
+	}
+
+	if start, _ := time.Parse("2006-01-02_15:04", config.TimePeriodStart); *timePeriod.Start != start {
+		return fmt.Errorf("TimePeriodStart not set properly '%v' should be '%v'", *timePeriod.Start, start)
+	}
+
+	return nil
 }
 
 func checkBudgetCostTypes(config budgetTestConfig, costTypes budgets.CostTypes) error {
