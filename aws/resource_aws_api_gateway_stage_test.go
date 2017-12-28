@@ -26,6 +26,9 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "stage_name", "prod"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_enabled", "true"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_size", "0.5"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "canary_settings.0.percent_traffic", "33.33"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "canary_settings.0.stage_variable_overrides.four", "4"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "canary_settings.0.use_stage_cache", "true"),
 				),
 			},
 			resource.TestStep{
@@ -34,6 +37,9 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayStageExists("aws_api_gateway_stage.test", &conf),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "stage_name", "prod"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_enabled", "false"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "canary_settings.0.percent_traffic", "50.5"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "canary_settings.0.stage_variable_overrides.four", "5"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "canary_settings.0.use_stage_cache", "false"),
 				),
 			},
 			resource.TestStep{
@@ -43,6 +49,9 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "stage_name", "prod"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_enabled", "true"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_size", "0.5"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "canary_settings.0.percent_traffic", "33.33"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "canary_settings.0.stage_variable_overrides.four", "4"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "canary_settings.0.use_stage_cache", "true"),
 				),
 			},
 		},
@@ -171,6 +180,13 @@ resource "aws_api_gateway_stage" "test" {
   deployment_id = "${aws_api_gateway_deployment.dev.id}"
   cache_cluster_enabled = true
   cache_cluster_size = "0.5"
+	canary_settings {
+		percent_traffic = 33.33
+		stage_variable_overrides = {
+			four = "4"
+		}
+		use_stage_cache = "true"
+	}
   variables {
     one = "1"
     two = "2"
@@ -186,6 +202,13 @@ resource "aws_api_gateway_stage" "test" {
   stage_name = "prod"
   deployment_id = "${aws_api_gateway_deployment.dev.id}"
   cache_cluster_enabled = false
+	canary_settings {
+		percent_traffic = 50.5
+		stage_variable_overrides = {
+			four = "5"
+		}
+		use_stage_cache = "false"
+	}
   description = "Hello world"
   variables {
     one = "1"
