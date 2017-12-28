@@ -739,9 +739,9 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
-	tags {
-		Name = "%[2]s"
-	}
+  tags {
+    Name = "%[2]s"
+  }
 }
 
 resource "aws_subnet" "main" {
@@ -777,8 +777,8 @@ DEFINITION
 }
 
 resource "aws_iam_role" "ecs_service" {
-    name = "%[1]s"
-    assume_role_policy = <<EOF
+  name = "%[1]s"
+  assume_role_policy = <<EOF
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -796,9 +796,9 @@ EOF
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
-    name = "%[1]s"
-    role = "${aws_iam_role.ecs_service.name}"
-    policy = <<EOF
+  name = "%[1]s"
+  role = "${aws_iam_role.ecs_service.name}"
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
