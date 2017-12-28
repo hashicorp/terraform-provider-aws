@@ -34,7 +34,7 @@ func resourceAwsLambdaPermission() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateLambdaFunctionName,
+				ValidateFunc: validateLambdaFunctionNameArn,
 			},
 			"principal": {
 				Type:     schema.TypeString,
