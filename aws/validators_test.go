@@ -142,7 +142,6 @@ func TestValidateLambdaFunctionName(t *testing.T) {
 
 	invalidNames := []string{
 		"/FunctionNameWithSlash",
-		":FunctionNameWithSlash",
 		"arn:aws:lambda:us-west-2:123456789012:function:ARNFunctionName",
 		// length > 64
 		"TooLooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo" +
