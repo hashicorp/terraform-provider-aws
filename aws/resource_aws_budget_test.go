@@ -3,6 +3,7 @@ package aws
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"strconv"
 	"testing"
 	"text/template"
@@ -67,20 +68,84 @@ func TestAwsBudget_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testBudgetHCLBasicUseDefaults(configBasic),
-				Check:  newComposedBudgetTestCheck(configBasic, testAccProvider),
+				Check:  newComposedBudgetTestCheck(configBasic, testAccProvider, "name"),
 			},
 
 			{
 				Config: testBudgetHCLBasic(configBasicUpdate),
-				Check:  newComposedBudgetTestCheck(configBasicUpdate, testAccProvider),
+				Check:  newComposedBudgetTestCheck(configBasicUpdate, testAccProvider, "name"),
 			},
 		},
 	})
 }
 
-func newComposedBudgetTestCheck(config budgetTestConfig, provider *schema.Provider) resource.TestCheckFunc {
+func TestAwsBudget_prefix(t *testing.T) {
+	name := "test-budget-"
+	configBasic := budgetTestConfig{
+		BudgetName:               name,
+		BudgetType:               "COST",
+		LimitAmount:              "100",
+		LimitUnit:                "USD",
+		FilterKey:                "AZ",
+		FilterValue:              "us-east-1",
+		IncludeCredit:            "false",
+		IncludeOtherSubscription: "false",
+		IncludeRecurring:         "false",
+		IncludeRefund:            "false",
+		IncludeSubscription:      "false",
+		IncludeSupport:           "false",
+		IncludeTax:               "false",
+		IncludeUpfront:           "false",
+		UseBlended:               "false",
+		TimeUnit:                 "MONTHLY",
+		TimePeriodStart:          "2017-01-01_12:00",
+		TimePeriodEnd:            "2087-06-15_12:00",
+	}
+
+	configBasicUpdate := budgetTestConfig{
+		BudgetName:               name,
+		BudgetType:               "COST",
+		LimitAmount:              "500",
+		LimitUnit:                "USD",
+		FilterKey:                "AZ",
+		FilterValue:              "us-east-2",
+		IncludeCredit:            "false",
+		IncludeOtherSubscription: "false",
+		IncludeRecurring:         "false",
+		IncludeRefund:            "false",
+		IncludeSubscription:      "false",
+		IncludeSupport:           "false",
+		IncludeTax:               "true",
+		IncludeUpfront:           "false",
+		UseBlended:               "false",
+		TimeUnit:                 "MONTHLY",
+		TimePeriodStart:          "2017-01-01_12:00",
+		TimePeriodEnd:            "2018-01-01_12:00",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		CheckDestroy: func(s *terraform.State) error {
+			return testCheckBudgetDestroy(name, testAccProvider)
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testBudgetHCLPrefixUseDefaults(configBasic),
+				Check:  newComposedBudgetTestCheck(configBasic, testAccProvider, "name_prefix"),
+			},
+
+			{
+				Config: testBudgetHCLPrefix(configBasicUpdate),
+				Check:  newComposedBudgetTestCheck(configBasicUpdate, testAccProvider, "name_prefix"),
+			},
+		},
+	})
+}
+
+func newComposedBudgetTestCheck(config budgetTestConfig, provider *schema.Provider, nameField string) resource.TestCheckFunc {
 	return resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttr("aws_budget.foo", "budget_name", config.BudgetName),
+		resource.TestMatchResourceAttr("aws_budget.foo", nameField, regexp.MustCompile(config.BudgetName)),
 		resource.TestCheckResourceAttr("aws_budget.foo", "budget_type", config.BudgetType),
 		resource.TestCheckResourceAttr("aws_budget.foo", "limit_amount", config.LimitAmount),
 		resource.TestCheckResourceAttr("aws_budget.foo", "limit_unit", config.LimitUnit),
@@ -93,7 +158,12 @@ func newComposedBudgetTestCheck(config budgetTestConfig, provider *schema.Provid
 
 func testBudgetExists(config budgetTestConfig, provider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		b, err := describeBudget(config.BudgetName, provider.Meta())
+		rs, ok := s.RootModule().Resources["aws_budget.foo"]
+		if !ok {
+			return fmt.Errorf("Not found: %s", "aws_budget.foo")
+		}
+
+		b, err := describeBudget(rs.Primary.ID, provider.Meta())
 		if err != nil {
 			return fmt.Errorf("Describebudget error: %v", err)
 		}
@@ -203,11 +273,55 @@ type budgetTestConfig struct {
 	FilterValue              string
 }
 
+func testBudgetHCLPrefixUseDefaults(budgetConfig budgetTestConfig) string {
+	t := template.Must(template.New("t1").
+		Parse(`
+resource "aws_budget" "foo" {
+	name_prefix = "{{.BudgetName}}"
+	budget_type = "{{.BudgetType}}"
+ 	limit_amount = "{{.LimitAmount}}"
+ 	limit_unit = "{{.LimitUnit}}"
+	time_period_start = "{{.TimePeriodStart}}" 
+ 	time_unit = "{{.TimeUnit}}"
+	cost_filters {
+		{{.FilterKey}} = "{{.FilterValue}}"
+	}
+}
+`))
+	var doc bytes.Buffer
+	t.Execute(&doc, budgetConfig)
+	return doc.String()
+}
+
+func testBudgetHCLPrefix(budgetConfig budgetTestConfig) string {
+	t := template.Must(template.New("t1").
+		Parse(`
+resource "aws_budget" "foo" {
+	name_prefix = "{{.BudgetName}}"
+	budget_type = "{{.BudgetType}}"
+ 	limit_amount = "{{.LimitAmount}}"
+ 	limit_unit = "{{.LimitUnit}}"
+	include_tax = "{{.IncludeTax}}"
+	include_subscription = "{{.IncludeSubscription}}"
+	use_blended = "{{.UseBlended}}"
+	time_period_start = "{{.TimePeriodStart}}" 
+	time_period_end = "{{.TimePeriodEnd}}"
+ 	time_unit = "{{.TimeUnit}}"
+	cost_filters {
+		{{.FilterKey}} = "{{.FilterValue}}"
+	}
+}
+`))
+	var doc bytes.Buffer
+	t.Execute(&doc, budgetConfig)
+	return doc.String()
+}
+
 func testBudgetHCLBasicUseDefaults(budgetConfig budgetTestConfig) string {
 	t := template.Must(template.New("t1").
 		Parse(`
 resource "aws_budget" "foo" {
-	budget_name = "{{.BudgetName}}"
+	name = "{{.BudgetName}}"
 	budget_type = "{{.BudgetType}}"
  	limit_amount = "{{.LimitAmount}}"
  	limit_unit = "{{.LimitUnit}}"
@@ -227,7 +341,7 @@ func testBudgetHCLBasic(budgetConfig budgetTestConfig) string {
 	t := template.Must(template.New("t1").
 		Parse(`
 resource "aws_budget" "foo" {
-	budget_name = "{{.BudgetName}}"
+	name = "{{.BudgetName}}"
 	budget_type = "{{.BudgetType}}"
  	limit_amount = "{{.LimitAmount}}"
  	limit_unit = "{{.LimitUnit}}"

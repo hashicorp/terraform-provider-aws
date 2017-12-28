@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/budgets"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -22,9 +23,15 @@ func resourceAwsBudget() *schema.Resource {
 
 func resourceAwsBudgetSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"budget_name": {
+		"name": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			ConflictsWith: []string{"name_prefix"},
+		},
+		"name_prefix": {
 			Type:     schema.TypeString,
-			Required: true,
+			Optional: true,
+			ForceNew: true,
 		},
 		"budget_type": {
 			Type:     schema.TypeString,
@@ -116,7 +123,7 @@ func resourceAwsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsBudgetRead(d *schema.ResourceData, meta interface{}) error {
-	budgetName := d.Get("budget_name").(string)
+	budgetName := d.Id()
 	describeBudgetOutput, err := describeBudget(budgetName, meta)
 	if isBudgetNotFoundException(err) {
 		d.SetId("")
@@ -127,7 +134,10 @@ func resourceAwsBudgetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("describe budget failed: %v", err)
 	}
 
-	d.Set("budget_name", describeBudgetOutput.Budget.BudgetName)
+	if _, ok := d.GetOk("name"); ok {
+		d.Set("name", describeBudgetOutput.Budget.BudgetName)
+	}
+
 	d.Set("budget_type", describeBudgetOutput.Budget.BudgetType)
 	d.Set("limit_amount", describeBudgetOutput.Budget.BudgetLimit.Amount)
 	d.Set("limit_unit", describeBudgetOutput.Budget.BudgetLimit.Unit)
@@ -167,7 +177,7 @@ func resourceAwsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
-	budgetName := d.Get("budget_name").(string)
+	budgetName := d.Id()
 	if !budgetExists(budgetName, meta) {
 		log.Printf("[INFO] budget %s could not be found. skipping delete.", d.Id())
 		return nil
@@ -187,7 +197,20 @@ func resourceAwsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func newBudget(d *schema.ResourceData) (*budgets.Budget, error) {
-	budgetName := d.Get("budget_name").(string)
+	var budgetName string
+	if id := d.Id(); id != "" {
+		budgetName = id
+
+	} else if v, ok := d.GetOk("name"); ok {
+		budgetName = v.(string)
+
+	} else if v, ok := d.GetOk("name_prefix"); ok {
+		budgetName = resource.PrefixedUniqueId(v.(string))
+
+	} else {
+		budgetName = resource.UniqueId()
+	}
+
 	budgetType := d.Get("budget_type").(string)
 	budgetLimitAmount := d.Get("limit_amount").(string)
 	budgetLimitUnit := d.Get("limit_unit").(string)
