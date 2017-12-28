@@ -34,6 +34,7 @@ func resourceAwsIamUser() *schema.Resource {
 				all and that would make this provider unnecessarily complex
 				and inefficient. Still, there are other reasons one might want
 				the UniqueID, so we can make it available.
+				UniqueID(UserId) is used as Id() to be able to rename user.
 			*/
 			"unique_id": &schema.Schema{
 				Type:     schema.TypeString,
@@ -75,25 +76,26 @@ func resourceAwsIamUserCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error creating IAM User %s: %s", name, err)
 	}
-	d.SetId(*createResp.User.UserName)
+	d.SetId(*createResp.User.UserId)
 	return resourceAwsIamUserReadResult(d, createResp.User)
 }
 
 func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
+	name := d.Get("name").(string)
 
 	request := &iam.GetUserInput{
-		UserName: aws.String(d.Id()),
+		UserName: aws.String(name),
 	}
 
 	getResp, err := iamconn.GetUser(request)
 	if err != nil {
 		if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" { // XXX test me
-			log.Printf("[WARN] No IAM user by name (%s) found", d.Id())
+			log.Printf("[WARN] No IAM user by name (%s) found", name)
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error reading IAM User %s: %s", d.Id(), err)
+		return fmt.Errorf("Error reading IAM User %s: %s", name, err)
 	}
 	return resourceAwsIamUserReadResult(d, getResp.User)
 }
@@ -115,6 +117,8 @@ func resourceAwsIamUserReadResult(d *schema.ResourceData, user *iam.User) error 
 }
 
 func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
+	name := d.Get("name").(string)
+
 	if d.HasChange("name") || d.HasChange("path") {
 		iamconn := meta.(*AWSClient).iamconn
 		on, nn := d.GetChange("name")
@@ -130,11 +134,11 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := iamconn.UpdateUser(request)
 		if err != nil {
 			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
-				log.Printf("[WARN] No IAM user by name (%s) found", d.Id())
+				log.Printf("[WARN] No IAM user by name (%s) found", name)
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("Error updating IAM User %s: %s", d.Id(), err)
+			return fmt.Errorf("Error updating IAM User %s: %s", name, err)
 		}
 		return resourceAwsIamUserRead(d, meta)
 	}
@@ -143,11 +147,12 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
+	name := d.Get("name").(string)
 
 	// IAM Users must be removed from all groups before they can be deleted
 	var groups []string
 	listGroups := &iam.ListGroupsForUserInput{
-		UserName: aws.String(d.Id()),
+		UserName: aws.String(name),
 	}
 	pageOfGroups := func(page *iam.ListGroupsForUserOutput, lastPage bool) (shouldContinue bool) {
 		for _, g := range page.Groups {
@@ -157,12 +162,12 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	err := iamconn.ListGroupsForUserPages(listGroups, pageOfGroups)
 	if err != nil {
-		return fmt.Errorf("Error removing user %q from all groups: %s", d.Id(), err)
+		return fmt.Errorf("Error removing user %q from all groups: %s", name, err)
 	}
 	for _, g := range groups {
 		// use iam group membership func to remove user from all groups
-		log.Printf("[DEBUG] Removing IAM User %s from IAM Group %s", d.Id(), g)
-		if err := removeUsersFromGroup(iamconn, []*string{aws.String(d.Id())}, g); err != nil {
+		log.Printf("[DEBUG] Removing IAM User %s from IAM Group %s", name, g)
+		if err := removeUsersFromGroup(iamconn, []*string{aws.String(name)}, g); err != nil {
 			return err
 		}
 	}
@@ -171,7 +176,7 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 	if d.Get("force_destroy").(bool) {
 		var accessKeys []string
 		listAccessKeys := &iam.ListAccessKeysInput{
-			UserName: aws.String(d.Id()),
+			UserName: aws.String(name),
 		}
 		pageOfAccessKeys := func(page *iam.ListAccessKeysOutput, lastPage bool) (shouldContinue bool) {
 			for _, k := range page.AccessKeyMetadata {
@@ -181,11 +186,11 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 		err = iamconn.ListAccessKeysPages(listAccessKeys, pageOfAccessKeys)
 		if err != nil {
-			return fmt.Errorf("Error removing access keys of user %s: %s", d.Id(), err)
+			return fmt.Errorf("Error removing access keys of user %s: %s", name, err)
 		}
 		for _, k := range accessKeys {
 			_, err := iamconn.DeleteAccessKey(&iam.DeleteAccessKeyInput{
-				UserName:    aws.String(d.Id()),
+				UserName:    aws.String(name),
 				AccessKeyId: aws.String(k),
 			})
 			if err != nil {
@@ -195,7 +200,7 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 
 		var MFADevices []string
 		listMFADevices := &iam.ListMFADevicesInput{
-			UserName: aws.String(d.Id()),
+			UserName: aws.String(name),
 		}
 		pageOfMFADevices := func(page *iam.ListMFADevicesOutput, lastPage bool) (shouldContinue bool) {
 			for _, m := range page.MFADevices {
@@ -205,11 +210,11 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 		err = iamconn.ListMFADevicesPages(listMFADevices, pageOfMFADevices)
 		if err != nil {
-			return fmt.Errorf("Error removing MFA devices of user %s: %s", d.Id(), err)
+			return fmt.Errorf("Error removing MFA devices of user %s: %s", name, err)
 		}
 		for _, m := range MFADevices {
 			_, err := iamconn.DeactivateMFADevice(&iam.DeactivateMFADeviceInput{
-				UserName:     aws.String(d.Id()),
+				UserName:     aws.String(name),
 				SerialNumber: aws.String(m),
 			})
 			if err != nil {
@@ -218,7 +223,7 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		_, err = iamconn.DeleteLoginProfile(&iam.DeleteLoginProfileInput{
-			UserName: aws.String(d.Id()),
+			UserName: aws.String(name),
 		})
 		if err != nil {
 			if iamerr, ok := err.(awserr.Error); !ok || iamerr.Code() != "NoSuchEntity" {
@@ -228,12 +233,12 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	request := &iam.DeleteUserInput{
-		UserName: aws.String(d.Id()),
+		UserName: aws.String(name),
 	}
 
 	log.Println("[DEBUG] Delete IAM User request:", request)
 	if _, err := iamconn.DeleteUser(request); err != nil {
-		return fmt.Errorf("Error deleting IAM User %s: %s", d.Id(), err)
+		return fmt.Errorf("Error deleting IAM User %s: %s", name, err)
 	}
 	return nil
 }
