@@ -187,7 +187,6 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		input.CanarySettings = &apigateway.CanarySettings{
-			DeploymentId:           aws.String(d.Get("deployment_id").(string)),
 			StageVariableOverrides: aws.StringMap(stageVariableOverrides),
 			PercentTraffic:         aws.Float64(percentTraffic.(float64)),
 			UseStageCache:          aws.Bool(useStageCache.(bool)),
@@ -331,14 +330,6 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 			Path:  aws.String("/deploymentId"),
 			Value: aws.String(d.Get("deployment_id").(string)),
 		})
-
-		if _, ok := d.GetOk("canary_settings"); ok {
-			operations = append(operations, &apigateway.PatchOperation{
-				Op:    aws.String("replace"),
-				Path:  aws.String("/canarySettings/deploymentId"),
-				Value: aws.String(d.Get("deployment_id").(string)),
-			})
-		}
 	}
 	if d.HasChange("description") {
 		operations = append(operations, &apigateway.PatchOperation{
