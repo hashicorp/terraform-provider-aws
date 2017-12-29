@@ -30,6 +30,7 @@ func TestAccAcmCertificateIssuingFlow(t *testing.T) {
 					testAccCheckAcmCertificateExists("aws_acm_certificate.cert", &conf),
 					testAccCheckAcmCertificateWasIssued(&conf),
 					testAccCheckAcmCertificateAttributes("aws_acm_certificate.cert", &conf, domain),
+					testAccCheckAcmDataSourceAttributes("data.aws_acm_certificate.cert", &conf, domain),
 				),
 			},
 		},
@@ -95,6 +96,26 @@ func testAccCheckAcmCertificateAttributes(n string, cert *acm.DescribeCertificat
 		}
 
 		// TODO: check other attributes?
+
+		return nil
+	}
+}
+
+func testAccCheckAcmDataSourceAttributes(n string, cert *acm.DescribeCertificateOutput, domain string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+		attrs := rs.Primary.Attributes
+
+		if attrs["domain"] != domain {
+			return fmt.Errorf("Domain name in state is %s but expected %s", attrs["domain"], domain)
+		}
+
+		if attrs["arn"] != *cert.Certificate.CertificateArn {
+			return fmt.Errorf("Certificate ARN in state is %s but expected %s", attrs["arn"], *cert.Certificate.CertificateArn)
+		}
 
 		return nil
 	}

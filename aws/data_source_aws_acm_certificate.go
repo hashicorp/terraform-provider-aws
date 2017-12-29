@@ -86,14 +86,18 @@ func dataSourceAwsAcmGetCertificate(d *schema.ResourceData, meta interface{}) *r
 	}
 
 	var arns []string
+	var domains []string
+
 	log.Printf("[DEBUG] Reading ACM Certificate: %s", params)
 	err := conn.ListCertificatesPages(params, func(page *acm.ListCertificatesOutput, lastPage bool) bool {
 		for _, cert := range page.CertificateSummaryList {
 			if targetDomain != nil && *cert.DomainName == targetDomain {
 				arns = append(arns, *cert.CertificateArn)
+				domains = append(domains, *cert.DomainName)
 			}
 			if targetArn != nil && *cert.CertificateArn == targetArn {
 				arns = append(arns, *cert.CertificateArn)
+				domains = append(domains, *cert.DomainName)
 			}
 		}
 
@@ -108,6 +112,7 @@ func dataSourceAwsAcmGetCertificate(d *schema.ResourceData, meta interface{}) *r
 	if ok {
 		typesStrings := expandStringList(types.([]interface{}))
 		var matchedArns []string
+		var matchedDomains []string
 		for _, arn := range arns {
 			params := &acm.DescribeCertificateInput{}
 			params.CertificateArn = &arn
@@ -120,12 +125,14 @@ func dataSourceAwsAcmGetCertificate(d *schema.ResourceData, meta interface{}) *r
 			for _, certType := range typesStrings {
 				if *description.Certificate.Type == *certType {
 					matchedArns = append(matchedArns, arn)
+					matchedDomains = append(domains, *description.Certificate.DomainName)
 					break
 				}
 			}
 		}
 
 		arns = matchedArns
+		domains = matchedDomains
 	}
 
 	targetValue := targetArn
@@ -142,6 +149,7 @@ func dataSourceAwsAcmGetCertificate(d *schema.ResourceData, meta interface{}) *r
 
 	d.SetId(time.Now().UTC().String())
 	d.Set("arn", arns[0])
+	d.Set("domain", domains[0])
 
 	return nil
 }
