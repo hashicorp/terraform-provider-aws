@@ -18,46 +18,8 @@ import (
 
 func TestAwsBudget_basic(t *testing.T) {
 	name := fmt.Sprintf("test-budget-%d", acctest.RandInt())
-	configBasicDefaults := budgetTestConfig{
-		BudgetName:               name,
-		BudgetType:               "COST",
-		LimitAmount:              "100",
-		LimitUnit:                "USD",
-		FilterKey:                "AZ",
-		FilterValue:              "us-east-1",
-		IncludeCredit:            "true",
-		IncludeOtherSubscription: "true",
-		IncludeRecurring:         "true",
-		IncludeRefund:            "true",
-		IncludeSubscription:      "true",
-		IncludeSupport:           "true",
-		IncludeTax:               "true",
-		IncludeUpfront:           "true",
-		UseBlended:               "false",
-		TimeUnit:                 "MONTHLY",
-		TimePeriodStart:          "2017-01-01_12:00",
-		TimePeriodEnd:            "2087-06-15_12:00",
-	}
-	configBasicUpdate := budgetTestConfig{
-		BudgetName:               name,
-		BudgetType:               "COST",
-		LimitAmount:              "500",
-		LimitUnit:                "USD",
-		FilterKey:                "AZ",
-		FilterValue:              "us-east-2",
-		IncludeCredit:            "true",
-		IncludeOtherSubscription: "true",
-		IncludeRecurring:         "true",
-		IncludeRefund:            "true",
-		IncludeSubscription:      "false",
-		IncludeSupport:           "true",
-		IncludeTax:               "false",
-		IncludeUpfront:           "true",
-		UseBlended:               "true",
-		TimeUnit:                 "MONTHLY",
-		TimePeriodStart:          "2017-01-01_12:00",
-		TimePeriodEnd:            "2018-01-01_12:00",
-	}
+	configBasicDefaults := newBudgetTestConfigDefaults(name)
+	configBasicUpdate := newBudgetTestConfigUpdate(name)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -81,47 +43,8 @@ func TestAwsBudget_basic(t *testing.T) {
 
 func TestAwsBudget_prefix(t *testing.T) {
 	name := "test-budget-"
-	configBasicDefaults := budgetTestConfig{
-		BudgetName:               name,
-		BudgetType:               "COST",
-		LimitAmount:              "100",
-		LimitUnit:                "USD",
-		FilterKey:                "AZ",
-		FilterValue:              "us-east-1",
-		IncludeCredit:            "true",
-		IncludeOtherSubscription: "true",
-		IncludeRecurring:         "true",
-		IncludeRefund:            "true",
-		IncludeSubscription:      "true",
-		IncludeSupport:           "true",
-		IncludeTax:               "true",
-		IncludeUpfront:           "true",
-		UseBlended:               "false",
-		TimeUnit:                 "MONTHLY",
-		TimePeriodStart:          "2017-01-01_12:00",
-		TimePeriodEnd:            "2087-06-15_12:00",
-	}
-
-	configBasicUpdate := budgetTestConfig{
-		BudgetName:               name,
-		BudgetType:               "COST",
-		LimitAmount:              "500",
-		LimitUnit:                "USD",
-		FilterKey:                "AZ",
-		FilterValue:              "us-east-2",
-		IncludeCredit:            "true",
-		IncludeOtherSubscription: "true",
-		IncludeRecurring:         "true",
-		IncludeRefund:            "true",
-		IncludeSubscription:      "false",
-		IncludeSupport:           "true",
-		IncludeTax:               "false",
-		IncludeUpfront:           "true",
-		UseBlended:               "true",
-		TimeUnit:                 "MONTHLY",
-		TimePeriodStart:          "2017-01-01_12:00",
-		TimePeriodEnd:            "2018-01-01_12:00",
-	}
+	configBasicDefaults := newBudgetTestConfigDefaults(name)
+	configBasicUpdate := newBudgetTestConfigUpdate(name)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -271,6 +194,52 @@ type budgetTestConfig struct {
 	TimePeriodEnd            string
 	FilterKey                string
 	FilterValue              string
+}
+
+func newBudgetTestConfigUpdate(name string) budgetTestConfig {
+	return budgetTestConfig{
+		BudgetName:               name,
+		BudgetType:               "COST",
+		LimitAmount:              "500",
+		LimitUnit:                "USD",
+		FilterKey:                "AZ",
+		FilterValue:              "us-east-2",
+		IncludeCredit:            "true",
+		IncludeOtherSubscription: "true",
+		IncludeRecurring:         "true",
+		IncludeRefund:            "true",
+		IncludeSubscription:      "false",
+		IncludeSupport:           "true",
+		IncludeTax:               "false",
+		IncludeUpfront:           "true",
+		UseBlended:               "true",
+		TimeUnit:                 "MONTHLY",
+		TimePeriodStart:          "2017-01-01_12:00",
+		TimePeriodEnd:            "2018-01-01_12:00",
+	}
+}
+
+func newBudgetTestConfigDefaults(name string) budgetTestConfig {
+	return budgetTestConfig{
+		BudgetName:               name,
+		BudgetType:               "COST",
+		LimitAmount:              "100",
+		LimitUnit:                "USD",
+		FilterKey:                "AZ",
+		FilterValue:              "us-east-1",
+		IncludeCredit:            "true",
+		IncludeOtherSubscription: "true",
+		IncludeRecurring:         "true",
+		IncludeRefund:            "true",
+		IncludeSubscription:      "true",
+		IncludeSupport:           "true",
+		IncludeTax:               "true",
+		IncludeUpfront:           "true",
+		UseBlended:               "false",
+		TimeUnit:                 "MONTHLY",
+		TimePeriodStart:          "2017-01-01_12:00",
+		TimePeriodEnd:            "2087-06-15_12:00",
+	}
 }
 
 func testBudgetHCLPrefixUseDefaults(budgetConfig budgetTestConfig) string {
