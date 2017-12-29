@@ -63,6 +63,10 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"kibana_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ebs_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -480,12 +484,14 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		if err != nil {
 			return err
 		}
+		d.Set("kibana_endpoint", endpoints["vpc"].(string)+"/_plugin/kibana/")
 		if ds.Endpoint != nil {
 			return fmt.Errorf("%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
 			d.Set("endpoint", *ds.Endpoint)
+			d.Set("kibana_endpoint", *ds.Endpoint+"/_plugin/kibana/")
 		}
 		if ds.Endpoints != nil {
 			return fmt.Errorf("%q: Elasticsearch domain not in VPC expected to have null Endpoints value", d.Id())
