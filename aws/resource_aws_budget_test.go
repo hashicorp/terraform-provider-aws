@@ -197,6 +197,8 @@ type budgetTestConfig struct {
 }
 
 func newBudgetTestConfigUpdate(name string) budgetTestConfig {
+	dateNow := time.Now()
+	futureDate := dateNow.AddDate(0, 0, 7*2)
 	return budgetTestConfig{
 		BudgetName:               name,
 		BudgetType:               "COST",
@@ -215,7 +217,7 @@ func newBudgetTestConfigUpdate(name string) budgetTestConfig {
 		UseBlended:               "true",
 		TimeUnit:                 "MONTHLY",
 		TimePeriodStart:          "2017-01-01_12:00",
-		TimePeriodEnd:            "2018-01-01_12:00",
+		TimePeriodEnd:            futureDate.Format("2006-01-02_15:04"),
 	}
 }
 
