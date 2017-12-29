@@ -14,6 +14,7 @@ ENHANCEMENTS:
 * resource/aws_codepipeline: ARN is now exposed as an attribute [GH-2773]
 * resource/elasticsearch_domain: Fixed a crash when no Cloudwatch log group is configured [GH-2787]
 * resource/aws_appautoscaling_scheduled_action: min_capcity argument is now honoured [GH-2794]
+* resource/aws_rds_cluster: Clusters in the `resetting-master-credentials` state no longer cause an error [GH-2791]
 
 BUG FIXES:
 
