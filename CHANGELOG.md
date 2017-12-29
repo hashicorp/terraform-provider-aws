@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * provider: Allow API Gateway and Lambda endpoints configuration [GH-2641]
 * provider: `eu-west-3` is now supported [GH-2707]
+* provider: Endpoints can now be specified for ACM, ECR, ECS, STS and Route 53 [GH-2795]
 * resource/aws_kinesis_firehose_delivery_stream: Import is now supported [GH-2707]
 * resource/aws_cognito_user_pool: The ARN for the pool is now computed and exposed as an attribute [GH-2723]
 * resource/aws_directory_service_directory: Add security_group_id field [GH-2688]
