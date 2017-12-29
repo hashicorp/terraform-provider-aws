@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAcmCertificateIssuingFlow(t *testing.T) {
+func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 	var conf acm.DescribeCertificateOutput
 
 	root_zone_domain := "sandbox.sellmayr.net"
