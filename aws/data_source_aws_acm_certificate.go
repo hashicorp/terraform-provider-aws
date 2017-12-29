@@ -100,10 +100,7 @@ func dataSourceAwsAcmGetCertificate(d *schema.ResourceData, meta interface{}) *r
 		return true
 	})
 	if err != nil {
-		return &resource.RetryError{
-			Err:       errwrap.Wrapf("Error describing certificates: {{err}}", err),
-			Retryable: false,
-		}
+		return resource.NonRetryableError(errwrap.Wrapf("Error describing certificates: {{err}}", err))
 	}
 
 	// filter based on certificate type (imported or aws-issued)
@@ -117,10 +114,7 @@ func dataSourceAwsAcmGetCertificate(d *schema.ResourceData, meta interface{}) *r
 
 			description, err := conn.DescribeCertificate(params)
 			if err != nil {
-				return &resource.RetryError{
-					Err:       errwrap.Wrapf("Error describing certificates: {{err}}", err),
-					Retryable: false,
-				}
+				return resource.NonRetryableError(errwrap.Wrapf("Error describing certificates: {{err}}", err))
 			}
 
 			for _, certType := range typesStrings {
@@ -140,16 +134,10 @@ func dataSourceAwsAcmGetCertificate(d *schema.ResourceData, meta interface{}) *r
 	}
 
 	if len(arns) == 0 {
-		return &resource.RetryError{
-			Err:       fmt.Errorf("No certificate for domain %q found in this region.", targetValue),
-			Retryable: true,
-		}
+		return resource.RetryableError(fmt.Errorf("No certificate for domain %q found in this region.", targetValue))
 	}
 	if len(arns) > 1 {
-		return &resource.RetryError{
-			Err:       fmt.Errorf("Multiple certificates for domain %q found in this region.", targetValue),
-			Retryable: true,
-		}
+		return resource.NonRetryableError(fmt.Errorf("Multiple certificates for domain %q found in this region.", targetValue))
 	}
 
 	d.SetId(time.Now().UTC().String())

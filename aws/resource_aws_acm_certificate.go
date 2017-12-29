@@ -109,39 +109,24 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		resp, err := acmconn.DescribeCertificate(params)
 
 		if err != nil {
-			return &resource.RetryError{
-				Err:       fmt.Errorf("Error describing certificate: %s", err),
-				Retryable: false,
-			}
+			return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %s", err))
 		}
 
 		if err := d.Set("domain_name", resp.Certificate.DomainName); err != nil {
-			return &resource.RetryError{
-				Err:       err,
-				Retryable: false,
-			}
+			return resource.NonRetryableError(err)
 		}
 		if err := d.Set("subject_alternative_names", cleanUpSubjectAlternativeNames(resp.Certificate)); err != nil {
-			return &resource.RetryError{
-				Err:       err,
-				Retryable: false,
-			}
+			return resource.NonRetryableError(err)
 		}
 
 		domainValidationOptions, err := convertDomainValidationOptions(resp.Certificate.DomainValidationOptions)
 
 		if err != nil {
-			return &resource.RetryError{
-				Err:       err,
-				Retryable: true,
-			}
+			return resource.RetryableError(err)
 		}
 
 		if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
-			return &resource.RetryError{
-				Err:       err,
-				Retryable: false,
-			}
+			return resource.NonRetryableError(err)
 		}
 
 		return nil
