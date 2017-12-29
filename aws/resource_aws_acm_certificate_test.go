@@ -39,7 +39,7 @@ func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 func testAccCheckAcmCertificateWasIssued(output *acm.DescribeCertificateOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *output.Certificate.Status != "ISSUED" {
-			return fmt.Errorf("Expected certificate to be issued but was in status %s", output.Certificate.Status)
+			return fmt.Errorf("Expected certificate to be issued but was in status %s", *output.Certificate.Status)
 		}
 		return nil
 	}
