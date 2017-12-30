@@ -17,18 +17,17 @@ func resourceAwsAppautoscalingTarget() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAppautoscalingTargetCreate,
 		Read:   resourceAwsAppautoscalingTargetRead,
+		Update: resourceAwsAppautoscalingTargetUpdate,
 		Delete: resourceAwsAppautoscalingTargetDelete,
 
 		Schema: map[string]*schema.Schema{
 			"max_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
-				ForceNew: true,
 			},
 			"min_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
-				ForceNew: true,
 			},
 			"resource_id": {
 				Type:     schema.TypeString,
@@ -38,7 +37,6 @@ func resourceAwsAppautoscalingTarget() *schema.Resource {
 			"role_arn": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"scalable_dimension": {
 				Type:         schema.TypeString,
@@ -74,8 +72,8 @@ func resourceAwsAppautoscalingTargetCreate(d *schema.ResourceData, meta interfac
 		_, err = conn.RegisterScalableTarget(&targetOpts)
 
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ValidationException" {
-				log.Printf("[DEBUG] Retrying creation of Application Autoscaling Scalable Target due to possible issues with IAM: %s", awsErr)
+			if isAWSErr(err, "ValidationException", "Unable to assume IAM role") {
+				log.Printf("[DEBUG] Retrying creation of Application Autoscaling Scalable Target due to possible issues with IAM: %s", err)
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -116,6 +114,49 @@ func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{
 	d.Set("service_namespace", t.ServiceNamespace)
 
 	return nil
+}
+
+func resourceAwsAppautoscalingTargetUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).appautoscalingconn
+
+	input := &applicationautoscaling.RegisterScalableTargetInput{
+		ResourceId:        aws.String(d.Get("resource_id").(string)),
+		ScalableDimension: aws.String(d.Get("scalable_dimension").(string)),
+		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
+	}
+
+	if d.HasChange("max_capacity") {
+		input.MaxCapacity = aws.Int64(int64(d.Get("max_capacity").(int)))
+	}
+
+	if d.HasChange("min_capacity") {
+		input.MinCapacity = aws.Int64(int64(d.Get("min_capacity").(int)))
+	}
+
+	if d.HasChange("role_arn") {
+		input.RoleARN = aws.String(d.Get("role_arn").(string))
+	}
+
+	log.Printf("[DEBUG] Updating Application Autoscaling Target: %#v", input)
+	var err error
+	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err = conn.RegisterScalableTarget(input)
+
+		if err != nil {
+			if isAWSErr(err, "ValidationException", "Unable to assume IAM role") {
+				log.Printf("[DEBUG] Retrying creation of Application Autoscaling Scalable Target due to possible issues with IAM: %s", err)
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("Error updating application autoscaling target: %s", err)
+	}
+
+	return resourceAwsAppautoscalingTargetRead(d, meta)
 }
 
 func resourceAwsAppautoscalingTargetDelete(d *schema.ResourceData, meta interface{}) error {
