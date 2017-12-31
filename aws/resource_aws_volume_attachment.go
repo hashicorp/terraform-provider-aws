@@ -18,6 +18,7 @@ func resourceAwsVolumeAttachment() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsVolumeAttachmentCreate,
 		Read:   resourceAwsVolumeAttachmentRead,
+		Update: resourceAwsVolumeAttachmentUpdate,
 		Delete: resourceAwsVolumeAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -202,6 +203,10 @@ func resourceAwsVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) e
 		d.SetId("")
 	}
 
+	return nil
+}
+
+func resourceAwsVolumeAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
