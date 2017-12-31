@@ -43,12 +43,10 @@ func resourceAwsVolumeAttachment() *schema.Resource {
 			"force_detach": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"skip_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 		},
 	}
