@@ -3,13 +3,10 @@ package aws
 import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"log"
-	"strings"
 	"time"
 )
 
@@ -190,47 +187,4 @@ func resourceAwsAcmCertificateDelete(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId("")
 	return nil
-}
-
-func resourceAwsAcmCertificateDomain(d *schema.ResourceData) string {
-	if v, ok := d.GetOk("domain"); ok {
-		return v.(string)
-	} else if strings.Contains(d.Id(), "eipalloc") {
-		// We have to do this for backwards compatibility since TF 0.1
-		// didn't have the "domain" computed attribute.
-		return "vpc"
-	}
-
-	return "standard"
-}
-
-func disassociateAcmCertificate(d *schema.ResourceData, meta interface{}) error {
-	ec2conn := meta.(*AWSClient).ec2conn
-	log.Printf("[DEBUG] Disassociating EIP: %s", d.Id())
-	var err error
-	switch resourceAwsAcmCertificateDomain(d) {
-	case "vpc":
-		associationID := d.Get("association_id").(string)
-		if associationID == "" {
-			// If assiciationID is empty, it means there's no association.
-			// Hence this disassociation can be skipped.
-			return nil
-		}
-		_, err = ec2conn.DisassociateAddress(&ec2.DisassociateAddressInput{
-			AssociationId: aws.String(associationID),
-		})
-	case "standard":
-		_, err = ec2conn.DisassociateAddress(&ec2.DisassociateAddressInput{
-			PublicIp: aws.String(d.Get("public_ip").(string)),
-		})
-	}
-
-	// First check if the association ID is not found. If this
-	// is the case, then it was already disassociated somehow,
-	// and that is okay. The most commmon reason for this is that
-	// the instance or ENI it was attached it was destroyed.
-	if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidAssociationID.NotFound" {
-		err = nil
-	}
-	return err
 }
