@@ -134,6 +134,7 @@ The following arguments are supported:
 `environment_variable` supports the following:
 * `name` - (Required) The environment variable's name or key.
 * `value` - (Required) The environment variable's value.
+* `type` - (Optional) The type of environment variable. Valid values: `PARAMETER_STORE`, `PLAINTEXT`.
 
 `source` supports the following:
 
@@ -156,4 +157,3 @@ The following attributes are exported:
 * `encryption_key` - The AWS Key Management Service (AWS KMS) customer master key (CMK) that was used for encrypting the build project's build output artifacts.
 * `name` - The projects name.
 * `service_role` - The ARN of the IAM service role.
-

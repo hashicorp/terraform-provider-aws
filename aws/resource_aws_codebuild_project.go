@@ -95,6 +95,21 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+											value := v.(string)
+											validType := []string{"PARAMETER_STORE", "PLAINTEXT"}
+											for _, str := range validType {
+												if value == str {
+													return
+												}
+											}
+											errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
+											return
+										},
+									},
 								},
 							},
 						},
@@ -312,6 +327,10 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 
 				if v := config["value"].(string); v != "" {
 					projectEnvironmentVar.Value = &v
+				}
+
+				if v := config["type"].(string); v != "" {
+					projectEnvironmentVar.Type = &v
 				}
 
 				projectEnvironmentVariables = append(projectEnvironmentVariables, projectEnvironmentVar)
