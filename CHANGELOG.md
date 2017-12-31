@@ -2,9 +2,9 @@
 
 ENHANCEMENTS:
 
-* provider: Allow API Gateway and Lambda endpoints configuration [GH-2641]
 * provider: `eu-west-3` is now supported [GH-2707]
 * provider: Endpoints can now be specified for ACM, ECR, ECS, STS and Route 53 [GH-2795]
+* provider: Endpoints can now be specified for API Gateway and Lambda [GH-2641]
 * resource/aws_kinesis_firehose_delivery_stream: Import is now supported [GH-2707]
 * resource/aws_cognito_user_pool: The ARN for the pool is now computed and exposed as an attribute [GH-2723]
 * resource/aws_directory_service_directory: Add security_group_id field [GH-2688]
@@ -12,15 +12,15 @@ ENHANCEMENTS:
 * resource/aws_rds_cluster_instance: Set db_subnet_group_name in state on read if available [GH-2606]
 * resource/aws_eip: Tagging is now supported [GH-2768]
 * resource/aws_codepipeline: ARN is now exposed as an attribute [GH-2773]
-* resource/elasticsearch_domain: Fixed a crash when no Cloudwatch log group is configured [GH-2787]
 * resource/aws_appautoscaling_scheduled_action: min_capcity argument is now honoured [GH-2794]
 * resource/aws_rds_cluster: Clusters in the `resetting-master-credentials` state no longer cause an error [GH-2791]
 
 BUG FIXES:
 
-* resource/cognito_user_pool: Update Cognito email message length to 20,000 [GH-2692]
+* resource/aws_cognito_user_pool: Update Cognito email message length to 20,000 [GH-2692]
 * resource/aws_volume_attachment: Changing device name without changing volume or instance ID now correctly produces a diff [GH-2720]
 * resource/aws_s3_bucket_object: Object tagging is now supported in GovCloud [GH-2665]
+* resource/aws_elasticsearch_domain: Fixed a crash when no Cloudwatch log group is configured [GH-2787]
 
 ## 1.6.0 (December 18, 2017)
 
