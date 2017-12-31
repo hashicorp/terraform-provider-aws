@@ -391,6 +391,10 @@ resource "aws_ssm_association" "foo" {
     key = "tag:Name"
     values = ["acceptanceTest"]
   }
+  targets {
+    key = "tag:ExtraName"
+    values = ["acceptanceTest"]
+  }
 }`, rName)
 }
 

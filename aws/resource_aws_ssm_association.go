@@ -213,6 +213,10 @@ func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) er
 		associationInput.OutputLocation = expandSSMAssociationOutputLocation(d.Get("output_location").([]interface{}))
 	}
 
+	if d.HasChange("targets") {
+		associationInput.Targets = expandAwsSsmTargets(d)
+	}
+
 	_, err := ssmconn.UpdateAssociation(associationInput)
 	if err != nil {
 		return errwrap.Wrapf("[ERROR] Error updating SSM association: {{err}}", err)
