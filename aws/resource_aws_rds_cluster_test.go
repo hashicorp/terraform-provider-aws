@@ -230,6 +230,25 @@ func TestAccAWSRDSCluster_encrypted(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSCluster_EncryptedCrossRegionReplication(t *testing.T) {
+	var v rds.DBCluster
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfigEncryptedCrossRegionReplica(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists("aws_rds_cluster.test_primary", &v),
+					testAccCheckAWSClusterExists("aws_rds_cluster.test_replica", &v),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRDSCluster_backupsUpdate(t *testing.T) {
 	var v rds.DBCluster
 
@@ -858,4 +877,75 @@ resource "aws_rds_cluster" "default" {
 
   depends_on = ["aws_iam_role.another_rds_sample_role"]
 }`, n, n, n)
+}
+
+func testAccAWSClusterConfigEncryptedCrossRegionReplica(n int) string {
+	return fmt.Sprintf(`
+		provider "aws" {
+			alias  = "useast1"
+			region = "us-east-1"
+		}
+		
+		provider "aws" {
+			alias  = "uswest2"
+			region = "us-west-2"
+		}
+		
+		resource "aws_rds_cluster_instance" "test_instance" {
+			provider = "aws.uswest2"
+			identifier = "tf-aurora-instance-%d"
+			cluster_identifier = "${aws_rds_cluster.test_primary.id}"
+			instance_class = "db.t2.small"
+		}
+
+		resource "aws_rds_cluster" "test_primary" {
+			provider = "aws.uswest2"
+			cluster_identifier = "tf-aurora-cluster-%d"
+			availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+			database_name = "mydb"
+			master_username = "foo"
+			master_password = "mustbeeightcharaters"
+			storage_encrypted = true
+			skip_final_snapshot = true
+		}
+
+		data "aws_caller_identity" "current" {}
+
+		resource "aws_kms_key" "kms_key_east" {
+			provider = "aws.useast1"
+			description = "Terraform acc test %d"
+			policy = <<POLICY
+			{
+				"Version": "2012-10-17",
+				"Id": "kms-tf-1",
+				"Statement": [
+					{
+						"Sid": "Enable IAM User Permissions",
+						"Effect": "Allow",
+						"Principal": {
+							"AWS": "*"
+						},
+						"Action": "kms:*",
+						"Resource": "*"
+					}
+				]
+			}
+			POLICY
+		}
+
+		resource "aws_rds_cluster" "test_replica" {
+			provider = "aws.useast1"
+			depends_on = ["aws_rds_cluster.test_primary", "aws_rds_cluster_instance.test_instance", "aws_kms_key.kms_key_east"]
+			cluster_identifier = "tf-aurora-replica-cluster-%d"
+			availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]
+			database_name = "mydb"
+			master_username = "foo"
+			master_password = "mustbeeightcharaters"
+			kms_key_id = "${aws_kms_key.kms_key_east.arn}"
+			storage_encrypted = true
+			skip_final_snapshot = true
+			replication_source_identifier = "arn:aws:rds:us-west-2:${data.aws_caller_identity.current.account_id}:cluster:${aws_rds_cluster.test_primary.cluster_identifier}"
+			source_region = "us-west-2"
+		}
+`, n, n, n, n)
 }
