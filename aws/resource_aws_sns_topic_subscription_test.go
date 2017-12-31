@@ -225,7 +225,7 @@ resource "aws_sns_topic_subscription" "test_subscription" {
     topic_arn = "${aws_sns_topic.test_topic.arn}"
     protocol = "sqs"
     endpoint = "${aws_sqs_queue.test_queue.arn}"
-    filter=_policy = "{\"key1\": [\"val1\"], \"key2\": [\"val2\"]}"
+    filter=_policy = "{"key1": ["val1"], "key2": ["val2"]}"
   }
 `, i, i)
 }
