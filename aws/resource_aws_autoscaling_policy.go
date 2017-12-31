@@ -283,7 +283,7 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 		params.AdjustmentType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("cooldown"); ok {
+	if v, ok := d.GetOkExists("cooldown"); ok {
 		params.Cooldown = aws.Int64(int64(v.(int)))
 	}
 
