@@ -24,6 +24,7 @@ var SNSSubscriptionAttributeMap = map[string]string{
 	"endpoint":             "Endpoint",
 	"protocol":             "Protocol",
 	"raw_message_delivery": "RawMessageDelivery",
+	"filter_policy":        "FilterPolicy",
 }
 
 func resourceAwsSnsTopicSubscription() *schema.Resource {
@@ -73,6 +74,10 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"filter_policy": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
@@ -143,6 +148,22 @@ func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
+	if d.HasChange("filter_policy") {
+		_, n := d.GetChange("filter_policy")
+
+		attrValue := n.(string)
+
+		req := &sns.SetSubscriptionAttributesInput{
+			SubscriptionArn: aws.String(d.Id()),
+			AttributeName:   aws.String("FilterPolicy"),
+			AttributeValue:  aws.String(attrValue),
+		}
+		_, err := snsconn.SetSubscriptionAttributes(req)
+
+		if err != nil {
+			return fmt.Errorf("Unable to set filter policy attribute on subscription")
+		}
+	}
 	return resourceAwsSnsTopicSubscriptionRead(d, meta)
 }
 

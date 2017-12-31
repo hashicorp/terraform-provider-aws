@@ -31,6 +31,25 @@ func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSNSTopicSubscription_attributes(t *testing.T) {
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig_attributes(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
+					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription"),
+					testAccCheckAWSSNSTopicSubscriptionAttributesExists("aws_sns_topic_subscription.test_subscription"),
+				),
+			},
+		},
+	})
+}
 func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 	ri := acctest.RandInt()
 
@@ -124,6 +143,41 @@ func testAccCheckAWSSNSTopicSubscriptionExists(n string) resource.TestCheckFunc 
 	}
 }
 
+func testAccCheckAWSSNSTopicSubscriptionAttributesExists(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No SNS subscription with that ARN exists")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).snsconn
+
+		params := &sns.GetSubscriptionAttributesInput{
+			SubscriptionArn: aws.String(rs.Primary.ID),
+		}
+		out, err := conn.GetSubscriptionAttributes(params)
+
+		if err != nil {
+			return err
+		}
+
+		expected := map[string]string{
+			"FilterPolicy": "{\"key1\": [\"val1\"], \"key2\": [\"val2\"]}",
+		}
+		for key, actualVal := range out.Attributes {
+			if *actualVal != expected[key] {
+				return fmt.Errorf("Expected %v, got %v", expected[key], actualVal)
+			}
+		}
+
+		return nil
+	}
+}
+
 func TestObfuscateEndpointPassword(t *testing.T) {
 	checks := map[string]string{
 		"https://example.com/myroute":                   "https://example.com/myroute",
@@ -154,6 +208,25 @@ resource "aws_sns_topic_subscription" "test_subscription" {
     protocol = "sqs"
     endpoint = "${aws_sqs_queue.test_queue.arn}"
 }
+`, i, i)
+}
+
+func testAccAWSSNSTopicSubscriptionConfig_attributes(i int) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test_topic" {
+    name = "terraform-test-topic-%d"
+}
+
+resource "aws_sqs_queue" "test_queue" {
+	name = "terraform-subscription-test-queue-%d"
+}
+
+resource "aws_sns_topic_subscription" "test_subscription" {
+    topic_arn = "${aws_sns_topic.test_topic.arn}"
+    protocol = "sqs"
+    endpoint = "${aws_sqs_queue.test_queue.arn}"
+    filter=_policy = "{\"key1\": [\"val1\"], \"key2\": [\"val2\"]}"
+  }
 `, i, i)
 }
 
