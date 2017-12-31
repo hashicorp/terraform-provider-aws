@@ -305,8 +305,10 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			healthCheckProtocol := strings.ToLower(healthCheck["protocol"].(string))
 
 			if healthCheckProtocol != "tcp" && !d.IsNewResource() {
-				params.Matcher = &elbv2.Matcher{
-					HttpCode: aws.String(healthCheck["matcher"].(string)),
+				if m := healthCheck["matcher"].(string); m != "" {
+					params.Matcher = &elbv2.Matcher{
+						HttpCode: aws.String(m),
+					}
 				}
 				params.HealthCheckPath = aws.String(healthCheck["path"].(string))
 				params.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
