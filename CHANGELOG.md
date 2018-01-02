@@ -21,6 +21,7 @@ BUG FIXES:
 * resource/aws_volume_attachment: Changing device name without changing volume or instance ID now correctly produces a diff [GH-2720]
 * resource/aws_s3_bucket_object: Object tagging is now supported in GovCloud [GH-2665]
 * resource/aws_elasticsearch_domain: Fixed a crash when no Cloudwatch log group is configured [GH-2787]
+* resource/aws_s3_bucket_policy: Set the resource ID after successful creation [GH-2820]
 
 ## 1.6.0 (December 18, 2017)
 
