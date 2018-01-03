@@ -1986,6 +1986,15 @@ func validateCognitoRoles(v map[string]interface{}, k string) (errors []error) {
 	return
 }
 
+func validateCognitoUserPoolDomain(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens (max length 63 chars) allowed in %q", k))
+	}
+	return
+}
+
 func validateDxConnectionBandWidth(v interface{}, k string) (ws []string, errors []error) {
 	val, ok := v.(string)
 	if !ok {
