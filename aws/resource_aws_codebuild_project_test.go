@@ -172,6 +172,24 @@ func TestAWSCodeBuildProject_artifactsNamespaceTypeValidation(t *testing.T) {
 	}
 }
 
+func TestAWSCodeBuildProject_cacheTypeValidation(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{Value: "S3", ErrCount: 0},
+		{Value: "XYZ", ErrCount: 1},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateAwsCodeBuildCacheType(tc.Value, "aws_codebuild_project")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the AWS CodeBuild project artifacts type to trigger a validation error")
+		}
+	}
+}
+
 func longTestData() string {
 	data := `
 	test-test-test-test-test-test-test-test-test-test-
@@ -388,6 +406,11 @@ func testAccCheckAWSCodeBuildProjectDestroy(s *terraform.State) error {
 
 func testAccAWSCodeBuildProjectConfig_basic(rName, vpcConfig, vpcResources string) string {
 	return fmt.Sprintf(`
+resource "aws_s3_bucket" "foo" {
+  bucket = "tf-test-codebuild-%s"
+  acl    = "private"
+}
+
 resource "aws_iam_role" "codebuild_role" {
   name = "codebuild-role-%s"
   assume_role_policy = <<EOF
@@ -459,6 +482,11 @@ resource "aws_codebuild_project" "foo" {
     type = "NO_ARTIFACTS"
   }
 
+  cache {
+    type = "S3"
+    location = "${aws_s3_bucket.foo.bucket}"
+  }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
@@ -481,7 +509,7 @@ resource "aws_codebuild_project" "foo" {
 	%s
 }
 %s
-`, rName, rName, rName, rName, vpcConfig, vpcResources)
+`, rName, rName, rName, rName, rName, vpcConfig, vpcResources)
 }
 
 func testAccAWSCodeBuildProjectConfig_basicUpdated(rName string) string {

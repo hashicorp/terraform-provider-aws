@@ -59,6 +59,25 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				},
 				Set: resourceAwsCodeBuildProjectArtifactsHash,
 			},
+			"cache": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateAwsCodeBuildCacheType,
+						},
+						"location": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+				Set: resourceAwsCodeBuildProjectCacheHash,
+			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -226,6 +245,10 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		Artifacts:   &projectArtifacts,
 	}
 
+	if v, ok := d.GetOk("cache"); ok {
+		params.Cache = expandProjectCache(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("description"); ok {
 		params.Description = aws.String(v.(string))
 	}
@@ -310,6 +333,19 @@ func expandProjectArtifacts(d *schema.ResourceData) codebuild.ProjectArtifacts {
 	}
 
 	return projectArtifacts
+}
+
+func expandProjectCache(s *schema.Set) *codebuild.ProjectCache {
+	var projectCache *codebuild.ProjectCache
+
+	data := s.List()[0].(map[string]interface{})
+
+	projectCache = &codebuild.ProjectCache{
+		Type:     aws.String(data["type"].(string)),
+		Location: aws.String(data["location"].(string)),
+	}
+
+	return projectCache
 }
 
 func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironment {
@@ -438,6 +474,10 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	if err := d.Set("cache", schema.NewSet(resourceAwsCodeBuildProjectCacheHash, flattenAwsCodebuildProjectCache(project.Cache))); err != nil {
+		return err
+	}
+
 	if err := d.Set("source", flattenAwsCodeBuildProjectSource(project.Source)); err != nil {
 		return err
 	}
@@ -483,6 +523,16 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("vpc_config") {
 		params.VpcConfig = expandCodeBuildVpcConfig(d.Get("vpc_config").([]interface{}))
+	}
+
+	if d.HasChange("cache") {
+		if v, ok := d.GetOk("cache"); ok {
+			params.Cache = expandProjectCache(v.(*schema.Set))
+		} else {
+			params.Cache = &codebuild.ProjectCache{
+				Type: aws.String("NO_CACHE"),
+			}
+		}
 	}
 
 	if d.HasChange("description") {
@@ -567,6 +617,20 @@ func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) 
 	return &artifactSet
 }
 
+func flattenAwsCodebuildProjectCache(cache *codebuild.ProjectCache) []interface{} {
+	values := map[string]interface{}{}
+
+	if cache.Type != nil {
+		values["type"] = *cache.Type
+	}
+
+	if cache.Location != nil {
+		values["location"] = *cache.Location
+	}
+
+	return []interface{}{values}
+}
+
 func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnvironment) []interface{} {
 	envConfig := map[string]interface{}{}
 
@@ -626,6 +690,21 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	artifactType := m["type"].(string)
 
 	buf.WriteString(fmt.Sprintf("%s-", artifactType))
+
+	return hashcode.String(buf.String())
+}
+
+func resourceAwsCodeBuildProjectCacheHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	if m["type"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
+	}
+
+	if m["location"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["location"].(string)))
+	}
 
 	return hashcode.String(buf.String())
 }
@@ -785,6 +864,18 @@ func validateAwsCodeBuildEnvironmentType(v interface{}, k string) (ws []string, 
 
 	if !types[value] {
 		errors = append(errors, fmt.Errorf("CodeBuild: Environment Type can only be LINUX_CONTAINER"))
+	}
+	return
+}
+
+func validateAwsCodeBuildCacheType(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	types := map[string]bool{
+		"S3": true,
+	}
+
+	if !types[value] {
+		errors = append(errors, fmt.Errorf("CodeBuild: Cache Type can only be S3"))
 	}
 	return
 }
