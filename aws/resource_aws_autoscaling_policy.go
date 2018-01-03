@@ -287,7 +287,7 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 		params.Cooldown = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("estimated_instance_warmup"); ok {
+	if v, ok := d.GetOkExists("estimated_instance_warmup"); ok {
 		params.EstimatedInstanceWarmup = aws.Int64(int64(v.(int)))
 	}
 
@@ -300,7 +300,7 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 	}
 
 	//if policy_type=="SimpleScaling" then scaling_adjustment is required and 0 is allowed
-	if v, ok := d.GetOk("scaling_adjustment"); ok || *params.PolicyType == "SimpleScaling" {
+	if v, ok := d.GetOkExists("scaling_adjustment"); ok || *params.PolicyType == "SimpleScaling" {
 		params.ScalingAdjustment = aws.Int64(int64(v.(int)))
 	}
 
@@ -312,10 +312,10 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 		params.StepAdjustments = steps
 	}
 
-	if v, ok := d.GetOk("min_adjustment_magnitude"); ok {
+	if v, ok := d.GetOkExists("min_adjustment_magnitude"); ok {
 		// params.MinAdjustmentMagnitude = aws.Int64(int64(d.Get("min_adjustment_magnitude").(int)))
 		params.MinAdjustmentMagnitude = aws.Int64(int64(v.(int)))
-	} else if v, ok := d.GetOk("min_adjustment_step"); ok {
+	} else if v, ok := d.GetOkExists("min_adjustment_step"); ok {
 		// params.MinAdjustmentStep = aws.Int64(int64(d.Get("min_adjustment_step").(int)))
 		params.MinAdjustmentStep = aws.Int64(int64(v.(int)))
 	}
