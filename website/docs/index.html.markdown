@@ -251,6 +251,10 @@ in excess of those allowed by the access policy of the role that is being assume
 
 Nested `endpoints` block supports the following:
 
+* `cloudformation` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom CloudFormation endpoints.
+
 * `cloudwatch` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom CloudWatch endpoints.
@@ -263,25 +267,9 @@ Nested `endpoints` block supports the following:
   URL constructed from the `region`. It's typically used to connect to
   custom CloudWatchLogs endpoints.
 
-* `cloudformation` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom CloudFormation endpoints.
-
 * `dynamodb` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   `dynamodb-local`.
-
-* `kinesis` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  `kinesalite`.
-
-* `kms` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom KMS endpoints.
-
-* `iam` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom IAM endpoints.
 
 * `ec2` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
@@ -290,6 +278,18 @@ Nested `endpoints` block supports the following:
 * `elb` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom ELB endpoints.
+
+* `iam` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom IAM endpoints.
+
+* `kinesis` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  `kinesalite`.
+
+* `kms` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom KMS endpoints.
 
 * `rds` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
