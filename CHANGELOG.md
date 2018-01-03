@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * resource/aws_appautoscaling_scheduled_action: min_capcity argument is now honoured [GH-2794]
 * resource/aws_rds_cluster: Clusters in the `resetting-master-credentials` state no longer cause an error [GH-2791]
 * resource/aws_cloudwatch_metric_alarm: Support optional datapoints_to_alarm configuration [GH-2609]
+* resource/aws_ses_event_destination: Add support for SNS destinations [GH-1737]
 
 BUG FIXES:
 
