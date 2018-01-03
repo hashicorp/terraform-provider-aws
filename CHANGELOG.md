@@ -20,6 +20,7 @@ ENHANCEMENTS:
 * resource/aws_rds_cluster: Clusters in the `resetting-master-credentials` state no longer cause an error [GH-2791]
 * resource/aws_cloudwatch_metric_alarm: Support optional datapoints_to_alarm configuration [GH-2609]
 * resource/aws_ses_event_destination: Add support for SNS destinations [GH-1737]
+* resource/aws_iam_role: Delete inline policies when `force_detach_policies = true` [GH-2388]
 * data-source/aws_iam_server_certificate: Add support for retrieving public key [GH-2749]
 
 BUG FIXES:
