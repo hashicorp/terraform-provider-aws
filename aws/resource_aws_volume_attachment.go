@@ -205,6 +205,7 @@ func resourceAwsVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsVolumeAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] Attaching Volume (%s) is updating which does nothing but updates a few params in state", d.Id())
 	return nil
 }
 
