@@ -6,7 +6,7 @@ description: |-
     Provides details about an ecs cluster
 ---
 
-# Data Source: aws_ecscluster
+# Data Source: aws_ecs_cluster
 
 The ECS Cluster data source allows access to details of a specific
 cluster within an AWS ECS service.

@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific Security Group
 ---
 
-# Data Source: aws_securitygroup
+# Data Source: aws_security_group
 
 `aws_security_group` provides details about a specific Security Group.
 

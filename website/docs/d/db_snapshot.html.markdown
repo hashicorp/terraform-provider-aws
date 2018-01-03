@@ -6,7 +6,7 @@ description: |-
   Get information on a DB Snapshot.
 ---
 
-# Data Source: aws_dbsnapshot
+# Data Source: aws_db_snapshot
 
 Use this data source to get information about a DB Snapshot for use when provisioning DB instances
 
