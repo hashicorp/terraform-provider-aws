@@ -6,7 +6,7 @@ description: |-
   Provides a Load Balancer Target Group data source.
 ---
 
-# aws_lb_target_group
+# Data Source: aws_lb_target_group
 
 ~> **Note:** `aws_alb_target_group` is known as `aws_lb_target_group`. The functionality is identical.
 

@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific VPC subnet
 ---
 
-# aws_subnet
+# Data Source: aws_subnet
 
 `aws_subnet` provides details about a specific VPC subnet.
 
