@@ -1,5 +1,9 @@
 ## 1.6.1 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_cognito_user_pool_domain` [GH-2325]
+
 ENHANCEMENTS:
 
 * provider: `eu-west-3` is now supported [GH-2707]
@@ -7,16 +11,16 @@ ENHANCEMENTS:
 * provider: Endpoints can now be specified for API Gateway and Lambda [GH-2641]
 * resource/aws_kinesis_firehose_delivery_stream: Import is now supported [GH-2707]
 * resource/aws_cognito_user_pool: The ARN for the pool is now computed and exposed as an attribute [GH-2723]
-* resource/aws_directory_service_directory: Add security_group_id field [GH-2688]
+* resource/aws_directory_service_directory: Add `security_group_id` field [GH-2688]
 * resource/aws_rds_cluster_instance: Support Performance Insights [GH-2331]
-* resource/aws_rds_cluster_instance: Set db_subnet_group_name in state on read if available [GH-2606]
+* resource/aws_rds_cluster_instance: Set `db_subnet_group_name` in state on read if available [GH-2606]
 * resource/aws_eip: Tagging is now supported [GH-2768]
 * resource/aws_codepipeline: ARN is now exposed as an attribute [GH-2773]
-* resource/aws_appautoscaling_scheduled_action: min_capcity argument is now honoured [GH-2794]
+* resource/aws_appautoscaling_scheduled_action: `min_capacity` argument is now honoured [GH-2794]
 * resource/aws_rds_cluster: Clusters in the `resetting-master-credentials` state no longer cause an error [GH-2791]
 * resource/aws_cloudwatch_metric_alarm: Support optional datapoints_to_alarm configuration [GH-2609]
 * resource/aws_ses_event_destination: Add support for SNS destinations [GH-1737]
-* data-source/aws_iam_server_certificate: add support for retrieving public key [GH-2749]
+* data-source/aws_iam_server_certificate: Add support for retrieving public key [GH-2749]
 
 BUG FIXES:
 
