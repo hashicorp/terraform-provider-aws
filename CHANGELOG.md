@@ -1,4 +1,4 @@
-## 1.6.1 (Unreleased)
+## 1.7.0 (Unreleased)
 
 FEATURES:
 
