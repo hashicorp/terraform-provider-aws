@@ -170,7 +170,6 @@ func resourceAwsLambdaFunction() *schema.Resource {
 						"variables": {
 							Type:     schema.TypeMap,
 							Optional: true,
-							Elem:     schema.TypeString,
 						},
 					},
 				},
