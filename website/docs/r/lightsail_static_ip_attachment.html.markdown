@@ -6,7 +6,7 @@ description: |-
   Provides an Lightsail Static IP Attachment
 ---
 
-# aws\_lightsail\_static\_ip\_attachment
+# aws_lightsail_static_ip_attachment
 
 Provides a static IP address attachment - relationship between a Lightsail static IP & Lightsail instance.
 

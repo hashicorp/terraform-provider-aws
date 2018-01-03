@@ -6,7 +6,7 @@ description: |-
   Provides an ECS service.
 ---
 
-# aws\_ecs\_service
+# aws_ecs_service
 
 -> **Note:** To prevent a race condition during service deletion, make sure to set `depends_on` to the related `aws_iam_role_policy`; otherwise, the policy may be destroyed too soon and the ECS service will then get stuck in the `DRAINING` state.
 
@@ -50,6 +50,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the service (up to 255 letters, numbers, hyphens, and underscores)
 * `task_definition` - (Required) The family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service.
 * `desired_count` - (Required) The number of instances of the task definition to place and keep running
+* `launch_type` - (Optional) The launch type on which to run your service. The valid values are `EC2` and `FARGATE`. Defaults to `EC2`.
 * `cluster` - (Optional) ARN of an ECS cluster
 * `iam_role` - (Optional) The ARN of IAM role that allows your Amazon ECS container agent to make calls to your load balancer on your behalf. This parameter is only required if you are using a load balancer with your service.
 * `deployment_maximum_percent` - (Optional) The upper limit (as a percentage of the service's desiredCount) of the number of running tasks that can be running in a service during a deployment.
@@ -70,7 +71,6 @@ Load balancers support the following:
 * `target_group_arn` - (Required for ALB) The ARN of the ALB target group to associate with the service.
 * `container_name` - (Required) The name of the container to associate with the load balancer (as it appears in a container definition).
 * `container_port` - (Required) The port on the container to associate with the load balancer.
-* `launch_type` - (Optional) The launch type on which to run your service. The valid values are `EC2` and `FARGATE`. Defaults to `EC2`.
 
 ## placement_strategy
 
@@ -98,9 +98,10 @@ Guide](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-
 ## network_configuration
 
 `network_configuration` support the following:
+
 * `subnets` - (Required) The subnets associated with the task or service.
 * `security_groups` - (Optional) The security groups associated with the task or service. If you do not specify a security group, the default security group for the VPC is used.
-For more information, see [Task Networking](http://docs.aws.amazon.com/AmazonECS/latest/developerguidetask-networking.html)
+For more information, see [Task Networking](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-networking.html)
 
 ## Attributes Reference
 

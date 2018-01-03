@@ -6,7 +6,7 @@ description: |-
   Provides an IAM Server Certificate
 ---
 
-# aws\_iam\_server\_certificate
+# aws_iam_server_certificate
 
 Provides an IAM Server Certificate resource to upload Server Certificates.
 Certs uploaded to IAM can easily work with other AWS services such as:

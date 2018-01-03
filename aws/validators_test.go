@@ -9,6 +9,30 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+func TestValidateInstanceUserDataSize(t *testing.T) {
+	validValues := []string{
+		"#!/bin/bash",
+		"#!/bin/bash\n" + strings.Repeat("#", 16372), // = 16384
+	}
+
+	for _, s := range validValues {
+		_, errors := validateInstanceUserDataSize(s, "user_data")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be valid user data with limited size: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"#!/bin/bash\n" + strings.Repeat("#", 16373), // = 16385
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateInstanceUserDataSize(s, "user_data")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be valid user data with limited size: %v", s, errors)
+		}
+	}
+}
 func TestValidateEcrRepositoryName(t *testing.T) {
 	validNames := []string{
 		"nginx-web-app",
@@ -2327,7 +2351,7 @@ func TestValidateCognitoUserPoolEmailVerificationMessage(t *testing.T) {
 		"Foo {####}",
 		"{####} Bar",
 		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
-		"{####}" + strings.Repeat("W", 1994), // = 2000
+		"{####}" + strings.Repeat("W", 19994), // = 20000
 	}
 
 	for _, s := range validValues {
@@ -2340,7 +2364,7 @@ func TestValidateCognitoUserPoolEmailVerificationMessage(t *testing.T) {
 	invalidValues := []string{
 		"Foo",
 		"{###}",
-		"{####}" + strings.Repeat("W", 1995), // > 2000
+		"{####}" + strings.Repeat("W", 19995), // > 20000
 	}
 
 	for _, s := range invalidValues {
@@ -2796,6 +2820,73 @@ func TestValidateCognitoUserPoolReplyEmailAddress(t *testing.T) {
 		_, errors := validateCognitoUserPoolReplyEmailAddress(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Cognito User Pool Reply Email Address", v)
+		}
+	}
+}
+
+func TestResourceAWSElastiCacheReplicationGroupAuthTokenValidation(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "this-is-valid!#%()^",
+			ErrCount: 0,
+		},
+		{
+			Value:    "this-is-not",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid\"",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid@",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid/",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(129),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateAwsElastiCacheReplicationGroupAuthToken(tc.Value, "aws_elasticache_replication_group_auth_token")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the ElastiCache Replication Group AuthToken to trigger a validation error")
+		}
+	}
+}
+
+func TestValidateCognitoUserPoolDomain(t *testing.T) {
+	validTypes := []string{
+		"valid-domain",
+		"validdomain",
+		"val1d-d0main",
+	}
+	for _, v := range validTypes {
+		_, errors := validateCognitoUserPoolDomain(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool Domain: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"UpperCase",
+		"-invalid",
+		"invalid-",
+		strings.Repeat("i", 64), // > 63
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateCognitoUserPoolDomain(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Cognito User Pool Domain", v)
 		}
 	}
 }

@@ -6,7 +6,7 @@ description: |-
   Provides a CodePipeline
 ---
 
-# aws\_codepipeline
+# aws_codepipeline
 
 Provides a CodePipeline.
 
@@ -157,9 +157,10 @@ A `action` block supports the following arguments:
 
 ## Attributes Reference
 
-The following attributes are exported:
+The following additional attributes are exported:
 
 * `id` - The codepipeline ID.
+* `arn` - The codepipeline ARN.
 
 ## Import
 

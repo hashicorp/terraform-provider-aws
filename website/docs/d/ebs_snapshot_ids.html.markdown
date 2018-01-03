@@ -6,7 +6,7 @@ description: |-
   Provides a list of EBS snapshot IDs.
 ---
 
-# aws\_ebs\_snapshot\_ids
+# aws_ebs_snapshot_ids
 
 Use this data source to get a list of EBS Snapshot IDs matching the specified
 criteria.

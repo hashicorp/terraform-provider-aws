@@ -6,7 +6,7 @@ description: |-
   Provides a Inspector assessment template.
 ---
 
-# aws\_inspector\_assessment\_template
+# aws_inspector_assessment_template
 
 Provides a Inspector assessment template
 

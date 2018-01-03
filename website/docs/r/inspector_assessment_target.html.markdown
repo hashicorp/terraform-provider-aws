@@ -6,7 +6,7 @@ description: |-
   Provides a Inspector assessment target.
 ---
 
-# aws\_inspector\_assessment\_target
+# aws_inspector_assessment_target
 
 Provides a Inspector assessment target
 

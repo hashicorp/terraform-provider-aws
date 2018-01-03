@@ -6,7 +6,7 @@ description: |-
   Get AWS Elastic Load Balancing Hosted Zone Id
 ---
 
-# aws\_elb\_hosted\_zone\_id
+# aws_elb_hosted_zone_id
 
 Use this data source to get the HostedZoneId of the AWS Elastic Load Balancing HostedZoneId
 in a given region for the purpose of using in an AWS Route53 Alias.

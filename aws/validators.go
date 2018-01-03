@@ -15,6 +15,15 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+func validateInstanceUserDataSize(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if len(value) > 16384 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 16384 bytes", k))
+	}
+	return
+}
+
 func validateRdsIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
@@ -611,6 +620,16 @@ func validateS3BucketReplicationRulePrefix(v interface{}, k string) (ws []string
 	if len(value) > 1024 {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 1024 characters: %q", k, value))
+	}
+
+	return
+}
+
+func validateS3BucketServerSideEncryptionAlgorithm(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if value != s3.ServerSideEncryptionAes256 && value != s3.ServerSideEncryptionAwsKms {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of %q or %q", k, s3.ServerSideEncryptionAwsKms, s3.ServerSideEncryptionAes256))
 	}
 
 	return
@@ -1455,8 +1474,8 @@ func validateCognitoUserPoolEmailVerificationMessage(v interface{}, k string) (w
 		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
 	}
 
-	if len(value) > 2000 {
-		es = append(es, fmt.Errorf("%q cannot be longer than 2000 characters", k))
+	if len(value) > 20000 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 20000 characters", k))
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`).MatchString(value) {
@@ -1967,6 +1986,15 @@ func validateCognitoRoles(v map[string]interface{}, k string) (errors []error) {
 	return
 }
 
+func validateCognitoUserPoolDomain(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens (max length 63 chars) allowed in %q", k))
+	}
+	return
+}
+
 func validateDxConnectionBandWidth(v interface{}, k string) (ws []string, errors []error) {
 	val, ok := v.(string)
 	if !ok {
@@ -1982,5 +2010,18 @@ func validateDxConnectionBandWidth(v interface{}, k string) (ws []string, errors
 	}
 
 	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validBandWidth, val))
+	return
+}
+
+func validateAwsElastiCacheReplicationGroupAuthToken(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) < 16) || (len(value) > 128) {
+		errors = append(errors, fmt.Errorf(
+			"%q must contain from 16 to 128 alphanumeric characters or symbols (excluding @, \", and /)", k))
+	}
+	if !regexp.MustCompile(`^[^@"\/]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters or symbols (excluding @, \", and /) allowed in %q", k))
+	}
 	return
 }
