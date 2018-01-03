@@ -21,6 +21,7 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_metric_alarm: Support optional datapoints_to_alarm configuration [GH-2609]
 * resource/aws_ses_event_destination: Add support for SNS destinations [GH-1737]
 * resource/aws_iam_role: Delete inline policies when `force_detach_policies = true` [GH-2388]
+* resource/aws_lb_target_group: Improve `health_check` validation [GH-2580]
 * data-source/aws_iam_server_certificate: Add support for retrieving public key [GH-2749]
 
 BUG FIXES:
