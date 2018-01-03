@@ -93,19 +93,27 @@ func resourceAwsElasticSearchDomainPolicyUpsert(d *schema.ResourceData, meta int
 
 func resourceAwsElasticSearchDomainPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).esconn
+	domainName := d.Get("domain_name").(string)
 
 	_, err := conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{
-		DomainName:     aws.String(d.Get("domain_name").(string)),
+		DomainName:     aws.String(domainName),
 		AccessPolicies: aws.String(""),
 	})
 	if err != nil {
+		log.Printf("[WARN] ElasticSearch Domain Policy for %s delete failed: %s", domainName, err)
+
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+			log.Printf("[WARN] ElasticSearch Domain %q not found, removing", domainName)
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
-	log.Printf("[DEBUG] Waiting for ElasticSearch domain policy %q to be deleted", d.Get("domain_name").(string))
+	log.Printf("[DEBUG] Waiting for ElasticSearch domain policy %q to be deleted", domainName)
 	err = resource.Retry(60*time.Minute, func() *resource.RetryError {
 		out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
+			DomainName: aws.String(domainName),
 		})
 		if err != nil {
 			return resource.NonRetryableError(err)
