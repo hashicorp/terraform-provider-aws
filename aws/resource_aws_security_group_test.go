@@ -1420,6 +1420,28 @@ func TestAccAWSSecurityGroup_egressWithPrefixList(t *testing.T) {
 	})
 }
 
+func TestAccAWSSecurityGroup_emptyRuleDescription(t *testing.T) {
+	var group ec2.SecurityGroup
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigEmptyRuleDescription,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.web", &group),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "egress.3629188364.description", ""),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.web", "ingress.3629188364.description", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSecurityGroup_ipv4andipv6Egress(t *testing.T) {
 	var group ec2.SecurityGroup
 
@@ -1608,6 +1630,36 @@ func TestAccAWSSecurityGroup_failWithDiffMismatch(t *testing.T) {
 	})
 }
 
+const testAccAWSSecurityGroupConfigEmptyRuleDescription = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_security_group" "web" {
+  name = "terraform_acceptance_test_desc_example"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.foo.id}"
+
+  ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["10.0.0.0/8"]
+    description = ""
+  }
+
+  egress {
+    protocol = "tcp"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["10.0.0.0/8"]
+    description = ""
+  }
+
+  tags {
+    Name = "tf-acc-test"
+  }
+}`
 const testAccAWSSecurityGroupConfigForTagsOrdering = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
