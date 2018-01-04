@@ -79,7 +79,7 @@ resource "aws_codebuild_project" "foo" {
   }
 
   cache {
-    type = "S3"
+    type     = "S3"
     location = "${aws_s3_bucket.foo.bucket}"
   }
 
