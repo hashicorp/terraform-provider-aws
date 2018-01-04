@@ -189,6 +189,12 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).apigateway
 
 	d.Partial(true)
+
+	if tagErr := setTagsAPIGatewayStage(conn, d, "hoge"); tagErr != nil {
+		return tagErr
+	}
+	d.SetPartial("tags")
+
 	operations := make([]*apigateway.PatchOperation, 0)
 	waitForCache := false
 	if d.HasChange("cache_cluster_enabled") {
@@ -241,12 +247,6 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 		newV := n.(map[string]interface{})
 		operations = append(operations, diffVariablesOps("/variables/", oldV, newV)...)
 	}
-	// if d.HasChange("tags") {
-	// 	o, n := d.GetChange("tags")
-	// 	oldV := o.(map[string]interface{})
-	// 	newV := n.(map[string]interface{})
-	// 	operations = append(operations, diffVariablesOps("/tags/", oldV, newV)...)
-	// }
 
 	input := apigateway.UpdateStageInput{
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
