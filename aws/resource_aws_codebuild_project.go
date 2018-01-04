@@ -621,7 +621,11 @@ func flattenAwsCodebuildProjectCache(cache *codebuild.ProjectCache) []interface{
 	values := map[string]interface{}{}
 
 	if cache.Type != nil {
-		values["type"] = *cache.Type
+		if *cache.Type == "NO_CACHE" {
+			values["type"] = ""
+		} else {
+			values["type"] = *cache.Type
+		}
 	}
 
 	if cache.Location != nil {
