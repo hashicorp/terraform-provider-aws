@@ -51,6 +51,13 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"endpoint_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "EDGE",
+				ValidateFunc: validateAwsApiGatewayEndpointType,
+			},
 		},
 	}
 }
@@ -67,6 +74,9 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 	params := &apigateway.CreateRestApiInput{
 		Name:        aws.String(d.Get("name").(string)),
 		Description: description,
+		EndpointConfiguration: &apigateway.EndpointConfiguration{
+			Types: []*string{aws.String(d.Get("endpoint_type").(string))},
+		},
 	}
 
 	binaryMediaTypes, binaryMediaTypesOk := d.GetOk("binary_media_types")
@@ -193,6 +203,14 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 		}
 	}
 
+	if d.HasChange("endpoint_type") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/endpointConfiguration/types/0"),
+			Value: aws.String(d.Get("endpoint_type").(string)),
+		})
+	}
+
 	return operations
 }
 
@@ -245,4 +263,18 @@ func resourceAwsApiGatewayRestApiDelete(d *schema.ResourceData, meta interface{}
 
 		return resource.NonRetryableError(err)
 	})
+}
+
+func validateAwsApiGatewayEndpointType(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	types := map[string]bool{
+		apigateway.EndpointTypeRegional: true,
+		apigateway.EndpointTypeEdge:     true,
+	}
+
+	if !types[value] {
+		errors = append(errors, fmt.Errorf("Endpoint type %s is invalid. Valid types are 'EDGE' and 'REGIONAL'", value))
+	}
+
+	return
 }

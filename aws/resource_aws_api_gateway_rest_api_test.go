@@ -23,6 +23,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
 					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "bar"),
+					testAccCheckAWSAPIGatewayRestAPIEndpointConfiguration(&conf, apigateway.EndpointTypeRegional),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "bar"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", ""),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
@@ -36,6 +37,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
 					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "test"),
 					testAccCheckAWSAPIGatewayRestAPIDescriptionAttribute(&conf, "test"),
+					testAccCheckAWSAPIGatewayRestAPIEndpointConfiguration(&conf, apigateway.EndpointTypeEdge),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "test"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", "test"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
@@ -61,6 +63,7 @@ func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
 					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "test"),
 					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/test"}),
+					testAccCheckAWSAPIGatewayRestAPIEndpointConfiguration(&conf, apigateway.EndpointTypeEdge),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "test"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", ""),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
@@ -74,6 +77,7 @@ func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
 					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "test"),
 					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/update"}),
+					testAccCheckAWSAPIGatewayRestAPIEndpointConfiguration(&conf, apigateway.EndpointTypeRegional),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "test"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
 				),
@@ -188,9 +192,20 @@ func testAccCheckAWSAPIGatewayRestAPIDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccCheckAWSAPIGatewayRestAPIEndpointConfiguration(conf *apigateway.RestApi, endpointType string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *conf.EndpointConfiguration.Types[0] != endpointType {
+			return fmt.Errorf("Wrong endpoint type: %q", *conf.EndpointConfiguration.Types[0])
+		}
+
+		return nil
+	}
+}
+
 const testAccAWSAPIGatewayRestAPIConfig = `
 resource "aws_api_gateway_rest_api" "test" {
-  name = "bar"
+	name = "bar"
+	endpoint_type = "REGIONAL"
 }
 `
 
@@ -198,7 +213,8 @@ const testAccAWSAPIGatewayRestAPIUpdateConfig = `
 resource "aws_api_gateway_rest_api" "test" {
   name = "test"
   description = "test"
-  binary_media_types = ["application/octet-stream"]
+	binary_media_types = ["application/octet-stream"]
+	endpoint_type = "EDGE"
 }
 `
 
@@ -243,7 +259,8 @@ EOF
 
 const testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPI = `
 resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
+	name = "test"
+	endpoint_type = "REGIONAL"
   body = <<EOF
 {
   "swagger": "2.0",

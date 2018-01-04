@@ -27,6 +27,9 @@ The following arguments are supported:
 * `description` - (Optional) The description of the REST API
 * `binary_media_types` - (Optional) The list of binary media types supported by the RestApi. By default, the RestApi supports only UTF-8-encoded text payloads.
 * `body` - (Optional) An OpenAPI specification that defines the set of routes and integrations to create as part of the REST API.
+* `endpoint_type` - (Optional) The type of endpoint to create, either `EDGE` or `REGIONAL`.  If unspecified, defaults to
+  `EDGE`.  Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for
+  more information on the difference between edge-optimized and regional APIs.
 
 __Note__: If the `body` argument is provided, the OpenAPI specification will be used to configure the resources, methods and integrations for the Rest API. If this argument is provided, the following resources should not be managed as separate ones, as updates may cause manual resource updates to be overwritten:
 
