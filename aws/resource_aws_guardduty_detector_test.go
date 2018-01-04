@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsGuardDutyDetector_basic(t *testing.T) {
+func testAccAwsGuardDutyDetector_basic(t *testing.T) {
 	resourceName := "aws_guardduty_detector.test"
 
 	resource.Test(t, resource.TestCase{
@@ -44,7 +44,7 @@ func TestAccAwsGuardDutyDetector_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsGuardDutyDetector_import(t *testing.T) {
+func testAccAwsGuardDutyDetector_import(t *testing.T) {
 	resourceName := "aws_guardduty_detector.test"
 
 	resource.Test(t, resource.TestCase{
@@ -79,7 +79,7 @@ func testAccCheckAwsGuardDutyDetectorDestroy(s *terraform.State) error {
 
 		_, err := conn.GetDetector(input)
 		if err != nil {
-			if isAWSErr(err, "NoSuchEntityException", "The request is rejected because the input detectorId is not owned by the current account.") {
+			if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 				return nil
 			}
 			return err

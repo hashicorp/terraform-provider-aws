@@ -41,7 +41,7 @@ func resourceAwsGuardDutyDetectorCreate(d *schema.ResourceData, meta interface{}
 		Enable: aws.Bool(d.Get("enable").(bool)),
 	}
 
-	log.Printf("[DEBUG] Creating GuardDuty Detector: %#v", input)
+	log.Printf("[DEBUG] Creating GuardDuty Detector: %s", input)
 	output, err := conn.CreateDetector(&input)
 	if err != nil {
 		return fmt.Errorf("Creating GuardDuty Detector failed: %s", err.Error())
@@ -57,10 +57,10 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 		DetectorId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading GuardDuty Detector: %#v", input)
+	log.Printf("[DEBUG] Reading GuardDuty Detector: %s", input)
 	gdo, err := conn.GetDetector(&input)
 	if err != nil {
-		if isAWSErr(err, "NoSuchEntityException", "The request is rejected because the input detectorId is not owned by the current account.") {
+		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 			log.Printf("[WARN] GuardDuty detector %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -69,12 +69,7 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("account_id", meta.(*AWSClient).accountid)
-
-	if *gdo.Status == guardduty.DetectorStatusEnabled {
-		d.Set("enable", true)
-	} else {
-		d.Set("enable", false)
-	}
+	d.Set("enable", *gdo.Status == guardduty.DetectorStatusEnabled)
 
 	return nil
 }
@@ -87,7 +82,7 @@ func resourceAwsGuardDutyDetectorUpdate(d *schema.ResourceData, meta interface{}
 		Enable:     aws.Bool(d.Get("enable").(bool)),
 	}
 
-	log.Printf("[DEBUG] Update GuardDuty Detector: %#v", input)
+	log.Printf("[DEBUG] Update GuardDuty Detector: %s", input)
 	_, err := conn.UpdateDetector(&input)
 	if err != nil {
 		return fmt.Errorf("Updating GuardDuty Detector '%s' failed: %s", d.Id(), err.Error())
@@ -102,7 +97,7 @@ func resourceAwsGuardDutyDetectorDelete(d *schema.ResourceData, meta interface{}
 		DetectorId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Delete GuardDuty Detector: %#v", input)
+	log.Printf("[DEBUG] Delete GuardDuty Detector: %s", input)
 	_, err := conn.DeleteDetector(&input)
 	if err != nil {
 		return fmt.Errorf("Deleting GuardDuty Detector '%s' failed: %s", d.Id(), err.Error())
