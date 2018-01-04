@@ -484,14 +484,14 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		if err != nil {
 			return err
 		}
-		d.Set("kibana_endpoint", endpoints["vpc"].(string)+"/_plugin/kibana/")
+		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
 			return fmt.Errorf("%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
 			d.Set("endpoint", *ds.Endpoint)
-			d.Set("kibana_endpoint", *ds.Endpoint+"/_plugin/kibana/")
+			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {
 			return fmt.Errorf("%q: Elasticsearch domain not in VPC expected to have null Endpoints value", d.Id())
@@ -681,4 +681,8 @@ func resourceAwsElasticSearchDomainDelete(d *schema.ResourceData, meta interface
 	d.SetId("")
 
 	return err
+}
+
+func getKibanaEndpoint(d *schema.ResourceData) string {
+	return d.Get("endpoint").(string) + "/_plugin/kibana/"
 }
