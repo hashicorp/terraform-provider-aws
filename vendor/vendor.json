@@ -549,6 +549,14 @@
 			"versionExact": "v1.12.55"
 		},
 		{
+			"checksumSHA1": "siWpqsOY3u69XkgPF8+F8V1K0Pc=",
+			"path": "github.com/aws/aws-sdk-go/service/dax",
+			"revision": "f62f7b7c5425f2b1a630932617477bdeac6dc371",
+			"revisionTime": "2018-01-02T21:46:00Z",
+			"version": "v1.12.55",
+			"versionExact": "v1.12.55"
+		},
+		{
 			"checksumSHA1": "26CWoHQP/dyL2VzE5ZNd8zNzhko=",
 			"path": "github.com/aws/aws-sdk-go/service/devicefarm",
 			"revision": "f62f7b7c5425f2b1a630932617477bdeac6dc371",
