@@ -32,6 +32,26 @@ func TestAccAWSCognitoUserPoolAppClient_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPoolAppClient_update_basic(t *testing.T) {
+	name := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolAppClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolAppClientConfig_update_basic(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolAppClientExists("aws_cognito_user_pool_app_client.basic"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_app_client.basic", "name", "terraform-test-pool-app-client-updated-"+name),
+					resource.TestCheckNoResourceAttr("aws_cognito_user_pool_app_client.basic", "client_secret"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPoolAppClient_generate_secret(t *testing.T) {
 	name := acctest.RandString(5)
 
@@ -102,6 +122,38 @@ func TestAccAWSCognitoUserPoolAppClient_complex(t *testing.T) {
 		},
 	})
 }
+func TestAccAWSCognitoUserPoolAppClient_update_non_attributes(t *testing.T) {
+	name := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolAppClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolAppClientConfig_update_non_attributes(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolAppClientExists("aws_cognito_user_pool_app_client.update_non_attributes"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_app_client.update_non_attributes", "name", "terraform-test-pool-app-client-"+name),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_app_client.update_non_attributes", "read_attributes.881205744", "email"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_app_client.update_non_attributes", "write_attributes.881205744", "email"),
+					resource.TestCheckNoResourceAttr("aws_cognito_user_pool_app_client.update_non_attributes", "read_attributes.140932285"),
+					resource.TestCheckNoResourceAttr("aws_cognito_user_pool_app_client.update_non_attributes", "client_secret"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolAppClientConfig_update_non_attributes_updated(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolAppClientExists("aws_cognito_user_pool_app_client.update_non_attributes"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_app_client.update_non_attributes", "name", "terraform-test-pool-app-client-updated-"+name),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_app_client.update_non_attributes", "read_attributes.881205744", "email"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_app_client.update_non_attributes", "write_attributes.881205744", "email"),
+					resource.TestCheckNoResourceAttr("aws_cognito_user_pool_app_client.update_non_attributes", "client_secret"),
+				),
+			},
+		},
+	})
+}
 
 func testAccCheckAWSCognitoUserPoolAppClientDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
@@ -165,6 +217,18 @@ resource "aws_cognito_user_pool" "pool" {
 
 resource "aws_cognito_user_pool_app_client" "basic" {
   name         = "terraform-test-pool-app-client-%s"
+  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+}`, name, name)
+}
+
+func testAccAWSCognitoUserPoolAppClientConfig_update_basic(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+}
+
+resource "aws_cognito_user_pool_app_client" "basic" {
+  name         = "terraform-test-pool-app-client-updated-%s"
   user_pool_id = "${aws_cognito_user_pool.pool.id}"
 }`, name, name)
 }
@@ -276,6 +340,46 @@ resource "aws_cognito_user_pool_app_client" "complex" {
     "email",
     "name",
     "custom:foobar",
+  ]
+}`, name, name)
+}
+
+func testAccAWSCognitoUserPoolAppClientConfig_update_non_attributes(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+}
+
+resource "aws_cognito_user_pool_app_client" "update_non_attributes" {
+  name         = "terraform-test-pool-app-client-%s"
+  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+
+  read_attributes = [
+    "email",
+  ]
+
+  write_attributes = [
+    "email",
+  ]
+}`, name, name)
+}
+
+func testAccAWSCognitoUserPoolAppClientConfig_update_non_attributes_updated(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+}
+
+resource "aws_cognito_user_pool_app_client" "update_non_attributes" {
+  name         = "terraform-test-pool-app-client-updated-%s"
+  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+
+  read_attributes = [
+    "email",
+  ]
+
+  write_attributes = [
+    "email",
   ]
 }`, name, name)
 }

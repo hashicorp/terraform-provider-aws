@@ -112,17 +112,12 @@ func resourceAwsCognitoUserPoolAppClientRead(d *schema.ResourceData, meta interf
 	if resp.UserPoolClient.ClientSecret != nil {
 		d.Set("client_secret", *resp.UserPoolClient.ClientName)
 	}
-	if resp.UserPoolClient.RefreshTokenValidity != nil {
-		d.Set("refresh_token_validity", *resp.UserPoolClient.RefreshTokenValidity)
-	}
-	if resp.UserPoolClient.ReadAttributes != nil {
-		d.Set("read_attributes", flattenStringList(resp.UserPoolClient.ReadAttributes))
-	}
-	if resp.UserPoolClient.WriteAttributes != nil {
-		d.Set("write_attributes", flattenStringList(resp.UserPoolClient.WriteAttributes))
-	}
 
 	d.Set("name", *resp.UserPoolClient.ClientName)
+	d.Set("refresh_token_validity", *resp.UserPoolClient.RefreshTokenValidity)
+
+	d.Set("read_attributes", flattenStringList(resp.UserPoolClient.ReadAttributes))
+	d.Set("write_attributes", flattenStringList(resp.UserPoolClient.WriteAttributes))
 
 	return nil
 }
@@ -143,12 +138,12 @@ func resourceAwsCognitoUserPoolAppClientUpdate(d *schema.ResourceData, meta inte
 		params.RefreshTokenValidity = aws.Int64(int64(d.Get("refresh_token_validity").(int)))
 	}
 
-	if d.HasChange("read_attributes") {
-		params.ReadAttributes = expandStringList(d.Get("read_attributes").(*schema.Set).List())
+	if v, ok := d.GetOk("read_attributes"); ok {
+		params.ReadAttributes = expandStringList(v.(*schema.Set).List())
 	}
 
-	if d.HasChange("write_attributes") {
-		params.WriteAttributes = expandStringList(d.Get("write_attributes").(*schema.Set).List())
+	if v, ok := d.GetOk("write_attributes"); ok {
+		params.WriteAttributes = expandStringList(v.(*schema.Set).List())
 	}
 
 	log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
