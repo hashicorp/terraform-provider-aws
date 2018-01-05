@@ -925,7 +925,6 @@ resource "aws_cognito_user_pool" "pool" {
     default_email_option  = "CONFIRM_WITH_LINK"
     email_message_by_link = "{##foobar##}"
     email_subject_by_link = "foobar"
-    sms_message           = "{####} Baz"
   }
 }`, name)
 }
