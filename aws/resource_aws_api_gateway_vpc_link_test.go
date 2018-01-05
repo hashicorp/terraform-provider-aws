@@ -83,10 +83,7 @@ resource "aws_lb" "test_a" {
   name = "tf-lb-a-%s"
   internal = true
   load_balancer_type = "network"
-
-  subnet_mapping {
-    subnet_id = "${aws_subnet.test.id}"
-  }
+  subnets = ["${aws_subnet.test.id}"]
 }
 
 resource "aws_vpc" "test" {
@@ -96,7 +93,6 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.10.0.0/21"
-  map_public_ip_on_launch = true
   availability_zone = "us-west-2a"
 }
 
@@ -114,10 +110,7 @@ resource "aws_lb" "test_a" {
   name = "tf-lb-a-%s"
   internal = true
   load_balancer_type = "network"
-
-  subnet_mapping {
-    subnet_id = "${aws_subnet.test.id}"
-  }
+  subnets = ["${aws_subnet.test.id}"]
 }
 
 resource "aws_vpc" "test" {
@@ -127,7 +120,6 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.10.0.0/21"
-  map_public_ip_on_launch = true
   availability_zone = "us-west-2a"
 }
 

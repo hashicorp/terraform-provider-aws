@@ -159,6 +159,8 @@ func resourceAwsApiGatewayVpcLinkDelete(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
+	time.Sleep(60 * time.Second)
+
 	d.SetId("")
 	return nil
 }
