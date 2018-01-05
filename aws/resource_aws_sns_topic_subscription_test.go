@@ -160,18 +160,14 @@ func testAccCheckAWSSNSTopicSubscriptionAttributesExists(n string) resource.Test
 			SubscriptionArn: aws.String(rs.Primary.ID),
 		}
 		out, err := conn.GetSubscriptionAttributes(params)
-
 		if err != nil {
 			return err
 		}
 
-		expected := map[string]string{
-			"FilterPolicy": "{\"key1\": [\"val1\"], \"key2\": [\"val2\"]}",
-		}
-		for key, actualVal := range out.Attributes {
-			if *actualVal != expected[key] {
-				return fmt.Errorf("Expected %v, got %v", expected[key], actualVal)
-			}
+		expected := "{\"key1\": [\"val1\"], \"key2\": [\"val2\"]}"
+		actual := *out.Attributes["FilterPolicy"]
+		if expected != actual {
+			return fmt.Errorf("Expected %v, got %v", expected, actual)
 		}
 
 		return nil
@@ -225,7 +221,7 @@ resource "aws_sns_topic_subscription" "test_subscription" {
     topic_arn = "${aws_sns_topic.test_topic.arn}"
     protocol = "sqs"
     endpoint = "${aws_sqs_queue.test_queue.arn}"
-    filter=_policy = "{"key1": ["val1"], "key2": ["val2"]}"
+    filter_policy = "{\"key1\": [\"val1\"], \"key2\": [\"val2\"]}"
   }
 `, i, i)
 }
