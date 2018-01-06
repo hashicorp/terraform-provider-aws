@@ -56,7 +56,6 @@ func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}
 		Target:     []string{apigateway.VpcLinkStatusAvailable},
 		Refresh:    apigatewayVpcLinkRefreshStatusFunc(conn, *resp.Id),
 		Timeout:    5 * time.Minute,
-		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 
@@ -131,7 +130,6 @@ func resourceAwsApiGatewayVpcLinkUpdate(d *schema.ResourceData, meta interface{}
 		Target:     []string{apigateway.VpcLinkStatusAvailable},
 		Refresh:    apigatewayVpcLinkRefreshStatusFunc(conn, d.Id()),
 		Timeout:    5 * time.Minute,
-		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 
@@ -159,7 +157,30 @@ func resourceAwsApiGatewayVpcLinkDelete(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	time.Sleep(60 * time.Second)
+	stateConf := resource.StateChangeConf{
+		Pending: []string{apigateway.VpcLinkStatusPending,
+			apigateway.VpcLinkStatusAvailable,
+			apigateway.VpcLinkStatusDeleting},
+		Target:     []string{"deleted"},
+		Timeout:    3 * time.Minute,
+		MinTimeout: 1 * time.Second,
+		Refresh: func() (interface{}, string, error) {
+			resp, err := conn.GetVpcLink(&apigateway.GetVpcLinkInput{
+				VpcLinkId: aws.String(d.Id()),
+			})
+			if err != nil {
+				if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+					return nil, "deleted", nil
+				}
+				return nil, "failed", err
+			}
+			return resp, *resp.Status, nil
+		},
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return err
+	}
 
 	d.SetId("")
 	return nil
