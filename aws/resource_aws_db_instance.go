@@ -517,7 +517,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		// Wait, catching any errors
-		_, err := stateConf.WaitForState()
+		_, err = stateConf.WaitForState()
 		if err != nil {
 			return err
 		}
