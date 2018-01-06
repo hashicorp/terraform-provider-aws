@@ -522,8 +522,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			return err
 		}
 
-		err = resourceAwsDbInstanceUpdate(d, meta)
-		if err != nil {
+		if err = resourceAwsDbInstanceUpdate(d, meta); err != nil {
 			return err
 		}
 	} else {
