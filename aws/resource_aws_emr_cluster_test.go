@@ -245,6 +245,26 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRCluster_keepJob(t *testing.T) {
+	var cluster emr.Cluster
+	r := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfig_keepJop(r, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					resource.TestCheckResourceAttr(
+						"aws_emr_cluster.tf-test-cluster", "keep_job_flow_alive_when_no_steps", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEMRCluster_visibleToAllUsers(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
