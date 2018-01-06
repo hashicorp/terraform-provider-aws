@@ -76,8 +76,14 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 				Computed: true,
 			},
 			"filter_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validateJsonString,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := normalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
