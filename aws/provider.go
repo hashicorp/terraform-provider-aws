@@ -276,6 +276,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_cloudfront_distribution":                  resourceAwsCloudFrontDistribution(),
 			"aws_cloudfront_origin_access_identity":        resourceAwsCloudFrontOriginAccessIdentity(),
 			"aws_cloudtrail":                               resourceAwsCloudTrail(),
+			"aws_cloudwatch_event_permission":              resourceAwsCloudWatchEventPermission(),
 			"aws_cloudwatch_event_rule":                    resourceAwsCloudWatchEventRule(),
 			"aws_cloudwatch_event_target":                  resourceAwsCloudWatchEventTarget(),
 			"aws_cloudwatch_log_destination":               resourceAwsCloudWatchLogDestination(),
