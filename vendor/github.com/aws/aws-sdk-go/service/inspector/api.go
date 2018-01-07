@@ -4391,6 +4391,12 @@ type AssessmentTemplate struct {
 	// Arn is a required field
 	Arn *string `locationName:"arn" min:"1" type:"string" required:"true"`
 
+	// The number of existing assessment runs associated with this assessment template.
+	// This value can be zero or a positive integer.
+	//
+	// AssessmentRunCount is a required field
+	AssessmentRunCount *int64 `locationName:"assessmentRunCount" type:"integer" required:"true"`
+
 	// The ARN of the assessment target that corresponds to this assessment template.
 	//
 	// AssessmentTargetArn is a required field
@@ -4407,6 +4413,11 @@ type AssessmentTemplate struct {
 	//
 	// DurationInSeconds is a required field
 	DurationInSeconds *int64 `locationName:"durationInSeconds" min:"180" type:"integer" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the most recent assessment run associated
+	// with this assessment template. This value exists only when the value of assessmentRunCount
+	// is greater than zero.
+	LastAssessmentRunArn *string `locationName:"lastAssessmentRunArn" min:"1" type:"string"`
 
 	// The name of the assessment template.
 	//
@@ -4441,6 +4452,12 @@ func (s *AssessmentTemplate) SetArn(v string) *AssessmentTemplate {
 	return s
 }
 
+// SetAssessmentRunCount sets the AssessmentRunCount field's value.
+func (s *AssessmentTemplate) SetAssessmentRunCount(v int64) *AssessmentTemplate {
+	s.AssessmentRunCount = &v
+	return s
+}
+
 // SetAssessmentTargetArn sets the AssessmentTargetArn field's value.
 func (s *AssessmentTemplate) SetAssessmentTargetArn(v string) *AssessmentTemplate {
 	s.AssessmentTargetArn = &v
@@ -4456,6 +4473,12 @@ func (s *AssessmentTemplate) SetCreatedAt(v time.Time) *AssessmentTemplate {
 // SetDurationInSeconds sets the DurationInSeconds field's value.
 func (s *AssessmentTemplate) SetDurationInSeconds(v int64) *AssessmentTemplate {
 	s.DurationInSeconds = &v
+	return s
+}
+
+// SetLastAssessmentRunArn sets the LastAssessmentRunArn field's value.
+func (s *AssessmentTemplate) SetLastAssessmentRunArn(v string) *AssessmentTemplate {
+	s.LastAssessmentRunArn = &v
 	return s
 }
 

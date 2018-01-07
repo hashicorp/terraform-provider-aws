@@ -120,8 +120,11 @@ const (
 	// ErrCodeDoesNotExistException for service response error code
 	// "DoesNotExistException".
 	//
-	// Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-	// doesn't exist.
+	// Error returned when the ID specified for a resource, such as a Maintenance
+	// Window or Patch baseline, doesn't exist.
+	//
+	// For information about resource limits in Systems Manager, see AWS Systems
+	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 	ErrCodeDoesNotExistException = "DoesNotExistException"
 
 	// ErrCodeDuplicateDocumentContent for service response error code
@@ -525,8 +528,11 @@ const (
 	// ErrCodeResourceLimitExceededException for service response error code
 	// "ResourceLimitExceededException".
 	//
-	// Error returned when the caller has exceeded the default resource limits (e.g.
-	// too many Maintenance Windows have been created).
+	// Error returned when the caller has exceeded the default resource limits.
+	// For example, too many Maintenance Windows or Patch baselines have been created.
+	//
+	// For information about resource limits in Systems Manager, see AWS Systems
+	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 	ErrCodeResourceLimitExceededException = "ResourceLimitExceededException"
 
 	// ErrCodeStatusUnchanged for service response error code
