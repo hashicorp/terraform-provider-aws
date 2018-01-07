@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -116,6 +117,30 @@ func TestAccAWSAppautoScalingTarget_multipleTargets(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.read", "scalable_dimension", "dynamodb:table:ReadCapacityUnits"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.read", "min_capacity", "2"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.read", "max_capacity", "15"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAppautoScalingTarget_optionalRoleArn(t *testing.T) {
+	var readTarget applicationautoscaling.ScalableTarget
+
+	rInt := acctest.RandInt()
+	tableName := fmt.Sprintf("tf_acc_test_table_%d", rInt)
+
+	r, _ := regexp.Compile("arn:aws:iam::.*:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAppautoscalingTarget_optionalRoleArn(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppautoscalingTargetExists("aws_appautoscaling_target.read", &readTarget),
+					resource.TestMatchResourceAttr("aws_appautoscaling_target.read", "role_arn", r),
 				),
 			},
 		},
@@ -836,6 +861,29 @@ resource "aws_appautoscaling_target" "read" {
   min_capacity = 2
   max_capacity = 15
   depends_on = ["aws_iam_role_policy.p"]
+}
+`, tableName)
+}
+
+func testAccAWSAppautoscalingTarget_optionalRoleArn(tableName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "dynamodb_table_test" {
+  name           = "%s"
+  read_capacity  = 5
+  write_capacity = 5
+  hash_key       = "FooKey"
+  attribute {
+    name = "FooKey"
+    type = "S"
+  }
+}
+
+resource "aws_appautoscaling_target" "read" {
+  service_namespace = "dynamodb"
+  resource_id = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
+  scalable_dimension = "dynamodb:table:ReadCapacityUnits"
+  min_capacity = 2
+  max_capacity = 15
 }
 `, tableName)
 }
