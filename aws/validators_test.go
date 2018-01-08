@@ -2503,6 +2503,24 @@ func TestValidateCognitoUserPoolDomain(t *testing.T) {
 	}
 }
 
+func TestValidateAwsCodeBuildCacheType(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{Value: "S3", ErrCount: 0},
+		{Value: "XYZ", ErrCount: 1},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateAwsCodeBuildCacheType(tc.Value, "aws_codebuild_project")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the AWS CodeBuild project artifacts type to trigger a validation error")
+		}
+	}
+}
+
 func TestValidateCognitoUserGroupName(t *testing.T) {
 	validValues := []string{
 		"foo",

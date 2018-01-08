@@ -872,18 +872,6 @@ func validateAwsCodeBuildEnvironmentType(v interface{}, k string) (ws []string, 
 	return
 }
 
-func validateAwsCodeBuildCacheType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		"S3": true,
-	}
-
-	if !types[value] {
-		errors = append(errors, fmt.Errorf("CodeBuild: Cache Type can only be S3"))
-	}
-	return
-}
-
 func validateAwsCodeBuildSourceType(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	types := map[string]bool{
