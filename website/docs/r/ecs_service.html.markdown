@@ -58,6 +58,7 @@ The following arguments are supported:
 * `placement_strategy` - (Optional) Service level strategy rules that are taken
 into consideration during task placement. The maximum number of
 `placement_strategy` blocks is `5`. Defined below.
+* `health_check_grace_period_seconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 1800. Only valid for services configured to use load balancers.
 * `load_balancer` - (Optional) A load balancer block. Load balancers documented below.
 * `placement_constraints` - (Optional) rules that are taken into consideration during task placement. Maximum number of
 `placement_constraints` is `10`. Defined below.
