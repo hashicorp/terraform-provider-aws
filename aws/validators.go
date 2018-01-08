@@ -1884,14 +1884,16 @@ func validateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(v map[string]
 
 func validateCognitoRoleMappingsRulesConfiguration(v map[string]interface{}) (errors []error) {
 	t := v["type"].(string)
-	value, ok := v["mapping_rule"]
-	valLength := len(value.([]interface{}))
+	valLength := 0
+	if value, ok := v["mapping_rule"]; ok {
+		valLength = len(value.([]interface{}))
+	}
 
-	if (!ok || valLength == 0) && t == cognitoidentity.RoleMappingTypeRules {
+	if (valLength == 0) && t == cognitoidentity.RoleMappingTypeRules {
 		errors = append(errors, fmt.Errorf("mapping_rule is required for Rules"))
 	}
 
-	if (!ok || valLength > 0) && t == cognitoidentity.RoleMappingTypeToken {
+	if (valLength > 0) && t == cognitoidentity.RoleMappingTypeToken {
 		errors = append(errors, fmt.Errorf("mapping_rule must not be set for Token based role mapping"))
 	}
 
