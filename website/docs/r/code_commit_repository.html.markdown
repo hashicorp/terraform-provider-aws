@@ -39,3 +39,11 @@ The following attributes are exported:
 * `arn` - The ARN of the repository
 * `clone_url_http` - The URL to use for cloning the repository over HTTPS.
 * `clone_url_ssh` - The URL to use for cloning the repository over SSH.
+
+## Import
+
+Codecommit repository can be imported using repository name, e.g.
+
+```
+$ terraform import aws_codecommit_repository.imported ExistingRepo
+```
