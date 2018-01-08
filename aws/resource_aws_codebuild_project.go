@@ -60,7 +60,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Set: resourceAwsCodeBuildProjectArtifactsHash,
 			},
 			"cache": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -76,7 +76,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsCodeBuildProjectCacheHash,
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -246,7 +245,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("cache"); ok {
-		params.Cache = expandProjectCache(v.(*schema.Set))
+		params.Cache = expandProjectCache(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -335,10 +334,10 @@ func expandProjectArtifacts(d *schema.ResourceData) codebuild.ProjectArtifacts {
 	return projectArtifacts
 }
 
-func expandProjectCache(s *schema.Set) *codebuild.ProjectCache {
+func expandProjectCache(s []interface{}) *codebuild.ProjectCache {
 	var projectCache *codebuild.ProjectCache
 
-	data := s.List()[0].(map[string]interface{})
+	data := s[0].(map[string]interface{})
 
 	projectCache = &codebuild.ProjectCache{
 		Type:     aws.String(data["type"].(string)),
@@ -474,7 +473,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	if err := d.Set("cache", schema.NewSet(resourceAwsCodeBuildProjectCacheHash, flattenAwsCodebuildProjectCache(project.Cache))); err != nil {
+	if err := d.Set("cache", flattenAwsCodebuildProjectCache(project.Cache)); err != nil {
 		return err
 	}
 
@@ -527,7 +526,7 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("cache") {
 		if v, ok := d.GetOk("cache"); ok {
-			params.Cache = expandProjectCache(v.(*schema.Set))
+			params.Cache = expandProjectCache(v.([]interface{}))
 		} else {
 			params.Cache = &codebuild.ProjectCache{
 				Type: aws.String("NO_CACHE"),
@@ -694,21 +693,6 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	artifactType := m["type"].(string)
 
 	buf.WriteString(fmt.Sprintf("%s-", artifactType))
-
-	return hashcode.String(buf.String())
-}
-
-func resourceAwsCodeBuildProjectCacheHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-
-	if m["type"] != nil {
-		buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
-	}
-
-	if m["location"] != nil {
-		buf.WriteString(fmt.Sprintf("%s-", m["location"].(string)))
-	}
 
 	return hashcode.String(buf.String())
 }
