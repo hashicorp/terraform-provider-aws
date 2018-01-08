@@ -3,15 +3,16 @@ layout: "aws"
 page_title: "AWS: aws_vpc_peering_connection_accepter"
 sidebar_current: "docs-aws-resource-vpc-peering-accepter"
 description: |-
-  Manage the accepter's side of a cross-account VPC Peering Connection.
+  Manage the accepter's side of a VPC Peering Connection.
 ---
 
 # aws_vpc_peering_connection_accepter
 
-Provides a resource to manage the accepter's side of a cross-account VPC Peering Connection.
+Provides a resource to manage the accepter's side of a VPC Peering Connection.
 
-When a cross-account (requester's AWS account differs from the accepter's AWS account) VPC Peering Connection
-is created, a VPC Peering Connection resource is automatically created in the accepter's account.
+When a cross-account (requester's AWS account differs from the accepter's AWS account) or an inter-region
+VPC Peering Connection is created, a VPC Peering Connection resource is automatically created in the
+accepter's account.
 The requester can use the `aws_vpc_peering_connection` resource to manage its side of the connection
 and the accepter can use the `aws_vpc_peering_connection_accepter` resource to "adopt" its side of the
 connection into management.
@@ -20,11 +21,14 @@ connection into management.
 
 ```hcl
 provider "aws" {
+  region = "us-east-1"
+
   # Requester's credentials.
 }
 
 provider "aws" {
   alias = "peer"
+  region = "us-west-2"
 
   # Accepter's credentials.
 }
@@ -47,6 +51,7 @@ resource "aws_vpc_peering_connection" "peer" {
   vpc_id        = "${aws_vpc.main.id}"
   peer_vpc_id   = "${aws_vpc.peer.id}"
   peer_owner_id = "${data.aws_caller_identity.peer.account_id}"
+  peer_region   = "us-west-2"
   auto_accept   = false
 
   tags {
@@ -91,6 +96,7 @@ All of the argument attributes except `auto_accept` are also exported as result 
 * `vpc_id` - The ID of the accepter VPC.
 * `peer_vpc_id` - The ID of the requester VPC.
 * `peer_owner_id` - The AWS account ID of the owner of the requester VPC.
+* `peer_region` - The region of the accepter VPC.
 * `accepter` - A configuration block that describes [VPC Peering Connection]
 (http://docs.aws.amazon.com/AmazonVPC/latest/PeeringGuide) options set for the accepter VPC.
 * `requester` - A configuration block that describes [VPC Peering Connection]
