@@ -31,6 +31,7 @@ BUG FIXES:
 * resource/aws_s3_bucket_object: Object tagging is now supported in GovCloud [GH-2665]
 * resource/aws_elasticsearch_domain: Fixed a crash when no Cloudwatch log group is configured [GH-2787]
 * resource/aws_s3_bucket_policy: Set the resource ID after successful creation [GH-2820]
+* resource/aws_db_parameter_group: Remove group from state if it's gone [GH-2868]
 
 ## 1.6.0 (December 18, 2017)
 
