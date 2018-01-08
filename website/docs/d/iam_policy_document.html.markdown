@@ -78,6 +78,9 @@ valid to use literal JSON strings within your configuration, or to use the
 The following arguments are supported:
 
 * `policy_id` (Optional) - An ID for the policy document.
+* `source_json` (Optional) - An IAM policy document to import and add the
+  statements from.  Use this to, for example, customize resource policies in
+  modules.
 * `statement` (Required) - A nested configuration block (described below)
   configuring one *statement* to be included in the policy document.
 
