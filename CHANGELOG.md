@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_cognito_user_pool_domain` [GH-2325]
+* **New resource:** `aws_guardduty_detector` [GH-2524]
 
 ENHANCEMENTS:
 
