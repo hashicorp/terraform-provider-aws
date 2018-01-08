@@ -36,6 +36,7 @@ BUG FIXES:
 * resource/aws_s3_bucket_policy: Set the resource ID after successful creation [GH-2820]
 * resource/aws_db_parameter_group: Remove group from state if it's gone [GH-2868]
 * resource/aws_appautoscaling_target: Make `role_arn` optional & computed [GH-2889]
+* resource/aws_ssm_maintenance_window: Respect `enabled` during updates [GH-2818]
 
 ## 1.6.0 (December 18, 2017)
 
