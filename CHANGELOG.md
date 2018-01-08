@@ -25,7 +25,10 @@ ENHANCEMENTS:
 * resource/aws_iam_role: Delete inline policies when `force_detach_policies = true` [GH-2388]
 * resource/aws_lb_target_group: Improve `health_check` validation [GH-2580]
 * resource/aws_ecs_service: Add `health_check_grace_period_seconds` attribute [GH-2788]
+* resource/aws_vpc_peering_connection: Add support for cross-region VPC peering [GH-2508]
+* resource/aws_vpc_peering_connection_accepter: Add support for cross-region VPC peering [GH-2508]
 * data-source/aws_iam_server_certificate: Add support for retrieving public key [GH-2749]
+* data-source/aws_vpc_peering_connection: Add support for cross-region VPC peering [GH-2508]
 
 BUG FIXES:
 
