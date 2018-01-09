@@ -600,10 +600,15 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 		if len(stickinessBlocks) != 0 {
 			return fmt.Errorf("Network Load Balancers do not support Stickiness")
 		}
-		// Network Load Balancers have many special qwirks to them.
-		// See http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html
-		if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
-			healthCheck := healthChecks[0].(map[string]interface{})
+	}
+
+	// Network Load Balancers have many special qwirks to them.
+	// See http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html
+	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+		healthCheck := healthChecks[0].(map[string]interface{})
+		protocol := healthCheck["protocol"].(string)
+
+		if protocol == "TCP" {
 			// Cannot set custom matcher on TCP health checks
 			if m := healthCheck["matcher"].(string); m != "" {
 				return fmt.Errorf("%s: custom matcher is not supported for target_groups with TCP protocol", diff.Id())
@@ -639,6 +644,12 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 		if diff.HasChange("health_check.0.interval") {
 			old, new := diff.GetChange("health_check.0.interval")
 			return fmt.Errorf("Health check interval cannot be updated from %d to %d for TCP based Target Group %s,"+
+				" use 'terraform taint' to recreate the resource if you wish",
+				old, new, diff.Id())
+		}
+		if diff.HasChange("health_check.0.timeout") {
+			old, new := diff.GetChange("health_check.0.timeout")
+			return fmt.Errorf("Health check timeout cannot be updated from %d to %d for TCP based Target Group %s,"+
 				" use 'terraform taint' to recreate the resource if you wish",
 				old, new, diff.Id())
 		}
