@@ -63,10 +63,6 @@ func TestAccDataSourceAwsVpnGateway_attached(t *testing.T) {
 
 func testAccDataSourceAwsVpnGatewayUnattachedConfig(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpn_gateway" "unattached" {
   tags {
     Name = "terraform-testacc-vpn-gateway-data-source-unattached-%d"
@@ -85,17 +81,14 @@ data "aws_vpn_gateway" "test_by_tags" {
 }
 
 data "aws_vpn_gateway" "test_by_amazon_side_asn" {
-	amazon_side_asn = "${aws_vpn_gateway.unattached.amazon_side_asn}"
+  amazon_side_asn = "${aws_vpn_gateway.unattached.amazon_side_asn}"
+  state           = "available"
 }
 `, rInt, rInt+1, rInt-1)
 }
 
 func testAccDataSourceAwsVpnGatewayAttachedConfig(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
