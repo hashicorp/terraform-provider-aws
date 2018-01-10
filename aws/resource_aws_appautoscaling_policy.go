@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -109,6 +110,12 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 			"alarms": &schema.Schema{
 				Type:     schema.TypeList,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"alarms_actions": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"adjustment_type": &schema.Schema{
@@ -277,11 +284,72 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Failed to create scaling policy: %s", err)
 	}
 
+	if err = addAlarmActions(d, resp.Alarms, meta); err != nil {
+		return fmt.Errorf("Failed to add actions to autoscaling cloudwatch alarms: %s", err)
+	}
+
 	d.Set("arn", resp.PolicyARN)
 	d.SetId(d.Get("name").(string))
 	log.Printf("[INFO] ApplicationAutoScaling scaling PolicyARN: %s", d.Get("arn").(string))
 
 	return resourceAwsAppautoscalingPolicyRead(d, meta)
+}
+
+func addAlarmActions(d *schema.ResourceData, alarms []*applicationautoscaling.Alarm, meta interface{}) error {
+	actions := expandStringList(d.Get("alarms_actions").([]interface{}))
+	if actions == nil || len(actions) == 0 {
+		return nil
+	}
+
+	alarmNames := make([]*string, len(alarms))
+	for i := 0; i < len(alarms); i++ {
+		alarmNames[i] = alarms[i].AlarmName
+	}
+
+	params := &cloudwatch.DescribeAlarmsInput{
+		AlarmNames: alarmNames,
+	}
+
+	conn := meta.(*AWSClient).cloudwatchconn
+	resp, err := conn.DescribeAlarms(params)
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < len(resp.MetricAlarms); i++ {
+		log.Printf("[INFO] Adding alarms_actions to %s", *resp.MetricAlarms[i].AlarmName)
+		resp.MetricAlarms[i].AlarmActions = append(resp.MetricAlarms[i].AlarmActions, actions...)
+		_, err := conn.PutMetricAlarm(convertMetricAlarmToPutMetricAlarmInput(resp.MetricAlarms[i]))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func convertMetricAlarmToPutMetricAlarmInput(metricAlarm *cloudwatch.MetricAlarm) *cloudwatch.PutMetricAlarmInput {
+	return &cloudwatch.PutMetricAlarmInput{
+		ActionsEnabled:                   metricAlarm.ActionsEnabled,
+		AlarmActions:                     metricAlarm.AlarmActions,
+		AlarmDescription:                 metricAlarm.AlarmDescription,
+		AlarmName:                        metricAlarm.AlarmName,
+		ComparisonOperator:               metricAlarm.ComparisonOperator,
+		DatapointsToAlarm:                metricAlarm.DatapointsToAlarm,
+		Dimensions:                       metricAlarm.Dimensions,
+		EvaluateLowSampleCountPercentile: metricAlarm.EvaluateLowSampleCountPercentile,
+		EvaluationPeriods:                metricAlarm.EvaluationPeriods,
+		ExtendedStatistic:                metricAlarm.ExtendedStatistic,
+		InsufficientDataActions:          metricAlarm.InsufficientDataActions,
+		MetricName:                       metricAlarm.MetricName,
+		Namespace:                        metricAlarm.Namespace,
+		OKActions:                        metricAlarm.OKActions,
+		Period:                           metricAlarm.Period,
+		Statistic:                        metricAlarm.Statistic,
+		Threshold:                        metricAlarm.Threshold,
+		TreatMissingData:                 metricAlarm.TreatMissingData,
+		Unit:                             metricAlarm.Unit,
+	}
 }
 
 func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{}) error {
