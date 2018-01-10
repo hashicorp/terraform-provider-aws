@@ -25,6 +25,9 @@ func resourceAwsEcsService() *schema.Resource {
 		Update: resourceAwsEcsServiceUpdate,
 		Delete: resourceAwsEcsServiceDelete,
 
+		SchemaVersion: 1,
+		MigrateState:  resourceAwsEcsServiceMigrateState,
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -137,9 +140,8 @@ func resourceAwsEcsService() *schema.Resource {
 				},
 			},
 			"placement_strategy": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -152,6 +154,13 @@ func resourceAwsEcsService() *schema.Resource {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Optional: true,
+							StateFunc: func(v interface{}) string {
+								value := v.(string)
+								if value == "host" {
+									return "instanceId"
+								}
+								return value
+							},
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								if strings.ToLower(old) == strings.ToLower(new) {
 									return true
@@ -160,20 +169,6 @@ func resourceAwsEcsService() *schema.Resource {
 							},
 						},
 					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
-					if m["field"] != nil {
-						field := m["field"].(string)
-						if field == "host" {
-							buf.WriteString("instanceId-")
-						} else {
-							buf.WriteString(fmt.Sprintf("%s-", field))
-						}
-					}
-					return hashcode.String(buf.String())
 				},
 			},
 
@@ -238,7 +233,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 	input.NetworkConfiguration = expandEcsNetworkConfigration(d.Get("network_configuration").([]interface{}))
 
-	strategies := d.Get("placement_strategy").(*schema.Set).List()
+	strategies := d.Get("placement_strategy").([]interface{})
 	if len(strategies) > 0 {
 		var ps []*ecs.PlacementStrategy
 		for _, raw := range strategies {
