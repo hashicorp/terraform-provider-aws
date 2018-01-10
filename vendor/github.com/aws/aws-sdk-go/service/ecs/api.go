@@ -2669,6 +2669,27 @@ func (c *ECS) RunTaskRequest(input *RunTaskInput) (req *request.Request, output 
 // Alternatively, you can use StartTask to use your own scheduler or place tasks
 // manually on specific container instances.
 //
+// The Amazon ECS API follows an eventual consistency model, due to the distributed
+// nature of the system supporting the API. This means that the result of an
+// API command you run that affects your Amazon ECS resources might not be immediately
+// visible to all subsequent commands you run. You should keep this in mind
+// when you carry out an API command that immediately follows a previous API
+// command.
+//
+// To manage eventual consistency, you can do the following:
+//
+//    * Confirm the state of the resource before you run a command to modify
+//    it. Run the DescribeTasks command using an exponential backoff algorithm
+//    to ensure that you allow enough time for the previous command to propagate
+//    through the system. To do this, run the DescribeTasks command repeatedly,
+//    starting with a couple of seconds of wait time, and increasing gradually
+//    up to five minutes of wait time.
+//
+//    * Add wait time between subsequent commands, even if the DescribeTasks
+//    command returns an accurate response. Apply an exponential backoff algorithm
+//    starting with a couple of seconds of wait time, and increase gradually
+//    up to about five minutes of wait time.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -4292,6 +4313,9 @@ type ContainerDefinition struct {
 	// allow the container to only reserve 128 MiB of memory from the remaining
 	// resources on the container instance, but also allow the container to consume
 	// more memory resources when needed.
+	//
+	// The Docker daemon reserves a minimum of 4 MiB of memory for a container,
+	// so you should not specify fewer than 4 MiB of memory for your containers.
 	MemoryReservation *int64 `locationName:"memoryReservation" type:"integer"`
 
 	// The mount points for data volumes in your container.
@@ -4991,6 +5015,17 @@ type CreateServiceInput struct {
 	// DesiredCount is a required field
 	DesiredCount *int64 `locationName:"desiredCount" type:"integer" required:"true"`
 
+	// The period of time, in seconds, that the Amazon ECS service scheduler should
+	// ignore unhealthy Elastic Load Balancing target health checks after a task
+	// has first started. This is only valid if your service is configured to use
+	// a load balancer. If your service's tasks take a while to start and respond
+	// to ELB health checks, you can specify a health check grace period of up to
+	// 1,800 seconds during which the ECS service scheduler will ignore ELB health
+	// check status. This grace period can prevent the ECS service scheduler from
+	// marking tasks as unhealthy and stopping them before they have time to come
+	// up.
+	HealthCheckGracePeriodSeconds *int64 `locationName:"healthCheckGracePeriodSeconds" type:"integer"`
+
 	// The launch type on which to run your service.
 	LaunchType *string `locationName:"launchType" type:"string" enum:"LaunchType"`
 
@@ -5126,6 +5161,12 @@ func (s *CreateServiceInput) SetDeploymentConfiguration(v *DeploymentConfigurati
 // SetDesiredCount sets the DesiredCount field's value.
 func (s *CreateServiceInput) SetDesiredCount(v int64) *CreateServiceInput {
 	s.DesiredCount = &v
+	return s
+}
+
+// SetHealthCheckGracePeriodSeconds sets the HealthCheckGracePeriodSeconds field's value.
+func (s *CreateServiceInput) SetHealthCheckGracePeriodSeconds(v int64) *CreateServiceInput {
+	s.HealthCheckGracePeriodSeconds = &v
 	return s
 }
 
@@ -5768,7 +5809,7 @@ type DescribeClustersInput struct {
 	//
 	//    * runningEC2TasksCount
 	//
-	//    * RunningFargateTasksCount
+	//    * runningFargateTasksCount
 	//
 	//    * pendingEC2TasksCount
 	//
@@ -7810,9 +7851,9 @@ func (s *PlacementStrategy) SetType(v string) *PlacementStrategy {
 // to send or receive traffic. Port mappings are specified as part of the container
 // definition.
 //
-// If using containers in a task with the Fargate launch type, exposed ports
-// should be specified using containerPort. The hostPort can be left blank or
-// it must be the same value as the containerPort.
+// If using containers in a task with the awsvpc or host network mode, exposed
+// ports should be specified using containerPort. The hostPort can be left blank
+// or it must be the same value as the containerPort.
 //
 // After a task reaches the RUNNING status, manual and automatic host and container
 // port assignments are visible in the networkBindings section of DescribeTasks
@@ -7824,11 +7865,11 @@ type PortMapping struct {
 	// The port number on the container that is bound to the user-specified or automatically
 	// assigned host port.
 	//
-	// If using containers in a task with the Fargate launch type, exposed ports
-	// should be specified using containerPort.
+	// If using containers in a task with the awsvpc or host network mode, exposed
+	// ports should be specified using containerPort.
 	//
-	// If using containers in a task with the EC2 launch type and you specify a
-	// container port and not a host port, your container automatically receives
+	// If using containers in a task with the bridge network mode and you specify
+	// a container port and not a host port, your container automatically receives
 	// a host port in the ephemeral port range (for more information, see hostPort).
 	// Port mappings that are automatically assigned in this way do not count toward
 	// the 100 reserved ports limit of a container instance.
@@ -7836,12 +7877,12 @@ type PortMapping struct {
 
 	// The port number on the container instance to reserve for your container.
 	//
-	// If using containers in a task with the Fargate launch type, the hostPort
+	// If using containers in a task with the awsvpc or host network mode, the hostPort
 	// can either be left blank or needs to be the same value as the containerPort.
 	//
-	// If using containers in a task with the EC2 launch type, you can specify a
-	// non-reserved host port for your container port mapping, or you can omit the
-	// hostPort (or set it to 0) while specifying a containerPort and your container
+	// If using containers in a task with the bridge network mode, you can specify
+	// a non-reserved host port for your container port mapping, or you can omit
+	// the hostPort (or set it to 0) while specifying a containerPort and your container
 	// automatically receives a port in the ephemeral port range for your container
 	// instance operating system and Docker version.
 	//
@@ -8123,11 +8164,16 @@ type RegisterTaskDefinitionInput struct {
 	ContainerDefinitions []*ContainerDefinition `locationName:"containerDefinitions" type:"list" required:"true"`
 
 	// The number of cpu units used by the task. If using the EC2 launch type, this
-	// field is optional and any value can be used. If you are using the Fargate
-	// launch type, this field is required and you must use one of the following
-	// values, which determines your range of valid values for the memory parameter:
+	// field is optional and any value can be used.
 	//
-	//    * 256 (.25 vCPU) - Available memory values: 512MB, 1GB, 2GB
+	// Task-level CPU and memory parameters are ignored for Windows containers.
+	// We recommend specifying container-level resources for Windows containers.
+	//
+	// If you are using the Fargate launch type, this field is required and you
+	// must use one of the following values, which determines your range of valid
+	// values for the memory parameter:
+	//
+	//    * 256 (.25 vCPU) - Available memory values: 0.5GB, 1GB, 2GB
 	//
 	//    * 512 (.5 vCPU) - Available memory values: 1GB, 2GB, 3GB, 4GB
 	//
@@ -8154,11 +8200,16 @@ type RegisterTaskDefinitionInput struct {
 	Family *string `locationName:"family" type:"string" required:"true"`
 
 	// The amount (in MiB) of memory used by the task. If using the EC2 launch type,
-	// this field is optional and any value can be used. If you are using the Fargate
-	// launch type, this field is required and you must use one of the following
-	// values, which determines your range of valid values for the cpu parameter:
+	// this field is optional and any value can be used.
 	//
-	//    * 512MB, 1GB, 2GB - Available cpu values: 256 (.25 vCPU)
+	// Task-level CPU and memory parameters are ignored for Windows containers.
+	// We recommend specifying container-level resources for Windows containers.
+	//
+	// If you are using the Fargate launch type, this field is required and you
+	// must use one of the following values, which determines your range of valid
+	// values for the cpu parameter:
+	//
+	//    * 0.5GB, 1GB, 2GB - Available cpu values: 256 (.25 vCPU)
 	//
 	//    * 1GB, 2GB, 3GB, 4GB - Available cpu values: 512 (.5 vCPU)
 	//
@@ -8642,6 +8693,11 @@ type Service struct {
 	// are displayed.
 	Events []*ServiceEvent `locationName:"events" type:"list"`
 
+	// The period of time, in seconds, that the Amazon ECS service scheduler ignores
+	// unhealthy Elastic Load Balancing target health checks after a task has first
+	// started.
+	HealthCheckGracePeriodSeconds *int64 `locationName:"healthCheckGracePeriodSeconds" type:"integer"`
+
 	// The launch type on which your service is running.
 	LaunchType *string `locationName:"launchType" type:"string" enum:"LaunchType"`
 
@@ -8739,6 +8795,12 @@ func (s *Service) SetDesiredCount(v int64) *Service {
 // SetEvents sets the Events field's value.
 func (s *Service) SetEvents(v []*ServiceEvent) *Service {
 	s.Events = v
+	return s
+}
+
+// SetHealthCheckGracePeriodSeconds sets the HealthCheckGracePeriodSeconds field's value.
+func (s *Service) SetHealthCheckGracePeriodSeconds(v int64) *Service {
+	s.HealthCheckGracePeriodSeconds = &v
 	return s
 }
 
@@ -9383,7 +9445,7 @@ type Task struct {
 	// type, this field is required and you must use one of the following values,
 	// which determines your range of valid values for the memory parameter:
 	//
-	//    * 256 (.25 vCPU) - Available memory values: 512MB, 1GB, 2GB
+	//    * 256 (.25 vCPU) - Available memory values: 0.5GB, 1GB, 2GB
 	//
 	//    * 512 (.5 vCPU) - Available memory values: 1GB, 2GB, 3GB, 4GB
 	//
@@ -9421,7 +9483,7 @@ type Task struct {
 	// type, this field is required and you must use one of the following values,
 	// which determines your range of valid values for the cpu parameter:
 	//
-	//    * 512MB, 1GB, 2GB - Available cpu values: 256 (.25 vCPU)
+	//    * 0.5GB, 1GB, 2GB - Available cpu values: 256 (.25 vCPU)
 	//
 	//    * 1GB, 2GB, 3GB, 4GB - Available cpu values: 512 (.5 vCPU)
 	//
@@ -9670,7 +9732,7 @@ type TaskDefinition struct {
 	// type, this field is required and you must use one of the following values,
 	// which determines your range of valid values for the memory parameter:
 	//
-	//    * 256 (.25 vCPU) - Available memory values: 512MB, 1GB, 2GB
+	//    * 256 (.25 vCPU) - Available memory values: 0.5GB, 1GB, 2GB
 	//
 	//    * 512 (.5 vCPU) - Available memory values: 1GB, 2GB, 3GB, 4GB
 	//
@@ -9696,7 +9758,7 @@ type TaskDefinition struct {
 	// type, this field is required and you must use one of the following values,
 	// which determines your range of valid values for the cpu parameter:
 	//
-	//    * 512MB, 1GB, 2GB - Available cpu values: 256 (.25 vCPU)
+	//    * 0.5GB, 1GB, 2GB - Available cpu values: 256 (.25 vCPU)
 	//
 	//    * 1GB, 2GB, 3GB, 4GB - Available cpu values: 512 (.5 vCPU)
 	//
@@ -10241,6 +10303,17 @@ type UpdateServiceInput struct {
 	// Whether or not to force a new deployment of the service.
 	ForceNewDeployment *bool `locationName:"forceNewDeployment" type:"boolean"`
 
+	// The period of time, in seconds, that the Amazon ECS service scheduler should
+	// ignore unhealthy Elastic Load Balancing target health checks after a task
+	// has first started. This is only valid if your service is configured to use
+	// a load balancer. If your service's tasks take a while to start and respond
+	// to ELB health checks, you can specify a health check grace period of up to
+	// 1,800 seconds during which the ECS service scheduler will ignore ELB health
+	// check status. This grace period can prevent the ECS service scheduler from
+	// marking tasks as unhealthy and stopping them before they have time to come
+	// up.
+	HealthCheckGracePeriodSeconds *int64 `locationName:"healthCheckGracePeriodSeconds" type:"integer"`
+
 	// The network configuration for the service. This parameter is required for
 	// task definitions that use the awsvpc network mode to receive their own Elastic
 	// Network Interface, and it is not supported for other network modes. For more
@@ -10318,6 +10391,12 @@ func (s *UpdateServiceInput) SetDesiredCount(v int64) *UpdateServiceInput {
 // SetForceNewDeployment sets the ForceNewDeployment field's value.
 func (s *UpdateServiceInput) SetForceNewDeployment(v bool) *UpdateServiceInput {
 	s.ForceNewDeployment = &v
+	return s
+}
+
+// SetHealthCheckGracePeriodSeconds sets the HealthCheckGracePeriodSeconds field's value.
+func (s *UpdateServiceInput) SetHealthCheckGracePeriodSeconds(v int64) *UpdateServiceInput {
+	s.HealthCheckGracePeriodSeconds = &v
 	return s
 }
 

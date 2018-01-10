@@ -9,6 +9,7 @@ ENHANCEMENTS:
 * resource/aws_directory_service_directory: Add security_group_id field [GH-2688]
 * resource/aws_rds_cluster_instance: Support Performance Insights [GH-2331]
 * resource/aws_rds_cluster_instance: Set db_subnet_group_name in state on read if available [GH-2606]
+* resource/aws_eip: Tagging is now supported [GH-2768]
 
 BUG FIXES:
 
