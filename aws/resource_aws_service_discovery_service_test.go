@@ -154,7 +154,7 @@ resource "aws_service_discovery_service" "test" {
       ttl = 10
       type = "A"
     }
-		dns_records {
+    dns_records {
       ttl = 5
       type = "AAAA"
     }
@@ -179,7 +179,7 @@ resource "aws_service_discovery_service" "test" {
       type = "A"
     }
   }
-	health_check_config {
+  health_check_config {
     failure_threshold = %d
     resource_path = "%s"
     type = "HTTP"

@@ -1,7 +1,7 @@
 package aws
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -48,22 +48,10 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 										Required: true,
 									},
 									"type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-										ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-											value := v.(string)
-
-											validType := []string{"SRV", "A", "AAAA"}
-											for _, str := range validType {
-												if value == str {
-													return
-												}
-											}
-
-											errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
-											return
-										},
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validateServiceDiscoveryServiceDnsRecordsType,
 									},
 								},
 							},
@@ -86,22 +74,10 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 							Optional: true,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								value := v.(string)
-
-								validType := []string{"HTTP", "HTTPS", "TCP"}
-								for _, str := range validType {
-									if value == str {
-										return
-									}
-								}
-
-								errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
-								return
-							},
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateServiceDiscoveryServiceHealthCheckConfigType,
 						},
 					},
 				},
@@ -151,17 +127,19 @@ func resourceAwsServiceDiscoveryServiceRead(d *schema.ResourceData, meta interfa
 	resp, err := conn.GetService(input)
 	if err != nil {
 		if isAWSErr(err, servicediscovery.ErrCodeServiceNotFound, "") {
+			log.Printf("[WARN] Service Discovery Service (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 		return err
 	}
 
-	d.Set("arn", resp.Service.Arn)
-	d.Set("name", resp.Service.Name)
-	d.Set("description", resp.Service.Description)
-	d.Set("dns_config", flattenServiceDiscoveryDnsConfig(resp.Service.DnsConfig))
-	d.Set("health_check_config", flattenServiceDiscoveryHealthCheckConfig(resp.Service.HealthCheckConfig))
+	service := resp.Service
+	d.Set("arn", service.Arn)
+	d.Set("name", service.Name)
+	d.Set("description", service.Description)
+	d.Set("dns_config", flattenServiceDiscoveryDnsConfig(service.DnsConfig))
+	d.Set("health_check_config", flattenServiceDiscoveryHealthCheckConfig(service.HealthCheckConfig))
 	return nil
 }
 
@@ -188,10 +166,6 @@ func resourceAwsServiceDiscoveryServiceUpdate(d *schema.ResourceData, meta inter
 
 	resp, err := conn.UpdateService(input)
 	if err != nil {
-		if isAWSErr(err, servicediscovery.ErrCodeServiceNotFound, "") {
-			d.SetId("")
-			return nil
-		}
 		return err
 	}
 
@@ -221,14 +195,9 @@ func resourceAwsServiceDiscoveryServiceDelete(d *schema.ResourceData, meta inter
 
 	_, err := conn.DeleteService(input)
 	if err != nil {
-		if isAWSErr(err, servicediscovery.ErrCodeServiceNotFound, "") {
-			d.SetId("")
-			return nil
-		}
 		return err
 	}
 
-	d.SetId("")
 	return nil
 }
 
