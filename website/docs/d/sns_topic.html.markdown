@@ -6,7 +6,7 @@ description: |-
   Get information on a Amazon Simple Notification Service (SNS) Topic
 ---
 
-# aws_sns_topic
+# Data Source: aws_sns_topic
 
 Use this data source to get the ARN of a topic in AWS Simple Notification
 Service (SNS). By using this data source, you can reference SNS topics

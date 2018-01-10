@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific AWS service that can be specified when creating a VPC endpoint.
 ---
 
-# aws_vpc_endpoint_service
+# Data Source: aws_vpc_endpoint_service
 
 The VPC Endpoint Service data source allows access to a specific AWS
 service that can be specified when creating a VPC endpoint within the region

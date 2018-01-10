@@ -6,7 +6,7 @@ description: |-
   Get information on AWS IP ranges.
 ---
 
-# aws_ip_ranges
+# Data Source: aws_ip_ranges
 
 Use this data source to get the [IP ranges][1] of various AWS products and services.
 

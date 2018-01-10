@@ -1364,7 +1364,7 @@ func validateAwsLbTargetGroupName(v interface{}, k string) (ws []string, errors 
 
 func validateAwsLbTargetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
 	name := v.(string)
-	if len(name) > 32 {
+	if len(name) > 6 {
 		errors = append(errors, fmt.Errorf("%q (%q) cannot be longer than '6' characters", k, name))
 	}
 	return
@@ -1983,6 +1983,15 @@ func validateCognitoRoles(v map[string]interface{}, k string) (errors []error) {
 		errors = append(errors, fmt.Errorf("%q: Either \"authenticated\" or \"unauthenticated\" must be defined", k))
 	}
 
+	return
+}
+
+func validateCognitoUserPoolDomain(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens (max length 63 chars) allowed in %q", k))
+	}
 	return
 }
 

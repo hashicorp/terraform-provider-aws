@@ -6,7 +6,7 @@ description: |-
     Provides metadata and optionally content of an S3 object
 ---
 
-# aws_s3_bucket_object
+# Data Source: aws_s3_bucket_object
 
 The S3 object data source allows access to the metadata and
 _optionally_ (see below) content of an object stored inside S3 bucket.

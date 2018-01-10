@@ -1,21 +1,46 @@
-## 1.6.1 (Unreleased)
+## 1.7.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_cognito_user_pool_domain` [GH-2325]
+* **New Resource:** `aws_guardduty_detector` [GH-2524]
+* **New Resource:** `aws_route53_query_log` [GH-2770]
 
 ENHANCEMENTS:
 
-* provider: Allow API Gateway and Lambda endpoints configuration [GH-2641]
 * provider: `eu-west-3` is now supported [GH-2707]
+* provider: Endpoints can now be specified for ACM, ECR, ECS, STS and Route 53 [GH-2795]
+* provider: Endpoints can now be specified for API Gateway and Lambda [GH-2641]
 * resource/aws_kinesis_firehose_delivery_stream: Import is now supported [GH-2707]
 * resource/aws_cognito_user_pool: The ARN for the pool is now computed and exposed as an attribute [GH-2723]
-* resource/aws_directory_service_directory: Add security_group_id field [GH-2688]
+* resource/aws_directory_service_directory: Add `security_group_id` field [GH-2688]
 * resource/aws_rds_cluster_instance: Support Performance Insights [GH-2331]
-* resource/aws_rds_cluster_instance: Set db_subnet_group_name in state on read if available [GH-2606]
+* resource/aws_rds_cluster_instance: Set `db_subnet_group_name` in state on read if available [GH-2606]
 * resource/aws_eip: Tagging is now supported [GH-2768]
+* resource/aws_codepipeline: ARN is now exposed as an attribute [GH-2773]
+* resource/aws_appautoscaling_scheduled_action: `min_capacity` argument is now honoured [GH-2794]
+* resource/aws_rds_cluster: Clusters in the `resetting-master-credentials` state no longer cause an error [GH-2791]
+* resource/aws_cloudwatch_metric_alarm: Support optional datapoints_to_alarm configuration [GH-2609]
+* resource/aws_ses_event_destination: Add support for SNS destinations [GH-1737]
+* resource/aws_iam_role: Delete inline policies when `force_detach_policies = true` [GH-2388]
+* resource/aws_lb_target_group: Improve `health_check` validation [GH-2580]
+* resource/aws_ecs_service: Add `health_check_grace_period_seconds` attribute [GH-2788]
+* resource/aws_vpc_peering_connection: Add support for cross-region VPC peering [GH-2508]
+* resource/aws_vpc_peering_connection_accepter: Add support for cross-region VPC peering [GH-2508]
+* data-source/aws_iam_server_certificate: Add support for retrieving public key [GH-2749]
+* data-source/aws_vpc_peering_connection: Add support for cross-region VPC peering [GH-2508]
 
 BUG FIXES:
 
-* resource/cognito_user_pool: Update Cognito email message length to 20,000 [GH-2692]
+* resource/aws_cognito_user_pool: Update Cognito email message length to 20,000 [GH-2692]
 * resource/aws_volume_attachment: Changing device name without changing volume or instance ID now correctly produces a diff [GH-2720]
 * resource/aws_s3_bucket_object: Object tagging is now supported in GovCloud [GH-2665]
+* resource/aws_elasticsearch_domain: Fixed a crash when no Cloudwatch log group is configured [GH-2787]
+* resource/aws_s3_bucket_policy: Set the resource ID after successful creation [GH-2820]
+* resource/aws_db_parameter_group: Remove group from state if it's gone [GH-2868]
+* resource/aws_appautoscaling_target: Make `role_arn` optional & computed [GH-2889]
+* resource/aws_ssm_maintenance_window: Respect `enabled` during updates [GH-2818]
+* resource/aws_lb_target_group: Fix max prefix length check [GH-2790]
 
 ## 1.6.0 (December 18, 2017)
 
