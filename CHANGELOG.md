@@ -30,6 +30,7 @@ ENHANCEMENTS:
 * data-source/aws_iam_server_certificate: Add support for retrieving public key [GH-2749]
 * data-source/aws_vpc_peering_connection: Add support for cross-region VPC peering [GH-2508]
 * resource/aws_elasticsearch_domain: export kibana endpoint [GH-2804]
+* resource/aws_ssm_association: Allow for multiple targets [GH-2297]
 
 BUG FIXES:
 
