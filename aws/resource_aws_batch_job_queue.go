@@ -27,8 +27,9 @@ func resourceAwsBatchJobQueue() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateBatchName,
 			},
 			"priority": {
 				Type:     schema.TypeInt,
@@ -143,9 +144,9 @@ func resourceAwsBatchJobQueueDelete(d *schema.ResourceData, meta interface{}) er
 
 	// Wait until the Job Queue is disabled before deleting
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{batch.JQStateEnabled},
-		Target:     []string{batch.JQStateDisabled},
-		Refresh:    batchJobQueueRefreshStateFunc(conn, sn),
+		Pending:    []string{batch.JQStatusUpdating},
+		Target:     []string{batch.JQStatusValid},
+		Refresh:    batchJobQueueRefreshStatusFunc(conn, sn),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -154,12 +155,13 @@ func resourceAwsBatchJobQueueDelete(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return err
 	}
+
 	log.Printf("[DEBUG] Trying to delete Job Queue %s", sn)
 	_, err = conn.DeleteJobQueue(&batch.DeleteJobQueueInput{
 		JobQueue: aws.String(sn),
 	})
-	if err == nil {
-		return nil
+	if err != nil {
+		return err
 	}
 
 	deleteStateConf := &resource.StateChangeConf{

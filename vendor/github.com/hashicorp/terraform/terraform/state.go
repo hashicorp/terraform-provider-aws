@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform/config"
 	"github.com/mitchellh/copystructure"
 	"github.com/satori/go.uuid"
+
+	tfversion "github.com/hashicorp/terraform/version"
 )
 
 const (
@@ -664,7 +666,7 @@ func (s *State) FromFutureTerraform() bool {
 	}
 
 	v := version.Must(version.NewVersion(s.TFVersion))
-	return SemVersion.LessThan(v)
+	return tfversion.SemVer.LessThan(v)
 }
 
 func (s *State) Init() {
@@ -976,6 +978,10 @@ type ModuleState struct {
 	// Path is the import path from the root module. Modules imports are
 	// always disjoint, so the path represents amodule tree
 	Path []string `json:"path"`
+
+	// Locals are kept only transiently in-memory, because we can always
+	// re-compute them.
+	Locals map[string]interface{} `json:"-"`
 
 	// Outputs declared by the module and maintained for each module
 	// even though only the root module technically needs to be kept.
@@ -1681,7 +1687,20 @@ func (s *InstanceState) Equal(other *InstanceState) bool {
 		// We only do the deep check if both are non-nil. If one is nil
 		// we treat it as equal since their lengths are both zero (check
 		// above).
-		if !reflect.DeepEqual(s.Meta, other.Meta) {
+		//
+		// Since this can contain numeric values that may change types during
+		// serialization, let's compare the serialized values.
+		sMeta, err := json.Marshal(s.Meta)
+		if err != nil {
+			// marshaling primitives shouldn't ever error out
+			panic(err)
+		}
+		otherMeta, err := json.Marshal(other.Meta)
+		if err != nil {
+			panic(err)
+		}
+
+		if !bytes.Equal(sMeta, otherMeta) {
 			return false
 		}
 	}
@@ -1891,7 +1910,7 @@ func ReadState(src io.Reader) (*State, error) {
 		result = v3State
 	default:
 		return nil, fmt.Errorf("Terraform %s does not support state version %d, please update.",
-			SemVersion.String(), versionIdentifier.Version)
+			tfversion.SemVer.String(), versionIdentifier.Version)
 	}
 
 	// If we reached this place we must have a result set
@@ -1935,7 +1954,7 @@ func ReadStateV2(jsonBytes []byte) (*State, error) {
 	// version that we don't understand
 	if state.Version > StateVersion {
 		return nil, fmt.Errorf("Terraform %s does not support state version %d, please update.",
-			SemVersion.String(), state.Version)
+			tfversion.SemVer.String(), state.Version)
 	}
 
 	// Make sure the version is semantic
@@ -1970,7 +1989,7 @@ func ReadStateV3(jsonBytes []byte) (*State, error) {
 	// version that we don't understand
 	if state.Version > StateVersion {
 		return nil, fmt.Errorf("Terraform %s does not support state version %d, please update.",
-			SemVersion.String(), state.Version)
+			tfversion.SemVer.String(), state.Version)
 	}
 
 	// Make sure the version is semantic

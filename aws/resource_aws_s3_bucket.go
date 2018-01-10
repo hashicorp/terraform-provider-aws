@@ -392,6 +392,43 @@ func resourceAwsS3Bucket() *schema.Resource {
 				},
 			},
 
+			"server_side_encryption_configuration": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"rule": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"apply_server_side_encryption_by_default": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"kms_master_key_id": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"sse_algorithm": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validateS3BucketServerSideEncryptionAlgorithm,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -531,6 +568,12 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("server_side_encryption_configuration") {
+		if err := resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(s3conn, d); err != nil {
+			return err
+		}
+	}
+
 	return resourceAwsS3BucketRead(d, meta)
 }
 
@@ -652,19 +695,22 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			} else {
 				var host string
 				var path string
+				var query string
 				parsedHostName, err := url.Parse(*v.HostName)
 				if err == nil {
 					host = parsedHostName.Host
 					path = parsedHostName.Path
+					query = parsedHostName.RawQuery
 				} else {
 					host = *v.HostName
 					path = ""
 				}
 
 				w["redirect_all_requests_to"] = (&url.URL{
-					Host:   host,
-					Path:   path,
-					Scheme: *v.Protocol,
+					Host:     host,
+					Path:     path,
+					Scheme:   *v.Protocol,
+					RawQuery: query,
 				}).String()
 			}
 		}
@@ -935,6 +981,31 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("replication_configuration", flattenAwsS3BucketReplicationConfiguration(replication.ReplicationConfiguration)); err != nil {
 			log.Printf("[DEBUG] Error setting replication configuration: %s", err)
 			return err
+		}
+	}
+
+	// Read the bucket server side encryption configuration
+
+	encryptionResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.GetBucketEncryption(&s3.GetBucketEncryptionInput{
+			Bucket: aws.String(d.Id()),
+		})
+	})
+	if err != nil {
+		if isAWSErr(err, "ServerSideEncryptionConfigurationNotFoundError", "encryption configuration was not found") {
+			log.Printf("[DEBUG] Default encryption is not enabled for %s", d.Id())
+			d.Set("server_side_encryption_configuration", []map[string]interface{}{})
+		} else {
+			return err
+		}
+	} else {
+		encryption := encryptionResponse.(*s3.GetBucketEncryptionOutput)
+		log.Printf("[DEBUG] S3 Bucket: %s, read encryption configuration: %v", d.Id(), encryption)
+		if c := encryption.ServerSideEncryptionConfiguration; c != nil {
+			if err := d.Set("server_side_encryption_configuration", flattenAwsS3ServerSideEncryptionConfiguration(c)); err != nil {
+				log.Printf("[DEBUG] Error setting server side encryption configuration: %s", err)
+				return err
+			}
 		}
 	}
 
@@ -1227,6 +1298,10 @@ func resourceAwsS3BucketWebsitePut(s3conn *s3.S3, d *schema.ResourceData, websit
 			if redirect.Path != "" {
 				redirectHostBuf.WriteString(redirect.Path)
 			}
+			if redirect.RawQuery != "" {
+				redirectHostBuf.WriteString("?")
+				redirectHostBuf.WriteString(redirect.RawQuery)
+			}
 			websiteConfiguration.RedirectAllRequestsTo = &s3.RedirectAllRequestsTo{HostName: aws.String(redirectHostBuf.String()), Protocol: aws.String(redirect.Scheme)}
 		} else {
 			websiteConfiguration.RedirectAllRequestsTo = &s3.RedirectAllRequestsTo{HostName: aws.String(redirectAllRequestsTo)}
@@ -1486,6 +1561,68 @@ func resourceAwsS3BucketRequestPayerUpdate(s3conn *s3.S3, d *schema.ResourceData
 	return nil
 }
 
+func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(s3conn *s3.S3, d *schema.ResourceData) error {
+	bucket := d.Get("bucket").(string)
+	serverSideEncryptionConfiguration := d.Get("server_side_encryption_configuration").([]interface{})
+	if len(serverSideEncryptionConfiguration) == 0 {
+		log.Printf("[DEBUG] Delete server side encryption configuration: %#v", serverSideEncryptionConfiguration)
+		i := &s3.DeleteBucketEncryptionInput{
+			Bucket: aws.String(bucket),
+		}
+
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			if _, err := s3conn.DeleteBucketEncryption(i); err != nil {
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("error removing S3 bucket server side encryption: %s", err)
+		}
+		return nil
+	}
+
+	c := serverSideEncryptionConfiguration[0].(map[string]interface{})
+
+	rc := &s3.ServerSideEncryptionConfiguration{}
+
+	rcRules := c["rule"].([]interface{})
+	var rules []*s3.ServerSideEncryptionRule
+	for _, v := range rcRules {
+		rr := v.(map[string]interface{})
+		rrDefault := rr["apply_server_side_encryption_by_default"].([]interface{})
+		sseAlgorithm := rrDefault[0].(map[string]interface{})["sse_algorithm"].(string)
+		kmsMasterKeyId := rrDefault[0].(map[string]interface{})["kms_master_key_id"].(string)
+		rcDefaultRule := &s3.ServerSideEncryptionByDefault{
+			SSEAlgorithm: aws.String(sseAlgorithm),
+		}
+		if kmsMasterKeyId != "" {
+			rcDefaultRule.KMSMasterKeyID = aws.String(kmsMasterKeyId)
+		}
+		rcRule := &s3.ServerSideEncryptionRule{
+			ApplyServerSideEncryptionByDefault: rcDefaultRule,
+		}
+
+		rules = append(rules, rcRule)
+	}
+
+	rc.Rules = rules
+	i := &s3.PutBucketEncryptionInput{
+		Bucket: aws.String(bucket),
+		ServerSideEncryptionConfiguration: rc,
+	}
+	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
+
+	_, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.PutBucketEncryption(i)
+	})
+	if err != nil {
+		return fmt.Errorf("error putting S3 server side encryption configuration: %s", err)
+	}
+
+	return nil
+}
+
 func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	replicationConfiguration := d.Get("replication_configuration").([]interface{})
@@ -1730,6 +1867,25 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 	}
 
 	return nil
+}
+
+func flattenAwsS3ServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionConfiguration) []map[string]interface{} {
+	var encryptionConfiguration []map[string]interface{}
+	rules := make([]interface{}, 0, len(c.Rules))
+	for _, v := range c.Rules {
+		if v.ApplyServerSideEncryptionByDefault != nil {
+			r := make(map[string]interface{})
+			d := make(map[string]interface{})
+			d["kms_master_key_id"] = aws.StringValue(v.ApplyServerSideEncryptionByDefault.KMSMasterKeyID)
+			d["sse_algorithm"] = aws.StringValue(v.ApplyServerSideEncryptionByDefault.SSEAlgorithm)
+			r["apply_server_side_encryption_by_default"] = []map[string]interface{}{d}
+			rules = append(rules, r)
+		}
+	}
+	encryptionConfiguration = append(encryptionConfiguration, map[string]interface{}{
+		"rule": rules,
+	})
+	return encryptionConfiguration
 }
 
 func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) []map[string]interface{} {

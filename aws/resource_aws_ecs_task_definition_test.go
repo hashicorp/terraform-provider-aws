@@ -160,6 +160,69 @@ func TestAccAWSEcsTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 	})
 }
 
+// Regression for https://github.com/terraform-providers/terraform-provider-aws/issues/2336
+func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
+	var conf ecs.TaskDefinition
+	familyName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	containerName := fmt.Sprintf("tfacctest%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionArrays(familyName, containerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.test", &conf),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskDefinition_Fargate(t *testing.T) {
+	var conf ecs.TaskDefinition
+	familyName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionFargate(familyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.fargate", &conf),
+					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "requires_compatibilities.#", "1"),
+					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "cpu", "256"),
+					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "memory", "512"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskDefinition_ExecutionRole(t *testing.T) {
+	var conf ecs.TaskDefinition
+	familyName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionExecutionRole(familyName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.fargate", &conf),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckEcsTaskDefinitionRecreated(t *testing.T,
 	before, after *ecs.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -424,6 +487,206 @@ TASK_DEFINITION
   }
 }
 `
+
+func testAccAWSEcsTaskDefinitionArrays(familyName, containerName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = "%s"
+  container_definitions = <<TASK_DEFINITION
+[
+    {
+      "name": "wordpress",
+      "image": "wordpress",
+      "essential": true,
+      "links": ["container1", "container2", "container3"],
+      "portMappings": [
+        {"containerPort": 80},
+        {"containerPort": 81},
+        {"containerPort": 82}
+      ],
+      "environment": [
+        {"name": "VARNAME1", "value": "VARVAL1"},
+        {"name": "VARNAME2", "value": "VARVAL2"},
+        {"name": "VARNAME3", "value": "VARVAL3"}
+      ],
+      "extraHosts": [
+        {"hostname": "host1", "ipAddress": "127.0.0.1"},
+        {"hostname": "host2", "ipAddress": "127.0.0.2"},
+        {"hostname": "host3", "ipAddress": "127.0.0.3"}
+      ],
+      "mountPoints": [
+        {"sourceVolume": "vol1", "containerPath": "/vol1"},
+        {"sourceVolume": "vol2", "containerPath": "/vol2"},
+        {"sourceVolume": "vol3", "containerPath": "/vol3"}
+      ],
+      "volumesFrom": [
+        {"sourceContainer": "container1"},
+        {"sourceContainer": "container2"},
+        {"sourceContainer": "container3"}
+      ],
+      "ulimits": [
+        {
+          "name": "core",
+          "softLimit": 10, "hardLimit": 20
+        },
+        {
+          "name": "cpu",
+          "softLimit": 10, "hardLimit": 20
+        },
+        {
+          "name": "fsize",
+          "softLimit": 10, "hardLimit": 20
+        }
+      ],
+      "linuxParameters": {
+        "capabilities": {
+          "add": ["AUDIT_CONTROL", "AUDIT_WRITE", "BLOCK_SUSPEND"],
+          "drop": ["CHOWN", "IPC_LOCK", "KILL"]
+        }
+      },
+      "devices": [
+        {
+          "hostPath": "/path1",
+          "permissions": ["read", "write", "mknod"]
+        },
+        {
+          "hostPath": "/path2",
+          "permissions": ["read", "write"]
+        },
+        {
+          "hostPath": "/path3",
+          "permissions": ["read", "mknod"]
+        }
+      ],
+      "dockerSecurityOptions": ["label:one", "label:two", "label:three"],
+      "memory": 500,
+      "cpu": 10
+    },
+    {
+      "name": "container1",
+      "image": "busybox",
+      "memory": 100
+    },
+    {
+      "name": "container2",
+      "image": "busybox",
+      "memory": 100
+    },
+    {
+      "name": "container3",
+      "image": "busybox",
+      "memory": 100
+    }
+]
+TASK_DEFINITION
+  volume {
+    name = "vol1"
+    host_path = "/host/vol1"
+  }
+  volume {
+    name = "vol2"
+    host_path = "/host/vol2"
+  }
+  volume {
+    name = "vol3"
+    host_path = "/host/vol3"
+  }
+}
+`, familyName)
+}
+
+func testAccAWSEcsTaskDefinitionFargate(familyName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "fargate" {
+  family                   = "%s"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+}
+`, familyName)
+}
+
+func testAccAWSEcsTaskDefinitionExecutionRole(familyName string, rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role" {
+  name = "test-role-%d"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "policy" {
+  name        = "test-policy-%d"
+  description = "A test policy"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  role       = "${aws_iam_role.role.name}"
+  policy_arn = "${aws_iam_policy.policy.arn}"
+}
+
+resource "aws_ecs_task_definition" "fargate" {
+  family                   = "%s"
+  execution_role_arn       = "${aws_iam_role.role.arn}"
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+}
+`, rInt, rInt, familyName)
+}
 
 var testAccAWSEcsTaskDefinitionWithScratchVolume = `
 resource "aws_ecs_task_definition" "sleep" {

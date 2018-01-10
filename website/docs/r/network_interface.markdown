@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic network interface (ENI) resource.
 ---
 
-# aws\_network\_interface
+# aws_network_interface
 
 Provides an Elastic network interface (ENI) resource.
 

@@ -159,7 +159,7 @@ func lookupCloudWatchLogGroup(conn *cloudwatchlogs.CloudWatchLogs,
 func resourceAwsCloudWatchLogGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatchlogsconn
 
-	name := d.Get("name").(string)
+	name := d.Id()
 	log.Printf("[DEBUG] Updating CloudWatch Log Group: %q", name)
 
 	if d.HasChange("retention_in_days") {

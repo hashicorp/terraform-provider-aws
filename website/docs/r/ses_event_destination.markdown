@@ -6,7 +6,7 @@ description: |-
   Provides an SES event destination
 ---
 
-# aws\_ses\_event_destination
+# aws_ses_event_destination
 
 Provides an SES event destination
 
@@ -48,9 +48,10 @@ The following arguments are supported:
 * `name` - (Required) The name of the event destination
 * `configuration_set_name` - (Required) The name of the configuration set
 * `enabled` - (Optional) If true, the event destination will be enabled
-* `matching_types` - (Required) A list of matching types. May be any of `"send"`, `"reject"`, `"bounce"`, `"complaint"`, or `"delivery"`.
+* `matching_types` - (Required) A list of matching types. May be any of `"send"`, `"reject"`, `"bounce"`, `"complaint"`, `"delivery"`, `"open"`, or `"click"`.
 * `cloudwatch_destination` - (Optional) CloudWatch destination for the events
 * `kinesis_destination` - (Optional) Send the events to a kinesis firehose destination
+* `sns_destination` - (Optional) Send the events to an SNS Topic destination
 
 ~> **NOTE:** You can specify `"cloudwatch_destination"` or `"kinesis_destination"` but not both
 
@@ -64,4 +65,8 @@ Kinesis Destination requires the following:
 
 * `stream_arn` - (Required) The ARN of the Kinesis Stream
 * `role_arn` - (Required) The ARN of the role that has permissions to access the Kinesis Stream
+
+SNS Topic requires the following:
+
+* `topic_arn` - (Required) The ARN of the SNS topic
 

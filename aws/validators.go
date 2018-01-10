@@ -9,9 +9,20 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
 )
+
+func validateInstanceUserDataSize(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if len(value) > 16384 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 16384 bytes", k))
+	}
+	return
+}
 
 func validateRdsIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
@@ -277,6 +288,18 @@ func validateCloudWatchEventRuleName(v interface{}, k string) (ws []string, erro
 			k, pattern, value))
 	}
 
+	return
+}
+
+func validateCloudWatchLogResourcePolicyDocument(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	// http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutResourcePolicy.html
+	if len(value) > 5120 || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("CloudWatch log resource policy document must be between 1 and 5120 characters."))
+	}
+	if _, err := normalizeJsonString(v); err != nil {
+		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
+	}
 	return
 }
 
@@ -602,6 +625,16 @@ func validateS3BucketReplicationRulePrefix(v interface{}, k string) (ws []string
 	return
 }
 
+func validateS3BucketServerSideEncryptionAlgorithm(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if value != s3.ServerSideEncryptionAes256 && value != s3.ServerSideEncryptionAwsKms {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of %q or %q", k, s3.ServerSideEncryptionAwsKms, s3.ServerSideEncryptionAes256))
+	}
+
+	return
+}
+
 func validateS3BucketReplicationDestinationStorageClass(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if value != s3.StorageClassStandard && value != s3.StorageClassStandardIa && value != s3.StorageClassReducedRedundancy {
@@ -761,7 +794,7 @@ func validateSQSFifoQueueName(v interface{}, k string) (errors []error) {
 
 func validateSNSSubscriptionProtocol(v interface{}, k string) (ws []string, errors []error) {
 	value := strings.ToLower(v.(string))
-	forbidden := []string{"email", "sms"}
+	forbidden := []string{"email"}
 	for _, f := range forbidden {
 		if strings.Contains(value, f) {
 			errors = append(
@@ -1321,7 +1354,7 @@ func validateDbOptionGroupNamePrefix(v interface{}, k string) (ws []string, erro
 	return
 }
 
-func validateAwsAlbTargetGroupName(v interface{}, k string) (ws []string, errors []error) {
+func validateAwsLbTargetGroupName(v interface{}, k string) (ws []string, errors []error) {
 	name := v.(string)
 	if len(name) > 32 {
 		errors = append(errors, fmt.Errorf("%q (%q) cannot be longer than '32' characters", k, name))
@@ -1329,9 +1362,9 @@ func validateAwsAlbTargetGroupName(v interface{}, k string) (ws []string, errors
 	return
 }
 
-func validateAwsAlbTargetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validateAwsLbTargetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
 	name := v.(string)
-	if len(name) > 32 {
+	if len(name) > 6 {
 		errors = append(errors, fmt.Errorf("%q (%q) cannot be longer than '6' characters", k, name))
 	}
 	return
@@ -1365,7 +1398,7 @@ func validateAwsKmsName(v interface{}, k string) (ws []string, es []error) {
 func validateCognitoIdentityPoolName(v interface{}, k string) (ws []string, errors []error) {
 	val := v.(string)
 	if !regexp.MustCompile("^[\\w _]+$").MatchString(val) {
-		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric caracters and spaces", k))
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters and spaces", k))
 	}
 
 	return
@@ -1374,11 +1407,11 @@ func validateCognitoIdentityPoolName(v interface{}, k string) (ws []string, erro
 func validateCognitoProviderDeveloperName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 100 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 100 caracters", k))
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 100 characters", k))
 	}
 
 	if !regexp.MustCompile("^[\\w._-]+$").MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric caracters, dots, underscores and hyphens", k))
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores and hyphens", k))
 	}
 
 	return
@@ -1391,11 +1424,11 @@ func validateCognitoSupportedLoginProviders(v interface{}, k string) (ws []strin
 	}
 
 	if len(value) > 128 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 caracters", k))
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 characters", k))
 	}
 
 	if !regexp.MustCompile("^[\\w.;_/-]+$").MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric caracters, dots, semicolons, underscores, slashes and hyphens", k))
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, semicolons, underscores, slashes and hyphens", k))
 	}
 
 	return
@@ -1408,11 +1441,11 @@ func validateCognitoIdentityProvidersClientId(v interface{}, k string) (ws []str
 	}
 
 	if len(value) > 128 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 caracters", k))
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 characters", k))
 	}
 
 	if !regexp.MustCompile("^[\\w_]+$").MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric caracters and underscores", k))
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters and underscores", k))
 	}
 
 	return
@@ -1425,13 +1458,290 @@ func validateCognitoIdentityProvidersProviderName(v interface{}, k string) (ws [
 	}
 
 	if len(value) > 128 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 caracters", k))
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 characters", k))
 	}
 
 	if !regexp.MustCompile("^[\\w._:/-]+$").MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric caracters, dots, underscores, colons, slashes and hyphens", k))
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores, colons, slashes and hyphens", k))
 	}
 
+	return
+}
+
+func validateCognitoUserPoolEmailVerificationMessage(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 6 {
+		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
+	}
+
+	if len(value) > 20000 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 20000 characters", k))
+	}
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolEmailVerificationSubject(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 6 {
+		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
+	}
+
+	if len(value) > 140 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 140 characters", k))
+	}
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q can be composed of any kind of letter, symbols, numeric character, punctuation and whitespaces", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolMfaConfiguration(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+
+	valid := map[string]bool{
+		cognitoidentityprovider.UserPoolMfaTypeOff:      true,
+		cognitoidentityprovider.UserPoolMfaTypeOn:       true,
+		cognitoidentityprovider.UserPoolMfaTypeOptional: true,
+	}
+	if !valid[value] {
+		es = append(es, fmt.Errorf(
+			"%q must be equal to OFF, ON, or OPTIONAL", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolSmsAuthenticationMessage(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 6 {
+		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
+	}
+
+	if len(value) > 140 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 140 characters", k))
+	}
+
+	if !regexp.MustCompile(`.*\{####\}.*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolSmsVerificationMessage(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 6 {
+		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
+	}
+
+	if len(value) > 140 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 140 characters", k))
+	}
+
+	if !regexp.MustCompile(`.*\{####\}.*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolAliasAttribute(v interface{}, k string) (ws []string, es []error) {
+	validValues := []string{
+		cognitoidentityprovider.AliasAttributeTypeEmail,
+		cognitoidentityprovider.AliasAttributeTypePhoneNumber,
+		cognitoidentityprovider.AliasAttributeTypePreferredUsername,
+	}
+	period := v.(string)
+	for _, f := range validValues {
+		if period == f {
+			return
+		}
+	}
+	es = append(es, fmt.Errorf(
+		"%q contains an invalid alias attribute %q. Valid alias attributes are %q.",
+		k, period, validValues))
+	return
+}
+
+func validateCognitoUserPoolAutoVerifiedAttribute(v interface{}, k string) (ws []string, es []error) {
+	validValues := []string{
+		cognitoidentityprovider.VerifiedAttributeTypePhoneNumber,
+		cognitoidentityprovider.VerifiedAttributeTypeEmail,
+	}
+	period := v.(string)
+	for _, f := range validValues {
+		if period == f {
+			return
+		}
+	}
+	es = append(es, fmt.Errorf(
+		"%q contains an invalid verified attribute %q. Valid verified attributes are %q.",
+		k, period, validValues))
+	return
+}
+
+func validateCognitoUserPoolTemplateDefaultEmailOption(v interface{}, k string) (ws []string, es []error) {
+	validValues := []string{
+		cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithLink,
+		cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithCode,
+	}
+	period := v.(string)
+	for _, f := range validValues {
+		if period == f {
+			return
+		}
+	}
+	es = append(es, fmt.Errorf(
+		"%q contains an invalid template default email option %q. Valid template default email options are %q.",
+		k, period, validValues))
+	return
+}
+
+func validateCognitoUserPoolTemplateEmailMessage(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 6 {
+		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
+	}
+
+	if len(value) > 20000 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 20000 characters", k))
+	}
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolTemplateEmailMessageByLink(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 1 {
+		es = append(es, fmt.Errorf("%q cannot be less than 1 character", k))
+	}
+
+	if len(value) > 140 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 140 characters", k))
+	}
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{##[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*##\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s*]*\\{##[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s*]*##\\}[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s*]*", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolTemplateEmailSubject(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 1 {
+		es = append(es, fmt.Errorf("%q cannot be less than 1 character", k))
+	}
+
+	if len(value) > 140 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 140 characters", k))
+	}
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s]+", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolTemplateEmailSubjectByLink(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 1 {
+		es = append(es, fmt.Errorf("%q cannot be less than 1 character", k))
+	}
+
+	if len(value) > 140 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 140 characters", k))
+	}
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s]+", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolTemplateSmsMessage(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 6 {
+		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
+	}
+
+	if len(value) > 140 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 140 characters", k))
+	}
+
+	if !regexp.MustCompile(`.*\{####\}.*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolInviteTemplateEmailMessage(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 6 {
+		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
+	}
+
+	if len(value) > 20000 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 20000 characters", k))
+	}
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+	}
+
+	if !regexp.MustCompile(`.*\{username\}.*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {username}", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolInviteTemplateSmsMessage(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 6 {
+		es = append(es, fmt.Errorf("%q cannot be less than 6 characters", k))
+	}
+
+	if len(value) > 140 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 140 characters", k))
+	}
+
+	if !regexp.MustCompile(`.*\{####\}.*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {####}", k))
+	}
+
+	if !regexp.MustCompile(`.*\{username\}.*`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q does not contain {username}", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolReplyEmailAddress(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+@[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolSchemaName(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 1 {
+		es = append(es, fmt.Errorf("%q cannot be less than 1 character", k))
+	}
+
+	if len(value) > 20 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 20 character", k))
+	}
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+", k))
+	}
 	return
 }
 
@@ -1449,7 +1759,7 @@ func validateIamRoleDescription(v interface{}, k string) (ws []string, errors []
 	value := v.(string)
 
 	if len(value) > 1000 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 1000 caracters", k))
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 1000 characters", k))
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`).MatchString(value) {
@@ -1489,8 +1799,229 @@ func validateSsmParameterType(v interface{}, k string) (ws []string, errors []er
 
 func validateBatchName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[A-Za-z0-9_]{1,128}$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q (%q) must be up to 128 letters (uppercase and lowercase), numbers, and underscores.", k, v))
+	if !regexp.MustCompile(`^[0-9a-zA-Z]{1}[0-9a-zA-Z_\-]{0,127}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q (%q) must be up to 128 letters (uppercase and lowercase), numbers, underscores and dashes, and must start with an alphanumeric.", k, v))
+	}
+	return
+}
+
+func validateSecurityGroupRuleDescription(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 255 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 255 characters: %q", k, value))
+	}
+
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpRange.html
+	pattern := `^[A-Za-z0-9 \.\_\-\:\/\(\)\#\,\@\[\]\+\=\;\{\}\!\$\*]+$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q doesn't comply with restrictions (%q): %q",
+			k, pattern, value))
+	}
+	return
+}
+
+func validateServiceCatalogPortfolioName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) > 20) || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("Service catalog name must be between 1 and 20 characters."))
+	}
+	return
+}
+
+func validateServiceCatalogPortfolioDescription(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 2000 {
+		errors = append(errors, fmt.Errorf("Service catalog description must be less than 2000 characters."))
+	}
+	return
+}
+
+func validateServiceCatalogPortfolioProviderName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) > 20) || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("Service catalog provider name must be between 1 and 20 characters."))
+	}
+	return
+}
+
+func validateSesTemplateName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) > 64) || (len(value) == 0) {
+		errors = append(errors, fmt.Errorf("SES template name must be between 1 and 64 characters."))
+	}
+	return
+}
+
+func validateSesTemplateHtml(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 512000 {
+		errors = append(errors, fmt.Errorf("SES template must be less than 500KB in size, including both the text and HTML parts."))
+	}
+	return
+}
+
+func validateSesTemplateText(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 512000 {
+		errors = append(errors, fmt.Errorf("SES template must be less than 500KB in size, including both the text and HTML parts."))
+	}
+
+	return
+}
+
+func validateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(v map[string]interface{}) (errors []error) {
+	t := v["type"].(string)
+	isRequired := t == cognitoidentity.RoleMappingTypeToken || t == cognitoidentity.RoleMappingTypeRules
+
+	if value, ok := v["ambiguous_role_resolution"]; (!ok || value == "") && isRequired {
+		errors = append(errors, fmt.Errorf("Ambiguous Role Resolution must be defined when \"type\" equals \"Token\" or \"Rules\""))
+	}
+
+	return
+}
+
+func validateCognitoRoleMappingsRulesConfiguration(v map[string]interface{}) (errors []error) {
+	t := v["type"].(string)
+	value, ok := v["mapping_rule"]
+	valLength := len(value.([]interface{}))
+
+	if (!ok || valLength == 0) && t == cognitoidentity.RoleMappingTypeRules {
+		errors = append(errors, fmt.Errorf("mapping_rule is required for Rules"))
+	}
+
+	if (ok || valLength > 0) && t == cognitoidentity.RoleMappingTypeToken {
+		errors = append(errors, fmt.Errorf("mapping_rule must not be set for Token based role mapping"))
+	}
+
+	return
+}
+
+func validateCognitoRoleMappingsAmbiguousRoleResolution(v interface{}, k string) (ws []string, errors []error) {
+	validValues := []string{
+		cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
+		cognitoidentity.AmbiguousRoleResolutionTypeDeny,
+	}
+	value := v.(string)
+	for _, s := range validValues {
+		if value == s {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid value %q. Valid values are %q.",
+		k, value, validValues))
+	return
+}
+
+func validateCognitoRoleMappingsRulesClaim(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if !regexp.MustCompile("^[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+$").MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores, colons, slashes and hyphens", k))
+	}
+
+	return
+}
+
+func validateCognitoRoleMappingsRulesMatchType(v interface{}, k string) (ws []string, errors []error) {
+	validValues := []string{
+		cognitoidentity.MappingRuleMatchTypeEquals,
+		cognitoidentity.MappingRuleMatchTypeContains,
+		cognitoidentity.MappingRuleMatchTypeStartsWith,
+		cognitoidentity.MappingRuleMatchTypeNotEqual,
+	}
+	value := v.(string)
+	for _, s := range validValues {
+		if value == s {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid value %q. Valid values are %q.",
+		k, value, validValues))
+	return
+}
+
+func validateCognitoRoleMappingsRulesValue(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) < 1 {
+		errors = append(errors, fmt.Errorf("%q cannot be less than 1 character", k))
+	}
+
+	if len(value) > 128 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 1 characters", k))
+	}
+
+	return
+}
+
+func validateCognitoRoleMappingsType(v interface{}, k string) (ws []string, errors []error) {
+	validValues := []string{
+		cognitoidentity.RoleMappingTypeToken,
+		cognitoidentity.RoleMappingTypeRules,
+	}
+	value := v.(string)
+	for _, s := range validValues {
+		if value == s {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid value %q. Valid values are %q.",
+		k, value, validValues))
+	return
+}
+
+// Validates that either authenticated or unauthenticated is defined
+func validateCognitoRoles(v map[string]interface{}, k string) (errors []error) {
+	_, hasAuthenticated := v["authenticated"].(string)
+	_, hasUnauthenticated := v["unauthenticated"].(string)
+
+	if !hasAuthenticated && !hasUnauthenticated {
+		errors = append(errors, fmt.Errorf("%q: Either \"authenticated\" or \"unauthenticated\" must be defined", k))
+	}
+
+	return
+}
+
+func validateCognitoUserPoolDomain(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens (max length 63 chars) allowed in %q", k))
+	}
+	return
+}
+
+func validateDxConnectionBandWidth(v interface{}, k string) (ws []string, errors []error) {
+	val, ok := v.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+
+	validBandWidth := []string{"1Gbps", "10Gbps"}
+	for _, str := range validBandWidth {
+		if val == str {
+			return
+		}
+	}
+
+	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validBandWidth, val))
+	return
+}
+
+func validateAwsElastiCacheReplicationGroupAuthToken(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) < 16) || (len(value) > 128) {
+		errors = append(errors, fmt.Errorf(
+			"%q must contain from 16 to 128 alphanumeric characters or symbols (excluding @, \", and /)", k))
+	}
+	if !regexp.MustCompile(`^[^@"\/]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters or symbols (excluding @, \", and /) allowed in %q", k))
 	}
 	return
 }

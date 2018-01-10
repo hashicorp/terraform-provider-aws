@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Deployment.
 ---
 
-# aws\_api\_gateway\_deployment
+# aws_api_gateway_deployment
 
 Provides an API Gateway Deployment.
 
@@ -42,7 +42,7 @@ resource "aws_api_gateway_integration" "MyDemoIntegration" {
 }
 
 resource "aws_api_gateway_deployment" "MyDemoDeployment" {
-  depends_on = ["aws_api_gateway_method.MyDemoMethod"]
+  depends_on = ["aws_api_gateway_integration.MyDemoIntegration"]
 
   rest_api_id = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
   stage_name  = "test"

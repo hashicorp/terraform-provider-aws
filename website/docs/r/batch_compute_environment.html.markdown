@@ -133,7 +133,7 @@ resource "aws_batch_compute_environment" "sample" {
 ## Attributes Reference
 
 * `arn` - The Amazon Resource Name (ARN) of the compute environment.
-* `ecc_cluster_arn` - The Amazon Resource Name (ARN) of the underlying Amazon ECS cluster used by the compute environment.
+* `ecs_cluster_arn` - The Amazon Resource Name (ARN) of the underlying Amazon ECS cluster used by the compute environment.
 * `status` - The current status of the compute environment (for example, CREATING or VALID).
 * `status_reason` - A short, human-readable string to provide additional details about the current status of the compute environment.
 

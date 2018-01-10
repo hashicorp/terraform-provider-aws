@@ -31,6 +31,7 @@ func TestAccAWSELB_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists("aws_elb.bar", &conf),
 					testAccCheckAWSELBAttributes(&conf),
+					resource.TestCheckResourceAttrSet("aws_elb.bar", "arn"),
 					resource.TestCheckResourceAttr(
 						"aws_elb.bar", "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(

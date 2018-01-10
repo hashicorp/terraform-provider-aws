@@ -6,7 +6,7 @@ description: |-
   Provides a CodeBuild Project resource.
 ---
 
-# aws\_codebuild\_project
+# aws_codebuild_project
 
 Provides a CodeBuild Project resource.
 

@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic File System Mount Target (EFS) data source.
 ---
 
-# aws_efs_mount_target
+# Data Source: aws_efs_mount_target
 
 Provides information about an Elastic File System Mount Target (EFS).
 

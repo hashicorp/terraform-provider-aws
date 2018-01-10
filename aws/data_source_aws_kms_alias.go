@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -36,6 +37,7 @@ func dataSourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
 
 	target := d.Get("name")
 	var alias *kms.AliasListEntry
+	log.Printf("[DEBUG] Reading KMS Alias: %s", params)
 	err := conn.ListAliasesPages(params, func(page *kms.ListAliasesOutput, lastPage bool) bool {
 		for _, entity := range page.Aliases {
 			if *entity.AliasName == target {

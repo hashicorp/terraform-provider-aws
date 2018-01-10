@@ -160,33 +160,34 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"aws_acm_certificate":          dataSourceAwsAcmCertificate(),
-			"aws_alb":                      dataSourceAwsAlb(),
-			"aws_alb_listener":             dataSourceAwsAlbListener(),
-			"aws_alb_target_group":         dataSourceAwsAlbTargetGroup(),
-			"aws_ami":                      dataSourceAwsAmi(),
-			"aws_ami_ids":                  dataSourceAwsAmiIds(),
-			"aws_autoscaling_groups":       dataSourceAwsAutoscalingGroups(),
-			"aws_availability_zone":        dataSourceAwsAvailabilityZone(),
-			"aws_availability_zones":       dataSourceAwsAvailabilityZones(),
-			"aws_billing_service_account":  dataSourceAwsBillingServiceAccount(),
-			"aws_caller_identity":          dataSourceAwsCallerIdentity(),
-			"aws_canonical_user_id":        dataSourceAwsCanonicalUserId(),
-			"aws_cloudformation_stack":     dataSourceAwsCloudFormationStack(),
-			"aws_db_instance":              dataSourceAwsDbInstance(),
-			"aws_db_snapshot":              dataSourceAwsDbSnapshot(),
-			"aws_ebs_snapshot":             dataSourceAwsEbsSnapshot(),
-			"aws_ebs_snapshot_ids":         dataSourceAwsEbsSnapshotIds(),
-			"aws_ebs_volume":               dataSourceAwsEbsVolume(),
-			"aws_ecr_repository":           dataSourceAwsEcrRepository(),
-			"aws_ecs_cluster":              dataSourceAwsEcsCluster(),
-			"aws_ecs_container_definition": dataSourceAwsEcsContainerDefinition(),
-			"aws_ecs_task_definition":      dataSourceAwsEcsTaskDefinition(),
-			"aws_efs_file_system":          dataSourceAwsEfsFileSystem(),
-			"aws_efs_mount_target":         dataSourceAwsEfsMountTarget(),
-			"aws_eip":                      dataSourceAwsEip(),
+			"aws_acm_certificate":            dataSourceAwsAcmCertificate(),
+			"aws_ami":                        dataSourceAwsAmi(),
+			"aws_ami_ids":                    dataSourceAwsAmiIds(),
+			"aws_autoscaling_groups":         dataSourceAwsAutoscalingGroups(),
+			"aws_availability_zone":          dataSourceAwsAvailabilityZone(),
+			"aws_availability_zones":         dataSourceAwsAvailabilityZones(),
+			"aws_billing_service_account":    dataSourceAwsBillingServiceAccount(),
+			"aws_caller_identity":            dataSourceAwsCallerIdentity(),
+			"aws_canonical_user_id":          dataSourceAwsCanonicalUserId(),
+			"aws_cloudformation_stack":       dataSourceAwsCloudFormationStack(),
+			"aws_cloudtrail_service_account": dataSourceAwsCloudTrailServiceAccount(),
+			"aws_db_instance":                dataSourceAwsDbInstance(),
+			"aws_db_snapshot":                dataSourceAwsDbSnapshot(),
+			"aws_dynamodb_table":             dataSourceAwsDynamoDbTable(),
+			"aws_ebs_snapshot":               dataSourceAwsEbsSnapshot(),
+			"aws_ebs_snapshot_ids":           dataSourceAwsEbsSnapshotIds(),
+			"aws_ebs_volume":                 dataSourceAwsEbsVolume(),
+			"aws_ecr_repository":             dataSourceAwsEcrRepository(),
+			"aws_ecs_cluster":                dataSourceAwsEcsCluster(),
+			"aws_ecs_container_definition":   dataSourceAwsEcsContainerDefinition(),
+			"aws_ecs_task_definition":        dataSourceAwsEcsTaskDefinition(),
+			"aws_efs_file_system":            dataSourceAwsEfsFileSystem(),
+			"aws_efs_mount_target":           dataSourceAwsEfsMountTarget(),
+			"aws_eip":                        dataSourceAwsEip(),
 			"aws_elastic_beanstalk_solution_stack": dataSourceAwsElasticBeanstalkSolutionStack(),
 			"aws_elasticache_cluster":              dataSourceAwsElastiCacheCluster(),
+			"aws_elb":                              dataSourceAwsElb(),
+			"aws_elasticache_replication_group":    dataSourceAwsElasticacheReplicationGroup(),
 			"aws_elb_hosted_zone_id":               dataSourceAwsElbHostedZoneId(),
 			"aws_elb_service_account":              dataSourceAwsElbServiceAccount(),
 			"aws_iam_account_alias":                dataSourceAwsIamAccountAlias(),
@@ -195,19 +196,25 @@ func Provider() terraform.ResourceProvider {
 			"aws_iam_policy_document":              dataSourceAwsIamPolicyDocument(),
 			"aws_iam_role":                         dataSourceAwsIAMRole(),
 			"aws_iam_server_certificate":           dataSourceAwsIAMServerCertificate(),
+			"aws_iam_user":                         dataSourceAwsIAMUser(),
 			"aws_internet_gateway":                 dataSourceAwsInternetGateway(),
 			"aws_instance":                         dataSourceAwsInstance(),
+			"aws_instances":                        dataSourceAwsInstances(),
 			"aws_ip_ranges":                        dataSourceAwsIPRanges(),
 			"aws_kinesis_stream":                   dataSourceAwsKinesisStream(),
 			"aws_kms_alias":                        dataSourceAwsKmsAlias(),
 			"aws_kms_ciphertext":                   dataSourceAwsKmsCiphertext(),
 			"aws_kms_secret":                       dataSourceAwsKmsSecret(),
+			"aws_nat_gateway":                      dataSourceAwsNatGateway(),
+			"aws_network_interface":                dataSourceAwsNetworkInterface(),
 			"aws_partition":                        dataSourceAwsPartition(),
 			"aws_prefix_list":                      dataSourceAwsPrefixList(),
+			"aws_rds_cluster":                      dataSourceAwsRdsCluster(),
 			"aws_redshift_service_account":         dataSourceAwsRedshiftServiceAccount(),
 			"aws_region":                           dataSourceAwsRegion(),
 			"aws_route_table":                      dataSourceAwsRouteTable(),
 			"aws_route53_zone":                     dataSourceAwsRoute53Zone(),
+			"aws_s3_bucket":                        dataSourceAwsS3Bucket(),
 			"aws_s3_bucket_object":                 dataSourceAwsS3BucketObject(),
 			"aws_sns_topic":                        dataSourceAwsSnsTopic(),
 			"aws_ssm_parameter":                    dataSourceAwsSsmParameter(),
@@ -219,14 +226,17 @@ func Provider() terraform.ResourceProvider {
 			"aws_vpc_endpoint_service":             dataSourceAwsVpcEndpointService(),
 			"aws_vpc_peering_connection":           dataSourceAwsVpcPeeringConnection(),
 			"aws_vpn_gateway":                      dataSourceAwsVpnGateway(),
+
+			// Adding the Aliases for the ALB -> LB Rename
+			"aws_lb":               dataSourceAwsLb(),
+			"aws_alb":              dataSourceAwsLb(),
+			"aws_lb_listener":      dataSourceAwsLbListener(),
+			"aws_alb_listener":     dataSourceAwsLbListener(),
+			"aws_lb_target_group":  dataSourceAwsLbTargetGroup(),
+			"aws_alb_target_group": dataSourceAwsLbTargetGroup(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"aws_alb":                                      resourceAwsAlb(),
-			"aws_alb_listener":                             resourceAwsAlbListener(),
-			"aws_alb_listener_rule":                        resourceAwsAlbListenerRule(),
-			"aws_alb_target_group":                         resourceAwsAlbTargetGroup(),
-			"aws_alb_target_group_attachment":              resourceAwsAlbTargetGroupAttachment(),
 			"aws_ami":                                      resourceAwsAmi(),
 			"aws_ami_copy":                                 resourceAwsAmiCopy(),
 			"aws_ami_from_instance":                        resourceAwsAmiFromInstance(),
@@ -254,6 +264,9 @@ func Provider() terraform.ResourceProvider {
 			"aws_app_cookie_stickiness_policy":             resourceAwsAppCookieStickinessPolicy(),
 			"aws_appautoscaling_target":                    resourceAwsAppautoscalingTarget(),
 			"aws_appautoscaling_policy":                    resourceAwsAppautoscalingPolicy(),
+			"aws_appautoscaling_scheduled_action":          resourceAwsAppautoscalingScheduledAction(),
+			"aws_athena_database":                          resourceAwsAthenaDatabase(),
+			"aws_athena_named_query":                       resourceAwsAthenaNamedQuery(),
 			"aws_autoscaling_attachment":                   resourceAwsAutoscalingAttachment(),
 			"aws_autoscaling_group":                        resourceAwsAutoscalingGroup(),
 			"aws_autoscaling_notification":                 resourceAwsAutoscalingNotification(),
@@ -269,6 +282,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_cloudwatch_log_destination_policy":        resourceAwsCloudWatchLogDestinationPolicy(),
 			"aws_cloudwatch_log_group":                     resourceAwsCloudWatchLogGroup(),
 			"aws_cloudwatch_log_metric_filter":             resourceAwsCloudWatchLogMetricFilter(),
+			"aws_cloudwatch_log_resource_policy":           resourceAwsCloudWatchLogResourcePolicy(),
 			"aws_cloudwatch_log_stream":                    resourceAwsCloudWatchLogStream(),
 			"aws_cloudwatch_log_subscription_filter":       resourceAwsCloudwatchLogSubscriptionFilter(),
 			"aws_config_config_rule":                       resourceAwsConfigConfigRule(),
@@ -276,6 +290,9 @@ func Provider() terraform.ResourceProvider {
 			"aws_config_configuration_recorder_status":     resourceAwsConfigConfigurationRecorderStatus(),
 			"aws_config_delivery_channel":                  resourceAwsConfigDeliveryChannel(),
 			"aws_cognito_identity_pool":                    resourceAwsCognitoIdentityPool(),
+			"aws_cognito_identity_pool_roles_attachment":   resourceAwsCognitoIdentityPoolRolesAttachment(),
+			"aws_cognito_user_pool":                        resourceAwsCognitoUserPool(),
+			"aws_cognito_user_pool_domain":                 resourceAwsCognitoUserPoolDomain(),
 			"aws_autoscaling_lifecycle_hook":               resourceAwsAutoscalingLifecycleHook(),
 			"aws_cloudwatch_metric_alarm":                  resourceAwsCloudWatchMetricAlarm(),
 			"aws_cloudwatch_dashboard":                     resourceAwsCloudWatchDashboard(),
@@ -301,9 +318,13 @@ func Provider() terraform.ResourceProvider {
 			"aws_dms_replication_instance":                 resourceAwsDmsReplicationInstance(),
 			"aws_dms_replication_subnet_group":             resourceAwsDmsReplicationSubnetGroup(),
 			"aws_dms_replication_task":                     resourceAwsDmsReplicationTask(),
+			"aws_dx_lag":                                   resourceAwsDxLag(),
+			"aws_dx_connection":                            resourceAwsDxConnection(),
+			"aws_dx_connection_association":                resourceAwsDxConnectionAssociation(),
 			"aws_dynamodb_table":                           resourceAwsDynamoDbTable(),
 			"aws_ebs_snapshot":                             resourceAwsEbsSnapshot(),
 			"aws_ebs_volume":                               resourceAwsEbsVolume(),
+			"aws_ecr_lifecycle_policy":                     resourceAwsEcrLifecyclePolicy(),
 			"aws_ecr_repository":                           resourceAwsEcrRepository(),
 			"aws_ecr_repository_policy":                    resourceAwsEcrRepositoryPolicy(),
 			"aws_ecs_cluster":                              resourceAwsEcsCluster(),
@@ -334,6 +355,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_emr_security_configuration":               resourceAwsEMRSecurityConfiguration(),
 			"aws_flow_log":                                 resourceAwsFlowLog(),
 			"aws_glacier_vault":                            resourceAwsGlacierVault(),
+			"aws_guardduty_detector":                       resourceAwsGuardDutyDetector(),
 			"aws_iam_access_key":                           resourceAwsIamAccessKey(),
 			"aws_iam_account_alias":                        resourceAwsIamAccountAlias(),
 			"aws_iam_account_password_policy":              resourceAwsIamAccountPasswordPolicy(),
@@ -383,6 +405,9 @@ func Provider() terraform.ResourceProvider {
 			"aws_load_balancer_listener_policy":            resourceAwsLoadBalancerListenerPolicies(),
 			"aws_lb_ssl_negotiation_policy":                resourceAwsLBSSLNegotiationPolicy(),
 			"aws_main_route_table_association":             resourceAwsMainRouteTableAssociation(),
+			"aws_mq_broker":                                resourceAwsMqBroker(),
+			"aws_mq_configuration":                         resourceAwsMqConfiguration(),
+			"aws_media_store_container":                    resourceAwsMediaStoreContainer(),
 			"aws_nat_gateway":                              resourceAwsNatGateway(),
 			"aws_network_acl":                              resourceAwsNetworkAcl(),
 			"aws_default_network_acl":                      resourceAwsDefaultNetworkAcl(),
@@ -415,6 +440,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_redshift_parameter_group":                 resourceAwsRedshiftParameterGroup(),
 			"aws_redshift_subnet_group":                    resourceAwsRedshiftSubnetGroup(),
 			"aws_route53_delegation_set":                   resourceAwsRoute53DelegationSet(),
+			"aws_route53_query_log":                        resourceAwsRoute53QueryLog(),
 			"aws_route53_record":                           resourceAwsRoute53Record(),
 			"aws_route53_zone_association":                 resourceAwsRoute53ZoneAssociation(),
 			"aws_route53_zone":                             resourceAwsRoute53Zone(),
@@ -425,11 +451,13 @@ func Provider() terraform.ResourceProvider {
 			"aws_route_table_association":                  resourceAwsRouteTableAssociation(),
 			"aws_ses_active_receipt_rule_set":              resourceAwsSesActiveReceiptRuleSet(),
 			"aws_ses_domain_identity":                      resourceAwsSesDomainIdentity(),
+			"aws_ses_domain_dkim":                          resourceAwsSesDomainDkim(),
 			"aws_ses_receipt_filter":                       resourceAwsSesReceiptFilter(),
 			"aws_ses_receipt_rule":                         resourceAwsSesReceiptRule(),
 			"aws_ses_receipt_rule_set":                     resourceAwsSesReceiptRuleSet(),
 			"aws_ses_configuration_set":                    resourceAwsSesConfigurationSet(),
 			"aws_ses_event_destination":                    resourceAwsSesEventDestination(),
+			"aws_ses_template":                             resourceAwsSesTemplate(),
 			"aws_s3_bucket":                                resourceAwsS3Bucket(),
 			"aws_s3_bucket_policy":                         resourceAwsS3BucketPolicy(),
 			"aws_s3_bucket_object":                         resourceAwsS3BucketObject(),
@@ -438,6 +466,9 @@ func Provider() terraform.ResourceProvider {
 			"aws_network_interface_sg_attachment":          resourceAwsNetworkInterfaceSGAttachment(),
 			"aws_default_security_group":                   resourceAwsDefaultSecurityGroup(),
 			"aws_security_group_rule":                      resourceAwsSecurityGroupRule(),
+			"aws_servicecatalog_portfolio":                 resourceAwsServiceCatalogPortfolio(),
+			"aws_service_discovery_private_dns_namespace":  resourceAwsServiceDiscoveryPrivateDnsNamespace(),
+			"aws_service_discovery_public_dns_namespace":   resourceAwsServiceDiscoveryPublicDnsNamespace(),
 			"aws_simpledb_domain":                          resourceAwsSimpleDBDomain(),
 			"aws_ssm_activation":                           resourceAwsSsmActivation(),
 			"aws_ssm_association":                          resourceAwsSsmAssociation(),
@@ -448,6 +479,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ssm_patch_baseline":                       resourceAwsSsmPatchBaseline(),
 			"aws_ssm_patch_group":                          resourceAwsSsmPatchGroup(),
 			"aws_ssm_parameter":                            resourceAwsSsmParameter(),
+			"aws_ssm_resource_data_sync":                   resourceAwsSsmResourceDataSync(),
 			"aws_spot_datafeed_subscription":               resourceAwsSpotDataFeedSubscription(),
 			"aws_spot_instance_request":                    resourceAwsSpotInstanceRequest(),
 			"aws_spot_fleet_request":                       resourceAwsSpotFleetRequest(),
@@ -489,6 +521,21 @@ func Provider() terraform.ResourceProvider {
 			"aws_batch_compute_environment":                resourceAwsBatchComputeEnvironment(),
 			"aws_batch_job_definition":                     resourceAwsBatchJobDefinition(),
 			"aws_batch_job_queue":                          resourceAwsBatchJobQueue(),
+
+			// ALBs are actually LBs because they can be type `network` or `application`
+			// To avoid regressions, we will add a new resource for each and they both point
+			// back to the old ALB version. IF the Terraform supported aliases for resources
+			// this would be a whole lot simplier
+			"aws_alb":                         resourceAwsLb(),
+			"aws_lb":                          resourceAwsLb(),
+			"aws_alb_listener":                resourceAwsLbListener(),
+			"aws_lb_listener":                 resourceAwsLbListener(),
+			"aws_alb_listener_rule":           resourceAwsLbbListenerRule(),
+			"aws_lb_listener_rule":            resourceAwsLbbListenerRule(),
+			"aws_alb_target_group":            resourceAwsLbTargetGroup(),
+			"aws_lb_target_group":             resourceAwsLbTargetGroup(),
+			"aws_alb_target_group_attachment": resourceAwsLbTargetGroupAttachment(),
+			"aws_lb_target_group_attachment":  resourceAwsLbTargetGroupAttachment(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
@@ -520,6 +567,8 @@ func init() {
 			"being executed. If the API request still fails, an error is\n" +
 			"thrown.",
 
+		"apigateway_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"cloudformation_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"cloudwatch_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
@@ -539,6 +588,8 @@ func init() {
 		"kms_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"iam_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
+		"lambda_endpoint": "Use this to override the default endpoint URL constructed from the `region`\n",
 
 		"ec2_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
@@ -634,6 +685,8 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 	for _, endpointsSetI := range endpointsSet.List() {
 		endpoints := endpointsSetI.(map[string]interface{})
+		config.AcmEndpoint = endpoints["acm"].(string)
+		config.ApigatewayEndpoint = endpoints["apigateway"].(string)
 		config.CloudFormationEndpoint = endpoints["cloudformation"].(string)
 		config.CloudWatchEndpoint = endpoints["cloudwatch"].(string)
 		config.CloudWatchEventsEndpoint = endpoints["cloudwatchevents"].(string)
@@ -641,14 +694,19 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.DeviceFarmEndpoint = endpoints["devicefarm"].(string)
 		config.DynamoDBEndpoint = endpoints["dynamodb"].(string)
 		config.Ec2Endpoint = endpoints["ec2"].(string)
+		config.EcrEndpoint = endpoints["ecr"].(string)
+		config.EcsEndpoint = endpoints["ecs"].(string)
 		config.ElbEndpoint = endpoints["elb"].(string)
 		config.IamEndpoint = endpoints["iam"].(string)
 		config.KinesisEndpoint = endpoints["kinesis"].(string)
 		config.KmsEndpoint = endpoints["kms"].(string)
+		config.LambdaEndpoint = endpoints["lambda"].(string)
+		config.R53Endpoint = endpoints["r53"].(string)
 		config.RdsEndpoint = endpoints["rds"].(string)
 		config.S3Endpoint = endpoints["s3"].(string)
 		config.SnsEndpoint = endpoints["sns"].(string)
 		config.SqsEndpoint = endpoints["sqs"].(string)
+		config.StsEndpoint = endpoints["sts"].(string)
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok {
@@ -706,6 +764,18 @@ func endpointsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"acm": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["acm_endpoint"],
+				},
+				"apigateway": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["apigateway_endpoint"],
+				},
 				"cloudwatch": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -756,6 +826,20 @@ func endpointsSchema() *schema.Schema {
 					Description: descriptions["ec2_endpoint"],
 				},
 
+				"ecr": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["ecr_endpoint"],
+				},
+
+				"ecs": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["ecs_endpoint"],
+				},
+
 				"elb": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -773,6 +857,18 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["kms_endpoint"],
+				},
+				"lambda": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["lambda_endpoint"],
+				},
+				"r53": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["r53_endpoint"],
 				},
 				"rds": {
 					Type:        schema.TypeString,
@@ -798,6 +894,12 @@ func endpointsSchema() *schema.Schema {
 					Default:     "",
 					Description: descriptions["sqs_endpoint"],
 				},
+				"sts": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["sts_endpoint"],
+				},
 			},
 		},
 		Set: endpointsToHash,
@@ -807,6 +909,7 @@ func endpointsSchema() *schema.Schema {
 func endpointsToHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["apigateway"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["cloudwatch"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["cloudwatchevents"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["cloudwatchlogs"].(string)))
@@ -818,6 +921,7 @@ func endpointsToHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["elb"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kinesis"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kms"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["lambda"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["rds"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["s3"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["sns"].(string)))

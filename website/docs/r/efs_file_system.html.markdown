@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic File System (EFS) resource.
 ---
 
-# aws\_efs\_file\_system
+# aws_efs_file_system
 
 Provides an Elastic File System (EFS) resource.
 
@@ -48,6 +48,7 @@ The following attributes are exported:
 
 * `id` - The ID that identifies the file system (e.g. fs-ccfc0d65).
 * `kms_key_id` - The ARN for the KMS encryption key.
+* `dns_name` - The DNS name for the filesystem per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
 
 ## Import
 

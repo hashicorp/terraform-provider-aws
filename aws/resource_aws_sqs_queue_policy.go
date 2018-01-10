@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -16,15 +15,20 @@ func resourceAwsSqsQueuePolicy() *schema.Resource {
 		Read:   resourceAwsSqsQueuePolicyRead,
 		Update: resourceAwsSqsQueuePolicyUpsert,
 		Delete: resourceAwsSqsQueuePolicyDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+		MigrateState:  resourceAwsSqsQueuePolicyMigrateState,
+		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
-			"queue_url": &schema.Schema{
+			"queue_url": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"policy": &schema.Schema{
+			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validateJsonString,
@@ -48,20 +52,20 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error updating SQS attributes: %s", err)
 	}
 
-	d.SetId("sqs-policy-" + url)
+	d.SetId(url)
 
 	return resourceAwsSqsQueuePolicyRead(d, meta)
 }
 
 func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sqsconn
-	url := d.Get("queue_url").(string)
+
 	out, err := conn.GetQueueAttributes(&sqs.GetQueueAttributesInput{
-		QueueUrl:       aws.String(url),
+		QueueUrl:       aws.String(d.Id()),
 		AttributeNames: []*string{aws.String("Policy")},
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "AWS.SimpleQueueService.NonExistentQueue" {
+		if isAWSErr(err, "AWS.SimpleQueueService.NonExistentQueue", "") {
 			log.Printf("[WARN] SQS Queue (%s) not found", d.Id())
 			d.SetId("")
 			return nil
@@ -78,6 +82,7 @@ func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Set("policy", policy)
+	d.Set("queue_url", d.Id())
 
 	return nil
 }
@@ -85,10 +90,9 @@ func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsSqsQueuePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sqsconn
 
-	url := d.Get("queue_url").(string)
-	log.Printf("[DEBUG] Deleting SQS Queue Policy of %s", url)
+	log.Printf("[DEBUG] Deleting SQS Queue Policy of %s", d.Id())
 	_, err := conn.SetQueueAttributes(&sqs.SetQueueAttributesInput{
-		QueueUrl: aws.String(url),
+		QueueUrl: aws.String(d.Id()),
 		Attributes: aws.StringMap(map[string]string{
 			"Policy": "",
 		}),

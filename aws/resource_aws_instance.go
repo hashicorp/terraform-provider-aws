@@ -116,6 +116,7 @@ func resourceAwsInstance() *schema.Resource {
 						return ""
 					}
 				},
+				ValidateFunc: validateInstanceUserDataSize,
 			},
 
 			"user_data_base64": {
@@ -611,6 +612,9 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	if instance.Placement != nil {
 		d.Set("availability_zone", instance.Placement.AvailabilityZone)
+	}
+	if instance.Placement.GroupName != nil {
+		d.Set("placement_group", instance.Placement.GroupName)
 	}
 	if instance.Placement.Tenancy != nil {
 		d.Set("tenancy", instance.Placement.Tenancy)
@@ -1476,6 +1480,9 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 	})
 	if err != nil {
 		log.Printf("[WARN] Unable to describe VPC %q: %s", *instance.VpcId, err)
+	} else if len(out.Vpcs) == 0 {
+		// This may happen in Eucalyptus Cloud
+		log.Printf("[WARN] Unable to retrieve VPCs")
 	} else {
 		isInDefaultVpc := *out.Vpcs[0].IsDefault
 		useID = !isInDefaultVpc

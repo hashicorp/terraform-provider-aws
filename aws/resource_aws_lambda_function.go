@@ -88,6 +88,10 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Optional: true,
 				Default:  128,
 			},
+			"reserved_concurrent_executions": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"role": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -205,6 +209,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).lambdaconn
 
 	functionName := d.Get("function_name").(string)
+	reservedConcurrentExecutions := d.Get("reserved_concurrent_executions").(int)
 	iamRole := d.Get("role").(string)
 
 	log.Printf("[DEBUG] Creating Lambda Function %s with role %s", functionName, iamRole)
@@ -355,6 +360,21 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error creating Lambda function: %s", err)
 	}
 
+	if reservedConcurrentExecutions > 0 {
+
+		log.Printf("[DEBUG] Setting Concurrency to %d for the Lambda Function %s", reservedConcurrentExecutions, functionName)
+
+		concurrencyParams := &lambda.PutFunctionConcurrencyInput{
+			FunctionName:                 aws.String(functionName),
+			ReservedConcurrentExecutions: aws.Int64(int64(reservedConcurrentExecutions)),
+		}
+
+		_, err := conn.PutFunctionConcurrency(concurrencyParams)
+		if err != nil {
+			return fmt.Errorf("Error setting concurrency for Lambda %s: %s", functionName, err)
+		}
+	}
+
 	d.SetId(d.Get("function_name").(string))
 
 	return resourceAwsLambdaFunctionRead(d, meta)
@@ -453,6 +473,12 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("invoke_arn", buildLambdaInvokeArn(*function.FunctionArn, meta.(*AWSClient).region))
 
+	if getFunctionOutput.Concurrency != nil {
+		d.Set("reserved_concurrent_executions", getFunctionOutput.Concurrency.ReservedConcurrentExecutions)
+	} else {
+		d.Set("reserved_concurrent_executions", nil)
+	}
+
 	return nil
 }
 
@@ -507,49 +533,6 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		return tagErr
 	}
 	d.SetPartial("tags")
-
-	if d.HasChange("filename") || d.HasChange("source_code_hash") || d.HasChange("s3_bucket") || d.HasChange("s3_key") || d.HasChange("s3_object_version") {
-		codeReq := &lambda.UpdateFunctionCodeInput{
-			FunctionName: aws.String(d.Id()),
-			Publish:      aws.Bool(d.Get("publish").(bool)),
-		}
-
-		if v, ok := d.GetOk("filename"); ok {
-			// Grab an exclusive lock so that we're only reading one function into
-			// memory at a time.
-			// See https://github.com/hashicorp/terraform/issues/9364
-			awsMutexKV.Lock(awsMutexLambdaKey)
-			defer awsMutexKV.Unlock(awsMutexLambdaKey)
-			file, err := loadFileContent(v.(string))
-			if err != nil {
-				return fmt.Errorf("Unable to load %q: %s", v.(string), err)
-			}
-			codeReq.ZipFile = file
-		} else {
-			s3Bucket, _ := d.GetOk("s3_bucket")
-			s3Key, _ := d.GetOk("s3_key")
-			s3ObjectVersion, versionOk := d.GetOk("s3_object_version")
-
-			codeReq.S3Bucket = aws.String(s3Bucket.(string))
-			codeReq.S3Key = aws.String(s3Key.(string))
-			if versionOk {
-				codeReq.S3ObjectVersion = aws.String(s3ObjectVersion.(string))
-			}
-		}
-
-		log.Printf("[DEBUG] Send Update Lambda Function Code request: %#v", codeReq)
-
-		_, err := conn.UpdateFunctionCode(codeReq)
-		if err != nil {
-			return fmt.Errorf("Error modifying Lambda Function Code %s: %s", d.Id(), err)
-		}
-
-		d.SetPartial("filename")
-		d.SetPartial("source_code_hash")
-		d.SetPartial("s3_bucket")
-		d.SetPartial("s3_key")
-		d.SetPartial("s3_object_version")
-	}
 
 	configReq := &lambda.UpdateFunctionConfigurationInput{
 		FunctionName: aws.String(d.Id()),
@@ -666,6 +649,78 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		d.SetPartial("role")
 		d.SetPartial("timeout")
 	}
+
+	if d.HasChange("filename") || d.HasChange("source_code_hash") || d.HasChange("s3_bucket") || d.HasChange("s3_key") || d.HasChange("s3_object_version") {
+		codeReq := &lambda.UpdateFunctionCodeInput{
+			FunctionName: aws.String(d.Id()),
+			Publish:      aws.Bool(d.Get("publish").(bool)),
+		}
+
+		if v, ok := d.GetOk("filename"); ok {
+			// Grab an exclusive lock so that we're only reading one function into
+			// memory at a time.
+			// See https://github.com/hashicorp/terraform/issues/9364
+			awsMutexKV.Lock(awsMutexLambdaKey)
+			defer awsMutexKV.Unlock(awsMutexLambdaKey)
+			file, err := loadFileContent(v.(string))
+			if err != nil {
+				return fmt.Errorf("Unable to load %q: %s", v.(string), err)
+			}
+			codeReq.ZipFile = file
+		} else {
+			s3Bucket, _ := d.GetOk("s3_bucket")
+			s3Key, _ := d.GetOk("s3_key")
+			s3ObjectVersion, versionOk := d.GetOk("s3_object_version")
+
+			codeReq.S3Bucket = aws.String(s3Bucket.(string))
+			codeReq.S3Key = aws.String(s3Key.(string))
+			if versionOk {
+				codeReq.S3ObjectVersion = aws.String(s3ObjectVersion.(string))
+			}
+		}
+
+		log.Printf("[DEBUG] Send Update Lambda Function Code request: %#v", codeReq)
+
+		_, err := conn.UpdateFunctionCode(codeReq)
+		if err != nil {
+			return fmt.Errorf("Error modifying Lambda Function Code %s: %s", d.Id(), err)
+		}
+
+		d.SetPartial("filename")
+		d.SetPartial("source_code_hash")
+		d.SetPartial("s3_bucket")
+		d.SetPartial("s3_key")
+		d.SetPartial("s3_object_version")
+	}
+
+	if d.HasChange("reserved_concurrent_executions") {
+		nc := d.Get("reserved_concurrent_executions")
+
+		if nc.(int) > 0 {
+			log.Printf("[DEBUG] Updating Concurrency to %d for the Lambda Function %s", nc.(int), d.Id())
+
+			concurrencyParams := &lambda.PutFunctionConcurrencyInput{
+				FunctionName:                 aws.String(d.Id()),
+				ReservedConcurrentExecutions: aws.Int64(int64(d.Get("reserved_concurrent_executions").(int))),
+			}
+
+			_, err := conn.PutFunctionConcurrency(concurrencyParams)
+			if err != nil {
+				return fmt.Errorf("Error setting concurrency for Lambda %s: %s", d.Id(), err)
+			}
+		} else {
+			log.Printf("[DEBUG] Removing Concurrency for the Lambda Function %s", d.Id())
+
+			deleteConcurrencyParams := &lambda.DeleteFunctionConcurrencyInput{
+				FunctionName: aws.String(d.Id()),
+			}
+			_, err := conn.DeleteFunctionConcurrency(deleteConcurrencyParams)
+			if err != nil {
+				return fmt.Errorf("Error setting concurrency for Lambda %s: %s", d.Id(), err)
+			}
+		}
+	}
+
 	d.Partial(false)
 
 	return resourceAwsLambdaFunctionRead(d, meta)

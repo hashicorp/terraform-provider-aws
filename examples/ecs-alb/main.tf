@@ -67,7 +67,7 @@ data "aws_ami" "stable_coreos" {
 
   filter {
     name   = "description"
-    values = ["CoreOS stable *"]
+    values = ["CoreOS Container Linux stable *"]
   }
 
   filter {

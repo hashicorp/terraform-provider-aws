@@ -6,7 +6,7 @@ description: |-
   Provides a Glacier Vault.
 ---
 
-# aws\_glacier\_vault
+# aws_glacier_vault
 
 Provides a Glacier Vault Resource. You can refer to the [Glacier Developer Guide](https://docs.aws.amazon.com/amazonglacier/latest/dev/working-with-vaults.html) for a full explanation of the Glacier Vault functionality
 
@@ -55,7 +55,7 @@ EOF
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the Vault. Names can be between 1 and 255 characters long and the valid characters are a-z, A-Z, 0-9, '\_' (underscore), '-' (hyphen), and '.' (period).
+* `name` - (Required) The name of the Vault. Names can be between 1 and 255 characters long and the valid characters are a-z, A-Z, 0-9, '_' (underscore), '-' (hyphen), and '.' (period).
 * `access_policy` - (Optional) The policy document. This is a JSON formatted string.
   The heredoc syntax or `file` function is helpful here. Use the [Glacier Developer Guide](https://docs.aws.amazon.com/amazonglacier/latest/dev/vault-access-policy.html) for more information on Glacier Vault Policy
 * `notification` - (Optional) The notifications for the Vault. Fields documented below.

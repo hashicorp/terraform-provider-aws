@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hashicorp/go-getter"
+	"github.com/posener/complete"
 
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform/backend"
@@ -69,12 +69,14 @@ func (c *InitCommand) Run(args []string) int {
 		c.getPlugins = false
 	}
 
-	// set getProvider if we don't have a test version already
+	// set providerInstaller if we don't have a test version already
 	if c.providerInstaller == nil {
 		c.providerInstaller = &discovery.ProviderInstaller{
-			Dir: c.pluginDir(),
+			Dir:   c.pluginDir(),
+			Cache: c.pluginCache(),
 			PluginProtocolVersion: plugin.Handshake.ProtocolVersion,
 			SkipVerify:            !flagVerifyPlugins,
+			Ui:                    c.Ui,
 		}
 	}
 
@@ -127,7 +129,8 @@ func (c *InitCommand) Run(args []string) int {
 		)))
 		header = true
 
-		if err := c.copyConfigFromModule(path, src, pwd); err != nil {
+		s := module.NewStorage("", c.Services, c.Credentials)
+		if err := s.GetModule(path, src); err != nil {
 			c.Ui.Error(fmt.Sprintf("Error copying source module: %s", err))
 			return 1
 		}
@@ -151,8 +154,10 @@ func (c *InitCommand) Run(args []string) int {
 	if flagGet || flagBackend {
 		conf, err := c.Config(path)
 		if err != nil {
-			c.Ui.Error(fmt.Sprintf(
-				"Error loading configuration: %s", err))
+			// Since this may be the user's first ever interaction with Terraform,
+			// we'll provide some additional context in this case.
+			c.Ui.Error(strings.TrimSpace(errInitConfigError))
+			c.showDiagnostics(err)
 			return 1
 		}
 
@@ -167,7 +172,7 @@ func (c *InitCommand) Run(args []string) int {
 					"[reset][bold]Upgrading modules...")))
 			} else {
 				c.Ui.Output(c.Colorize().Color(fmt.Sprintf(
-					"[reset][bold]Downloading modules...")))
+					"[reset][bold]Initializing modules...")))
 			}
 
 			if err := getModules(&c.Meta, path, getMode); err != nil {
@@ -256,21 +261,14 @@ func (c *InitCommand) Run(args []string) int {
 	}
 
 	c.Ui.Output(c.Colorize().Color(strings.TrimSpace(outputInitSuccess)))
-
-	return 0
-}
-
-func (c *InitCommand) copyConfigFromModule(dst, src, pwd string) error {
-	// errors from this function will be prefixed with "Error copying source module: "
-	// when returned to the user.
-	var err error
-
-	src, err = getter.Detect(src, pwd, getter.Detectors)
-	if err != nil {
-		return fmt.Errorf("invalid module source: %s", err)
+	if !c.RunningInAutomation {
+		// If we're not running in an automation wrapper, give the user
+		// some more detailed next steps that are appropriate for interactive
+		// shell usage.
+		c.Ui.Output(c.Colorize().Color(strings.TrimSpace(outputInitSuccessCLI)))
 	}
 
-	return module.GetCopy(dst, src)
+	return 0
 }
 
 // Load the complete module tree, and fetch any missing providers.
@@ -284,6 +282,11 @@ func (c *InitCommand) getProviders(path string, state *terraform.State, upgrade 
 
 	if err := mod.Validate(); err != nil {
 		c.Ui.Error(fmt.Sprintf("Error getting plugins: %s", err))
+		return err
+	}
+
+	if err := terraform.CheckRequiredVersion(mod); err != nil {
+		c.Ui.Error(err.Error())
 		return err
 	}
 
@@ -307,11 +310,22 @@ func (c *InitCommand) getProviders(path string, state *terraform.State, upgrade 
 	))
 
 	missing := c.missingPlugins(available, requirements)
+	internal := c.internalProviders()
 
 	var errs error
 	if c.getPlugins {
+		if len(missing) > 0 {
+			c.Ui.Output(fmt.Sprintf("- Checking for available provider plugins on %s...",
+				discovery.GetReleaseHost()))
+		}
+
 		for provider, reqd := range missing {
-			c.Ui.Output(fmt.Sprintf("- Downloading plugin for provider %q...", provider))
+			if _, isInternal := internal[provider]; isInternal {
+				// Ignore internal providers; they are not eligible for
+				// installation.
+				continue
+			}
+
 			_, err := c.providerInstaller.Get(provider, reqd.Versions)
 
 			if err != nil {
@@ -369,7 +383,7 @@ func (c *InitCommand) getProviders(path string, state *terraform.State, upgrade 
 	// again. If anything changes, other commands that use providers will
 	// fail with an error instructing the user to re-run this command.
 	available = c.providerPluginSet() // re-discover to see newly-installed plugins
-	chosen := choosePlugins(available, requirements)
+	chosen := choosePlugins(available, internal, requirements)
 	digests := map[string][]byte{}
 	for name, meta := range chosen {
 		digest, err := meta.SHA256()
@@ -434,6 +448,29 @@ func (c *InitCommand) getProviders(path string, state *terraform.State, upgrade 
 	}
 
 	return nil
+}
+
+func (c *InitCommand) AutocompleteArgs() complete.Predictor {
+	return complete.PredictDirs("")
+}
+
+func (c *InitCommand) AutocompleteFlags() complete.Flags {
+	return complete.Flags{
+		"-backend":        completePredictBoolean,
+		"-backend-config": complete.PredictFiles("*.tfvars"), // can also be key=value, but we can't "predict" that
+		"-force-copy":     complete.PredictNothing,
+		"-from-module":    completePredictModuleSource,
+		"-get":            completePredictBoolean,
+		"-get-plugins":    completePredictBoolean,
+		"-input":          completePredictBoolean,
+		"-lock":           completePredictBoolean,
+		"-lock-timeout":   complete.PredictAnything,
+		"-no-color":       complete.PredictNothing,
+		"-plugin-dir":     complete.PredictDirs(""),
+		"-reconfigure":    complete.PredictNothing,
+		"-upgrade":        completePredictBoolean,
+		"-verify-plugins": completePredictBoolean,
+	}
 }
 
 func (c *InitCommand) Help() string {
@@ -509,6 +546,13 @@ func (c *InitCommand) Synopsis() string {
 	return "Initialize a Terraform working directory"
 }
 
+const errInitConfigError = `
+There are some problems with the configuration, described below.
+
+The Terraform configuration must be valid before initialization so that
+Terraform can determine which modules and providers need to be installed.
+`
+
 const errInitCopyNotEmpty = `
 The working directory already contains files. The -from-module option requires
 an empty directory into which a copy of the referenced module will be placed.
@@ -526,7 +570,9 @@ with Terraform immediately by creating Terraform configuration files.
 
 const outputInitSuccess = `
 [reset][bold][green]Terraform has been successfully initialized![reset][green]
+`
 
+const outputInitSuccessCLI = `[reset][green]
 You may now begin working with Terraform. Try running "terraform plan" to see
 any changes that are required for your infrastructure. All Terraform commands
 should now work.

@@ -6,7 +6,7 @@ description: |-
   Provides an Lightsail Key Pair
 ---
 
-# aws\_lightsail\_key\_pair
+# aws_lightsail_key_pair
 
 Provides a Lightsail Key Pair, for use with Lightsail Instances. These key pairs
 are seperate from EC2 Key Pairs, and must be created or imported for use with

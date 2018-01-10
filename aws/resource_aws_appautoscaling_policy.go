@@ -262,7 +262,13 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 		var err error
 		resp, err = conn.PutScalingPolicy(&params)
 		if err != nil {
+			if isAWSErr(err, "FailedResourceAccessException", "Rate exceeded") {
+				return resource.RetryableError(err)
+			}
 			if isAWSErr(err, "FailedResourceAccessException", "is not authorized to perform") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "FailedResourceAccessException", "token included in the request is invalid") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(fmt.Errorf("Error putting scaling policy: %s", err))
@@ -270,7 +276,7 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 		return nil
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to create scaling policy: %s", err)
 	}
 
 	d.Set("arn", resp.PolicyARN)
@@ -286,6 +292,7 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 	if p == nil {
+		log.Printf("[WARN] Application AutoScaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -317,7 +324,7 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Application Autoscaling Update Scaling Policy: %#v", params)
 	_, err := conn.PutScalingPolicy(&params)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to update scaling policy: %s", err)
 	}
 
 	return resourceAwsAppautoscalingPolicyRead(d, meta)
@@ -341,7 +348,7 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 	}
 	log.Printf("[DEBUG] Deleting Application AutoScaling Policy opts: %#v", params)
 	if _, err := conn.DeleteScalingPolicy(&params); err != nil {
-		return fmt.Errorf("Application AutoScaling Policy: %s", err)
+		return fmt.Errorf("Failed to delete autoscaling policy: %s", err)
 	}
 
 	d.SetId("")
@@ -571,14 +578,14 @@ func getAwsAppautoscalingPolicy(d *schema.ResourceData, meta interface{}) (*appl
 	}
 
 	// find scaling policy
-	name := d.Get("name")
+	name := d.Get("name").(string)
+	dimension := d.Get("scalable_dimension").(string)
 	for idx, sp := range resp.ScalingPolicies {
-		if *sp.PolicyName == name {
+		if *sp.PolicyName == name && *sp.ScalableDimension == dimension {
 			return resp.ScalingPolicies[idx], nil
 		}
 	}
 
-	// policy not found
 	return nil, nil
 }
 

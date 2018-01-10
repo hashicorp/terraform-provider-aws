@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Group resource.
 ---
 
-# aws\_autoscaling\_group
+# aws_autoscaling_group
 
 Provides an AutoScaling Group resource.
 
@@ -52,9 +52,9 @@ EOF
     propagate_at_launch = true
   }
 
-timeouts {
+  timeouts {
     delete = "15m"
-}
+  }
 
   tag {
     key                 = "lorem"
@@ -66,7 +66,7 @@ timeouts {
 
 ## Interpolated tags
 
-```
+```hcl
 variable extra_tags {
   default = [
     {
