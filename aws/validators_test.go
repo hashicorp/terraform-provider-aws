@@ -3070,15 +3070,15 @@ func TestValidateGuardDutyThreatIntelSetFormat(t *testing.T) {
 }
 
 func TestValidateAmazonSideAsn(t *testing.T) {
-	validAsns := []float64{
-		64512,
-		64513,
-		65533,
-		65534,
-		4200000000,
-		4200000001,
-		4294967293,
-		4294967294,
+	validAsns := []string{
+		"64512",
+		"64513",
+		"65533",
+		"65534",
+		"4200000000",
+		"4200000001",
+		"4294967293",
+		"4294967294",
 	}
 	for _, v := range validAsns {
 		_, errors := validateAmazonSideAsn(v, "amazon_side_asn")
@@ -3087,8 +3087,10 @@ func TestValidateAmazonSideAsn(t *testing.T) {
 		}
 	}
 
-	invalidAsns := []float64{
-		1,
+	invalidAsns := []string{
+		"1",
+		"ABCDEFG",
+		"",
 	}
 	for _, v := range invalidAsns {
 		_, errors := validateAmazonSideAsn(v, "amazon_side_asn")

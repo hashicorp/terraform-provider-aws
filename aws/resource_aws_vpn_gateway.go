@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -30,7 +31,7 @@ func resourceAwsVpnGateway() *schema.Resource {
 			},
 
 			"amazon_side_asn": {
-				Type:         schema.TypeFloat,
+				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Computed:     true,
@@ -56,7 +57,11 @@ func resourceAwsVpnGatewayCreate(d *schema.ResourceData, meta interface{}) error
 		Type:             aws.String("ipsec.1"),
 	}
 	if asn, ok := d.GetOk("amazon_side_asn"); ok {
-		createOpts.AmazonSideAsn = aws.Int64(int64(asn.(float64)))
+		i, err := strconv.ParseInt(asn.(string), 10, 64)
+		if err != nil {
+			return err
+		}
+		createOpts.AmazonSideAsn = aws.Int64(i)
 	}
 
 	// Create the VPN gateway
@@ -109,7 +114,7 @@ func resourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	if vpnGateway.AvailabilityZone != nil && *vpnGateway.AvailabilityZone != "" {
 		d.Set("availability_zone", vpnGateway.AvailabilityZone)
 	}
-	d.Set("amazon_side_asn", float64(aws.Int64Value(vpnGateway.AmazonSideAsn)))
+	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(vpnGateway.AmazonSideAsn), 10))
 	d.Set("tags", tagsToMap(vpnGateway.Tags))
 
 	return nil
