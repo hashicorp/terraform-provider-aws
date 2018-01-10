@@ -5,6 +5,7 @@ FEATURES:
 * **New Resource:** `aws_cognito_user_pool_domain` [GH-2325]
 * **New Resource:** `aws_guardduty_detector` [GH-2524]
 * **New Resource:** `aws_route53_query_log` [GH-2770]
+* **New Resource:** `aws_service_discovery_service` [GH-2613]
 
 ENHANCEMENTS:
 
@@ -46,6 +47,7 @@ BUG FIXES:
 * resource/aws_ssm_maintenance_window: Respect `enabled` during updates [GH-2818]
 * resource/aws_lb_target_group: Fix max prefix length check [GH-2790]
 * resource/aws_config_delivery_channel: Retry deletion [GH-2910]
+* provider: Fix regression affecting empty Optional+Computed fields [GH-2348]
 
 ## 1.6.0 (December 18, 2017)
 
