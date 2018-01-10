@@ -4596,8 +4596,8 @@ type CreateKeyInput struct {
 
 	// A flag to indicate whether to bypass the key policy lockout safety check.
 	//
-	// Setting this value to true increases the likelihood that the CMK becomes
-	// unmanageable. Do not set this value to true indiscriminately.
+	// Setting this value to true increases the risk that the CMK becomes unmanageable.
+	// Do not set this value to true indiscriminately.
 	//
 	// For more information, refer to the scenario in the Default Key Policy (http://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default-allow-root-enable-iam)
 	// section in the AWS Key Management Service Developer Guide.
@@ -4634,28 +4634,29 @@ type CreateKeyInput struct {
 
 	// The key policy to attach to the CMK.
 	//
-	// If you specify a policy and do not set BypassPolicyLockoutSafetyCheck to
-	// true, the policy must meet the following criteria:
+	// If you provide a key policy, it must meet the following criteria:
 	//
-	//    * It must allow the principal that is making the CreateKey request to
-	//    make a subsequent PutKeyPolicy request on the CMK. This reduces the likelihood
-	//    that the CMK becomes unmanageable. For more information, refer to the
-	//    scenario in the Default Key Policy (http://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default-allow-root-enable-iam)
-	//    section in the AWS Key Management Service Developer Guide.
+	//    * If you don't set BypassPolicyLockoutSafetyCheck to true, the key policy
+	//    must allow the principal that is making the CreateKey request to make
+	//    a subsequent PutKeyPolicy request on the CMK. This reduces the risk that
+	//    the CMK becomes unmanageable. For more information, refer to the scenario
+	//    in the Default Key Policy (http://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default-allow-root-enable-iam)
+	//    section of the AWS Key Management Service Developer Guide.
 	//
-	//    * The principals that are specified in the key policy must exist and be
-	//    visible to AWS KMS. When you create a new AWS principal (for example,
-	//    an IAM user or role), you might need to enforce a delay before specifying
-	//    the new principal in a key policy because the new principal might not
-	//    immediately be visible to AWS KMS. For more information, see Changes that
-	//    I make are not always immediately visible (http://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_general.html#troubleshoot_general_eventual-consistency)
-	//    in the IAM User Guide.
+	//    * Each statement in the key policy must contain one or more principals.
+	//    The principals in the key policy must exist and be visible to AWS KMS.
+	//    When you create a new AWS principal (for example, an IAM user or role),
+	//    you might need to enforce a delay before including the new principal in
+	//    a key policy because the new principal might not be immediately visible
+	//    to AWS KMS. For more information, see Changes that I make are not always
+	//    immediately visible (http://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_general.html#troubleshoot_general_eventual-consistency)
+	//    in the AWS Identity and Access Management User Guide.
 	//
-	// If you do not specify a policy, AWS KMS attaches a default key policy to
-	// the CMK. For more information, see Default Key Policy (http://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default)
+	// If you do not provide a key policy, AWS KMS attaches a default key policy
+	// to the CMK. For more information, see Default Key Policy (http://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default)
 	// in the AWS Key Management Service Developer Guide.
 	//
-	// The policy size limit is 32 kilobytes (32768 bytes).
+	// The key policy size limit is 32 kilobytes (32768 bytes).
 	Policy *string `min:"1" type:"string"`
 
 	// One or more tags. Each tag consists of a tag key and a tag value. Tag keys
@@ -5878,8 +5879,8 @@ type GetKeyPolicyInput struct {
 	// KeyId is a required field
 	KeyId *string `min:"1" type:"string" required:"true"`
 
-	// Specifies the name of the policy. The only valid name is default. To get
-	// the names of key policies, use ListKeyPolicies.
+	// Specifies the name of the key policy. The only valid name is default. To
+	// get the names of key policies, use ListKeyPolicies.
 	//
 	// PolicyName is a required field
 	PolicyName *string `min:"1" type:"string" required:"true"`
@@ -5933,7 +5934,7 @@ func (s *GetKeyPolicyInput) SetPolicyName(v string) *GetKeyPolicyInput {
 type GetKeyPolicyOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A policy document in JSON format.
+	// A key policy document in JSON format.
 	Policy *string `min:"1" type:"string"`
 }
 
@@ -6976,8 +6977,8 @@ type ListKeyPoliciesOutput struct {
 	// use for the Marker parameter in a subsequent request.
 	NextMarker *string `min:"1" type:"string"`
 
-	// A list of policy names. Currently, there is only one policy and it is named
-	// "Default".
+	// A list of key policy names. Currently, there is only one key policy per CMK
+	// and it is always named default.
 	PolicyNames []*string `type:"list"`
 
 	// A flag that indicates whether there are more items in the list. When this
@@ -7337,8 +7338,8 @@ type PutKeyPolicyInput struct {
 
 	// A flag to indicate whether to bypass the key policy lockout safety check.
 	//
-	// Setting this value to true increases the likelihood that the CMK becomes
-	// unmanageable. Do not set this value to true indiscriminately.
+	// Setting this value to true increases the risk that the CMK becomes unmanageable.
+	// Do not set this value to true indiscriminately.
 	//
 	// For more information, refer to the scenario in the Default Key Policy (http://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default-allow-root-enable-iam)
 	// section in the AWS Key Management Service Developer Guide.
@@ -7366,24 +7367,25 @@ type PutKeyPolicyInput struct {
 
 	// The key policy to attach to the CMK.
 	//
-	// If you do not set BypassPolicyLockoutSafetyCheck to true, the policy must
-	// meet the following criteria:
+	// The key policy must meet the following criteria:
 	//
-	//    * It must allow the principal that is making the PutKeyPolicy request
-	//    to make a subsequent PutKeyPolicy request on the CMK. This reduces the
-	//    likelihood that the CMK becomes unmanageable. For more information, refer
-	//    to the scenario in the Default Key Policy (http://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default-allow-root-enable-iam)
-	//    section in the AWS Key Management Service Developer Guide.
+	//    * If you don't set BypassPolicyLockoutSafetyCheck to true, the key policy
+	//    must allow the principal that is making the PutKeyPolicy request to make
+	//    a subsequent PutKeyPolicy request on the CMK. This reduces the risk that
+	//    the CMK becomes unmanageable. For more information, refer to the scenario
+	//    in the Default Key Policy (http://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default-allow-root-enable-iam)
+	//    section of the AWS Key Management Service Developer Guide.
 	//
-	//    * The principals that are specified in the key policy must exist and be
-	//    visible to AWS KMS. When you create a new AWS principal (for example,
-	//    an IAM user or role), you might need to enforce a delay before specifying
-	//    the new principal in a key policy because the new principal might not
-	//    immediately be visible to AWS KMS. For more information, see Changes that
-	//    I make are not always immediately visible (http://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_general.html#troubleshoot_general_eventual-consistency)
-	//    in the IAM User Guide.
+	//    * Each statement in the key policy must contain one or more principals.
+	//    The principals in the key policy must exist and be visible to AWS KMS.
+	//    When you create a new AWS principal (for example, an IAM user or role),
+	//    you might need to enforce a delay before including the new principal in
+	//    a key policy because the new principal might not be immediately visible
+	//    to AWS KMS. For more information, see Changes that I make are not always
+	//    immediately visible (http://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_general.html#troubleshoot_general_eventual-consistency)
+	//    in the AWS Identity and Access Management User Guide.
 	//
-	// The policy size limit is 32 kilobytes (32768 bytes).
+	// The key policy size limit is 32 kilobytes (32768 bytes).
 	//
 	// Policy is a required field
 	Policy *string `min:"1" type:"string" required:"true"`
