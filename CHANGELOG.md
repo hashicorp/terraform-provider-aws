@@ -41,6 +41,7 @@ BUG FIXES:
 * resource/aws_appautoscaling_target: Make `role_arn` optional & computed [GH-2889]
 * resource/aws_ssm_maintenance_window: Respect `enabled` during updates [GH-2818]
 * resource/aws_lb_target_group: Fix max prefix length check [GH-2790]
+* resource/aws_config_delivery_channel: Retry deletion [GH-2910]
 
 ## 1.6.0 (December 18, 2017)
 
