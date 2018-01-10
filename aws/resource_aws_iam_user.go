@@ -19,7 +19,7 @@ func resourceAwsIamUser() *schema.Resource {
 		Update: resourceAwsIamUserUpdate,
 		Delete: resourceAwsIamUserDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceAwsIamUserImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
