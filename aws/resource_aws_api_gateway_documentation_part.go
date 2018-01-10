@@ -1,7 +1,9 @@
 package aws
 
 import (
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
@@ -71,15 +73,16 @@ func resourceAwsApiGatewayDocumentationPart() *schema.Resource {
 func resourceAwsApiGatewayDocumentationPartCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigateway
 
+	apiId := d.Get("rest_api_id").(string)
 	out, err := conn.CreateDocumentationPart(&apigateway.CreateDocumentationPartInput{
 		Location:   expandApiGatewayDocumentationPartLocation(d.Get("location").([]interface{})),
 		Properties: aws.String(d.Get("properties").(string)),
-		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:  aws.String(apiId),
 	})
 	if err != nil {
 		return err
 	}
-	d.SetId(*out.Id)
+	d.SetId(apiId + "/" + *out.Id)
 
 	return nil
 }
@@ -88,12 +91,18 @@ func resourceAwsApiGatewayDocumentationPartRead(d *schema.ResourceData, meta int
 	conn := meta.(*AWSClient).apigateway
 
 	log.Printf("[INFO] Reading API Gateway Documentation Part %s", d.Id())
+
+	apiId, id, err := decodeApiGatewayDocumentationPartId(d.Id())
+	if err != nil {
+		return err
+	}
+
 	docPart, err := conn.GetDocumentationPart(&apigateway.GetDocumentationPartInput{
-		DocumentationPartId: aws.String(d.Id()),
-		RestApiId:           aws.String(d.Get("rest_api_id").(string)),
+		DocumentationPartId: aws.String(id),
+		RestApiId:           aws.String(apiId),
 	})
 	if err != nil {
-		if isAWSErr(err, "NotFoundException", "") {
+		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Documentation Part (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -103,6 +112,7 @@ func resourceAwsApiGatewayDocumentationPartRead(d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Received API Gateway Documentation Part: %s", docPart)
 
+	d.Set("rest_api_id", apiId)
 	d.Set("location", flattenApiGatewayDocumentationPartLocation(docPart.Location))
 	d.Set("properties", docPart.Properties)
 
@@ -112,9 +122,14 @@ func resourceAwsApiGatewayDocumentationPartRead(d *schema.ResourceData, meta int
 func resourceAwsApiGatewayDocumentationPartUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigateway
 
+	apiId, id, err := decodeApiGatewayDocumentationPartId(d.Id())
+	if err != nil {
+		return err
+	}
+
 	input := apigateway.UpdateDocumentationPartInput{
-		DocumentationPartId: aws.String(d.Id()),
-		RestApiId:           aws.String(d.Get("rest_api_id").(string)),
+		DocumentationPartId: aws.String(id),
+		RestApiId:           aws.String(apiId),
 	}
 	operations := make([]*apigateway.PatchOperation, 0)
 
@@ -144,9 +159,14 @@ func resourceAwsApiGatewayDocumentationPartUpdate(d *schema.ResourceData, meta i
 func resourceAwsApiGatewayDocumentationPartDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigateway
 
-	_, err := conn.DeleteDocumentationPart(&apigateway.DeleteDocumentationPartInput{
-		DocumentationPartId: aws.String(d.Id()),
-		RestApiId:           aws.String(d.Get("rest_api_id").(string)),
+	apiId, id, err := decodeApiGatewayDocumentationPartId(d.Id())
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.DeleteDocumentationPart(&apigateway.DeleteDocumentationPartInput{
+		DocumentationPartId: aws.String(id),
+		RestApiId:           aws.String(apiId),
 	})
 	if err != nil {
 		return err
@@ -199,4 +219,12 @@ func flattenApiGatewayDocumentationPartLocation(l *apigateway.DocumentationPartL
 	}
 
 	return []interface{}{m}
+}
+
+func decodeApiGatewayDocumentationPartId(id string) (string, string, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/ID", id)
+	}
+	return parts[0], parts[1], nil
 }

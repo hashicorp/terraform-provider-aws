@@ -40,10 +40,12 @@ The following argument is supported:
 
 #### `location`
 
-* `method` - (Optional) The HTTP verb of a method. It is a valid field for the API entity types of `METHOD`, `PATH_PARAMETER`, `QUERY_PARAMETER`, `REQUEST_HEADER`, `REQUEST_BODY`, `RESPONSE`, `RESPONSE_HEADER`, and `RESPONSE_BODY`. The default value is `*` for any method.
-* `name` - (Optional) The name of the targeted API entity. It is a valid and required field for the API entity types of `AUTHORIZER`, `MODEL`, `PATH_PARAMETER`, `QUERY_PARAMETER`, `REQUEST_HEADER`, `REQUEST_BODY` and `RESPONSE_HEADER`.
-* `path` - (Optional) The URL path of the target. It is a valid field for the API entity types of `RESOURCE`, `METHOD`, `PATH_PARAMETER`, `QUERY_PARAMETER`, `REQUEST_HEADER`, `REQUEST_BODY`, `RESPONSE`, `RESPONSE_HEADER`, and `RESPONSE_BODY`. The default value is `/` for the root resource.
-* `status_code` - (Optional) The HTTP status code of a response. It is a valid field for the API entity types of `RESPONSE`, `RESPONSE_HEADER`, and `RESPONSE_BODY`. The default value is `*` for any status code.
+See supported entity types for each field in the [official docs](https://docs.aws.amazon.com/apigateway/api-reference/resource/documentation-part/).
+
+* `method` - (Optional) The HTTP verb of a method. The default value is `*` for any method.
+* `name` - (Optional) The name of the targeted API entity.
+* `path` - (Optional) The URL path of the target. The default value is `/` for the root resource.
+* `status_code` - (Optional) The HTTP status code of a response. The default value is `*` for any status code.
 * `type` - (Required) The type of API entity to which the documentation content applies. e.g. `API`, `METHOD` or `REQUEST_BODY`
 
 ## Attribute Reference
@@ -54,8 +56,8 @@ The following attribute is exported in addition to the arguments listed above:
 
 ## Import
 
-API Gateway documentation_parts can be imported using the word `api-gateway-documentation_part`, e.g.
+API Gateway documentation_parts can be imported using `REST-API-ID/DOC-PART-ID`, e.g.
 
 ```
-$ terraform import aws_api_gateway_documentation_part.example 3oyy3t
+$ terraform import aws_api_gateway_documentation_part.example 5i4e1ko720/3oyy3t
 ```
