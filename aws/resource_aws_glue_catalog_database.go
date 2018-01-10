@@ -129,7 +129,13 @@ func resourceAwsGlueCatalogDatabaseRead(d *schema.ResourceData, meta interface{}
 
 	out, err := glueconn.GetDatabase(input)
 	if err != nil {
-		return fmt.Errorf("Error reading Glue Cataloge Database: %s", err.Error())
+
+		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			log.Printf("[WARN] Glue Catalog Database (%s) not found, removing from state", d.Id())
+			d.SetId("")
+		}
+
+		return fmt.Errorf("Error reading Glue Catalog Database: %s", err.Error())
 	}
 
 	d.Set("name", out.Database.Name)
