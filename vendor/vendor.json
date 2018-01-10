@@ -869,6 +869,14 @@
 			"versionExact": "v1.12.59"
 		},
 		{
+			"checksumSHA1": "C5Zj/tXuFQfwXkRsj6l0e6c71qE=",
+			"path": "github.com/aws/aws-sdk-go/service/sagemaker",
+			"revision": "f62f7b7c5425f2b1a630932617477bdeac6dc371",
+			"revisionTime": "2018-01-02T21:46:00Z",
+			"version": "v1.12.55",
+			"versionExact": "v1.12.55"
+		},
+		{
 			"checksumSHA1": "QZU8vR9cOIenYiH+Ywl4Gzfnlp0=",
 			"path": "github.com/aws/aws-sdk-go/service/servicecatalog",
 			"revision": "3c754f1d340244540350f0a00b940781bae9c905",
