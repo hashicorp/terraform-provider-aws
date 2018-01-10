@@ -68,7 +68,7 @@ func resourceAwsGlueCatalogDatabaseCreate(d *schema.ResourceData, meta interface
 
 	_, err := glueconn.CreateDatabase(input)
 	if err != nil {
-		return fmt.Errorf("Error creating Catalogue Database: %s", err)
+		return fmt.Errorf("Error creating Catalog Database: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", catalogID, name))
