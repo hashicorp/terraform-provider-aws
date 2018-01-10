@@ -2890,3 +2890,53 @@ func TestValidateCognitoUserPoolDomain(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateServiceDiscoveryServiceDnsRecordsType(t *testing.T) {
+	validTypes := []string{
+		"SRV",
+		"A",
+		"AAAA",
+	}
+	for _, v := range validTypes {
+		_, errors := validateServiceDiscoveryServiceDnsRecordsType(v, "")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Service Discovery DNS Records Type: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"hoge",
+		"srv",
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateServiceDiscoveryServiceDnsRecordsType(v, "")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Service Discovery DNS Records Type", v)
+		}
+	}
+}
+
+func TestValidateServiceDiscoveryServiceHealthCheckConfigType(t *testing.T) {
+	validTypes := []string{
+		"HTTP",
+		"HTTPS",
+		"TCP",
+	}
+	for _, v := range validTypes {
+		_, errors := validateServiceDiscoveryServiceHealthCheckConfigType(v, "")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Service Discovery Health Check Config Type: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"hoge",
+		"tcp",
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateServiceDiscoveryServiceHealthCheckConfigType(v, "")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Service Discovery Health Check Config Type", v)
+		}
+	}
+}
