@@ -108,11 +108,9 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 			},
 			"alarms": &schema.Schema{
 				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"adjustment_type": &schema.Schema{
 				Type:       schema.TypeString,
 				Optional:   true,
@@ -305,12 +303,20 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 	d.Set("resource_id", p.ResourceId)
 	d.Set("scalable_dimension", p.ScalableDimension)
 	d.Set("service_namespace", p.ServiceNamespace)
-	d.Set("alarms", p.Alarms)
+	d.Set("alarms", getAlarmARNs(p.Alarms))
 	d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(p.StepScalingPolicyConfiguration))
 	d.Set("target_tracking_scaling_policy_configuration",
 		flattenTargetTrackingScalingPolicyConfiguration(p.TargetTrackingScalingPolicyConfiguration))
 
 	return nil
+}
+
+func getAlarmARNs(alarms []*applicationautoscaling.Alarm) []interface{} {
+	arns := make([]*string, len(alarms))
+	for i, alarm := range alarms {
+		arns[i] = alarm.AlarmARN
+	}
+	return flattenStringList(arns)
 }
 
 func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
