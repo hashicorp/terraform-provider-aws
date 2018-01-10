@@ -36,7 +36,7 @@ func dataSourceAwsVpnGateway() *schema.Resource {
 				Computed: true,
 			},
 			"amazon_side_asn": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeFloat,
 				Optional: true,
 				Computed: true,
 			},
@@ -64,7 +64,7 @@ func dataSourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error
 	if asn, ok := d.GetOk("amazon_side_asn"); ok {
 		req.Filters = append(req.Filters, buildEC2AttributeFilterList(
 			map[string]string{
-				"amazon-side-asn": asn.(string),
+				"amazon-side-asn": strconv.FormatInt(int64(asn.(float64)), 10),
 			},
 		)...)
 	}
@@ -104,7 +104,7 @@ func dataSourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.SetId(aws.StringValue(vgw.VpnGatewayId))
 	d.Set("state", vgw.State)
 	d.Set("availability_zone", vgw.AvailabilityZone)
-	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(vgw.AmazonSideAsn), 10))
+	d.Set("amazon_side_asn", float64(aws.Int64Value(vgw.AmazonSideAsn)))
 	d.Set("tags", tagsToMap(vgw.Tags))
 
 	for _, attachment := range vgw.VpcAttachments {

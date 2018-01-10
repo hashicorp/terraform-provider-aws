@@ -31,7 +31,7 @@ func TestAccDataSourceAwsVpnGateway_unattached(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_vpn_gateway.test_by_id", "state"),
 					resource.TestCheckResourceAttr("data.aws_vpn_gateway.test_by_tags", "tags.%", "3"),
 					resource.TestCheckNoResourceAttr("data.aws_vpn_gateway.test_by_id", "attached_vpc_id"),
-					resource.TestCheckResourceAttr("data.aws_vpn_gateway.test_by_amazon_side_asn", "amazon_side_asn", "4294967293"),
+					resource.TestCheckResourceAttr("data.aws_vpn_gateway.test_by_amazon_side_asn", "amazon_side_asn", "4.294967293E+09"),
 				),
 			},
 		},

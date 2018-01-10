@@ -140,7 +140,7 @@ func TestAccAWSVpnGateway_withAmazonSideAsnSetToState(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &v),
 					resource.TestCheckResourceAttr(
-						"aws_vpn_gateway.foo", "amazon_side_asn", "4294967294"),
+						"aws_vpn_gateway.foo", "amazon_side_asn", "4.294967294E+09"),
 				),
 			},
 		},
