@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_api_gateway_documentation_part` [GH-2893]
+* **New Resource:** `aws_cloudwatch_event_permission` [GH-2888]
 * **New Resource:** `aws_cognito_user_pool_client` [GH-1803]
 * **New Resource:** `aws_cognito_user_pool_domain` [GH-2325]
 * **New Resource:** `aws_glue_catalog_database` [GH-2175]
