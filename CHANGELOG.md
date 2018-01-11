@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_api_gateway_documentation_part` [GH-2893]
 * **New Resource:** `aws_cognito_user_pool_domain` [GH-2325]
 * **New Resource:** `aws_guardduty_detector` [GH-2524]
 * **New Resource:** `aws_route53_query_log` [GH-2770]
