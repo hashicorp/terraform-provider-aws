@@ -67,9 +67,10 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
 
-	idParts := strings.Split(d.Id(), ":")
-	accountID := idParts[1]
-	detectorID := idParts[0]
+	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
+	if err != nil {
+		return err
+	}
 
 	input := guardduty.GetMembersInput{
 		AccountIds: []*string{aws.String(accountID)},
@@ -93,9 +94,9 @@ func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) er
 		return nil
 	}
 	member := gmo.Members[0]
-	d.Set("account_id", *member.AccountId)
+	d.Set("account_id", member.AccountId)
 	d.Set("detector_id", detectorID)
-	d.Set("email", *member.Email)
+	d.Set("email", member.Email)
 
 	return nil
 }
@@ -103,9 +104,10 @@ func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsGuardDutyMemberDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
 
-	idParts := strings.Split(d.Id(), ":")
-	accountID := idParts[1]
-	detectorID := idParts[0]
+	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
+	if err != nil {
+		return err
+	}
 
 	input := guardduty.DeleteMembersInput{
 		AccountIds: []*string{aws.String(accountID)},
@@ -113,9 +115,20 @@ func resourceAwsGuardDutyMemberDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[DEBUG] Delete GuardDuty Member: %s", input)
-	_, err := conn.DeleteMembers(&input)
+	_, err = conn.DeleteMembers(&input)
 	if err != nil {
 		return fmt.Errorf("Deleting GuardDuty Member '%s' failed: %s", d.Id(), err.Error())
 	}
 	return nil
+}
+
+func decodeGuardDutyMemberID(id string) (accountID, detectorID string, err error) {
+	parts := strings.Split(id, ":")
+	if len(parts) != 2 {
+		err = fmt.Errorf("GuardDuty Member ID must be of the form <Detector ID>:<Member AWS Account ID>")
+		return
+	}
+	accountID = parts[1]
+	detectorID = parts[0]
+	return
 }

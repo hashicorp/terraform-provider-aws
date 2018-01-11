@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -63,9 +62,10 @@ func testAccCheckAwsGuardDutyMemberDestroy(s *terraform.State) error {
 			continue
 		}
 
-		idParts := strings.Split(rs.Primary.ID, ":")
-		accountID := idParts[1]
-		detectorID := idParts[0]
+		accountID, detectorID, err := decodeGuardDutyMemberID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 
 		input := &guardduty.GetMembersInput{
 			AccountIds: []*string{aws.String(accountID)},
@@ -97,9 +97,10 @@ func testAccCheckAwsGuardDutyMemberExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		idParts := strings.Split(rs.Primary.ID, ":")
-		accountID := idParts[1]
-		detectorID := idParts[0]
+		accountID, detectorID, err := decodeGuardDutyMemberID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 
 		input := &guardduty.GetMembersInput{
 			AccountIds: []*string{aws.String(accountID)},
