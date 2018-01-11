@@ -52,22 +52,22 @@ func TestAccAwsServiceDiscoveryService_public(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryServiceConfig_public(rName, 5, "path"),
+				Config: testAccServiceDiscoveryServiceConfig_public(rName, 5, "/path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists("aws_service_discovery_service.test"),
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.type", "HTTP"),
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.failure_threshold", "5"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.resource_path", "path"),
+					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.resource_path", "/path"),
 					resource.TestCheckResourceAttrSet("aws_service_discovery_service.test", "arn"),
 				),
 			},
 			{
-				Config: testAccServiceDiscoveryServiceConfig_public(rName, 3, "update"),
+				Config: testAccServiceDiscoveryServiceConfig_public(rName, 3, "/updated-path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists("aws_service_discovery_service.test"),
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.type", "HTTP"),
 					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.failure_threshold", "3"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.resource_path", "update"),
+					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.resource_path", "/updated-path"),
 					resource.TestCheckResourceAttrSet("aws_service_discovery_service.test", "arn"),
 				),
 			},
