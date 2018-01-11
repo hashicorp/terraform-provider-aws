@@ -8,6 +8,7 @@ FEATURES:
 * **New Resource:** `aws_cognito_user_pool_domain` [GH-2325]
 * **New Resource:** `aws_glue_catalog_database` [GH-2175]
 * **New Resource:** `aws_guardduty_detector` [GH-2524]
+* **New Resource:** `aws_guardduty_member` [GH-2911]
 * **New Resource:** `aws_route53_query_log` [GH-2770]
 * **New Resource:** `aws_service_discovery_service` [GH-2613]
 
