@@ -125,7 +125,7 @@ func resourceAwsGuardDutyMemberDelete(d *schema.ResourceData, meta interface{}) 
 func decodeGuardDutyMemberID(id string) (accountID, detectorID string, err error) {
 	parts := strings.Split(id, ":")
 	if len(parts) != 2 {
-		err = fmt.Errorf("GuardDuty Member ID must be of the form <Detector ID>:<Member AWS Account ID>")
+		err = fmt.Errorf("GuardDuty Member ID must be of the form <Detector ID>:<Member AWS Account ID>, was provided: %s", id)
 		return
 	}
 	accountID = parts[1]
