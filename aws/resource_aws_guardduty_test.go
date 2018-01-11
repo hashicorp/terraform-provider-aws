@@ -10,6 +10,10 @@ func TestAccAWSGuardDuty(t *testing.T) {
 			"basic":  testAccAwsGuardDutyDetector_basic,
 			"import": testAccAwsGuardDutyDetector_import,
 		},
+		"Member": {
+			"basic":  testAccAwsGuardDutyMember_basic,
+			"import": testAccAwsGuardDutyMember_import,
+		},
 	}
 
 	for group, m := range testCases {
