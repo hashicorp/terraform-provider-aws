@@ -83,6 +83,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
@@ -188,6 +189,7 @@ type AWSClient struct {
 	apigateway            *apigateway.APIGateway
 	appautoscalingconn    *applicationautoscaling.ApplicationAutoScaling
 	autoscalingconn       *autoscaling.AutoScaling
+	sagemakerconn         *sagemaker.SageMaker
 	s3conn                *s3.S3
 	secretsmanagerconn    *secretsmanager.SecretsManager
 	scconn                *servicecatalog.ServiceCatalog
@@ -548,6 +550,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.r53conn = route53.New(r53Sess)
 	client.rdsconn = rds.New(awsRdsSess)
 	client.redshiftconn = redshift.New(sess)
+	client.sagemakerconn = sagemaker.New(sess)
 	client.simpledbconn = simpledb.New(sess)
 	client.s3conn = s3.New(awsS3Sess)
 	client.scconn = servicecatalog.New(sess)

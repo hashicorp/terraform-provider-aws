@@ -573,6 +573,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_route_table":                                  resourceAwsRouteTable(),
 			"aws_default_route_table":                          resourceAwsDefaultRouteTable(),
 			"aws_route_table_association":                      resourceAwsRouteTableAssociation(),
+			"aws_sagemaker_training_job":                       resourceAwsSagemakerTrainingJob(),
 			"aws_secretsmanager_secret":                        resourceAwsSecretsManagerSecret(),
 			"aws_secretsmanager_secret_version":                resourceAwsSecretsManagerSecretVersion(),
 			"aws_ses_active_receipt_rule_set":                  resourceAwsSesActiveReceiptRuleSet(),
