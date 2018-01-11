@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
 )
 
 func dataSourceAwsVpcEndpoint() *schema.Resource {
@@ -88,7 +89,7 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	vpce := resp.VpcEndpoints[0]
-	policy, err := normalizeJsonString(*vpce.PolicyDocument)
+	policy, err := structure.NormalizeJsonString(*vpce.PolicyDocument)
 	if err != nil {
 		return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
 	}
