@@ -17,6 +17,8 @@ ENHANCEMENTS:
 * provider: `eu-west-3` is now supported [GH-2707]
 * provider: Endpoints can now be specified for ACM, ECR, ECS, STS and Route 53 [GH-2795]
 * provider: Endpoints can now be specified for API Gateway and Lambda [GH-2641]
+* data-source/aws_iam_server_certificate: Add support for retrieving public key [GH-2749]
+* data-source/aws_vpc_peering_connection: Add support for cross-region VPC peering [GH-2508]
 * resource/aws_kinesis_firehose_delivery_stream: Import is now supported [GH-2707]
 * resource/aws_cognito_user_pool: The ARN for the pool is now computed and exposed as an attribute [GH-2723]
 * resource/aws_directory_service_directory: Add `security_group_id` field [GH-2688]
@@ -33,8 +35,6 @@ ENHANCEMENTS:
 * resource/aws_ecs_service: Add `health_check_grace_period_seconds` attribute [GH-2788]
 * resource/aws_vpc_peering_connection: Add support for cross-region VPC peering [GH-2508]
 * resource/aws_vpc_peering_connection_accepter: Add support for cross-region VPC peering [GH-2508]
-* data-source/aws_iam_server_certificate: Add support for retrieving public key [GH-2749]
-* data-source/aws_vpc_peering_connection: Add support for cross-region VPC peering [GH-2508]
 * resource/aws_elasticsearch_domain: export kibana endpoint [GH-2804]
 * resource/aws_ssm_association: Allow for multiple targets [GH-2297]
 * resource/aws_instance: Add computed field for volume_id of block device [GH-1489]
@@ -53,6 +53,7 @@ BUG FIXES:
 * resource/aws_lb_target_group: Fix max prefix length check [GH-2790]
 * resource/aws_config_delivery_channel: Retry deletion [GH-2910]
 * resource/aws_lb+aws_elb: Fix regression with undefined `name` [GH-2939]
+* resource/aws_lb_target_group: Fix validation rules for LB's healthcheck [GH-2906]
 * provider: Fix regression affecting empty Optional+Computed fields [GH-2348]
 
 ## 1.6.0 (December 18, 2017)
