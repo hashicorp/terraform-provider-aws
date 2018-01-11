@@ -195,6 +195,9 @@ for what to do.
    Travis CI build will fail if `go fmt` has not been run on incoming code.)
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
+ - [ ] __Vendor additions__: Create a separate PR if you are updating the vendor
+   folder. This is to avoid conflicts as the vendor versions tend to be fast
+   moving targets.
 
 #### New Resource
 
@@ -220,6 +223,9 @@ existing resources, but you still get to implement something completely new.
    Travis CI build will fail if `go fmt` has not been run on incoming code.)
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
+ - [ ] __Vendor updates__: Create a separate PR if you are adding to the vendor
+   folder. This is to avoid conflicts as the vendor versions tend to be fast
+   moving targets.
 
 #### New Provider
 
