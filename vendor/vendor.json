@@ -327,6 +327,14 @@
 			"versionExact": "v1.12.59"
 		},
 		{
+			"checksumSHA1": "/nO06EpnD22+Ex80gHi4UYrAvKc=",
+			"path": "github.com/aws/aws-sdk-go/service/budgets",
+			"revision": "3c754f1d340244540350f0a00b940781bae9c905",
+			"revisionTime": "2018-01-09T22:08:02Z",
+			"version": "v1.12.59",
+			"versionExact": "v1.12.59"
+		},
+		{
 			"checksumSHA1": "6gM3CZZgiB0JvS7EK1c31Q8L09U=",
 			"path": "github.com/aws/aws-sdk-go/service/cloudformation",
 			"revision": "3c754f1d340244540350f0a00b940781bae9c905",
