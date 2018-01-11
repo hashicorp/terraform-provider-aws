@@ -15,20 +15,19 @@ import (
 
 func resourceAwsAppautoscalingTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppautoscalingTargetCreate,
+		Create: resourceAwsAppautoscalingTargetPut,
 		Read:   resourceAwsAppautoscalingTargetRead,
+		Update: resourceAwsAppautoscalingTargetPut,
 		Delete: resourceAwsAppautoscalingTargetDelete,
 
 		Schema: map[string]*schema.Schema{
 			"max_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
-				ForceNew: true,
 			},
 			"min_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
-				ForceNew: true,
 			},
 			"resource_id": {
 				Type:     schema.TypeString,
@@ -39,7 +38,6 @@ func resourceAwsAppautoscalingTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"scalable_dimension": {
 				Type:         schema.TypeString,
@@ -57,7 +55,7 @@ func resourceAwsAppautoscalingTarget() *schema.Resource {
 	}
 }
 
-func resourceAwsAppautoscalingTargetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appautoscalingconn
 
 	var targetOpts applicationautoscaling.RegisterScalableTargetInput
@@ -72,14 +70,14 @@ func resourceAwsAppautoscalingTargetCreate(d *schema.ResourceData, meta interfac
 		targetOpts.RoleARN = aws.String(roleArn.(string))
 	}
 
-	log.Printf("[DEBUG] Application autoscaling target create configuration %#v", targetOpts)
+	log.Printf("[DEBUG] Application autoscaling target create configuration %s", targetOpts)
 	var err error
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err = conn.RegisterScalableTarget(&targetOpts)
 
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ValidationException" {
-				log.Printf("[DEBUG] Retrying creation of Application Autoscaling Scalable Target due to possible issues with IAM: %s", awsErr)
+			if isAWSErr(err, "ValidationException", "Unable to assume IAM role") {
+				log.Printf("[DEBUG] Retrying creation of Application Autoscaling Scalable Target due to possible issues with IAM: %s", err)
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
