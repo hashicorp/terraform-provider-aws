@@ -5,6 +5,7 @@ FEATURES:
 * **New Resource:** `aws_cognito_user_pool_domain` [GH-2325]
 * **New Resource:** `aws_guardduty_detector` [GH-2524]
 * **New Resource:** `aws_route53_query_log` [GH-2770]
+* **New Resource:** `aws_service_discovery_service` [GH-2613]
 
 ENHANCEMENTS:
 
@@ -29,6 +30,10 @@ ENHANCEMENTS:
 * resource/aws_vpc_peering_connection_accepter: Add support for cross-region VPC peering [GH-2508]
 * data-source/aws_iam_server_certificate: Add support for retrieving public key [GH-2749]
 * data-source/aws_vpc_peering_connection: Add support for cross-region VPC peering [GH-2508]
+* resource/aws_elasticsearch_domain: export kibana endpoint [GH-2804]
+* resource/aws_ssm_association: Allow for multiple targets [GH-2297]
+* resource/aws_instance: Add computed field for volume_id of block device [GH-1489]
+* resource/aws_api_gateway_integration: Allow update of URI attributes [GH-2834]
 
 BUG FIXES:
 
@@ -41,6 +46,8 @@ BUG FIXES:
 * resource/aws_appautoscaling_target: Make `role_arn` optional & computed [GH-2889]
 * resource/aws_ssm_maintenance_window: Respect `enabled` during updates [GH-2818]
 * resource/aws_lb_target_group: Fix max prefix length check [GH-2790]
+* resource/aws_config_delivery_channel: Retry deletion [GH-2910]
+* provider: Fix regression affecting empty Optional+Computed fields [GH-2348]
 
 ## 1.6.0 (December 18, 2017)
 

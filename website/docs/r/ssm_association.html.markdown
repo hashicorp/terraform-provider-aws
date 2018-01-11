@@ -75,7 +75,7 @@ The following arguments are supported:
 * `output_location` - (Optional) An output location block. Output Location is documented below.
 * `parameters` - (Optional) A block of arbitrary string parameters to pass to the SSM document.
 * `schedule_expression` - (Optional) A cron expression when the association will be applied to the target(s).
-* `targets` - (Optional) A block containing the targets of the SSM association. Targets are documented below.
+* `targets` - (Optional) A block containing the targets of the SSM association. Targets are documented below. AWS currently supports a maximum of 5 targets.
 
 Output Location (`output_location`) is an S3 bucket where you want to store the results of this association:
 
