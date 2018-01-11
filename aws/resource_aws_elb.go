@@ -37,16 +37,6 @@ func resourceAwsElb() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateElbName,
-				// This is to work around an unexpected schema behaviour returning diff
-				// for an empty field when it has a pre-computed value from previous run
-				// (e.g. from name_prefix)
-				// TODO: Revisit after we find the real root cause
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if new == "" {
-						return true
-					}
-					return false
-				},
 			},
 			"name_prefix": &schema.Schema{
 				Type:         schema.TypeString,
