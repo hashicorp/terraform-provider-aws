@@ -695,6 +695,14 @@
 			"versionExact": "v1.12.59"
 		},
 		{
+			"checksumSHA1": "Rs7QtkcLl3XNPnKb8ss/AhF2X50=",
+			"path": "github.com/aws/aws-sdk-go/service/mediapackage",
+			"revision": "3c754f1d340244540350f0a00b940781bae9c905",
+			"revisionTime": "2018-01-09T22:08:02Z",
+			"version": "v1.12.59",
+			"versionExact": "v1.12.59"
+		},
+		{
 			"checksumSHA1": "QjiIL8LrlhwrQw8FboF+wMNvUF0=",
 			"path": "github.com/aws/aws-sdk-go/service/mediastore",
 			"revision": "3c754f1d340244540350f0a00b940781bae9c905",
