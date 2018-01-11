@@ -10,8 +10,11 @@ import (
 )
 
 func TestAccDataSourceLambdaFunction_basic(t *testing.T) {
-	rSt := acctest.RandString(5)
-	rName := fmt.Sprintf("tf_test_%s", rSt)
+	rString := acctest.RandString(5)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_data_source_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_data_source_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_data_source_%s", rString)
+	rName := fmt.Sprintf("tf_test_%s", rString)
 	arnRegexp := regexp.MustCompile("^arn:aws:lambda:")
 
 	resource.Test(t, resource.TestCase{
@@ -20,7 +23,7 @@ func TestAccDataSourceLambdaFunction_basic(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceLambdaFunctionConfig_basic(rName, rSt),
+				Config: testAccAWSDataSourceLambdaFunctionConfig_basic(rName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_lambda_function.func", "arn"),
 					resource.TestMatchResourceAttr("data.aws_lambda_function.func", "arn", arnRegexp),
@@ -32,8 +35,11 @@ func TestAccDataSourceLambdaFunction_basic(t *testing.T) {
 }
 
 func TestAccDataSourceLambdaFunction_alias(t *testing.T) {
-	rSt := acctest.RandString(5)
-	rName := fmt.Sprintf("tf_test_%s", rSt)
+	rString := acctest.RandString(5)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_data_source_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_data_source_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_data_source_%s", rString)
+	rName := fmt.Sprintf("tf_test_%s", rString)
 	arnRegexp := regexp.MustCompile("^arn:aws:lambda:")
 
 	resource.Test(t, resource.TestCase{
@@ -42,7 +48,7 @@ func TestAccDataSourceLambdaFunction_alias(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceLambdaFunctionConfig_alias(rName, rSt),
+				Config: testAccAWSDataSourceLambdaFunctionConfig_alias(rName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_lambda_function.func", "arn"),
 					resource.TestMatchResourceAttr("data.aws_lambda_function.func", "arn", arnRegexp),
@@ -54,8 +60,8 @@ func TestAccDataSourceLambdaFunction_alias(t *testing.T) {
 	})
 }
 
-func testAccAWSDataSourceLambdaFunctionConfig_basic(rName, rSt string) string {
-	return fmt.Sprintf(baseAccAWSLambdaConfig(rSt)+`
+func testAccAWSDataSourceLambdaFunctionConfig_basic(rName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "lambda_function_test" {
     filename = "test-fixtures/lambdatest.zip"
     function_name = "%s"
@@ -71,8 +77,8 @@ data "aws_lambda_function" "func" {
 `, rName)
 }
 
-func testAccAWSDataSourceLambdaFunctionConfig_alias(rName, rSt string) string {
-	return fmt.Sprintf(baseAccAWSLambdaConfig(rSt)+`
+func testAccAWSDataSourceLambdaFunctionConfig_alias(rName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "lambda_function_test" {
     filename = "test-fixtures/lambdatest.zip"
     function_name = "%s"
