@@ -51,6 +51,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/glacier"
+	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/inspector"
@@ -198,6 +199,7 @@ type AWSClient struct {
 	wafregionalconn       *wafregional.WAFRegional
 	iotconn               *iot.IoT
 	batchconn             *batch.Batch
+	glueconn              *glue.Glue
 	athenaconn            *athena.Athena
 	dxconn                *directconnect.DirectConnect
 	mediastoreconn        *mediastore.MediaStore
@@ -445,6 +447,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
 	client.batchconn = batch.New(sess)
+	client.glueconn = glue.New(sess)
 	client.athenaconn = athena.New(sess)
 	client.dxconn = directconnect.New(sess)
 	client.mediastoreconn = mediastore.New(sess)
