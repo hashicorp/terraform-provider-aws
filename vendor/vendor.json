@@ -871,6 +871,14 @@
 			"versionExact": "v1.12.59"
 		},
 		{
+			"checksumSHA1": "y0XODBzpJjZvR1e9F6ULItV5nG4=",
+			"path": "github.com/aws/aws-sdk-go/service/workspaces",
+			"revision": "3c754f1d340244540350f0a00b940781bae9c905",
+			"revisionTime": "2018-01-09T22:08:02Z",
+			"version": "v1.12.59",
+			"versionExact": "v1.12.59"
+		},
+		{
 			"checksumSHA1": "usT4LCSQItkFvFOQT7cBlkCuGaE=",
 			"path": "github.com/beevik/etree",
 			"revision": "af219c0c7ea1b67ec263c0b1b1b96d284a9181ce",
