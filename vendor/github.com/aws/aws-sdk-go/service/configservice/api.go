@@ -6867,4 +6867,28 @@ const (
 
 	// ResourceTypeAwsCodeBuildProject is a ResourceType enum value
 	ResourceTypeAwsCodeBuildProject = "AWS::CodeBuild::Project"
+
+	// ResourceTypeAwsWafRateBasedRule is a ResourceType enum value
+	ResourceTypeAwsWafRateBasedRule = "AWS::WAF::RateBasedRule"
+
+	// ResourceTypeAwsWafRule is a ResourceType enum value
+	ResourceTypeAwsWafRule = "AWS::WAF::Rule"
+
+	// ResourceTypeAwsWafWebAcl is a ResourceType enum value
+	ResourceTypeAwsWafWebAcl = "AWS::WAF::WebACL"
+
+	// ResourceTypeAwsWafregionalRateBasedRule is a ResourceType enum value
+	ResourceTypeAwsWafregionalRateBasedRule = "AWS::WAFRegional::RateBasedRule"
+
+	// ResourceTypeAwsWafregionalRule is a ResourceType enum value
+	ResourceTypeAwsWafregionalRule = "AWS::WAFRegional::Rule"
+
+	// ResourceTypeAwsWafregionalWebAcl is a ResourceType enum value
+	ResourceTypeAwsWafregionalWebAcl = "AWS::WAFRegional::WebACL"
+
+	// ResourceTypeAwsCloudFrontDistribution is a ResourceType enum value
+	ResourceTypeAwsCloudFrontDistribution = "AWS::CloudFront::Distribution"
+
+	// ResourceTypeAwsCloudFrontStreamingDistribution is a ResourceType enum value
+	ResourceTypeAwsCloudFrontStreamingDistribution = "AWS::CloudFront::StreamingDistribution"
 )

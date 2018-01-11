@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific VPN gateway.
 ---
 
-# aws_vpn_gateway
+# Data Source: aws_vpn_gateway
 
 The VPN Gateway data source provides details about
 a specific VPN gateway.

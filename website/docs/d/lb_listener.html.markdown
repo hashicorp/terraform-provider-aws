@@ -6,7 +6,7 @@ description: |-
   Provides a Load Balancer Listener data source.
 ---
 
-# aws_lb_listener
+# Data Source: aws_lb_listener
 
 ~> **Note:** `aws_alb_listener` is known as `aws_lb_listener`. The functionality is identical.
 

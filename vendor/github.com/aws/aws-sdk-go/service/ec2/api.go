@@ -20190,6 +20190,8 @@ func (c *EC2) ReplaceNetworkAclAssociationRequest(input *ReplaceNetworkAclAssoci
 // For more information about network ACLs, see Network ACLs (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
+// This is an idempotent operation.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -22652,6 +22654,9 @@ type Address struct {
 
 	// The Elastic IP address.
 	PublicIp *string `locationName:"publicIp" type:"string"`
+
+	// Any tags assigned to the Elastic IP address.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -22709,6 +22714,12 @@ func (s *Address) SetPrivateIpAddress(v string) *Address {
 // SetPublicIp sets the PublicIp field's value.
 func (s *Address) SetPublicIp(v string) *Address {
 	s.PublicIp = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *Address) SetTags(v []*Tag) *Address {
+	s.Tags = v
 	return s
 }
 
@@ -41336,14 +41347,14 @@ type DescribeVpcEndpointConnectionsInput struct {
 
 	// One or more filters.
 	//
-	//    * customer-account-id - The AWS account number of the owner of the endpoint.
+	//    * service-id - The ID of the service.
 	//
-	//    * endpoint-connection-state - The state of the endpoint (PendingAcceptance
-	//    | Pending | Available | Deleting | Deleted | Rejected | Failed).
+	//    * vpc-endpoint-owner - The AWS account number of the owner of the endpoint.
+	//
+	//    * vpc-endpoint-state - The state of the endpoint (pendingAcceptance |
+	//    pending | available | deleting | deleted | rejected | failed).
 	//
 	//    * vpc-endpoint-id - The ID of the endpoint.
-	//
-	//    * vpc-endpoint-service-id - The ID of the service.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The maximum number of results to return for the request in a single page.
@@ -41437,12 +41448,12 @@ type DescribeVpcEndpointServiceConfigurationsInput struct {
 
 	// One or more filters.
 	//
-	//    * service-name - The ARN of the service.
+	//    * service-name - The name of the service.
 	//
-	//    * vpc-endpoint-service-id - The ID of the service.
+	//    * service-id - The ID of the service.
 	//
-	//    * vpc-endpoint-service-state - The state of the service (Pending | Available
-	//    | Deleting | Deleted | Failed).
+	//    * service-state - The state of the service (Pending | Available | Deleting
+	//    | Deleted | Failed).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The maximum number of results to return for the request in a single page.
@@ -49577,10 +49588,11 @@ type IpPermission struct {
 	// [EC2-VPC only] One or more IPv6 ranges.
 	Ipv6Ranges []*Ipv6Range `locationName:"ipv6Ranges" locationNameList:"item" type:"list"`
 
-	// (Valid for AuthorizeSecurityGroupEgress, RevokeSecurityGroupEgress and DescribeSecurityGroups
-	// only) One or more prefix list IDs for an AWS service. In an AuthorizeSecurityGroupEgress
-	// request, this is the AWS service that you want to access through a VPC endpoint
-	// from instances associated with the security group.
+	// (EC2-VPC only; valid for AuthorizeSecurityGroupEgress, RevokeSecurityGroupEgress
+	// and DescribeSecurityGroups only) One or more prefix list IDs for an AWS service.
+	// In an AuthorizeSecurityGroupEgress request, this is the AWS service that
+	// you want to access through a VPC endpoint from instances associated with
+	// the security group.
 	PrefixListIds []*PrefixListId `locationName:"prefixListIds" locationNameList:"item" type:"list"`
 
 	// The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
@@ -55613,7 +55625,7 @@ func (s *PrefixList) SetPrefixListName(v string) *PrefixList {
 	return s
 }
 
-// The ID of the prefix.
+// [EC2-VPC only] The ID of the prefix.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/PrefixListId
 type PrefixListId struct {
 	_ struct{} `type:"structure"`

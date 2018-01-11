@@ -6,7 +6,7 @@ description: |-
   Get information on an ElastiCache Replication Group resource.
 ---
 
-# aws_elasticache_replication_group
+# Data Source: aws_elasticache_replication_group
 
 Use this data source to get information about an Elasticache Replication Group.
 

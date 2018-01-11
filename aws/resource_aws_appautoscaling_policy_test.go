@@ -202,35 +202,6 @@ func testAccAWSAppautoscalingPolicyConfig(
 	randClusterName string,
 	randPolicyName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "autoscale_role" {
-	name = "%s"
-	path = "/"
-
-	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Action\":[\"sts:AssumeRole\"]}]}"
-}
-
-resource "aws_iam_role_policy" "autoscale_role_policy" {
-	name = "%s"
-	role = "${aws_iam_role.autoscale_role.id}"
-
-	policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "ecs:DescribeServices",
-                "ecs:UpdateService",
-				"cloudwatch:DescribeAlarms"
-            ],
-            "Resource": ["*"]
-        }
-    ]
-}
-EOF
-}
-
 resource "aws_ecs_cluster" "foo" {
 	name = "%s"
 }
@@ -263,7 +234,6 @@ resource "aws_appautoscaling_target" "tgt" {
 	service_namespace = "ecs"
 	resource_id = "service/${aws_ecs_cluster.foo.name}/${aws_ecs_service.service.name}"
 	scalable_dimension = "ecs:service:DesiredCount"
-	role_arn = "${aws_iam_role.autoscale_role.arn}"
 	min_capacity = 1
 	max_capacity = 4
 }
@@ -282,7 +252,7 @@ resource "aws_appautoscaling_policy" "foobar_simple" {
 	}
 	depends_on = ["aws_appautoscaling_target.tgt"]
 }
-`, randClusterName, randClusterName, randClusterName, randPolicyName)
+`, randClusterName, randPolicyName)
 }
 
 func testAccAWSAppautoscalingPolicySpotFleetRequestConfig(
@@ -326,38 +296,10 @@ resource "aws_spot_fleet_request" "test" {
   }
 }
 
-resource "aws_iam_role" "autoscale_role" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "application-autoscaling.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "autoscale_role_policy_a" {
-  role = "${aws_iam_role.autoscale_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
-}
-
-resource "aws_iam_role_policy_attachment" "autoscale_role_policy_b" {
-  role = "${aws_iam_role.autoscale_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetAutoscaleRole"
-}
-
 resource "aws_appautoscaling_target" "test" {
   service_namespace = "ec2"
   resource_id = "spot-fleet-request/${aws_spot_fleet_request.test.id}"
   scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
-  role_arn = "${aws_iam_role.autoscale_role.arn}"
   min_capacity = 1
   max_capacity = 3
 }
@@ -385,35 +327,6 @@ func testAccAWSAppautoscalingPolicyNestedSchemaConfig(
 	randClusterName string,
 	randPolicyName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "autoscale_role" {
-	name = "%s"
-	path = "/"
-
-	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Action\":[\"sts:AssumeRole\"]}]}"
-}
-
-resource "aws_iam_role_policy" "autoscale_role_policy" {
-	name = "%s"
-	role = "${aws_iam_role.autoscale_role.id}"
-
-	policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "ecs:DescribeServices",
-                "ecs:UpdateService",
-				"cloudwatch:DescribeAlarms"
-            ],
-            "Resource": ["*"]
-        }
-    ]
-}
-EOF
-}
-
 resource "aws_ecs_cluster" "foo" {
 	name = "%s"
 }
@@ -446,7 +359,6 @@ resource "aws_appautoscaling_target" "tgt" {
 	service_namespace = "ecs"
 	resource_id = "service/${aws_ecs_cluster.foo.name}/${aws_ecs_service.service.name}"
 	scalable_dimension = "ecs:service:DesiredCount"
-	role_arn = "${aws_iam_role.autoscale_role.arn}"
 	min_capacity = 1
 	max_capacity = 4
 }
@@ -468,7 +380,7 @@ resource "aws_appautoscaling_policy" "foobar_simple" {
 	}
 	depends_on = ["aws_appautoscaling_target.tgt"]
 }
-`, randClusterName, randClusterName, randClusterName, randPolicyName)
+`, randClusterName, randPolicyName)
 }
 
 func testAccAWSAppautoscalingPolicyDynamoDB(
@@ -485,53 +397,12 @@ resource "aws_dynamodb_table" "dynamodb_table_test" {
   }
 }
 
-resource "aws_iam_role" "autoscale_role" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "application-autoscaling.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "p" {
-  role = "${aws_iam_role.autoscale_role.name}"
-  policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "dynamodb:DescribeTable",
-                "dynamodb:UpdateTable",
-                "cloudwatch:PutMetricAlarm",
-                "cloudwatch:DescribeAlarms",
-                "cloudwatch:DeleteAlarms"
-            ],
-            "Resource": "*"
-        }
-    ]
-}
-POLICY
-}
-
 resource "aws_appautoscaling_target" "dynamo_test" {
   service_namespace = "dynamodb"
   resource_id = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
   scalable_dimension = "dynamodb:table:WriteCapacityUnits"
-  role_arn = "${aws_iam_role.autoscale_role.arn}"
   min_capacity = 1
   max_capacity = 10
-  depends_on = ["aws_iam_role_policy.p"]
 }
 
 resource "aws_appautoscaling_policy" "dynamo_test" {
@@ -569,53 +440,12 @@ resource "aws_dynamodb_table" "dynamodb_table_test" {
   }
 }
 
-resource "aws_iam_role" "autoscale_role" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "application-autoscaling.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "p" {
-  role = "${aws_iam_role.autoscale_role.name}"
-  policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "dynamodb:DescribeTable",
-                "dynamodb:UpdateTable",
-                "cloudwatch:PutMetricAlarm",
-                "cloudwatch:DescribeAlarms",
-                "cloudwatch:DeleteAlarms"
-            ],
-            "Resource": "*"
-        }
-    ]
-}
-POLICY
-}
-
 resource "aws_appautoscaling_target" "write" {
   service_namespace = "dynamodb"
   resource_id = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
   scalable_dimension = "dynamodb:table:WriteCapacityUnits"
-  role_arn = "${aws_iam_role.autoscale_role.arn}"
   min_capacity = 1
   max_capacity = 10
-  depends_on = ["aws_iam_role_policy.p"]
 }
 
 resource "aws_appautoscaling_policy" "write" {
@@ -640,10 +470,8 @@ resource "aws_appautoscaling_target" "read" {
   service_namespace = "dynamodb"
   resource_id = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
   scalable_dimension = "dynamodb:table:ReadCapacityUnits"
-  role_arn = "${aws_iam_role.autoscale_role.arn}"
   min_capacity = 1
   max_capacity = 10
-  depends_on = ["aws_iam_role_policy.p"]
 }
 
 resource "aws_appautoscaling_policy" "read" {

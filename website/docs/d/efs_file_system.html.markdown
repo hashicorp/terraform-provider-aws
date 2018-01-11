@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic File System (EFS) data source.
 ---
 
-# aws_efs_file_system
+# Data Source: aws_efs_file_system
 
 Provides information about an Elastic File System (EFS).
 
