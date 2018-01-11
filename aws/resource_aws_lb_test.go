@@ -1218,6 +1218,11 @@ resource "aws_lb" "lb_test" {
   }
 }
 
+# See https://github.com/terraform-providers/terraform-provider-aws/issues/2498
+output "lb_name" {
+  value = "${aws_lb.lb_test.name}"
+}
+
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
