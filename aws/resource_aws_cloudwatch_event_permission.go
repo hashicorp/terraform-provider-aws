@@ -92,26 +92,18 @@ func resourceAwsCloudWatchEventPermissionRead(d *schema.ResourceData, meta inter
 			return resource.NonRetryableError(fmt.Errorf("Reading CloudWatch Events permission '%s' failed: %s", d.Id(), err.Error()))
 		}
 
-		for _, statement := range policyDoc.Statements {
-			if statement.Sid == d.Id() {
-				policyStatement = &statement
-				return nil
-			}
-		}
-		if policyStatement == nil {
-			return resource.RetryableError(fmt.Errorf("CloudWatch Events permission %q not found", d.Id()))
-		}
-
-		return nil
+		policyStatement, err = findCloudWatchEventPermissionPolicyStatementByID(&policyDoc, d.Id())
+		return resource.RetryableError(err)
 	})
 	if err != nil {
-		return err
-	}
+		// Missing statement inside valid policy
+		if nfErr, ok := err.(*resource.NotFoundError); ok {
+			log.Printf("[WARN] %s", nfErr)
+			d.SetId("")
+			return nil
+		}
 
-	if policyStatement == nil {
-		log.Printf("[WARN] CloudWatch Events permission %q not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return err
 	}
 
 	d.Set("action", policyStatement.Action)
@@ -215,4 +207,21 @@ type CloudWatchEventPermissionPolicyStatement struct {
 	Action    string
 	Principal interface{} // "*" or {"AWS": "arn:aws:iam::111111111111:root"}
 	Resource  string
+}
+
+func findCloudWatchEventPermissionPolicyStatementByID(policy *CloudWatchEventPermissionPolicyDoc, id string) (
+	*CloudWatchEventPermissionPolicyStatement, error) {
+
+	log.Printf("[DEBUG] Received %d statements in CloudWatch Events permission policy: %s", len(policy.Statements), policy.Statements)
+	for _, statement := range policy.Statements {
+		if statement.Sid == id {
+			return &statement, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{
+		LastRequest:  id,
+		LastResponse: policy,
+		Message:      fmt.Sprintf("Failed to find statement %q in CloudWatch Events permission policy:\n%s", id, policy.Statements),
+	}
 }

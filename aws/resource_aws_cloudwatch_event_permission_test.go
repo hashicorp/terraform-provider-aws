@@ -199,15 +199,9 @@ func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFu
 			return fmt.Errorf("Reading CloudWatch Events bus policy for '%s' failed: %s", pr, err.Error())
 		}
 
-		var policyStatement *CloudWatchEventPermissionPolicyStatement
-		for _, statement := range policyDoc.Statements {
-			if statement.Sid == rs.Primary.ID {
-				policyStatement = &statement
-				break
-			}
-		}
-		if policyStatement == nil {
-			return fmt.Errorf("Not found: %s", pr)
+		_, err = findCloudWatchEventPermissionPolicyStatementByID(&policyDoc, rs.Primary.ID)
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -239,14 +233,8 @@ func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
 				return resource.NonRetryableError(fmt.Errorf("Reading CloudWatch Events permission '%s' failed: %s", rs.Primary.ID, err.Error()))
 			}
 
-			var policyStatement *CloudWatchEventPermissionPolicyStatement
-			for _, statement := range policyDoc.Statements {
-				if statement.Sid == rs.Primary.ID {
-					policyStatement = &statement
-					break
-				}
-			}
-			if policyStatement == nil {
+			_, err = findCloudWatchEventPermissionPolicyStatementByID(&policyDoc, rs.Primary.ID)
+			if err == nil {
 				return resource.RetryableError(fmt.Errorf("CloudWatch Events permission exists: %s", rs.Primary.ID))
 			}
 
