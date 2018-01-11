@@ -711,6 +711,14 @@
 			"versionExact": "v1.12.59"
 		},
 		{
+			"checksumSHA1": "ZY1SJNE03I6NL2OBJD9hlwVsqO0=",
+			"path": "github.com/aws/aws-sdk-go/service/mediastoredata",
+			"revision": "3c754f1d340244540350f0a00b940781bae9c905",
+			"revisionTime": "2018-01-09T22:08:02Z",
+			"version": "v1.12.59",
+			"versionExact": "v1.12.59"
+		},
+		{
 			"checksumSHA1": "ynB7Flcudp0VOqBVKZJ+23DtLHU=",
 			"path": "github.com/aws/aws-sdk-go/service/mq",
 			"revision": "3c754f1d340244540350f0a00b940781bae9c905",
