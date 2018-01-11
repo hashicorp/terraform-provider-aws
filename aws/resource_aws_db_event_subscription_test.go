@@ -92,6 +92,41 @@ func TestAccAWSDBEventSubscription_withSourceIds(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBEventSubscription_categoryUpdate(t *testing.T) {
+	var v rds.EventSubscription
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBEventSubscriptionConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBEventSubscriptionExists("aws_db_event_subscription.bar", &v),
+					resource.TestCheckResourceAttr(
+						"aws_db_event_subscription.bar", "enabled", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_db_event_subscription.bar", "source_type", "db-instance"),
+					resource.TestCheckResourceAttr(
+						"aws_db_event_subscription.bar", "name", fmt.Sprintf("tf-acc-test-rds-event-subs-%d", rInt)),
+				),
+			},
+			{
+				Config: testAccAWSDBEventSubscriptionConfigUpdateCategories(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBEventSubscriptionExists("aws_db_event_subscription.bar", &v),
+					resource.TestCheckResourceAttr(
+						"aws_db_event_subscription.bar", "enabled", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_db_event_subscription.bar", "source_type", "db-instance"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSDBEventSubscriptionExists(n string, v *rds.EventSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -262,4 +297,23 @@ func testAccAWSDBEventSubscriptionConfigUpdateSourceIds(rInt int) string {
 			Name = "name"
 		}
 	}`, rInt, rInt, rInt, rInt)
+}
+
+func testAccAWSDBEventSubscriptionConfigUpdateCategories(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "aws_sns_topic" {
+  name = "tf-acc-test-rds-event-subs-sns-topic-%d"
+}
+
+resource "aws_db_event_subscription" "bar" {
+  name = "tf-acc-test-rds-event-subs-%d"
+  sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
+  source_type = "db-instance"
+  event_categories = [
+    "availability",
+  ]
+  tags {
+    Name = "name"
+  }
+}`, rInt, rInt)
 }
