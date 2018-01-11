@@ -221,6 +221,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_subnet":                           dataSourceAwsSubnet(),
 			"aws_subnet_ids":                       dataSourceAwsSubnetIDs(),
 			"aws_security_group":                   dataSourceAwsSecurityGroup(),
+			"aws_security_groups":                  dataSourceAwsSecurityGroups(),
 			"aws_vpc":                              dataSourceAwsVpc(),
 			"aws_vpc_endpoint":                     dataSourceAwsVpcEndpoint(),
 			"aws_vpc_endpoint_service":             dataSourceAwsVpcEndpointService(),
