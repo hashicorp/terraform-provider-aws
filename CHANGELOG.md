@@ -51,6 +51,7 @@ BUG FIXES:
 * resource/aws_ssm_maintenance_window: Respect `enabled` during updates [GH-2818]
 * resource/aws_lb_target_group: Fix max prefix length check [GH-2790]
 * resource/aws_config_delivery_channel: Retry deletion [GH-2910]
+* resource/aws_lb+aws_elb: Fix regression with undefined `name` [GH-2939]
 * provider: Fix regression affecting empty Optional+Computed fields [GH-2348]
 
 ## 1.6.0 (December 18, 2017)
