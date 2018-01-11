@@ -447,6 +447,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_route_table":                              resourceAwsRouteTable(),
 			"aws_default_route_table":                      resourceAwsDefaultRouteTable(),
 			"aws_route_table_association":                  resourceAwsRouteTableAssociation(),
+			"aws_sagemaker_training_job":                   resourceAwsSagemakerTrainingJob(),
 			"aws_ses_active_receipt_rule_set":              resourceAwsSesActiveReceiptRuleSet(),
 			"aws_ses_domain_identity":                      resourceAwsSesDomainIdentity(),
 			"aws_ses_domain_dkim":                          resourceAwsSesDomainDkim(),
