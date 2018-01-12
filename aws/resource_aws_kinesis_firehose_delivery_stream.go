@@ -269,20 +269,19 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 			elasticsearchConfList[0] = elasticsearchConfiguration
 			d.Set("elasticsearch_configuration", elasticsearchConfList)
 			d.Set("s3_configuration", flattenFirehoseS3Configuration(*destination.ElasticsearchDestinationDescription.S3DestinationDescription))
-		} else if destination.S3DestinationDescription != nil {
+		} else if d.Get("destination").(string) == "s3" {
 			d.Set("destination", "s3")
 			d.Set("s3_configuration", flattenFirehoseS3Configuration(*destination.S3DestinationDescription))
-		} else if destination.ExtendedS3DestinationDescription != nil {
+		} else {
 			d.Set("destination", "extended_s3")
 
 			extendedS3Configuration := map[string]interface{}{
-				"buffering_interval":         *destination.ExtendedS3DestinationDescription.BufferingHints.IntervalInSeconds,
-				"buffering_size":             *destination.ExtendedS3DestinationDescription.BufferingHints.SizeInMBs,
+				"buffer_interval":            *destination.ExtendedS3DestinationDescription.BufferingHints.IntervalInSeconds,
+				"buffer_size":                *destination.ExtendedS3DestinationDescription.BufferingHints.SizeInMBs,
 				"bucket_arn":                 *destination.ExtendedS3DestinationDescription.BucketARN,
 				"role_arn":                   *destination.ExtendedS3DestinationDescription.RoleARN,
 				"compression_format":         *destination.ExtendedS3DestinationDescription.CompressionFormat,
 				"prefix":                     *destination.ExtendedS3DestinationDescription.Prefix,
-				"s3_backup_mode":             *destination.ExtendedS3DestinationDescription.S3BackupMode,
 				"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(*destination.ExtendedS3DestinationDescription.CloudWatchLoggingOptions),
 			}
 			if destination.ExtendedS3DestinationDescription.EncryptionConfiguration.KMSEncryptionConfig != nil {
