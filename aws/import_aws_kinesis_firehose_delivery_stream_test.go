@@ -12,7 +12,7 @@ import (
 func TestAccAWSKinesisFirehoseDeliveryStream_importBasic(t *testing.T) {
 	resName := "aws_kinesis_firehose_delivery_stream.test_stream"
 	rInt := acctest.RandInt()
-	config := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_s3basic,
+	config := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3basic,
 		rInt, os.Getenv("AWS_ACCOUNT_ID"), rInt, rInt, rInt)
 
 	resource.Test(t, resource.TestCase{
