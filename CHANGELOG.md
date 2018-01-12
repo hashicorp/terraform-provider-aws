@@ -19,6 +19,7 @@ ENHANCEMENTS:
 * provider: Endpoints can now be specified for API Gateway and Lambda [GH-2641]
 * data-source/aws_iam_server_certificate: Add support for retrieving public key [GH-2749]
 * data-source/aws_vpc_peering_connection: Add support for cross-region VPC peering [GH-2508]
+* data-source/aws_ssm_parameter: Support returning raw encrypted SecureString value [GH-2777]
 * resource/aws_kinesis_firehose_delivery_stream: Import is now supported [GH-2707]
 * resource/aws_cognito_user_pool: The ARN for the pool is now computed and exposed as an attribute [GH-2723]
 * resource/aws_directory_service_directory: Add `security_group_id` field [GH-2688]
