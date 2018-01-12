@@ -28,11 +28,15 @@ func TestValidateInstanceUserDataSize(t *testing.T) {
 
 	for _, s := range invalidValues {
 		_, errors := validateInstanceUserDataSize(s, "user_data")
-		if len(errors) == 0 {
+		if len(errors) != 1 {
 			t.Fatalf("%q should not be valid user data with limited size: %v", s, errors)
+		}
+		if !strings.Contains(errors[0].Error(), "16385") {
+			t.Fatalf("%q should trigger error message with actual size: %v", s, errors)
 		}
 	}
 }
+
 func TestValidateEcrRepositoryName(t *testing.T) {
 	validNames := []string{
 		"nginx-web-app",
