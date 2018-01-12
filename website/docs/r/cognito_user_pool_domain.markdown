@@ -1,4 +1,4 @@
---
+---
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool_domain"
 side_bar_current: "docs-aws-resource-cognito-user-pool-domain"
