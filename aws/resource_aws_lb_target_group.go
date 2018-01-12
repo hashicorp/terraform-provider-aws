@@ -596,9 +596,11 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 	protocol := diff.Get("protocol").(string)
 	if protocol == "TCP" {
 		// TCP load balancers do not support stickiness
-		stickinessBlocks := diff.Get("stickiness").([]interface{})
-		if len(stickinessBlocks) != 0 {
-			return fmt.Errorf("Network Load Balancers do not support Stickiness")
+		if stickinessBlocks := diff.Get("stickiness").([]interface{}); len(stickinessBlocks) == 1 {
+			stickiness := stickinessBlocks[0].(map[string]interface{})
+			if val := stickiness["enabled"].(bool); val {
+				return fmt.Errorf("Network Load Balancers do not support Stickiness")
+			}
 		}
 	}
 
