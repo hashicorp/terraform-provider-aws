@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
 
@@ -236,7 +237,7 @@ func testAccCheckAWSVpcPeeringConnectionDestroy(s *terraform.State) error {
 		}
 
 		if pc.Status != nil {
-			if *pc.Status.Code == "deleted" {
+			if *pc.Status.Code == "deleted" || *pc.Status.Code == "rejected" {
 				return nil
 			}
 			return fmt.Errorf("Found the VPC Peering Connection in an unexpected state: %s", pc)
@@ -315,16 +316,66 @@ func testAccCheckAWSVpcPeeringConnectionOptions(n, block string, options *ec2.Vp
 	}
 }
 
+func TestAccAWSVPCPeeringConnection_peerRegionAndAutoAccept(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshIgnore: []string{"auto_accept"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckAWSVpcPeeringConnectionDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config:      testAccVpcPeeringConfigRegionAutoAccept,
+				ExpectError: regexp.MustCompile(`.*peer_region cannot be set whilst auto_accept is true when creating a vpc peering connection.*`),
+			},
+		},
+	})
+}
+
+func TestAccAWSVPCPeeringConnection_region(t *testing.T) {
+	var connection ec2.VpcPeeringConnection
+
+	var providers []*schema.Provider
+	providerFactories := map[string]terraform.ResourceProviderFactory{
+		"aws": func() (terraform.ResourceProvider, error) {
+			p := Provider()
+			providers = append(providers, p.(*schema.Provider))
+			return p, nil
+		},
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   "aws_vpc_peering_connection.foo",
+		IDRefreshIgnore: []string{"auto_accept"},
+
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccVpcPeeringConfigRegion,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSVpcPeeringConnectionExists(
+						"aws_vpc_peering_connection.foo",
+						&connection),
+				),
+			},
+		},
+	})
+}
+
 const testAccVpcPeeringConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "TestAccAWSVPCPeeringConnection_basic"
+		Name = "tf-acc-revoke-vpc-peering-connection-basic"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "tf-acc-revoke-vpc-peering-connection-basic"
+	}
 }
 
 resource "aws_vpc_peering_connection" "foo" {
@@ -338,12 +389,15 @@ const testAccVpcPeeringConfigTags = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "TestAccAWSVPCPeeringConnection_tags"
+		Name = "tf-acc-revoke-vpc-peering-connection-tags"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "tf-acc-revoke-vpc-peering-connection-tags"
+	}
 }
 
 resource "aws_vpc_peering_connection" "foo" {
@@ -360,13 +414,16 @@ const testAccVpcPeeringConfigOptions = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "TestAccAWSVPCPeeringConnection_options"
+		Name = "tf-acc-revoke-vpc-peering-connection-options"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.1.0.0/16"
 	enable_dns_hostnames = true
+	tags {
+		Name = "tf-acc-revoke-vpc-peering-connection-options"
+	}
 }
 
 resource "aws_vpc_peering_connection" "foo" {
@@ -389,16 +446,90 @@ const testAccVpcPeeringConfigFailedState = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "TestAccAWSVPCPeeringConnection_failedState"
+		Name = "tf-acc-revoke-vpc-peering-connection-failedState"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.0.0.0/16"
+	tags {
+		Name = "tf-acc-revoke-vpc-peering-connection-failedState"
+	}
 }
 
 resource "aws_vpc_peering_connection" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
 	peer_vpc_id = "${aws_vpc.bar.id}"
+}
+`
+
+const testAccVpcPeeringConfigRegionAutoAccept = `
+provider "aws" {
+	alias = "main"
+  region = "us-west-2"
+}
+
+provider "aws" {
+	alias = "peer"
+  region = "us-east-1"
+}
+
+resource "aws_vpc" "foo" {
+	provider = "aws.main"
+	cidr_block = "10.0.0.0/16"
+	tags {
+		Name = "tf-acc-revoke-vpc-peering-connection-region"
+	}
+}
+
+resource "aws_vpc" "bar" {
+	provider = "aws.peer"
+	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "tf-acc-revoke-vpc-peering-connection-region"
+	}
+}
+
+resource "aws_vpc_peering_connection" "foo" {
+	provider = "aws.main"
+	vpc_id = "${aws_vpc.foo.id}"
+	peer_vpc_id = "${aws_vpc.bar.id}"
+	peer_region = "us-east-1"
+	auto_accept = true
+}
+`
+
+const testAccVpcPeeringConfigRegion = `
+provider "aws" {
+	alias = "main"
+  region = "us-west-2"
+}
+
+provider "aws" {
+	alias = "peer"
+  region = "us-east-1"
+}
+
+resource "aws_vpc" "foo" {
+	provider = "aws.main"
+	cidr_block = "10.0.0.0/16"
+	tags {
+		Name = "tf-acc-revoke-vpc-peering-connection-region"
+	}
+}
+
+resource "aws_vpc" "bar" {
+	provider = "aws.peer"
+	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "tf-acc-revoke-vpc-peering-connection-region"
+	}
+}
+
+resource "aws_vpc_peering_connection" "foo" {
+	provider = "aws.main"
+	vpc_id = "${aws_vpc.foo.id}"
+	peer_vpc_id = "${aws_vpc.bar.id}"
+	peer_region = "us-east-1"
 }
 `

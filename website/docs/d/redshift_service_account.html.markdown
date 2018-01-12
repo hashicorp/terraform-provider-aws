@@ -6,7 +6,7 @@ description: |-
   Get AWS Redshift Service Account for storing audit data in S3.
 ---
 
-# aws_redshift_service_account
+# Data Source: aws_redshift_service_account
 
 Use this data source to get the Account ID of the [AWS Redshift Service Account](http://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-enable-logging)
 in a given region for the purpose of allowing Redshift to store audit data in S3.

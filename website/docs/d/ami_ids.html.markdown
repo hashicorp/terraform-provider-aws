@@ -6,7 +6,7 @@ description: |-
   Provides a list of AMI IDs.
 ---
 
-# aws_ami_ids
+# Data Source: aws_ami_ids
 
 Use this data source to get a list of AMI IDs matching the specified criteria.
 

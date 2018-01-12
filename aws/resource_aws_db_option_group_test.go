@@ -487,7 +487,7 @@ resource "aws_db_option_group" "bar" {
   major_engine_version     = "11.00"
 
   option {
-    option_name = "Mirroring"
+    option_name = "TDE"
   }
 }
 `, r)

@@ -65,7 +65,7 @@ func (c *SSM) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *requ
 // and stack level. For example: Key=Owner and Value=DbAdmin, SysAdmin, or Dev.
 // Or Key=Stack and Value=Production, Pre-Production, or Test.
 //
-// Each resource can have a maximum of 10 tags.
+// Each resource can have a maximum of 50 tags.
 //
 // We recommend that you devise a set of tag keys that meets your needs for
 // each resource type. Using a consistent set of tag keys makes it easier for
@@ -726,8 +726,11 @@ func (c *SSM) CreateMaintenanceWindowRequest(input *CreateMaintenanceWindowInput
 //   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits (e.g.
-//   too many Maintenance Windows have been created).
+//   Error returned when the caller has exceeded the default resource limits.
+//   For example, too many Maintenance Windows or Patch baselines have been created.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -800,6 +803,9 @@ func (c *SSM) CreatePatchBaselineRequest(input *CreatePatchBaselineInput) (req *
 //
 // Creates a patch baseline.
 //
+// For information about valid key and value pairs in PatchFilters for each
+// supported operating system type, see PatchFilter (http://docs.aws.amazon.com/systems-manager/latest/APIReference/API_PatchFilter.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -813,8 +819,11 @@ func (c *SSM) CreatePatchBaselineRequest(input *CreatePatchBaselineInput) (req *
 //   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits (e.g.
-//   too many Maintenance Windows have been created).
+//   Error returned when the caller has exceeded the default resource limits.
+//   For example, too many Maintenance Windows or Patch baselines have been created.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -1879,8 +1888,11 @@ func (c *SSM) DeregisterTargetFromMaintenanceWindowRequest(input *DeregisterTarg
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -1966,8 +1978,11 @@ func (c *SSM) DeregisterTaskFromMaintenanceWindowRequest(input *DeregisterTaskFr
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -2838,8 +2853,11 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEff
 //   try again.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeUnsupportedOperatingSystem "UnsupportedOperatingSystem"
 //   The operating systems you specified is not supported, or the operation is
@@ -3459,8 +3477,11 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsRequest(input *De
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -3542,8 +3563,11 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTasksRequest(input *DescribeMain
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -3706,8 +3730,11 @@ func (c *SSM) DescribeMaintenanceWindowTargetsRequest(input *DescribeMaintenance
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -3789,8 +3816,11 @@ func (c *SSM) DescribeMaintenanceWindowTasksRequest(input *DescribeMaintenanceWi
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -4963,8 +4993,11 @@ func (c *SSM) GetMaintenanceWindowRequest(input *GetMaintenanceWindowInput) (req
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -5047,8 +5080,11 @@ func (c *SSM) GetMaintenanceWindowExecutionRequest(input *GetMaintenanceWindowEx
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -5131,8 +5167,11 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskRequest(input *GetMaintenanceWind
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -5215,8 +5254,11 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskInvocationRequest(input *GetMaint
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -5298,8 +5340,11 @@ func (c *SSM) GetMaintenanceWindowTaskRequest(input *GetMaintenanceWindowTaskInp
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -5702,6 +5747,8 @@ func (c *SSM) GetParametersByPathRequest(input *GetParametersByPathInput) (req *
 // that point and a NextToken. You can specify the NextToken in a subsequent
 // call to get the next set of results.
 //
+// This API action doesn't support filtering by tags.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -5856,8 +5903,11 @@ func (c *SSM) GetPatchBaselineRequest(input *GetPatchBaselineInput) (req *reques
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
@@ -7439,6 +7489,43 @@ func (c *SSM) PutComplianceItemsRequest(input *PutComplianceItemsInput) (req *re
 // so you must provide a full list of compliance items each time that you send
 // the request.
 //
+// ComplianceType can be one of the following:
+//
+//    * ExecutionId: The execution ID when the patch, association, or custom
+//    compliance item was applied.
+//
+//    * ExecutionType: Specify patch, association, or Custom:string.
+//
+//    * ExecutionTime. The time the patch, association, or custom compliance
+//    item was applied to the instance.
+//
+//    * Id: The patch, association, or custom compliance ID.
+//
+//    * Title: A title.
+//
+//    * Status: The status of the compliance item. For example, approved for
+//    patches, or Failed for associations.
+//
+//    * Severity: A patch severity. For example, critical.
+//
+//    * DocumentName: A SSM document name. For example, AWS-RunPatchBaseline.
+//
+//    * DocumentVersion: An SSM document version number. For example, 4.
+//
+//    * Classification: A patch classification. For example, security updates.
+//
+//    * PatchBaselineId: A patch baseline ID.
+//
+//    * PatchSeverity: A patch severity. For example, Critical.
+//
+//    * PatchState: A patch state. For example, InstancesWithFailedPatches.
+//
+//    * PatchGroup: The name of a patch group.
+//
+//    * InstalledTime: The time the association, patch, or custom compliance
+//    item was applied to the resource. Specify the time by using the following
+//    format: yyyy-MM-dd'T'HH:mm:ss'Z'
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -7697,11 +7784,8 @@ func (c *SSM) PutParameterRequest(input *PutParameterInput) (req *request.Reques
 //   The parameter already exists. You can't create duplicate parameters.
 //
 //   * ErrCodeHierarchyLevelLimitExceededException "HierarchyLevelLimitExceededException"
-//   A hierarchy can have a maximum of five levels. For example:
-//
-//   /Finance/Prod/IAD/OS/WinServ2016/license15
-//
-//   For more information, see Working with Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working.html).
+//   A hierarchy can have a maximum of 15 levels. For more information, see Working
+//   with Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working.html).
 //
 //   * ErrCodeHierarchyTypeMismatchException "HierarchyTypeMismatchException"
 //   Parameter Store does not support changing a parameter type in a hierarchy.
@@ -7801,8 +7885,11 @@ func (c *SSM) RegisterDefaultPatchBaselineRequest(input *RegisterDefaultPatchBas
 //   try again.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -7888,16 +7975,22 @@ func (c *SSM) RegisterPatchBaselineForPatchGroupRequest(input *RegisterPatchBase
 //   baseline that is already registered with a different patch baseline.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
 //   try again.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits (e.g.
-//   too many Maintenance Windows have been created).
+//   Error returned when the caller has exceeded the default resource limits.
+//   For example, too many Maintenance Windows or Patch baselines have been created.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -7983,12 +8076,18 @@ func (c *SSM) RegisterTargetWithMaintenanceWindowRequest(input *RegisterTargetWi
 //   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits (e.g.
-//   too many Maintenance Windows have been created).
+//   Error returned when the caller has exceeded the default resource limits.
+//   For example, too many Maintenance Windows or Patch baselines have been created.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -8074,12 +8173,18 @@ func (c *SSM) RegisterTaskWithMaintenanceWindowRequest(input *RegisterTaskWithMa
 //   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits (e.g.
-//   too many Maintenance Windows have been created).
+//   Error returned when the caller has exceeded the default resource limits.
+//   For example, too many Maintenance Windows or Patch baselines have been created.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeFeatureNotAvailableException "FeatureNotAvailableException"
 //   You attempted to register a LAMBDA or STEP_FUNCTION task in a region where
@@ -9075,8 +9180,11 @@ func (c *SSM) UpdateMaintenanceWindowRequest(input *UpdateMaintenanceWindowInput
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -9174,8 +9282,11 @@ func (c *SSM) UpdateMaintenanceWindowTargetRequest(input *UpdateMaintenanceWindo
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -9276,8 +9387,11 @@ func (c *SSM) UpdateMaintenanceWindowTaskRequest(input *UpdateMaintenanceWindowT
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -9446,6 +9560,9 @@ func (c *SSM) UpdatePatchBaselineRequest(input *UpdatePatchBaselineInput) (req *
 // Modifies an existing patch baseline. Fields not specified in the request
 // are left unchanged.
 //
+// For information about valid key and value pairs in PatchFilters for each
+// supported operating system type, see PatchFilter (http://docs.aws.amazon.com/systems-manager/latest/APIReference/API_PatchFilter.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -9455,8 +9572,11 @@ func (c *SSM) UpdatePatchBaselineRequest(input *UpdatePatchBaselineInput) (req *
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -18990,8 +19110,8 @@ type GetParametersByPathInput struct {
 	ParameterFilters []*ParameterStringFilter `type:"list"`
 
 	// The hierarchy for the parameter. Hierarchies start with a forward slash (/)
-	// and end with the parameter name. A hierarchy can have a maximum of five levels.
-	// For example: /Finance/Prod/IAD/WinServ2016/license15
+	// and end with the parameter name. A hierarchy can have a maximum of 15 levels.
+	// Here is an example of a hierarchy: /Finance/Prod/IAD/WinServ2016/license33
 	//
 	// Path is a required field
 	Path *string `min:"1" type:"string" required:"true"`
@@ -23644,7 +23764,7 @@ func (s *ParameterStringFilter) SetValues(v []*string) *ParameterStringFilter {
 	return s
 }
 
-// One or more filters. Use a filter to return a more specific list of results.
+// This data type is deprecated. Instead, use ParameterStringFilter.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ParametersFilter
 type ParametersFilter struct {
 	_ struct{} `type:"structure"`
@@ -23985,16 +24105,248 @@ func (s *PatchComplianceData) SetTitle(v string) *PatchComplianceData {
 }
 
 // Defines a patch filter.
+//
+// A patch filter consists of key/value pairs, but not all keys are valid for
+// all operating system types. For example, the key PRODUCT is valid for all
+// supported operating system types. The key MSRC_SEVERITY, however, is valid
+// only for Windows operating systems, and the key SECTION is valid only for
+// Ubuntu operating systems.
+//
+// Refer to the following sections for information about which keys may be used
+// with each major operating system, and which values are valid for each key.
+//
+// Windows Operating Systems
+//
+// The supported keys for Windows operating systems are PRODUCT, CLASSIFICATION,
+// and MSRC_SEVERITY. See the following lists for valid values for each of these
+// keys.
+//
+// Supported key:PRODUCT
+//
+// Supported values:
+//
+//    * Windows7
+//
+//    * Windows8
+//
+//    * Windows8.1
+//
+//    * Windows8Embedded
+//
+//    * Windows10
+//
+//    * Windows10LTSB
+//
+//    * WindowsServer2008
+//
+//    * WindowsServer2008R2
+//
+//    * WindowsServer2012
+//
+//    * WindowsServer2012R2
+//
+//    * WindowsServer2016
+//
+// Supported key:CLASSIFICATION
+//
+// Supported values:
+//
+//    * CriticalUpdates
+//
+//    * DefinitionUpdates
+//
+//    * Drivers
+//
+//    * FeaturePacks
+//
+//    * SecurityUpdates
+//
+//    * ServicePacks
+//
+//    * Tools
+//
+//    * UpdateRollups
+//
+//    * Updates
+//
+//    * Upgrades
+//
+// Supported key:MSRC_SEVERITY
+//
+// Supported values:
+//
+//    * Critical
+//
+//    * Important
+//
+//    * Moderate
+//
+//    * Low
+//
+//    * Unspecified
+//
+// Ubuntu Operating Systems
+//
+// The supported keys for Ubuntu operating systems are PRODUCT, PRIORITY, and
+// SECTION. See the following lists for valid values for each of these keys.
+//
+// Supported key:PRODUCT
+//
+// Supported values:
+//
+//    * Ubuntu14.04
+//
+//    * Ubuntu16.04
+//
+// Supported key:PRIORITY
+//
+// Supported values:
+//
+//    * Required
+//
+//    * Important
+//
+//    * Standard
+//
+//    * Optional
+//
+//    * Extra
+//
+// Supported key:SECTION
+//
+// Only the length of the key value is validated. Minimum length is 1. Maximum
+// length is 64.
+//
+// Amazon Linux Operating Systems
+//
+// The supported keys for Amazon Linux operating systems are PRODUCT, CLASSIFICATION,
+// and SEVERITY. See the following lists for valid values for each of these
+// keys.
+//
+// Supported key:PRODUCT
+//
+// Supported values:
+//
+//    * AmazonLinux2012.03
+//
+//    * AmazonLinux2012.09
+//
+//    * AmazonLinux2013.03
+//
+//    * AmazonLinux2013.09
+//
+//    * AmazonLinux2014.03
+//
+//    * AmazonLinux2014.09
+//
+//    * AmazonLinux2015.03
+//
+//    * AmazonLinux2015.09
+//
+//    * AmazonLinux2016.03
+//
+//    * AmazonLinux2016.09
+//
+//    * AmazonLinux2017.03
+//
+//    * AmazonLinux2017.09
+//
+// Supported key:CLASSIFICATION
+//
+// Supported values:
+//
+//    * Security
+//
+//    * Bugfix
+//
+//    * Enhancement
+//
+//    * Recommended
+//
+//    * Newpackage
+//
+// Supported key:SEVERITY
+//
+// Supported values:
+//
+//    * Critical
+//
+//    * Important
+//
+//    * Medium
+//
+//    * Low
+//
+// RedHat Enterprise Linux (RHEL) Operating Systems
+//
+// The supported keys for RedHat Enterprise Linux operating systems are PRODUCT,
+// CLASSIFICATION, and SEVERITY. See the following lists for valid values for
+// each of these keys.
+//
+// Supported key:PRODUCT
+//
+// Supported values:
+//
+//    * RedhatEnterpriseLinux6.5
+//
+//    * RedhatEnterpriseLinux6.6
+//
+//    * RedhatEnterpriseLinux6.7
+//
+//    * RedhatEnterpriseLinux6.8
+//
+//    * RedhatEnterpriseLinux6.9
+//
+//    * RedhatEnterpriseLinux7.0
+//
+//    * RedhatEnterpriseLinux7.1
+//
+//    * RedhatEnterpriseLinux7.2
+//
+//    * RedhatEnterpriseLinux7.3
+//
+//    * RedhatEnterpriseLinux7.4
+//
+// Supported key:CLASSIFICATION
+//
+// Supported values:
+//
+//    * Security
+//
+//    * Bugfix
+//
+//    * Enhancement
+//
+//    * Recommended
+//
+//    * Newpackage
+//
+// Supported key:SEVERITY
+//
+// Supported values:
+//
+//    * Critical
+//
+//    * Important
+//
+//    * Medium
+//
+//    * Low
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PatchFilter
 type PatchFilter struct {
 	_ struct{} `type:"structure"`
 
-	// The key for the filter (PRODUCT, CLASSIFICATION, MSRC_SEVERITY, PATCH_ID)
+	// The key for the filter.
+	//
+	// See PatchFilter for lists of valid keys for each operating system type.
 	//
 	// Key is a required field
 	Key *string `type:"string" required:"true" enum:"PatchFilterKey"`
 
 	// The value for the filter key.
+	//
+	// See PatchFilter for lists of valid values for each key based on operating
+	// system type.
 	//
 	// Values is a required field
 	Values []*string `min:"1" type:"list" required:"true"`

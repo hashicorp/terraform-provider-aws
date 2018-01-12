@@ -7,23 +7,51 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSEcsCluster_basic(t *testing.T) {
+	rString := acctest.RandString(8)
+	clusterName := fmt.Sprintf("tf-acc-cluster-basic-%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSEcsCluster,
+				Config: testAccAWSEcsCluster(clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists("aws_ecs_cluster.foo"),
 					resource.TestMatchResourceAttr("aws_ecs_cluster.foo", "arn",
-						regexp.MustCompile("^arn:aws:ecs:[a-z0-9-]+:[0-9]{12}:cluster/red-grapes$")),
+						regexp.MustCompile("^arn:aws:ecs:[a-z0-9-]+:[0-9]{12}:cluster/"+clusterName+"$")),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsCluster_importBasic(t *testing.T) {
+	rString := acctest.RandString(8)
+	clusterName := fmt.Sprintf("tf-acc-cluster-import-%s", rString)
+
+	resourceName := "aws_ecs_cluster.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSEcsCluster(clusterName),
+			},
+			resource.TestStep{
+				ResourceName:      resourceName,
+				ImportStateId:     clusterName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -66,8 +94,10 @@ func testAccCheckAWSEcsClusterExists(name string) resource.TestCheckFunc {
 	}
 }
 
-var testAccAWSEcsCluster = `
+func testAccAWSEcsCluster(clusterName string) string {
+	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "foo" {
-	name = "red-grapes"
+	name = "%s"
 }
-`
+`, clusterName)
+}

@@ -127,53 +127,12 @@ resource "aws_dynamodb_table" "hoge" {
   }
 }
 
-resource "aws_iam_role" "hoge" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "application-autoscaling.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "hoge" {
-  role = "${aws_iam_role.hoge.name}"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:DescribeTable",
-        "dynamodb:UpdateTable",
-        "cloudwatch:PutMetricAlarm",
-        "cloudwatch:DescribeAlarms",
-        "cloudwatch:DeleteAlarms"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
-}
-
 resource "aws_appautoscaling_target" "read" {
   service_namespace = "dynamodb"
   resource_id = "table/${aws_dynamodb_table.hoge.name}"
   scalable_dimension = "dynamodb:table:ReadCapacityUnits"
-  role_arn = "${aws_iam_role.hoge.arn}"
   min_capacity = 1
   max_capacity = 10
-  depends_on = ["aws_iam_role_policy.hoge"]
 }
 
 resource "aws_appautoscaling_scheduled_action" "hoge" {
@@ -193,45 +152,6 @@ resource "aws_appautoscaling_scheduled_action" "hoge" {
 
 func testAccAppautoscalingScheduledActionConfig_ECS(rName, ts string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "hoge" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "application-autoscaling.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "hoge" {
-  role = "${aws_iam_role.hoge.id}"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ecs:DescribeServices",
-        "ecs:UpdateService",
-        "cloudwatch:DescribeAlarms"
-      ],
-      "Resource": [
-        "*"
-      ]
-    }
-  ]
-}
-EOF
-}
-
 resource "aws_ecs_cluster" "hoge" {
   name = "tf-ecs-cluster-%s"
 }
@@ -265,7 +185,6 @@ resource "aws_appautoscaling_target" "hoge" {
   service_namespace = "ecs"
   resource_id = "service/${aws_ecs_cluster.hoge.name}/${aws_ecs_service.hoge.name}"
   scalable_dimension = "ecs:service:DesiredCount"
-  role_arn = "${aws_iam_role.hoge.arn}"
   min_capacity = 1
   max_capacity = 3
 }
@@ -627,38 +546,10 @@ resource "aws_spot_fleet_request" "hoge" {
   }
 }
 
-resource "aws_iam_role" "autoscale_role" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "application-autoscaling.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "autoscale_role_policy_a" {
-  role = "${aws_iam_role.autoscale_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
-}
-
-resource "aws_iam_role_policy_attachment" "autoscale_role_policy_b" {
-  role = "${aws_iam_role.autoscale_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetAutoscaleRole"
-}
-
 resource "aws_appautoscaling_target" "hoge" {
   service_namespace = "ec2"
   resource_id = "spot-fleet-request/${aws_spot_fleet_request.hoge.id}"
   scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
-  role_arn = "${aws_iam_role.autoscale_role.arn}"
   min_capacity = 1
   max_capacity = 3
 }

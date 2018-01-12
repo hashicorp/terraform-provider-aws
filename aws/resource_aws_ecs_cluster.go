@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -17,6 +18,9 @@ func resourceAwsEcsCluster() *schema.Resource {
 		Create: resourceAwsEcsClusterCreate,
 		Read:   resourceAwsEcsClusterRead,
 		Delete: resourceAwsEcsClusterDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsEcsClusterImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -31,6 +35,18 @@ func resourceAwsEcsCluster() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceAwsEcsClusterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	d.Set("name", d.Id())
+	d.SetId(arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Service:   "ecs",
+		Resource:  fmt.Sprintf("cluster/%s", d.Id()),
+	}.String())
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error {

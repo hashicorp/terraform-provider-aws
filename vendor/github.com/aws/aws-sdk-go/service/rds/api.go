@@ -1501,20 +1501,17 @@ func (c *RDS) CreateDBInstanceReadReplicaRequest(input *CreateDBInstanceReadRepl
 //
 // Creates a new DB instance that acts as a Read Replica for an existing source
 // DB instance. You can create a Read Replica for a DB instance running MySQL,
-// MariaDB, or PostgreSQL.
+// MariaDB, or PostgreSQL. For more information, see Working with PostgreSQL,
+// MySQL, and MariaDB Read Replicas (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html).
 //
 // Amazon Aurora does not support this action. You must call the CreateDBInstance
 // action to create a DB instance for an Aurora DB cluster.
 //
-// All Read Replica DB instances are created as Single-AZ deployments with backups
-// disabled. All other DB instance attributes (including DB security groups
-// and DB parameter groups) are inherited from the source DB instance, except
-// as specified below.
+// All Read Replica DB instances are created with backups disabled. All other
+// DB instance attributes (including DB security groups and DB parameter groups)
+// are inherited from the source DB instance, except as specified below.
 //
-// The source DB instance must have backup retention enabled.
-//
-// For more information, see Working with PostgreSQL, MySQL, and MariaDB Read
-// Replicas (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html).
+// Your source DB instance must have backup retention enabled.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7941,23 +7938,16 @@ func (c *RDS) RebootDBInstanceRequest(input *RebootDBInstanceInput) (req *reques
 
 // RebootDBInstance API operation for Amazon Relational Database Service.
 //
-// Rebooting a DB instance restarts the database engine service. A reboot also
-// applies to the DB instance any modifications to the associated DB parameter
-// group that were pending. Rebooting a DB instance results in a momentary outage
-// of the instance, during which the DB instance status is set to rebooting.
-// If the RDS instance is configured for MultiAZ, it is possible that the reboot
-// is conducted through a failover. An Amazon RDS event is created when the
-// reboot is completed.
+// You might need to reboot your DB instance, usually for maintenance reasons.
+// For example, if you make certain modifications, or if you change the DB parameter
+// group associated with the DB instance, you must reboot the instance for the
+// changes to take effect.
 //
-// If your DB instance is deployed in multiple Availability Zones, you can force
-// a failover from one AZ to the other during the reboot. You might force a
-// failover to test the availability of your DB instance deployment or to restore
-// operations to the original AZ after a failover occurs.
+// Rebooting a DB instance restarts the database engine service. Rebooting a
+// DB instance results in a momentary outage, during which the DB instance status
+// is set to rebooting.
 //
-// The time required to reboot is a function of the specific database engine's
-// crash recovery process. To improve the reboot time, we recommend that you
-// reduce database activities as much as possible during the reboot process
-// to reduce rollback activity for in-transit transactions.
+// For more information about rebooting, see Rebooting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_RebootInstance.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9450,6 +9440,8 @@ func (c *RDS) StartDBInstanceRequest(input *StartDBInstanceInput) (req *request.
 // AWS CLI command, or the StopDBInstance action. For more information, see
 // Stopping and Starting a DB instance in the AWS RDS user guide.
 //
+// This command does not apply to Aurora MySQL and Aurora PostgreSQL.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -9570,6 +9562,8 @@ func (c *RDS) StopDBInstanceRequest(input *StopDBInstanceInput) (req *request.Re
 // group membership. Amazon RDS also retains the transaction logs so you can
 // do a point-in-time restore if necessary. For more information, see Stopping
 // and Starting a DB instance in the AWS RDS user guide.
+//
+// This command does not apply to Aurora MySQL and Aurora PostgreSQL.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11202,7 +11196,7 @@ type CreateDBClusterInput struct {
 
 	// The port number on which the instances in the DB cluster accept connections.
 	//
-	// Default: 3306
+	// Default: 3306 if engine is set as aurora or 5432 if set to aurora-postgresql.
 	Port *int64 `type:"integer"`
 
 	// A URL that contains a Signature Version 4 signed request for the CreateDBCluster
@@ -11709,8 +11703,7 @@ func (s *CreateDBClusterSnapshotOutput) SetDBClusterSnapshot(v *DBClusterSnapsho
 type CreateDBInstanceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The amount of storage (in gigabytes) to be initially allocated for the DB
-	// instance.
+	// The amount of storage (in gibibytes) to allocate for the DB instance.
 	//
 	// Type: Integer
 	//
@@ -11724,9 +11717,9 @@ type CreateDBInstanceInput struct {
 	//
 	// Constraints to the amount of storage for each storage type are the following:
 	//
-	//    * General Purpose (SSD) storage (gp2): Must be an integer from 5 to 6144.
+	//    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 16384.
 	//
-	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 6144.
+	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 16384.
 	//
 	//    * Magnetic storage (standard): Must be an integer from 5 to 3072.
 	//
@@ -11734,9 +11727,9 @@ type CreateDBInstanceInput struct {
 	//
 	// Constraints to the amount of storage for each storage type are the following:
 	//
-	//    * General Purpose (SSD) storage (gp2): Must be an integer from 5 to 6144.
+	//    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 16384.
 	//
-	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 6144.
+	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 16384.
 	//
 	//    * Magnetic storage (standard): Must be an integer from 5 to 3072.
 	//
@@ -11744,9 +11737,9 @@ type CreateDBInstanceInput struct {
 	//
 	// Constraints to the amount of storage for each storage type are the following:
 	//
-	//    * General Purpose (SSD) storage (gp2): Must be an integer from 5 to 6144.
+	//    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 16384.
 	//
-	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 6144.
+	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 16384.
 	//
 	//    * Magnetic storage (standard): Must be an integer from 5 to 3072.
 	//
@@ -11754,9 +11747,9 @@ type CreateDBInstanceInput struct {
 	//
 	// Constraints to the amount of storage for each storage type are the following:
 	//
-	//    * General Purpose (SSD) storage (gp2): Must be an integer from 10 to 6144.
+	//    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 16384.
 	//
-	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 6144.
+	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 16384.
 	//
 	//    * Magnetic storage (standard): Must be an integer from 10 to 3072.
 	//
@@ -12036,13 +12029,19 @@ type CreateDBInstanceInput struct {
 	//
 	// MariaDB
 	//
+	//    * 10.2.11 (supported in all AWS Regions)
+	//
+	// 10.1.26 (supported in all AWS Regions)
+	//
 	//    * 10.1.23 (supported in all AWS Regions)
 	//
 	//    * 10.1.19 (supported in all AWS Regions)
 	//
 	//    * 10.1.14 (supported in all AWS Regions except us-east-2)
 	//
-	// 10.0.31 (supported in all AWS Regions)
+	//    * 10.0.32 (supported in all AWS Regions)
+	//
+	//    * 10.0.31 (supported in all AWS Regions)
 	//
 	//    * 10.0.28 (supported in all AWS Regions)
 	//
@@ -12051,15 +12050,21 @@ type CreateDBInstanceInput struct {
 	//    * 10.0.17 (supported in all AWS Regions except us-east-2, ca-central-1,
 	//    eu-west-2)
 	//
+	// Microsoft SQL Server 2017
+	//
+	//    * 14.00.1000.169.v1 (supported for all editions, and all AWS Regions)
+	//
 	// Microsoft SQL Server 2016
 	//
-	// 13.00.4422.0.v1 (supported for all editions, and all AWS Regions)
+	//    * 13.00.4451.0.v1 (supported for all editions, and all AWS Regions)
+	//
+	//    * 13.00.4422.0.v1 (supported for all editions, and all AWS Regions)
 	//
 	//    * 13.00.2164.0.v1 (supported for all editions, and all AWS Regions)
 	//
 	// Microsoft SQL Server 2014
 	//
-	// 12.00.5546.0.v1 (supported for all editions, and all AWS Regions)
+	//    * 12.00.5546.0.v1 (supported for all editions, and all AWS Regions)
 	//
 	//    * 12.00.5000.0.v1 (supported for all editions, and all AWS Regions)
 	//
@@ -12068,7 +12073,7 @@ type CreateDBInstanceInput struct {
 	//
 	// Microsoft SQL Server 2012
 	//
-	// 11.00.6594.0.v1 (supported for all editions, and all AWS Regions)
+	//    * 11.00.6594.0.v1 (supported for all editions, and all AWS Regions)
 	//
 	//    * 11.00.6020.0.v1 (supported for all editions, and all AWS Regions)
 	//
@@ -12080,8 +12085,8 @@ type CreateDBInstanceInput struct {
 	//
 	// Microsoft SQL Server 2008 R2
 	//
-	// 10.50.6529.0.v1 (supported for all editions, and all AWS Regions except us-east-2,
-	// ca-central-1, and eu-west-2)
+	//    * 10.50.6529.0.v1 (supported for all editions, and all AWS Regions except
+	//    us-east-2, ca-central-1, and eu-west-2)
 	//
 	//    * 10.50.6000.34.v1 (supported for all editions, and all AWS Regions except
 	//    us-east-2, ca-central-1, and eu-west-2)
@@ -12091,86 +12096,21 @@ type CreateDBInstanceInput struct {
 	//
 	// MySQL
 	//
-	// 5.7.19 (supported in all AWS regions)
+	//    * 5.7.19 (supported in all AWS regions)
 	//
 	//    * 5.7.17 (supported in all AWS regions)
 	//
 	//    * 5.7.16 (supported in all AWS regions)
 	//
-	//    * 5.6.37 (supported in all AWS Regions)
+	// 5.6.37(supported in all AWS Regions)
 	//
-	//    * 5.6.35 (supported in all AWS Regions)
+	// 5.6.35(supported in all AWS Regions)
 	//
-	//    * 5.6.34 (supported in all AWS Regions)
+	// 5.6.34(supported in all AWS Regions)
 	//
-	//    * 5.6.29 (supported in all AWS Regions)
+	// 5.6.29(supported in all AWS Regions)
 	//
-	//    * 5.6.27 (supported in all AWS Regions except us-east-2, ca-central-1,
-	//    eu-west-2)
-	//
-	// 5.5.57(supported in all AWS Regions)
-	//
-	// 5.5.54(supported in all AWS Regions)
-	//
-	// 5.5.53(supported in all AWS Regions)
-	//
-	// 5.5.46(supported in all AWS Regions)
-	//
-	// Oracle 12c
-	//
-	// 12.1.0.2.v9(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v8(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v7(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v6(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v5(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v4(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v3(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v2(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v1(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// Oracle 11g
-	//
-	// 11.2.0.4.v13(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v12(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v11(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v10(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v9(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v8(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v7(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v6(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v5(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v4(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v3(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v1(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// PostgreSQL
-	//
-	// Version 9.6.x: 9.6.5 | 9.6.3 | 9.6.2 | 9.6.1
-	//
-	// Version 9.5.x: 9.5.9 | 9.5.7 | 9.5.6 | 9.5.4 | 9.5.2
-	//
-	// Version 9.4.x: 9.4.14 | 9.4.12 | 9.4.11 | 9.4.9 | 9.4.7
-	//
-	// Version 9.3.x: 9.3.19 | 9.3.17 | 9.3.16 | 9.3.14 | 9.3.12
+	// 5.6.27
 	EngineVersion *string `type:"string"`
 
 	// The amount of Provisioned IOPS (input/output operations per second) to be
@@ -12178,9 +12118,9 @@ type CreateDBInstanceInput struct {
 	// values, see see Amazon RDS Provisioned IOPS Storage to Improve Performance
 	// (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS).
 	//
-	// Constraints: Must be a multiple between 3 and 10 of the storage amount for
+	// Constraints: Must be a multiple between 1 and 50 of the storage amount for
 	// the DB instance. Must also be an integer multiple of 1000. For example, if
-	// the size of your DB instance is 500 GB, then your Iops value can be 2000,
+	// the size of your DB instance is 500 GiB, then your Iops value can be 2000,
 	// 3000, 4000, or 5000.
 	Iops *int64 `type:"integer"`
 
@@ -12920,6 +12860,9 @@ type CreateDBInstanceReadReplicaInput struct {
 	// a MonitoringRoleArn value.
 	MonitoringRoleArn *string `type:"string"`
 
+	// Specifies whether the read replica is in a Multi-AZ deployment.
+	MultiAZ *bool `type:"boolean"`
+
 	// The option group the DB instance is associated with. If omitted, the default
 	// option group for the engine specified is used.
 	OptionGroupName *string `type:"string"`
@@ -13144,6 +13087,12 @@ func (s *CreateDBInstanceReadReplicaInput) SetMonitoringInterval(v int64) *Creat
 // SetMonitoringRoleArn sets the MonitoringRoleArn field's value.
 func (s *CreateDBInstanceReadReplicaInput) SetMonitoringRoleArn(v string) *CreateDBInstanceReadReplicaInput {
 	s.MonitoringRoleArn = &v
+	return s
+}
+
+// SetMultiAZ sets the MultiAZ field's value.
+func (s *CreateDBInstanceReadReplicaInput) SetMultiAZ(v bool) *CreateDBInstanceReadReplicaInput {
+	s.MultiAZ = &v
 	return s
 }
 
@@ -13945,7 +13894,7 @@ type DBCluster struct {
 	_ struct{} `type:"structure"`
 
 	// For all database engines except Amazon Aurora, AllocatedStorage specifies
-	// the allocated storage size in gigabytes (GB). For Aurora, AllocatedStorage
+	// the allocated storage size in gibibytes (GiB). For Aurora, AllocatedStorage
 	// always returns 1, because Aurora DB cluster storage size is not fixed, but
 	// instead automatically adjusts as needed.
 	AllocatedStorage *int64 `type:"integer"`
@@ -14538,7 +14487,7 @@ func (s *DBClusterRole) SetStatus(v string) *DBClusterRole {
 type DBClusterSnapshot struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the allocated storage size in gigabytes (GB).
+	// Specifies the allocated storage size in gibibytes (GiB).
 	AllocatedStorage *int64 `type:"integer"`
 
 	// Provides the list of EC2 Availability Zones that instances in the DB cluster
@@ -14934,7 +14883,7 @@ func (s *DBEngineVersion) SetValidUpgradeTarget(v []*UpgradeTarget) *DBEngineVer
 type DBInstance struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the allocated storage size specified in gigabytes.
+	// Specifies the allocated storage size specified in gibibytes.
 	AllocatedStorage *int64 `type:"integer"`
 
 	// Indicates that minor version patches are applied automatically.
@@ -15792,7 +15741,7 @@ func (s *DBSecurityGroupMembership) SetStatus(v string) *DBSecurityGroupMembersh
 type DBSnapshot struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the allocated storage size in gigabytes (GB).
+	// Specifies the allocated storage size in gibibytes (GiB).
 	AllocatedStorage *int64 `type:"integer"`
 
 	// Specifies the name of the Availability Zone the DB instance was located in
@@ -21969,72 +21918,14 @@ func (s *ModifyDBClusterSnapshotAttributeOutput) SetDBClusterSnapshotAttributesR
 type ModifyDBInstanceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The new storage capacity of the RDS instance. Changing this setting does
-	// not result in an outage and the change is applied during the next maintenance
-	// window unless ApplyImmediately is set to true for this request.
+	// The new amount of storage (in gibibytes) to allocate for the DB instance.
 	//
-	// MySQL
+	// For MariaDB, MySQL, Oracle, and PostgreSQL, the value supplied must be at
+	// least 10% greater than the current value. Values that are not at least 10%
+	// greater than the existing value are rounded up so that they are 10% greater
+	// than the current value.
 	//
-	// Default: Uses existing setting
-	//
-	// Valid Values: 5-6144
-	//
-	// Constraints: Value supplied must be at least 10% greater than the current
-	// value. Values that are not at least 10% greater than the existing value are
-	// rounded up so that they are 10% greater than the current value.
-	//
-	// Type: Integer
-	//
-	// MariaDB
-	//
-	// Default: Uses existing setting
-	//
-	// Valid Values: 5-6144
-	//
-	// Constraints: Value supplied must be at least 10% greater than the current
-	// value. Values that are not at least 10% greater than the existing value are
-	// rounded up so that they are 10% greater than the current value.
-	//
-	// Type: Integer
-	//
-	// PostgreSQL
-	//
-	// Default: Uses existing setting
-	//
-	// Valid Values: 5-6144
-	//
-	// Constraints: Value supplied must be at least 10% greater than the current
-	// value. Values that are not at least 10% greater than the existing value are
-	// rounded up so that they are 10% greater than the current value.
-	//
-	// Type: Integer
-	//
-	// Oracle
-	//
-	// Default: Uses existing setting
-	//
-	// Valid Values: 10-6144
-	//
-	// Constraints: Value supplied must be at least 10% greater than the current
-	// value. Values that are not at least 10% greater than the existing value are
-	// rounded up so that they are 10% greater than the current value.
-	//
-	// SQL Server
-	//
-	// Cannot be modified.
-	//
-	// If you choose to migrate your DB instance from using standard storage to
-	// using Provisioned IOPS, or from using Provisioned IOPS to using standard
-	// storage, the process can take time. The duration of the migration depends
-	// on several factors such as database load, storage size, storage type (standard
-	// or Provisioned IOPS), amount of IOPS provisioned (if any), and the number
-	// of prior scale storage operations. Typical migration times are under 24 hours,
-	// but the process can take up to several days in some cases. During the migration,
-	// the DB instance is available for use, but might experience performance degradation.
-	// While the migration takes place, nightly backups for the instance are suspended.
-	// No other Amazon RDS operations can take place for the instance, including
-	// modifying the instance, rebooting the instance, deleting the instance, creating
-	// a Read Replica for the instance, and creating a DB snapshot of the instance.
+	// For the valid values for allocated storage for each engine, see CreateDBInstance.
 	AllocatedStorage *int64 `type:"integer"`
 
 	// Indicates that major version upgrades are allowed. Changing this parameter
@@ -22257,24 +22148,12 @@ type ModifyDBInstanceInput struct {
 	EngineVersion *string `type:"string"`
 
 	// The new Provisioned IOPS (I/O operations per second) value for the RDS instance.
+	//
 	// Changing this setting does not result in an outage and the change is applied
 	// during the next maintenance window unless the ApplyImmediately parameter
-	// is set to true for this request.
-	//
-	// Default: Uses existing setting
-	//
-	// Constraints: Value supplied must be at least 10% greater than the current
-	// value. Values that are not at least 10% greater than the existing value are
-	// rounded up so that they are 10% greater than the current value. If you are
-	// migrating from Provisioned IOPS to standard storage, set this value to 0.
-	// The DB instance will require a reboot for the change in storage type to take
-	// effect.
-	//
-	// SQL Server
-	//
-	// Setting the IOPS value for the SQL Server database engine is not supported.
-	//
-	// Type: Integer
+	// is set to true for this request. If you are migrating from Provisioned IOPS
+	// to standard storage, set this value to 0. The DB instance will require a
+	// reboot for the change in storage type to take effect.
 	//
 	// If you choose to migrate your DB instance from using standard storage to
 	// using Provisioned IOPS, or from using Provisioned IOPS to using standard
@@ -22288,6 +22167,13 @@ type ModifyDBInstanceInput struct {
 	// No other Amazon RDS operations can take place for the instance, including
 	// modifying the instance, rebooting the instance, deleting the instance, creating
 	// a Read Replica for the instance, and creating a DB snapshot of the instance.
+	//
+	// Constraints: For MariaDB, MySQL, Oracle, and PostgreSQL, the value supplied
+	// must be at least 10% greater than the current value. Values that are not
+	// at least 10% greater than the existing value are rounded up so that they
+	// are 10% greater than the current value.
+	//
+	// Default: Uses existing setting
 	Iops *int64 `type:"integer"`
 
 	// The license model for the DB instance.
@@ -22357,8 +22243,6 @@ type ModifyDBInstanceInput struct {
 	// Specifies if the DB instance is a Multi-AZ deployment. Changing this parameter
 	// does not result in an outage and the change is applied during the next maintenance
 	// window unless the ApplyImmediately parameter is set to true for this request.
-	//
-	// Constraints: Cannot be specified if the DB instance is a Read Replica.
 	MultiAZ *bool `type:"boolean"`
 
 	// The new DB instance identifier for the DB instance when renaming a DB instance.
@@ -22462,9 +22346,23 @@ type ModifyDBInstanceInput struct {
 
 	// Specifies the storage type to be associated with the DB instance.
 	//
-	// Valid values: standard | gp2 | io1
+	// If you specify Provisioned IOPS (io1), you must also include a value for
+	// the Iops parameter.
 	//
-	// If you specify io1, you must also include a value for the Iops parameter.
+	// If you choose to migrate your DB instance from using standard storage to
+	// using Provisioned IOPS, or from using Provisioned IOPS to using standard
+	// storage, the process can take time. The duration of the migration depends
+	// on several factors such as database load, storage size, storage type (standard
+	// or Provisioned IOPS), amount of IOPS provisioned (if any), and the number
+	// of prior scale storage operations. Typical migration times are under 24 hours,
+	// but the process can take up to several days in some cases. During the migration,
+	// the DB instance is available for use, but might experience performance degradation.
+	// While the migration takes place, nightly backups for the instance are suspended.
+	// No other Amazon RDS operations can take place for the instance, including
+	// modifying the instance, rebooting the instance, deleting the instance, creating
+	// a Read Replica for the instance, and creating a DB snapshot of the instance.
+	//
+	// Valid values: standard | gp2 | io1
 	//
 	// Default: io1 if the Iops parameter is specified, otherwise standard
 	StorageType *string `type:"string"`
@@ -26673,8 +26571,8 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	//
 	// Default: The same as source
 	//
-	// Constraint: Must be compatible with the engine of the source. You can restore
-	// a MariaDB 10.1 DB instance from a MySQL 5.6 snapshot.
+	// Constraint: Must be compatible with the engine of the source. For example,
+	// you can restore a MariaDB 10.1 DB instance from a MySQL 5.6 snapshot.
 	//
 	// Valid Values:
 	//
@@ -28455,7 +28353,7 @@ func (s *ValidDBInstanceModificationsMessage) SetStorage(v []*ValidStorageOption
 type ValidStorageOptions struct {
 	_ struct{} `type:"structure"`
 
-	// The valid range of Provisioned IOPS to gigabytes of storage multiplier. For
+	// The valid range of Provisioned IOPS to gibibytes of storage multiplier. For
 	// example, 3-10, which means that provisioned IOPS can be between 3 and 10
 	// times storage.
 	IopsToStorageRatio []*DoubleRange `locationNameList:"DoubleRange" type:"list"`
@@ -28463,7 +28361,7 @@ type ValidStorageOptions struct {
 	// The valid range of provisioned IOPS. For example, 1000-20000.
 	ProvisionedIops []*Range `locationNameList:"Range" type:"list"`
 
-	// The valid range of storage in gigabytes. For example, 100 to 6144.
+	// The valid range of storage in gibibytes. For example, 100 to 16384.
 	StorageSize []*Range `locationNameList:"Range" type:"list"`
 
 	// The valid storage types for your DB instance. For example, gp2, io1.

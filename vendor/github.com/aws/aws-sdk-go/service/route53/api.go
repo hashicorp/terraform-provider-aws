@@ -1352,6 +1352,16 @@ func (c *Route53) CreateTrafficPolicyVersionRequest(input *CreateTrafficPolicyVe
 //   * ErrCodeInvalidInput "InvalidInput"
 //   The input is not valid.
 //
+//   * ErrCodeTooManyTrafficPolicyVersionsForCurrentPolicy "TooManyTrafficPolicyVersionsForCurrentPolicy"
+//   This traffic policy version can't be created because you've reached the limit
+//   of 1000 on the number of versions that you can create for the current traffic
+//   policy.
+//
+//   To create more traffic policy versions, you can use GetTrafficPolicy to get
+//   the traffic policy document for a specified traffic policy version, and then
+//   use CreateTrafficPolicy to create a new traffic policy using the traffic
+//   policy document.
+//
 //   * ErrCodeConcurrentModification "ConcurrentModification"
 //   Another user submitted a request to create, update, or delete the object
 //   at the same time that you did. Retry the request.
