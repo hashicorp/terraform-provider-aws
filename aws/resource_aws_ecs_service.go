@@ -207,7 +207,14 @@ func resourceAwsEcsServiceImport(d *schema.ResourceData, meta interface{}) ([]*s
 	log.Printf("[DEBUG] Importing ECS service %s from cluster %s", name, cluster)
 
 	d.SetId(name)
-	d.Set("cluster", cluster)
+	clusterArn := arnString(
+		meta.(*AWSClient).partition,
+		meta.(*AWSClient).region,
+		"ecs",
+		meta.(*AWSClient).accountid,
+		fmt.Sprintf("cluster/%s", cluster),
+	)
+	d.Set("cluster", clusterArn)
 	return []*schema.ResourceData{d}, nil
 }
 

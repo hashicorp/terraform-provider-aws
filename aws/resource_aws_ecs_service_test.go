@@ -108,6 +108,29 @@ func TestAccAWSEcsServiceWithARN(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsService_basicImport(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceName := "aws_ecs_service.mongodb"
+	importInput := fmt.Sprintf("terraformecstest%d/mongodb-%d", rInt, rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsService(rInt),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     importInput,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsServiceWithUnnormalizedPlacementStrategy(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.Test(t, resource.TestCase{
