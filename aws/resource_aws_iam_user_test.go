@@ -80,6 +80,34 @@ func TestAccAWSUser_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSUser_nameChange(t *testing.T) {
+	var conf iam.GetUserOutput
+
+	name1 := fmt.Sprintf("test-user-%d", acctest.RandInt())
+	name2 := fmt.Sprintf("test-user-%d", acctest.RandInt())
+	path := "/"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserConfig(name1, path),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists("aws_iam_user.user", &conf),
+				),
+			},
+			{
+				Config: testAccAWSUserConfig(name2, path),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists("aws_iam_user.user", &conf),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSUserDestroy(s *terraform.State) error {
 	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
 
