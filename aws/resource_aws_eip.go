@@ -231,13 +231,27 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	// If we are updating an EIP that is not newly created, and we are attached to
 	// an instance or interface, detach first.
-	if (d.Get("instance").(string) != "" || d.Get("association_id").(string) != "") && !d.IsNewResource() {
+	disassociate := false
+	if !d.IsNewResource() {
+		if (d.Get("instance").(string) != "") && d.HasChange("instance") {
+			disassociate = true
+		} else if (d.Get("association_id").(string) != "") && (d.HasChange("network_interface") || d.HasChange("associate_with_private_ip")) {
+			disassociate = true
+		}
+	}
+	if disassociate {
 		if err := disassociateEip(d, meta); err != nil {
 			return err
 		}
 	}
 
-	if ok_instance || ok_interface {
+	associate := false
+	if ok_instance && d.HasChange("instance") {
+		associate = true
+	} else if ok_interface && (d.HasChange("network_interface") || d.HasChange("associate_with_private_ip")) {
+		associate = true
+	}
+	if associate {
 		instanceId := v_instance.(string)
 		networkInterfaceId := v_interface.(string)
 
