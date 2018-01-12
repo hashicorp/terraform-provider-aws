@@ -1501,20 +1501,17 @@ func (c *RDS) CreateDBInstanceReadReplicaRequest(input *CreateDBInstanceReadRepl
 //
 // Creates a new DB instance that acts as a Read Replica for an existing source
 // DB instance. You can create a Read Replica for a DB instance running MySQL,
-// MariaDB, or PostgreSQL.
+// MariaDB, or PostgreSQL. For more information, see Working with PostgreSQL,
+// MySQL, and MariaDB Read Replicas (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html).
 //
 // Amazon Aurora does not support this action. You must call the CreateDBInstance
 // action to create a DB instance for an Aurora DB cluster.
 //
-// All Read Replica DB instances are created as Single-AZ deployments with backups
-// disabled. All other DB instance attributes (including DB security groups
-// and DB parameter groups) are inherited from the source DB instance, except
-// as specified below.
+// All Read Replica DB instances are created with backups disabled. All other
+// DB instance attributes (including DB security groups and DB parameter groups)
+// are inherited from the source DB instance, except as specified below.
 //
-// The source DB instance must have backup retention enabled.
-//
-// For more information, see Working with PostgreSQL, MySQL, and MariaDB Read
-// Replicas (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html).
+// Your source DB instance must have backup retention enabled.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9443,6 +9440,8 @@ func (c *RDS) StartDBInstanceRequest(input *StartDBInstanceInput) (req *request.
 // AWS CLI command, or the StopDBInstance action. For more information, see
 // Stopping and Starting a DB instance in the AWS RDS user guide.
 //
+// This command does not apply to Aurora MySQL and Aurora PostgreSQL.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -9563,6 +9562,8 @@ func (c *RDS) StopDBInstanceRequest(input *StopDBInstanceInput) (req *request.Re
 // group membership. Amazon RDS also retains the transaction logs so you can
 // do a point-in-time restore if necessary. For more information, see Stopping
 // and Starting a DB instance in the AWS RDS user guide.
+//
+// This command does not apply to Aurora MySQL and Aurora PostgreSQL.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11716,7 +11717,7 @@ type CreateDBInstanceInput struct {
 	//
 	// Constraints to the amount of storage for each storage type are the following:
 	//
-	//    * General Purpose (SSD) storage (gp2): Must be an integer from 5 to 16384.
+	//    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 16384.
 	//
 	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 16384.
 	//
@@ -11726,7 +11727,7 @@ type CreateDBInstanceInput struct {
 	//
 	// Constraints to the amount of storage for each storage type are the following:
 	//
-	//    * General Purpose (SSD) storage (gp2): Must be an integer from 5 to 16384.
+	//    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 16384.
 	//
 	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 16384.
 	//
@@ -11736,7 +11737,7 @@ type CreateDBInstanceInput struct {
 	//
 	// Constraints to the amount of storage for each storage type are the following:
 	//
-	//    * General Purpose (SSD) storage (gp2): Must be an integer from 5 to 16384.
+	//    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 16384.
 	//
 	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 16384.
 	//
@@ -11746,7 +11747,7 @@ type CreateDBInstanceInput struct {
 	//
 	// Constraints to the amount of storage for each storage type are the following:
 	//
-	//    * General Purpose (SSD) storage (gp2): Must be an integer from 10 to 16384.
+	//    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 16384.
 	//
 	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 16384.
 	//
@@ -12028,7 +12029,9 @@ type CreateDBInstanceInput struct {
 	//
 	// MariaDB
 	//
-	//    * 10.1.26 (supported in all AWS Regions)
+	//    * 10.2.11 (supported in all AWS Regions)
+	//
+	// 10.1.26 (supported in all AWS Regions)
 	//
 	//    * 10.1.23 (supported in all AWS Regions)
 	//
@@ -12036,7 +12039,7 @@ type CreateDBInstanceInput struct {
 	//
 	//    * 10.1.14 (supported in all AWS Regions except us-east-2)
 	//
-	// 10.0.32 (supported in all AWS Regions)
+	//    * 10.0.32 (supported in all AWS Regions)
 	//
 	//    * 10.0.31 (supported in all AWS Regions)
 	//
@@ -12049,11 +12052,11 @@ type CreateDBInstanceInput struct {
 	//
 	// Microsoft SQL Server 2017
 	//
-	// 14.00.1000.169.v1 (supported for all editions, and all AWS Regions)
+	//    * 14.00.1000.169.v1 (supported for all editions, and all AWS Regions)
 	//
 	// Microsoft SQL Server 2016
 	//
-	// 13.00.4451.0.v1 (supported for all editions, and all AWS Regions)
+	//    * 13.00.4451.0.v1 (supported for all editions, and all AWS Regions)
 	//
 	//    * 13.00.4422.0.v1 (supported for all editions, and all AWS Regions)
 	//
@@ -12061,7 +12064,7 @@ type CreateDBInstanceInput struct {
 	//
 	// Microsoft SQL Server 2014
 	//
-	// 12.00.5546.0.v1 (supported for all editions, and all AWS Regions)
+	//    * 12.00.5546.0.v1 (supported for all editions, and all AWS Regions)
 	//
 	//    * 12.00.5000.0.v1 (supported for all editions, and all AWS Regions)
 	//
@@ -12070,7 +12073,7 @@ type CreateDBInstanceInput struct {
 	//
 	// Microsoft SQL Server 2012
 	//
-	// 11.00.6594.0.v1 (supported for all editions, and all AWS Regions)
+	//    * 11.00.6594.0.v1 (supported for all editions, and all AWS Regions)
 	//
 	//    * 11.00.6020.0.v1 (supported for all editions, and all AWS Regions)
 	//
@@ -12082,8 +12085,8 @@ type CreateDBInstanceInput struct {
 	//
 	// Microsoft SQL Server 2008 R2
 	//
-	// 10.50.6529.0.v1 (supported for all editions, and all AWS Regions except us-east-2,
-	// ca-central-1, and eu-west-2)
+	//    * 10.50.6529.0.v1 (supported for all editions, and all AWS Regions except
+	//    us-east-2, ca-central-1, and eu-west-2)
 	//
 	//    * 10.50.6000.34.v1 (supported for all editions, and all AWS Regions except
 	//    us-east-2, ca-central-1, and eu-west-2)
@@ -12093,86 +12096,21 @@ type CreateDBInstanceInput struct {
 	//
 	// MySQL
 	//
-	// 5.7.19 (supported in all AWS regions)
+	//    * 5.7.19 (supported in all AWS regions)
 	//
 	//    * 5.7.17 (supported in all AWS regions)
 	//
 	//    * 5.7.16 (supported in all AWS regions)
 	//
-	//    * 5.6.37 (supported in all AWS Regions)
+	// 5.6.37(supported in all AWS Regions)
 	//
-	//    * 5.6.35 (supported in all AWS Regions)
+	// 5.6.35(supported in all AWS Regions)
 	//
-	//    * 5.6.34 (supported in all AWS Regions)
+	// 5.6.34(supported in all AWS Regions)
 	//
-	//    * 5.6.29 (supported in all AWS Regions)
+	// 5.6.29(supported in all AWS Regions)
 	//
-	//    * 5.6.27 (supported in all AWS Regions except us-east-2, ca-central-1,
-	//    eu-west-2)
-	//
-	// 5.5.57(supported in all AWS Regions)
-	//
-	// 5.5.54(supported in all AWS Regions)
-	//
-	// 5.5.53(supported in all AWS Regions)
-	//
-	// 5.5.46(supported in all AWS Regions)
-	//
-	// Oracle 12c
-	//
-	// 12.1.0.2.v9(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v8(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v7(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v6(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v5(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v4(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v3(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v2(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v1(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// Oracle 11g
-	//
-	// 11.2.0.4.v13(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v12(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v11(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v10(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v9(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v8(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v7(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v6(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v5(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v4(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v3(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v1(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// PostgreSQL
-	//
-	// Version 9.6.x: 9.6.5 | 9.6.3 | 9.6.2 | 9.6.1
-	//
-	// Version 9.5.x: 9.5.9 | 9.5.7 | 9.5.6 | 9.5.4 | 9.5.2
-	//
-	// Version 9.4.x: 9.4.14 | 9.4.12 | 9.4.11 | 9.4.9 | 9.4.7
-	//
-	// Version 9.3.x: 9.3.19 | 9.3.17 | 9.3.16 | 9.3.14 | 9.3.12
+	// 5.6.27
 	EngineVersion *string `type:"string"`
 
 	// The amount of Provisioned IOPS (input/output operations per second) to be
@@ -12922,6 +12860,9 @@ type CreateDBInstanceReadReplicaInput struct {
 	// a MonitoringRoleArn value.
 	MonitoringRoleArn *string `type:"string"`
 
+	// Specifies whether the read replica is in a Multi-AZ deployment.
+	MultiAZ *bool `type:"boolean"`
+
 	// The option group the DB instance is associated with. If omitted, the default
 	// option group for the engine specified is used.
 	OptionGroupName *string `type:"string"`
@@ -13146,6 +13087,12 @@ func (s *CreateDBInstanceReadReplicaInput) SetMonitoringInterval(v int64) *Creat
 // SetMonitoringRoleArn sets the MonitoringRoleArn field's value.
 func (s *CreateDBInstanceReadReplicaInput) SetMonitoringRoleArn(v string) *CreateDBInstanceReadReplicaInput {
 	s.MonitoringRoleArn = &v
+	return s
+}
+
+// SetMultiAZ sets the MultiAZ field's value.
+func (s *CreateDBInstanceReadReplicaInput) SetMultiAZ(v bool) *CreateDBInstanceReadReplicaInput {
+	s.MultiAZ = &v
 	return s
 }
 
@@ -22296,8 +22243,6 @@ type ModifyDBInstanceInput struct {
 	// Specifies if the DB instance is a Multi-AZ deployment. Changing this parameter
 	// does not result in an outage and the change is applied during the next maintenance
 	// window unless the ApplyImmediately parameter is set to true for this request.
-	//
-	// Constraints: Cannot be specified if the DB instance is a Read Replica.
 	MultiAZ *bool `type:"boolean"`
 
 	// The new DB instance identifier for the DB instance when renaming a DB instance.
@@ -26626,8 +26571,8 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	//
 	// Default: The same as source
 	//
-	// Constraint: Must be compatible with the engine of the source. You can restore
-	// a MariaDB 10.1 DB instance from a MySQL 5.6 snapshot.
+	// Constraint: Must be compatible with the engine of the source. For example,
+	// you can restore a MariaDB 10.1 DB instance from a MySQL 5.6 snapshot.
 	//
 	// Valid Values:
 	//
