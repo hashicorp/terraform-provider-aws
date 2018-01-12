@@ -39,6 +39,7 @@ ENHANCEMENTS:
 * resource/aws_ssm_association: Allow for multiple targets [GH-2297]
 * resource/aws_instance: Add computed field for volume_id of block device [GH-1489]
 * resource/aws_api_gateway_integration: Allow update of URI attributes [GH-2834]
+* resource/aws_ecs_cluster: Support resource import [GH-2762]
 
 BUG FIXES:
 
