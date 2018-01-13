@@ -1,0 +1,77 @@
+---
+layout: "aws"
+page_title: "AWS: aws_acm_certificate"
+sidebar_current: "docs-aws-resource-acm-certificate"
+description: |-
+  Requests and manages a certificate from Amazon Certificate Manager (ACM).
+---
+
+# aws_acm_certificate
+
+The ACM certificate resource allows requesting and management of certificates
+from the Amazon Certificate Manager.
+
+It deals with requesting certificates and managing their attributes and life-cycle.
+This resource does not deal with validation of a certificate but can provide inputs
+for other resources implementing the validation. It does not wait for a certificate to be issued.
+Use a [`aws_acm_certificate_validation`](acm_certificate_validation.html) resource for this.
+
+Most commonly, this resource is used to together with [`aws_route53_record`](route53_record.html) and
+[`aws_acm_certificate_validation`](acm_certificate_validation.html) to request a DNS validated certificate,
+deploy the required validation records and wait for validation to complete.
+
+## Example Usage
+
+```hcl
+resource "aws_acm_certificate" "cert" {
+    domain_name = "example.com"
+	validation_method = "DNS"
+}
+
+data "aws_route53_zone" "zone" {
+  name = "example.com."
+  private_zone = false
+}
+
+resource "aws_route53_record" "cert_validation" {
+  name = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_name}"
+  type = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_type}"
+  zone_id = "${data.aws_route53_zone.zone.id}"
+  records = ["${aws_acm_certificate.cert.domain_validation_options.0.resource_record_value}"]
+  ttl = 60
+}
+
+resource "aws_acm_certificate_validation" "cert" {
+  certificate_arn = "${aws_acm_certificate.cert.certificate_arn}"
+  validation_record_fqdn = "${aws_route53_record.cert_validation.fqdn}"
+}
+
+resource "aws_lb_listener" "front_end" {
+  # [...]
+  certificate_arn   = "${aws_acm_certificate_validation.cert.certificate_arn}"
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `domain_name` - (Required) A domain name for which the certificate should be issued
+* `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
+* `validation_method` - (Required) Which method to use for validation (only `DNS` is supported at the moment)
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `certificate_arn` - The ARN of the certificate
+* `domain_validation_options` - A list of attributes to feed into other resources to complete certificate validation. Can have more than one element, e.g. if SANs are defined
+
+Domain validation objects export the following attributes:
+
+* `domain_name` - The domain to be validated
+* `resource_record_name` - The name of the DNS record to create to validate the certificate
+* `resource_record_type` - The type of DNS record to create
+* `resource_record_value` - The value the DNS record needs to have
+
+
