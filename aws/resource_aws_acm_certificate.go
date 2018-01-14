@@ -22,7 +22,6 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"subject_alternative_names": &schema.Schema{
 				Type:     schema.TypeList,
 				Optional: true,
@@ -144,21 +143,21 @@ func cleanUpSubjectAlternativeNames(cert *acm.CertificateDetail) []string {
 }
 
 func convertDomainValidationOptions(validations []*acm.DomainValidation) ([]map[string]interface{}, error) {
-	result := make([]map[string]interface{}, 0, len(validations))
+	var result []map[string]interface{}
 
 	for _, o := range validations {
-		validationOption := make(map[string]interface{})
-		validationOption["domain_name"] = *o.DomainName
 		if o.ResourceRecord != nil {
-			validationOption["resource_record_name"] = *o.ResourceRecord.Name
-			validationOption["resource_record_type"] = *o.ResourceRecord.Type
-			validationOption["resource_record_value"] = *o.ResourceRecord.Value
+			validationOption := map[string]interface{}{
+				"domain_name":           *o.DomainName,
+				"resource_record_name":  *o.ResourceRecord.Name,
+				"resource_record_type":  *o.ResourceRecord.Type,
+				"resource_record_value": *o.ResourceRecord.Value,
+			}
+			result = append(result, validationOption)
 		} else {
 			log.Printf("[DEBUG] No resource record found in validation options, need to retry: %#v", o)
 			return nil, fmt.Errorf("No resource record found in DNS DomainValidationOptions: %v", o)
 		}
-
-		result = append(result, validationOption)
 	}
 
 	return result, nil

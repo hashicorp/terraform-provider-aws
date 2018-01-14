@@ -18,6 +18,7 @@ func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 
 	root_zone_domain := "sandbox.sellmayr.net"
 	domain := "certtest.sandbox.sellmayr.net"
+	sanDomain := "certtest2.sandbox.sellmayr.net"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -26,28 +27,28 @@ func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Test that we can request a certificate
 			resource.TestStep{
-				Config: testAccAcmCertificateConfig(domain),
+				Config: testAccAcmCertificateConfig(domain, sanDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcmCertificateExists("aws_acm_certificate.cert", &conf),
-					testAccCheckAcmCertificateAttributes("aws_acm_certificate.cert", &conf, domain, "PENDING_VALIDATION"),
+					testAccCheckAcmCertificateAttributes("aws_acm_certificate.cert", &conf, domain, sanDomain, "PENDING_VALIDATION"),
 				),
 			},
 			// Test that validation times out if certificate can't be validated
 			resource.TestStep{
-				Config:      testAccAcmCertificateWithValidationConfig(domain),
+				Config:      testAccAcmCertificateWithValidationConfig(domain, sanDomain),
 				ExpectError: regexp.MustCompile("Expected certificate to be issued but was in state PENDING_VALIDATION"),
 			},
 			// Test that validation fails if given validation_fqdns don't match
 			resource.TestStep{
-				Config:      testAccAcmCertificateWithValidationConfigAndWrongFQDN(domain),
+				Config:      testAccAcmCertificateWithValidationConfigAndWrongFQDN(domain, sanDomain),
 				ExpectError: regexp.MustCompile("Certificate needs .* to be set but only .* was passed to validation_record_fqdns"),
 			},
 			// Test that validation succeeds once we provide the right DNS validation records
 			resource.TestStep{
-				Config: testAccAcmCertificateWithValidationAndRecordsConfig(root_zone_domain, domain),
+				Config: testAccAcmCertificateWithValidationAndRecordsConfig(root_zone_domain, domain, sanDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcmCertificateExists("aws_acm_certificate.cert", &confAfterValidation),
-					testAccCheckAcmCertificateAttributes("aws_acm_certificate.cert", &confAfterValidation, domain, "ISSUED"),
+					testAccCheckAcmCertificateAttributes("aws_acm_certificate.cert", &confAfterValidation, domain, sanDomain, "ISSUED"),
 					testAccCheckAcmCertificateValidationAttributes("aws_acm_certificate_validation.cert", &confAfterValidation),
 				),
 			},
@@ -55,34 +56,37 @@ func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 	})
 }
 
-func testAccAcmCertificateConfig(domain string) string {
+func testAccAcmCertificateConfig(domain string, sanDomain string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "cert" {
     domain_name = "%s"
 	validation_method = "DNS"
+	subject_alternative_names = ["%s"]
 }
-`, domain)
+`, domain, sanDomain)
 }
 
-func testAccAcmCertificateWithValidationConfig(domain string) string {
+func testAccAcmCertificateWithValidationConfig(domain string, sanDomain string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "cert" {
     domain_name = "%s"
 	validation_method = "DNS"
+	subject_alternative_names = ["%s"]
 }
 
 resource "aws_acm_certificate_validation" "cert" {
   certificate_arn = "${aws_acm_certificate.cert.certificate_arn}"
   timeout = "20s"
 }
-`, domain)
+`, domain, sanDomain)
 }
 
-func testAccAcmCertificateWithValidationConfigAndWrongFQDN(domain string) string {
+func testAccAcmCertificateWithValidationConfigAndWrongFQDN(domain string, sanDomain string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "cert" {
     domain_name = "%s"
 	validation_method = "DNS"
+	subject_alternative_names = ["%s"]
 }
 
 resource "aws_acm_certificate_validation" "cert" {
@@ -90,14 +94,15 @@ resource "aws_acm_certificate_validation" "cert" {
   validation_record_fqdns = ["some-wrong-fqdn.example.com"]
   timeout = "20s"
 }
-`, domain)
+`, domain, sanDomain)
 }
 
-func testAccAcmCertificateWithValidationAndRecordsConfig(rootZoneDomain string, domain string) string {
+func testAccAcmCertificateWithValidationAndRecordsConfig(rootZoneDomain string, domain string, sanDomain string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "cert" {
     domain_name = "%s"
 	validation_method = "DNS"
+	subject_alternative_names = ["%s"]
 }
 
 data "aws_route53_zone" "zone" {
@@ -113,11 +118,22 @@ resource "aws_route53_record" "cert_validation" {
   ttl = 60
 }
 
+resource "aws_route53_record" "cert_validation_san" {
+  name = "${aws_acm_certificate.cert.domain_validation_options.1.resource_record_name}"
+  type = "${aws_acm_certificate.cert.domain_validation_options.1.resource_record_type}"
+  zone_id = "${data.aws_route53_zone.zone.id}"
+  records = ["${aws_acm_certificate.cert.domain_validation_options.1.resource_record_value}"]
+  ttl = 60
+}
+
 resource "aws_acm_certificate_validation" "cert" {
   certificate_arn = "${aws_acm_certificate.cert.certificate_arn}"
-  validation_record_fqdns = ["${aws_route53_record.cert_validation.fqdn}"]
+  validation_record_fqdns = [
+	"${aws_route53_record.cert_validation.fqdn}",
+	"${aws_route53_record.cert_validation_san.fqdn}"
+  ]
 }
-`, domain, rootZoneDomain)
+`, domain, sanDomain, rootZoneDomain)
 }
 
 func testAccCheckAcmCertificateExists(n string, res *acm.DescribeCertificateOutput) resource.TestCheckFunc {
@@ -155,7 +171,7 @@ func testAccCheckAcmCertificateExists(n string, res *acm.DescribeCertificateOutp
 	}
 }
 
-func testAccCheckAcmCertificateAttributes(n string, cert *acm.DescribeCertificateOutput, domain string, status string) resource.TestCheckFunc {
+func testAccCheckAcmCertificateAttributes(n string, cert *acm.DescribeCertificateOutput, domain string, sanDomain string, status string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -166,14 +182,15 @@ func testAccCheckAcmCertificateAttributes(n string, cert *acm.DescribeCertificat
 		if *cert.Certificate.DomainName != domain {
 			return fmt.Errorf("Domain name is %s but expected %s", *cert.Certificate.DomainName, domain)
 		}
+		if *cert.Certificate.SubjectAlternativeNames[1] != sanDomain {
+			return fmt.Errorf("SAN Domain name is %s but expected %s", *cert.Certificate.SubjectAlternativeNames[1], sanDomain)
+		}
 		if *cert.Certificate.Status != status {
 			return fmt.Errorf("Status is %s but expected %s", *cert.Certificate.Status, status)
 		}
 		if attrs["domain_name"] != domain {
 			return fmt.Errorf("Domain name in state is %s but expected %s", attrs["domain_name"], domain)
 		}
-
-		// TODO: check other attributes?
 
 		return nil
 	}
