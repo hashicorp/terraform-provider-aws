@@ -18,6 +18,9 @@ func resourceAwsDxConnection() *schema.Resource {
 		Read:   resourceAwsDxConnectionRead,
 		Update: resourceAwsDxConnectionUpdate,
 		Delete: resourceAwsDxConnectionDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

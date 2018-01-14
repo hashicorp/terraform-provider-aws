@@ -35,3 +35,11 @@ The following attributes are exported:
 
 * `id` - The ID of the connection.
 * `arn` - The ARN of the connection.
+
+## Import
+
+Direct Connect connections can be imported using the `connection id`, e.g.
+
+```
+$ terraform import aws_dx_connection.test_connection dxcon-ffre0ec3
+```

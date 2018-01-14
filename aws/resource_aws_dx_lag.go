@@ -18,6 +18,9 @@ func resourceAwsDxLag() *schema.Resource {
 		Read:   resourceAwsDxLagRead,
 		Update: resourceAwsDxLagUpdate,
 		Delete: resourceAwsDxLagDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
