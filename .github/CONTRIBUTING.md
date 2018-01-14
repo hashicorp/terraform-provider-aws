@@ -253,6 +253,29 @@ into Terraform.
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
 
+#### Terraform Schema and Code Idiosyncracies
+
+There are aspects of the terraform code base and models which have a common theme
+and style
+
+ - [ ] __Ignore Timestamps__: Generally, creation and modification dates are not
+   included in schemas.
+ - [ ] __Attribute Update Tests__: Try to add a second test step in at least one
+   test case showing attribute changes propagate during Update operations
+ - [ ] __AWS Errors__: Use the helper function (`isAWSErr(err, ...)`) to check the
+   type of AWS error.
+ - [ ] __`Computed`__: The `Computed` attribute is generally used in isolation for
+   any IDs or anything not defined in the config and returned by the API.
+ - [ ] __`Computed` with `Optional`__: The `Computed` attribute is generally used
+   in conjunction with `Optional` when the API automatically sets unpredictable 
+   default value or when the value is generally not static and depends on other 
+   attributes.
+ - [ ] __American Spelling__: Use American spelling for variables, functions, and
+   constants.
+ - [ ] __Removed Resources__: If a resources is removed from AWS, make sure to
+   catch this case, print an error, and use `d.SetId("")` to remove the resource
+   from the state.
+ 
 
 ### Writing Acceptance Tests
 
