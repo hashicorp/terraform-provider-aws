@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"log"
+	"reflect"
+	"sort"
 	"time"
 )
 
@@ -22,10 +24,12 @@ func resourceAwsAcmCertificateValidation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"validation_record_fqdn": {
-				Type:     schema.TypeString,
+			"validation_record_fqdns": {
+				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 			"timeout": {
 				Type:     schema.TypeString,
@@ -38,22 +42,38 @@ func resourceAwsAcmCertificateValidation() *schema.Resource {
 }
 
 func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta interface{}) error {
-	// TODO: check that validation_record_fqdn (if set) matches the domain validation information for cert
-	// TODO: check that certificate is AMAZON_ISSUED and has Domain Validation enabled (should we also allow to wait for E-Mail validation?)
-
 	timeout, err := time.ParseDuration(d.Get("timeout").(string))
 	if err != nil {
 		return err
 	}
 
-	return resource.Retry(timeout, func() *resource.RetryError {
-		acmconn := meta.(*AWSClient).acmconn
+	certificate_arn := d.Get("certificate_arn").(string)
 
-		certificate_arn := d.Get("certificate_arn").(string)
-		params := &acm.DescribeCertificateInput{
-			CertificateArn: aws.String(certificate_arn),
+	acmconn := meta.(*AWSClient).acmconn
+	params := &acm.DescribeCertificateInput{
+		CertificateArn: aws.String(certificate_arn),
+	}
+
+	resp, err := acmconn.DescribeCertificate(params)
+
+	if err != nil {
+		return fmt.Errorf("Error describing certificate: %s", err)
+	}
+
+	if *resp.Certificate.Type != "AMAZON_ISSUED" {
+		return fmt.Errorf("Certificate %s has type %s, no validation necessary", *resp.Certificate.CertificateArn, *resp.Certificate.Type)
+	}
+
+	if validation_record_fqdns, ok := d.GetOk("validation_record_fqdns"); ok {
+		err := resourceAwsAcmCertificateCheckValidationRecords(validation_record_fqdns.(*schema.Set).List(), resp.Certificate)
+		if err != nil {
+			return err
 		}
+	} else {
+		log.Printf("[INFO] No validation_record_fqdns set, skipping check")
+	}
 
+	return resource.Retry(timeout, func() *resource.RetryError {
 		resp, err := acmconn.DescribeCertificate(params)
 
 		if err != nil {
@@ -67,6 +87,33 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 		log.Printf("[INFO] ACM Certificate validation for %s done, certificate was issued", certificate_arn)
 		return resource.NonRetryableError(resourceAwsAcmCertificateValidationRead(d, meta))
 	})
+}
+
+func resourceAwsAcmCertificateCheckValidationRecords(validation_record_fqdns []interface{}, cert *acm.CertificateDetail) error {
+	expected_fqdns := make([]string, len(cert.DomainValidationOptions))
+	for i, v := range cert.DomainValidationOptions {
+		if *v.ValidationMethod == "DNS" {
+			expected_fqdns[i] = *v.ResourceRecord.Name
+		}
+	}
+
+	actual_validation_record_fqdns := make([]string, 0, len(validation_record_fqdns))
+
+	for _, v := range validation_record_fqdns {
+		val := v.(string)
+		actual_validation_record_fqdns = append(actual_validation_record_fqdns, val)
+	}
+
+	sort.Strings(expected_fqdns)
+	sort.Strings(actual_validation_record_fqdns)
+
+	log.Printf("[DEBUG] Checking validation_record_fqdns. Expected: %v, Actual: %v", expected_fqdns, actual_validation_record_fqdns)
+
+	if !reflect.DeepEqual(expected_fqdns, actual_validation_record_fqdns) {
+		return fmt.Errorf("Certificate needs %v to be set but only %v was passed to validation_record_fqdns", expected_fqdns, actual_validation_record_fqdns)
+	}
+
+	return nil
 }
 
 func resourceAwsAcmCertificateValidationRead(d *schema.ResourceData, meta interface{}) error {

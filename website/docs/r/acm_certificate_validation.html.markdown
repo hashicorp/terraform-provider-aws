@@ -41,7 +41,7 @@ resource "aws_route53_record" "cert_validation" {
 
 resource "aws_acm_certificate_validation" "cert" {
   certificate_arn = "${aws_acm_certificate.cert.certificate_arn}"
-  validation_record_fqdn = "${aws_route53_record.cert_validation.fqdn}"
+  validation_record_fqdns = ["${aws_route53_record.cert_validation.fqdn}"]
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -55,7 +55,7 @@ resource "aws_lb_listener" "front_end" {
 The following arguments are supported:
 
 * `certificate_arn` - (Required) The ARN of the certificate that is being validated.
-* `validation_record_fqdn` - (Optional) The FQDN of the record that implements the validation. If this is set, the resource can implement additional sanity checks and has an explicit dependency on the resource that is implementing the validation
+* `validation_record_fqdns` - (Optional) List of FQDNs that implement the validation. If this is set, the resource can implement additional sanity checks and has an explicit dependency on the resource that is implementing the validation
 * `timeout` - (Optional) How long to wait for a certificate to be issued. Defaults to `"45m"` but ACM usually validates certificates much faster.
 
 ## Attributes Reference

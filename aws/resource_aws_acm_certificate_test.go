@@ -37,6 +37,11 @@ func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 				Config:      testAccAcmCertificateWithValidationConfig(domain),
 				ExpectError: regexp.MustCompile("Expected certificate to be issued but was in state PENDING_VALIDATION"),
 			},
+			// Test that validation fails if given validation_fqdns don't match
+			resource.TestStep{
+				Config:      testAccAcmCertificateWithValidationConfigAndWrongFQDN(domain),
+				ExpectError: regexp.MustCompile("Certificate needs .* to be set but only .* was passed to validation_record_fqdns"),
+			},
 			// Test that validation succeeds once we provide the right DNS validation records
 			resource.TestStep{
 				Config: testAccAcmCertificateWithValidationAndRecordsConfig(root_zone_domain, domain),
@@ -73,6 +78,21 @@ resource "aws_acm_certificate_validation" "cert" {
 `, domain)
 }
 
+func testAccAcmCertificateWithValidationConfigAndWrongFQDN(domain string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "cert" {
+    domain_name = "%s"
+	validation_method = "DNS"
+}
+
+resource "aws_acm_certificate_validation" "cert" {
+  certificate_arn = "${aws_acm_certificate.cert.certificate_arn}"
+  validation_record_fqdns = ["some-wrong-fqdn.example.com"]
+  timeout = "20s"
+}
+`, domain)
+}
+
 func testAccAcmCertificateWithValidationAndRecordsConfig(rootZoneDomain string, domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "cert" {
@@ -95,7 +115,7 @@ resource "aws_route53_record" "cert_validation" {
 
 resource "aws_acm_certificate_validation" "cert" {
   certificate_arn = "${aws_acm_certificate.cert.certificate_arn}"
-  validation_record_fqdn = "${aws_route53_record.cert_validation.fqdn}" # This wouldn't strictly be necessary but it can enforce a dependency
+  validation_record_fqdns = ["${aws_route53_record.cert_validation.fqdn}"]
 }
 `, domain, rootZoneDomain)
 }
