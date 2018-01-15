@@ -1,4 +1,9 @@
 ## 1.7.1 (Unreleased)
+
+BUG FIXES:
+
+* data-source/aws_db_snapshot: Prevent crash on unfinished snapshots [GH-2960]
+
 ## 1.7.0 (January 12, 2018)
 
 FEATURES:
