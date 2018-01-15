@@ -270,11 +270,13 @@ and style
    in conjunction with `Optional` when the API automatically sets unpredictable 
    default value or when the value is generally not static and depends on other 
    attributes.
- - [ ] __American Spelling__: Use American spelling for variables, functions, and
-   constants.
- - [ ] __Removed Resources__: If a resources is removed from AWS, make sure to
-   catch this case, print an error, and use `d.SetId("")` to remove the resource
-   from the state.
+ - [ ] __Spelling__: When referencing reosources in the AWS API, use spelling which 
+   matches that of official AWS documentat. In all other case, use American 
+   spelling for variables, functions, and constants.
+ - [ ] __Removed Resources__:  If a resource is removed from AWS outside of
+   Terraform (e.g. via different tool, API or web UI), make sure to catch this case.
+   Print a [WARN] log message, and use `d.SetId("")` to remove the resource from
+   state inside `Read()`.
  
 
 ### Writing Acceptance Tests
