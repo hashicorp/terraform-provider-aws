@@ -241,9 +241,11 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 				"copy_options":               *destination.RedshiftDestinationDescription.CopyCommand.CopyOptions,
 				"data_table_columns":         *destination.RedshiftDestinationDescription.CopyCommand.DataTableColumns,
 				"s3_backup_mode":             *destination.RedshiftDestinationDescription.S3BackupMode,
-				"s3_backup_configuration":    flattenFirehoseS3Configuration(*destination.RedshiftDestinationDescription.S3BackupDescription),
 				"retry_duration":             *destination.RedshiftDestinationDescription.RetryOptions.DurationInSeconds,
 				"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(*destination.RedshiftDestinationDescription.CloudWatchLoggingOptions),
+			}
+			if s3bd := destination.RedshiftDestinationDescription.S3BackupDescription; s3bd != nil {
+				redshiftConfiguration["s3_backup_configuration"] = flattenFirehoseS3Configuration(*s3bd)
 			}
 			redshiftConfList := make([]map[string]interface{}, 1)
 			redshiftConfList[0] = redshiftConfiguration
