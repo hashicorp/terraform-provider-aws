@@ -74,7 +74,6 @@ resource "aws_vpc_peering_connection" "foo" {
   peer_vpc_id   = "${aws_vpc.bar.id}"
   vpc_id        = "${aws_vpc.foo.id}"
   peer_region   = "us-east-1"
-  auto_accept   = true
 }
 
 resource "aws_vpc" "foo" {
