@@ -2008,9 +2008,10 @@ func validateCognitoRoleMappingsType(v interface{}, k string) (ws []string, erro
 }
 
 // Validates that either authenticated or unauthenticated is defined
-func validateCognitoRoles(v map[string]interface{}, k string) (errors []error) {
-	_, hasAuthenticated := v["authenticated"].(string)
-	_, hasUnauthenticated := v["unauthenticated"].(string)
+func validateCognitoRoles(v map[string]interface{}, k string) (roles []string, errors []error) {
+	authRole, hasAuthenticated := v["authenticated"].(string)
+	unauthRole, hasUnauthenticated := v["unauthenticated"].(string)
+	roles = append(roles, authRole, unauthRole)
 
 	if !hasAuthenticated && !hasUnauthenticated {
 		errors = append(errors, fmt.Errorf("%q: Either \"authenticated\" or \"unauthenticated\" must be defined", k))

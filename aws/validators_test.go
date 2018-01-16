@@ -2752,7 +2752,7 @@ func TestValidateCognitoRoles(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		errors := validateCognitoRoles(s, "roles")
+		_, errors := validateCognitoRoles(s, "roles")
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito Roles: %v", s, errors)
 		}
@@ -2764,7 +2764,7 @@ func TestValidateCognitoRoles(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		errors := validateCognitoRoles(s, "roles")
+		_, errors := validateCognitoRoles(s, "roles")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito Roles: %v", s, errors)
 		}
