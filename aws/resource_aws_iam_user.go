@@ -136,7 +136,7 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error updating IAM User %s: %s", d.Id(), err)
 		}
 
-		d.SetId(*request.NewUserName)
+		d.SetId(nn.(string))
 		return resourceAwsIamUserRead(d, meta)
 	}
 	return nil
