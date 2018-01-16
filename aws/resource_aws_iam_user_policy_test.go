@@ -94,25 +94,27 @@ func testAccCheckIAMUserPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		role, name := resourceAwsIamUserPolicyParseId(rs.Primary.ID)
-
-		request := &iam.GetRolePolicyInput{
-			PolicyName: aws.String(name),
-			RoleName:   aws.String(role),
+		user, name, err := resourceAwsIamUserPolicyParseId(rs.Primary.ID)
+		if err != nil {
+			return err
 		}
 
-		var err error
-		getResp, err := iamconn.GetRolePolicy(request)
+		request := &iam.GetUserPolicyInput{
+			PolicyName: aws.String(name),
+			UserName:   aws.String(user),
+		}
+
+		getResp, err := iamconn.GetUserPolicy(request)
 		if err != nil {
 			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
 				// none found, that's good
 				return nil
 			}
-			return fmt.Errorf("Error reading IAM policy %s from role %s: %s", name, role, err)
+			return fmt.Errorf("Error reading IAM policy %s from user %s: %s", name, user, err)
 		}
 
 		if getResp != nil {
-			return fmt.Errorf("Found IAM Role, expected none: %s", getResp)
+			return fmt.Errorf("Found IAM User, expected none: %s", getResp)
 		}
 	}
 
@@ -138,8 +140,12 @@ func testAccCheckIAMUserPolicy(
 		}
 
 		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
-		username, name := resourceAwsIamUserPolicyParseId(policy.Primary.ID)
-		_, err := iamconn.GetUserPolicy(&iam.GetUserPolicyInput{
+		username, name, err := resourceAwsIamUserPolicyParseId(policy.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		_, err = iamconn.GetUserPolicy(&iam.GetUserPolicyInput{
 			UserName:   aws.String(username),
 			PolicyName: aws.String(name),
 		})
