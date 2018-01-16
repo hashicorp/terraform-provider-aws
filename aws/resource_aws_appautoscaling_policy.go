@@ -579,7 +579,7 @@ func getAwsAppautoscalingPolicy(d *schema.ResourceData, meta interface{}) (*appl
 		return nil, fmt.Errorf("Error retrieving scaling policies: %s", err)
 	}
 	if len(resp.ScalingPolicies) == 0 {
-		return nil, fmt.Errorf("Application AutoScaling Policy not found: %s", params)
+		return nil, nil
 	}
 
 	return resp.ScalingPolicies[0], nil
