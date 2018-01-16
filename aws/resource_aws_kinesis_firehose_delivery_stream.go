@@ -205,16 +205,21 @@ func flattenFirehoseS3Configuration(s3 firehose.S3DestinationDescription) []map[
 
 func flattenProcessingConfiguration(pc firehose.ProcessingConfiguration) []map[string]interface{} {
 	processingConfiguration := make([]map[string]interface{}, 1)
-	var processors []map[string]interface{}
+
+	processors := make([]interface{}, len(pc.Processors), len(pc.Processors))
 	for i, p := range pc.Processors {
-		processors = append(processors, map[string]interface{}{
-			"type": p.Type,
-		})
-		for _, params := range p.Parameters {
-			processors[i]["parameters"] = map[string]interface{}{
-				"parameter_name":  params.ParameterName,
-				"parameter_value": params.ParameterValue,
+		parameters := make([]interface{}, len(p.Parameters), len(p.Parameters))
+
+		for j, params := range p.Parameters {
+			parameters[j] = map[string]interface{}{
+				"parameter_name":  *params.ParameterName,
+				"parameter_value": *params.ParameterValue,
 			}
+		}
+
+		processors[i] = map[string]interface{}{
+			"type":       *p.Type,
+			"parameters": parameters,
 		}
 	}
 	processingConfiguration[0] = map[string]interface{}{
@@ -294,7 +299,11 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 			}
 			extendedS3ConfList := make([]map[string]interface{}, 1)
 			extendedS3ConfList[0] = extendedS3Configuration
-			d.Set("extended_s3_configuration", extendedS3ConfList)
+
+			err := d.Set("extended_s3_configuration", extendedS3ConfList)
+			if err != nil {
+				return err
+			}
 		}
 		d.Set("destination_id", *destination.DestinationId)
 	}
