@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * data-source/aws_db_snapshot: Prevent crash on unfinished snapshots [GH-2960]
+* resource/aws_codepipeline: Prevent crash on empty artifacts [GH-2998]
 
 ## 1.7.0 (January 12, 2018)
 
