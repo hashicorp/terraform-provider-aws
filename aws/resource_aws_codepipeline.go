@@ -416,6 +416,9 @@ func flattenAwsCodePipelineStageActionConfiguration(config map[string]*string) m
 func expandAwsCodePipelineActionsOutputArtifacts(s []interface{}) []*codepipeline.OutputArtifact {
 	outputArtifacts := []*codepipeline.OutputArtifact{}
 	for _, artifact := range s {
+		if artifact == nil {
+			continue
+		}
 		outputArtifacts = append(outputArtifacts, &codepipeline.OutputArtifact{
 			Name: aws.String(artifact.(string)),
 		})
@@ -434,6 +437,9 @@ func flattenAwsCodePipelineActionsOutputArtifacts(artifacts []*codepipeline.Outp
 func expandAwsCodePipelineActionsInputArtifacts(s []interface{}) []*codepipeline.InputArtifact {
 	outputArtifacts := []*codepipeline.InputArtifact{}
 	for _, artifact := range s {
+		if artifact == nil {
+			continue
+		}
 		outputArtifacts = append(outputArtifacts, &codepipeline.InputArtifact{
 			Name: aws.String(artifact.(string)),
 		})
