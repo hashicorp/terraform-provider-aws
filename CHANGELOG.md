@@ -5,6 +5,8 @@ BUG FIXES:
 * data-source/aws_db_snapshot: Prevent crash on unfinished snapshots [GH-2960]
 * resource/aws_codepipeline: Prevent crash on empty artifacts [GH-2998]
 * resource/aws_eip: Do not disassociate EIP on tags-only update [GH-2975]
+* resource/aws_iam_user: Prevent state removal during name attribute update [GH-2979]
+* resource/aws_iam_user: Allow path attribute update [GH-2940]
 * resource/aws_sns_topic_subscription: Prevent crash on subscription attribute update [GH-2967]
 
 ## 1.7.0 (January 12, 2018)
