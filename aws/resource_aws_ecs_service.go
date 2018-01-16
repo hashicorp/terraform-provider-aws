@@ -134,9 +134,9 @@ func resourceAwsEcsService() *schema.Resource {
 							Set:      schema.HashString,
 						},
 						"assign_public_ip": &schema.Schema{
-							Type:     schema.TypeString,
+							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  "DISABLED",
+							Default:  false,
 						},
 					},
 				},
@@ -419,8 +419,10 @@ func flattenEcsNetworkConfigration(nc *ecs.NetworkConfiguration) []interface{} {
 	result := make(map[string]interface{})
 	result["security_groups"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.SecurityGroups))
 	result["subnets"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.Subnets))
-	result["assign_public_ip"] = *nc.AwsvpcConfiguration.AssignPublicIp
-
+	result["assign_public_ip"] = "true"
+	if *nc.AwsvpcConfiguration.AssignPublicIp == "DISABLED" {
+		result["assign_public_ip"] = "false"
+	}
 	return []interface{}{result}
 }
 
@@ -434,8 +436,11 @@ func expandEcsNetworkConfigration(nc []interface{}) *ecs.NetworkConfiguration {
 		awsVpcConfig.SecurityGroups = expandStringSet(val.(*schema.Set))
 	}
 	awsVpcConfig.Subnets = expandStringSet(raw["subnets"].(*schema.Set))
-	if val, ok := raw["assign_public_ip"].(string); ok {
-		awsVpcConfig.AssignPublicIp = aws.String(val)
+	if val, ok := raw["assign_public_ip"].(bool); ok {
+		awsVpcConfig.AssignPublicIp = aws.String("DISABLED")
+		if val {
+			awsVpcConfig.AssignPublicIp = aws.String("ENABLED")
+		}
 	}
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
