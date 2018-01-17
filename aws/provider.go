@@ -431,6 +431,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_opsworks_mysql_layer":                     resourceAwsOpsworksMysqlLayer(),
 			"aws_opsworks_ganglia_layer":                   resourceAwsOpsworksGangliaLayer(),
 			"aws_opsworks_custom_layer":                    resourceAwsOpsworksCustomLayer(),
+			"aws_opsworks_ecs_cluster_layer":               resourceAwsOpsworksECSClusterLayer(),
 			"aws_opsworks_instance":                        resourceAwsOpsworksInstance(),
 			"aws_opsworks_user_profile":                    resourceAwsOpsworksUserProfile(),
 			"aws_opsworks_permission":                      resourceAwsOpsworksPermission(),
