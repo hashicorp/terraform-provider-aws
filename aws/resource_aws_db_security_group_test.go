@@ -101,10 +101,6 @@ func testAccCheckAWSDBSecurityGroupAttributes(group *rds.DBSecurityGroup) resour
 			return fmt.Errorf("bad status: %#v", statuses)
 		}
 
-		if *group.DBSecurityGroupName != "secgroup-terraform" {
-			return fmt.Errorf("bad name: %#v", *group.DBSecurityGroupName)
-		}
-
 		return nil
 	}
 }
