@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +14,10 @@ import (
 
 func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
 	var v rds.DBSecurityGroup
+
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -136,10 +141,6 @@ func testAccCheckAWSDBSecurityGroupExists(n string, v *rds.DBSecurityGroup) reso
 }
 
 const testAccAWSDBSecurityGroupConfig = `
-provider "aws" {
-        region = "us-east-1"
-}
-
 resource "aws_db_security_group" "bar" {
     name = "secgroup-terraform"
 
