@@ -287,13 +287,57 @@ func TestAccAWSLambdaFunction_versioned(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigVersioned(funcName, policyName, roleName, sgName),
+				Config: testAccAWSLambdaConfigVersioned("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
 					resource.TestMatchResourceAttr("aws_lambda_function.lambda_function_test", "version",
 						regexp.MustCompile("^[0-9]+$")),
+					resource.TestMatchResourceAttr("aws_lambda_function.lambda_function_test", "qualified_arn",
+						regexp.MustCompile(":"+funcName+":[0-9]+$")),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	path, zipFile, err := createTempFile("lambda_localUpdate")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(path)
+
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_versioned_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_versioned_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_versioned_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_versioned_%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigVersioned("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName),
+			},
+			{
+				PreConfig: func() {
+					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile)
+				},
+				Config: testAccAWSLambdaConfigVersioned(path, funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
+					resource.TestMatchResourceAttr("aws_lambda_function.lambda_function_test", "version",
+						regexp.MustCompile("^2$")),
+					resource.TestMatchResourceAttr("data.template_file.function_version", "rendered",
+						regexp.MustCompile("^2$")),
 					resource.TestMatchResourceAttr("aws_lambda_function.lambda_function_test", "qualified_arn",
 						regexp.MustCompile(":"+funcName+":[0-9]+$")),
 				),
@@ -1366,17 +1410,25 @@ resource "aws_lambda_function" "lambda_function_test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigVersioned(funcName, policyName, roleName, sgName string) string {
+func testAccAWSLambdaConfigVersioned(fileName, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "lambda_function_test" {
-    filename = "test-fixtures/lambdatest.zip"
+    filename = "%s"
     function_name = "%s"
     publish = true
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
     runtime = "nodejs4.3"
 }
-`, funcName)
+
+data "template_file" "function_version" {
+  template = "$${function_version}"
+
+  vars {
+    function_version = "${aws_lambda_function.lambda_function_test.version}"
+  }
+}
+`, fileName, funcName)
 }
 
 func testAccAWSLambdaConfigWithTracingConfig(funcName, policyName, roleName, sgName string) string {

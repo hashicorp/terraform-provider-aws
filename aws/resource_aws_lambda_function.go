@@ -200,7 +200,17 @@ func resourceAwsLambdaFunction() *schema.Resource {
 
 			"tags": tagsSchema(),
 		},
+
+		CustomizeDiff: updateVerionIfPublish,
 	}
+}
+
+func updateVerionIfPublish(d *schema.ResourceDiff, meta interface{}) error {
+	publish := d.Get("publish").(bool)
+	if publish && needsFunctionCodeUpdate(d) {
+		d.SetNewComputed("version")
+	}
+	return nil
 }
 
 // resourceAwsLambdaFunction maps to:
@@ -521,6 +531,14 @@ func resourceAwsLambdaFunctionDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
+type resourceDiffer interface {
+	HasChange(string) bool
+}
+
+func needsFunctionCodeUpdate(d resourceDiffer) bool {
+	return d.HasChange("filename") || d.HasChange("source_code_hash") || d.HasChange("s3_bucket") || d.HasChange("s3_key") || d.HasChange("s3_object_version")
+}
+
 // resourceAwsLambdaFunctionUpdate maps to:
 // UpdateFunctionCode in the API / SDK
 func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -664,7 +682,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		d.SetPartial("timeout")
 	}
 
-	if d.HasChange("filename") || d.HasChange("source_code_hash") || d.HasChange("s3_bucket") || d.HasChange("s3_key") || d.HasChange("s3_object_version") {
+	if needsFunctionCodeUpdate(d) {
 		codeReq := &lambda.UpdateFunctionCodeInput{
 			FunctionName: aws.String(d.Id()),
 			Publish:      aws.Bool(d.Get("publish").(bool)),
