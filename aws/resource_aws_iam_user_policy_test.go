@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -82,6 +83,51 @@ func TestAccAWSIAMUserPolicy_generatedName(t *testing.T) {
 					),
 				),
 			},
+			{
+				Config: testAccIAMUserPolicyConfig_generatedNameUpdate(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIAMUserPolicy(
+						"aws_iam_user.test",
+						"aws_iam_user_policy.test",
+					),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMUserPolicy_importBasic(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIAMUserPolicyConfig(rInt),
+			},
+			{
+				ResourceName:      "aws_iam_user_policy.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMUserPolicy_invalidJSON(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccIAMUserPolicyConfig_invalidJSON(rInt),
+				ExpectError: regexp.MustCompile("invalid JSON"),
+			},
 		},
 	})
 }
@@ -94,25 +140,27 @@ func testAccCheckIAMUserPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		role, name := resourceAwsIamUserPolicyParseId(rs.Primary.ID)
-
-		request := &iam.GetRolePolicyInput{
-			PolicyName: aws.String(name),
-			RoleName:   aws.String(role),
+		user, name, err := resourceAwsIamUserPolicyParseId(rs.Primary.ID)
+		if err != nil {
+			return err
 		}
 
-		var err error
-		getResp, err := iamconn.GetRolePolicy(request)
+		request := &iam.GetUserPolicyInput{
+			PolicyName: aws.String(name),
+			UserName:   aws.String(user),
+		}
+
+		getResp, err := iamconn.GetUserPolicy(request)
 		if err != nil {
 			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
 				// none found, that's good
 				return nil
 			}
-			return fmt.Errorf("Error reading IAM policy %s from role %s: %s", name, role, err)
+			return fmt.Errorf("Error reading IAM policy %s from user %s: %s", name, user, err)
 		}
 
 		if getResp != nil {
-			return fmt.Errorf("Found IAM Role, expected none: %s", getResp)
+			return fmt.Errorf("Found IAM user policy, expected none: %s", getResp)
 		}
 	}
 
@@ -138,8 +186,12 @@ func testAccCheckIAMUserPolicy(
 		}
 
 		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
-		username, name := resourceAwsIamUserPolicyParseId(policy.Primary.ID)
-		_, err := iamconn.GetUserPolicy(&iam.GetUserPolicyInput{
+		username, name, err := resourceAwsIamUserPolicyParseId(policy.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		_, err = iamconn.GetUserPolicy(&iam.GetUserPolicyInput{
 			UserName:   aws.String(username),
 			PolicyName: aws.String(name),
 		})
@@ -164,6 +216,20 @@ func testAccIAMUserPolicyConfig(rInt int) string {
 		user = "${aws_iam_user.user.name}"
 		policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}}"
 	}`, rInt, rInt)
+}
+
+func testAccIAMUserPolicyConfig_invalidJSON(rInt int) string {
+	return fmt.Sprintf(`
+  resource "aws_iam_user" "user" {
+    name = "test_user_%d"
+    path = "/"
+  }
+
+  resource "aws_iam_user_policy" "foo" {
+    name = "foo_policy_%d"
+    user = "${aws_iam_user.user.name}"
+    policy = "NonJSONString"
+  }`, rInt, rInt)
 }
 
 func testAccIAMUserPolicyConfig_namePrefix(rInt int) string {
@@ -191,6 +257,19 @@ func testAccIAMUserPolicyConfig_generatedName(rInt int) string {
 		user = "${aws_iam_user.test.name}"
 		policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}}"
 	}`, rInt)
+}
+
+func testAccIAMUserPolicyConfig_generatedNameUpdate(rInt int) string {
+	return fmt.Sprintf(`
+  resource "aws_iam_user" "test" {
+    name = "test_user_%d"
+    path = "/"
+  }
+
+  resource "aws_iam_user_policy" "test" {
+    user = "${aws_iam_user.test.name}"
+    policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"iam:*\",\"Resource\":\"*\"}}"
+  }`, rInt)
 }
 
 func testAccIAMUserPolicyConfigUpdate(rInt int) string {
