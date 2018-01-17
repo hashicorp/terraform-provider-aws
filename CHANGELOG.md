@@ -5,6 +5,7 @@ BUG FIXES:
 * data-source/aws_db_snapshot: Prevent crash on unfinished snapshots [GH-2960]
 * resource/aws_codepipeline: Prevent crash on empty artifacts [GH-2998]
 * resource/aws_eip: Do not disassociate EIP on tags-only update [GH-2975]
+* resource/aws_iam_instance_profile: Allow cleanup during destruction without refresh [GH-2983]
 * resource/aws_iam_user: Prevent state removal during name attribute update [GH-2979]
 * resource/aws_iam_user: Allow path attribute update [GH-2940]
 * resource/aws_lb_target_group: Allow a blank health check path, for TCP healthchecks [GH-2980]
