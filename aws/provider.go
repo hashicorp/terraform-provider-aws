@@ -297,6 +297,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_cognito_user_pool":                        resourceAwsCognitoUserPool(),
 			"aws_cognito_user_pool_client":                 resourceAwsCognitoUserPoolClient(),
 			"aws_cognito_user_pool_domain":                 resourceAwsCognitoUserPoolDomain(),
+			"aws_cognito_user_pool_group":                  resourceAwsCognitoUserPoolGroup(),
 			"aws_cloudwatch_metric_alarm":                  resourceAwsCloudWatchMetricAlarm(),
 			"aws_cloudwatch_dashboard":                     resourceAwsCloudWatchDashboard(),
 			"aws_codedeploy_app":                           resourceAwsCodeDeployApp(),
