@@ -2179,6 +2179,69 @@ func TestValidateAwsKmsName(t *testing.T) {
 	}
 }
 
+func TestValidateAwsKmsGrantName(t *testing.T) {
+	validValues := []string{
+		"123",
+		"Abc",
+		"grant_1",
+		"grant:/-",
+	}
+
+	for _, s := range validValues {
+		_, errors := validateAwsKmsGrantName(s, "name")
+		if len(errors) > 0 {
+			t.Fatalf("%q AWS KMS Grant Name should have been valid: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		strings.Repeat("w", 257),
+		"grant.invalid",
+		";",
+		"white space",
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateAwsKmsGrantName(s, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid AWS KMS Grant Name", s)
+		}
+	}
+}
+
+func TestValidateAwsKmsGrantOperation(t *testing.T) {
+	validValues := []string{
+		"Decrypt",
+		"Encrypt",
+		"GenerateDataKey",
+		"GenerateDataKeyWithoutPlaintext",
+		"ReEncryptFrom",
+		"ReEncryptTo",
+		"CreateGrant",
+		"RetireGrant",
+		"DescribeKey",
+	}
+
+	for _, s := range validValues {
+		_, errors := validateAwsKmsGrantOperation(s, "operation")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid AWS KMS Grant Operation: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"foo",
+		"bar",
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateAwsKmsGrantOperation(s, "operation")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid AWS KMS Grant Operation", s)
+		}
+	}
+}
+
 func TestValidateCognitoIdentityPoolName(t *testing.T) {
 	validValues := []string{
 		"123",

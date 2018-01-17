@@ -1395,6 +1395,43 @@ func validateAwsKmsName(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
+func validateAwsKmsGrantOperation(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+
+	validTypes := map[string]bool{
+		"Decrypt":                         true,
+		"Encrypt":                         true,
+		"GenerateDataKey":                 true,
+		"GenerateDataKeyWithoutPlaintext": true,
+		"ReEncryptFrom":                   true,
+		"ReEncryptTo":                     true,
+		"CreateGrant":                     true,
+		"RetireGrant":                     true,
+		"DescribeKey":                     true,
+	}
+
+	if _, ok := validTypes[value]; !ok {
+		es = append(es, fmt.Errorf(
+			"%s must be one of the following: [ Decrypt, Encrypt, GenerateDataKey, GenerateDataKeyWithoutPlaintext, ReEncryptFrom, ReEncryptTo, CreateGrant, RetireGrant, DescribeKey ]", k))
+
+	}
+	return
+}
+
+func validateAwsKmsGrantName(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+
+	if len(value) > 256 {
+		es = append(es, fmt.Errorf("%s can not be greater than 256 characters", k))
+	}
+
+	if !regexp.MustCompile(`^[a-zA-Z0-9:/_-]+$`).MatchString(value) {
+		es = append(es, fmt.Errorf("%s must only contain [a-zA-Z0-9:/_-]", k))
+	}
+
+	return
+}
+
 func validateCognitoIdentityPoolName(v interface{}, k string) (ws []string, errors []error) {
 	val := v.(string)
 	if !regexp.MustCompile("^[\\w _]+$").MatchString(val) {

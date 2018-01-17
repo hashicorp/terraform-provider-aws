@@ -393,6 +393,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_kinesis_firehose_delivery_stream":         resourceAwsKinesisFirehoseDeliveryStream(),
 			"aws_kinesis_stream":                           resourceAwsKinesisStream(),
 			"aws_kms_alias":                                resourceAwsKmsAlias(),
+			"aws_kms_grant":                                resourceAwsKmsGrant(),
 			"aws_kms_key":                                  resourceAwsKmsKey(),
 			"aws_lambda_function":                          resourceAwsLambdaFunction(),
 			"aws_lambda_event_source_mapping":              resourceAwsLambdaEventSourceMapping(),
