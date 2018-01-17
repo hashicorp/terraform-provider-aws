@@ -20,7 +20,7 @@ func TestAccAWSAPIGatewayBasePath_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
@@ -42,7 +42,7 @@ func TestAccAWSAPIGatewayEmptyBasePath_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
@@ -143,12 +143,13 @@ func testAccCheckAWSAPIGatewayBasePathDestroy(name string) resource.TestCheckFun
 	}
 }
 
-func testAccAWSAPIGatewayBasePathConfig(name string) string {
+func testAccAWSAPIGatewayBasePathConfig(domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-apigateway-base-path-mapping"
   description = "Terraform Acceptance Tests"
 }
+
 # API gateway won't let us deploy an empty API
 resource "aws_api_gateway_resource" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
@@ -181,17 +182,15 @@ resource "aws_api_gateway_base_path_mapping" "test" {
 resource "aws_api_gateway_domain_name" "test" {
   domain_name = "%s"
   certificate_name = "tf-apigateway-base-path-mapping-test"
-  certificate_body = <<EOF
-%vEOF
-  certificate_chain = <<EOF
-%vEOF
-  certificate_private_key = <<EOF
-%vEOF
+  certificate_body = "${tls_locally_signed_cert.leaf.cert_pem}"
+  certificate_chain = "${tls_self_signed_cert.ca.cert_pem}"
+  certificate_private_key = "${tls_private_key.test.private_key_pem}"
 }
-`, name, testAccAWSAPIGatewayCertBody, testAccAWSAPIGatewayCertChain, testAccAWSAPIGatewayCertPrivateKey)
+%s
+`, domainName, testAccAWSAPIGatewayCerts(domainName))
 }
 
-func testAccAWSAPIGatewayEmptyBasePathConfig(name string) string {
+func testAccAWSAPIGatewayEmptyBasePathConfig(domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-apigateway-base-path-mapping"
@@ -223,12 +222,10 @@ resource "aws_api_gateway_base_path_mapping" "test" {
 resource "aws_api_gateway_domain_name" "test" {
   domain_name = "%s"
   certificate_name = "tf-apigateway-base-path-mapping-test"
-  certificate_body = <<EOF
-%vEOF
-  certificate_chain = <<EOF
-%vEOF
-  certificate_private_key = <<EOF
-%vEOF
+  certificate_body = "${tls_locally_signed_cert.leaf.cert_pem}"
+  certificate_chain = "${tls_self_signed_cert.ca.cert_pem}"
+  certificate_private_key = "${tls_private_key.test.private_key_pem}"
 }
-`, name, testAccAWSAPIGatewayCertBody, testAccAWSAPIGatewayCertChain, testAccAWSAPIGatewayCertPrivateKey)
+%s
+`, domainName, testAccAWSAPIGatewayCerts(domainName))
 }
