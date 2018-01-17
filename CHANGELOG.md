@@ -10,6 +10,7 @@ BUG FIXES:
 * resource/aws_iam_instance_profile: Allow cleanup during destruction without refresh [GH-2983]
 * resource/aws_iam_user: Prevent state removal during name attribute update [GH-2979]
 * resource/aws_iam_user: Allow path attribute update [GH-2940]
+* resource/aws_lambda_function: Make EC2 rate limit errors retryable on update [GH-2964]
 * resource/aws_lb_target_group: Allow a blank health check path, for TCP healthchecks [GH-2980]
 * resource/aws_sns_topic_subscription: Prevent crash on subscription attribute update [GH-2967]
 * resource/aws_kinesis_firehose_delivery_stream: Fix import for S3 destinations [GH-2970]
