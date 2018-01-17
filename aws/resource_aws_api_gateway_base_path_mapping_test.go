@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -15,7 +16,7 @@ func TestAccAWSAPIGatewayBasePath_basic(t *testing.T) {
 	var conf apigateway.BasePathMapping
 
 	// Our test cert is for a wildcard on this domain
-	name := fmt.Sprintf("%s.tf-acc.invalid", resource.UniqueId())
+	name := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -37,7 +38,7 @@ func TestAccAWSAPIGatewayEmptyBasePath_basic(t *testing.T) {
 	var conf apigateway.BasePathMapping
 
 	// Our test cert is for a wildcard on this domain
-	name := fmt.Sprintf("%s.tf-acc.invalid", resource.UniqueId())
+	name := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

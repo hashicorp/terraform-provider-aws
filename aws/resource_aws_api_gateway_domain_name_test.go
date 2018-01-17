@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -15,9 +16,9 @@ func TestAccAWSAPIGatewayDomainName_basic(t *testing.T) {
 	var conf apigateway.DomainName
 
 	// Our test cert is for a wildcard on this domain
-	uniqueId := resource.UniqueId()
-	name := fmt.Sprintf("%s.tf-acc.invalid", uniqueId)
-	nameModified := fmt.Sprintf("test-acc.%s.tf-acc.invalid", uniqueId)
+	rString := acctest.RandString(8)
+	name := fmt.Sprintf("tf-acc-%s.terraformtest.com", rString)
+	nameModified := fmt.Sprintf("tf-acc-%s-modified.terraformtest.com", rString)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
