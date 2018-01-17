@@ -224,7 +224,7 @@ func flattenProcessingConfiguration(pc firehose.ProcessingConfiguration, roleArn
 		for _, params := range p.Parameters {
 			name, value := *params.ParameterName, *params.ParameterValue
 
-			if t == "Lambda" {
+			if t == firehose.ProcessorTypeLambda {
 				// Ignore defaults
 				if v, ok := defaultLambdaParams[name]; ok && v == value {
 					continue
