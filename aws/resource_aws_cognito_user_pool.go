@@ -620,9 +620,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		Resource:  fmt.Sprintf("userpool/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
-	if resp.UserPool.AutoVerifiedAttributes != nil {
-		d.Set("auto_verified_attributes", flattenStringList(resp.UserPool.AutoVerifiedAttributes))
-	}
+	d.Set("auto_verified_attributes", flattenStringList(resp.UserPool.AutoVerifiedAttributes))
 	if resp.UserPool.EmailVerificationSubject != nil {
 		d.Set("email_verification_subject", *resp.UserPool.EmailVerificationSubject)
 	}
