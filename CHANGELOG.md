@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * data-source/aws_db_snapshot: Prevent crash on unfinished snapshots [GH-2960]
+* resource/aws_codebuild_project: Prevent crash on empty source buildspec and location [GH-3011]
 * resource/aws_codepipeline: Prevent crash on empty artifacts [GH-2998]
 * resource/aws_appautoscaling_policy: Match correct policy when multiple policies with same name and service [GH-3012]
 * resource/aws_eip: Do not disassociate EIP on tags-only update [GH-2975]
