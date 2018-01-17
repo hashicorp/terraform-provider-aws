@@ -388,7 +388,10 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	d.Set("source", flattenAwsCodebuildProjectSource(project.Source))
+	if err := d.Set("source", flattenAwsCodebuildProjectSource(project.Source)); err != nil {
+		return err
+	}
+
 	d.Set("description", project.Description)
 	d.Set("encryption_key", project.EncryptionKey)
 	d.Set("name", project.Name)
