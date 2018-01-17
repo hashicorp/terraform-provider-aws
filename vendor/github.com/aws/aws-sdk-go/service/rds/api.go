@@ -10234,6 +10234,41 @@ func (s *CharacterSet) SetCharacterSetName(v string) *CharacterSet {
 	return s
 }
 
+// The configuration setting for the log types to be enabled for export to CloudWatch
+// Logs for a specific DB instance or DB cluster.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/CloudwatchLogsExportConfiguration
+type CloudwatchLogsExportConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The list of log types to disable.
+	DisableLogTypes []*string `type:"list"`
+
+	// The list of log types to enable.
+	EnableLogTypes []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s CloudwatchLogsExportConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudwatchLogsExportConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetDisableLogTypes sets the DisableLogTypes field's value.
+func (s *CloudwatchLogsExportConfiguration) SetDisableLogTypes(v []*string) *CloudwatchLogsExportConfiguration {
+	s.DisableLogTypes = v
+	return s
+}
+
+// SetEnableLogTypes sets the EnableLogTypes field's value.
+func (s *CloudwatchLogsExportConfiguration) SetEnableLogTypes(v []*string) *CloudwatchLogsExportConfiguration {
+	s.EnableLogTypes = v
+	return s
+}
+
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/CopyDBClusterParameterGroupMessage
 type CopyDBClusterParameterGroupInput struct {
 	_ struct{} `type:"structure"`
@@ -11959,6 +11994,10 @@ type CreateDBInstanceInput struct {
 	// Directory Service.
 	DomainIAMRoleName *string `type:"string"`
 
+	// The list of log types that need to be enabled for exporting to CloudWatch
+	// Logs.
+	EnableCloudwatchLogsExports []*string `type:"list"`
+
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
 	//
@@ -12554,6 +12593,12 @@ func (s *CreateDBInstanceInput) SetDomainIAMRoleName(v string) *CreateDBInstance
 	return s
 }
 
+// SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
+func (s *CreateDBInstanceInput) SetEnableCloudwatchLogsExports(v []*string) *CreateDBInstanceInput {
+	s.EnableCloudwatchLogsExports = v
+	return s
+}
+
 // SetEnableIAMDatabaseAuthentication sets the EnableIAMDatabaseAuthentication field's value.
 func (s *CreateDBInstanceInput) SetEnableIAMDatabaseAuthentication(v bool) *CreateDBInstanceInput {
 	s.EnableIAMDatabaseAuthentication = &v
@@ -12803,6 +12848,9 @@ type CreateDBInstanceReadReplicaInput struct {
 	// DestinationRegion is used for presigning the request to a given region.
 	DestinationRegion *string `type:"string"`
 
+	// The list of logs that the new DB instance is to export to CloudWatch Logs.
+	EnableCloudwatchLogsExports []*string `type:"list"`
+
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
 	//
@@ -12861,6 +12909,13 @@ type CreateDBInstanceReadReplicaInput struct {
 	MonitoringRoleArn *string `type:"string"`
 
 	// Specifies whether the read replica is in a Multi-AZ deployment.
+	//
+	// You can create a Read Replica as a Multi-AZ DB instance. RDS creates a standby
+	// of your replica in another Availability Zone for failover support for the
+	// replica. Creating your Read Replica as a Multi-AZ DB instance is independent
+	// of whether the source database is a Multi-AZ DB instance.
+	//
+	// Currently PostgreSQL Read Replicas can only be created as single-AZ DB instances.
 	MultiAZ *bool `type:"boolean"`
 
 	// The option group the DB instance is associated with. If omitted, the default
@@ -13051,6 +13106,12 @@ func (s *CreateDBInstanceReadReplicaInput) SetDBSubnetGroupName(v string) *Creat
 // SetDestinationRegion sets the DestinationRegion field's value.
 func (s *CreateDBInstanceReadReplicaInput) SetDestinationRegion(v string) *CreateDBInstanceReadReplicaInput {
 	s.DestinationRegion = &v
+	return s
+}
+
+// SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
+func (s *CreateDBInstanceReadReplicaInput) SetEnableCloudwatchLogsExports(v []*string) *CreateDBInstanceReadReplicaInput {
+	s.EnableCloudwatchLogsExports = v
 	return s
 }
 
@@ -14799,6 +14860,10 @@ type DBEngineVersion struct {
 	// The version number of the database engine.
 	EngineVersion *string `type:"string"`
 
+	// The types of logs that the database engine has available for export to CloudWatch
+	// Logs.
+	ExportableLogTypes []*string `type:"list"`
+
 	// A list of the character sets supported by this engine for the CharacterSetName
 	// parameter of the CreateDBInstance action.
 	SupportedCharacterSets []*CharacterSet `locationNameList:"CharacterSet" type:"list"`
@@ -14806,6 +14871,10 @@ type DBEngineVersion struct {
 	// A list of the time zones supported by this engine for the Timezone parameter
 	// of the CreateDBInstance action.
 	SupportedTimezones []*Timezone `locationNameList:"Timezone" type:"list"`
+
+	// A value that indicates whether the engine version supports exporting the
+	// log types specified by ExportableLogTypes to CloudWatch Logs.
+	SupportsLogExportsToCloudwatchLogs *bool `type:"boolean"`
 
 	// A list of engine versions that this database engine version can be upgraded
 	// to.
@@ -14858,6 +14927,12 @@ func (s *DBEngineVersion) SetEngineVersion(v string) *DBEngineVersion {
 	return s
 }
 
+// SetExportableLogTypes sets the ExportableLogTypes field's value.
+func (s *DBEngineVersion) SetExportableLogTypes(v []*string) *DBEngineVersion {
+	s.ExportableLogTypes = v
+	return s
+}
+
 // SetSupportedCharacterSets sets the SupportedCharacterSets field's value.
 func (s *DBEngineVersion) SetSupportedCharacterSets(v []*CharacterSet) *DBEngineVersion {
 	s.SupportedCharacterSets = v
@@ -14867,6 +14942,12 @@ func (s *DBEngineVersion) SetSupportedCharacterSets(v []*CharacterSet) *DBEngine
 // SetSupportedTimezones sets the SupportedTimezones field's value.
 func (s *DBEngineVersion) SetSupportedTimezones(v []*Timezone) *DBEngineVersion {
 	s.SupportedTimezones = v
+	return s
+}
+
+// SetSupportsLogExportsToCloudwatchLogs sets the SupportsLogExportsToCloudwatchLogs field's value.
+func (s *DBEngineVersion) SetSupportsLogExportsToCloudwatchLogs(v bool) *DBEngineVersion {
+	s.SupportsLogExportsToCloudwatchLogs = &v
 	return s
 }
 
@@ -14964,6 +15045,10 @@ type DBInstance struct {
 
 	// The Active Directory Domain membership records associated with the DB instance.
 	DomainMemberships []*DomainMembership `locationNameList:"DomainMembership" type:"list"`
+
+	// A list of log types that this DB instance is configured to export to CloudWatch
+	// Logs.
+	EnabledCloudwatchLogsExports []*string `type:"list"`
 
 	// Specifies the connection endpoint.
 	Endpoint *Endpoint `type:"structure"`
@@ -15230,6 +15315,12 @@ func (s *DBInstance) SetDbiResourceId(v string) *DBInstance {
 // SetDomainMemberships sets the DomainMemberships field's value.
 func (s *DBInstance) SetDomainMemberships(v []*DomainMembership) *DBInstance {
 	s.DomainMemberships = v
+	return s
+}
+
+// SetEnabledCloudwatchLogsExports sets the EnabledCloudwatchLogsExports field's value.
+func (s *DBInstance) SetEnabledCloudwatchLogsExports(v []*string) *DBInstance {
+	s.EnabledCloudwatchLogsExports = v
 	return s
 }
 
@@ -21994,6 +22085,10 @@ type ModifyDBInstanceInput struct {
 	// Indicates the certificate that needs to be associated with the instance.
 	CACertificateIdentifier *string `type:"string"`
 
+	// The configuration setting for the log types to be enabled for export to CloudWatch
+	// Logs for a specific DB instance or DB cluster.
+	CloudwatchLogsExportConfiguration *CloudwatchLogsExportConfiguration `type:"structure"`
+
 	// True to copy all tags from the DB instance to snapshots of the DB instance,
 	// and otherwise false. The default is false.
 	CopyTagsToSnapshot *bool `type:"boolean"`
@@ -22444,6 +22539,12 @@ func (s *ModifyDBInstanceInput) SetBackupRetentionPeriod(v int64) *ModifyDBInsta
 // SetCACertificateIdentifier sets the CACertificateIdentifier field's value.
 func (s *ModifyDBInstanceInput) SetCACertificateIdentifier(v string) *ModifyDBInstanceInput {
 	s.CACertificateIdentifier = &v
+	return s
+}
+
+// SetCloudwatchLogsExportConfiguration sets the CloudwatchLogsExportConfiguration field's value.
+func (s *ModifyDBInstanceInput) SetCloudwatchLogsExportConfiguration(v *CloudwatchLogsExportConfiguration) *ModifyDBInstanceInput {
+	s.CloudwatchLogsExportConfiguration = v
 	return s
 }
 
@@ -24245,6 +24346,43 @@ func (s *Parameter) SetSource(v string) *Parameter {
 	return s
 }
 
+// A list of the log types whose configuration is still pending. In other words,
+// these log types are in the process of being activated or deactivated.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/PendingCloudwatchLogsExports
+type PendingCloudwatchLogsExports struct {
+	_ struct{} `type:"structure"`
+
+	// Log types that are in the process of being enabled. After they are enabled,
+	// these log types are exported to CloudWatch Logs.
+	LogTypesToDisable []*string `type:"list"`
+
+	// Log types that are in the process of being deactivated. After they are deactivated,
+	// these log types aren't exported to CloudWatch Logs.
+	LogTypesToEnable []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s PendingCloudwatchLogsExports) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PendingCloudwatchLogsExports) GoString() string {
+	return s.String()
+}
+
+// SetLogTypesToDisable sets the LogTypesToDisable field's value.
+func (s *PendingCloudwatchLogsExports) SetLogTypesToDisable(v []*string) *PendingCloudwatchLogsExports {
+	s.LogTypesToDisable = v
+	return s
+}
+
+// SetLogTypesToEnable sets the LogTypesToEnable field's value.
+func (s *PendingCloudwatchLogsExports) SetLogTypesToEnable(v []*string) *PendingCloudwatchLogsExports {
+	s.LogTypesToEnable = v
+	return s
+}
+
 // Provides information about a pending maintenance action for a resource.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/PendingMaintenanceAction
 type PendingMaintenanceAction struct {
@@ -24370,6 +24508,10 @@ type PendingModifiedValues struct {
 	// Indicates that the Single-AZ DB instance is to change to a Multi-AZ deployment.
 	MultiAZ *bool `type:"boolean"`
 
+	// A list of the log types whose configuration is still pending. In other words,
+	// these log types are in the process of being activated or deactivated.
+	PendingCloudwatchLogsExports *PendingCloudwatchLogsExports `type:"structure"`
+
 	// Specifies the pending port for the DB instance.
 	Port *int64 `type:"integer"`
 
@@ -24450,6 +24592,12 @@ func (s *PendingModifiedValues) SetMasterUserPassword(v string) *PendingModified
 // SetMultiAZ sets the MultiAZ field's value.
 func (s *PendingModifiedValues) SetMultiAZ(v bool) *PendingModifiedValues {
 	s.MultiAZ = &v
+	return s
+}
+
+// SetPendingCloudwatchLogsExports sets the PendingCloudwatchLogsExports field's value.
+func (s *PendingModifiedValues) SetPendingCloudwatchLogsExports(v *PendingCloudwatchLogsExports) *PendingModifiedValues {
+	s.PendingCloudwatchLogsExports = v
 	return s
 }
 
@@ -26553,6 +26701,10 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	// Directory Service.
 	DomainIAMRoleName *string `type:"string"`
 
+	// The list of logs that the restored DB instance is to export to CloudWatch
+	// Logs.
+	EnableCloudwatchLogsExports []*string `type:"list"`
+
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
 	//
@@ -26768,6 +26920,12 @@ func (s *RestoreDBInstanceFromDBSnapshotInput) SetDomainIAMRoleName(v string) *R
 	return s
 }
 
+// SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
+func (s *RestoreDBInstanceFromDBSnapshotInput) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBInstanceFromDBSnapshotInput {
+	s.EnableCloudwatchLogsExports = v
+	return s
+}
+
 // SetEnableIAMDatabaseAuthentication sets the EnableIAMDatabaseAuthentication field's value.
 func (s *RestoreDBInstanceFromDBSnapshotInput) SetEnableIAMDatabaseAuthentication(v bool) *RestoreDBInstanceFromDBSnapshotInput {
 	s.EnableIAMDatabaseAuthentication = &v
@@ -26952,6 +27110,10 @@ type RestoreDBInstanceFromS3Input struct {
 
 	// A DB subnet group to associate with this DB instance.
 	DBSubnetGroupName *string `type:"string"`
+
+	// The list of logs that the restored DB instance is to export to CloudWatch
+	// Logs.
+	EnableCloudwatchLogsExports []*string `type:"list"`
 
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
@@ -27245,6 +27407,12 @@ func (s *RestoreDBInstanceFromS3Input) SetDBSubnetGroupName(v string) *RestoreDB
 	return s
 }
 
+// SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
+func (s *RestoreDBInstanceFromS3Input) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBInstanceFromS3Input {
+	s.EnableCloudwatchLogsExports = v
+	return s
+}
+
 // SetEnableIAMDatabaseAuthentication sets the EnableIAMDatabaseAuthentication field's value.
 func (s *RestoreDBInstanceFromS3Input) SetEnableIAMDatabaseAuthentication(v bool) *RestoreDBInstanceFromS3Input {
 	s.EnableIAMDatabaseAuthentication = &v
@@ -27483,6 +27651,10 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	// Directory Service.
 	DomainIAMRoleName *string `type:"string"`
 
+	// The list of logs that the restored DB instance is to export to CloudWatch
+	// Logs.
+	EnableCloudwatchLogsExports []*string `type:"list"`
+
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
 	//
@@ -27604,7 +27776,7 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	//
 	// Constraints:
 	//
-	//    * Must match the identifier of an existing DBInstance.
+	//    * Must match the identifier of an existing DB instance.
 	//
 	// SourceDBInstanceIdentifier is a required field
 	SourceDBInstanceIdentifier *string `type:"string" required:"true"`
@@ -27721,6 +27893,12 @@ func (s *RestoreDBInstanceToPointInTimeInput) SetDomain(v string) *RestoreDBInst
 // SetDomainIAMRoleName sets the DomainIAMRoleName field's value.
 func (s *RestoreDBInstanceToPointInTimeInput) SetDomainIAMRoleName(v string) *RestoreDBInstanceToPointInTimeInput {
 	s.DomainIAMRoleName = &v
+	return s
+}
+
+// SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
+func (s *RestoreDBInstanceToPointInTimeInput) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBInstanceToPointInTimeInput {
+	s.EnableCloudwatchLogsExports = v
 	return s
 }
 
