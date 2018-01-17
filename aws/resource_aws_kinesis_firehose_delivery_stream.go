@@ -257,11 +257,13 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 		destination := s.Destinations[0]
 		if destination.RedshiftDestinationDescription != nil {
 			d.Set("destination", "redshift")
+			password := d.Get("redshift_configuration.0.password").(string)
 
 			redshiftConfiguration := map[string]interface{}{
 				"cluster_jdbcurl":            *destination.RedshiftDestinationDescription.ClusterJDBCURL,
 				"role_arn":                   *destination.RedshiftDestinationDescription.RoleARN,
 				"username":                   *destination.RedshiftDestinationDescription.Username,
+				"password":                   password,
 				"data_table_name":            *destination.RedshiftDestinationDescription.CopyCommand.DataTableName,
 				"copy_options":               *destination.RedshiftDestinationDescription.CopyCommand.CopyOptions,
 				"data_table_columns":         *destination.RedshiftDestinationDescription.CopyCommand.DataTableColumns,
