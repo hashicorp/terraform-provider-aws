@@ -203,22 +203,42 @@ func flattenFirehoseS3Configuration(s3 firehose.S3DestinationDescription) []map[
 	return s3Configuration
 }
 
-func flattenProcessingConfiguration(pc firehose.ProcessingConfiguration) []map[string]interface{} {
+func flattenProcessingConfiguration(pc firehose.ProcessingConfiguration, roleArn string) []map[string]interface{} {
 	processingConfiguration := make([]map[string]interface{}, 1)
+
+	// It is necessary to explicitely filter this out
+	// to prevent diffs during routine use and retain the ability
+	// to show diffs if any field has drifted
+	defaultLambdaParams := map[string]string{
+		"NumberOfRetries":         "3",
+		"RoleArn":                 roleArn,
+		"BufferSizeInMBs":         "3",
+		"BufferIntervalInSeconds": "60",
+	}
 
 	processors := make([]interface{}, len(pc.Processors), len(pc.Processors))
 	for i, p := range pc.Processors {
-		parameters := make([]interface{}, len(p.Parameters), len(p.Parameters))
+		t := *p.Type
+		parameters := make([]interface{}, 0)
 
-		for j, params := range p.Parameters {
-			parameters[j] = map[string]interface{}{
-				"parameter_name":  *params.ParameterName,
-				"parameter_value": *params.ParameterValue,
+		for _, params := range p.Parameters {
+			name, value := *params.ParameterName, *params.ParameterValue
+
+			if t == "Lambda" {
+				// Ignore defaults
+				if v, ok := defaultLambdaParams[name]; ok && v == value {
+					continue
+				}
 			}
+
+			parameters = append(parameters, map[string]interface{}{
+				"parameter_name":  name,
+				"parameter_value": value,
+			})
 		}
 
 		processors[i] = map[string]interface{}{
-			"type":       *p.Type,
+			"type":       t,
 			"parameters": parameters,
 		}
 	}
@@ -282,11 +302,12 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 		} else {
 			d.Set("destination", "extended_s3")
 
+			roleArn := *destination.ExtendedS3DestinationDescription.RoleARN
 			extendedS3Configuration := map[string]interface{}{
 				"buffer_interval":            *destination.ExtendedS3DestinationDescription.BufferingHints.IntervalInSeconds,
 				"buffer_size":                *destination.ExtendedS3DestinationDescription.BufferingHints.SizeInMBs,
 				"bucket_arn":                 *destination.ExtendedS3DestinationDescription.BucketARN,
-				"role_arn":                   *destination.ExtendedS3DestinationDescription.RoleARN,
+				"role_arn":                   roleArn,
 				"compression_format":         *destination.ExtendedS3DestinationDescription.CompressionFormat,
 				"prefix":                     *destination.ExtendedS3DestinationDescription.Prefix,
 				"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(*destination.ExtendedS3DestinationDescription.CloudWatchLoggingOptions),
@@ -295,7 +316,8 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 				extendedS3Configuration["kms_key_arn"] = *destination.ExtendedS3DestinationDescription.EncryptionConfiguration.KMSEncryptionConfig
 			}
 			if destination.ExtendedS3DestinationDescription.ProcessingConfiguration != nil {
-				extendedS3Configuration["processing_configuration"] = flattenProcessingConfiguration(*destination.ExtendedS3DestinationDescription.ProcessingConfiguration)
+				extendedS3Configuration["processing_configuration"] = flattenProcessingConfiguration(
+					*destination.ExtendedS3DestinationDescription.ProcessingConfiguration, roleArn)
 			}
 			extendedS3ConfList := make([]map[string]interface{}, 1)
 			extendedS3ConfList[0] = extendedS3Configuration
