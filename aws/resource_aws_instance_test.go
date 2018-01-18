@@ -2072,18 +2072,13 @@ resource "aws_iam_role" "test" {
 	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 
-resource "aws_iam_instance_profile" "test" {
-	name = "test-%s"
-	roles = ["${aws_iam_role.test.name}"]
-}
-
 resource "aws_instance" "foo" {
 	ami = "ami-4fccb37f"
 	instance_type = "m1.small"
 	tags {
 		bar = "baz"
 	}
-}`, rName, rName)
+}`, rName)
 }
 
 func testAccInstanceConfigWithInstanceProfile(rName string) string {
