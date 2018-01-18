@@ -822,7 +822,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		if _, ok := d.GetOk("iam_instance_profile"); ok {
 			// Does not have an Iam Instance Profile associated with it, need to associate
 			if len(resp.IamInstanceProfileAssociations) == 0 {
-				err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 					_, err := conn.AssociateIamInstanceProfile(&ec2.AssociateIamInstanceProfileInput{
 						InstanceId: aws.String(d.Id()),
 						IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
@@ -845,7 +845,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				// Has an Iam Instance Profile associated with it, need to replace the association
 				associationId := resp.IamInstanceProfileAssociations[0].AssociationId
 
-				err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 					_, err := conn.ReplaceIamInstanceProfileAssociation(&ec2.ReplaceIamInstanceProfileAssociationInput{
 						AssociationId: associationId,
 						IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
