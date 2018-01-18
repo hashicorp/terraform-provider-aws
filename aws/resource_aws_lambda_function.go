@@ -22,10 +22,11 @@ const awsMutexLambdaKey = `aws_lambda_function`
 
 func resourceAwsLambdaFunction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaFunctionCreate,
-		Read:   resourceAwsLambdaFunctionRead,
-		Update: resourceAwsLambdaFunctionUpdate,
-		Delete: resourceAwsLambdaFunctionDelete,
+		Create:        resourceAwsLambdaFunctionCreate,
+		Read:          resourceAwsLambdaFunctionRead,
+		Update:        resourceAwsLambdaFunctionUpdate,
+		Delete:        resourceAwsLambdaFunctionDelete,
+		CustomizeDiff: resourceAwsLambdaFunctionCustomDiff,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -771,4 +772,19 @@ func validateRuntime(v interface{}, k string) (ws []string, errors []error) {
 			runtime, lambda.RuntimeNodejs43))
 	}
 	return
+}
+
+// Some of the Lambda Function output attributes are updated when a new version is uploaded. Most
+// are only updated when the Publish attribute is set. A force new would delete previous version of
+// the function, which could break Lambda alias
+func resourceAwsLambdaFunctionCustomDiff(diff *schema.ResourceDiff, meta interface{}) error {
+	if diff.HasChange("source_code_hash") {
+		diff.SetNewComputed("last_modified")
+
+		if diff.Get("publish").(bool) {
+			diff.SetNewComputed("version")
+			diff.SetNewComputed("qualified_arn")
+		}
+	}
+	return nil
 }
