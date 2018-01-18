@@ -385,6 +385,9 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 			if isAWSErr(err, "ValidationException", "Invalid InstanceProfile:") {
 				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, "AccessDeniedException", "Failed to authorize instance profile") {
+				return resource.RetryableError(err)
+			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
