@@ -1468,6 +1468,22 @@ func validateCognitoIdentityProvidersProviderName(v interface{}, k string) (ws [
 	return
 }
 
+func validateCognitoUserGroupName(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if len(value) < 1 {
+		es = append(es, fmt.Errorf("%q cannot be less than 1 character", k))
+	}
+
+	if len(value) > 128 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 128 character", k))
+	}
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+", k))
+	}
+	return
+}
+
 func validateCognitoUserPoolEmailVerificationMessage(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 	if len(value) < 6 {
@@ -1496,6 +1512,14 @@ func validateCognitoUserPoolEmailVerificationSubject(v interface{}, k string) (w
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q can be composed of any kind of letter, symbols, numeric character, punctuation and whitespaces", k))
+	}
+	return
+}
+
+func validateCognitoUserPoolId(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[\w-]+_[0-9a-zA-Z]+$`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q must be the region name followed by an underscore and then alphanumeric pattern", k))
 	}
 	return
 }

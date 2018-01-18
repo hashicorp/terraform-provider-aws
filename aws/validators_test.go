@@ -2890,3 +2890,63 @@ func TestValidateCognitoUserPoolDomain(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateCognitoUserGroupName(t *testing.T) {
+	validValues := []string{
+		"foo",
+		"7346241598935552",
+		"foo_bar",
+		"foo:bar",
+		"foo/bar",
+		"foo-bar",
+		"$foobar",
+		strings.Repeat("W", 128),
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoUserGroupName(s, "name")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool Group Name: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"",
+		strings.Repeat("W", 129), // > 128
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoUserGroupName(s, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool Group Name: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateCognitoUserPoolId(t *testing.T) {
+	validValues := []string{
+		"eu-west-1_Foo123",
+		"ap-southeast-2_BaRBaz987",
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoUserPoolId(s, "user_pool_id")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool Id: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"",
+		"foo",
+		"us-east-1-Foo123",
+		"eu-central-2_Bar+4",
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoUserPoolId(s, "user_pool_id")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool Id: %v", s, errors)
+		}
+	}
+}
