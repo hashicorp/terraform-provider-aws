@@ -186,21 +186,22 @@ func flattenCloudwatchLoggingOptions(clo firehose.CloudWatchLoggingOptions) *sch
 	return schema.NewSet(cloudwatchLoggingOptionsHash, []interface{}{cloudwatchLoggingOptions})
 }
 
-func flattenFirehoseS3Configuration(s3 firehose.S3DestinationDescription) []map[string]interface{} {
-	s3Configuration := make([]map[string]interface{}, 1)
-	s3Configuration[0] = map[string]interface{}{
-		"role_arn":                   *s3.RoleARN,
-		"bucket_arn":                 *s3.BucketARN,
-		"prefix":                     *s3.Prefix,
-		"buffer_size":                *s3.BufferingHints.SizeInMBs,
-		"buffer_interval":            *s3.BufferingHints.IntervalInSeconds,
-		"compression_format":         *s3.CompressionFormat,
-		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(*s3.CloudWatchLoggingOptions),
+func flattenFirehoseS3Configuration(s3 firehose.S3DestinationDescription) []interface{} {
+	s3Configuration := map[string]interface{}{
+		"role_arn":           *s3.RoleARN,
+		"bucket_arn":         *s3.BucketARN,
+		"prefix":             *s3.Prefix,
+		"buffer_size":        *s3.BufferingHints.SizeInMBs,
+		"buffer_interval":    *s3.BufferingHints.IntervalInSeconds,
+		"compression_format": *s3.CompressionFormat,
+	}
+	if s3.CloudWatchLoggingOptions != nil {
+		s3Configuration["cloudwatch_logging_options"] = flattenCloudwatchLoggingOptions(*s3.CloudWatchLoggingOptions)
 	}
 	if s3.EncryptionConfiguration.KMSEncryptionConfig != nil {
-		s3Configuration[0]["kms_key_arn"] = *s3.EncryptionConfiguration.KMSEncryptionConfig
+		s3Configuration["kms_key_arn"] = *s3.EncryptionConfiguration.KMSEncryptionConfig
 	}
-	return s3Configuration
+	return []interface{}{s3Configuration}
 }
 
 func flattenProcessingConfiguration(pc firehose.ProcessingConfiguration, roleArn string) []map[string]interface{} {
