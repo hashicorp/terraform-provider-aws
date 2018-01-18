@@ -1075,10 +1075,12 @@ func validateAppautoscalingScalableDimension(v interface{}, k string) (ws []stri
 		"ecs:service:DesiredCount":                     true,
 		"ec2:spot-fleet-request:TargetCapacity":        true,
 		"elasticmapreduce:instancegroup:InstanceCount": true,
+		"appstream:fleet:DesiredCapacity":              true,
 		"dynamodb:table:ReadCapacityUnits":             true,
 		"dynamodb:table:WriteCapacityUnits":            true,
 		"dynamodb:index:ReadCapacityUnits":             true,
 		"dynamodb:index:WriteCapacityUnits":            true,
+		"rds:cluster:ReadReplicaCount":                 true,
 	}
 
 	if !dimensions[value] {
@@ -1091,9 +1093,11 @@ func validateAppautoscalingServiceNamespace(v interface{}, k string) (ws []strin
 	value := v.(string)
 	namespaces := map[string]bool{
 		"ecs":              true,
-		"ec2":              true,
-		"dynamodb":         true,
 		"elasticmapreduce": true,
+		"ec2":              true,
+		"appstream":        true,
+		"dynamodb":         true,
+		"rds":              true,
 	}
 
 	if !namespaces[value] {
@@ -1126,6 +1130,14 @@ func validateAppautoscalingPredefinedMetricSpecification(v interface{}, k string
 	validMetrics := []string{
 		"DynamoDBReadCapacityUtilization",
 		"DynamoDBWriteCapacityUtilization",
+		"ALBRequestCountPerTarget",
+		"RDSReaderAverageCPUUtilization",
+		"RDSReaderAverageDatabaseConnections",
+		"EC2SpotFleetRequestAverageCPUUtilization",
+		"EC2SpotFleetRequestAverageNetworkIn",
+		"EC2SpotFleetRequestAverageNetworkOut",
+		"ECSServiceAverageCPUUtilization",
+		"ECSServiceAverageMemoryUtilization",
 	}
 	metric := v.(string)
 	for _, o := range validMetrics {
