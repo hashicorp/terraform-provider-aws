@@ -10,6 +10,7 @@ BUG FIXES:
 * resource/aws_eip: Do not disassociate EIP on tags-only update [GH-2975]
 * resource/aws_emr_cluster: Retry creation on `ValidationException` (IAM) [GH-3027]
 * resource/aws_iam_instance_profile: Allow cleanup during destruction without refresh [GH-2983]
+* resource/aws_iam_role: Prevent missing attached policy results [GH-2857]
 * resource/aws_iam_user: Prevent state removal during name attribute update [GH-2979]
 * resource/aws_iam_user: Allow path attribute update [GH-2940]
 * resource/aws_iam_user_policy: Fix updates with generated policy names and validate JSON [GH-3031]
