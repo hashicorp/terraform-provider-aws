@@ -201,14 +201,16 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"tags": tagsSchema(),
 		},
 
-		CustomizeDiff: updateVerionIfPublish,
+		CustomizeDiff: updateComputedAttributesOnPublish,
 	}
 }
 
-func updateVerionIfPublish(d *schema.ResourceDiff, meta interface{}) error {
+func updateComputedAttributesOnPublish(d *schema.ResourceDiff, meta interface{}) error {
 	publish := d.Get("publish").(bool)
 	if publish && needsFunctionCodeUpdate(d) {
 		d.SetNewComputed("version")
+		d.SetNewComputed("qualified_arn")
+		d.SetNewComputed("last_modified")
 	}
 	return nil
 }

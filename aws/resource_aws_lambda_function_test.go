@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -317,6 +318,8 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_versioned_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_versioned_%s", rString)
 
+	var timeBeforeUpdate time.Time
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -328,6 +331,7 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 			{
 				PreConfig: func() {
 					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile)
+					timeBeforeUpdate = time.Now()
 				},
 				Config: testAccAWSLambdaConfigVersioned(path, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
@@ -340,6 +344,11 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 						regexp.MustCompile("^2$")),
 					resource.TestMatchResourceAttr("aws_lambda_function.lambda_function_test", "qualified_arn",
 						regexp.MustCompile(":"+funcName+":[0-9]+$")),
+					resource.TestMatchResourceAttr("data.template_file.qualified_arn", "rendered",
+						regexp.MustCompile(fmt.Sprintf(":function:%s:2$", funcName))),
+					func(s *terraform.State) error {
+						return testAccCheckAttributeIsDateAfter(s, "data.template_file.last_modified", "rendered", timeBeforeUpdate)
+					},
 				),
 			},
 		},
@@ -1094,6 +1103,30 @@ func testAccCheckAwsLambdaSourceCodeHash(function *lambda.GetFunctionOutput, exp
 	}
 }
 
+func testAccCheckAttributeIsDateAfter(s *terraform.State, name string, key string, before time.Time) error {
+	rs, ok := s.RootModule().Resources[name]
+	if !ok {
+		return fmt.Errorf("Resource %s not found", name)
+	}
+
+	v, ok := rs.Primary.Attributes[key]
+	if !ok {
+		return fmt.Errorf("%s: Attribute '%s' not found", name, key)
+	}
+
+	const ISO8601UTC = "2006-01-02T15:04:05Z0700"
+	timeValue, err := time.Parse(ISO8601UTC, v)
+	if err != nil {
+		return err
+	}
+
+	if !before.Before(timeValue) {
+		return fmt.Errorf("Expected time attribute %s.%s with value %s was not before %s", name, key, v, before.Format(ISO8601UTC))
+	}
+
+	return nil
+}
+
 func testAccCreateZipFromFiles(files map[string]string, zipFile *os.File) error {
 	zipFile.Truncate(0)
 	zipFile.Seek(0, 0)
@@ -1426,6 +1459,22 @@ data "template_file" "function_version" {
 
   vars {
     function_version = "${aws_lambda_function.lambda_function_test.version}"
+  }
+}
+
+data "template_file" "last_modified" {
+  template = "$${last_modified}"
+
+  vars {
+    last_modified = "${aws_lambda_function.lambda_function_test.last_modified}"
+  }
+}
+
+data "template_file" "qualified_arn" {
+  template = "$${qualified_arn}"
+
+  vars {
+    qualified_arn = "${aws_lambda_function.lambda_function_test.qualified_arn}"
   }
 }
 `, fileName, funcName)
