@@ -324,6 +324,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_dx_lag":                                   resourceAwsDxLag(),
 			"aws_dx_connection":                            resourceAwsDxConnection(),
 			"aws_dx_connection_association":                resourceAwsDxConnectionAssociation(),
+			"aws_dx_gateway_association":                   resourceAwsDxGatewayAssociation(),
 			"aws_dynamodb_table":                           resourceAwsDynamoDbTable(),
 			"aws_ebs_snapshot":                             resourceAwsEbsSnapshot(),
 			"aws_ebs_volume":                               resourceAwsEbsVolume(),
