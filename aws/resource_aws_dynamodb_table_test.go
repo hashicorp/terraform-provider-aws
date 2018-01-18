@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -107,6 +108,44 @@ func TestAccAWSDynamoDbTable_gsiUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.test", &conf),
 				),
+			},
+		},
+	})
+}
+func TestAccAWSDynamoDbTable_gsiForbidKeyChanges(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigInitialState(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+				),
+			},
+			{
+				// Dropping the range key attribute on a global secondary index should not be allowed
+				Config: testAccAWSDynamoDbConfigGsiDropRangeKey(rName),
+
+				ExpectNonEmptyPlan: true,
+				ExpectError:        regexp.MustCompile("Modifications to the index keys are not allowed on global secondary index 'InitialTestTableGSI' after it is created"),
+			},
+			{
+				// Changing the range key attribute on a global secondary index should not be allowed
+				Config: testAccAWSDynamoDbConfigGsiChangeRangeKey(rName),
+
+				ExpectNonEmptyPlan: true,
+				ExpectError:        regexp.MustCompile("Modifications to the index keys are not allowed on global secondary index 'InitialTestTableGSI' after it is created"),
+			},
+			{
+				// Reordering the global secondary index keys should not result in a plan change
+				Config:             testAccAWSDynamoDbConfigGsiReorderKeys(rName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
@@ -744,6 +783,152 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, name)
+}
+
+// This configuration should be used after testAccAWSDynamoDbConfigInitialState to
+// mimick the range key being dropped off of a secondary index
+func testAccAWSDynamoDbConfigGsiDropRangeKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  read_capacity = 10
+  write_capacity = 20
+  hash_key = "TestTableHashKey"
+  range_key = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "TestGSIRangeKey"
+    type = "S"
+  }
+
+  local_secondary_index {
+    name = "TestTableLSI"
+    range_key = "TestLSIRangeKey"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name = "InitialTestTableGSI"
+    hash_key = "TestTableHashKey"
+    write_capacity = 10
+    read_capacity = 10
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName)
+}
+
+// This configuration should be used after testAccAWSDynamoDbConfigInitialState to
+// mimick the range key being changed to a new attribute on a secondary index
+func testAccAWSDynamoDbConfigGsiChangeRangeKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  read_capacity = 10
+  write_capacity = 20
+  hash_key = "TestTableHashKey"
+  range_key = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "TestGSIRangeKey"
+    type = "S"
+  }
+
+  local_secondary_index {
+    name = "TestTableLSI"
+    range_key = "TestLSIRangeKey"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name = "InitialTestTableGSI"
+    hash_key = "TestTableHashKey"
+    range_key = "TestLSIRangeKey"
+    write_capacity = 10
+    read_capacity = 10
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName)
+}
+
+// This configuration should be used after testAccAWSDynamoDbConfigInitialState to
+// mimick the index key attributes order being flipped (which should be treated as a no-op)
+func testAccAWSDynamoDbConfigGsiReorderKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  read_capacity = 10
+  write_capacity = 20
+  hash_key = "TestTableHashKey"
+  range_key = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "TestGSIRangeKey"
+    type = "S"
+  }
+
+  local_secondary_index {
+    name = "TestTableLSI"
+    range_key = "TestLSIRangeKey"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name = "InitialTestTableGSI"
+    range_key = "TestGSIRangeKey"
+    hash_key = "TestTableHashKey"
+    write_capacity = 10
+    read_capacity = 10
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName)
 }
 
 func testAccAWSDynamoDbConfigAddTimeToLive(rName string) string {

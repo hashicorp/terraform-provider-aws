@@ -13,6 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform/helper/hashcode"
 )
@@ -41,6 +42,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsDynamoDbTableMigrateState,
+		CustomizeDiff: resourceAwsDynamoDbTableCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -646,6 +648,42 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	return resourceAwsDynamoDbTableRead(d, meta)
+}
+
+func resourceAwsDynamoDbTableCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
+	oldGsis, newGsis := diff.GetChange("global_secondary_index")
+	newGsiSet := newGsis.(*schema.Set)
+	if len(newGsiSet.List()) > 0 {
+		oldGsiSet := oldGsis.(*schema.Set)
+		for _, newGsiElement := range newGsiSet.List() {
+			newGsiData := newGsiElement.(map[string]interface{})
+			newGsiName := newGsiData["name"].(string)
+			oldGsiElement := findByAttribute(oldGsiSet, "name", newGsiName)
+			if oldGsiElement != nil {
+				newGsi := createGSIFromData(&newGsiData)
+				oldGsiData := oldGsiElement.(map[string]interface{})
+				oldGsi := createGSIFromData(&oldGsiData)
+
+				if !awsutil.DeepEqual(newGsi.KeySchema, oldGsi.KeySchema) {
+					return fmt.Errorf("Modifications to the index keys are not allowed on global secondary index '%s' after it is created", newGsiName)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func findByAttribute(set *schema.Set, name string, value string) interface{} {
+	for _, setElement := range set.List() {
+		element := setElement.(map[string]interface{})
+		attributeValue := element[name].(string)
+		if attributeValue == value {
+			return setElement
+		}
+	}
+
+	return nil
 }
 
 func updateTimeToLive(d *schema.ResourceData, meta interface{}) error {
