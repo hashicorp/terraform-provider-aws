@@ -15,6 +15,7 @@ BUG FIXES:
 * resource/aws_iam_user: Prevent state removal during name attribute update [GH-2979]
 * resource/aws_iam_user: Allow path attribute update [GH-2940]
 * resource/aws_iam_user_policy: Fix updates with generated policy names and validate JSON [GH-3031]
+* resource/aws_instance: Retry IAM instance profile (re)association for eventual consistency on update [GH-3055]
 * resource/aws_lambda_function: Make EC2 rate limit errors retryable on update [GH-2964]
 * resource/aws_lb_target_group: Allow a blank health check path, for TCP healthchecks [GH-2980]
 * resource/aws_sns_topic_subscription: Prevent crash on subscription attribute update [GH-2967]
