@@ -359,6 +359,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_flow_log":                                 resourceAwsFlowLog(),
 			"aws_glacier_vault":                            resourceAwsGlacierVault(),
 			"aws_glue_catalog_database":                    resourceAwsGlueCatalogDatabase(),
+			"aws_glue_catalog_crawler":                    	resourceAwsGlueCrawler(),
 			"aws_guardduty_detector":                       resourceAwsGuardDutyDetector(),
 			"aws_guardduty_member":                         resourceAwsGuardDutyMember(),
 			"aws_iam_access_key":                           resourceAwsIamAccessKey(),
