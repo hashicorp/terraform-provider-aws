@@ -21,6 +21,7 @@ BUG FIXES:
 * resource/aws_kinesis_firehose_delivery_stream: Fix import for S3 destinations [GH-2970]
 * resource/aws_kinesis_firehose_delivery_stream: Prevent crash on empty Redshift's S3 Backup Description [GH-2970]
 * resource/aws_kinesis_firehose_delivery_stream: Detect drifts in `processing_configuration` [GH-2970]
+* resource/aws_kinesis_firehose_delivery_stream: Prevent crash on empty CloudWatch logging opts [GH-3052]
 
 ## 1.7.0 (January 12, 2018)
 
