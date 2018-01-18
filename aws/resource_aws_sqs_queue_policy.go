@@ -46,12 +46,14 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 	policy := d.Get("policy").(string)
 	url := d.Get("queue_url").(string)
 
-	_, err := conn.SetQueueAttributes(&sqs.SetQueueAttributesInput{
+	sqaInput := &sqs.SetQueueAttributesInput{
 		QueueUrl: aws.String(url),
 		Attributes: aws.StringMap(map[string]string{
-			"Policy": policy,
+			sqs.QueueAttributeNamePolicy: policy,
 		}),
-	})
+	}
+	log.Printf("[DEBUG] Updating SQS attributes: %s", sqaInput)
+	_, err := conn.SetQueueAttributes(sqaInput)
 	if err != nil {
 		return fmt.Errorf("Error updating SQS attributes: %s", err)
 	}
@@ -59,31 +61,32 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 	// https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SetQueueAttributes.html
 	// When you change a queue's attributes, the change can take up to 60 seconds
 	// for most of the attributes to propagate throughout the Amazon SQS system.
-	wait := resource.StateChangeConf{
-		Pending:    []string{""},
-		Target:     []string{"SQS queue policy updated"},
-		Timeout:    1 * time.Minute,
-		MinTimeout: 1 * time.Second,
-		Refresh: func() (interface{}, string, error) {
-			out, err := conn.GetQueueAttributes(&sqs.GetQueueAttributesInput{
-				QueueUrl:       aws.String(url),
-				AttributeNames: []*string{aws.String("Policy")},
-			})
-			if err != nil {
-				return out, "", err
-			}
-			queuePolicy, ok := out.Attributes["Policy"]
-			if ok {
-				equivalent, err := awspolicy.PoliciesAreEquivalent(*queuePolicy, policy)
-				if err != nil || !equivalent {
-					return out, "", nil
-				}
-				return out, "SQS queue policy updated", nil
-			}
-			return out, "", nil
-		},
+	gqaInput := &sqs.GetQueueAttributesInput{
+		QueueUrl:       aws.String(url),
+		AttributeNames: []*string{aws.String(sqs.QueueAttributeNamePolicy)},
 	}
-	_, err = wait.WaitForState()
+	notUpdatedError := fmt.Errorf("SQS attribute %s not updated", sqs.QueueAttributeNamePolicy)
+	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		log.Printf("[DEBUG] Reading SQS attributes: %s", gqaInput)
+		out, err := conn.GetQueueAttributes(gqaInput)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		queuePolicy, ok := out.Attributes[sqs.QueueAttributeNamePolicy]
+		if !ok {
+			log.Printf("[DEBUG] SQS attribute %s not found - retrying", sqs.QueueAttributeNamePolicy)
+			return resource.RetryableError(notUpdatedError)
+		}
+		equivalent, err := awspolicy.PoliciesAreEquivalent(*queuePolicy, policy)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		if !equivalent {
+			log.Printf("[DEBUG] SQS attribute %s not updated - retrying", sqs.QueueAttributeNamePolicy)
+			return resource.RetryableError(notUpdatedError)
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -98,7 +101,7 @@ func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) err
 
 	out, err := conn.GetQueueAttributes(&sqs.GetQueueAttributesInput{
 		QueueUrl:       aws.String(d.Id()),
-		AttributeNames: []*string{aws.String("Policy")},
+		AttributeNames: []*string{aws.String(sqs.QueueAttributeNamePolicy)},
 	})
 	if err != nil {
 		if isAWSErr(err, "AWS.SimpleQueueService.NonExistentQueue", "") {
@@ -112,7 +115,7 @@ func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Received empty response for SQS queue %s", d.Id())
 	}
 
-	policy, ok := out.Attributes["Policy"]
+	policy, ok := out.Attributes[sqs.QueueAttributeNamePolicy]
 	if ok {
 		d.Set("policy", policy)
 	} else {
@@ -131,7 +134,7 @@ func resourceAwsSqsQueuePolicyDelete(d *schema.ResourceData, meta interface{}) e
 	_, err := conn.SetQueueAttributes(&sqs.SetQueueAttributesInput{
 		QueueUrl: aws.String(d.Id()),
 		Attributes: aws.StringMap(map[string]string{
-			"Policy": "",
+			sqs.QueueAttributeNamePolicy: "",
 		}),
 	})
 	if err != nil {
