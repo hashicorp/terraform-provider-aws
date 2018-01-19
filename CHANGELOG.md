@@ -1,4 +1,9 @@
 ## 1.8.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* datasource/aws_kms_alias: Add target_key_arn attribute [GH-2551]
+
 ## 1.7.1 (January 19, 2018)
 
 BUG FIXES:
