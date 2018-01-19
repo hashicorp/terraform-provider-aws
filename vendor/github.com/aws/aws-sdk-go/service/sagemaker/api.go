@@ -2646,12 +2646,11 @@ func (c *SageMaker) UpdateEndpointWeightsAndCapacitiesRequest(input *UpdateEndpo
 
 // UpdateEndpointWeightsAndCapacities API operation for Amazon SageMaker Service.
 //
-// Updates variant weight, capacity, or both of one or more variants associated
-// with an endpoint. This operation updates weight, capacity, or both for the
-// previously provisioned endpoint. When it receives the request, Amazon SageMaker
-// sets the endpoint status to Updating. After updating the endpoint, it sets
-// the status to InService. To check the status of an endpoint, use the DescribeEndpoint
-// (http://docs.aws.amazon.com/sagemaker/latest/dg/API_DescribeEndpoint.html)
+// Updates variant weight of one or more variants associated with an existing
+// endpoint, or capacity of one variant associated with an existing endpoint.
+// When it receives the request, Amazon SageMaker sets the endpoint status to
+// Updating. After updating the endpoint, it sets the status to InService. To
+// check the status of an endpoint, use the DescribeEndpoint (http://docs.aws.amazon.com/sagemaker/latest/dg/API_DescribeEndpoint.html)
 // API.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3120,6 +3119,11 @@ type CreateEndpointConfigInput struct {
 	// EndpointConfigName is a required field
 	EndpointConfigName *string `type:"string" required:"true"`
 
+	// The Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon
+	// SageMaker uses to encrypt data on the storage volume attached to the ML compute
+	// instance that hosts the endpoint.
+	KmsKeyId *string `type:"string"`
+
 	// An array of ProductionVariant objects, one for each model that you want to
 	// host at this endpoint.
 	//
@@ -3184,6 +3188,12 @@ func (s *CreateEndpointConfigInput) Validate() error {
 // SetEndpointConfigName sets the EndpointConfigName field's value.
 func (s *CreateEndpointConfigInput) SetEndpointConfigName(v string) *CreateEndpointConfigInput {
 	s.EndpointConfigName = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *CreateEndpointConfigInput) SetKmsKeyId(v string) *CreateEndpointConfigInput {
+	s.KmsKeyId = &v
 	return s
 }
 
@@ -4333,6 +4343,10 @@ type DescribeEndpointConfigOutput struct {
 	// EndpointConfigName is a required field
 	EndpointConfigName *string `type:"string" required:"true"`
 
+	// AWS KMS key ID Amazon SageMaker uses to encrypt data when storing it on the
+	// ML storage volume attached to the instance.
+	KmsKeyId *string `type:"string"`
+
 	// An array of ProductionVariant objects, one for each model that you want to
 	// host at this endpoint.
 	//
@@ -4365,6 +4379,12 @@ func (s *DescribeEndpointConfigOutput) SetEndpointConfigArn(v string) *DescribeE
 // SetEndpointConfigName sets the EndpointConfigName field's value.
 func (s *DescribeEndpointConfigOutput) SetEndpointConfigName(v string) *DescribeEndpointConfigOutput {
 	s.EndpointConfigName = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *DescribeEndpointConfigOutput) SetKmsKeyId(v string) *DescribeEndpointConfigOutput {
+	s.KmsKeyId = &v
 	return s
 }
 
@@ -6481,6 +6501,11 @@ type ResourceConfig struct {
 	// InstanceType is a required field
 	InstanceType *string `type:"string" required:"true" enum:"TrainingInstanceType"`
 
+	// The Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon
+	// SageMaker uses to encrypt data on the storage volume attached to the ML compute
+	// instance(s) that run the training job.
+	VolumeKmsKeyId *string `type:"string"`
+
 	// The size of the ML storage volume that you want to provision.
 	//
 	// ML storage volumes store model artifacts and incremental states. Training
@@ -6541,6 +6566,12 @@ func (s *ResourceConfig) SetInstanceCount(v int64) *ResourceConfig {
 // SetInstanceType sets the InstanceType field's value.
 func (s *ResourceConfig) SetInstanceType(v string) *ResourceConfig {
 	s.InstanceType = &v
+	return s
+}
+
+// SetVolumeKmsKeyId sets the VolumeKmsKeyId field's value.
+func (s *ResourceConfig) SetVolumeKmsKeyId(v string) *ResourceConfig {
+	s.VolumeKmsKeyId = &v
 	return s
 }
 
