@@ -236,6 +236,11 @@ func resourceAwsEMRCluster() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
+			"scale_down_behavior": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
 			"security_configuration": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -363,8 +368,13 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	if v, ok := d.GetOk("log_uri"); ok {
 		params.LogUri = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("autoscaling_role"); ok {
 		params.AutoScalingRole = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("scale_down_behavior"); ok {
+		params.ScaleDownBehavior = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("security_configuration"); ok {
@@ -486,6 +496,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", cluster.Name)
+	d.Set("scale_down_behavior", cluster.ScaleDownBehavior)
 	d.Set("service_role", cluster.ServiceRole)
 	d.Set("security_configuration", cluster.SecurityConfiguration)
 	d.Set("autoscaling_role", cluster.AutoScalingRole)

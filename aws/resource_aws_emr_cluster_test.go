@@ -1004,6 +1004,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   core_instance_type   = "c4.large"
   core_instance_count  = 1
 
+  scale_down_behavior = "TERMINATE_AT_INSTANCE_HOUR"
+
   security_configuration = "${aws_emr_security_configuration.foo.name}"
 
   tags {
