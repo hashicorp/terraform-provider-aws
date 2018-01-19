@@ -190,7 +190,6 @@ func flattenFirehoseS3Configuration(s3 firehose.S3DestinationDescription) []inte
 	s3Configuration := map[string]interface{}{
 		"role_arn":           *s3.RoleARN,
 		"bucket_arn":         *s3.BucketARN,
-		"prefix":             *s3.Prefix,
 		"buffer_size":        *s3.BufferingHints.SizeInMBs,
 		"buffer_interval":    *s3.BufferingHints.IntervalInSeconds,
 		"compression_format": *s3.CompressionFormat,
@@ -200,6 +199,9 @@ func flattenFirehoseS3Configuration(s3 firehose.S3DestinationDescription) []inte
 	}
 	if s3.EncryptionConfiguration.KMSEncryptionConfig != nil {
 		s3Configuration["kms_key_arn"] = *s3.EncryptionConfiguration.KMSEncryptionConfig
+	}
+	if s3.Prefix != nil {
+		s3Configuration["prefix"] = *s3.Prefix
 	}
 	return []interface{}{s3Configuration}
 }
