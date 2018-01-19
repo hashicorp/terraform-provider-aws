@@ -351,6 +351,10 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
+				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+				return resource.RetryableError(err)
+			}
 
 			return resource.NonRetryableError(err)
 		}
