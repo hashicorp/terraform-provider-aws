@@ -1,30 +1,30 @@
-## 1.7.1 (Unreleased)
+## 1.7.1 (January 19, 2018)
 
 BUG FIXES:
 
-* data-source/aws_db_snapshot: Prevent crash on unfinished snapshots [GH-2960]
-* resource/aws_cloudfront_distribution: Retry deletion on DistributionNotDisabled [GH-3034]
-* resource/aws_codebuild_project: Prevent crash on empty source buildspec and location [GH-3011]
-* resource/aws_codepipeline: Prevent crash on empty artifacts [GH-2998]
-* resource/aws_appautoscaling_policy: Match correct policy when multiple policies with same name and service [GH-3012]
-* resource/aws_eip: Do not disassociate EIP on tags-only update [GH-2975]
-* resource/aws_elastic_beanstalk_application: Retry DescribeApplication after creation [GH-3064]
-* resource/aws_emr_cluster: Retry creation on `ValidationException` (IAM) [GH-3027]
-* resource/aws_emr_cluster: Retry creation on `AccessDeniedException` (IAM) [GH-3050]
-* resource/aws_iam_instance_profile: Allow cleanup during destruction without refresh [GH-2983]
-* resource/aws_iam_role: Prevent missing attached policy results [GH-2857]
-* resource/aws_iam_user: Prevent state removal during name attribute update [GH-2979]
-* resource/aws_iam_user: Allow path attribute update [GH-2940]
-* resource/aws_iam_user_policy: Fix updates with generated policy names and validate JSON [GH-3031]
-* resource/aws_instance: Retry IAM instance profile (re)association for eventual consistency on update [GH-3055]
-* resource/aws_lambda_function: Make EC2 rate limit errors retryable on update [GH-2964]
-* resource/aws_lambda_function: Retry creation on EC2 throttle error [GH-3062]
-* resource/aws_lb_target_group: Allow a blank health check path, for TCP healthchecks [GH-2980]
-* resource/aws_sns_topic_subscription: Prevent crash on subscription attribute update [GH-2967]
-* resource/aws_kinesis_firehose_delivery_stream: Fix import for S3 destinations [GH-2970]
-* resource/aws_kinesis_firehose_delivery_stream: Prevent crash on empty Redshift's S3 Backup Description [GH-2970]
-* resource/aws_kinesis_firehose_delivery_stream: Detect drifts in `processing_configuration` [GH-2970]
-* resource/aws_kinesis_firehose_delivery_stream: Prevent crash on empty CloudWatch logging opts [GH-3052]
+* data-source/aws_db_snapshot: Prevent crash on unfinished snapshots ([#2960](https://github.com/terraform-providers/terraform-provider-aws/issues/2960))
+* resource/aws_cloudfront_distribution: Retry deletion on DistributionNotDisabled ([#3034](https://github.com/terraform-providers/terraform-provider-aws/issues/3034))
+* resource/aws_codebuild_project: Prevent crash on empty source buildspec and location ([#3011](https://github.com/terraform-providers/terraform-provider-aws/issues/3011))
+* resource/aws_codepipeline: Prevent crash on empty artifacts ([#2998](https://github.com/terraform-providers/terraform-provider-aws/issues/2998))
+* resource/aws_appautoscaling_policy: Match correct policy when multiple policies with same name and service ([#3012](https://github.com/terraform-providers/terraform-provider-aws/issues/3012))
+* resource/aws_eip: Do not disassociate EIP on tags-only update ([#2975](https://github.com/terraform-providers/terraform-provider-aws/issues/2975))
+* resource/aws_elastic_beanstalk_application: Retry DescribeApplication after creation ([#3064](https://github.com/terraform-providers/terraform-provider-aws/issues/3064))
+* resource/aws_emr_cluster: Retry creation on `ValidationException` (IAM) ([#3027](https://github.com/terraform-providers/terraform-provider-aws/issues/3027))
+* resource/aws_emr_cluster: Retry creation on `AccessDeniedException` (IAM) ([#3050](https://github.com/terraform-providers/terraform-provider-aws/issues/3050))
+* resource/aws_iam_instance_profile: Allow cleanup during destruction without refresh ([#2983](https://github.com/terraform-providers/terraform-provider-aws/issues/2983))
+* resource/aws_iam_role: Prevent missing attached policy results ([#2857](https://github.com/terraform-providers/terraform-provider-aws/issues/2857))
+* resource/aws_iam_user: Prevent state removal during name attribute update ([#2979](https://github.com/terraform-providers/terraform-provider-aws/issues/2979))
+* resource/aws_iam_user: Allow path attribute update ([#2940](https://github.com/terraform-providers/terraform-provider-aws/issues/2940))
+* resource/aws_iam_user_policy: Fix updates with generated policy names and validate JSON ([#3031](https://github.com/terraform-providers/terraform-provider-aws/issues/3031))
+* resource/aws_instance: Retry IAM instance profile (re)association for eventual consistency on update ([#3055](https://github.com/terraform-providers/terraform-provider-aws/issues/3055))
+* resource/aws_lambda_function: Make EC2 rate limit errors retryable on update ([#2964](https://github.com/terraform-providers/terraform-provider-aws/issues/2964))
+* resource/aws_lambda_function: Retry creation on EC2 throttle error ([#3062](https://github.com/terraform-providers/terraform-provider-aws/issues/3062))
+* resource/aws_lb_target_group: Allow a blank health check path, for TCP healthchecks ([#2980](https://github.com/terraform-providers/terraform-provider-aws/issues/2980))
+* resource/aws_sns_topic_subscription: Prevent crash on subscription attribute update ([#2967](https://github.com/terraform-providers/terraform-provider-aws/issues/2967))
+* resource/aws_kinesis_firehose_delivery_stream: Fix import for S3 destinations ([#2970](https://github.com/terraform-providers/terraform-provider-aws/issues/2970))
+* resource/aws_kinesis_firehose_delivery_stream: Prevent crash on empty Redshift's S3 Backup Description ([#2970](https://github.com/terraform-providers/terraform-provider-aws/issues/2970))
+* resource/aws_kinesis_firehose_delivery_stream: Detect drifts in `processing_configuration` ([#2970](https://github.com/terraform-providers/terraform-provider-aws/issues/2970))
+* resource/aws_kinesis_firehose_delivery_stream: Prevent crash on empty CloudWatch logging opts ([#3052](https://github.com/terraform-providers/terraform-provider-aws/issues/3052))
 
 ## 1.7.0 (January 12, 2018)
 
