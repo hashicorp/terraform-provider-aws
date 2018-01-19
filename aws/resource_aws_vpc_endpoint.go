@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsVpcEndpoint() *schema.Resource {
@@ -35,7 +36,7 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      ec2.VpcEndpointTypeGateway,
-				ValidateFunc: validateVpcEndpointType,
+				ValidateFunc: validation.StringInSlice([]string{ec2.VpcEndpointTypeGateway, ec2.VpcEndpointTypeInterface}, false),
 			},
 			"service_name": {
 				Type:     schema.TypeString,
@@ -46,7 +47,7 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateJsonString,
+				ValidateFunc: validation.ValidateJsonString,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
