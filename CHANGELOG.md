@@ -8,6 +8,7 @@ BUG FIXES:
 * resource/aws_codepipeline: Prevent crash on empty artifacts [GH-2998]
 * resource/aws_appautoscaling_policy: Match correct policy when multiple policies with same name and service [GH-3012]
 * resource/aws_eip: Do not disassociate EIP on tags-only update [GH-2975]
+* resource/aws_elastic_beanstalk_application: Retry DescribeApplication after creation [GH-3064]
 * resource/aws_emr_cluster: Retry creation on `ValidationException` (IAM) [GH-3027]
 * resource/aws_emr_cluster: Retry creation on `AccessDeniedException` (IAM) [GH-3050]
 * resource/aws_iam_instance_profile: Allow cleanup during destruction without refresh [GH-2983]
