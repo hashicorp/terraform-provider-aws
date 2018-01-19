@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -446,7 +447,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	ds := out.DomainStatus
 
 	if ds.AccessPolicies != nil && *ds.AccessPolicies != "" {
-		policies, err := normalizeJsonString(*ds.AccessPolicies)
+		policies, err := structure.NormalizeJsonString(*ds.AccessPolicies)
 		if err != nil {
 			return errwrap.Wrapf("access policies contain an invalid JSON: {{err}}", err)
 		}
