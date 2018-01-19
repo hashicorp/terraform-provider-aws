@@ -206,11 +206,13 @@ func resourceAwsLambdaFunction() *schema.Resource {
 }
 
 func updateComputedAttributesOnPublish(d *schema.ResourceDiff, meta interface{}) error {
-	publish := d.Get("publish").(bool)
-	if publish && needsFunctionCodeUpdate(d) {
-		d.SetNewComputed("version")
-		d.SetNewComputed("qualified_arn")
+	if needsFunctionCodeUpdate(d) {
 		d.SetNewComputed("last_modified")
+		publish := d.Get("publish").(bool)
+		if publish {
+			d.SetNewComputed("version")
+			d.SetNewComputed("qualified_arn")
+		}
 	}
 	return nil
 }

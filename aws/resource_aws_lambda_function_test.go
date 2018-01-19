@@ -625,6 +625,8 @@ func TestAccAWSLambdaFunction_localUpdate(t *testing.T) {
 	funcName := fmt.Sprintf("tf_acc_lambda_func_local_upd_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_local_upd_%s", rString)
 
+	var timeBeforeUpdate time.Time
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -645,6 +647,7 @@ func TestAccAWSLambdaFunction_localUpdate(t *testing.T) {
 			{
 				PreConfig: func() {
 					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile)
+					timeBeforeUpdate = time.Now()
 				},
 				Config: genAWSLambdaFunctionConfig_local(path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
@@ -652,6 +655,9 @@ func TestAccAWSLambdaFunction_localUpdate(t *testing.T) {
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, funcName),
 					testAccCheckAwsLambdaSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
+					func(s *terraform.State) error {
+						return testAccCheckAttributeIsDateAfter(s, "data.template_file.last_modified", "rendered", timeBeforeUpdate)
+					},
 				),
 			},
 		},
@@ -1803,6 +1809,15 @@ resource "aws_lambda_function" "lambda_function_local" {
     handler = "exports.example"
     runtime = "nodejs4.3"
 }
+
+data "template_file" "last_modified" {
+  template = "$${last_modified}"
+
+  vars {
+    last_modified = "${aws_lambda_function.lambda_function_local.last_modified}"
+  }
+}
+
 `, roleName, filePath, filePath, funcName)
 }
 
