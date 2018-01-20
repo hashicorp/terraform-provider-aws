@@ -14,6 +14,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAcmCertificateCreate,
 		Read:   resourceAwsAcmCertificateRead,
+		Update: resourceAwsAcmCertificateUpdate,
 		Delete: resourceAwsAcmCertificateDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -71,6 +72,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -96,6 +98,17 @@ func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.SetId(*resp.CertificateArn)
+	if v, ok := d.GetOk("tags"); ok {
+		params := &acm.AddTagsToCertificateInput{
+			CertificateArn: resp.CertificateArn,
+			Tags:           tagsFromMapACM(v.(map[string]interface{})),
+		}
+		_, err := acmconn.AddTagsToCertificate(params)
+
+		if err != nil {
+			return fmt.Errorf("Error requesting certificate: %s", err)
+		}
+	}
 
 	return resourceAwsAcmCertificateRead(d, meta)
 }
@@ -141,9 +154,28 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 			return resource.NonRetryableError(err)
 		}
 
+		params := &acm.ListTagsForCertificateInput{
+			CertificateArn: aws.String(d.Id()),
+		}
+
+		tagResp, err := acmconn.ListTagsForCertificate(params)
+		if err := d.Set("tags", tagsToMapACM(tagResp.Tags)); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
 		return nil
 	})
+}
 
+func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+	if d.HasChange("tags") {
+		acmconn := meta.(*AWSClient).acmconn
+		err := setTagsACM(acmconn, d)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func cleanUpSubjectAlternativeNames(cert *acm.CertificateDetail) []string {

@@ -24,8 +24,11 @@ deploy the required validation records and wait for validation to complete.
 
 ```hcl
 resource "aws_acm_certificate" "cert" {
-    domain_name = "example.com"
-	validation_method = "DNS"
+  domain_name = "example.com"
+  validation_method = "DNS"
+  tags {
+    Environment = "test"
+  }
 }
 
 data "aws_route53_zone" "zone" {
@@ -59,6 +62,7 @@ The following arguments are supported:
 * `domain_name` - (Required) A domain name for which the certificate should be issued
 * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
 * `validation_method` - (Required) Which method to use for validation (only `DNS` is supported at the moment)
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
 
