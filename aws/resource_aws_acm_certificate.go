@@ -96,7 +96,6 @@ func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.SetId(*resp.CertificateArn)
-	d.Set("certificate_arn", *resp.CertificateArn)
 
 	return resourceAwsAcmCertificateRead(d, meta)
 }
