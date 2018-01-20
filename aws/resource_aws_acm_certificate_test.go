@@ -52,6 +52,11 @@ func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 					testAccCheckAcmCertificateValidationAttributes("aws_acm_certificate_validation.cert", &confAfterValidation),
 				),
 			},
+			resource.TestStep{
+				ResourceName:      "aws_acm_certificate.cert",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

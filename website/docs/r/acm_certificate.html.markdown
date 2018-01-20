@@ -74,4 +74,10 @@ Domain validation objects export the following attributes:
 * `resource_record_type` - The type of DNS record to create
 * `resource_record_value` - The value the DNS record needs to have
 
+## Import
 
+Certificates can be imported using their ARN, e.g.
+
+```
+$ terraform import aws_acm_certificate.cert aws_acm_certificate.cert arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a
+```

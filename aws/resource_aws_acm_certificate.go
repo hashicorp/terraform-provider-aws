@@ -15,6 +15,9 @@ func resourceAwsAcmCertificate() *schema.Resource {
 		Create: resourceAwsAcmCertificateCreate,
 		Read:   resourceAwsAcmCertificateRead,
 		Delete: resourceAwsAcmCertificateDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"domain_name": &schema.Schema{
@@ -108,7 +111,17 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 			return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %s", err))
 		}
 
+		if *resp.Certificate.Type != "AMAZON_ISSUED" {
+			return resource.NonRetryableError(fmt.Errorf("Certificate has type %s, only AMAZON_ISSUED is supported at the moment", *resp.Certificate.Type))
+		}
+
 		if err := d.Set("domain_name", resp.Certificate.DomainName); err != nil {
+			return resource.NonRetryableError(err)
+		}
+		if err := d.Set("certificate_arn", resp.Certificate.CertificateArn); err != nil {
+			return resource.NonRetryableError(err)
+		}
+		if err := d.Set("validation_method", resp.Certificate.DomainValidationOptions[0].ValidationMethod); err != nil {
 			return resource.NonRetryableError(err)
 		}
 		if err := d.Set("subject_alternative_names", cleanUpSubjectAlternativeNames(resp.Certificate)); err != nil {
