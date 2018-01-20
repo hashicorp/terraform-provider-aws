@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"os"
 	"regexp"
 )
 
@@ -16,10 +17,13 @@ func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 	var conf acm.DescribeCertificateOutput
 	var tags acm.ListTagsForCertificateOutput
 	var confAfterValidation acm.DescribeCertificateOutput
+	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
+		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
+	}
 
-	root_zone_domain := "sandbox.sellmayr.net"
-	domain := "certtest.sandbox.sellmayr.net"
-	sanDomain := "certtest2.sandbox.sellmayr.net"
+	root_zone_domain := os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
+	domain := fmt.Sprintf("certtest.%s", root_zone_domain)
+	sanDomain := fmt.Sprintf("certtest2.%s", root_zone_domain)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
