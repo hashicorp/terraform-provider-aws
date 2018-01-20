@@ -35,6 +35,12 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					if v.(string) != "DNS" {
+						errors = append(errors, fmt.Errorf("only validation_method DNS is supported at the moment"))
+					}
+					return
+				},
 			},
 			"certificate_arn": &schema.Schema{
 				Type:     schema.TypeString,
@@ -75,8 +81,6 @@ func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) e
 		DomainName:       aws.String(d.Get("domain_name").(string)),
 		ValidationMethod: aws.String("DNS"),
 	}
-
-	// TODO: check that validation method is DNS, nothing else supported at the moment
 
 	sans, ok := d.GetOk("subject_alternative_names")
 	if ok {
