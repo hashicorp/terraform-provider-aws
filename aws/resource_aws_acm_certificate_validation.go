@@ -9,6 +9,7 @@ import (
 	"log"
 	"reflect"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -93,7 +94,7 @@ func resourceAwsAcmCertificateCheckValidationRecords(validation_record_fqdns []i
 	expected_fqdns := make([]string, len(cert.DomainValidationOptions))
 	for i, v := range cert.DomainValidationOptions {
 		if *v.ValidationMethod == "DNS" {
-			expected_fqdns[i] = *v.ResourceRecord.Name
+			expected_fqdns[i] = strings.TrimSuffix(*v.ResourceRecord.Name, ".")
 		}
 	}
 
@@ -101,7 +102,7 @@ func resourceAwsAcmCertificateCheckValidationRecords(validation_record_fqdns []i
 
 	for _, v := range validation_record_fqdns {
 		val := v.(string)
-		actual_validation_record_fqdns = append(actual_validation_record_fqdns, val)
+		actual_validation_record_fqdns = append(actual_validation_record_fqdns, strings.TrimSuffix(val, "."))
 	}
 
 	sort.Strings(expected_fqdns)
