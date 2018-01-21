@@ -4155,13 +4155,16 @@ func (c *SES) SendCustomVerificationEmailRequest(input *SendCustomVerificationEm
 
 // SendCustomVerificationEmail API operation for Amazon Simple Email Service.
 //
-// Sends a custom verification email to a specified recipient. Verification
-// emails sent using this operation are counted against your 24-hour sending
-// quota and per-second sending rate.
+// Adds an email address to the list of identities for your Amazon SES account
+// and attempts to verify it. As a result of executing this operation, a customized
+// verification email is sent to the specified address.
 //
-// For more information about custom verification email templates, see Using
-// Custom Verification Email Templates (https://docs.aws.amazon.com/ses/latest/DeveloperGuide/custom-verification-emails.html)
+// To use this operation, you must first create a custom verification email
+// template. For more information about creating and using custom verification
+// email templates, see Using Custom Verification Email Templates (https://docs.aws.amazon.com/ses/latest/DeveloperGuide/custom-verification-emails.html)
 // in the Amazon SES Developer Guide.
+//
+// You can execute this operation no more than once per second.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6377,8 +6380,8 @@ func (c *SES) VerifyEmailIdentityRequest(input *VerifyEmailIdentityInput) (req *
 // VerifyEmailIdentity API operation for Amazon Simple Email Service.
 //
 // Adds an email address to the list of identities for your Amazon SES account
-// and attempts to verify it. This operation causes a confirmation email message
-// to be sent to the specified address.
+// and attempts to verify it. As a result of executing this operation, a verification
+// email is sent to the specified address.
 //
 // You can execute this operation no more than once per second.
 //
@@ -6888,8 +6891,8 @@ type CloneReceiptRuleSetInput struct {
 
 	// The name of the rule set to create. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), periods (.), underscores
-	//    (_), or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Start and end with a letter or number.
 	//
@@ -7022,8 +7025,8 @@ type CloudWatchDimensionConfiguration struct {
 	// if you do not provide the value of the dimension when you send an email.
 	// The default value must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), underscores (_),
-	//    or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Contain less than 256 characters.
 	//
@@ -7033,8 +7036,8 @@ type CloudWatchDimensionConfiguration struct {
 	// The name of an Amazon CloudWatch dimension associated with an email sending
 	// metric. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), underscores (_),
-	//    or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Contain less than 256 characters.
 	//
@@ -7716,8 +7719,8 @@ type CreateReceiptRuleSetInput struct {
 
 	// The name of the rule set to create. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), periods (.), underscores
-	//    (_), or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Start and end with a letter or number.
 	//
@@ -8988,8 +8991,8 @@ type EventDestination struct {
 
 	// The name of the event destination. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), underscores (_),
-	//    or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Contain less than 64 characters.
 	//
@@ -10336,8 +10339,8 @@ type ListCustomVerificationEmailTemplatesInput struct {
 	// will return up to 50 results.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// A token returned from a previous call to ListCustomVerificationEmailTemplates
-	// to indicate the position in the list of email templates.
+	// An array the contains the name and creation time stamp for each template
+	// in your Amazon SES account.
 	NextToken *string `type:"string"`
 }
 
@@ -10385,7 +10388,7 @@ type ListCustomVerificationEmailTemplatesOutput struct {
 	CustomVerificationEmailTemplates []*CustomVerificationEmailTemplate `type:"list"`
 
 	// A token indicating that there are additional custom verification email templates
-	// available to be listed. Pass this token to a subsequent call to ListCustomVerificationEmailTemplates
+	// available to be listed. Pass this token to a subsequent call to ListTemplates
 	// to retrieve the next 50 custom verification email templates.
 	NextToken *string `type:"string"`
 }
@@ -10688,7 +10691,8 @@ type ListTemplatesInput struct {
 	// results.
 	MaxItems *int64 `type:"integer"`
 
-	// The token to use for pagination.
+	// A token returned from a previous call to ListTemplates to indicate the position
+	// in the list of email templates.
 	NextToken *string `type:"string"`
 }
 
@@ -10718,11 +10722,13 @@ func (s *ListTemplatesInput) SetNextToken(v string) *ListTemplatesInput {
 type ListTemplatesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The token to use for pagination.
+	// A token indicating that there are additional email templates available to
+	// be listed. Pass this token to a subsequent call to ListTemplates to retrieve
+	// the next 50 email templates.
 	NextToken *string `type:"string"`
 
-	// An array the contains the name of creation time stamp for each template in
-	// your Amazon SES account.
+	// An array the contains the name and creation time stamp for each template
+	// in your Amazon SES account.
 	TemplatesMetadata []*TemplateMetadata `type:"list"`
 }
 
@@ -10941,8 +10947,8 @@ type MessageTag struct {
 
 	// The name of the tag. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), underscores (_),
-	//    or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Contain less than 256 characters.
 	//
@@ -10951,8 +10957,8 @@ type MessageTag struct {
 
 	// The value of the tag. The value must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), underscores (_),
-	//    or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Contain less than 256 characters.
 	//
@@ -11311,8 +11317,8 @@ type ReceiptFilter struct {
 
 	// The name of the IP address filter. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), periods (.), underscores
-	//    (_), or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Start and end with a letter or number.
 	//
@@ -11450,8 +11456,8 @@ type ReceiptRule struct {
 
 	// The name of the receipt rule. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), periods (.), underscores
-	//    (_), or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Start and end with a letter or number.
 	//
@@ -11561,8 +11567,8 @@ type ReceiptRuleSetMetadata struct {
 
 	// The name of the receipt rule set. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), periods (.), underscores
-	//    (_), or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Start and end with a letter or number.
 	//
@@ -11904,7 +11910,7 @@ type S3Action struct {
 	// This encryption client is currently available with the AWS Java SDK (http://aws.amazon.com/sdk-for-java/)
 	// and AWS Ruby SDK (http://aws.amazon.com/sdk-for-ruby/) only. For more information
 	// about client-side encryption using AWS KMS master keys, see the Amazon S3
-	// Developer Guide (http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingClientSideEncryption.html).
+	// Developer Guide (AmazonS3/latest/dev/UsingClientSideEncryption.html).
 	KmsKeyArn *string `type:"string"`
 
 	// The key prefix of the Amazon S3 bucket. The key prefix is similar to a directory
@@ -13964,7 +13970,7 @@ func (s *Template) SetTextPart(v string) *Template {
 	return s
 }
 
-// Information about an email template.
+// Contains information about an email template.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/TemplateMetadata
 type TemplateMetadata struct {
 	_ struct{} `type:"structure"`

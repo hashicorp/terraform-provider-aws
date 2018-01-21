@@ -1300,6 +1300,8 @@ func (c *CloudWatch) PutMetricAlarmRequest(input *PutMetricAlarmInput) (req *req
 //
 // If you are an IAM user, you must have Amazon EC2 permissions for some operations:
 //
+//    * iam:CreateServiceLinkedRole for all alarms with EC2 actions
+//
 //    * ec2:DescribeInstanceStatus and ec2:DescribeInstances for all alarms
 //    on EC2 instance status metrics
 //

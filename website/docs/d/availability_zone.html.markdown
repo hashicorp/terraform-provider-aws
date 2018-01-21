@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific availability zone
 ---
 
-# aws_availability_zone
+# Data Source: aws_availability_zone
 
 `aws_availability_zone` provides details about a specific availability zone (AZ)
 in the current region.
@@ -77,7 +77,7 @@ zone whose data will be exported as attributes.
 * `name` - (Optional) The full name of the availability zone to select.
 
 * `state` - (Optional) A specific availability zone state to require. May
-  be any of `"available"`, `"information"`, `"impaired"` or `"available"`.
+  be any of `"available"`, `"information"` or `"impaired"`.
 
 All reasonable uses of this data source will specify `name`, since `state`
 alone would match a single AZ only in a region that itself has only one AZ.

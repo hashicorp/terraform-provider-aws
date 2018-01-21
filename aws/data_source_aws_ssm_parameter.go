@@ -32,6 +32,11 @@ func dataSourceAwsSsmParameter() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
+			"with_decryption": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 		},
 	}
 }
@@ -41,15 +46,14 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 
-	log.Printf("[DEBUG] Reading SSM Parameter: %q", name)
-
 	paramInput := &ssm.GetParametersInput{
 		Names: []*string{
 			aws.String(name),
 		},
-		WithDecryption: aws.Bool(true),
+		WithDecryption: aws.Bool(d.Get("with_decryption").(bool)),
 	}
 
+	log.Printf("[DEBUG] Reading SSM Parameter: %s", paramInput)
 	resp, err := ssmconn.GetParameters(paramInput)
 
 	if err != nil {

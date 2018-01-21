@@ -2307,6 +2307,9 @@ type EnvironmentImage struct {
 
 	// The name of the Docker image.
 	Name *string `locationName:"name" type:"string"`
+
+	// A list of environment image versions.
+	Versions []*string `locationName:"versions" type:"list"`
 }
 
 // String returns the string representation
@@ -2328,6 +2331,12 @@ func (s *EnvironmentImage) SetDescription(v string) *EnvironmentImage {
 // SetName sets the Name field's value.
 func (s *EnvironmentImage) SetName(v string) *EnvironmentImage {
 	s.Name = &v
+	return s
+}
+
+// SetVersions sets the Versions field's value.
+func (s *EnvironmentImage) SetVersions(v []*string) *EnvironmentImage {
+	s.Versions = v
 	return s
 }
 
@@ -3044,10 +3053,7 @@ type Project struct {
 	// The default is 60 minutes.
 	TimeoutInMinutes *int64 `locationName:"timeoutInMinutes" min:"5" type:"integer"`
 
-	// If your AWS CodeBuild project accesses resources in an Amazon VPC, you provide
-	// this parameter that identifies the VPC ID and the list of security group
-	// IDs and subnet IDs. The security groups and subnets must belong to the same
-	// VPC. You must provide at least one security group and one subnet ID.
+	// Information about the VPC configuration that AWS CodeBuild will access.
 	VpcConfig *VpcConfig `locationName:"vpcConfig" type:"structure"`
 
 	// Information about a webhook in GitHub that connects repository events to
@@ -4220,10 +4226,7 @@ func (s *UpdateProjectOutput) SetProject(v *Project) *UpdateProjectOutput {
 	return s
 }
 
-// If your AWS CodeBuild project accesses resources in an Amazon VPC, you provide
-// this parameter that identifies the VPC ID and the list of security group
-// IDs and subnet IDs. The security groups and subnets must belong to the same
-// VPC. You must provide at least one security group and one subnet ID.
+// Information about the VPC configuration that AWS CodeBuild will access.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/VpcConfig
 type VpcConfig struct {
 	_ struct{} `type:"structure"`

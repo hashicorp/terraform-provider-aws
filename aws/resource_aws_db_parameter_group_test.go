@@ -291,6 +291,26 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBParameterGroup_Disappears(t *testing.T) {
+	var v rds.DBParameterGroup
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSDBParameterGroupConfig(groupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.bar", &v),
+					testAccCheckAWSDbParamaterGroupDisappears(&v),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDBParameterGroup_namePrefix(t *testing.T) {
 	var v rds.DBParameterGroup
 
@@ -433,6 +453,23 @@ func TestResourceAWSDBParameterGroupName_validation(t *testing.T) {
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the DB Parameter Group Name to trigger a validation error")
 		}
+	}
+}
+
+func testAccCheckAWSDbParamaterGroupDisappears(v *rds.DBParameterGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_db_parameter_group" {
+				continue
+			}
+			_, err := conn.DeleteDBParameterGroup(&rds.DeleteDBParameterGroupInput{
+				DBParameterGroupName: v.DBParameterGroupName,
+			})
+			return err
+		}
+		return nil
 	}
 }
 

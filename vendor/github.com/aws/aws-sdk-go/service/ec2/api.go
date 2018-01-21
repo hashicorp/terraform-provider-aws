@@ -5428,6 +5428,10 @@ func (c *EC2) CreateVpcPeeringConnectionRequest(input *CreateVpcPeeringConnectio
 // the requester VPC. The requester VPC and accepter VPC cannot have overlapping
 // CIDR blocks.
 //
+// Limitations and rules apply to a VPC peering connection. For more information,
+// see the limitations (http://docs.aws.amazon.com/AmazonVPC/latest/PeeringGuide/vpc-peering-basics.html#vpc-peering-limitations)
+// section in the VPC Peering Guide.
+//
 // The owner of the accepter VPC must accept the peering request to activate
 // the peering connection. The VPC peering connection request expires after
 // 7 days, after which it cannot be accepted or rejected.
@@ -18933,9 +18937,9 @@ func (c *EC2) ModifyVpcEndpointServicePermissionsRequest(input *ModifyVpcEndpoin
 
 // ModifyVpcEndpointServicePermissions API operation for Amazon Elastic Compute Cloud.
 //
-// Modifies the permissions for your VPC endpoint service. You can add or remove
-// permissions for service consumers (IAM users, IAM roles, and AWS accounts)
-// to discover your endpoint service.
+// Modifies the permissions for your VPC endpoint service (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/endpoint-service.html).
+// You can add or remove permissions for service consumers (IAM users, IAM roles,
+// and AWS accounts) to connect to your endpoint service.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -20189,6 +20193,8 @@ func (c *EC2) ReplaceNetworkAclAssociationRequest(input *ReplaceNetworkAclAssoci
 // create a subnet, it's automatically associated with the default network ACL.
 // For more information about network ACLs, see Network ACLs (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
 // in the Amazon Virtual Private Cloud User Guide.
+//
+// This is an idempotent operation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -22652,6 +22658,9 @@ type Address struct {
 
 	// The Elastic IP address.
 	PublicIp *string `locationName:"publicIp" type:"string"`
+
+	// Any tags assigned to the Elastic IP address.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -22709,6 +22718,12 @@ func (s *Address) SetPrivateIpAddress(v string) *Address {
 // SetPublicIp sets the PublicIp field's value.
 func (s *Address) SetPublicIp(v string) *Address {
 	s.PublicIp = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *Address) SetTags(v []*Tag) *Address {
+	s.Tags = v
 	return s
 }
 
@@ -29773,7 +29788,7 @@ type CreateVpcEndpointInput struct {
 	SecurityGroupIds []*string `locationName:"SecurityGroupId" locationNameList:"item" type:"list"`
 
 	// The service name. To get a list of available services, use the DescribeVpcEndpointServices
-	// request.
+	// request, or get the name from the service provider.
 	//
 	// ServiceName is a required field
 	ServiceName *string `type:"string" required:"true"`
@@ -33139,6 +33154,18 @@ type DescribeAddressesInput struct {
 	//    the Elastic IP address.
 	//
 	//    * public-ip - The Elastic IP address.
+	//
+	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
+	//    Specify the key of the tag in the filter name and the value of the tag
+	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
+	//    for the filter name and X for the filter value.
+	//
+	//    * tag-key - The key of a tag assigned to the resource. This filter is
+	//    independent of the tag-value filter. For example, if you use both the
+	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
+	//    assigned both the tag key Purpose (regardless of what the tag's value
+	//    is), and the tag value X (regardless of the tag's key). If you want to
+	//    list only resources where Purpose is X, see the tag:key=value filter.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// [EC2-Classic] One or more Elastic IP addresses.
@@ -36646,6 +36673,18 @@ type DescribeLaunchTemplatesInput struct {
 	//    * create-time - The time the launch template was created.
 	//
 	//    * launch-template-name - The name of the launch template.
+	//
+	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
+	//    Specify the key of the tag in the filter name and the value of the tag
+	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
+	//    for the filter name and X for the filter value.
+	//
+	//    * tag-key - The key of a tag assigned to the resource. This filter is
+	//    independent of the tag-value filter. For example, if you use both the
+	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
+	//    assigned both the tag key Purpose (regardless of what the tag's value
+	//    is), and the tag value X (regardless of the tag's key). If you want to
+	//    list only resources where Purpose is X, see the tag:key=value filter.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// One or more launch template IDs.
@@ -40324,9 +40363,10 @@ type DescribeTagsInput struct {
 	//    * resource-id - The resource ID.
 	//
 	//    * resource-type - The resource type (customer-gateway | dhcp-options |
-	//    image | instance | internet-gateway | network-acl | network-interface
-	//    | reserved-instances | route-table | security-group | snapshot | spot-instances-request
-	//    | subnet | volume | vpc | vpn-connection | vpn-gateway).
+	//    elastic-ip | fpga-image | image | instance | internet-gateway | launch-template
+	//    | natgateway | network-acl | network-interface | reserved-instances |
+	//    route-table | security-group | snapshot | spot-instances-request | subnet
+	//    | volume | vpc | vpc-peering-connection | vpn-connection | vpn-gateway).
 	//
 	//    * value - The tag value.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
@@ -41336,14 +41376,14 @@ type DescribeVpcEndpointConnectionsInput struct {
 
 	// One or more filters.
 	//
-	//    * customer-account-id - The AWS account number of the owner of the endpoint.
+	//    * service-id - The ID of the service.
 	//
-	//    * endpoint-connection-state - The state of the endpoint (PendingAcceptance
-	//    | Pending | Available | Deleting | Deleted | Rejected | Failed).
+	//    * vpc-endpoint-owner - The AWS account number of the owner of the endpoint.
+	//
+	//    * vpc-endpoint-state - The state of the endpoint (pendingAcceptance |
+	//    pending | available | deleting | deleted | rejected | failed).
 	//
 	//    * vpc-endpoint-id - The ID of the endpoint.
-	//
-	//    * vpc-endpoint-service-id - The ID of the service.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The maximum number of results to return for the request in a single page.
@@ -41437,12 +41477,12 @@ type DescribeVpcEndpointServiceConfigurationsInput struct {
 
 	// One or more filters.
 	//
-	//    * service-name - The ARN of the service.
+	//    * service-name - The name of the service.
 	//
-	//    * vpc-endpoint-service-id - The ID of the service.
+	//    * service-id - The ID of the service.
 	//
-	//    * vpc-endpoint-service-state - The state of the service (Pending | Available
-	//    | Deleting | Deleted | Failed).
+	//    * service-state - The state of the service (Pending | Available | Deleting
+	//    | Deleted | Failed).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The maximum number of results to return for the request in a single page.
@@ -49522,7 +49562,8 @@ func (s *InternetGateway) SetTags(v []*Tag) *InternetGateway {
 type InternetGatewayAttachment struct {
 	_ struct{} `type:"structure"`
 
-	// The current state of the attachment.
+	// The current state of the attachment. For an Internet gateway, the state is
+	// available when attached to a VPC; otherwise, this value is not returned.
 	State *string `locationName:"state" type:"string" enum:"AttachmentStatus"`
 
 	// The ID of the VPC.
@@ -49577,10 +49618,11 @@ type IpPermission struct {
 	// [EC2-VPC only] One or more IPv6 ranges.
 	Ipv6Ranges []*Ipv6Range `locationName:"ipv6Ranges" locationNameList:"item" type:"list"`
 
-	// (Valid for AuthorizeSecurityGroupEgress, RevokeSecurityGroupEgress and DescribeSecurityGroups
-	// only) One or more prefix list IDs for an AWS service. In an AuthorizeSecurityGroupEgress
-	// request, this is the AWS service that you want to access through a VPC endpoint
-	// from instances associated with the security group.
+	// (EC2-VPC only; valid for AuthorizeSecurityGroupEgress, RevokeSecurityGroupEgress
+	// and DescribeSecurityGroups only) One or more prefix list IDs for an AWS service.
+	// In an AuthorizeSecurityGroupEgress request, this is the AWS service that
+	// you want to access through a VPC endpoint from instances associated with
+	// the security group.
 	PrefixListIds []*PrefixListId `locationName:"prefixListIds" locationNameList:"item" type:"list"`
 
 	// The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
@@ -55613,7 +55655,7 @@ func (s *PrefixList) SetPrefixListName(v string) *PrefixList {
 	return s
 }
 
-// The ID of the prefix.
+// [EC2-VPC only] The ID of the prefix.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/PrefixListId
 type PrefixListId struct {
 	_ struct{} `type:"structure"`
@@ -60751,7 +60793,9 @@ type RunInstancesInput struct {
 	// The IAM instance profile.
 	IamInstanceProfile *IamInstanceProfileSpecification `locationName:"iamInstanceProfile" type:"structure"`
 
-	// The ID of the AMI, which you can get by calling DescribeImages.
+	// The ID of the AMI, which you can get by calling DescribeImages. An AMI is
+	// required to launch an instance and must be specified here or in a launch
+	// template.
 	ImageId *string `type:"string"`
 
 	// Indicates whether an instance stops or terminates when you initiate shutdown
@@ -66137,13 +66181,19 @@ type UserIdGroupPair struct {
 	// The name of the security group. In a request, use this parameter for a security
 	// group in EC2-Classic or a default VPC only. For a security group in a nondefault
 	// VPC, use the security group ID.
+	//
+	// For a referenced security group in another VPC, this value is not returned
+	// if the referenced security group is deleted.
 	GroupName *string `locationName:"groupName" type:"string"`
 
 	// The status of a VPC peering connection, if applicable.
 	PeeringStatus *string `locationName:"peeringStatus" type:"string"`
 
-	// The ID of an AWS account. For a referenced security group in another VPC,
-	// the account ID of the referenced security group is returned.
+	// The ID of an AWS account.
+	//
+	// For a referenced security group in another VPC, the account ID of the referenced
+	// security group is returned in the response. If the referenced security group
+	// is deleted, this value is not returned.
 	//
 	// [EC2-Classic] Required when adding or removing rules that reference a security
 	// group in another AWS account.

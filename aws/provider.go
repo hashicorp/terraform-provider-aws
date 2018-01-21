@@ -247,6 +247,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_api_gateway_base_path_mapping":            resourceAwsApiGatewayBasePathMapping(),
 			"aws_api_gateway_client_certificate":           resourceAwsApiGatewayClientCertificate(),
 			"aws_api_gateway_deployment":                   resourceAwsApiGatewayDeployment(),
+			"aws_api_gateway_documentation_part":           resourceAwsApiGatewayDocumentationPart(),
 			"aws_api_gateway_domain_name":                  resourceAwsApiGatewayDomainName(),
 			"aws_api_gateway_gateway_response":             resourceAwsApiGatewayGatewayResponse(),
 			"aws_api_gateway_integration":                  resourceAwsApiGatewayIntegration(),
@@ -269,6 +270,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_athena_named_query":                       resourceAwsAthenaNamedQuery(),
 			"aws_autoscaling_attachment":                   resourceAwsAutoscalingAttachment(),
 			"aws_autoscaling_group":                        resourceAwsAutoscalingGroup(),
+			"aws_autoscaling_lifecycle_hook":               resourceAwsAutoscalingLifecycleHook(),
 			"aws_autoscaling_notification":                 resourceAwsAutoscalingNotification(),
 			"aws_autoscaling_policy":                       resourceAwsAutoscalingPolicy(),
 			"aws_autoscaling_schedule":                     resourceAwsAutoscalingSchedule(),
@@ -276,6 +278,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_cloudfront_distribution":                  resourceAwsCloudFrontDistribution(),
 			"aws_cloudfront_origin_access_identity":        resourceAwsCloudFrontOriginAccessIdentity(),
 			"aws_cloudtrail":                               resourceAwsCloudTrail(),
+			"aws_cloudwatch_event_permission":              resourceAwsCloudWatchEventPermission(),
 			"aws_cloudwatch_event_rule":                    resourceAwsCloudWatchEventRule(),
 			"aws_cloudwatch_event_target":                  resourceAwsCloudWatchEventTarget(),
 			"aws_cloudwatch_log_destination":               resourceAwsCloudWatchLogDestination(),
@@ -292,7 +295,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_cognito_identity_pool":                    resourceAwsCognitoIdentityPool(),
 			"aws_cognito_identity_pool_roles_attachment":   resourceAwsCognitoIdentityPoolRolesAttachment(),
 			"aws_cognito_user_pool":                        resourceAwsCognitoUserPool(),
-			"aws_autoscaling_lifecycle_hook":               resourceAwsAutoscalingLifecycleHook(),
+			"aws_cognito_user_pool_client":                 resourceAwsCognitoUserPoolClient(),
+			"aws_cognito_user_pool_domain":                 resourceAwsCognitoUserPoolDomain(),
 			"aws_cloudwatch_metric_alarm":                  resourceAwsCloudWatchMetricAlarm(),
 			"aws_cloudwatch_dashboard":                     resourceAwsCloudWatchDashboard(),
 			"aws_codedeploy_app":                           resourceAwsCodeDeployApp(),
@@ -354,6 +358,9 @@ func Provider() terraform.ResourceProvider {
 			"aws_emr_security_configuration":               resourceAwsEMRSecurityConfiguration(),
 			"aws_flow_log":                                 resourceAwsFlowLog(),
 			"aws_glacier_vault":                            resourceAwsGlacierVault(),
+			"aws_glue_catalog_database":                    resourceAwsGlueCatalogDatabase(),
+			"aws_guardduty_detector":                       resourceAwsGuardDutyDetector(),
+			"aws_guardduty_member":                         resourceAwsGuardDutyMember(),
 			"aws_iam_access_key":                           resourceAwsIamAccessKey(),
 			"aws_iam_account_alias":                        resourceAwsIamAccountAlias(),
 			"aws_iam_account_password_policy":              resourceAwsIamAccountPasswordPolicy(),
@@ -438,6 +445,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_redshift_parameter_group":                 resourceAwsRedshiftParameterGroup(),
 			"aws_redshift_subnet_group":                    resourceAwsRedshiftSubnetGroup(),
 			"aws_route53_delegation_set":                   resourceAwsRoute53DelegationSet(),
+			"aws_route53_query_log":                        resourceAwsRoute53QueryLog(),
 			"aws_route53_record":                           resourceAwsRoute53Record(),
 			"aws_route53_zone_association":                 resourceAwsRoute53ZoneAssociation(),
 			"aws_route53_zone":                             resourceAwsRoute53Zone(),
@@ -464,6 +472,9 @@ func Provider() terraform.ResourceProvider {
 			"aws_default_security_group":                   resourceAwsDefaultSecurityGroup(),
 			"aws_security_group_rule":                      resourceAwsSecurityGroupRule(),
 			"aws_servicecatalog_portfolio":                 resourceAwsServiceCatalogPortfolio(),
+			"aws_service_discovery_private_dns_namespace":  resourceAwsServiceDiscoveryPrivateDnsNamespace(),
+			"aws_service_discovery_public_dns_namespace":   resourceAwsServiceDiscoveryPublicDnsNamespace(),
+			"aws_service_discovery_service":                resourceAwsServiceDiscoveryService(),
 			"aws_simpledb_domain":                          resourceAwsSimpleDBDomain(),
 			"aws_ssm_activation":                           resourceAwsSsmActivation(),
 			"aws_ssm_association":                          resourceAwsSsmAssociation(),
@@ -562,6 +573,8 @@ func init() {
 			"being executed. If the API request still fails, an error is\n" +
 			"thrown.",
 
+		"apigateway_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"cloudformation_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"cloudwatch_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
@@ -581,6 +594,8 @@ func init() {
 		"kms_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"iam_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
+		"lambda_endpoint": "Use this to override the default endpoint URL constructed from the `region`\n",
 
 		"ec2_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
@@ -676,6 +691,8 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 	for _, endpointsSetI := range endpointsSet.List() {
 		endpoints := endpointsSetI.(map[string]interface{})
+		config.AcmEndpoint = endpoints["acm"].(string)
+		config.ApigatewayEndpoint = endpoints["apigateway"].(string)
 		config.CloudFormationEndpoint = endpoints["cloudformation"].(string)
 		config.CloudWatchEndpoint = endpoints["cloudwatch"].(string)
 		config.CloudWatchEventsEndpoint = endpoints["cloudwatchevents"].(string)
@@ -683,14 +700,19 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.DeviceFarmEndpoint = endpoints["devicefarm"].(string)
 		config.DynamoDBEndpoint = endpoints["dynamodb"].(string)
 		config.Ec2Endpoint = endpoints["ec2"].(string)
+		config.EcrEndpoint = endpoints["ecr"].(string)
+		config.EcsEndpoint = endpoints["ecs"].(string)
 		config.ElbEndpoint = endpoints["elb"].(string)
 		config.IamEndpoint = endpoints["iam"].(string)
 		config.KinesisEndpoint = endpoints["kinesis"].(string)
 		config.KmsEndpoint = endpoints["kms"].(string)
+		config.LambdaEndpoint = endpoints["lambda"].(string)
+		config.R53Endpoint = endpoints["r53"].(string)
 		config.RdsEndpoint = endpoints["rds"].(string)
 		config.S3Endpoint = endpoints["s3"].(string)
 		config.SnsEndpoint = endpoints["sns"].(string)
 		config.SqsEndpoint = endpoints["sqs"].(string)
+		config.StsEndpoint = endpoints["sts"].(string)
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok {
@@ -748,6 +770,18 @@ func endpointsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"acm": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["acm_endpoint"],
+				},
+				"apigateway": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["apigateway_endpoint"],
+				},
 				"cloudwatch": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -798,6 +832,20 @@ func endpointsSchema() *schema.Schema {
 					Description: descriptions["ec2_endpoint"],
 				},
 
+				"ecr": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["ecr_endpoint"],
+				},
+
+				"ecs": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["ecs_endpoint"],
+				},
+
 				"elb": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -815,6 +863,18 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["kms_endpoint"],
+				},
+				"lambda": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["lambda_endpoint"],
+				},
+				"r53": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["r53_endpoint"],
 				},
 				"rds": {
 					Type:        schema.TypeString,
@@ -840,6 +900,12 @@ func endpointsSchema() *schema.Schema {
 					Default:     "",
 					Description: descriptions["sqs_endpoint"],
 				},
+				"sts": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["sts_endpoint"],
+				},
 			},
 		},
 		Set: endpointsToHash,
@@ -849,6 +915,7 @@ func endpointsSchema() *schema.Schema {
 func endpointsToHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["apigateway"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["cloudwatch"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["cloudwatchevents"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["cloudwatchlogs"].(string)))
@@ -860,6 +927,7 @@ func endpointsToHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["elb"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kinesis"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kms"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["lambda"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["rds"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["s3"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["sns"].(string)))

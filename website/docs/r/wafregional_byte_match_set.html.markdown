@@ -12,7 +12,7 @@ Provides a WAF Regional Byte Match Set Resource for use with Application Load Ba
 
 ## Example Usage
 
-```
+```hcl
 resource "aws_wafregional_byte_match_set" "byte_set" {
   name = "tf_waf_byte_match_set"
   byte_match_tuple {

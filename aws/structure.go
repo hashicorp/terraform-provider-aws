@@ -35,6 +35,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/beevik/etree"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
 	"gopkg.in/yaml.v2"
 )
 
@@ -1990,30 +1991,6 @@ func expandConfigRuleScope(configured map[string]interface{}) *configservice.Sco
 	return scope
 }
 
-// Takes a value containing JSON string and passes it through
-// the JSON parser to normalize it, returns either a parsing
-// error or normalized JSON string.
-func normalizeJsonString(jsonString interface{}) (string, error) {
-	var j interface{}
-
-	if jsonString == nil || jsonString.(string) == "" {
-		return "", nil
-	}
-
-	s := jsonString.(string)
-
-	err := json.Unmarshal([]byte(s), &j)
-	if err != nil {
-		return s, err
-	}
-
-	// The error is intentionally ignored here to allow empty policies to passthrough validation.
-	// This covers any interpolated values
-	bytes, _ := json.Marshal(j)
-
-	return string(bytes[:]), nil
-}
-
 // Takes a value containing YAML string and passes it through
 // the YAML parser. Returns either a parsing
 // error or original YAML string.
@@ -2036,10 +2013,10 @@ func checkYamlString(yamlString interface{}) (string, error) {
 
 func normalizeCloudFormationTemplate(templateString interface{}) (string, error) {
 	if looksLikeJsonString(templateString) {
-		return normalizeJsonString(templateString)
-	} else {
-		return checkYamlString(templateString)
+		return structure.NormalizeJsonString(templateString.(string))
 	}
+
+	return checkYamlString(templateString)
 }
 
 func flattenInspectorTags(cfTags []*cloudformation.Tag) map[string]string {

@@ -66,7 +66,7 @@ EOF
 
 ## Interpolated tags
 
-```
+```hcl
 variable extra_tags {
   default = [
     {

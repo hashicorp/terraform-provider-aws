@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific service region
 ---
 
-# aws_region
+# Data Source: aws_region
 
 `aws_region` provides details about a specific AWS region.
 

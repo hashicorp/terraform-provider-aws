@@ -1501,20 +1501,17 @@ func (c *RDS) CreateDBInstanceReadReplicaRequest(input *CreateDBInstanceReadRepl
 //
 // Creates a new DB instance that acts as a Read Replica for an existing source
 // DB instance. You can create a Read Replica for a DB instance running MySQL,
-// MariaDB, or PostgreSQL.
+// MariaDB, or PostgreSQL. For more information, see Working with PostgreSQL,
+// MySQL, and MariaDB Read Replicas (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html).
 //
 // Amazon Aurora does not support this action. You must call the CreateDBInstance
 // action to create a DB instance for an Aurora DB cluster.
 //
-// All Read Replica DB instances are created as Single-AZ deployments with backups
-// disabled. All other DB instance attributes (including DB security groups
-// and DB parameter groups) are inherited from the source DB instance, except
-// as specified below.
+// All Read Replica DB instances are created with backups disabled. All other
+// DB instance attributes (including DB security groups and DB parameter groups)
+// are inherited from the source DB instance, except as specified below.
 //
-// The source DB instance must have backup retention enabled.
-//
-// For more information, see Working with PostgreSQL, MySQL, and MariaDB Read
-// Replicas (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html).
+// Your source DB instance must have backup retention enabled.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7941,23 +7938,16 @@ func (c *RDS) RebootDBInstanceRequest(input *RebootDBInstanceInput) (req *reques
 
 // RebootDBInstance API operation for Amazon Relational Database Service.
 //
-// Rebooting a DB instance restarts the database engine service. A reboot also
-// applies to the DB instance any modifications to the associated DB parameter
-// group that were pending. Rebooting a DB instance results in a momentary outage
-// of the instance, during which the DB instance status is set to rebooting.
-// If the RDS instance is configured for MultiAZ, it is possible that the reboot
-// is conducted through a failover. An Amazon RDS event is created when the
-// reboot is completed.
+// You might need to reboot your DB instance, usually for maintenance reasons.
+// For example, if you make certain modifications, or if you change the DB parameter
+// group associated with the DB instance, you must reboot the instance for the
+// changes to take effect.
 //
-// If your DB instance is deployed in multiple Availability Zones, you can force
-// a failover from one AZ to the other during the reboot. You might force a
-// failover to test the availability of your DB instance deployment or to restore
-// operations to the original AZ after a failover occurs.
+// Rebooting a DB instance restarts the database engine service. Rebooting a
+// DB instance results in a momentary outage, during which the DB instance status
+// is set to rebooting.
 //
-// The time required to reboot is a function of the specific database engine's
-// crash recovery process. To improve the reboot time, we recommend that you
-// reduce database activities as much as possible during the reboot process
-// to reduce rollback activity for in-transit transactions.
+// For more information about rebooting, see Rebooting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_RebootInstance.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9450,6 +9440,8 @@ func (c *RDS) StartDBInstanceRequest(input *StartDBInstanceInput) (req *request.
 // AWS CLI command, or the StopDBInstance action. For more information, see
 // Stopping and Starting a DB instance in the AWS RDS user guide.
 //
+// This command does not apply to Aurora MySQL and Aurora PostgreSQL.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -9570,6 +9562,8 @@ func (c *RDS) StopDBInstanceRequest(input *StopDBInstanceInput) (req *request.Re
 // group membership. Amazon RDS also retains the transaction logs so you can
 // do a point-in-time restore if necessary. For more information, see Stopping
 // and Starting a DB instance in the AWS RDS user guide.
+//
+// This command does not apply to Aurora MySQL and Aurora PostgreSQL.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10237,6 +10231,41 @@ func (s *CharacterSet) SetCharacterSetDescription(v string) *CharacterSet {
 // SetCharacterSetName sets the CharacterSetName field's value.
 func (s *CharacterSet) SetCharacterSetName(v string) *CharacterSet {
 	s.CharacterSetName = &v
+	return s
+}
+
+// The configuration setting for the log types to be enabled for export to CloudWatch
+// Logs for a specific DB instance or DB cluster.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/CloudwatchLogsExportConfiguration
+type CloudwatchLogsExportConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The list of log types to disable.
+	DisableLogTypes []*string `type:"list"`
+
+	// The list of log types to enable.
+	EnableLogTypes []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s CloudwatchLogsExportConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudwatchLogsExportConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetDisableLogTypes sets the DisableLogTypes field's value.
+func (s *CloudwatchLogsExportConfiguration) SetDisableLogTypes(v []*string) *CloudwatchLogsExportConfiguration {
+	s.DisableLogTypes = v
+	return s
+}
+
+// SetEnableLogTypes sets the EnableLogTypes field's value.
+func (s *CloudwatchLogsExportConfiguration) SetEnableLogTypes(v []*string) *CloudwatchLogsExportConfiguration {
+	s.EnableLogTypes = v
 	return s
 }
 
@@ -11202,7 +11231,7 @@ type CreateDBClusterInput struct {
 
 	// The port number on which the instances in the DB cluster accept connections.
 	//
-	// Default: 3306
+	// Default: 3306 if engine is set as aurora or 5432 if set to aurora-postgresql.
 	Port *int64 `type:"integer"`
 
 	// A URL that contains a Signature Version 4 signed request for the CreateDBCluster
@@ -11709,8 +11738,7 @@ func (s *CreateDBClusterSnapshotOutput) SetDBClusterSnapshot(v *DBClusterSnapsho
 type CreateDBInstanceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The amount of storage (in gigabytes) to be initially allocated for the DB
-	// instance.
+	// The amount of storage (in gibibytes) to allocate for the DB instance.
 	//
 	// Type: Integer
 	//
@@ -11724,9 +11752,9 @@ type CreateDBInstanceInput struct {
 	//
 	// Constraints to the amount of storage for each storage type are the following:
 	//
-	//    * General Purpose (SSD) storage (gp2): Must be an integer from 5 to 6144.
+	//    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 16384.
 	//
-	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 6144.
+	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 16384.
 	//
 	//    * Magnetic storage (standard): Must be an integer from 5 to 3072.
 	//
@@ -11734,9 +11762,9 @@ type CreateDBInstanceInput struct {
 	//
 	// Constraints to the amount of storage for each storage type are the following:
 	//
-	//    * General Purpose (SSD) storage (gp2): Must be an integer from 5 to 6144.
+	//    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 16384.
 	//
-	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 6144.
+	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 16384.
 	//
 	//    * Magnetic storage (standard): Must be an integer from 5 to 3072.
 	//
@@ -11744,9 +11772,9 @@ type CreateDBInstanceInput struct {
 	//
 	// Constraints to the amount of storage for each storage type are the following:
 	//
-	//    * General Purpose (SSD) storage (gp2): Must be an integer from 5 to 6144.
+	//    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 16384.
 	//
-	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 6144.
+	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 16384.
 	//
 	//    * Magnetic storage (standard): Must be an integer from 5 to 3072.
 	//
@@ -11754,9 +11782,9 @@ type CreateDBInstanceInput struct {
 	//
 	// Constraints to the amount of storage for each storage type are the following:
 	//
-	//    * General Purpose (SSD) storage (gp2): Must be an integer from 10 to 6144.
+	//    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 16384.
 	//
-	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 6144.
+	//    * Provisioned IOPS storage (io1): Must be an integer from 100 to 16384.
 	//
 	//    * Magnetic storage (standard): Must be an integer from 10 to 3072.
 	//
@@ -11966,6 +11994,10 @@ type CreateDBInstanceInput struct {
 	// Directory Service.
 	DomainIAMRoleName *string `type:"string"`
 
+	// The list of log types that need to be enabled for exporting to CloudWatch
+	// Logs.
+	EnableCloudwatchLogsExports []*string `type:"list"`
+
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
 	//
@@ -12036,13 +12068,19 @@ type CreateDBInstanceInput struct {
 	//
 	// MariaDB
 	//
+	//    * 10.2.11 (supported in all AWS Regions)
+	//
+	// 10.1.26 (supported in all AWS Regions)
+	//
 	//    * 10.1.23 (supported in all AWS Regions)
 	//
 	//    * 10.1.19 (supported in all AWS Regions)
 	//
 	//    * 10.1.14 (supported in all AWS Regions except us-east-2)
 	//
-	// 10.0.31 (supported in all AWS Regions)
+	//    * 10.0.32 (supported in all AWS Regions)
+	//
+	//    * 10.0.31 (supported in all AWS Regions)
 	//
 	//    * 10.0.28 (supported in all AWS Regions)
 	//
@@ -12051,15 +12089,21 @@ type CreateDBInstanceInput struct {
 	//    * 10.0.17 (supported in all AWS Regions except us-east-2, ca-central-1,
 	//    eu-west-2)
 	//
+	// Microsoft SQL Server 2017
+	//
+	//    * 14.00.1000.169.v1 (supported for all editions, and all AWS Regions)
+	//
 	// Microsoft SQL Server 2016
 	//
-	// 13.00.4422.0.v1 (supported for all editions, and all AWS Regions)
+	//    * 13.00.4451.0.v1 (supported for all editions, and all AWS Regions)
+	//
+	//    * 13.00.4422.0.v1 (supported for all editions, and all AWS Regions)
 	//
 	//    * 13.00.2164.0.v1 (supported for all editions, and all AWS Regions)
 	//
 	// Microsoft SQL Server 2014
 	//
-	// 12.00.5546.0.v1 (supported for all editions, and all AWS Regions)
+	//    * 12.00.5546.0.v1 (supported for all editions, and all AWS Regions)
 	//
 	//    * 12.00.5000.0.v1 (supported for all editions, and all AWS Regions)
 	//
@@ -12068,7 +12112,7 @@ type CreateDBInstanceInput struct {
 	//
 	// Microsoft SQL Server 2012
 	//
-	// 11.00.6594.0.v1 (supported for all editions, and all AWS Regions)
+	//    * 11.00.6594.0.v1 (supported for all editions, and all AWS Regions)
 	//
 	//    * 11.00.6020.0.v1 (supported for all editions, and all AWS Regions)
 	//
@@ -12080,8 +12124,8 @@ type CreateDBInstanceInput struct {
 	//
 	// Microsoft SQL Server 2008 R2
 	//
-	// 10.50.6529.0.v1 (supported for all editions, and all AWS Regions except us-east-2,
-	// ca-central-1, and eu-west-2)
+	//    * 10.50.6529.0.v1 (supported for all editions, and all AWS Regions except
+	//    us-east-2, ca-central-1, and eu-west-2)
 	//
 	//    * 10.50.6000.34.v1 (supported for all editions, and all AWS Regions except
 	//    us-east-2, ca-central-1, and eu-west-2)
@@ -12091,86 +12135,21 @@ type CreateDBInstanceInput struct {
 	//
 	// MySQL
 	//
-	// 5.7.19 (supported in all AWS regions)
+	//    * 5.7.19 (supported in all AWS regions)
 	//
 	//    * 5.7.17 (supported in all AWS regions)
 	//
 	//    * 5.7.16 (supported in all AWS regions)
 	//
-	//    * 5.6.37 (supported in all AWS Regions)
+	// 5.6.37(supported in all AWS Regions)
 	//
-	//    * 5.6.35 (supported in all AWS Regions)
+	// 5.6.35(supported in all AWS Regions)
 	//
-	//    * 5.6.34 (supported in all AWS Regions)
+	// 5.6.34(supported in all AWS Regions)
 	//
-	//    * 5.6.29 (supported in all AWS Regions)
+	// 5.6.29(supported in all AWS Regions)
 	//
-	//    * 5.6.27 (supported in all AWS Regions except us-east-2, ca-central-1,
-	//    eu-west-2)
-	//
-	// 5.5.57(supported in all AWS Regions)
-	//
-	// 5.5.54(supported in all AWS Regions)
-	//
-	// 5.5.53(supported in all AWS Regions)
-	//
-	// 5.5.46(supported in all AWS Regions)
-	//
-	// Oracle 12c
-	//
-	// 12.1.0.2.v9(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v8(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v7(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v6(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v5(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v4(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v3(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v2(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// 12.1.0.2.v1(supported for EE in all AWS regions, and SE2 in all AWS regions except us-gov-west-1)
-	//
-	// Oracle 11g
-	//
-	// 11.2.0.4.v13(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v12(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v11(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v10(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v9(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v8(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v7(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v6(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v5(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v4(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v3(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// 11.2.0.4.v1(supported for EE, SE1, and SE, in all AWS regions)
-	//
-	// PostgreSQL
-	//
-	// Version 9.6.x: 9.6.5 | 9.6.3 | 9.6.2 | 9.6.1
-	//
-	// Version 9.5.x: 9.5.9 | 9.5.7 | 9.5.6 | 9.5.4 | 9.5.2
-	//
-	// Version 9.4.x: 9.4.14 | 9.4.12 | 9.4.11 | 9.4.9 | 9.4.7
-	//
-	// Version 9.3.x: 9.3.19 | 9.3.17 | 9.3.16 | 9.3.14 | 9.3.12
+	// 5.6.27
 	EngineVersion *string `type:"string"`
 
 	// The amount of Provisioned IOPS (input/output operations per second) to be
@@ -12178,9 +12157,9 @@ type CreateDBInstanceInput struct {
 	// values, see see Amazon RDS Provisioned IOPS Storage to Improve Performance
 	// (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS).
 	//
-	// Constraints: Must be a multiple between 3 and 10 of the storage amount for
+	// Constraints: Must be a multiple between 1 and 50 of the storage amount for
 	// the DB instance. Must also be an integer multiple of 1000. For example, if
-	// the size of your DB instance is 500 GB, then your Iops value can be 2000,
+	// the size of your DB instance is 500 GiB, then your Iops value can be 2000,
 	// 3000, 4000, or 5000.
 	Iops *int64 `type:"integer"`
 
@@ -12614,6 +12593,12 @@ func (s *CreateDBInstanceInput) SetDomainIAMRoleName(v string) *CreateDBInstance
 	return s
 }
 
+// SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
+func (s *CreateDBInstanceInput) SetEnableCloudwatchLogsExports(v []*string) *CreateDBInstanceInput {
+	s.EnableCloudwatchLogsExports = v
+	return s
+}
+
 // SetEnableIAMDatabaseAuthentication sets the EnableIAMDatabaseAuthentication field's value.
 func (s *CreateDBInstanceInput) SetEnableIAMDatabaseAuthentication(v bool) *CreateDBInstanceInput {
 	s.EnableIAMDatabaseAuthentication = &v
@@ -12863,6 +12848,9 @@ type CreateDBInstanceReadReplicaInput struct {
 	// DestinationRegion is used for presigning the request to a given region.
 	DestinationRegion *string `type:"string"`
 
+	// The list of logs that the new DB instance is to export to CloudWatch Logs.
+	EnableCloudwatchLogsExports []*string `type:"list"`
+
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
 	//
@@ -12919,6 +12907,16 @@ type CreateDBInstanceReadReplicaInput struct {
 	// If MonitoringInterval is set to a value other than 0, then you must supply
 	// a MonitoringRoleArn value.
 	MonitoringRoleArn *string `type:"string"`
+
+	// Specifies whether the read replica is in a Multi-AZ deployment.
+	//
+	// You can create a Read Replica as a Multi-AZ DB instance. RDS creates a standby
+	// of your replica in another Availability Zone for failover support for the
+	// replica. Creating your Read Replica as a Multi-AZ DB instance is independent
+	// of whether the source database is a Multi-AZ DB instance.
+	//
+	// Currently PostgreSQL Read Replicas can only be created as single-AZ DB instances.
+	MultiAZ *bool `type:"boolean"`
 
 	// The option group the DB instance is associated with. If omitted, the default
 	// option group for the engine specified is used.
@@ -13111,6 +13109,12 @@ func (s *CreateDBInstanceReadReplicaInput) SetDestinationRegion(v string) *Creat
 	return s
 }
 
+// SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
+func (s *CreateDBInstanceReadReplicaInput) SetEnableCloudwatchLogsExports(v []*string) *CreateDBInstanceReadReplicaInput {
+	s.EnableCloudwatchLogsExports = v
+	return s
+}
+
 // SetEnableIAMDatabaseAuthentication sets the EnableIAMDatabaseAuthentication field's value.
 func (s *CreateDBInstanceReadReplicaInput) SetEnableIAMDatabaseAuthentication(v bool) *CreateDBInstanceReadReplicaInput {
 	s.EnableIAMDatabaseAuthentication = &v
@@ -13144,6 +13148,12 @@ func (s *CreateDBInstanceReadReplicaInput) SetMonitoringInterval(v int64) *Creat
 // SetMonitoringRoleArn sets the MonitoringRoleArn field's value.
 func (s *CreateDBInstanceReadReplicaInput) SetMonitoringRoleArn(v string) *CreateDBInstanceReadReplicaInput {
 	s.MonitoringRoleArn = &v
+	return s
+}
+
+// SetMultiAZ sets the MultiAZ field's value.
+func (s *CreateDBInstanceReadReplicaInput) SetMultiAZ(v bool) *CreateDBInstanceReadReplicaInput {
+	s.MultiAZ = &v
 	return s
 }
 
@@ -13945,7 +13955,7 @@ type DBCluster struct {
 	_ struct{} `type:"structure"`
 
 	// For all database engines except Amazon Aurora, AllocatedStorage specifies
-	// the allocated storage size in gigabytes (GB). For Aurora, AllocatedStorage
+	// the allocated storage size in gibibytes (GiB). For Aurora, AllocatedStorage
 	// always returns 1, because Aurora DB cluster storage size is not fixed, but
 	// instead automatically adjusts as needed.
 	AllocatedStorage *int64 `type:"integer"`
@@ -14538,7 +14548,7 @@ func (s *DBClusterRole) SetStatus(v string) *DBClusterRole {
 type DBClusterSnapshot struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the allocated storage size in gigabytes (GB).
+	// Specifies the allocated storage size in gibibytes (GiB).
 	AllocatedStorage *int64 `type:"integer"`
 
 	// Provides the list of EC2 Availability Zones that instances in the DB cluster
@@ -14850,6 +14860,10 @@ type DBEngineVersion struct {
 	// The version number of the database engine.
 	EngineVersion *string `type:"string"`
 
+	// The types of logs that the database engine has available for export to CloudWatch
+	// Logs.
+	ExportableLogTypes []*string `type:"list"`
+
 	// A list of the character sets supported by this engine for the CharacterSetName
 	// parameter of the CreateDBInstance action.
 	SupportedCharacterSets []*CharacterSet `locationNameList:"CharacterSet" type:"list"`
@@ -14857,6 +14871,10 @@ type DBEngineVersion struct {
 	// A list of the time zones supported by this engine for the Timezone parameter
 	// of the CreateDBInstance action.
 	SupportedTimezones []*Timezone `locationNameList:"Timezone" type:"list"`
+
+	// A value that indicates whether the engine version supports exporting the
+	// log types specified by ExportableLogTypes to CloudWatch Logs.
+	SupportsLogExportsToCloudwatchLogs *bool `type:"boolean"`
 
 	// A list of engine versions that this database engine version can be upgraded
 	// to.
@@ -14909,6 +14927,12 @@ func (s *DBEngineVersion) SetEngineVersion(v string) *DBEngineVersion {
 	return s
 }
 
+// SetExportableLogTypes sets the ExportableLogTypes field's value.
+func (s *DBEngineVersion) SetExportableLogTypes(v []*string) *DBEngineVersion {
+	s.ExportableLogTypes = v
+	return s
+}
+
 // SetSupportedCharacterSets sets the SupportedCharacterSets field's value.
 func (s *DBEngineVersion) SetSupportedCharacterSets(v []*CharacterSet) *DBEngineVersion {
 	s.SupportedCharacterSets = v
@@ -14918,6 +14942,12 @@ func (s *DBEngineVersion) SetSupportedCharacterSets(v []*CharacterSet) *DBEngine
 // SetSupportedTimezones sets the SupportedTimezones field's value.
 func (s *DBEngineVersion) SetSupportedTimezones(v []*Timezone) *DBEngineVersion {
 	s.SupportedTimezones = v
+	return s
+}
+
+// SetSupportsLogExportsToCloudwatchLogs sets the SupportsLogExportsToCloudwatchLogs field's value.
+func (s *DBEngineVersion) SetSupportsLogExportsToCloudwatchLogs(v bool) *DBEngineVersion {
+	s.SupportsLogExportsToCloudwatchLogs = &v
 	return s
 }
 
@@ -14934,7 +14964,7 @@ func (s *DBEngineVersion) SetValidUpgradeTarget(v []*UpgradeTarget) *DBEngineVer
 type DBInstance struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the allocated storage size specified in gigabytes.
+	// Specifies the allocated storage size specified in gibibytes.
 	AllocatedStorage *int64 `type:"integer"`
 
 	// Indicates that minor version patches are applied automatically.
@@ -15015,6 +15045,10 @@ type DBInstance struct {
 
 	// The Active Directory Domain membership records associated with the DB instance.
 	DomainMemberships []*DomainMembership `locationNameList:"DomainMembership" type:"list"`
+
+	// A list of log types that this DB instance is configured to export to CloudWatch
+	// Logs.
+	EnabledCloudwatchLogsExports []*string `type:"list"`
 
 	// Specifies the connection endpoint.
 	Endpoint *Endpoint `type:"structure"`
@@ -15281,6 +15315,12 @@ func (s *DBInstance) SetDbiResourceId(v string) *DBInstance {
 // SetDomainMemberships sets the DomainMemberships field's value.
 func (s *DBInstance) SetDomainMemberships(v []*DomainMembership) *DBInstance {
 	s.DomainMemberships = v
+	return s
+}
+
+// SetEnabledCloudwatchLogsExports sets the EnabledCloudwatchLogsExports field's value.
+func (s *DBInstance) SetEnabledCloudwatchLogsExports(v []*string) *DBInstance {
+	s.EnabledCloudwatchLogsExports = v
 	return s
 }
 
@@ -15792,7 +15832,7 @@ func (s *DBSecurityGroupMembership) SetStatus(v string) *DBSecurityGroupMembersh
 type DBSnapshot struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the allocated storage size in gigabytes (GB).
+	// Specifies the allocated storage size in gibibytes (GiB).
 	AllocatedStorage *int64 `type:"integer"`
 
 	// Specifies the name of the Availability Zone the DB instance was located in
@@ -21969,72 +22009,14 @@ func (s *ModifyDBClusterSnapshotAttributeOutput) SetDBClusterSnapshotAttributesR
 type ModifyDBInstanceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The new storage capacity of the RDS instance. Changing this setting does
-	// not result in an outage and the change is applied during the next maintenance
-	// window unless ApplyImmediately is set to true for this request.
+	// The new amount of storage (in gibibytes) to allocate for the DB instance.
 	//
-	// MySQL
+	// For MariaDB, MySQL, Oracle, and PostgreSQL, the value supplied must be at
+	// least 10% greater than the current value. Values that are not at least 10%
+	// greater than the existing value are rounded up so that they are 10% greater
+	// than the current value.
 	//
-	// Default: Uses existing setting
-	//
-	// Valid Values: 5-6144
-	//
-	// Constraints: Value supplied must be at least 10% greater than the current
-	// value. Values that are not at least 10% greater than the existing value are
-	// rounded up so that they are 10% greater than the current value.
-	//
-	// Type: Integer
-	//
-	// MariaDB
-	//
-	// Default: Uses existing setting
-	//
-	// Valid Values: 5-6144
-	//
-	// Constraints: Value supplied must be at least 10% greater than the current
-	// value. Values that are not at least 10% greater than the existing value are
-	// rounded up so that they are 10% greater than the current value.
-	//
-	// Type: Integer
-	//
-	// PostgreSQL
-	//
-	// Default: Uses existing setting
-	//
-	// Valid Values: 5-6144
-	//
-	// Constraints: Value supplied must be at least 10% greater than the current
-	// value. Values that are not at least 10% greater than the existing value are
-	// rounded up so that they are 10% greater than the current value.
-	//
-	// Type: Integer
-	//
-	// Oracle
-	//
-	// Default: Uses existing setting
-	//
-	// Valid Values: 10-6144
-	//
-	// Constraints: Value supplied must be at least 10% greater than the current
-	// value. Values that are not at least 10% greater than the existing value are
-	// rounded up so that they are 10% greater than the current value.
-	//
-	// SQL Server
-	//
-	// Cannot be modified.
-	//
-	// If you choose to migrate your DB instance from using standard storage to
-	// using Provisioned IOPS, or from using Provisioned IOPS to using standard
-	// storage, the process can take time. The duration of the migration depends
-	// on several factors such as database load, storage size, storage type (standard
-	// or Provisioned IOPS), amount of IOPS provisioned (if any), and the number
-	// of prior scale storage operations. Typical migration times are under 24 hours,
-	// but the process can take up to several days in some cases. During the migration,
-	// the DB instance is available for use, but might experience performance degradation.
-	// While the migration takes place, nightly backups for the instance are suspended.
-	// No other Amazon RDS operations can take place for the instance, including
-	// modifying the instance, rebooting the instance, deleting the instance, creating
-	// a Read Replica for the instance, and creating a DB snapshot of the instance.
+	// For the valid values for allocated storage for each engine, see CreateDBInstance.
 	AllocatedStorage *int64 `type:"integer"`
 
 	// Indicates that major version upgrades are allowed. Changing this parameter
@@ -22102,6 +22084,10 @@ type ModifyDBInstanceInput struct {
 
 	// Indicates the certificate that needs to be associated with the instance.
 	CACertificateIdentifier *string `type:"string"`
+
+	// The configuration setting for the log types to be enabled for export to CloudWatch
+	// Logs for a specific DB instance or DB cluster.
+	CloudwatchLogsExportConfiguration *CloudwatchLogsExportConfiguration `type:"structure"`
 
 	// True to copy all tags from the DB instance to snapshots of the DB instance,
 	// and otherwise false. The default is false.
@@ -22257,24 +22243,12 @@ type ModifyDBInstanceInput struct {
 	EngineVersion *string `type:"string"`
 
 	// The new Provisioned IOPS (I/O operations per second) value for the RDS instance.
+	//
 	// Changing this setting does not result in an outage and the change is applied
 	// during the next maintenance window unless the ApplyImmediately parameter
-	// is set to true for this request.
-	//
-	// Default: Uses existing setting
-	//
-	// Constraints: Value supplied must be at least 10% greater than the current
-	// value. Values that are not at least 10% greater than the existing value are
-	// rounded up so that they are 10% greater than the current value. If you are
-	// migrating from Provisioned IOPS to standard storage, set this value to 0.
-	// The DB instance will require a reboot for the change in storage type to take
-	// effect.
-	//
-	// SQL Server
-	//
-	// Setting the IOPS value for the SQL Server database engine is not supported.
-	//
-	// Type: Integer
+	// is set to true for this request. If you are migrating from Provisioned IOPS
+	// to standard storage, set this value to 0. The DB instance will require a
+	// reboot for the change in storage type to take effect.
 	//
 	// If you choose to migrate your DB instance from using standard storage to
 	// using Provisioned IOPS, or from using Provisioned IOPS to using standard
@@ -22288,6 +22262,13 @@ type ModifyDBInstanceInput struct {
 	// No other Amazon RDS operations can take place for the instance, including
 	// modifying the instance, rebooting the instance, deleting the instance, creating
 	// a Read Replica for the instance, and creating a DB snapshot of the instance.
+	//
+	// Constraints: For MariaDB, MySQL, Oracle, and PostgreSQL, the value supplied
+	// must be at least 10% greater than the current value. Values that are not
+	// at least 10% greater than the existing value are rounded up so that they
+	// are 10% greater than the current value.
+	//
+	// Default: Uses existing setting
 	Iops *int64 `type:"integer"`
 
 	// The license model for the DB instance.
@@ -22357,8 +22338,6 @@ type ModifyDBInstanceInput struct {
 	// Specifies if the DB instance is a Multi-AZ deployment. Changing this parameter
 	// does not result in an outage and the change is applied during the next maintenance
 	// window unless the ApplyImmediately parameter is set to true for this request.
-	//
-	// Constraints: Cannot be specified if the DB instance is a Read Replica.
 	MultiAZ *bool `type:"boolean"`
 
 	// The new DB instance identifier for the DB instance when renaming a DB instance.
@@ -22462,9 +22441,23 @@ type ModifyDBInstanceInput struct {
 
 	// Specifies the storage type to be associated with the DB instance.
 	//
-	// Valid values: standard | gp2 | io1
+	// If you specify Provisioned IOPS (io1), you must also include a value for
+	// the Iops parameter.
 	//
-	// If you specify io1, you must also include a value for the Iops parameter.
+	// If you choose to migrate your DB instance from using standard storage to
+	// using Provisioned IOPS, or from using Provisioned IOPS to using standard
+	// storage, the process can take time. The duration of the migration depends
+	// on several factors such as database load, storage size, storage type (standard
+	// or Provisioned IOPS), amount of IOPS provisioned (if any), and the number
+	// of prior scale storage operations. Typical migration times are under 24 hours,
+	// but the process can take up to several days in some cases. During the migration,
+	// the DB instance is available for use, but might experience performance degradation.
+	// While the migration takes place, nightly backups for the instance are suspended.
+	// No other Amazon RDS operations can take place for the instance, including
+	// modifying the instance, rebooting the instance, deleting the instance, creating
+	// a Read Replica for the instance, and creating a DB snapshot of the instance.
+	//
+	// Valid values: standard | gp2 | io1
 	//
 	// Default: io1 if the Iops parameter is specified, otherwise standard
 	StorageType *string `type:"string"`
@@ -22546,6 +22539,12 @@ func (s *ModifyDBInstanceInput) SetBackupRetentionPeriod(v int64) *ModifyDBInsta
 // SetCACertificateIdentifier sets the CACertificateIdentifier field's value.
 func (s *ModifyDBInstanceInput) SetCACertificateIdentifier(v string) *ModifyDBInstanceInput {
 	s.CACertificateIdentifier = &v
+	return s
+}
+
+// SetCloudwatchLogsExportConfiguration sets the CloudwatchLogsExportConfiguration field's value.
+func (s *ModifyDBInstanceInput) SetCloudwatchLogsExportConfiguration(v *CloudwatchLogsExportConfiguration) *ModifyDBInstanceInput {
+	s.CloudwatchLogsExportConfiguration = v
 	return s
 }
 
@@ -24347,6 +24346,43 @@ func (s *Parameter) SetSource(v string) *Parameter {
 	return s
 }
 
+// A list of the log types whose configuration is still pending. In other words,
+// these log types are in the process of being activated or deactivated.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/PendingCloudwatchLogsExports
+type PendingCloudwatchLogsExports struct {
+	_ struct{} `type:"structure"`
+
+	// Log types that are in the process of being enabled. After they are enabled,
+	// these log types are exported to CloudWatch Logs.
+	LogTypesToDisable []*string `type:"list"`
+
+	// Log types that are in the process of being deactivated. After they are deactivated,
+	// these log types aren't exported to CloudWatch Logs.
+	LogTypesToEnable []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s PendingCloudwatchLogsExports) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PendingCloudwatchLogsExports) GoString() string {
+	return s.String()
+}
+
+// SetLogTypesToDisable sets the LogTypesToDisable field's value.
+func (s *PendingCloudwatchLogsExports) SetLogTypesToDisable(v []*string) *PendingCloudwatchLogsExports {
+	s.LogTypesToDisable = v
+	return s
+}
+
+// SetLogTypesToEnable sets the LogTypesToEnable field's value.
+func (s *PendingCloudwatchLogsExports) SetLogTypesToEnable(v []*string) *PendingCloudwatchLogsExports {
+	s.LogTypesToEnable = v
+	return s
+}
+
 // Provides information about a pending maintenance action for a resource.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/PendingMaintenanceAction
 type PendingMaintenanceAction struct {
@@ -24472,6 +24508,10 @@ type PendingModifiedValues struct {
 	// Indicates that the Single-AZ DB instance is to change to a Multi-AZ deployment.
 	MultiAZ *bool `type:"boolean"`
 
+	// A list of the log types whose configuration is still pending. In other words,
+	// these log types are in the process of being activated or deactivated.
+	PendingCloudwatchLogsExports *PendingCloudwatchLogsExports `type:"structure"`
+
 	// Specifies the pending port for the DB instance.
 	Port *int64 `type:"integer"`
 
@@ -24552,6 +24592,12 @@ func (s *PendingModifiedValues) SetMasterUserPassword(v string) *PendingModified
 // SetMultiAZ sets the MultiAZ field's value.
 func (s *PendingModifiedValues) SetMultiAZ(v bool) *PendingModifiedValues {
 	s.MultiAZ = &v
+	return s
+}
+
+// SetPendingCloudwatchLogsExports sets the PendingCloudwatchLogsExports field's value.
+func (s *PendingModifiedValues) SetPendingCloudwatchLogsExports(v *PendingCloudwatchLogsExports) *PendingModifiedValues {
+	s.PendingCloudwatchLogsExports = v
 	return s
 }
 
@@ -26655,6 +26701,10 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	// Directory Service.
 	DomainIAMRoleName *string `type:"string"`
 
+	// The list of logs that the restored DB instance is to export to CloudWatch
+	// Logs.
+	EnableCloudwatchLogsExports []*string `type:"list"`
+
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
 	//
@@ -26673,8 +26723,8 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	//
 	// Default: The same as source
 	//
-	// Constraint: Must be compatible with the engine of the source. You can restore
-	// a MariaDB 10.1 DB instance from a MySQL 5.6 snapshot.
+	// Constraint: Must be compatible with the engine of the source. For example,
+	// you can restore a MariaDB 10.1 DB instance from a MySQL 5.6 snapshot.
 	//
 	// Valid Values:
 	//
@@ -26870,6 +26920,12 @@ func (s *RestoreDBInstanceFromDBSnapshotInput) SetDomainIAMRoleName(v string) *R
 	return s
 }
 
+// SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
+func (s *RestoreDBInstanceFromDBSnapshotInput) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBInstanceFromDBSnapshotInput {
+	s.EnableCloudwatchLogsExports = v
+	return s
+}
+
 // SetEnableIAMDatabaseAuthentication sets the EnableIAMDatabaseAuthentication field's value.
 func (s *RestoreDBInstanceFromDBSnapshotInput) SetEnableIAMDatabaseAuthentication(v bool) *RestoreDBInstanceFromDBSnapshotInput {
 	s.EnableIAMDatabaseAuthentication = &v
@@ -27054,6 +27110,10 @@ type RestoreDBInstanceFromS3Input struct {
 
 	// A DB subnet group to associate with this DB instance.
 	DBSubnetGroupName *string `type:"string"`
+
+	// The list of logs that the restored DB instance is to export to CloudWatch
+	// Logs.
+	EnableCloudwatchLogsExports []*string `type:"list"`
 
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
@@ -27347,6 +27407,12 @@ func (s *RestoreDBInstanceFromS3Input) SetDBSubnetGroupName(v string) *RestoreDB
 	return s
 }
 
+// SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
+func (s *RestoreDBInstanceFromS3Input) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBInstanceFromS3Input {
+	s.EnableCloudwatchLogsExports = v
+	return s
+}
+
 // SetEnableIAMDatabaseAuthentication sets the EnableIAMDatabaseAuthentication field's value.
 func (s *RestoreDBInstanceFromS3Input) SetEnableIAMDatabaseAuthentication(v bool) *RestoreDBInstanceFromS3Input {
 	s.EnableIAMDatabaseAuthentication = &v
@@ -27585,6 +27651,10 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	// Directory Service.
 	DomainIAMRoleName *string `type:"string"`
 
+	// The list of logs that the restored DB instance is to export to CloudWatch
+	// Logs.
+	EnableCloudwatchLogsExports []*string `type:"list"`
+
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
 	//
@@ -27706,7 +27776,7 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	//
 	// Constraints:
 	//
-	//    * Must match the identifier of an existing DBInstance.
+	//    * Must match the identifier of an existing DB instance.
 	//
 	// SourceDBInstanceIdentifier is a required field
 	SourceDBInstanceIdentifier *string `type:"string" required:"true"`
@@ -27823,6 +27893,12 @@ func (s *RestoreDBInstanceToPointInTimeInput) SetDomain(v string) *RestoreDBInst
 // SetDomainIAMRoleName sets the DomainIAMRoleName field's value.
 func (s *RestoreDBInstanceToPointInTimeInput) SetDomainIAMRoleName(v string) *RestoreDBInstanceToPointInTimeInput {
 	s.DomainIAMRoleName = &v
+	return s
+}
+
+// SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
+func (s *RestoreDBInstanceToPointInTimeInput) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBInstanceToPointInTimeInput {
+	s.EnableCloudwatchLogsExports = v
 	return s
 }
 
@@ -28455,7 +28531,7 @@ func (s *ValidDBInstanceModificationsMessage) SetStorage(v []*ValidStorageOption
 type ValidStorageOptions struct {
 	_ struct{} `type:"structure"`
 
-	// The valid range of Provisioned IOPS to gigabytes of storage multiplier. For
+	// The valid range of Provisioned IOPS to gibibytes of storage multiplier. For
 	// example, 3-10, which means that provisioned IOPS can be between 3 and 10
 	// times storage.
 	IopsToStorageRatio []*DoubleRange `locationNameList:"DoubleRange" type:"list"`
@@ -28463,7 +28539,7 @@ type ValidStorageOptions struct {
 	// The valid range of provisioned IOPS. For example, 1000-20000.
 	ProvisionedIops []*Range `locationNameList:"Range" type:"list"`
 
-	// The valid range of storage in gigabytes. For example, 100 to 6144.
+	// The valid range of storage in gibibytes. For example, 100 to 16384.
 	StorageSize []*Range `locationNameList:"Range" type:"list"`
 
 	// The valid storage types for your DB instance. For example, gp2, io1.

@@ -386,7 +386,11 @@ func resourceAwsMqUserHash(v interface{}) int {
 	var buf bytes.Buffer
 
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%t-", m["console_access"].(bool)))
+	if ca, ok := m["console_access"]; ok {
+		buf.WriteString(fmt.Sprintf("%t-", ca.(bool)))
+	} else {
+		buf.WriteString("false-")
+	}
 	if g, ok := m["groups"]; ok {
 		buf.WriteString(fmt.Sprintf("%v-", g.(*schema.Set).List()))
 	}

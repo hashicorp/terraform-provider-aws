@@ -1272,6 +1272,100 @@ func (c *IoT) CreateKeysAndCertificateWithContext(ctx aws.Context, input *Create
 	return out, req.Send()
 }
 
+const opCreateOTAUpdate = "CreateOTAUpdate"
+
+// CreateOTAUpdateRequest generates a "aws/request.Request" representing the
+// client's request for the CreateOTAUpdate operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateOTAUpdate for more information on using the CreateOTAUpdate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateOTAUpdateRequest method.
+//    req, resp := client.CreateOTAUpdateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) CreateOTAUpdateRequest(input *CreateOTAUpdateInput) (req *request.Request, output *CreateOTAUpdateOutput) {
+	op := &request.Operation{
+		Name:       opCreateOTAUpdate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/otaUpdates/{otaUpdateId}",
+	}
+
+	if input == nil {
+		input = &CreateOTAUpdateInput{}
+	}
+
+	output = &CreateOTAUpdateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateOTAUpdate API operation for AWS IoT.
+//
+// Creates an AWS IoT OTAUpdate on a target group of things or groups.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation CreateOTAUpdate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   The resource already exists.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+func (c *IoT) CreateOTAUpdate(input *CreateOTAUpdateInput) (*CreateOTAUpdateOutput, error) {
+	req, out := c.CreateOTAUpdateRequest(input)
+	return out, req.Send()
+}
+
+// CreateOTAUpdateWithContext is the same as CreateOTAUpdate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateOTAUpdate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) CreateOTAUpdateWithContext(ctx aws.Context, input *CreateOTAUpdateInput, opts ...request.Option) (*CreateOTAUpdateOutput, error) {
+	req, out := c.CreateOTAUpdateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreatePolicy = "CreatePolicy"
 
 // CreatePolicyRequest generates a "aws/request.Request" representing the
@@ -1563,6 +1657,106 @@ func (c *IoT) CreateRoleAlias(input *CreateRoleAliasInput) (*CreateRoleAliasOutp
 // for more information on using Contexts.
 func (c *IoT) CreateRoleAliasWithContext(ctx aws.Context, input *CreateRoleAliasInput, opts ...request.Option) (*CreateRoleAliasOutput, error) {
 	req, out := c.CreateRoleAliasRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateStream = "CreateStream"
+
+// CreateStreamRequest generates a "aws/request.Request" representing the
+// client's request for the CreateStream operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateStream for more information on using the CreateStream
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateStreamRequest method.
+//    req, resp := client.CreateStreamRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) CreateStreamRequest(input *CreateStreamInput) (req *request.Request, output *CreateStreamOutput) {
+	op := &request.Operation{
+		Name:       opCreateStream,
+		HTTPMethod: "POST",
+		HTTPPath:   "/streams/{streamId}",
+	}
+
+	if input == nil {
+		input = &CreateStreamInput{}
+	}
+
+	output = &CreateStreamOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateStream API operation for AWS IoT.
+//
+// Creates a stream for delivering one or more large files in chunks over MQTT.
+// A stream transports data bytes in chunks or blocks packaged as MQTT messages
+// from a source like S3. You can have one or more files associated with a stream.
+// The total size of a file associated with the stream cannot exceed more than
+// 2 MB. The stream will be created with version 0. If a stream is created with
+// the same streamID as a stream that existed and was deleted within last 90
+// days, we will resurrect that old stream by incrementing the version by 1.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation CreateStream for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   The resource already exists.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) CreateStream(input *CreateStreamInput) (*CreateStreamOutput, error) {
+	req, out := c.CreateStreamRequest(input)
+	return out, req.Send()
+}
+
+// CreateStreamWithContext is the same as CreateStream with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateStream for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) CreateStreamWithContext(ctx aws.Context, input *CreateStreamInput, opts ...request.Option) (*CreateStreamOutput, error) {
+	req, out := c.CreateStreamRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2222,6 +2416,97 @@ func (c *IoT) DeleteCertificateWithContext(ctx aws.Context, input *DeleteCertifi
 	return out, req.Send()
 }
 
+const opDeleteOTAUpdate = "DeleteOTAUpdate"
+
+// DeleteOTAUpdateRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteOTAUpdate operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteOTAUpdate for more information on using the DeleteOTAUpdate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteOTAUpdateRequest method.
+//    req, resp := client.DeleteOTAUpdateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DeleteOTAUpdateRequest(input *DeleteOTAUpdateInput) (req *request.Request, output *DeleteOTAUpdateOutput) {
+	op := &request.Operation{
+		Name:       opDeleteOTAUpdate,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/otaUpdates/{otaUpdateId}",
+	}
+
+	if input == nil {
+		input = &DeleteOTAUpdateInput{}
+	}
+
+	output = &DeleteOTAUpdateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteOTAUpdate API operation for AWS IoT.
+//
+// Delete an OTA update.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DeleteOTAUpdate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+func (c *IoT) DeleteOTAUpdate(input *DeleteOTAUpdateInput) (*DeleteOTAUpdateOutput, error) {
+	req, out := c.DeleteOTAUpdateRequest(input)
+	return out, req.Send()
+}
+
+// DeleteOTAUpdateWithContext is the same as DeleteOTAUpdate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteOTAUpdate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DeleteOTAUpdateWithContext(ctx aws.Context, input *DeleteOTAUpdateInput, opts ...request.Option) (*DeleteOTAUpdateOutput, error) {
+	req, out := c.DeleteOTAUpdateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeletePolicy = "DeletePolicy"
 
 // DeletePolicyRequest generates a "aws/request.Request" representing the
@@ -2604,6 +2889,100 @@ func (c *IoT) DeleteRoleAlias(input *DeleteRoleAliasInput) (*DeleteRoleAliasOutp
 // for more information on using Contexts.
 func (c *IoT) DeleteRoleAliasWithContext(ctx aws.Context, input *DeleteRoleAliasInput, opts ...request.Option) (*DeleteRoleAliasOutput, error) {
 	req, out := c.DeleteRoleAliasRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteStream = "DeleteStream"
+
+// DeleteStreamRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteStream operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteStream for more information on using the DeleteStream
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteStreamRequest method.
+//    req, resp := client.DeleteStreamRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DeleteStreamRequest(input *DeleteStreamInput) (req *request.Request, output *DeleteStreamOutput) {
+	op := &request.Operation{
+		Name:       opDeleteStream,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/streams/{streamId}",
+	}
+
+	if input == nil {
+		input = &DeleteStreamInput{}
+	}
+
+	output = &DeleteStreamOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteStream API operation for AWS IoT.
+//
+// Deletes a stream.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DeleteStream for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeDeleteConflictException "DeleteConflictException"
+//   You can't delete the resource because it is attached to one or more resources.
+//
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) DeleteStream(input *DeleteStreamInput) (*DeleteStreamOutput, error) {
+	req, out := c.DeleteStreamRequest(input)
+	return out, req.Send()
+}
+
+// DeleteStreamWithContext is the same as DeleteStream with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteStream for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DeleteStreamWithContext(ctx aws.Context, input *DeleteStreamInput, opts ...request.Option) (*DeleteStreamOutput, error) {
+	req, out := c.DeleteStreamRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4028,6 +4407,97 @@ func (c *IoT) DescribeRoleAliasWithContext(ctx aws.Context, input *DescribeRoleA
 	return out, req.Send()
 }
 
+const opDescribeStream = "DescribeStream"
+
+// DescribeStreamRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeStream operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeStream for more information on using the DescribeStream
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeStreamRequest method.
+//    req, resp := client.DescribeStreamRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DescribeStreamRequest(input *DescribeStreamInput) (req *request.Request, output *DescribeStreamOutput) {
+	op := &request.Operation{
+		Name:       opDescribeStream,
+		HTTPMethod: "GET",
+		HTTPPath:   "/streams/{streamId}",
+	}
+
+	if input == nil {
+		input = &DescribeStreamInput{}
+	}
+
+	output = &DescribeStreamOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeStream API operation for AWS IoT.
+//
+// Gets information about a stream.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DescribeStream for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) DescribeStream(input *DescribeStreamInput) (*DescribeStreamOutput, error) {
+	req, out := c.DescribeStreamRequest(input)
+	return out, req.Send()
+}
+
+// DescribeStreamWithContext is the same as DescribeStream with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeStream for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DescribeStreamWithContext(ctx aws.Context, input *DescribeStreamInput, opts ...request.Option) (*DescribeStreamOutput, error) {
+	req, out := c.DescribeStreamRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeThing = "DescribeThing"
 
 // DescribeThingRequest generates a "aws/request.Request" representing the
@@ -5183,6 +5653,97 @@ func (c *IoT) GetLoggingOptions(input *GetLoggingOptionsInput) (*GetLoggingOptio
 // for more information on using Contexts.
 func (c *IoT) GetLoggingOptionsWithContext(ctx aws.Context, input *GetLoggingOptionsInput, opts ...request.Option) (*GetLoggingOptionsOutput, error) {
 	req, out := c.GetLoggingOptionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetOTAUpdate = "GetOTAUpdate"
+
+// GetOTAUpdateRequest generates a "aws/request.Request" representing the
+// client's request for the GetOTAUpdate operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetOTAUpdate for more information on using the GetOTAUpdate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetOTAUpdateRequest method.
+//    req, resp := client.GetOTAUpdateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) GetOTAUpdateRequest(input *GetOTAUpdateInput) (req *request.Request, output *GetOTAUpdateOutput) {
+	op := &request.Operation{
+		Name:       opGetOTAUpdate,
+		HTTPMethod: "GET",
+		HTTPPath:   "/otaUpdates/{otaUpdateId}",
+	}
+
+	if input == nil {
+		input = &GetOTAUpdateInput{}
+	}
+
+	output = &GetOTAUpdateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetOTAUpdate API operation for AWS IoT.
+//
+// Gets an OTA update.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation GetOTAUpdate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+func (c *IoT) GetOTAUpdate(input *GetOTAUpdateInput) (*GetOTAUpdateOutput, error) {
+	req, out := c.GetOTAUpdateRequest(input)
+	return out, req.Send()
+}
+
+// GetOTAUpdateWithContext is the same as GetOTAUpdate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetOTAUpdate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) GetOTAUpdateWithContext(ctx aws.Context, input *GetOTAUpdateInput, opts ...request.Option) (*GetOTAUpdateOutput, error) {
+	req, out := c.GetOTAUpdateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6421,6 +6982,94 @@ func (c *IoT) ListJobsWithContext(ctx aws.Context, input *ListJobsInput, opts ..
 	return out, req.Send()
 }
 
+const opListOTAUpdates = "ListOTAUpdates"
+
+// ListOTAUpdatesRequest generates a "aws/request.Request" representing the
+// client's request for the ListOTAUpdates operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListOTAUpdates for more information on using the ListOTAUpdates
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListOTAUpdatesRequest method.
+//    req, resp := client.ListOTAUpdatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ListOTAUpdatesRequest(input *ListOTAUpdatesInput) (req *request.Request, output *ListOTAUpdatesOutput) {
+	op := &request.Operation{
+		Name:       opListOTAUpdates,
+		HTTPMethod: "GET",
+		HTTPPath:   "/otaUpdates",
+	}
+
+	if input == nil {
+		input = &ListOTAUpdatesInput{}
+	}
+
+	output = &ListOTAUpdatesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListOTAUpdates API operation for AWS IoT.
+//
+// Lists OTA updates.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ListOTAUpdates for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+func (c *IoT) ListOTAUpdates(input *ListOTAUpdatesInput) (*ListOTAUpdatesOutput, error) {
+	req, out := c.ListOTAUpdatesRequest(input)
+	return out, req.Send()
+}
+
+// ListOTAUpdatesWithContext is the same as ListOTAUpdates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListOTAUpdates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListOTAUpdatesWithContext(ctx aws.Context, input *ListOTAUpdatesInput, opts ...request.Option) (*ListOTAUpdatesOutput, error) {
+	req, out := c.ListOTAUpdatesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListOutgoingCertificates = "ListOutgoingCertificates"
 
 // ListOutgoingCertificatesRequest generates a "aws/request.Request" representing the
@@ -7055,6 +7704,94 @@ func (c *IoT) ListRoleAliases(input *ListRoleAliasesInput) (*ListRoleAliasesOutp
 // for more information on using Contexts.
 func (c *IoT) ListRoleAliasesWithContext(ctx aws.Context, input *ListRoleAliasesInput, opts ...request.Option) (*ListRoleAliasesOutput, error) {
 	req, out := c.ListRoleAliasesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListStreams = "ListStreams"
+
+// ListStreamsRequest generates a "aws/request.Request" representing the
+// client's request for the ListStreams operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListStreams for more information on using the ListStreams
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListStreamsRequest method.
+//    req, resp := client.ListStreamsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ListStreamsRequest(input *ListStreamsInput) (req *request.Request, output *ListStreamsOutput) {
+	op := &request.Operation{
+		Name:       opListStreams,
+		HTTPMethod: "GET",
+		HTTPPath:   "/streams",
+	}
+
+	if input == nil {
+		input = &ListStreamsInput{}
+	}
+
+	output = &ListStreamsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListStreams API operation for AWS IoT.
+//
+// Lists all of the streams in your AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ListStreams for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) ListStreams(input *ListStreamsInput) (*ListStreamsOutput, error) {
+	req, out := c.ListStreamsRequest(input)
+	return out, req.Send()
+}
+
+// ListStreamsWithContext is the same as ListStreams with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListStreams for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListStreamsWithContext(ctx aws.Context, input *ListStreamsInput, opts ...request.Option) (*ListStreamsOutput, error) {
+	req, out := c.ListStreamsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -10154,6 +10891,97 @@ func (c *IoT) UpdateRoleAliasWithContext(ctx aws.Context, input *UpdateRoleAlias
 	return out, req.Send()
 }
 
+const opUpdateStream = "UpdateStream"
+
+// UpdateStreamRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateStream operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateStream for more information on using the UpdateStream
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateStreamRequest method.
+//    req, resp := client.UpdateStreamRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) UpdateStreamRequest(input *UpdateStreamInput) (req *request.Request, output *UpdateStreamOutput) {
+	op := &request.Operation{
+		Name:       opUpdateStream,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/streams/{streamId}",
+	}
+
+	if input == nil {
+		input = &UpdateStreamInput{}
+	}
+
+	output = &UpdateStreamOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateStream API operation for AWS IoT.
+//
+// Updates an existing stream. The stream version will be incremented by one.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation UpdateStream for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) UpdateStream(input *UpdateStreamInput) (*UpdateStreamOutput, error) {
+	req, out := c.UpdateStreamRequest(input)
+	return out, req.Send()
+}
+
+// UpdateStreamWithContext is the same as UpdateStream with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateStream for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) UpdateStreamWithContext(ctx aws.Context, input *UpdateStreamInput, opts ...request.Option) (*UpdateStreamOutput, error) {
+	req, out := c.UpdateStreamRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateThing = "UpdateThing"
 
 // UpdateThingRequest generates a "aws/request.Request" representing the
@@ -12030,6 +12858,161 @@ func (s *CloudwatchMetricAction) SetRoleArn(v string) *CloudwatchMetricAction {
 	return s
 }
 
+// Describes the method to use when code signing a file.
+type CodeSigning struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the AWSSignerJob which was created to sign the file.
+	AwsSignerJobId *string `locationName:"awsSignerJobId" type:"string"`
+
+	// A custom method for code signing a file.
+	CustomCodeSigning *CustomCodeSigning `locationName:"customCodeSigning" type:"structure"`
+}
+
+// String returns the string representation
+func (s CodeSigning) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CodeSigning) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CodeSigning) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CodeSigning"}
+	if s.CustomCodeSigning != nil {
+		if err := s.CustomCodeSigning.Validate(); err != nil {
+			invalidParams.AddNested("CustomCodeSigning", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsSignerJobId sets the AwsSignerJobId field's value.
+func (s *CodeSigning) SetAwsSignerJobId(v string) *CodeSigning {
+	s.AwsSignerJobId = &v
+	return s
+}
+
+// SetCustomCodeSigning sets the CustomCodeSigning field's value.
+func (s *CodeSigning) SetCustomCodeSigning(v *CustomCodeSigning) *CodeSigning {
+	s.CustomCodeSigning = v
+	return s
+}
+
+// Describes the certificate chain being used when code signing a file.
+type CodeSigningCertificateChain struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the certificate.
+	CertificateName *string `locationName:"certificateName" type:"string"`
+
+	// A base64 encoded binary representation of the code signing certificate chain.
+	InlineDocument *string `locationName:"inlineDocument" type:"string"`
+
+	// A stream of the certificate chain files.
+	Stream *Stream `locationName:"stream" type:"structure"`
+}
+
+// String returns the string representation
+func (s CodeSigningCertificateChain) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CodeSigningCertificateChain) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CodeSigningCertificateChain) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CodeSigningCertificateChain"}
+	if s.Stream != nil {
+		if err := s.Stream.Validate(); err != nil {
+			invalidParams.AddNested("Stream", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateName sets the CertificateName field's value.
+func (s *CodeSigningCertificateChain) SetCertificateName(v string) *CodeSigningCertificateChain {
+	s.CertificateName = &v
+	return s
+}
+
+// SetInlineDocument sets the InlineDocument field's value.
+func (s *CodeSigningCertificateChain) SetInlineDocument(v string) *CodeSigningCertificateChain {
+	s.InlineDocument = &v
+	return s
+}
+
+// SetStream sets the Stream field's value.
+func (s *CodeSigningCertificateChain) SetStream(v *Stream) *CodeSigningCertificateChain {
+	s.Stream = v
+	return s
+}
+
+// Describes the signature for a file.
+type CodeSigningSignature struct {
+	_ struct{} `type:"structure"`
+
+	// A base64 encoded binary representation of the code signing signature.
+	//
+	// InlineDocument is automatically base64 encoded/decoded by the SDK.
+	InlineDocument []byte `locationName:"inlineDocument" type:"blob"`
+
+	// A stream of the code signing signature.
+	Stream *Stream `locationName:"stream" type:"structure"`
+}
+
+// String returns the string representation
+func (s CodeSigningSignature) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CodeSigningSignature) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CodeSigningSignature) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CodeSigningSignature"}
+	if s.Stream != nil {
+		if err := s.Stream.Validate(); err != nil {
+			invalidParams.AddNested("Stream", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInlineDocument sets the InlineDocument field's value.
+func (s *CodeSigningSignature) SetInlineDocument(v []byte) *CodeSigningSignature {
+	s.InlineDocument = v
+	return s
+}
+
+// SetStream sets the Stream field's value.
+func (s *CodeSigningSignature) SetStream(v *Stream) *CodeSigningSignature {
+	s.Stream = v
+	return s
+}
+
 // Configuration.
 type Configuration struct {
 	_ struct{} `type:"structure"`
@@ -12534,6 +13517,199 @@ func (s *CreateKeysAndCertificateOutput) SetKeyPair(v *KeyPair) *CreateKeysAndCe
 	return s
 }
 
+type CreateOTAUpdateInput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of additional OTA update parameters which are name-value pairs.
+	AdditionalParameters map[string]*string `locationName:"additionalParameters" type:"map"`
+
+	// The description of the OTA update.
+	Description *string `locationName:"description" type:"string"`
+
+	// The files to be streamed by the OTA update.
+	//
+	// Files is a required field
+	Files []*OTAUpdateFile `locationName:"files" min:"1" type:"list" required:"true"`
+
+	// The ID of the OTA update to be created.
+	//
+	// OtaUpdateId is a required field
+	OtaUpdateId *string `location:"uri" locationName:"otaUpdateId" min:"1" type:"string" required:"true"`
+
+	// The IAM role that allows access to the AWS IoT Jobs service.
+	//
+	// RoleArn is a required field
+	RoleArn *string `locationName:"roleArn" min:"20" type:"string" required:"true"`
+
+	// Specifies whether the update will continue to run (CONTINUOUS), or will be
+	// complete after all the things specified as targets have completed the update
+	// (SNAPSHOT). If continuous, the update may also be run on a thing when a change
+	// is detected in a target. For example, an update will run on a thing when
+	// the thing is added to a target group, even after the update was completed
+	// by all things originally in the group. Valid values: CONTINUOUS | SNAPSHOT.
+	TargetSelection *string `locationName:"targetSelection" type:"string" enum:"TargetSelection"`
+
+	// The targeted devices to receive OTA updates.
+	//
+	// Targets is a required field
+	Targets []*string `locationName:"targets" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateOTAUpdateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateOTAUpdateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateOTAUpdateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateOTAUpdateInput"}
+	if s.Files == nil {
+		invalidParams.Add(request.NewErrParamRequired("Files"))
+	}
+	if s.Files != nil && len(s.Files) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Files", 1))
+	}
+	if s.OtaUpdateId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OtaUpdateId"))
+	}
+	if s.OtaUpdateId != nil && len(*s.OtaUpdateId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OtaUpdateId", 1))
+	}
+	if s.RoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	}
+	if s.RoleArn != nil && len(*s.RoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 20))
+	}
+	if s.Targets == nil {
+		invalidParams.Add(request.NewErrParamRequired("Targets"))
+	}
+	if s.Targets != nil && len(s.Targets) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Targets", 1))
+	}
+	if s.Files != nil {
+		for i, v := range s.Files {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Files", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAdditionalParameters sets the AdditionalParameters field's value.
+func (s *CreateOTAUpdateInput) SetAdditionalParameters(v map[string]*string) *CreateOTAUpdateInput {
+	s.AdditionalParameters = v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateOTAUpdateInput) SetDescription(v string) *CreateOTAUpdateInput {
+	s.Description = &v
+	return s
+}
+
+// SetFiles sets the Files field's value.
+func (s *CreateOTAUpdateInput) SetFiles(v []*OTAUpdateFile) *CreateOTAUpdateInput {
+	s.Files = v
+	return s
+}
+
+// SetOtaUpdateId sets the OtaUpdateId field's value.
+func (s *CreateOTAUpdateInput) SetOtaUpdateId(v string) *CreateOTAUpdateInput {
+	s.OtaUpdateId = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *CreateOTAUpdateInput) SetRoleArn(v string) *CreateOTAUpdateInput {
+	s.RoleArn = &v
+	return s
+}
+
+// SetTargetSelection sets the TargetSelection field's value.
+func (s *CreateOTAUpdateInput) SetTargetSelection(v string) *CreateOTAUpdateInput {
+	s.TargetSelection = &v
+	return s
+}
+
+// SetTargets sets the Targets field's value.
+func (s *CreateOTAUpdateInput) SetTargets(v []*string) *CreateOTAUpdateInput {
+	s.Targets = v
+	return s
+}
+
+type CreateOTAUpdateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS IoT job ARN associated with the OTA update.
+	AwsIotJobArn *string `locationName:"awsIotJobArn" type:"string"`
+
+	// The AWS IoT job ID associated with the OTA update.
+	AwsIotJobId *string `locationName:"awsIotJobId" type:"string"`
+
+	// The OTA update ARN.
+	OtaUpdateArn *string `locationName:"otaUpdateArn" type:"string"`
+
+	// The OTA update ID.
+	OtaUpdateId *string `locationName:"otaUpdateId" min:"1" type:"string"`
+
+	// The OTA update status.
+	OtaUpdateStatus *string `locationName:"otaUpdateStatus" type:"string" enum:"OTAUpdateStatus"`
+}
+
+// String returns the string representation
+func (s CreateOTAUpdateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateOTAUpdateOutput) GoString() string {
+	return s.String()
+}
+
+// SetAwsIotJobArn sets the AwsIotJobArn field's value.
+func (s *CreateOTAUpdateOutput) SetAwsIotJobArn(v string) *CreateOTAUpdateOutput {
+	s.AwsIotJobArn = &v
+	return s
+}
+
+// SetAwsIotJobId sets the AwsIotJobId field's value.
+func (s *CreateOTAUpdateOutput) SetAwsIotJobId(v string) *CreateOTAUpdateOutput {
+	s.AwsIotJobId = &v
+	return s
+}
+
+// SetOtaUpdateArn sets the OtaUpdateArn field's value.
+func (s *CreateOTAUpdateOutput) SetOtaUpdateArn(v string) *CreateOTAUpdateOutput {
+	s.OtaUpdateArn = &v
+	return s
+}
+
+// SetOtaUpdateId sets the OtaUpdateId field's value.
+func (s *CreateOTAUpdateOutput) SetOtaUpdateId(v string) *CreateOTAUpdateOutput {
+	s.OtaUpdateId = &v
+	return s
+}
+
+// SetOtaUpdateStatus sets the OtaUpdateStatus field's value.
+func (s *CreateOTAUpdateOutput) SetOtaUpdateStatus(v string) *CreateOTAUpdateOutput {
+	s.OtaUpdateStatus = &v
+	return s
+}
+
 // The input for the CreatePolicy operation.
 type CreatePolicyInput struct {
 	_ struct{} `type:"structure"`
@@ -12861,6 +14037,151 @@ func (s *CreateRoleAliasOutput) SetRoleAlias(v string) *CreateRoleAliasOutput {
 // SetRoleAliasArn sets the RoleAliasArn field's value.
 func (s *CreateRoleAliasOutput) SetRoleAliasArn(v string) *CreateRoleAliasOutput {
 	s.RoleAliasArn = &v
+	return s
+}
+
+type CreateStreamInput struct {
+	_ struct{} `type:"structure"`
+
+	// A description of the stream.
+	Description *string `locationName:"description" type:"string"`
+
+	// The files to stream.
+	//
+	// Files is a required field
+	Files []*StreamFile `locationName:"files" min:"1" type:"list" required:"true"`
+
+	// An IAM role that allows the IoT service principal assumes to access your
+	// S3 files.
+	//
+	// RoleArn is a required field
+	RoleArn *string `locationName:"roleArn" min:"20" type:"string" required:"true"`
+
+	// The stream ID.
+	//
+	// StreamId is a required field
+	StreamId *string `location:"uri" locationName:"streamId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateStreamInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateStreamInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateStreamInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateStreamInput"}
+	if s.Files == nil {
+		invalidParams.Add(request.NewErrParamRequired("Files"))
+	}
+	if s.Files != nil && len(s.Files) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Files", 1))
+	}
+	if s.RoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	}
+	if s.RoleArn != nil && len(*s.RoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 20))
+	}
+	if s.StreamId == nil {
+		invalidParams.Add(request.NewErrParamRequired("StreamId"))
+	}
+	if s.StreamId != nil && len(*s.StreamId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StreamId", 1))
+	}
+	if s.Files != nil {
+		for i, v := range s.Files {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Files", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateStreamInput) SetDescription(v string) *CreateStreamInput {
+	s.Description = &v
+	return s
+}
+
+// SetFiles sets the Files field's value.
+func (s *CreateStreamInput) SetFiles(v []*StreamFile) *CreateStreamInput {
+	s.Files = v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *CreateStreamInput) SetRoleArn(v string) *CreateStreamInput {
+	s.RoleArn = &v
+	return s
+}
+
+// SetStreamId sets the StreamId field's value.
+func (s *CreateStreamInput) SetStreamId(v string) *CreateStreamInput {
+	s.StreamId = &v
+	return s
+}
+
+type CreateStreamOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A description of the stream.
+	Description *string `locationName:"description" type:"string"`
+
+	// The stream ARN.
+	StreamArn *string `locationName:"streamArn" type:"string"`
+
+	// The stream ID.
+	StreamId *string `locationName:"streamId" min:"1" type:"string"`
+
+	// The version of the stream.
+	StreamVersion *int64 `locationName:"streamVersion" type:"integer"`
+}
+
+// String returns the string representation
+func (s CreateStreamOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateStreamOutput) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateStreamOutput) SetDescription(v string) *CreateStreamOutput {
+	s.Description = &v
+	return s
+}
+
+// SetStreamArn sets the StreamArn field's value.
+func (s *CreateStreamOutput) SetStreamArn(v string) *CreateStreamOutput {
+	s.StreamArn = &v
+	return s
+}
+
+// SetStreamId sets the StreamId field's value.
+func (s *CreateStreamOutput) SetStreamId(v string) *CreateStreamOutput {
+	s.StreamId = &v
+	return s
+}
+
+// SetStreamVersion sets the StreamVersion field's value.
+func (s *CreateStreamOutput) SetStreamVersion(v int64) *CreateStreamOutput {
+	s.StreamVersion = &v
 	return s
 }
 
@@ -13245,6 +14566,77 @@ func (s CreateTopicRuleOutput) GoString() string {
 	return s.String()
 }
 
+// Describes a custom method used to code sign a file.
+type CustomCodeSigning struct {
+	_ struct{} `type:"structure"`
+
+	// The certificate chain.
+	CertificateChain *CodeSigningCertificateChain `locationName:"certificateChain" type:"structure"`
+
+	// The hash algorithm used to code sign the file.
+	HashAlgorithm *string `locationName:"hashAlgorithm" type:"string"`
+
+	// The signature for the file.
+	Signature *CodeSigningSignature `locationName:"signature" type:"structure"`
+
+	// The signature algorithm used to code sign the file.
+	SignatureAlgorithm *string `locationName:"signatureAlgorithm" type:"string"`
+}
+
+// String returns the string representation
+func (s CustomCodeSigning) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CustomCodeSigning) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CustomCodeSigning) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CustomCodeSigning"}
+	if s.CertificateChain != nil {
+		if err := s.CertificateChain.Validate(); err != nil {
+			invalidParams.AddNested("CertificateChain", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Signature != nil {
+		if err := s.Signature.Validate(); err != nil {
+			invalidParams.AddNested("Signature", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateChain sets the CertificateChain field's value.
+func (s *CustomCodeSigning) SetCertificateChain(v *CodeSigningCertificateChain) *CustomCodeSigning {
+	s.CertificateChain = v
+	return s
+}
+
+// SetHashAlgorithm sets the HashAlgorithm field's value.
+func (s *CustomCodeSigning) SetHashAlgorithm(v string) *CustomCodeSigning {
+	s.HashAlgorithm = &v
+	return s
+}
+
+// SetSignature sets the Signature field's value.
+func (s *CustomCodeSigning) SetSignature(v *CodeSigningSignature) *CustomCodeSigning {
+	s.Signature = v
+	return s
+}
+
+// SetSignatureAlgorithm sets the SignatureAlgorithm field's value.
+func (s *CustomCodeSigning) SetSignatureAlgorithm(v string) *CustomCodeSigning {
+	s.SignatureAlgorithm = &v
+	return s
+}
+
 type DeleteAuthorizerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13419,6 +14811,61 @@ func (s DeleteCertificateOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteCertificateOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteOTAUpdateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The OTA update ID to delete.
+	//
+	// OtaUpdateId is a required field
+	OtaUpdateId *string `location:"uri" locationName:"otaUpdateId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteOTAUpdateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteOTAUpdateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteOTAUpdateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteOTAUpdateInput"}
+	if s.OtaUpdateId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OtaUpdateId"))
+	}
+	if s.OtaUpdateId != nil && len(*s.OtaUpdateId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OtaUpdateId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOtaUpdateId sets the OtaUpdateId field's value.
+func (s *DeleteOTAUpdateInput) SetOtaUpdateId(v string) *DeleteOTAUpdateInput {
+	s.OtaUpdateId = &v
+	return s
+}
+
+type DeleteOTAUpdateOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteOTAUpdateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteOTAUpdateOutput) GoString() string {
 	return s.String()
 }
 
@@ -13630,6 +15077,61 @@ func (s DeleteRoleAliasOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteRoleAliasOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteStreamInput struct {
+	_ struct{} `type:"structure"`
+
+	// The stream ID.
+	//
+	// StreamId is a required field
+	StreamId *string `location:"uri" locationName:"streamId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteStreamInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteStreamInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteStreamInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteStreamInput"}
+	if s.StreamId == nil {
+		invalidParams.Add(request.NewErrParamRequired("StreamId"))
+	}
+	if s.StreamId != nil && len(*s.StreamId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StreamId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetStreamId sets the StreamId field's value.
+func (s *DeleteStreamInput) SetStreamId(v string) *DeleteStreamInput {
+	s.StreamId = &v
+	return s
+}
+
+type DeleteStreamOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteStreamOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteStreamOutput) GoString() string {
 	return s.String()
 }
 
@@ -14703,6 +16205,70 @@ func (s DescribeRoleAliasOutput) GoString() string {
 // SetRoleAliasDescription sets the RoleAliasDescription field's value.
 func (s *DescribeRoleAliasOutput) SetRoleAliasDescription(v *RoleAliasDescription) *DescribeRoleAliasOutput {
 	s.RoleAliasDescription = v
+	return s
+}
+
+type DescribeStreamInput struct {
+	_ struct{} `type:"structure"`
+
+	// The stream ID.
+	//
+	// StreamId is a required field
+	StreamId *string `location:"uri" locationName:"streamId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeStreamInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeStreamInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeStreamInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeStreamInput"}
+	if s.StreamId == nil {
+		invalidParams.Add(request.NewErrParamRequired("StreamId"))
+	}
+	if s.StreamId != nil && len(*s.StreamId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StreamId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetStreamId sets the StreamId field's value.
+func (s *DescribeStreamInput) SetStreamId(v string) *DescribeStreamInput {
+	s.StreamId = &v
+	return s
+}
+
+type DescribeStreamOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the stream.
+	StreamInfo *StreamInfo `locationName:"streamInfo" type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeStreamOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeStreamOutput) GoString() string {
+	return s.String()
+}
+
+// SetStreamInfo sets the StreamInfo field's value.
+func (s *DescribeStreamOutput) SetStreamInfo(v *StreamInfo) *DescribeStreamOutput {
+	s.StreamInfo = v
 	return s
 }
 
@@ -15879,6 +17445,39 @@ func (s EnableTopicRuleOutput) GoString() string {
 	return s.String()
 }
 
+// Error information.
+type ErrorInfo struct {
+	_ struct{} `type:"structure"`
+
+	// The error code.
+	Code *string `locationName:"code" type:"string"`
+
+	// The error message.
+	Message *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ErrorInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ErrorInfo) GoString() string {
+	return s.String()
+}
+
+// SetCode sets the Code field's value.
+func (s *ErrorInfo) SetCode(v string) *ErrorInfo {
+	s.Code = &v
+	return s
+}
+
+// SetMessage sets the Message field's value.
+func (s *ErrorInfo) SetMessage(v string) *ErrorInfo {
+	s.Message = &v
+	return s
+}
+
 // Information that explicitly denies authorization.
 type ExplicitDeny struct {
 	_ struct{} `type:"structure"`
@@ -16190,6 +17789,70 @@ func (s *GetLoggingOptionsOutput) SetLogLevel(v string) *GetLoggingOptionsOutput
 // SetRoleArn sets the RoleArn field's value.
 func (s *GetLoggingOptionsOutput) SetRoleArn(v string) *GetLoggingOptionsOutput {
 	s.RoleArn = &v
+	return s
+}
+
+type GetOTAUpdateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The OTA update ID.
+	//
+	// OtaUpdateId is a required field
+	OtaUpdateId *string `location:"uri" locationName:"otaUpdateId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetOTAUpdateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetOTAUpdateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetOTAUpdateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetOTAUpdateInput"}
+	if s.OtaUpdateId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OtaUpdateId"))
+	}
+	if s.OtaUpdateId != nil && len(*s.OtaUpdateId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OtaUpdateId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOtaUpdateId sets the OtaUpdateId field's value.
+func (s *GetOTAUpdateInput) SetOtaUpdateId(v string) *GetOTAUpdateInput {
+	s.OtaUpdateId = &v
+	return s
+}
+
+type GetOTAUpdateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The OTA update info.
+	OtaUpdateInfo *OTAUpdateInfo `locationName:"otaUpdateInfo" type:"structure"`
+}
+
+// String returns the string representation
+func (s GetOTAUpdateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetOTAUpdateOutput) GoString() string {
+	return s.String()
+}
+
+// SetOtaUpdateInfo sets the OtaUpdateInfo field's value.
+func (s *GetOTAUpdateOutput) SetOtaUpdateInfo(v *OTAUpdateInfo) *GetOTAUpdateOutput {
+	s.OtaUpdateInfo = v
 	return s
 }
 
@@ -18270,6 +19933,92 @@ func (s *ListJobsOutput) SetNextToken(v string) *ListJobsOutput {
 	return s
 }
 
+type ListOTAUpdatesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of results to return at one time.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// A token used to retreive the next set of results.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+
+	// The OTA update job status.
+	OtaUpdateStatus *string `location:"querystring" locationName:"otaUpdateStatus" type:"string" enum:"OTAUpdateStatus"`
+}
+
+// String returns the string representation
+func (s ListOTAUpdatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListOTAUpdatesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListOTAUpdatesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListOTAUpdatesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListOTAUpdatesInput) SetMaxResults(v int64) *ListOTAUpdatesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListOTAUpdatesInput) SetNextToken(v string) *ListOTAUpdatesInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetOtaUpdateStatus sets the OtaUpdateStatus field's value.
+func (s *ListOTAUpdatesInput) SetOtaUpdateStatus(v string) *ListOTAUpdatesInput {
+	s.OtaUpdateStatus = &v
+	return s
+}
+
+type ListOTAUpdatesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A token to use to get the next set of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// A list of OTA update jobs.
+	OtaUpdates []*OTAUpdateSummary `locationName:"otaUpdates" type:"list"`
+}
+
+// String returns the string representation
+func (s ListOTAUpdatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListOTAUpdatesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListOTAUpdatesOutput) SetNextToken(v string) *ListOTAUpdatesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetOtaUpdates sets the OtaUpdates field's value.
+func (s *ListOTAUpdatesOutput) SetOtaUpdates(v []*OTAUpdateSummary) *ListOTAUpdatesOutput {
+	s.OtaUpdates = v
+	return s
+}
+
 // The input to the ListOutgoingCertificates operation.
 type ListOutgoingCertificatesInput struct {
 	_ struct{} `type:"structure"`
@@ -18904,6 +20653,92 @@ func (s *ListRoleAliasesOutput) SetNextMarker(v string) *ListRoleAliasesOutput {
 // SetRoleAliases sets the RoleAliases field's value.
 func (s *ListRoleAliasesOutput) SetRoleAliases(v []*string) *ListRoleAliasesOutput {
 	s.RoleAliases = v
+	return s
+}
+
+type ListStreamsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Set to true to return the list of streams in ascending order.
+	AscendingOrder *bool `location:"querystring" locationName:"isAscendingOrder" type:"boolean"`
+
+	// The maximum number of results to return at a time.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// A token used to get the next set of results.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListStreamsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListStreamsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListStreamsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListStreamsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAscendingOrder sets the AscendingOrder field's value.
+func (s *ListStreamsInput) SetAscendingOrder(v bool) *ListStreamsInput {
+	s.AscendingOrder = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListStreamsInput) SetMaxResults(v int64) *ListStreamsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListStreamsInput) SetNextToken(v string) *ListStreamsInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListStreamsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A token used to get the next set of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// A list of streams.
+	Streams []*StreamSummary `locationName:"streams" type:"list"`
+}
+
+// String returns the string representation
+func (s ListStreamsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListStreamsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListStreamsOutput) SetNextToken(v string) *ListStreamsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetStreams sets the Streams field's value.
+func (s *ListStreamsOutput) SetStreams(v []*StreamSummary) *ListStreamsOutput {
+	s.Streams = v
 	return s
 }
 
@@ -20100,6 +21935,265 @@ func (s *LoggingOptionsPayload) SetRoleArn(v string) *LoggingOptionsPayload {
 	return s
 }
 
+// Describes a file to be associated with an OTA update.
+type OTAUpdateFile struct {
+	_ struct{} `type:"structure"`
+
+	// A list of name/attribute pairs.
+	Attributes map[string]*string `locationName:"attributes" type:"map"`
+
+	// The code signing method of the file.
+	CodeSigning *CodeSigning `locationName:"codeSigning" type:"structure"`
+
+	// The name of the file.
+	FileName *string `locationName:"fileName" type:"string"`
+
+	// The source of the file.
+	FileSource *Stream `locationName:"fileSource" type:"structure"`
+
+	// The file version.
+	FileVersion *string `locationName:"fileVersion" type:"string"`
+}
+
+// String returns the string representation
+func (s OTAUpdateFile) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OTAUpdateFile) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OTAUpdateFile) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OTAUpdateFile"}
+	if s.CodeSigning != nil {
+		if err := s.CodeSigning.Validate(); err != nil {
+			invalidParams.AddNested("CodeSigning", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.FileSource != nil {
+		if err := s.FileSource.Validate(); err != nil {
+			invalidParams.AddNested("FileSource", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAttributes sets the Attributes field's value.
+func (s *OTAUpdateFile) SetAttributes(v map[string]*string) *OTAUpdateFile {
+	s.Attributes = v
+	return s
+}
+
+// SetCodeSigning sets the CodeSigning field's value.
+func (s *OTAUpdateFile) SetCodeSigning(v *CodeSigning) *OTAUpdateFile {
+	s.CodeSigning = v
+	return s
+}
+
+// SetFileName sets the FileName field's value.
+func (s *OTAUpdateFile) SetFileName(v string) *OTAUpdateFile {
+	s.FileName = &v
+	return s
+}
+
+// SetFileSource sets the FileSource field's value.
+func (s *OTAUpdateFile) SetFileSource(v *Stream) *OTAUpdateFile {
+	s.FileSource = v
+	return s
+}
+
+// SetFileVersion sets the FileVersion field's value.
+func (s *OTAUpdateFile) SetFileVersion(v string) *OTAUpdateFile {
+	s.FileVersion = &v
+	return s
+}
+
+// Information about an OTA update.
+type OTAUpdateInfo struct {
+	_ struct{} `type:"structure"`
+
+	// A collection of name/value pairs
+	AdditionalParameters map[string]*string `locationName:"additionalParameters" type:"map"`
+
+	// The AWS IoT job ARN associated with the OTA update.
+	AwsIotJobArn *string `locationName:"awsIotJobArn" type:"string"`
+
+	// The AWS IoT job ID associated with the OTA update.
+	AwsIotJobId *string `locationName:"awsIotJobId" type:"string"`
+
+	// The date when the OTA update was created.
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+
+	// A description of the OTA update.
+	Description *string `locationName:"description" type:"string"`
+
+	// Error information associated with the OTA update.
+	ErrorInfo *ErrorInfo `locationName:"errorInfo" type:"structure"`
+
+	// The date when the OTA update was last updated.
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
+
+	// The OTA update ARN.
+	OtaUpdateArn *string `locationName:"otaUpdateArn" type:"string"`
+
+	// A list of files associated with the OTA update.
+	OtaUpdateFiles []*OTAUpdateFile `locationName:"otaUpdateFiles" min:"1" type:"list"`
+
+	// The OTA update ID.
+	OtaUpdateId *string `locationName:"otaUpdateId" min:"1" type:"string"`
+
+	// The status of the OTA update.
+	OtaUpdateStatus *string `locationName:"otaUpdateStatus" type:"string" enum:"OTAUpdateStatus"`
+
+	// Specifies whether the OTA update will continue to run (CONTINUOUS), or will
+	// be complete after all those things specified as targets have completed the
+	// OTA update (SNAPSHOT). If continuous, the OTA update may also be run on a
+	// thing when a change is detected in a target. For example, an OTA update will
+	// run on a thing when the thing is added to a target group, even after the
+	// OTA update was completed by all things originally in the group.
+	TargetSelection *string `locationName:"targetSelection" type:"string" enum:"TargetSelection"`
+
+	// The targets of the OTA update.
+	Targets []*string `locationName:"targets" min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s OTAUpdateInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OTAUpdateInfo) GoString() string {
+	return s.String()
+}
+
+// SetAdditionalParameters sets the AdditionalParameters field's value.
+func (s *OTAUpdateInfo) SetAdditionalParameters(v map[string]*string) *OTAUpdateInfo {
+	s.AdditionalParameters = v
+	return s
+}
+
+// SetAwsIotJobArn sets the AwsIotJobArn field's value.
+func (s *OTAUpdateInfo) SetAwsIotJobArn(v string) *OTAUpdateInfo {
+	s.AwsIotJobArn = &v
+	return s
+}
+
+// SetAwsIotJobId sets the AwsIotJobId field's value.
+func (s *OTAUpdateInfo) SetAwsIotJobId(v string) *OTAUpdateInfo {
+	s.AwsIotJobId = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *OTAUpdateInfo) SetCreationDate(v time.Time) *OTAUpdateInfo {
+	s.CreationDate = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *OTAUpdateInfo) SetDescription(v string) *OTAUpdateInfo {
+	s.Description = &v
+	return s
+}
+
+// SetErrorInfo sets the ErrorInfo field's value.
+func (s *OTAUpdateInfo) SetErrorInfo(v *ErrorInfo) *OTAUpdateInfo {
+	s.ErrorInfo = v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *OTAUpdateInfo) SetLastModifiedDate(v time.Time) *OTAUpdateInfo {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetOtaUpdateArn sets the OtaUpdateArn field's value.
+func (s *OTAUpdateInfo) SetOtaUpdateArn(v string) *OTAUpdateInfo {
+	s.OtaUpdateArn = &v
+	return s
+}
+
+// SetOtaUpdateFiles sets the OtaUpdateFiles field's value.
+func (s *OTAUpdateInfo) SetOtaUpdateFiles(v []*OTAUpdateFile) *OTAUpdateInfo {
+	s.OtaUpdateFiles = v
+	return s
+}
+
+// SetOtaUpdateId sets the OtaUpdateId field's value.
+func (s *OTAUpdateInfo) SetOtaUpdateId(v string) *OTAUpdateInfo {
+	s.OtaUpdateId = &v
+	return s
+}
+
+// SetOtaUpdateStatus sets the OtaUpdateStatus field's value.
+func (s *OTAUpdateInfo) SetOtaUpdateStatus(v string) *OTAUpdateInfo {
+	s.OtaUpdateStatus = &v
+	return s
+}
+
+// SetTargetSelection sets the TargetSelection field's value.
+func (s *OTAUpdateInfo) SetTargetSelection(v string) *OTAUpdateInfo {
+	s.TargetSelection = &v
+	return s
+}
+
+// SetTargets sets the Targets field's value.
+func (s *OTAUpdateInfo) SetTargets(v []*string) *OTAUpdateInfo {
+	s.Targets = v
+	return s
+}
+
+// An OTA update summary.
+type OTAUpdateSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The date when the OTA update was created.
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+
+	// The OTA update ARN.
+	OtaUpdateArn *string `locationName:"otaUpdateArn" type:"string"`
+
+	// The OTA update ID.
+	OtaUpdateId *string `locationName:"otaUpdateId" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s OTAUpdateSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OTAUpdateSummary) GoString() string {
+	return s.String()
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *OTAUpdateSummary) SetCreationDate(v time.Time) *OTAUpdateSummary {
+	s.CreationDate = &v
+	return s
+}
+
+// SetOtaUpdateArn sets the OtaUpdateArn field's value.
+func (s *OTAUpdateSummary) SetOtaUpdateArn(v string) *OTAUpdateSummary {
+	s.OtaUpdateArn = &v
+	return s
+}
+
+// SetOtaUpdateId sets the OtaUpdateId field's value.
+func (s *OTAUpdateSummary) SetOtaUpdateId(v string) *OTAUpdateSummary {
+	s.OtaUpdateId = &v
+	return s
+}
+
 // A certificate that has been transferred but not yet accepted.
 type OutgoingCertificate struct {
 	_ struct{} `type:"structure"`
@@ -21110,6 +23204,74 @@ func (s *S3Action) SetRoleArn(v string) *S3Action {
 	return s
 }
 
+// The location in S3 the contains the files to stream.
+type S3Location struct {
+	_ struct{} `type:"structure"`
+
+	// The S3 bucket that contains the file to stream.
+	//
+	// Bucket is a required field
+	Bucket *string `locationName:"bucket" min:"1" type:"string" required:"true"`
+
+	// The name of the file within the S3 bucket to stream.
+	//
+	// Key is a required field
+	Key *string `locationName:"key" min:"1" type:"string" required:"true"`
+
+	// The file version.
+	Version *string `locationName:"version" type:"string"`
+}
+
+// String returns the string representation
+func (s S3Location) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3Location) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *S3Location) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "S3Location"}
+	if s.Bucket == nil {
+		invalidParams.Add(request.NewErrParamRequired("Bucket"))
+	}
+	if s.Bucket != nil && len(*s.Bucket) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Bucket", 1))
+	}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBucket sets the Bucket field's value.
+func (s *S3Location) SetBucket(v string) *S3Location {
+	s.Bucket = &v
+	return s
+}
+
+// SetKey sets the Key field's value.
+func (s *S3Location) SetKey(v string) *S3Location {
+	s.Key = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *S3Location) SetVersion(v string) *S3Location {
+	s.Version = &v
+	return s
+}
+
 // Describes an action to write a message to a Salesforce IoT Cloud Input Stream.
 type SalesforceAction struct {
 	_ struct{} `type:"structure"`
@@ -21906,6 +24068,238 @@ func (s StopThingRegistrationTaskOutput) String() string {
 // GoString returns the string representation
 func (s StopThingRegistrationTaskOutput) GoString() string {
 	return s.String()
+}
+
+// Describes a group of files that can be streamed.
+type Stream struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of a file associated with a stream.
+	FileId *int64 `locationName:"fileId" type:"integer"`
+
+	// The stream ID.
+	StreamId *string `locationName:"streamId" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s Stream) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Stream) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Stream) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Stream"}
+	if s.StreamId != nil && len(*s.StreamId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StreamId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFileId sets the FileId field's value.
+func (s *Stream) SetFileId(v int64) *Stream {
+	s.FileId = &v
+	return s
+}
+
+// SetStreamId sets the StreamId field's value.
+func (s *Stream) SetStreamId(v string) *Stream {
+	s.StreamId = &v
+	return s
+}
+
+// Represents a file to stream.
+type StreamFile struct {
+	_ struct{} `type:"structure"`
+
+	// The file ID.
+	FileId *int64 `locationName:"fileId" type:"integer"`
+
+	// The location of the file in S3.
+	S3Location *S3Location `locationName:"s3Location" type:"structure"`
+}
+
+// String returns the string representation
+func (s StreamFile) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StreamFile) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StreamFile) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StreamFile"}
+	if s.S3Location != nil {
+		if err := s.S3Location.Validate(); err != nil {
+			invalidParams.AddNested("S3Location", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFileId sets the FileId field's value.
+func (s *StreamFile) SetFileId(v int64) *StreamFile {
+	s.FileId = &v
+	return s
+}
+
+// SetS3Location sets the S3Location field's value.
+func (s *StreamFile) SetS3Location(v *S3Location) *StreamFile {
+	s.S3Location = v
+	return s
+}
+
+// Information about a stream.
+type StreamInfo struct {
+	_ struct{} `type:"structure"`
+
+	// The date when the stream was created.
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+
+	// The description of the stream.
+	Description *string `locationName:"description" type:"string"`
+
+	// The files to stream.
+	Files []*StreamFile `locationName:"files" min:"1" type:"list"`
+
+	// The date when the stream was last updated.
+	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp" timestampFormat:"unix"`
+
+	// An IAM role AWS IoT assumes to access your S3 files.
+	RoleArn *string `locationName:"roleArn" min:"20" type:"string"`
+
+	// The stream ARN.
+	StreamArn *string `locationName:"streamArn" type:"string"`
+
+	// The stream ID.
+	StreamId *string `locationName:"streamId" min:"1" type:"string"`
+
+	// The stream version.
+	StreamVersion *int64 `locationName:"streamVersion" type:"integer"`
+}
+
+// String returns the string representation
+func (s StreamInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StreamInfo) GoString() string {
+	return s.String()
+}
+
+// SetCreatedAt sets the CreatedAt field's value.
+func (s *StreamInfo) SetCreatedAt(v time.Time) *StreamInfo {
+	s.CreatedAt = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *StreamInfo) SetDescription(v string) *StreamInfo {
+	s.Description = &v
+	return s
+}
+
+// SetFiles sets the Files field's value.
+func (s *StreamInfo) SetFiles(v []*StreamFile) *StreamInfo {
+	s.Files = v
+	return s
+}
+
+// SetLastUpdatedAt sets the LastUpdatedAt field's value.
+func (s *StreamInfo) SetLastUpdatedAt(v time.Time) *StreamInfo {
+	s.LastUpdatedAt = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *StreamInfo) SetRoleArn(v string) *StreamInfo {
+	s.RoleArn = &v
+	return s
+}
+
+// SetStreamArn sets the StreamArn field's value.
+func (s *StreamInfo) SetStreamArn(v string) *StreamInfo {
+	s.StreamArn = &v
+	return s
+}
+
+// SetStreamId sets the StreamId field's value.
+func (s *StreamInfo) SetStreamId(v string) *StreamInfo {
+	s.StreamId = &v
+	return s
+}
+
+// SetStreamVersion sets the StreamVersion field's value.
+func (s *StreamInfo) SetStreamVersion(v int64) *StreamInfo {
+	s.StreamVersion = &v
+	return s
+}
+
+// A summary of a stream.
+type StreamSummary struct {
+	_ struct{} `type:"structure"`
+
+	// A description of the stream.
+	Description *string `locationName:"description" type:"string"`
+
+	// The stream ARN.
+	StreamArn *string `locationName:"streamArn" type:"string"`
+
+	// The stream ID.
+	StreamId *string `locationName:"streamId" min:"1" type:"string"`
+
+	// The stream version.
+	StreamVersion *int64 `locationName:"streamVersion" type:"integer"`
+}
+
+// String returns the string representation
+func (s StreamSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StreamSummary) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *StreamSummary) SetDescription(v string) *StreamSummary {
+	s.Description = &v
+	return s
+}
+
+// SetStreamArn sets the StreamArn field's value.
+func (s *StreamSummary) SetStreamArn(v string) *StreamSummary {
+	s.StreamArn = &v
+	return s
+}
+
+// SetStreamId sets the StreamId field's value.
+func (s *StreamSummary) SetStreamId(v string) *StreamSummary {
+	s.StreamId = &v
+	return s
+}
+
+// SetStreamVersion sets the StreamVersion field's value.
+func (s *StreamSummary) SetStreamVersion(v int64) *StreamSummary {
+	s.StreamVersion = &v
+	return s
 }
 
 type TestAuthorizationInput struct {
@@ -23387,6 +25781,141 @@ func (s *UpdateRoleAliasOutput) SetRoleAliasArn(v string) *UpdateRoleAliasOutput
 	return s
 }
 
+type UpdateStreamInput struct {
+	_ struct{} `type:"structure"`
+
+	// The description of the stream.
+	Description *string `locationName:"description" type:"string"`
+
+	// The files associated with the stream.
+	Files []*StreamFile `locationName:"files" min:"1" type:"list"`
+
+	// An IAM role that allows the IoT service principal assumes to access your
+	// S3 files.
+	RoleArn *string `locationName:"roleArn" min:"20" type:"string"`
+
+	// The stream ID.
+	//
+	// StreamId is a required field
+	StreamId *string `location:"uri" locationName:"streamId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateStreamInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateStreamInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateStreamInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateStreamInput"}
+	if s.Files != nil && len(s.Files) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Files", 1))
+	}
+	if s.RoleArn != nil && len(*s.RoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 20))
+	}
+	if s.StreamId == nil {
+		invalidParams.Add(request.NewErrParamRequired("StreamId"))
+	}
+	if s.StreamId != nil && len(*s.StreamId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StreamId", 1))
+	}
+	if s.Files != nil {
+		for i, v := range s.Files {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Files", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDescription sets the Description field's value.
+func (s *UpdateStreamInput) SetDescription(v string) *UpdateStreamInput {
+	s.Description = &v
+	return s
+}
+
+// SetFiles sets the Files field's value.
+func (s *UpdateStreamInput) SetFiles(v []*StreamFile) *UpdateStreamInput {
+	s.Files = v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *UpdateStreamInput) SetRoleArn(v string) *UpdateStreamInput {
+	s.RoleArn = &v
+	return s
+}
+
+// SetStreamId sets the StreamId field's value.
+func (s *UpdateStreamInput) SetStreamId(v string) *UpdateStreamInput {
+	s.StreamId = &v
+	return s
+}
+
+type UpdateStreamOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A description of the stream.
+	Description *string `locationName:"description" type:"string"`
+
+	// The stream ARN.
+	StreamArn *string `locationName:"streamArn" type:"string"`
+
+	// The stream ID.
+	StreamId *string `locationName:"streamId" min:"1" type:"string"`
+
+	// The stream version.
+	StreamVersion *int64 `locationName:"streamVersion" type:"integer"`
+}
+
+// String returns the string representation
+func (s UpdateStreamOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateStreamOutput) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *UpdateStreamOutput) SetDescription(v string) *UpdateStreamOutput {
+	s.Description = &v
+	return s
+}
+
+// SetStreamArn sets the StreamArn field's value.
+func (s *UpdateStreamOutput) SetStreamArn(v string) *UpdateStreamOutput {
+	s.StreamArn = &v
+	return s
+}
+
+// SetStreamId sets the StreamId field's value.
+func (s *UpdateStreamOutput) SetStreamId(v string) *UpdateStreamOutput {
+	s.StreamId = &v
+	return s
+}
+
+// SetStreamVersion sets the StreamVersion field's value.
+func (s *UpdateStreamOutput) SetStreamVersion(v int64) *UpdateStreamOutput {
+	s.StreamVersion = &v
+	return s
+}
+
 type UpdateThingGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -23851,6 +26380,20 @@ const (
 
 	// MessageFormatJson is a MessageFormat enum value
 	MessageFormatJson = "JSON"
+)
+
+const (
+	// OTAUpdateStatusCreatePending is a OTAUpdateStatus enum value
+	OTAUpdateStatusCreatePending = "CREATE_PENDING"
+
+	// OTAUpdateStatusCreateInProgress is a OTAUpdateStatus enum value
+	OTAUpdateStatusCreateInProgress = "CREATE_IN_PROGRESS"
+
+	// OTAUpdateStatusCreateComplete is a OTAUpdateStatus enum value
+	OTAUpdateStatusCreateComplete = "CREATE_COMPLETE"
+
+	// OTAUpdateStatusCreateFailed is a OTAUpdateStatus enum value
+	OTAUpdateStatusCreateFailed = "CREATE_FAILED"
 )
 
 const (

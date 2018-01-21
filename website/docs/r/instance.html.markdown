@@ -234,6 +234,8 @@ The following attributes are exported:
 * `vpc_security_group_ids` - The associated security groups in non-default VPC
 * `subnet_id` - The VPC subnet ID.
 
+For any `root_block_device` and `ebs_block_device` the `volume_id` is exported.
+e.g. `aws_instance.web.root_block_device.0.volume_id`
 
 ## Import
 

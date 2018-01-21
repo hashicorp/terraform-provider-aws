@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific Route 53 Hosted Zone
 ---
 
-# aws_route53_zone
+# Data Source: aws_route53_zone
 
 `aws_route53_zone` provides details about a specific Route 53 Hosted Zone.
 

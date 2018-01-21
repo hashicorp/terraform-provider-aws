@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -61,6 +62,10 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Computed: true,
 			},
 			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kibana_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -475,7 +480,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	ds := out.DomainStatus
 
 	if ds.AccessPolicies != nil && *ds.AccessPolicies != "" {
-		policies, err := normalizeJsonString(*ds.AccessPolicies)
+		policies, err := structure.NormalizeJsonString(*ds.AccessPolicies)
 		if err != nil {
 			return errwrap.Wrapf("access policies contain an invalid JSON: {{err}}", err)
 		}
@@ -517,12 +522,14 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		if err != nil {
 			return err
 		}
+		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
 			return fmt.Errorf("%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
 			d.Set("endpoint", *ds.Endpoint)
+			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {
 			return fmt.Errorf("%q: Elasticsearch domain not in VPC expected to have null Endpoints value", d.Id())
@@ -534,7 +541,9 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		for k, val := range ds.LogPublishingOptions {
 			mm := map[string]interface{}{}
 			mm["log_type"] = k
-			mm["cloudwatch_log_group_arn"] = *val.CloudWatchLogsLogGroupArn
+			if val.CloudWatchLogsLogGroupArn != nil {
+				mm["cloudwatch_log_group_arn"] = *val.CloudWatchLogsLogGroupArn
+			}
 			mm["enabled"] = *val.Enabled
 			m = append(m, mm)
 		}
@@ -717,4 +726,8 @@ func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) boo
 	// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'.
 	// These should be treated as equivalent.
 	return strings.Contains(old, new)
+}
+
+func getKibanaEndpoint(d *schema.ResourceData) string {
+	return d.Get("endpoint").(string) + "/_plugin/kibana/"
 }

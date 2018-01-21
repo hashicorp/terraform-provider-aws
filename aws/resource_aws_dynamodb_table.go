@@ -816,15 +816,21 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, meta interface{}, t
 	if err != nil {
 		return err
 	}
-	timeToLive := []interface{}{}
-	attribute := map[string]*string{
-		"name": timeToLiveOutput.TimeToLiveDescription.AttributeName,
-		"type": timeToLiveOutput.TimeToLiveDescription.TimeToLiveStatus,
-	}
-	timeToLive = append(timeToLive, attribute)
-	d.Set("timeToLive", timeToLive)
 
-	log.Printf("[DEBUG] Loaded TimeToLive data for DynamoDB table '%s'", d.Id())
+	if timeToLiveOutput.TimeToLiveDescription != nil && timeToLiveOutput.TimeToLiveDescription.AttributeName != nil {
+		timeToLiveList := []interface{}{
+			map[string]interface{}{
+				"attribute_name": *timeToLiveOutput.TimeToLiveDescription.AttributeName,
+				"enabled":        (*timeToLiveOutput.TimeToLiveDescription.TimeToLiveStatus == dynamodb.TimeToLiveStatusEnabled),
+			},
+		}
+		err := d.Set("ttl", timeToLiveList)
+		if err != nil {
+			return err
+		}
+
+		log.Printf("[DEBUG] Loaded TimeToLive data for DynamoDB table '%s'", d.Id())
+	}
 
 	tags, err := readTableTags(d, meta)
 	if err != nil {

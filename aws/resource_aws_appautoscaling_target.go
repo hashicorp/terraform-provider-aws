@@ -37,7 +37,8 @@ func resourceAwsAppautoscalingTarget() *schema.Resource {
 			},
 			"role_arn": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"scalable_dimension": {
@@ -64,9 +65,12 @@ func resourceAwsAppautoscalingTargetCreate(d *schema.ResourceData, meta interfac
 	targetOpts.MaxCapacity = aws.Int64(int64(d.Get("max_capacity").(int)))
 	targetOpts.MinCapacity = aws.Int64(int64(d.Get("min_capacity").(int)))
 	targetOpts.ResourceId = aws.String(d.Get("resource_id").(string))
-	targetOpts.RoleARN = aws.String(d.Get("role_arn").(string))
 	targetOpts.ScalableDimension = aws.String(d.Get("scalable_dimension").(string))
 	targetOpts.ServiceNamespace = aws.String(d.Get("service_namespace").(string))
+
+	if roleArn, exists := d.GetOk("role_arn"); exists {
+		targetOpts.RoleARN = aws.String(roleArn.(string))
+	}
 
 	log.Printf("[DEBUG] Application autoscaling target create configuration %#v", targetOpts)
 	var err error
@@ -103,7 +107,7 @@ func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 	if t == nil {
-		log.Printf("[INFO] Application AutoScaling Target %q not found", d.Id())
+		log.Printf("[WARN] Application AutoScaling Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}

@@ -9,6 +9,30 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+func TestValidateInstanceUserDataSize(t *testing.T) {
+	validValues := []string{
+		"#!/bin/bash",
+		"#!/bin/bash\n" + strings.Repeat("#", 16372), // = 16384
+	}
+
+	for _, s := range validValues {
+		_, errors := validateInstanceUserDataSize(s, "user_data")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be valid user data with limited size: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"#!/bin/bash\n" + strings.Repeat("#", 16373), // = 16385
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateInstanceUserDataSize(s, "user_data")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be valid user data with limited size: %v", s, errors)
+		}
+	}
+}
 func TestValidateEcrRepositoryName(t *testing.T) {
 	validNames := []string{
 		"nginx-web-app",
@@ -2327,7 +2351,7 @@ func TestValidateCognitoUserPoolEmailVerificationMessage(t *testing.T) {
 		"Foo {####}",
 		"{####} Bar",
 		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
-		"{####}" + strings.Repeat("W", 1994), // = 2000
+		"{####}" + strings.Repeat("W", 19994), // = 20000
 	}
 
 	for _, s := range validValues {
@@ -2340,7 +2364,7 @@ func TestValidateCognitoUserPoolEmailVerificationMessage(t *testing.T) {
 	invalidValues := []string{
 		"Foo",
 		"{###}",
-		"{####}" + strings.Repeat("W", 1995), // > 2000
+		"{####}" + strings.Repeat("W", 19995), // > 20000
 	}
 
 	for _, s := range invalidValues {
@@ -2836,6 +2860,83 @@ func TestResourceAWSElastiCacheReplicationGroupAuthTokenValidation(t *testing.T)
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the ElastiCache Replication Group AuthToken to trigger a validation error")
+		}
+	}
+}
+
+func TestValidateCognitoUserPoolDomain(t *testing.T) {
+	validTypes := []string{
+		"valid-domain",
+		"validdomain",
+		"val1d-d0main",
+	}
+	for _, v := range validTypes {
+		_, errors := validateCognitoUserPoolDomain(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool Domain: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"UpperCase",
+		"-invalid",
+		"invalid-",
+		strings.Repeat("i", 64), // > 63
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateCognitoUserPoolDomain(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Cognito User Pool Domain", v)
+		}
+	}
+}
+
+func TestValidateServiceDiscoveryServiceDnsRecordsType(t *testing.T) {
+	validTypes := []string{
+		"SRV",
+		"A",
+		"AAAA",
+	}
+	for _, v := range validTypes {
+		_, errors := validateServiceDiscoveryServiceDnsRecordsType(v, "")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Service Discovery DNS Records Type: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"hoge",
+		"srv",
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateServiceDiscoveryServiceDnsRecordsType(v, "")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Service Discovery DNS Records Type", v)
+		}
+	}
+}
+
+func TestValidateServiceDiscoveryServiceHealthCheckConfigType(t *testing.T) {
+	validTypes := []string{
+		"HTTP",
+		"HTTPS",
+		"TCP",
+	}
+	for _, v := range validTypes {
+		_, errors := validateServiceDiscoveryServiceHealthCheckConfigType(v, "")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Service Discovery Health Check Config Type: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"hoge",
+		"tcp",
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateServiceDiscoveryServiceHealthCheckConfigType(v, "")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Service Discovery Health Check Config Type", v)
 		}
 	}
 }

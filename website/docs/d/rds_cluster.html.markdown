@@ -6,7 +6,7 @@ description: |-
   Provides a RDS cluster data source.
 ---
 
-# aws_rds_cluster
+# Data Source: aws_rds_cluster
 
 Provides information about a RDS cluster.
 
@@ -14,7 +14,7 @@ Provides information about a RDS cluster.
 
 ```hcl
 data "aws_rds_cluster" "clusterName" {
-  name = "clusterName"
+  cluster_identifier = "clusterName"
 }
 ```
 

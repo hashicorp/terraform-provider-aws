@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -265,6 +266,42 @@ func TestAccAWSEIPAssociate_not_associated(t *testing.T) {
 	})
 }
 
+func TestAccAWSEIP_tags(t *testing.T) {
+	var conf ec2.Address
+	resourceName := "aws_eip.bar"
+	rName1 := fmt.Sprintf("%s-%d", t.Name(), acctest.RandInt())
+	rName2 := fmt.Sprintf("%s-%d", t.Name(), acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_eip.bar",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSEIPConfig_tags(rName1, t.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.RandomName", rName1),
+					resource.TestCheckResourceAttr(resourceName, "tags.TestName", t.Name()),
+				),
+			},
+			resource.TestStep{
+				Config: testAccAWSEIPConfig_tags(rName2, t.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.RandomName", rName2),
+					resource.TestCheckResourceAttr(resourceName, "tags.TestName", t.Name()),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEIPDisappears(v *ec2.Address) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -401,6 +438,17 @@ const testAccAWSEIPConfig = `
 resource "aws_eip" "bar" {
 }
 `
+
+func testAccAWSEIPConfig_tags(rName, testName string) string {
+	return fmt.Sprintf(`
+resource "aws_eip" "bar" {
+  tags {
+    RandomName = "%[1]s"
+    TestName   = "%[2]s"
+  }
+}
+`, rName, testName)
+}
 
 const testAccAWSEIPInstanceEc2Classic = `
 provider "aws" {

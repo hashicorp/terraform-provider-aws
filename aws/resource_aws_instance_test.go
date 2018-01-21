@@ -267,6 +267,8 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 						"aws_instance.foo", &v),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "root_block_device.#", "1"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo", "root_block_device.0.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "root_block_device.0.volume_size", "11"),
 					resource.TestCheckResourceAttr(
@@ -275,12 +277,16 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 						"aws_instance.foo", "ebs_block_device.#", "3"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2576023345.device_name", "/dev/sdb"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo", "ebs_block_device.2576023345.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2576023345.volume_size", "9"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2576023345.volume_type", "standard"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2554893574.device_name", "/dev/sdc"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo", "ebs_block_device.2554893574.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2554893574.volume_size", "10"),
 					resource.TestCheckResourceAttr(
@@ -2066,18 +2072,13 @@ resource "aws_iam_role" "test" {
 	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 
-resource "aws_iam_instance_profile" "test" {
-	name = "test-%s"
-	roles = ["${aws_iam_role.test.name}"]
-}
-
 resource "aws_instance" "foo" {
 	ami = "ami-4fccb37f"
 	instance_type = "m1.small"
 	tags {
 		bar = "baz"
 	}
-}`, rName, rName)
+}`, rName)
 }
 
 func testAccInstanceConfigWithInstanceProfile(rName string) string {

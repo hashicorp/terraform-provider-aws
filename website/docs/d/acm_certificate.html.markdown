@@ -6,7 +6,7 @@ description: |-
   Get information on a Amazon Certificate Manager (ACM) Certificate
 ---
 
-# aws_acm_certificate
+# Data Source: aws_acm_certificate
 
 Use this data source to get the ARN of a certificate in AWS Certificate
 Manager (ACM). The process of requesting and verifying a certificate in ACM

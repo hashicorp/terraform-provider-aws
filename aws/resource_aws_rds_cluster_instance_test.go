@@ -52,6 +52,7 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 
 func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 	var v rds.DBInstance
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -59,10 +60,12 @@ func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterInstanceConfig_namePrefix(acctest.RandInt()),
+				Config: testAccAWSClusterInstanceConfig_namePrefix(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.test", &v),
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster_instance.test", "db_subnet_group_name", fmt.Sprintf("tf-test-%d", rInt)),
 					resource.TestMatchResourceAttr(
 						"aws_rds_cluster_instance.test", "identifier", regexp.MustCompile("^tf-cluster-instance-")),
 				),
@@ -138,8 +141,8 @@ func TestAccAWSRDSClusterInstance_disappears(t *testing.T) {
 func testAccCheckAWSDBClusterInstanceAttributes(v *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		if *v.Engine != "aurora" {
-			return fmt.Errorf("bad engine, expected \"aurora\": %#v", *v.Engine)
+		if *v.Engine != "aurora" && *v.Engine != "aurora-postgresql" {
+			return fmt.Errorf("bad engine, expected \"aurora\" or \"aurora-postgresql\": %#v", *v.Engine)
 		}
 
 		if !strings.HasPrefix(*v.DBClusterIdentifier, "tf-aurora-cluster") {
@@ -222,6 +225,30 @@ func TestAccAWSRDSClusterInstance_withInstanceEnhancedMonitor(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &v),
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSClusterInstance_withInstancePerformanceInsights(t *testing.T) {
+	var v rds.DBInstance
+	keyRegex := regexp.MustCompile("^arn:aws:kms:")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterInstancePerformanceInsights(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &v),
+					testAccCheckAWSDBClusterInstanceAttributes(&v),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster_instance.cluster_instances", "performance_insights_enabled", "true"),
+					resource.TestMatchResourceAttr(
+						"aws_rds_cluster_instance.cluster_instances", "performance_insights_kms_key_id", keyRegex),
 				),
 			},
 		},
@@ -539,4 +566,65 @@ resource "aws_db_parameter_group" "bar" {
   }
 }
 `, n, n, n, n, n, n)
+}
+
+func testAccAWSClusterInstancePerformanceInsights(n int) string {
+	return fmt.Sprintf(`
+
+resource "aws_kms_key" "foo" {
+    description = "Terraform acc test %d"
+    policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_rds_cluster" "default" {
+  engine             = "aurora-postgresql"
+  cluster_identifier = "tf-aurora-cluster-test-%d"
+  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name      = "mydb"
+  master_username    = "foo"
+  master_password    = "mustbeeightcharaters"
+  storage_encrypted = true
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster_instance" "cluster_instances" {
+  engine                  = "aurora-postgresql"
+  identifier              = "tf-cluster-instance-%d"
+  cluster_identifier      = "${aws_rds_cluster.default.id}"
+  instance_class          = "db.r4.large"
+  db_parameter_group_name = "${aws_db_parameter_group.bar.name}"
+  performance_insights_enabled = true
+  performance_insights_kms_key_id = "${aws_kms_key.foo.arn}"
+}
+
+resource "aws_db_parameter_group" "bar" {
+  name   = "tfcluster-test-group-%d"
+  family = "aurora-postgresql9.6"
+
+  parameter {
+    name  = "authentication_timeout"
+    value = "10"
+  }
+
+  tags {
+    foo = "bar"
+  }
+}
+`, n, n, n, n)
 }

@@ -195,6 +195,9 @@ for what to do.
    Travis CI build will fail if `go fmt` has not been run on incoming code.)
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
+ - [ ] __Vendor additions__: Create a separate PR if you are updating the vendor
+   folder. This is to avoid conflicts as the vendor versions tend to be fast
+   moving targets.
 
 #### New Resource
 
@@ -220,6 +223,9 @@ existing resources, but you still get to implement something completely new.
    Travis CI build will fail if `go fmt` has not been run on incoming code.)
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
+ - [ ] __Vendor updates__: Create a separate PR if you are adding to the vendor
+   folder. This is to avoid conflicts as the vendor versions tend to be fast
+   moving targets.
 
 #### New Provider
 
@@ -247,60 +253,31 @@ into Terraform.
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
 
-#### Core Bugfix/Enhancement
+#### Terraform Schema and Code Idiosyncracies
 
-We are always happy when any developer is interested in diving into Terraform's
-core to help out! Here's what we look for in smaller Core PRs.
+There are aspects of the terraform code base and models which have a common theme
+and style
 
- - [ ] __Unit tests__: Terraform's core is covered by hundreds of unit tests at
-   several different layers of abstraction. Generally the best place to start
-   is with a "Context Test". These are higher level test that interact
-   end-to-end with most of Terraform's core. They are divided into test files
-   for each major action (plan, apply, etc.). Getting a failing test is a great
-   way to prove out a bug report or a new enhancement. With a context test in
-   place, you can work on implementation and lower level unit tests. Lower
-   level tests are largely context dependent, but the Context Tests are almost
-   always part of core work.
- - [ ] __Documentation updates__: If the core change involves anything that
-   needs to be reflected in our documentation, you can make those changes in
-   the same PR. The [Terraform website][website] source is in this repo and
-   includes instructions for getting a local copy of the site up and running if
-   you'd like to preview your changes.
- - [ ] __Well-formed Code__: Do your best to follow existing conventions you
-   see in the codebase, and ensure your code is formatted with `go fmt`. (The
-   Travis CI build will fail if `go fmt` has not been run on incoming code.)
-   The PR reviewers can help out on this front, and may provide comments with
-   suggestions on how to improve the code.
-
-#### Core Feature
-
-If you're interested in taking on a larger core feature, it's a good idea to
-get feedback early and often on the effort.
-
- - [ ] __Early validation of idea and implementation plan__: Terraform's core
-   is complicated enough that there are often several ways to implement
-   something, each of which has different implications and tradeoffs. Working
-   through a plan of attack with the team before you dive into implementation
-   will help ensure that you're working in the right direction.
- - [ ] __Unit tests__: Terraform's core is covered by hundreds of unit tests at
-   several different layers of abstraction. Generally the best place to start
-   is with a "Context Test". These are higher level test that interact
-   end-to-end with most of Terraform's core. They are divided into test files
-   for each major action (plan, apply, etc.). Getting a failing test is a great
-   way to prove out a bug report or a new enhancement. With a context test in
-   place, you can work on implementation and lower level unit tests. Lower
-   level tests are largely context dependent, but the Context Tests are almost
-   always part of core work.
- - [ ] __Documentation updates__: If the core change involves anything that
-   needs to be reflected in our documentation, you can make those changes in
-   the same PR. The [Terraform website][website] source is in this repo and
-   includes instructions for getting a local copy of the site up and running if
-   you'd like to preview your changes.
- - [ ] __Well-formed Code__: Do your best to follow existing conventions you
-   see in the codebase, and ensure your code is formatted with `go fmt`. (The
-   Travis CI build will fail if `go fmt` has not been run on incoming code.)
-   The PR reviewers can help out on this front, and may provide comments with
-   suggestions on how to improve the code.
+ - [ ] __Ignore Timestamps__: Generally, creation and modification dates are not
+   included in schemas.
+ - [ ] __Attribute Update Tests__: Try to add a second test step in at least one
+   test case showing attribute changes propagate during Update operations
+ - [ ] __AWS Errors__: Use the helper function (`isAWSErr(err, ...)`) to check the
+   type of AWS error.
+ - [ ] __`Computed`__: The `Computed` attribute is generally used in isolation for
+   any IDs or anything not defined in the config and returned by the API.
+ - [ ] __`Computed` with `Optional`__: The `Computed` attribute is generally used
+   in conjunction with `Optional` when the API automatically sets unpredictable 
+   default value or when the value is generally not static and depends on other 
+   attributes.
+ - [ ] __Spelling__: When referencing reosources in the AWS API, use spelling which 
+   matches that of official AWS documentation. In all other cases, use American
+   spelling for variables, functions, and constants.
+ - [ ] __Removed Resources__:  If a resource is removed from AWS outside of
+   Terraform (e.g. via different tool, API or web UI), make sure to catch this case.
+   Print a `[WARN]` log message, and use `d.SetId("")` to remove the resource from
+   state inside `Read()`.
+ 
 
 ### Writing Acceptance Tests
 
@@ -326,14 +303,13 @@ Acceptance tests can be run using the `testacc` target in the Terraform
 expression. Prior to running the tests provider configuration details such as
 access keys must be made available as environment variables.
 
-For example, to run an acceptance test against the Azure Resource Manager
+For example, to run an acceptance test against the Amazon Web Services
 provider, the following environment variables must be set:
 
 ```sh
-export ARM_SUBSCRIPTION_ID=...
-export ARM_CLIENT_ID=...
-export ARM_CLIENT_SECRET=...
-export ARM_TENANT_ID=...
+export AWS_ACCESS_KEY_ID=...
+export AWS_SECRET_ACCESS_KEY=...
+export AWS_DEFAULT_REGION=...
 ```
 
 Tests can then be run by specifying the target provider and a regular

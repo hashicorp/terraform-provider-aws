@@ -12,7 +12,7 @@ Creates a Snapshot of an DB Instance.
 
 ## Example Usage
 
-```
+```hcl
 resource "aws_db_instance" "bar" {
 	allocated_storage = 10
 	engine = "MySQL"

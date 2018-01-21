@@ -527,7 +527,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			stateConf := &resource.StateChangeConf{
 				Pending:    resourceAwsDbInstanceCreatePendingStates,
 				Target:     []string{"available", "storage-optimization"},
-				Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
+				Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 				Timeout:    d.Timeout(schema.TimeoutCreate),
 				MinTimeout: 10 * time.Second,
 				Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -688,7 +688,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceAwsDbInstanceCreatePendingStates,
 		Target:     []string{"available", "storage-optimization"},
-		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
+		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -704,7 +704,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	v, err := resourceAwsDbInstanceRetrieve(d, meta)
+	v, err := resourceAwsDbInstanceRetrieve(d.Id(), meta.(*AWSClient).rdsconn)
 
 	if err != nil {
 		return err
@@ -858,21 +858,21 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	log.Println(
-		"[INFO] Waiting for DB Instance to be destroyed")
+	log.Println("[INFO] Waiting for DB Instance to be destroyed")
+	return waitUntilAwsDbInstanceIsDeleted(d.Id(), conn, d.Timeout(schema.TimeoutDelete))
+}
+
+func waitUntilAwsDbInstanceIsDeleted(id string, conn *rds.RDS, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceAwsDbInstanceDeletePendingStates,
 		Target:     []string{},
-		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Refresh:    resourceAwsDbInstanceStateRefreshFunc(id, conn),
+		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return err
-	}
-
-	return nil
+	_, err := stateConf.WaitForState()
+	return err
 }
 
 func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -1038,7 +1038,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		stateConf := &resource.StateChangeConf{
 			Pending:    resourceAwsDbInstanceUpdatePendingStates,
 			Target:     []string{"available", "storage-optimization"},
-			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
+			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -1089,12 +1089,9 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 // API. It returns an error if there is a communication problem or unexpected
 // error with AWS. When the DBInstance is not found, it returns no error and a
 // nil pointer.
-func resourceAwsDbInstanceRetrieve(
-	d *schema.ResourceData, meta interface{}) (*rds.DBInstance, error) {
-	conn := meta.(*AWSClient).rdsconn
-
+func resourceAwsDbInstanceRetrieve(id string, conn *rds.RDS) (*rds.DBInstance, error) {
 	opts := rds.DescribeDBInstancesInput{
-		DBInstanceIdentifier: aws.String(d.Id()),
+		DBInstanceIdentifier: aws.String(id),
 	}
 
 	log.Printf("[DEBUG] DB Instance describe configuration: %#v", opts)
@@ -1109,7 +1106,7 @@ func resourceAwsDbInstanceRetrieve(
 	}
 
 	if len(resp.DBInstances) != 1 ||
-		*resp.DBInstances[0].DBInstanceIdentifier != d.Id() {
+		*resp.DBInstances[0].DBInstanceIdentifier != id {
 		if err != nil {
 			return nil, nil
 		}
@@ -1127,10 +1124,9 @@ func resourceAwsDbInstanceImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsDbInstanceStateRefreshFunc(
-	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
+func resourceAwsDbInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := resourceAwsDbInstanceRetrieve(d, meta)
+		v, err := resourceAwsDbInstanceRetrieve(id, conn)
 
 		if err != nil {
 			log.Printf("Error on retrieving DB Instance when waiting: %s", err)
@@ -1142,7 +1138,7 @@ func resourceAwsDbInstanceStateRefreshFunc(
 		}
 
 		if v.DBInstanceStatus != nil {
-			log.Printf("[DEBUG] DB Instance status for instance %s: %s", d.Id(), *v.DBInstanceStatus)
+			log.Printf("[DEBUG] DB Instance status for instance %s: %s", id, *v.DBInstanceStatus)
 		}
 
 		return v, *v.DBInstanceStatus, nil

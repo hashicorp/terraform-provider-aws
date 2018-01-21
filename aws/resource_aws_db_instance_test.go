@@ -3,10 +3,9 @@ package aws
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"regexp"
 	"strings"
-
-	"math/rand"
 	"testing"
 	"time"
 
@@ -18,6 +17,66 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_db_instance", &resource.Sweeper{
+		Name: "aws_db_instance",
+		F:    testSweepDbInstances,
+	})
+}
+
+func testSweepDbInstances(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).rdsconn
+
+	prefixes := []string{
+		"foobarbaz-test-terraform-",
+		"foobarbaz-enhanced-monitoring-",
+		"mydb-rds-",
+		"terraform-",
+		"tf-",
+	}
+
+	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
+		for _, dbi := range out.DBInstances {
+			hasPrefix := false
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(*dbi.DBInstanceIdentifier, prefix) {
+					hasPrefix = true
+				}
+			}
+			if !hasPrefix {
+				continue
+			}
+			log.Printf("[INFO] Deleting DB instance: %s", *dbi.DBInstanceIdentifier)
+
+			_, err := conn.DeleteDBInstance(&rds.DeleteDBInstanceInput{
+				DBInstanceIdentifier: dbi.DBInstanceIdentifier,
+				SkipFinalSnapshot:    aws.Bool(true),
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete DB instance %s: %s",
+					*dbi.DBInstanceIdentifier, err)
+				continue
+			}
+
+			err = waitUntilAwsDbInstanceIsDeleted(*dbi.DBInstanceIdentifier, conn, 40*time.Minute)
+			if err != nil {
+				log.Printf("[ERROR] Failure while waiting for DB instance %s to be deleted: %s",
+					*dbi.DBInstanceIdentifier, err)
+			}
+		}
+		return !lastPage
+	})
+	if err != nil {
+		return fmt.Errorf("Error retrieving DB instances: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSDBInstance_basic(t *testing.T) {
 	var v rds.DBInstance
@@ -194,7 +253,7 @@ func TestAccAWSDBInstance_iamAuth(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBInstanceReplica(t *testing.T) {
+func TestAccAWSDBInstance_replica(t *testing.T) {
 	var s, r rds.DBInstance
 
 	resource.Test(t, resource.TestCase{
@@ -214,7 +273,7 @@ func TestAccAWSDBInstanceReplica(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBInstanceNoSnapshot(t *testing.T) {
+func TestAccAWSDBInstance_noSnapshot(t *testing.T) {
 	var snap rds.DBInstance
 
 	resource.Test(t, resource.TestCase{
@@ -232,7 +291,7 @@ func TestAccAWSDBInstanceNoSnapshot(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBInstanceSnapshot(t *testing.T) {
+func TestAccAWSDBInstance_snapshot(t *testing.T) {
 	var snap rds.DBInstance
 	rInt := acctest.RandInt()
 
@@ -403,6 +462,25 @@ func TestAccAWSDBInstance_diffSuppressInitialState(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBInstanceConfigSuppressInitialState(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_ec2Classic(t *testing.T) {
+	var v rds.DBInstance
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfigEc2Classic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
 				),
@@ -855,9 +933,6 @@ func testAccReplicaInstanceConfig(val int) string {
 
 func testAccSnapshotInstanceConfig() string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 resource "aws_db_instance" "snapshot" {
 	identifier = "tf-test-%d"
 
@@ -868,7 +943,6 @@ resource "aws_db_instance" "snapshot" {
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
-	security_group_names = ["default"]
 	backup_retention_period = 1
 
 	publicly_accessible = true
@@ -882,9 +956,6 @@ resource "aws_db_instance" "snapshot" {
 
 func testAccSnapshotInstanceConfigWithSnapshot(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 resource "aws_db_instance" "snapshot" {
 	identifier = "tf-snapshot-%d"
 
@@ -896,7 +967,6 @@ resource "aws_db_instance" "snapshot" {
 	password = "barbarbarbar"
 	publicly_accessible = true
 	username = "foo"
-    	security_group_names = ["default"]
 	backup_retention_period = 1
 
 	parameter_group_name = "default.mysql5.6"
@@ -1345,6 +1415,29 @@ resource "aws_db_instance" "bar" {
 	skip_final_snapshot = true
 }
 `, acctest.RandInt())
+
+func testAccAWSDBInstanceConfigEc2Classic(rInt int) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_db_instance" "bar" {
+  identifier = "foobarbaz-test-terraform-%d"
+  allocated_storage = 10
+  engine = "mysql"
+  engine_version = "5.6"
+  instance_class = "db.m3.medium"
+  name = "baz"
+  password = "barbarbarbar"
+  username = "foo"
+  publicly_accessible = true
+  security_group_names = ["default"]
+  parameter_group_name = "default.mysql5.6"
+  skip_final_snapshot = true
+}
+`, rInt)
+}
 
 func testAccAWSDBInstanceConfigSuppressInitialState(rInt int) string {
 	return fmt.Sprintf(`
