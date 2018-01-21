@@ -62,3 +62,11 @@ The following arguments are supported:
 * `description` - (Optional) The description of the user group.
 * `precedence` - (Optional) The precedence of the user group.
 * `role_arn` - (Optional) The ARN of the IAM role to be associated with the user group.
+
+## Import
+
+Cognito User Groups can be imported using the `user_pool_id`/`name` attributes concatenated, e.g.
+
+```
+$ terraform import aws_cognito_user_group.group us-east-1_vG78M4goG/user-group
+```

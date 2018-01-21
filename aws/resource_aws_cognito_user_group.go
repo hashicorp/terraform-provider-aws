@@ -1,8 +1,10 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -16,6 +18,10 @@ func resourceAwsCognitoUserGroup() *schema.Resource {
 		Read:   resourceAwsCognitoUserGroupRead,
 		Update: resourceAwsCognitoUserGroupUpdate,
 		Delete: resourceAwsCognitoUserGroupDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsCognitoUserGroupImport,
+		},
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateGroup.html
 		Schema: map[string]*schema.Schema{
@@ -154,4 +160,16 @@ func resourceAwsCognitoUserGroupDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	return nil
+}
+
+func resourceAwsCognitoUserGroupImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idSplit := strings.Split(d.Id(), "/")
+	if len(idSplit) != 2 {
+		return nil, errors.New("Error importing Cognito User Group. Must specify user_pool_id/group_name")
+	}
+	userPoolId := idSplit[0]
+	name := idSplit[1]
+	d.Set("user_pool_id", userPoolId)
+	d.Set("name", name)
+	return []*schema.ResourceData{d}, nil
 }

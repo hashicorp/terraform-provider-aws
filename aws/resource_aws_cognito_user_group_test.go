@@ -75,6 +75,28 @@ func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserGroup_importBasic(t *testing.T) {
+	resourceName := "aws_cognito_user_group.main"
+	poolName := acctest.RandString(10)
+	groupName := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserGroupConfig_basic(poolName, groupName),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSCognitoUserGroupExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
