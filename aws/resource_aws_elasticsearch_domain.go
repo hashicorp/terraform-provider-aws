@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,7 +14,6 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"strings"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -94,6 +94,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
@@ -315,17 +316,12 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 
 	if v, ok := d.GetOk("encrypt_at_rest"); ok {
 		options := v.([]interface{})
-
-		if len(options) > 1 {
-			return fmt.Errorf("Only a single encrypt_at_rest block is expected")
-		} else if len(options) == 1 {
-			if options[0] == nil {
-				return fmt.Errorf("At least one field is expected inside encrypt_at_rest")
-			}
-
-			s := options[0].(map[string]interface{})
-			input.EncryptionAtRestOptions = expandESEncryptAtRestOptions(s)
+		if options[0] == nil {
+			return fmt.Errorf("At least one field is expected inside encrypt_at_rest")
 		}
+
+		s := options[0].(map[string]interface{})
+		input.EncryptionAtRestOptions = expandESEncryptAtRestOptions(s)
 	}
 
 	if v, ok := d.GetOk("cluster_config"); ok {
