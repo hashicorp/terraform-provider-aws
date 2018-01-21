@@ -1,6 +1,9 @@
 package aws
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/errwrap"
@@ -14,6 +17,7 @@ func resourceAwsCognitoUserGroup() *schema.Resource {
 		Update: resourceAwsCognitoUserGroupUpdate,
 		Delete: resourceAwsCognitoUserGroupDelete,
 
+		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateGroup.html
 		Schema: map[string]*schema.Schema{
 			"description": {
 				Type:         schema.TypeString,
@@ -65,12 +69,14 @@ func resourceAwsCognitoUserGroupCreate(d *schema.ResourceData, meta interface{})
 		params.RoleArn = aws.String(v.(string))
 	}
 
+	log.Print("[DEBUG] Creating Cognito User Group")
+
 	resp, err := conn.CreateGroup(params)
 	if err != nil {
 		return errwrap.Wrapf("Error creating Cognito User Group: {{err}}", err)
 	}
 
-	d.SetId(*resp.Group.GroupName)
+	d.SetId(fmt.Sprintf("%s/%s", *resp.Group.UserPoolId, *resp.Group.GroupName))
 
 	return resourceAwsCognitoUserGroupRead(d, meta)
 }
@@ -83,22 +89,21 @@ func resourceAwsCognitoUserGroupRead(d *schema.ResourceData, meta interface{}) e
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	}
 
+	log.Print("[DEBUG] Reading Cognito User Group")
+
 	resp, err := conn.GetGroup(params)
 	if err != nil {
+		if isAWSErr(err, "ResourceNotFoundException", "") {
+			log.Printf("[WARN] Cognito User Group %s is already gone", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return errwrap.Wrapf("Error reading Cognito User Group: {{err}}", err)
 	}
 
-	if resp.Group.Description != nil {
-		d.Set("description", *resp.Group.Description)
-	}
-
-	if resp.Group.Precedence != nil {
-		d.Set("precedence", *resp.Group.Precedence)
-	}
-
-	if resp.Group.RoleArn != nil {
-		d.Set("role_arn", *resp.Group.RoleArn)
-	}
+	d.Set("description", resp.Group.Description)
+	d.Set("precedence", resp.Group.Precedence)
+	d.Set("role_arn", resp.Group.RoleArn)
 
 	return nil
 }
@@ -123,6 +128,8 @@ func resourceAwsCognitoUserGroupUpdate(d *schema.ResourceData, meta interface{})
 		params.RoleArn = aws.String(d.Get("description").(string))
 	}
 
+	log.Print("[DEBUG] Updating Cognito User Group")
+
 	_, err := conn.UpdateGroup(params)
 	if err != nil {
 		return errwrap.Wrapf("Error updating Cognito User Group: {{err}}", err)
@@ -139,8 +146,9 @@ func resourceAwsCognitoUserGroupDelete(d *schema.ResourceData, meta interface{})
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	}
 
-	_, err := conn.DeleteGroup(params)
+	log.Print("[DEBUG] Deleting Cognito User Group")
 
+	_, err := conn.DeleteGroup(params)
 	if err != nil {
 		return errwrap.Wrapf("Error deleting Cognito User Group: {{err}}", err)
 	}

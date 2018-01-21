@@ -14,9 +14,9 @@ import (
 )
 
 func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
-	poolName := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	groupName := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	updatedGroupName := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	poolName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	groupName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	updatedGroupName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -82,18 +82,26 @@ func testAccCheckAWSCognitoUserGroupExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		if rs.Primary.ID == "" {
+		id := rs.Primary.ID
+		name := rs.Primary.Attributes["name"]
+		userPoolId := rs.Primary.Attributes["user_pool_id"]
+
+		if name == "" {
 			return errors.New("No Cognito User Group Name set")
 		}
 
-		if rs.Primary.Attributes["user_pool_id"] == "" {
+		if userPoolId == "" {
 			return errors.New("No Cognito User Pool Id set")
+		}
+
+		if id != fmt.Sprintf("%s/%s", userPoolId, name) {
+			return errors.New(fmt.Sprintf("ID should be user_pool_id/name. ID was %s. name was %s, user_pool_id was %s", id, name, userPoolId))
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
 
 		params := &cognitoidentityprovider.GetGroupInput{
-			GroupName:  aws.String(rs.Primary.ID),
+			GroupName:  aws.String(rs.Primary.Attributes["name"]),
 			UserPoolId: aws.String(rs.Primary.Attributes["user_pool_id"]),
 		}
 
@@ -136,7 +144,7 @@ func testAccCheckAWSCognitoUserGroupDestroy(s *terraform.State) error {
 func testAccAWSCognitoUserGroupConfig_basic(poolName, groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "main" {
-  name = "identity pool %s"
+  name = "%s"
 }
 
 resource "aws_cognito_user_group" "main" {
@@ -149,7 +157,7 @@ resource "aws_cognito_user_group" "main" {
 func testAccAWSCognitoUserGroupConfig_complex(poolName, groupName, groupDescription string, precedence int) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "main" {
-  name = "identity pool %s"
+  name = "%s"
 }
 
 resource "aws_iam_role" "group_role" {
