@@ -3,6 +3,9 @@
 ENHANCEMENTS:
 
 * datasource/aws_kms_alias: Add target_key_arn attribute [GH-2551]
+
+BUG FIXES:
+
 * resource/aws_eip_assocation: Retry association for pending instances [GH-3072]
 
 ## 1.7.1 (January 19, 2018)
