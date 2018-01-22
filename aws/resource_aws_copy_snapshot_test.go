@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
 
@@ -44,7 +45,41 @@ func TestAccAWSCopySnapshot_withDescription(t *testing.T) {
 	})
 }
 
+func TestAccAWSCopySnapshot_withRegions(t *testing.T) {
+	var v ec2.Snapshot
+
+	// record the initialized providers so that we can use them to
+	// check for the instances in each region
+	var providers []*schema.Provider
+	providerFactories := map[string]terraform.ResourceProviderFactory{
+		"aws": func() (terraform.ResourceProvider, error) {
+			p := Provider()
+			providers = append(providers, p.(*schema.Provider))
+			return p, nil
+		},
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsCopySnapshotConfigWithRegions,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCopySnapshotExistsWithProviders("aws_copy_snapshot.region_test", &v, &providers),
+				),
+			},
+		},
+	})
+
+}
+
 func testAccCheckCopySnapshotExists(n string, v *ec2.Snapshot) resource.TestCheckFunc {
+	providers := []*schema.Provider{testAccProvider}
+	return testAccCheckCopySnapshotExistsWithProviders(n, v, &providers)
+}
+
+func testAccCheckCopySnapshotExistsWithProviders(n string, v *ec2.Snapshot, providers *[]*schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -55,17 +90,24 @@ func testAccCheckCopySnapshotExists(n string, v *ec2.Snapshot) resource.TestChec
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		for _, provider := range *providers {
+			// Ignore if Meta is empty, this can happen for validation providers
+			if provider.Meta() == nil {
+				continue
+			}
 
-		request := &ec2.DescribeSnapshotsInput{
-			SnapshotIds: []*string{aws.String(rs.Primary.ID)},
-		}
+			conn := provider.Meta().(*AWSClient).ec2conn
 
-		response, err := conn.DescribeSnapshots(request)
-		if err == nil {
-			if response.Snapshots != nil && len(response.Snapshots) > 0 {
-				*v = *response.Snapshots[0]
-				return nil
+			request := &ec2.DescribeSnapshotsInput{
+				SnapshotIds: []*string{aws.String(rs.Primary.ID)},
+			}
+
+			response, err := conn.DescribeSnapshots(request)
+			if err == nil {
+				if response.Snapshots != nil && len(response.Snapshots) > 0 {
+					*v = *response.Snapshots[0]
+					return nil
+				}
 			}
 		}
 		return fmt.Errorf("Error finding EC2 Snapshot %s", rs.Primary.ID)
@@ -122,6 +164,47 @@ resource "aws_copy_snapshot" "description_test" {
 
   tags {
     Name = "testAccAwsCopySnapshotConfigWithDescription"
+  }
+}
+`
+
+const testAccAwsCopySnapshotConfigWithRegions = `
+provider "aws" {
+  region = "us-west-2"
+  alias  = "uswest2"
+}
+
+provider "aws" {
+  region = "us-east-1"
+  alias  = "useast1"
+}
+
+resource "aws_ebs_volume" "region_test" {
+  provider          = "aws.uswest2"
+  availability_zone = "us-west-2a"
+  size              = 1
+
+  tags {
+    Name = "testAccAwsCopySnapshotConfigWithRegions"
+  }
+}
+
+resource "aws_ebs_snapshot" "region_test" {
+  provider  = "aws.uswest2"
+  volume_id = "${aws_ebs_volume.region_test.id}"
+
+  tags {
+    Name = "testAccAwsCopySnapshotConfigWithRegions"
+  }
+}
+
+resource "aws_copy_snapshot" "region_test" {
+  provider           = "aws.useast1"
+  source_snapshot_id = "${aws_ebs_snapshot.region_test.id}"
+  source_region      = "us-west-2"
+
+  tags {
+    Name = "testAccAwsCopySnapshotConfigWithRegions"
   }
 }
 `
