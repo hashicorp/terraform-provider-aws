@@ -207,6 +207,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_kms_secret":                       dataSourceAwsKmsSecret(),
 			"aws_nat_gateway":                      dataSourceAwsNatGateway(),
 			"aws_network_interface":                dataSourceAwsNetworkInterface(),
+			"aws_organization_attributes":          dataSourceAwsOrganizationAttributes(),
+			"aws_organizations_members":            dataSourceAwsOrganizationMembers(),
 			"aws_partition":                        dataSourceAwsPartition(),
 			"aws_prefix_list":                      dataSourceAwsPrefixList(),
 			"aws_rds_cluster":                      dataSourceAwsRdsCluster(),

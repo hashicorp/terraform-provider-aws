@@ -63,6 +63,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -186,6 +187,7 @@ type AWSClient struct {
 	lightsailconn         *lightsail.Lightsail
 	mqconn                *mq.MQ
 	opsworksconn          *opsworks.OpsWorks
+	organizationsconn     *organizations.Organizations
 	glacierconn           *glacier.Glacier
 	guarddutyconn         *guardduty.GuardDuty
 	codebuildconn         *codebuild.CodeBuild
@@ -432,6 +434,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.lightsailconn = lightsail.New(sess)
 	client.mqconn = mq.New(sess)
 	client.opsworksconn = opsworks.New(sess)
+	client.organizationsconn = organizations.New(sess)
 	client.r53conn = route53.New(r53Sess)
 	client.rdsconn = rds.New(awsRdsSess)
 	client.redshiftconn = redshift.New(sess)
