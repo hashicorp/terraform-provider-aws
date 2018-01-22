@@ -68,48 +68,59 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the table, this needs to be unique
   within a region.
-* `read_capacity` - (Required) The number of read units for this table
-* `write_capacity` - (Required) The number of write units for this table
 * `hash_key` - (Required, Forces new resource) The attribute to use as the hash key (the
   attribute must also be defined as an attribute record
 * `range_key` - (Optional, Forces new resource) The attribute to use as the range key (must
   also be defined)
+* `write_capacity` - (Required) The number of write units for this table
+* `read_capacity` - (Required) The number of read units for this table
 * `attribute` - (Required) Define an attribute, has two properties:
   * `name` - The name of the attribute
   * `type` - One of: S, N, or B for (S)tring, (N)umber or (B)inary data
-* `stream_enabled` - (Optional) Indicates whether Streams are to be enabled (true) or disabled (false).
-* `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are KEYS_ONLY, NEW_IMAGE, OLD_IMAGE, NEW_AND_OLD_IMAGES.
 * `ttl` - (Optional) Defines ttl, has two properties, and can only be specified once:
   * `enabled` - (Required) Indicates whether ttl is enabled (true) or disabled (false).
-  * `attribute_name` - (Required) The name of the table attribute to store the TTL timestamp in. 
+  * `attribute_name` - (Required) The name of the table attribute to store the TTL timestamp in.
 * `local_secondary_index` - (Optional, Forces new resource) Describe an LSI on the table;
   these can only be allocated *at creation* so you cannot change this
 definition after you have created the resource.
 * `global_secondary_index` - (Optional) Describe a GSO for the table;
   subject to the normal limits on the number of GSIs, projected
 attributes, etc.
+* `stream_enabled` - (Optional) Indicates whether Streams are to be enabled (true) or disabled (false).
+* `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
 * `tags` - (Optional) A map of tags to populate on the created table.
 
-For both `local_secondary_index` and `global_secondary_index` objects,
-the following properties are supported:
+### Nested fields
 
-* `name` - (Required) The name of the LSI or GSI
-* `hash_key` - (Required for GSI) The name of the hash key in the index; must be
-defined as an attribute in the resource. Only applies to
-  `global_secondary_index`
+#### `local_secondary_index`
+
+* `name` - (Required) The name of the index
 * `range_key` - (Required) The name of the range key; must be defined
-* `projection_type` - (Required) One of "ALL", "INCLUDE" or "KEYS_ONLY"
-   where *ALL* projects every attribute into the index, *KEYS_ONLY*
-    projects just the hash and range key into the index, and *INCLUDE*
+* `projection_type` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY`
+   where `ALL` projects every attribute into the index, `KEYS_ONLY`
+    projects just the hash and range key into the index, and `INCLUDE`
     projects only the keys specified in the _non_key_attributes_
-parameter.
-* `non_key_attributes` - (Optional) Only required with *INCLUDE* as a
+    parameter.
+* `non_key_attributes` - (Optional) Only required with `INCLUDE` as a
   projection type; a list of attributes to project into the index. These
-do not need to be defined as attributes on the table.
+  do not need to be defined as attributes on the table.
 
-For `global_secondary_index` objects only, you need to specify
-`write_capacity` and `read_capacity` in the same way you would for the
-table as they have separate I/O capacity.
+#### `global_secondary_index`
+
+* `name` - (Required) The name of the index
+* `write_capacity` - (Required) The number of write units for this index
+* `read_capacity` - (Required) The number of read units for this index
+* `hash_key` - (Required) The name of the hash key in the index; must be
+  defined as an attribute in the resource.
+* `range_key` - (Optional) The name of the range key; must be defined
+* `projection_type` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY`
+   where `ALL` projects every attribute into the index, `KEYS_ONLY`
+    projects just the hash and range key into the index, and `INCLUDE`
+    projects only the keys specified in the _non_key_attributes_
+    parameter.
+* `non_key_attributes` - (Optional) Only required with `INCLUDE` as a
+  projection type; a list of attributes to project into the index. These
+  do not need to be defined as attributes on the table.
 
 ### A note about attributes
 
