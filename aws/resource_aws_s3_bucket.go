@@ -1972,20 +1972,6 @@ func removeNil(data map[string]interface{}) map[string]interface{} {
 	return withoutNil
 }
 
-// DEPRECATED. Please consider using `normalizeJsonString` function instead.
-func normalizeJson(jsonString interface{}) string {
-	if jsonString == nil || jsonString == "" {
-		return ""
-	}
-	var j interface{}
-	err := json.Unmarshal([]byte(jsonString.(string)), &j)
-	if err != nil {
-		return fmt.Sprintf("Error parsing JSON: %s", err)
-	}
-	b, _ := json.Marshal(j)
-	return string(b[:])
-}
-
 func normalizeRegion(region string) string {
 	// Default to us-east-1 if the bucket doesn't have a region:
 	// http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETlocation.html
