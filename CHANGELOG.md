@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * datasource/aws_kms_alias: Add target_key_arn attribute [GH-2551]
+* resource/aws_elasticsearch_domain: Add support for encrypt_at_rest [GH-2632]
 
 BUG FIXES:
 
