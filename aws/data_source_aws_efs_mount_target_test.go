@@ -30,6 +30,10 @@ func TestAccDataSourceAwsEfsMountTargetByMountTargetId(t *testing.T) {
 
 func testAccAwsEfsMountTargetConfigByMountTargetId(ct string) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_efs_file_system" "foo" {
 	creation_token = "%s"
 }

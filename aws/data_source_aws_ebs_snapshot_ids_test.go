@@ -71,6 +71,10 @@ func TestAccDataSourceAwsEbsSnapshotIds_empty(t *testing.T) {
 }
 
 const testAccDataSourceAwsEbsSnapshotIdsConfig_basic = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_ebs_volume" "test" {
     availability_zone = "us-west-2a"
     size              = 1
@@ -87,11 +91,14 @@ data "aws_ebs_snapshot_ids" "test" {
 
 func testAccDataSourceAwsEbsSnapshotIdsConfig_sorted1(uuid string) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_ebs_volume" "test" {
     availability_zone = "us-west-2a"
     size              = 1
-
-    count = 2
+    count             = 2
 }
 
 resource "aws_ebs_snapshot" "a" {

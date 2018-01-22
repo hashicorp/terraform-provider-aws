@@ -30,8 +30,11 @@ func TestAccDataSourceAwsSubnetIDs(t *testing.T) {
 }
 
 func testAccDataSourceAwsSubnetIDsConfigWithDataSource(rInt int) string {
-	return fmt.Sprintf(
-		`
+	return fmt.Sprintf(`
+	provider "aws" {
+		region = "us-west-2"
+	}
+
 	resource "aws_vpc" "test" {
 	  cidr_block = "172.%d.0.0/16"
 

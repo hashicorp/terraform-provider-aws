@@ -175,6 +175,10 @@ func testAccDataSourceAwsSubnetConfig(rInt int) string {
 
 func testAccDataSourceAwsSubnetConfigIpv6(rInt int) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -199,6 +203,10 @@ resource "aws_subnet" "test" {
 
 func testAccDataSourceAwsSubnetConfigIpv6WithDataSourceFilter(rInt int) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -230,6 +238,10 @@ data "aws_subnet" "by_ipv6_cidr" {
 
 func testAccDataSourceAwsSubnetConfigIpv6WithDataSourceIpv6CidrBlock(rInt int) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true

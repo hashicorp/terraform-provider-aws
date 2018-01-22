@@ -58,6 +58,10 @@ func testAccCheckAwsEbsSnapshotDataSourceID(n string) resource.TestCheckFunc {
 }
 
 const testAccCheckAwsEbsSnapshotDataSourceConfig = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_ebs_volume" "example" {
   availability_zone = "us-west-2a"
   type = "gp2"
@@ -78,6 +82,10 @@ data "aws_ebs_snapshot" "snapshot" {
 `
 
 const testAccCheckAwsEbsSnapshotDataSourceConfigWithMultipleFilters = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_ebs_volume" "external1" {
   availability_zone = "us-west-2a"
   type = "gp2"
