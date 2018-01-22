@@ -325,6 +325,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_dx_connection":                            resourceAwsDxConnection(),
 			"aws_dx_connection_association":                resourceAwsDxConnectionAssociation(),
 			"aws_dynamodb_table":                           resourceAwsDynamoDbTable(),
+			"aws_dynamodb_backup":                          resourceAwsDynamoDbBackup(),
 			"aws_ebs_snapshot":                             resourceAwsEbsSnapshot(),
 			"aws_ebs_volume":                               resourceAwsEbsVolume(),
 			"aws_ecr_lifecycle_policy":                     resourceAwsEcrLifecyclePolicy(),
