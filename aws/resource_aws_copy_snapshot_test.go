@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -72,6 +73,24 @@ func TestAccAWSCopySnapshot_withRegions(t *testing.T) {
 		},
 	})
 
+}
+
+func TestAccAWSCopySnapshot_withKms(t *testing.T) {
+	var v ec2.Snapshot
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsCopySnapshotConfigWithKms,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCopySnapshotExists("aws_copy_snapshot.kms_test", &v),
+					resource.TestMatchResourceAttr("aws_copy_snapshot.kms_test", "kms_key_id",
+						regexp.MustCompile("^arn:aws:kms:[a-z]{2}-[a-z]+-\\d{1}:[0-9]{12}:key/[a-z0-9-]{36}$")),
+				),
+			},
+		},
+	})
 }
 
 func testAccCheckCopySnapshotExists(n string, v *ec2.Snapshot) resource.TestCheckFunc {
@@ -205,6 +224,45 @@ resource "aws_copy_snapshot" "region_test" {
 
   tags {
     Name = "testAccAwsCopySnapshotConfigWithRegions"
+  }
+}
+`
+
+const testAccAwsCopySnapshotConfigWithKms = `
+provider "aws" {
+  region = "us-west-2"
+}
+
+resource "aws_kms_key" "kms_test" {
+  description             = "testAccAwsCopySnapshotConfigWithKms"
+  deletion_window_in_days = 7
+}
+
+resource "aws_ebs_volume" "kms_test" {
+  availability_zone = "us-west-2a"
+  size              = 1
+
+  tags {
+    Name = "testAccAwsCopySnapshotConfigWithKms"
+  }
+}
+
+resource "aws_ebs_snapshot" "kms_test" {
+  volume_id = "${aws_ebs_volume.kms_test.id}"
+
+  tags {
+    Name = "testAccAwsCopySnapshotConfigWithKms"
+  }
+}
+
+resource "aws_copy_snapshot" "kms_test" {
+  source_snapshot_id = "${aws_ebs_snapshot.kms_test.id}"
+  source_region      = "us-west-2"
+  encrypted          = true
+  kms_key_id         = "${aws_kms_key.kms_test.arn}"
+
+  tags {
+    Name = "testAccAwsCopySnapshotConfigWithKms"
   }
 }
 `
