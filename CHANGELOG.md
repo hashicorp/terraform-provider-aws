@@ -8,6 +8,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_eip_assocation: Retry association for pending instances [GH-3072]
+* resource/aws_kinesis_firehose_delivery_stream: Prevent panic on missing S3 configuration prefix [GH-3073]
 
 ## 1.7.1 (January 19, 2018)
 
