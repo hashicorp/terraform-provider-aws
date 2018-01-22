@@ -1047,6 +1047,10 @@ func expandESEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 }
 
 func flattenESEncryptAtRestOptions(o *elasticsearch.EncryptionAtRestOptions) []map[string]interface{} {
+	if o == nil {
+		return []map[string]interface{}{}
+	}
+
 	m := map[string]interface{}{}
 
 	if o.Enabled != nil {
