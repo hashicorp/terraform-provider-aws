@@ -1046,6 +1046,36 @@ func expandESEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 	return &options
 }
 
+func flattenESEncryptAtRestOptions(o *elasticsearch.EncryptionAtRestOptions) []map[string]interface{} {
+	if o == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if o.Enabled != nil {
+		m["enabled"] = *o.Enabled
+	}
+	if o.KmsKeyId != nil {
+		m["kms_key_id"] = *o.KmsKeyId
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandESEncryptAtRestOptions(m map[string]interface{}) *elasticsearch.EncryptionAtRestOptions {
+	options := elasticsearch.EncryptionAtRestOptions{}
+
+	if v, ok := m["enabled"]; ok {
+		options.Enabled = aws.Bool(v.(bool))
+	}
+	if v, ok := m["kms_key_id"]; ok && v.(string) != "" {
+		options.KmsKeyId = aws.String(v.(string))
+	}
+
+	return &options
+}
+
 func flattenESVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) []map[string]interface{} {
 	m := map[string]interface{}{}
 

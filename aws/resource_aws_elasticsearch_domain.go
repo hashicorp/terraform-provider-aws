@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -90,6 +91,28 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+						},
+					},
+				},
+			},
+			"encrypt_at_rest": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+							ForceNew: true,
+						},
+						"kms_key_id": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							DiffSuppressFunc: suppressEquivalentKmsKeyIds,
 						},
 					},
 				},
@@ -296,6 +319,16 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if v, ok := d.GetOk("encrypt_at_rest"); ok {
+		options := v.([]interface{})
+		if options[0] == nil {
+			return fmt.Errorf("At least one field is expected inside encrypt_at_rest")
+		}
+
+		s := options[0].(map[string]interface{})
+		input.EncryptionAtRestOptions = expandESEncryptAtRestOptions(s)
+	}
+
 	if v, ok := d.GetOk("cluster_config"); ok {
 		config := v.([]interface{})
 
@@ -463,6 +496,10 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
 
 	err = d.Set("ebs_options", flattenESEBSOptions(ds.EBSOptions))
+	if err != nil {
+		return err
+	}
+	err = d.Set("encrypt_at_rest", flattenESEncryptAtRestOptions(ds.EncryptionAtRestOptions))
 	if err != nil {
 		return err
 	}
@@ -682,6 +719,13 @@ func resourceAwsElasticSearchDomainDelete(d *schema.ResourceData, meta interface
 	d.SetId("")
 
 	return err
+}
+
+func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {
+	// The Elasticsearch API accepts a short KMS key id but always returns the ARN of the key.
+	// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'.
+	// These should be treated as equivalent.
+	return strings.Contains(old, new)
 }
 
 func getKibanaEndpoint(d *schema.ResourceData) string {
