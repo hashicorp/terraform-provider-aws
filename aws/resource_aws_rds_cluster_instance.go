@@ -189,7 +189,6 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
 			},
 
 			"tags": tagsSchema(),

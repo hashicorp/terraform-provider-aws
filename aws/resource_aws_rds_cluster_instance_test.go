@@ -233,7 +233,6 @@ func TestAccAWSRDSClusterInstance_withInstanceEnhancedMonitor(t *testing.T) {
 
 func TestAccAWSRDSClusterInstance_withInstancePerformanceInsights(t *testing.T) {
 	var v rds.DBInstance
-	keyRegex := regexp.MustCompile("^arn:aws:kms:")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -246,9 +245,7 @@ func TestAccAWSRDSClusterInstance_withInstancePerformanceInsights(t *testing.T) 
 					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &v),
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(
-						"aws_rds_cluster_instance.cluster_instances", "performance_insights_enabled", "true"),
-					resource.TestMatchResourceAttr(
-						"aws_rds_cluster_instance.cluster_instances", "performance_insights_kms_key_id", keyRegex),
+						"aws_rds_cluster_instance.cluster_instances", "performance_insights_enabled", "true")
 				),
 			},
 		},
