@@ -80,7 +80,7 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
   Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00".
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
 * `performance_insights_enabled` - (Optional) Specifies whether Performance Insights is enabled or not.
-* `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true.
+* `performance_insights_kms_key_id` - (Optional) The identifier for the KMS key to encrypt Performance Insights data. The identifier is the Amazon Resource Name (ARN), KMS key identifier, or the KMS key alias for the KMS encryption key. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true.
 * `tags` - (Optional) A mapping of tags to assign to the instance.
 
 ## Attributes Reference
