@@ -9,6 +9,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_ebs_snapshot: Fix `kms_key_id` attribute handling [GH-3085]
 * resource/aws_eip_assocation: Retry association for pending instances [GH-3072]
 * resource/aws_kinesis_firehose_delivery_stream: Prevent panic on missing S3 configuration prefix [GH-3073]
 * resource/aws_sqs_queue_policy: Prevent missing policy error on read [GH-2739]
