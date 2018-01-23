@@ -34,6 +34,4 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
-
-* `arn` - The Amazon Resource Name (ARN) specifying the log subscription filter.
+No extra attributes are exported.
