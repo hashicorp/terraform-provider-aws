@@ -496,7 +496,11 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", cluster.Name)
-	d.Set("scale_down_behavior", cluster.ScaleDownBehavior)
+
+	if d.Get("scale_down_behavior").(string) != "" {
+		d.Set("scale_down_behavior", cluster.ScaleDownBehavior)
+	}
+
 	d.Set("service_role", cluster.ServiceRole)
 	d.Set("security_configuration", cluster.SecurityConfiguration)
 	d.Set("autoscaling_role", cluster.AutoScalingRole)
