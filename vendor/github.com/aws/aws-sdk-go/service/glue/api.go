@@ -363,6 +363,94 @@ func (c *Glue) BatchDeleteTableWithContext(ctx aws.Context, input *BatchDeleteTa
 	return out, req.Send()
 }
 
+const opBatchDeleteTableVersion = "BatchDeleteTableVersion"
+
+// BatchDeleteTableVersionRequest generates a "aws/request.Request" representing the
+// client's request for the BatchDeleteTableVersion operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchDeleteTableVersion for more information on using the BatchDeleteTableVersion
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchDeleteTableVersionRequest method.
+//    req, resp := client.BatchDeleteTableVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteTableVersion
+func (c *Glue) BatchDeleteTableVersionRequest(input *BatchDeleteTableVersionInput) (req *request.Request, output *BatchDeleteTableVersionOutput) {
+	op := &request.Operation{
+		Name:       opBatchDeleteTableVersion,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &BatchDeleteTableVersionInput{}
+	}
+
+	output = &BatchDeleteTableVersionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchDeleteTableVersion API operation for AWS Glue.
+//
+// Deletes a specified batch of versions of a table.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation BatchDeleteTableVersion for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteTableVersion
+func (c *Glue) BatchDeleteTableVersion(input *BatchDeleteTableVersionInput) (*BatchDeleteTableVersionOutput, error) {
+	req, out := c.BatchDeleteTableVersionRequest(input)
+	return out, req.Send()
+}
+
+// BatchDeleteTableVersionWithContext is the same as BatchDeleteTableVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchDeleteTableVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) BatchDeleteTableVersionWithContext(ctx aws.Context, input *BatchDeleteTableVersionInput, opts ...request.Option) (*BatchDeleteTableVersionOutput, error) {
+	req, out := c.BatchDeleteTableVersionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opBatchGetPartition = "BatchGetPartition"
 
 // BatchGetPartitionRequest generates a "aws/request.Request" representing the
@@ -684,6 +772,9 @@ func (c *Glue) CreateConnectionRequest(input *CreateConnectionInput) (req *reque
 //
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
+//
+//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   A resource numerical limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateConnection
 func (c *Glue) CreateConnection(input *CreateConnectionInput) (*CreateConnectionOutput, error) {
@@ -1524,6 +1615,9 @@ func (c *Glue) CreateUserDefinedFunctionRequest(input *CreateUserDefinedFunction
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   A resource numerical limit was exceeded.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateUserDefinedFunction
 func (c *Glue) CreateUserDefinedFunction(input *CreateUserDefinedFunctionInput) (*CreateUserDefinedFunctionOutput, error) {
 	req, out := c.CreateUserDefinedFunctionRequest(input)
@@ -2231,6 +2325,94 @@ func (c *Glue) DeleteTable(input *DeleteTableInput) (*DeleteTableOutput, error) 
 // for more information on using Contexts.
 func (c *Glue) DeleteTableWithContext(ctx aws.Context, input *DeleteTableInput, opts ...request.Option) (*DeleteTableOutput, error) {
 	req, out := c.DeleteTableRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteTableVersion = "DeleteTableVersion"
+
+// DeleteTableVersionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteTableVersion operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteTableVersion for more information on using the DeleteTableVersion
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteTableVersionRequest method.
+//    req, resp := client.DeleteTableVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTableVersion
+func (c *Glue) DeleteTableVersionRequest(input *DeleteTableVersionInput) (req *request.Request, output *DeleteTableVersionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteTableVersion,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteTableVersionInput{}
+	}
+
+	output = &DeleteTableVersionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteTableVersion API operation for AWS Glue.
+//
+// Deletes a specified version of a table.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation DeleteTableVersion for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTableVersion
+func (c *Glue) DeleteTableVersion(input *DeleteTableVersionInput) (*DeleteTableVersionOutput, error) {
+	req, out := c.DeleteTableVersionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteTableVersionWithContext is the same as DeleteTableVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteTableVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) DeleteTableVersionWithContext(ctx aws.Context, input *DeleteTableVersionInput, opts ...request.Option) (*DeleteTableVersionOutput, error) {
+	req, out := c.DeleteTableVersionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4787,6 +4969,94 @@ func (c *Glue) GetTableWithContext(ctx aws.Context, input *GetTableInput, opts .
 	return out, req.Send()
 }
 
+const opGetTableVersion = "GetTableVersion"
+
+// GetTableVersionRequest generates a "aws/request.Request" representing the
+// client's request for the GetTableVersion operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetTableVersion for more information on using the GetTableVersion
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetTableVersionRequest method.
+//    req, resp := client.GetTableVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersion
+func (c *Glue) GetTableVersionRequest(input *GetTableVersionInput) (req *request.Request, output *GetTableVersionOutput) {
+	op := &request.Operation{
+		Name:       opGetTableVersion,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetTableVersionInput{}
+	}
+
+	output = &GetTableVersionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetTableVersion API operation for AWS Glue.
+//
+// Retrieves a specified version of a table.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetTableVersion for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersion
+func (c *Glue) GetTableVersion(input *GetTableVersionInput) (*GetTableVersionOutput, error) {
+	req, out := c.GetTableVersionRequest(input)
+	return out, req.Send()
+}
+
+// GetTableVersionWithContext is the same as GetTableVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetTableVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetTableVersionWithContext(ctx aws.Context, input *GetTableVersionInput, opts ...request.Option) (*GetTableVersionOutput, error) {
+	req, out := c.GetTableVersionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetTableVersions = "GetTableVersions"
 
 // GetTableVersionsRequest generates a "aws/request.Request" representing the
@@ -7128,6 +7398,9 @@ func (c *Glue) UpdateTableRequest(input *UpdateTableInput) (req *request.Request
 //   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
 //   Two processes are trying to modify a resource simultaneously.
 //
+//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   A resource numerical limit was exceeded.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTable
 func (c *Glue) UpdateTable(input *UpdateTableInput) (*UpdateTableOutput, error) {
 	req, out := c.UpdateTableRequest(input)
@@ -7721,7 +7994,8 @@ type BatchDeleteTableInput struct {
 	// the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
-	// The name of the catalog database where the tables to delete reside.
+	// The name of the catalog database where the tables to delete reside. For Hive
+	// compatibility, this name is entirely lowercase.
 	//
 	// DatabaseName is a required field
 	DatabaseName *string `min:"1" type:"string" required:"true"`
@@ -7802,6 +8076,117 @@ func (s BatchDeleteTableOutput) GoString() string {
 
 // SetErrors sets the Errors field's value.
 func (s *BatchDeleteTableOutput) SetErrors(v []*TableError) *BatchDeleteTableOutput {
+	s.Errors = v
+	return s
+}
+
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteTableVersionRequest
+type BatchDeleteTableVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the tables reside. If none is supplied,
+	// the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// The database in the catalog in which the table resides. For Hive compatibility,
+	// this name is entirely lowercase.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the table. For Hive compatibility, this name is entirely lowercase.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+
+	// A list of the IDs of versions to be deleted.
+	//
+	// VersionIds is a required field
+	VersionIds []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchDeleteTableVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchDeleteTableVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchDeleteTableVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchDeleteTableVersionInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+	if s.VersionIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("VersionIds"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *BatchDeleteTableVersionInput) SetCatalogId(v string) *BatchDeleteTableVersionInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *BatchDeleteTableVersionInput) SetDatabaseName(v string) *BatchDeleteTableVersionInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *BatchDeleteTableVersionInput) SetTableName(v string) *BatchDeleteTableVersionInput {
+	s.TableName = &v
+	return s
+}
+
+// SetVersionIds sets the VersionIds field's value.
+func (s *BatchDeleteTableVersionInput) SetVersionIds(v []*string) *BatchDeleteTableVersionInput {
+	s.VersionIds = v
+	return s
+}
+
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteTableVersionResponse
+type BatchDeleteTableVersionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of errors encountered while trying to delete the specified table versions.
+	Errors []*TableVersionError `type:"list"`
+}
+
+// String returns the string representation
+func (s BatchDeleteTableVersionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchDeleteTableVersionOutput) GoString() string {
+	return s.String()
+}
+
+// SetErrors sets the Errors field's value.
+func (s *BatchDeleteTableVersionOutput) SetErrors(v []*TableVersionError) *BatchDeleteTableVersionOutput {
 	s.Errors = v
 	return s
 }
@@ -8696,11 +9081,15 @@ type ConnectionInput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of key-value pairs used as parameters for this connection.
-	ConnectionProperties map[string]*string `type:"map"`
+	//
+	// ConnectionProperties is a required field
+	ConnectionProperties map[string]*string `type:"map" required:"true"`
 
 	// The type of the connection. Currently, only JDBC is supported; SFTP is not
 	// supported.
-	ConnectionType *string `type:"string" enum:"ConnectionType"`
+	//
+	// ConnectionType is a required field
+	ConnectionType *string `type:"string" required:"true" enum:"ConnectionType"`
 
 	// Description of the connection.
 	Description *string `type:"string"`
@@ -8709,7 +9098,9 @@ type ConnectionInput struct {
 	MatchCriteria []*string `type:"list"`
 
 	// The name of the connection.
-	Name *string `min:"1" type:"string"`
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
 
 	// A map of physical connection requirements, such as VPC and SecurityGroup,
 	// needed for making this connection successfully.
@@ -8729,6 +9120,15 @@ func (s ConnectionInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ConnectionInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ConnectionInput"}
+	if s.ConnectionProperties == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConnectionProperties"))
+	}
+	if s.ConnectionType == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConnectionType"))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
@@ -10220,7 +10620,8 @@ type CreateTableInput struct {
 	// the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
-	// The catalog database in which to create the new table.
+	// The catalog database in which to create the new table. For Hive compatibility,
+	// this name is entirely lowercase.
 	//
 	// DatabaseName is a required field
 	DatabaseName *string `min:"1" type:"string" required:"true"`
@@ -10618,7 +11019,8 @@ type Database struct {
 	// The location of the database (for example, an HDFS path).
 	LocationUri *string `min:"1" type:"string"`
 
-	// Name of the database.
+	// Name of the database. For Hive compatibility, this is folded to lowercase
+	// when it is stored.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -10667,7 +11069,7 @@ func (s *Database) SetParameters(v map[string]*string) *Database {
 	return s
 }
 
-// The structure used to create or updata a database.
+// The structure used to create or update a database.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DatabaseInput
 type DatabaseInput struct {
 	_ struct{} `type:"structure"`
@@ -10678,7 +11080,8 @@ type DatabaseInput struct {
 	// The location of the database (for example, an HDFS path).
 	LocationUri *string `min:"1" type:"string"`
 
-	// Name of the database.
+	// Name of the database. For Hive compatibility, this is folded to lowercase
+	// when it is stored.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -10932,7 +11335,8 @@ type DeleteDatabaseInput struct {
 	// the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
-	// The name of the Database to delete.
+	// The name of the Database to delete. For Hive compatibility, this must be
+	// all lowercase.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -11223,12 +11627,14 @@ type DeleteTableInput struct {
 	// the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
-	// The name of the catalog database in which the table resides.
+	// The name of the catalog database in which the table resides. For Hive compatibility,
+	// this name is entirely lowercase.
 	//
 	// DatabaseName is a required field
 	DatabaseName *string `min:"1" type:"string" required:"true"`
 
-	// The name of the table to be deleted.
+	// The name of the table to be deleted. For Hive compatibility, this name is
+	// entirely lowercase.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -11299,6 +11705,111 @@ func (s DeleteTableOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteTableOutput) GoString() string {
+	return s.String()
+}
+
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTableVersionRequest
+type DeleteTableVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the tables reside. If none is supplied,
+	// the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// The database in the catalog in which the table resides. For Hive compatibility,
+	// this name is entirely lowercase.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the table. For Hive compatibility, this name is entirely lowercase.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+
+	// The ID of the table version to be deleted.
+	//
+	// VersionId is a required field
+	VersionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteTableVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTableVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteTableVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteTableVersionInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+	if s.VersionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("VersionId"))
+	}
+	if s.VersionId != nil && len(*s.VersionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VersionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *DeleteTableVersionInput) SetCatalogId(v string) *DeleteTableVersionInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *DeleteTableVersionInput) SetDatabaseName(v string) *DeleteTableVersionInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *DeleteTableVersionInput) SetTableName(v string) *DeleteTableVersionInput {
+	s.TableName = &v
+	return s
+}
+
+// SetVersionId sets the VersionId field's value.
+func (s *DeleteTableVersionInput) SetVersionId(v string) *DeleteTableVersionInput {
+	s.VersionId = &v
+	return s
+}
+
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTableVersionResponse
+type DeleteTableVersionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteTableVersionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTableVersionOutput) GoString() string {
 	return s.String()
 }
 
@@ -12415,7 +12926,8 @@ type GetDatabaseInput struct {
 	// the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
-	// The name of the database to retrieve.
+	// The name of the database to retrieve. For Hive compatibility, this should
+	// be all lowercase.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -13617,12 +14129,14 @@ type GetTableInput struct {
 	// the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
-	// The name of the database in the catalog in which the table resides.
+	// The name of the database in the catalog in which the table resides. For Hive
+	// compatibility, this name is entirely lowercase.
 	//
 	// DatabaseName is a required field
 	DatabaseName *string `min:"1" type:"string" required:"true"`
 
-	// The name of the table for which to retrieve the definition.
+	// The name of the table for which to retrieve the definition. For Hive compatibility,
+	// this name is entirely lowercase.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -13705,6 +14219,115 @@ func (s *GetTableOutput) SetTable(v *Table) *GetTableOutput {
 	return s
 }
 
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersionRequest
+type GetTableVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the tables reside. If none is supplied,
+	// the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// The database in the catalog in which the table resides. For Hive compatibility,
+	// this name is entirely lowercase.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the table. For Hive compatibility, this name is entirely lowercase.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+
+	// The ID value of the table version to be retrieved.
+	VersionId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s GetTableVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetTableVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetTableVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetTableVersionInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+	if s.VersionId != nil && len(*s.VersionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VersionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *GetTableVersionInput) SetCatalogId(v string) *GetTableVersionInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *GetTableVersionInput) SetDatabaseName(v string) *GetTableVersionInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *GetTableVersionInput) SetTableName(v string) *GetTableVersionInput {
+	s.TableName = &v
+	return s
+}
+
+// SetVersionId sets the VersionId field's value.
+func (s *GetTableVersionInput) SetVersionId(v string) *GetTableVersionInput {
+	s.VersionId = &v
+	return s
+}
+
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersionResponse
+type GetTableVersionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The requested table version.
+	TableVersion *TableVersion `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetTableVersionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetTableVersionOutput) GoString() string {
+	return s.String()
+}
+
+// SetTableVersion sets the TableVersion field's value.
+func (s *GetTableVersionOutput) SetTableVersion(v *TableVersion) *GetTableVersionOutput {
+	s.TableVersion = v
+	return s
+}
+
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersionsRequest
 type GetTableVersionsInput struct {
 	_ struct{} `type:"structure"`
@@ -13713,7 +14336,8 @@ type GetTableVersionsInput struct {
 	// the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
-	// The database in the catalog in which the table resides.
+	// The database in the catalog in which the table resides. For Hive compatibility,
+	// this name is entirely lowercase.
 	//
 	// DatabaseName is a required field
 	DatabaseName *string `min:"1" type:"string" required:"true"`
@@ -13724,7 +14348,7 @@ type GetTableVersionsInput struct {
 	// A continuation token, if this is not the first call.
 	NextToken *string `type:"string"`
 
-	// The name of the table.
+	// The name of the table. For Hive compatibility, this name is entirely lowercase.
 	//
 	// TableName is a required field
 	TableName *string `min:"1" type:"string" required:"true"`
@@ -13840,7 +14464,8 @@ type GetTablesInput struct {
 	// the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
-	// The database in the catalog whose tables to list.
+	// The database in the catalog whose tables to list. For Hive compatibility,
+	// this name is entirely lowercase.
 	//
 	// DatabaseName is a required field
 	DatabaseName *string `min:"1" type:"string" required:"true"`
@@ -15523,7 +16148,7 @@ func (s *PartitionValueList) SetValues(v []*string) *PartitionValueList {
 type PhysicalConnectionRequirements struct {
 	_ struct{} `type:"structure"`
 
-	// The connection's availability zone.
+	// The connection's availability zone. This field is deprecated and has no effect.
 	AvailabilityZone *string `min:"1" type:"string"`
 
 	// The security group ID list used by the connection.
@@ -16694,7 +17319,8 @@ type Table struct {
 	// Person or entity who created the table.
 	CreatedBy *string `min:"1" type:"string"`
 
-	// Name of the metadata database where the table metadata resides.
+	// Name of the metadata database where the table metadata resides. For Hive
+	// compatibility, this must be all lowercase.
 	DatabaseName *string `min:"1" type:"string"`
 
 	// Description of the table.
@@ -16707,7 +17333,7 @@ type Table struct {
 	// Last time column statistics were computed for this table.
 	LastAnalyzedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// Name of the table.
+	// Name of the table. For Hive compatibility, this must be entirely lowercase.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -16856,7 +17482,7 @@ type TableError struct {
 	// Detail about the error.
 	ErrorDetail *ErrorDetail `type:"structure"`
 
-	// Name of the table.
+	// Name of the table. For Hive compatibility, this must be entirely lowercase.
 	TableName *string `min:"1" type:"string"`
 }
 
@@ -16896,7 +17522,8 @@ type TableInput struct {
 	// Last time column statistics were computed for this table.
 	LastAnalyzedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// Name of the table.
+	// Name of the table. For Hive compatibility, this is folded to lowercase when
+	// it is stored.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -17074,6 +17701,49 @@ func (s *TableVersion) SetTable(v *Table) *TableVersion {
 
 // SetVersionId sets the VersionId field's value.
 func (s *TableVersion) SetVersionId(v string) *TableVersion {
+	s.VersionId = &v
+	return s
+}
+
+// An error record for table-version operations.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/TableVersionError
+type TableVersionError struct {
+	_ struct{} `type:"structure"`
+
+	// Detail about the error.
+	ErrorDetail *ErrorDetail `type:"structure"`
+
+	// The name of the table in question.
+	TableName *string `min:"1" type:"string"`
+
+	// The ID value of the version in question.
+	VersionId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s TableVersionError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TableVersionError) GoString() string {
+	return s.String()
+}
+
+// SetErrorDetail sets the ErrorDetail field's value.
+func (s *TableVersionError) SetErrorDetail(v *ErrorDetail) *TableVersionError {
+	s.ErrorDetail = v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *TableVersionError) SetTableName(v string) *TableVersionError {
+	s.TableName = &v
+	return s
+}
+
+// SetVersionId sets the VersionId field's value.
+func (s *TableVersionError) SetVersionId(v string) *TableVersionError {
 	s.VersionId = &v
 	return s
 }
@@ -17655,7 +18325,8 @@ type UpdateDatabaseInput struct {
 	// DatabaseInput is a required field
 	DatabaseInput *DatabaseInput `type:"structure" required:"true"`
 
-	// The name of the metadata database to update in the catalog.
+	// The name of the database to update in the catalog. For Hive compatibility,
+	// this is folded to lowercase.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -18095,10 +18766,16 @@ type UpdateTableInput struct {
 	// the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
-	// The name of the catalog database in which the table resides.
+	// The name of the catalog database in which the table resides. For Hive compatibility,
+	// this name is entirely lowercase.
 	//
 	// DatabaseName is a required field
 	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// By default, UpdateTable always creates an archived version of the table before
+	// updating it. If skipArchive is set to true, however, UpdateTable does not
+	// create the archived version.
+	SkipArchive *bool `type:"boolean"`
 
 	// An updated TableInput object to define the metadata table in the catalog.
 	//
@@ -18152,6 +18829,12 @@ func (s *UpdateTableInput) SetCatalogId(v string) *UpdateTableInput {
 // SetDatabaseName sets the DatabaseName field's value.
 func (s *UpdateTableInput) SetDatabaseName(v string) *UpdateTableInput {
 	s.DatabaseName = &v
+	return s
+}
+
+// SetSkipArchive sets the SkipArchive field's value.
+func (s *UpdateTableInput) SetSkipArchive(v bool) *UpdateTableInput {
+	s.SkipArchive = &v
 	return s
 }
 
