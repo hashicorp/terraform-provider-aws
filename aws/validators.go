@@ -1743,7 +1743,9 @@ func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
 
 func validateLaunchTemplateName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if strings.HasSuffix(k, "prefix") && len(value) > 99 {
+	if len(value) < 3 {
+		errors = append(errors, fmt.Errorf("%q cannot be less than 3 characters", k))
+	} else if strings.HasSuffix(k, "prefix") && len(value) > 99 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 99 characters, name is limited to 125", k))
 	} else if !strings.HasSuffix(k, "prefix") && len(value) > 125 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 125 characters", k))
