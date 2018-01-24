@@ -63,7 +63,6 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resName, "ram_disk_id"),
 					resource.TestCheckResourceAttr(resName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resName, "tag_specifications.#", "1"),
-					resource.TestCheckResourceAttr(resName, "tags.#", "1"),
 				),
 			},
 		},

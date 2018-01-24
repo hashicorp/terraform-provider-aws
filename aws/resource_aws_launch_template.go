@@ -410,33 +410,10 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	launchTemplateDataOpts := &ec2.RequestLaunchTemplateData{
-		BlockDeviceMappings:      launchTemplateData.BlockDeviceMappings,
-		CreditSpecification:      launchTemplateData.CreditSpecification,
-		DisableApiTermination:    launchTemplateData.DisableApiTermination,
-		EbsOptimized:             launchTemplateData.EbsOptimized,
-		ElasticGpuSpecifications: launchTemplateData.ElasticGpuSpecifications,
-		IamInstanceProfile:       launchTemplateData.IamInstanceProfile,
-		ImageId:                  launchTemplateData.ImageId,
-		InstanceInitiatedShutdownBehavior: launchTemplateData.InstanceInitiatedShutdownBehavior,
-		InstanceMarketOptions:             launchTemplateData.InstanceMarketOptions,
-		InstanceType:                      launchTemplateData.InstanceType,
-		KernelId:                          launchTemplateData.KernelId,
-		KeyName:                           launchTemplateData.KeyName,
-		Monitoring:                        launchTemplateData.Monitoring,
-		NetworkInterfaces:                 launchTemplateData.NetworkInterfaces,
-		Placement:                         launchTemplateData.Placement,
-		RamDiskId:                         launchTemplateData.RamDiskId,
-		SecurityGroups:                    launchTemplateData.SecurityGroups,
-		SecurityGroupIds:                  launchTemplateData.SecurityGroupIds,
-		TagSpecifications:                 launchTemplateData.TagSpecifications,
-		UserData:                          launchTemplateData.UserData,
-	}
-
 	launchTemplateOpts := &ec2.CreateLaunchTemplateInput{
 		ClientToken:        aws.String(resource.UniqueId()),
 		LaunchTemplateName: aws.String(ltName),
-		LaunchTemplateData: launchTemplateDataOpts,
+		LaunchTemplateData: launchTemplateData,
 	}
 
 	resp, err := conn.CreateLaunchTemplate(launchTemplateOpts)
@@ -540,6 +517,26 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ec2conn
+
+	if !d.IsNewResource() {
+		launchTemplateData, err := buildLaunchTemplateData(d, meta)
+		if err != nil {
+			return err
+		}
+
+		launchTemplateVersionOpts := &ec2.CreateLaunchTemplateVersionInput{
+			ClientToken:        aws.String(resource.UniqueId()),
+			LaunchTemplateId:   aws.String(d.Id()),
+			LaunchTemplateData: launchTemplateData,
+		}
+
+		_, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
+		if createErr != nil {
+			return createErr
+		}
+	}
+
 	return resourceAwsLaunchTemplateRead(d, meta)
 }
 
@@ -626,6 +623,9 @@ func getIamInstanceProfile(i *ec2.LaunchTemplateIamInstanceProfileSpecification)
 func getInstanceMarketOptions(m *ec2.LaunchTemplateInstanceMarketOptions) []interface{} {
 	s := []interface{}{}
 	if m != nil {
+		mo := map[string]interface{}{
+			"market_type": *m.MarketType,
+		}
 		spot := []interface{}{}
 		so := m.SpotOptions
 		if so != nil {
@@ -636,11 +636,9 @@ func getInstanceMarketOptions(m *ec2.LaunchTemplateInstanceMarketOptions) []inte
 				"spot_instance_type":             *so.SpotInstanceType,
 				"valid_until":                    *so.ValidUntil,
 			})
+			mo["spot_options"] = spot
 		}
-		s = append(s, map[string]interface{}{
-			"market_type":  *m.MarketType,
-			"spot_options": spot,
-		})
+		s = append(s, mo)
 	}
 	return s
 }
@@ -666,12 +664,16 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 		for _, address := range v.Ipv6Addresses {
 			ipv6Addresses = append(ipv6Addresses, *address.Ipv6Address)
 		}
-		networkInterface["ipv6_addresses"] = ipv6Addresses
+		if len(ipv6Addresses) > 0 {
+			networkInterface["ipv6_addresses"] = ipv6Addresses
+		}
 
 		for _, address := range v.PrivateIpAddresses {
 			ipv4Addresses = append(ipv4Addresses, *address.PrivateIpAddress)
 		}
-		networkInterface["ipv4_addresses"] = ipv4Addresses
+		if len(ipv4Addresses) > 0 {
+			networkInterface["ipv4_addresses"] = ipv4Addresses
+		}
 
 		s = append(s, networkInterface)
 	}
@@ -697,47 +699,48 @@ func getTagSpecifications(t []*ec2.LaunchTemplateTagSpecification) []interface{}
 	s := []interface{}{}
 	for _, v := range t {
 		s = append(s, map[string]interface{}{
-			"resource_type": v.ResourceType,
+			"resource_type": *v.ResourceType,
 			"tags":          tagsToMap(v.Tags),
 		})
 	}
 	return s
 }
 
-type launchTemplateOpts struct {
-	BlockDeviceMappings               []*ec2.LaunchTemplateBlockDeviceMappingRequest
-	CreditSpecification               *ec2.CreditSpecificationRequest
-	DisableApiTermination             *bool
-	EbsOptimized                      *bool
-	ElasticGpuSpecifications          []*ec2.ElasticGpuSpecification
-	IamInstanceProfile                *ec2.LaunchTemplateIamInstanceProfileSpecificationRequest
-	ImageId                           *string
-	InstanceInitiatedShutdownBehavior *string
-	InstanceMarketOptions             *ec2.LaunchTemplateInstanceMarketOptionsRequest
-	InstanceType                      *string
-	KernelId                          *string
-	KeyName                           *string
-	Monitoring                        *ec2.LaunchTemplatesMonitoringRequest
-	NetworkInterfaces                 []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest
-	Placement                         *ec2.LaunchTemplatePlacementRequest
-	RamDiskId                         *string
-	SecurityGroupIds                  []*string
-	SecurityGroups                    []*string
-	TagSpecifications                 []*ec2.LaunchTemplateTagSpecificationRequest
-	UserData                          *string
-}
+func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.RequestLaunchTemplateData, error) {
+	opts := &ec2.RequestLaunchTemplateData{
+		UserData: aws.String(d.Get("user_data").(string)),
+	}
 
-func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*launchTemplateOpts, error) {
-	opts := &launchTemplateOpts{
-		DisableApiTermination: aws.Bool(d.Get("disable_api_termination").(bool)),
-		EbsOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
-		ImageId:               aws.String(d.Get("image_id").(string)),
-		InstanceInitiatedShutdownBehavior: aws.String(d.Get("instance_initiated_shutdown_behavior").(string)),
-		InstanceType:                      aws.String(d.Get("instance_type").(string)),
-		KernelId:                          aws.String(d.Get("kernel_id").(string)),
-		KeyName:                           aws.String(d.Get("key_name").(string)),
-		RamDiskId:                         aws.String(d.Get("ram_disk_id").(string)),
-		UserData:                          aws.String(d.Get("user_data").(string)),
+	if v, ok := d.GetOk("image_id"); ok {
+		opts.ImageId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("instance_initiated_shutdown_behavior"); ok {
+		opts.InstanceInitiatedShutdownBehavior = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("instance_type"); ok {
+		opts.InstanceType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kernel_id"); ok {
+		opts.KernelId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("key_name"); ok {
+		opts.KeyName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ram_disk_id"); ok {
+		opts.RamDiskId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("disable_api_termination"); ok {
+		opts.DisableApiTermination = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("ebs_optimized"); ok {
+		opts.EbsOptimized = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("block_device_mappings"); ok {
@@ -796,18 +799,21 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*launchT
 			imoData := imo[0].(map[string]interface{})
 			spotOptions := &ec2.LaunchTemplateSpotMarketOptionsRequest{}
 
-			if v := imoData["spot_options"]; v != nil {
-				so := v.(map[string]interface{})
-				spotOptions.BlockDurationMinutes = aws.Int64(int64(so["block_duration_minutes"].(int)))
-				spotOptions.InstanceInterruptionBehavior = aws.String(so["instance_interruption_behavior"].(string))
-				spotOptions.MaxPrice = aws.String(so["max_price"].(string))
-				spotOptions.SpotInstanceType = aws.String(so["spot_instance_type"].(string))
+			if v, ok := imoData["spot_options"]; ok {
+				vL := v.(*schema.Set).List()
+				for _, v := range vL {
+					so := v.(map[string]interface{})
+					spotOptions.BlockDurationMinutes = aws.Int64(int64(so["block_duration_minutes"].(int)))
+					spotOptions.InstanceInterruptionBehavior = aws.String(so["instance_interruption_behavior"].(string))
+					spotOptions.MaxPrice = aws.String(so["max_price"].(string))
+					spotOptions.SpotInstanceType = aws.String(so["spot_instance_type"].(string))
 
-				t, err := time.Parse(awsSpotInstanceTimeLayout, so["valid_until"].(string))
-				if err != nil {
-					return nil, fmt.Errorf("Error Parsing Launch Template Spot Options valid until: %s", err.Error())
+					t, err := time.Parse(awsSpotInstanceTimeLayout, so["valid_until"].(string))
+					if err != nil {
+						return nil, fmt.Errorf("Error Parsing Launch Template Spot Options valid until: %s", err.Error())
+					}
+					spotOptions.ValidUntil = aws.Time(t)
 				}
-				spotOptions.ValidUntil = aws.Time(t)
 			}
 
 			instanceMarketOptions := &ec2.LaunchTemplateInstanceMarketOptionsRequest{
@@ -894,7 +900,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*launchT
 
 		for _, ts := range t {
 			tsData := ts.(map[string]interface{})
-			tags := tagsFromMap(tsData)
+			tags := tagsFromMap(tsData["tags"].(map[string]interface{}))
 			tagSpecification := &ec2.LaunchTemplateTagSpecificationRequest{
 				ResourceType: aws.String(tsData["resource_type"].(string)),
 				Tags:         tags,
