@@ -961,6 +961,20 @@ func validateAwsEmrInstanceGroupRole(v interface{}, k string) (ws []string, erro
 	return
 }
 
+func validateAwsEmrCustomAmiId(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 256 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 characters", k))
+	}
+
+	if !regexp.MustCompile(`^ami\-[a-z0-9]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must begin with 'ami-' and be comprised of only [a-z0-9]: %v", k, value))
+	}
+
+	return
+}
+
 func validateSfnActivityName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 80 {
