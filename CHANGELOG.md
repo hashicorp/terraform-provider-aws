@@ -1,18 +1,21 @@
 ## 1.8.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_dynamodb_global_table` [GH-2517]
+
 ENHANCEMENTS:
 
-* datasource/aws_kms_alias: Add target_key_arn attribute [GH-2551]
+* data-source/aws_kms_alias: Add target_key_arn attribute [GH-2551]
+* resource/aws_api_gateway_integration: Allow update of content_handling attributes [GH-3123]
 * resource/aws_appautoscaling_target: Support updating max_capacity, min_capacity, and role_arn attributes [GH-2950]
+* resource/aws_cloudwatch_log_subscription_filter: Add support for distribution [GH-3046]
+* resource/aws_cognito_user_pool: support pre_token_generation in lambda_config [GH-3093]
 * resource/aws_elasticsearch_domain: Add support for encrypt_at_rest [GH-2632]
 * resource/aws_kms_alias: Add target_key_arn attribute [GH-3096]
 * resource/aws_route: Allow adding IPv6 routes to instances and network interfaces [GH-2265]
 * resource/aws_sqs_queue: Retry queue creation on QueueDeletedRecently error [GH-3113]
 * resource/aws_vpn_connection: Add inside CIDR and pre-shared key attributes [GH-1862]
-* resource/aws_api_gateway_integration: Allow update of content_handling attributes [GH-3123]
-* resource/cognito_user_pool: support pre_token_generation in lambda_config [GH-3093]
-* resource/aws_cloudwatch_log_subscription_filter: Add support for distribution [GH-3046]
-* **New Resource:** `aws_dynamodb_global_table` [GH-2517]
 
 BUG FIXES:
 
