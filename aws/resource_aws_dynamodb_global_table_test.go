@@ -102,7 +102,7 @@ func testAccCheckAwsDynamoDbGlobalTableDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeGlobalTable(input)
 		if err != nil {
-			if isAWSErr(err, "GlobalTableNotFoundException", "") {
+			if isAWSErr(err, dynamodb.ErrCodeGlobalTableNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -196,7 +196,7 @@ func testAccDynamoDbGlobalTableConfig_basic1(tableName string) string {
 %s
 
 resource "aws_dynamodb_global_table" "test" {
-	depends_on = ["aws_dynamodb_table.us-east-1"]
+  depends_on = ["aws_dynamodb_table.us-east-1"]
   provider = "aws.us-east-1"
 
   name = "%s"
