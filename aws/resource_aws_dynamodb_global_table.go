@@ -1,14 +1,12 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -48,7 +46,6 @@ func resourceAwsDynamoDbGlobalTable() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsDynamoDbGlobalTableReplicaHash,
 			},
 
 			"arn": {
@@ -243,13 +240,6 @@ func resourceAwsDynamoDbGlobalTableStateRefreshFunc(
 	}
 }
 
-func resourceAwsDynamoDbGlobalTableReplicaHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["region_name"].(string)))
-	return hashcode.String(buf.String())
-}
-
 func flattenAwsDynamoDbGlobalTable(d *schema.ResourceData, globalTableDescription *dynamodb.GlobalTableDescription) error {
 	var err error
 
@@ -316,12 +306,12 @@ func expandAwsDynamoDbReplica(configuredReplica map[string]interface{}) *dynamod
 	return replica
 }
 
-func flattenAwsDynamoDbReplicas(replicaDescriptions []*dynamodb.ReplicaDescription) *schema.Set {
+func flattenAwsDynamoDbReplicas(replicaDescriptions []*dynamodb.ReplicaDescription) []interface{} {
 	replicas := []interface{}{}
 	for _, replicaDescription := range replicaDescriptions {
 		replicas = append(replicas, flattenAwsDynamoDbReplica(replicaDescription))
 	}
-	return schema.NewSet(resourceAwsDynamoDbGlobalTableReplicaHash, replicas)
+	return replicas
 }
 
 func flattenAwsDynamoDbReplica(replicaDescription *dynamodb.ReplicaDescription) map[string]interface{} {

@@ -39,7 +39,7 @@ func TestAccAwsDynamoDbGlobalTable_basic(t *testing.T) {
 					testAccCheckAwsDynamoDbGlobalTableExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", tableName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replica.2879992352.region_name", "us-east-1"),
+					resource.TestCheckResourceAttr(resourceName, "replica.2896117718.region_name", "us-east-1"),
 					resource.TestMatchResourceAttr(resourceName, "arn",
 						regexp.MustCompile("^arn:aws:dynamodb::[0-9]{12}:global-table/[a-z0-9-]+$")),
 				),
@@ -49,8 +49,8 @@ func TestAccAwsDynamoDbGlobalTable_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDynamoDbGlobalTableExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "replica.2879992352.region_name", "us-east-1"),
-					resource.TestCheckResourceAttr(resourceName, "replica.2156159459.region_name", "us-east-2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.2896117718.region_name", "us-east-1"),
+					resource.TestCheckResourceAttr(resourceName, "replica.2276617237.region_name", "us-east-2"),
 				),
 			},
 			{
@@ -58,8 +58,8 @@ func TestAccAwsDynamoDbGlobalTable_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDynamoDbGlobalTableExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "replica.2879992352.region_name", "us-east-1"),
-					resource.TestCheckResourceAttr(resourceName, "replica.3948195346.region_name", "us-west-2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.2896117718.region_name", "us-east-1"),
+					resource.TestCheckResourceAttr(resourceName, "replica.3965887460.region_name", "us-west-2"),
 				),
 			},
 		},
