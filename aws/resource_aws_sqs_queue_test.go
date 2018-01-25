@@ -120,6 +120,33 @@ func TestAccAWSSQSQueue_policy(t *testing.T) {
 	})
 }
 
+func TestAccAWSSQSQueue_queueDeletedRecently(t *testing.T) {
+	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigWithDefaults(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+				),
+			},
+			{
+				Config: "# delete queue to quickly recreate",
+				Check:  testAccCheckAWSSQSQueueDestroy,
+			},
+			{
+				Config: testAccAWSSQSConfigWithDefaults(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSQSQueue_redrivePolicy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
