@@ -8,6 +8,7 @@ ENHANCEMENTS:
 * resource/aws_kms_alias: Add target_key_arn attribute [GH-3096]
 * resource/aws_route: Allow adding IPv6 routes to instances and network interfaces [GH-2265]
 * resource/aws_vpn_connection: Add inside CIDR and pre-shared key attributes [GH-1862]
+* resource/aws_api_gateway_integration: Allow update of content_handling attributes [GH-3123]
 
 BUG FIXES:
 
