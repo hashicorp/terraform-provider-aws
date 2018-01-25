@@ -3,12 +3,12 @@ package aws
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -231,14 +231,17 @@ func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
 		params := &sqs.GetQueueAttributesInput{
 			QueueUrl: aws.String(rs.Primary.ID),
 		}
-		_, err := conn.GetQueueAttributes(params)
-		if err == nil {
-			return fmt.Errorf("Queue %s still exists. Failing!", rs.Primary.ID)
-		}
-
-		// Verify the error is what we want
-		_, ok := err.(awserr.Error)
-		if !ok {
+		err := resource.Retry(15*time.Second, func() *resource.RetryError {
+			_, err := conn.GetQueueAttributes(params)
+			if err != nil {
+				if isAWSErr(err, sqs.ErrCodeQueueDoesNotExist, "") {
+					return nil
+				}
+				return resource.NonRetryableError(err)
+			}
+			return resource.RetryableError(fmt.Errorf("Queue %s still exists. Failing!", rs.Primary.ID))
+		})
+		if err != nil {
 			return err
 		}
 	}
