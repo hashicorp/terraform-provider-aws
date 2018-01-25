@@ -102,7 +102,7 @@ Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query
 
 * `subnets` - (Required) The subnets associated with the task or service.
 * `security_groups` - (Optional) The security groups associated with the task or service. If you do not specify a security group, the default security group for the VPC is used.
-* `assign_public_ip` - (Optional) Valid values are "ENABLED" or "DISABLED".  Will assign a public IP address to the ENI.
+* `assign_public_ip` - (Optional) Valid values are "true" or "false".  Will assign a public IP address to the ENI.
 For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-networking.html)
 
 ## Attributes Reference
