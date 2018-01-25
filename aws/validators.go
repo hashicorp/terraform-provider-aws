@@ -892,6 +892,19 @@ func validateAwsEcsPlacementConstraint(constType, constExpr string) error {
 	return nil
 }
 
+// http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateGlobalTable.html
+func validateAwsDynamoDbGlobalTableName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) > 255) || (len(value) < 3) {
+		errors = append(errors, fmt.Errorf("%s length must be between 3 and 255 characters: %q", k, value))
+	}
+	pattern := `^[a-zA-Z0-9_.-]+$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%s must only include alphanumeric, underscore, period, or hyphen characters: %q", k, value))
+	}
+	return
+}
+
 // Validates that an Ecs placement strategy is set correctly
 // Takes type, and field as strings
 func validateAwsEcsPlacementStrategy(stratType, stratField string) error {
