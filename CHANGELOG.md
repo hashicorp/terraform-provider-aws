@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * resource/aws_vpn_connection: Add inside CIDR and pre-shared key attributes [GH-1862]
 * resource/aws_api_gateway_integration: Allow update of content_handling attributes [GH-3123]
 * resource/cognito_user_pool: support pre_token_generation in lambda_config [GH-3093]
+* resource/aws_cloudwatch_log_subscription_filter: Add support for distribution [GH-3046]
 
 BUG FIXES:
 
