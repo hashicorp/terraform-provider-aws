@@ -154,7 +154,7 @@ resource "aws_cloudwatch_log_subscription_filter" "test_lambdafunction_logfilter
   log_group_name  = "${aws_cloudwatch_log_group.logs.name}"
   filter_pattern  = "logtype test"
   destination_arn = "${aws_lambda_function.test_lambdafunction.arn}"
-	distribution    = "Random"
+  distribution    = "Random"
 }
 
 resource "aws_lambda_function" "test_lambdafunction" {
