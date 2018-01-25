@@ -1,6 +1,10 @@
 package aws
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/hashicorp/terraform/helper/schema"
+)
 
 var base64encodingTests = []struct {
 	in  []byte
@@ -68,5 +72,31 @@ func TestJsonBytesEqualWhitespaceAndNoWhitespace(t *testing.T) {
 
 	if jsonBytesEqual([]byte(noWhitespaceDiff), []byte(whitespaceDiff)) {
 		t.Errorf("Expected jsonBytesEqual to return false for %s == %s", noWhitespaceDiff, whitespaceDiff)
+	}
+}
+
+func TestMergeSchemas(t *testing.T) {
+	s1 := map[string]*schema.Schema{
+		"aaa": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"zzz": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  42,
+		},
+	}
+	s2 := map[string]*schema.Schema{
+		"xxx": {
+			Type:     schema.TypeFloat,
+			Computed: true,
+		},
+	}
+
+	s3 := mergeSchemas(s1, s2)
+	if len(s3) != 3 {
+		t.Errorf("Expected merge schema to be of size 3, got %d", len(s3))
 	}
 }
