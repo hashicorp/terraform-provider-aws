@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * datasource/aws_kms_alias: Add target_key_arn attribute [GH-2551]
 * resource/aws_appautoscaling_target: Support updating max_capacity, min_capacity, and role_arn attributes [GH-2950]
 * resource/aws_elasticsearch_domain: Add support for encrypt_at_rest [GH-2632]
+* resource/aws_kms_alias: Add target_key_arn attribute [GH-3096]
 * resource/aws_route: Allow adding IPv6 routes to instances and network interfaces [GH-2265]
 * resource/aws_vpn_connection: Add inside CIDR and pre-shared key attributes [GH-1862]
 
