@@ -253,6 +253,19 @@ into Terraform.
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
 
+#### New Region
+
+Implementing a new region gives Terraform the ability to connect and interact
+with endpoints in a new geographic area. While baseline region support is fairly
+trivial to add, new regions are generally limited in which services they support.
+
+ - [ ] Add region to `aws/config.go`
+ - [ ] Check [Regions and Endpoints ELB regions](https://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region) and add Route53 Hosted Zone ID (or `""`) to `aws/data_source_aws_elb_hosted_zone_id.go`
+ - [ ] Check [Regions and Endpoints S3 website endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) and add Route53 Hosted Zone ID (or `""`) to `aws/hosted_zones.go`
+ - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html) and add AWS Account ID (or `""`) to `aws/data_source_aws_cloudtrail_service_account.go`
+ - [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID (or `""`) to `aws/data_source_aws_elb_service_account.go`
+ - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html) and add AWS Account ID (or `""`) to `aws/data_source_aws_redshift_service_account.go`
+
 #### Terraform Schema and Code Idiosyncracies
 
 There are aspects of the terraform code base and models which have a common theme
