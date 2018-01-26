@@ -358,6 +358,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_emr_instance_group":                       resourceAwsEMRInstanceGroup(),
 			"aws_emr_security_configuration":               resourceAwsEMRSecurityConfiguration(),
 			"aws_flow_log":                                 resourceAwsFlowLog(),
+			"aws_gamelift_build":                           resourceAwsGameliftBuild(),
 			"aws_glacier_vault":                            resourceAwsGlacierVault(),
 			"aws_glue_catalog_database":                    resourceAwsGlueCatalogDatabase(),
 			"aws_guardduty_detector":                       resourceAwsGuardDutyDetector(),

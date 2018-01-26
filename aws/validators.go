@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -2117,5 +2118,18 @@ func validateServiceDiscoveryServiceHealthCheckConfigType(v interface{}, k strin
 		}
 	}
 	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
+	return
+}
+
+func validateGameliftOperatingSystem(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	operatingSystems := map[string]bool{
+		gamelift.OperatingSystemAmazonLinux: true,
+		gamelift.OperatingSystemWindows2012: true,
+	}
+
+	if !operatingSystems[value] {
+		errors = append(errors, fmt.Errorf("%q must be a valid operating system value: %q", k, value))
+	}
 	return
 }

@@ -50,6 +50,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
+	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -177,6 +178,7 @@ type AWSClient struct {
 	iamconn               *iam.IAM
 	kinesisconn           *kinesis.Kinesis
 	kmsconn               *kms.KMS
+	gameliftconn          *gamelift.GameLift
 	firehoseconn          *firehose.Firehose
 	inspectorconn         *inspector.Inspector
 	elasticacheconn       *elasticache.ElastiCache
@@ -423,6 +425,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.esconn = elasticsearch.New(sess)
 	client.firehoseconn = firehose.New(sess)
 	client.inspectorconn = inspector.New(sess)
+	client.gameliftconn = gamelift.New(sess)
 	client.glacierconn = glacier.New(sess)
 	client.guarddutyconn = guardduty.New(sess)
 	client.iotconn = iot.New(sess)
