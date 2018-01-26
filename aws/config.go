@@ -226,6 +226,9 @@ func (c *AWSClient) IsChinaCloud() bool {
 	if c.region == "cn-north-1" {
 		return true
 	}
+	if c.region == "cn-northwest-1" {
+		return true
+	}
 	return false
 }
 
@@ -506,6 +509,7 @@ func (c *Config) ValidateRegion() error {
 		"ap-southeast-2",
 		"ca-central-1",
 		"cn-north-1",
+		"cn-northwest-1",
 		"eu-central-1",
 		"eu-west-1",
 		"eu-west-2",
