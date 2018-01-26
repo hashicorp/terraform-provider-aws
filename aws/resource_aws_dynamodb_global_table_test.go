@@ -34,7 +34,30 @@ func TestAccAwsDynamoDbGlobalTable_basic(t *testing.T) {
 				ExpectError: regexp.MustCompile("name must only include alphanumeric, underscore, period, or hyphen characters"),
 			},
 			{
-				Config: testAccDynamoDbGlobalTableConfig_basic1(tableName),
+				Config: testAccDynamoDbGlobalTableConfig_basic(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDynamoDbGlobalTableExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", tableName),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "arn",
+						regexp.MustCompile("^arn:aws:dynamodb::[0-9]{12}:global-table/[a-z0-9-]+$")),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsDynamoDbGlobalTable_multipleRegions(t *testing.T) {
+	resourceName := "aws_dynamodb_global_table.test"
+	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDynamoDbGlobalTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDynamoDbGlobalTableExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", tableName),
@@ -45,7 +68,7 @@ func TestAccAwsDynamoDbGlobalTable_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDynamoDbGlobalTableConfig_basic2(tableName),
+				Config: testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDynamoDbGlobalTableExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
@@ -54,7 +77,7 @@ func TestAccAwsDynamoDbGlobalTable_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDynamoDbGlobalTableConfig_basic3(tableName),
+				Config: testAccDynamoDbGlobalTableConfig_multipleRegions3(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDynamoDbGlobalTableExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
@@ -76,7 +99,7 @@ func TestAccAwsDynamoDbGlobalTable_import(t *testing.T) {
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccDynamoDbGlobalTableConfig_basic1(tableName),
+				Config: testAccDynamoDbGlobalTableConfig_basic(tableName),
 			},
 
 			resource.TestStep{
@@ -125,7 +148,39 @@ func testAccCheckAwsDynamoDbGlobalTableExists(name string) resource.TestCheckFun
 	}
 }
 
-func testAccDynamoDbGlobalTableConfig_basic_dynamodb_tables(tableName string) string {
+func testAccDynamoDbGlobalTableConfig_basic(tableName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {
+  current = true
+}
+
+resource "aws_dynamodb_table" "test" {
+  hash_key         = "myAttribute"
+  name             = "%s"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+  read_capacity    = 1
+  write_capacity   = 1
+
+  attribute {
+    name = "myAttribute"
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_global_table" "test" {
+  depends_on = ["aws_dynamodb_table.test"]
+
+  name = "%s"
+
+  replica {
+    region_name = "${data.aws_region.current.name}"
+  }
+}
+`, tableName, tableName)
+}
+
+func testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   alias  = "us-east-1"
@@ -191,7 +246,7 @@ resource "aws_dynamodb_table" "us-west-2" {
 }`, tableName, tableName, tableName)
 }
 
-func testAccDynamoDbGlobalTableConfig_basic1(tableName string) string {
+func testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -204,10 +259,10 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-east-1"
   }
-}`, testAccDynamoDbGlobalTableConfig_basic_dynamodb_tables(tableName), tableName)
+}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
-func testAccDynamoDbGlobalTableConfig_basic2(tableName string) string {
+func testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -224,10 +279,10 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-east-2"
   }
-}`, testAccDynamoDbGlobalTableConfig_basic_dynamodb_tables(tableName), tableName)
+}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
-func testAccDynamoDbGlobalTableConfig_basic3(tableName string) string {
+func testAccDynamoDbGlobalTableConfig_multipleRegions3(tableName string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -244,7 +299,7 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-west-2"
   }
-}`, testAccDynamoDbGlobalTableConfig_basic_dynamodb_tables(tableName), tableName)
+}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_invalidName(tableName string) string {
