@@ -189,7 +189,7 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *sqs.CreateQueueOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(70*time.Second, func() *resource.RetryError {
 		var err error
 		output, err = sqsconn.CreateQueue(req)
 		if err != nil {
