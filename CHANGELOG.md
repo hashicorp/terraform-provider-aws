@@ -28,6 +28,7 @@ BUG FIXES:
 * resource/aws_lambda_function: Retry updates for IAM eventual consistency [GH-3116]
 * resource/aws_route53_record: Suppress uppercase alias name diff [GH-3119]
 * resource/aws_sqs_queue_policy: Prevent missing policy error on read [GH-2739]
+* resource/aws_rds_cluster: Retry deletion on InvalidDBClusterStateFault [GH-3028]
 
 ## 1.7.1 (January 19, 2018)
 
