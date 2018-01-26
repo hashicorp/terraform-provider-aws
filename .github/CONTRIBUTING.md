@@ -316,14 +316,14 @@ Tests can then be run by specifying the target provider and a regular
 expression defining the tests to run:
 
 ```sh
-$ make testacc TEST=./builtin/providers/azurerm TESTARGS='-run=TestAccAzureRMPublicIpStatic_update'
+$ make testacc TEST=./azurerm TESTARGS='-run=TestAccAzureRMPublicIpStatic_update'
 ==> Checking that code complies with gofmt requirements...
 go generate ./...
-TF_ACC=1 go test ./builtin/providers/azurerm -v -run=TestAccAzureRMPublicIpStatic_update -timeout 120m
+TF_ACC=1 go test ./azurerm -v -run=TestAccAzureRMPublicIpStatic_update -timeout 120m
 === RUN   TestAccAzureRMPublicIpStatic_update
 --- PASS: TestAccAzureRMPublicIpStatic_update (177.48s)
 PASS
-ok      github.com/hashicorp/terraform/builtin/providers/azurerm    177.504s
+ok      github.com/hashicorp/terraform/azurerm    177.504s
 ```
 
 Entire resource test suites can be targeted by using the naming convention to
@@ -332,16 +332,16 @@ write the regular expression. For example, to run all tests of the
 testing like this:
 
 ```sh
-$ make testacc TEST=./builtin/providers/azurerm TESTARGS='-run=TestAccAzureRMPublicIpStatic'
+$ make testacc TEST=./azurerm TESTARGS='-run=TestAccAzureRMPublicIpStatic'
 ==> Checking that code complies with gofmt requirements...
 go generate ./...
-TF_ACC=1 go test ./builtin/providers/azurerm -v -run=TestAccAzureRMPublicIpStatic -timeout 120m
+TF_ACC=1 go test ./azurerm -v -run=TestAccAzureRMPublicIpStatic -timeout 120m
 === RUN   TestAccAzureRMPublicIpStatic_basic
 --- PASS: TestAccAzureRMPublicIpStatic_basic (137.74s)
 === RUN   TestAccAzureRMPublicIpStatic_update
 --- PASS: TestAccAzureRMPublicIpStatic_update (180.63s)
 PASS
-ok      github.com/hashicorp/terraform/builtin/providers/azurerm    318.392s
+ok      github.com/hashicorp/terraform/azurerm    318.392s
 ```
 
 #### Writing an Acceptance Test
