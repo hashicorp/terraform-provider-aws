@@ -320,6 +320,9 @@ For example, to run an acceptance test against the Amazon Web Services
 provider, the following environment variables must be set:
 
 ```sh
+# Using a profile
+export AWS_PROFILE=...
+# Otherwise
 export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
 export AWS_DEFAULT_REGION=...
@@ -329,32 +332,32 @@ Tests can then be run by specifying the target provider and a regular
 expression defining the tests to run:
 
 ```sh
-$ make testacc TEST=./builtin/providers/azurerm TESTARGS='-run=TestAccAzureRMPublicIpStatic_update'
+$ make testacc TEST=./aws TESTARGS='-run=TestAccAWSCloudWatchDashboard_update'
 ==> Checking that code complies with gofmt requirements...
-go generate ./...
-TF_ACC=1 go test ./builtin/providers/azurerm -v -run=TestAccAzureRMPublicIpStatic_update -timeout 120m
-=== RUN   TestAccAzureRMPublicIpStatic_update
---- PASS: TestAccAzureRMPublicIpStatic_update (177.48s)
+TF_ACC=1 go test ./aws -v -run=TestAccAWSCloudWatchDashboard_update -timeout 120m
+=== RUN   TestAccAWSCloudWatchDashboard_update
+--- PASS: TestAccAWSCloudWatchDashboard_update (26.56s)
 PASS
-ok      github.com/hashicorp/terraform/builtin/providers/azurerm    177.504s
+ok  	github.com/terraform-providers/terraform-provider-aws/aws	26.607s
 ```
 
 Entire resource test suites can be targeted by using the naming convention to
 write the regular expression. For example, to run all tests of the
-`azurerm_public_ip` resource rather than just the update test, you can start
+`aws_cloudwatch_dashboard` resource rather than just the update test, you can start
 testing like this:
 
 ```sh
-$ make testacc TEST=./builtin/providers/azurerm TESTARGS='-run=TestAccAzureRMPublicIpStatic'
+$ make testacc TEST=./aws TESTARGS='-run=TestAccAWSCloudWatchDashboard'
 ==> Checking that code complies with gofmt requirements...
-go generate ./...
-TF_ACC=1 go test ./builtin/providers/azurerm -v -run=TestAccAzureRMPublicIpStatic -timeout 120m
-=== RUN   TestAccAzureRMPublicIpStatic_basic
---- PASS: TestAccAzureRMPublicIpStatic_basic (137.74s)
-=== RUN   TestAccAzureRMPublicIpStatic_update
---- PASS: TestAccAzureRMPublicIpStatic_update (180.63s)
+TF_ACC=1 go test ./aws -v -run=TestAccAWSCloudWatchDashboard -timeout 120m
+=== RUN   TestAccAWSCloudWatchDashboard_importBasic
+--- PASS: TestAccAWSCloudWatchDashboard_importBasic (15.06s)
+=== RUN   TestAccAWSCloudWatchDashboard_basic
+--- PASS: TestAccAWSCloudWatchDashboard_basic (12.70s)
+=== RUN   TestAccAWSCloudWatchDashboard_update
+--- PASS: TestAccAWSCloudWatchDashboard_update (27.81s)
 PASS
-ok      github.com/hashicorp/terraform/builtin/providers/azurerm    318.392s
+ok  	github.com/terraform-providers/terraform-provider-aws/aws	55.619s
 ```
 
 #### Writing an Acceptance Test
