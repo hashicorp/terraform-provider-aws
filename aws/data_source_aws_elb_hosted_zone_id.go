@@ -25,6 +25,7 @@ var elbHostedZoneIdPerRegionMap = map[string]string{
 	"sa-east-1":      "Z2P70J7HTTTPLU",
 	"us-gov-west-1":  "048591011584",
 	"cn-north-1":     "638102146993",
+	"cn-northwest-1": "", // Not supported as of January 2018
 }
 
 func dataSourceAwsElbHostedZoneId() *schema.Resource {

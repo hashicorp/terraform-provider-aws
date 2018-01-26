@@ -20,6 +20,7 @@ var hostedZoneIDsMap = map[string]string{
 	"ca-central-1":   "Z1QDHH18159H29",
 	"sa-east-1":      "Z7KQH4QJS55SO",
 	"us-gov-west-1":  "Z31GFT0UA1I2HV",
+	"cn-northwest-1": "", // Not supported as of January 2018
 }
 
 // Returns the hosted zone ID for an S3 website endpoint region. This can be
