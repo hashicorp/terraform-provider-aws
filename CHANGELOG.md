@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_dynamodb_global_table` [GH-2517]
+* **New Resource:** `aws_gamelift_build` [GH-2843]
 
 ENHANCEMENTS:
 
