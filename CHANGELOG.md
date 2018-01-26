@@ -7,6 +7,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* provider: `cn-northwest-1` region is now supported [GH-3142]
 * data-source/aws_kms_alias: Add target_key_arn attribute [GH-2551]
 * resource/aws_api_gateway_integration: Allow update of content_handling attributes [GH-3123]
 * resource/aws_appautoscaling_target: Support updating max_capacity, min_capacity, and role_arn attributes [GH-2950]
