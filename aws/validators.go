@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -1098,39 +1097,6 @@ func validateDmsReplicationTaskId(v interface{}, k string) (ws []string, es []er
 	return
 }
 
-func validateAppautoscalingScalableDimension(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	dimensions := map[string]bool{
-		"ecs:service:DesiredCount":                     true,
-		"ec2:spot-fleet-request:TargetCapacity":        true,
-		"elasticmapreduce:instancegroup:InstanceCount": true,
-		"dynamodb:table:ReadCapacityUnits":             true,
-		"dynamodb:table:WriteCapacityUnits":            true,
-		"dynamodb:index:ReadCapacityUnits":             true,
-		"dynamodb:index:WriteCapacityUnits":            true,
-	}
-
-	if !dimensions[value] {
-		errors = append(errors, fmt.Errorf("%q must be a valid scalable dimension value: %q", k, value))
-	}
-	return
-}
-
-func validateAppautoscalingServiceNamespace(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	namespaces := map[string]bool{
-		"ecs":              true,
-		"ec2":              true,
-		"dynamodb":         true,
-		"elasticmapreduce": true,
-	}
-
-	if !namespaces[value] {
-		errors = append(errors, fmt.Errorf("%q must be a valid service namespace value: %q", k, value))
-	}
-	return
-}
-
 func validateAppautoscalingCustomizedMetricSpecificationStatistic(v interface{}, k string) (ws []string, errors []error) {
 	validStatistic := []string{
 		"Average",
@@ -1148,31 +1114,6 @@ func validateAppautoscalingCustomizedMetricSpecificationStatistic(v interface{},
 	errors = append(errors, fmt.Errorf(
 		"%q contains an invalid statistic %q. Valid statistic are %q.",
 		k, statistic, validStatistic))
-	return
-}
-
-func validateAppautoscalingPredefinedMetricSpecification(v interface{}, k string) (ws []string, errors []error) {
-	validMetrics := []string{
-		applicationautoscaling.MetricTypeAlbrequestCountPerTarget,
-		applicationautoscaling.MetricTypeDynamoDbreadCapacityUtilization,
-		applicationautoscaling.MetricTypeDynamoDbwriteCapacityUtilization,
-		applicationautoscaling.MetricTypeEc2spotFleetRequestAverageCpuutilization,
-		applicationautoscaling.MetricTypeEc2spotFleetRequestAverageNetworkIn,
-		applicationautoscaling.MetricTypeEc2spotFleetRequestAverageNetworkOut,
-		applicationautoscaling.MetricTypeEcsserviceAverageCpuutilization,
-		applicationautoscaling.MetricTypeEcsserviceAverageMemoryUtilization,
-		applicationautoscaling.MetricTypeRdsreaderAverageCpuutilization,
-		applicationautoscaling.MetricTypeRdsreaderAverageDatabaseConnections,
-	}
-	metric := v.(string)
-	for _, o := range validMetrics {
-		if metric == o {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf(
-		"%q contains an invalid metric %q. Valid metric are %q.",
-		k, metric, validMetrics))
 	return
 }
 
