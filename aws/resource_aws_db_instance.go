@@ -502,9 +502,14 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		var sgUpdate bool
 		var passwordUpdate bool
+		var paramGroupUpdate bool
 
 		if _, ok := d.GetOk("password"); ok {
 			passwordUpdate = true
+		}
+
+		if _, ok := d.GetOk("parameter_group_name"); ok {
+			paramGroupUpdate = true
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
@@ -513,7 +518,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
 			sgUpdate = true
 		}
-		if sgUpdate || passwordUpdate {
+		if sgUpdate || passwordUpdate || paramGroupUpdate {
 			log.Printf("[INFO] DB is restoring from snapshot with default security, but custom security should be set, will now update after snapshot is restored!")
 
 			// wait for instance to get up and then modify security
