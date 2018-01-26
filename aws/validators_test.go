@@ -2888,6 +2888,65 @@ func TestResourceAWSElastiCacheReplicationGroupAuthTokenValidation(t *testing.T)
 	}
 }
 
+func TestValidateAppautoscalingPredefinedMetricSpecification(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "ALBRequestCountPerTarget",
+			ErrCount: 0,
+		},
+		{
+			Value:    "DynamoDBReadCapacityUtilization",
+			ErrCount: 0,
+		},
+		{
+			Value:    "DynamoDBWriteCapacityUtilization",
+			ErrCount: 0,
+		},
+		{
+			Value:    "EC2SpotFleetRequestAverageCPUUtilization",
+			ErrCount: 0,
+		},
+		{
+			Value:    "EC2SpotFleetRequestAverageNetworkIn",
+			ErrCount: 0,
+		},
+		{
+			Value:    "EC2SpotFleetRequestAverageNetworkOut",
+			ErrCount: 0,
+		},
+		{
+			Value:    "ECSServiceAverageCPUUtilization",
+			ErrCount: 0,
+		},
+		{
+			Value:    "ECSServiceAverageMemoryUtilization",
+			ErrCount: 0,
+		},
+		{
+			Value:    "RDSReaderAverageCPUUtilization",
+			ErrCount: 0,
+		},
+		{
+			Value:    "RDSReaderAverageDatabaseConnections",
+			ErrCount: 0,
+		},
+		{
+			Value:    "NotValid",
+			ErrCount: 1,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateAppautoscalingPredefinedMetricSpecification(tc.Value, "predefined_metric_type")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected %d errors, got %d: %s", tc.ErrCount, len(errors), errors)
+		}
+	}
+}
+
 func TestValidateCognitoUserPoolDomain(t *testing.T) {
 	validTypes := []string{
 		"valid-domain",

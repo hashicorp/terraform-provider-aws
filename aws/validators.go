@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -1152,8 +1153,16 @@ func validateAppautoscalingCustomizedMetricSpecificationStatistic(v interface{},
 
 func validateAppautoscalingPredefinedMetricSpecification(v interface{}, k string) (ws []string, errors []error) {
 	validMetrics := []string{
-		"DynamoDBReadCapacityUtilization",
-		"DynamoDBWriteCapacityUtilization",
+		applicationautoscaling.MetricTypeAlbrequestCountPerTarget,
+		applicationautoscaling.MetricTypeDynamoDbreadCapacityUtilization,
+		applicationautoscaling.MetricTypeDynamoDbwriteCapacityUtilization,
+		applicationautoscaling.MetricTypeEc2spotFleetRequestAverageCpuutilization,
+		applicationautoscaling.MetricTypeEc2spotFleetRequestAverageNetworkIn,
+		applicationautoscaling.MetricTypeEc2spotFleetRequestAverageNetworkOut,
+		applicationautoscaling.MetricTypeEcsserviceAverageCpuutilization,
+		applicationautoscaling.MetricTypeEcsserviceAverageMemoryUtilization,
+		applicationautoscaling.MetricTypeRdsreaderAverageCpuutilization,
+		applicationautoscaling.MetricTypeRdsreaderAverageDatabaseConnections,
 	}
 	metric := v.(string)
 	for _, o := range validMetrics {
