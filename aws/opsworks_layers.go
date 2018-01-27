@@ -216,7 +216,7 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 		},
 
 		"downscaling_cpu_threshold": {
-			Type:     schema.TypeInt,
+			Type:     schema.TypeFloat,
 			Optional: true,
 		},
 
@@ -231,17 +231,17 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 		},
 
 		"downscaling_load_threshold": {
-			Type:     schema.TypeInt,
+			Type:     schema.TypeFloat,
 			Optional: true,
 		},
 
 		"downscaling_mem_threshold": {
-			Type:     schema.TypeInt,
+			Type:     schema.TypeFloat,
 			Optional: true,
 		},
 
 		"downscaling_threshold_wait_time": {
-			Type:     schema.TypeInt,
+			Type:     schema.TypeFloat,
 			Optional: true,
 		},
 
@@ -252,7 +252,7 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 		},
 
 		"upscaling_cpu_threshold": {
-			Type:     schema.TypeInt,
+			Type:     schema.TypeFloat,
 			Optional: true,
 		},
 
@@ -267,12 +267,12 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 		},
 
 		"upscaling_load_threshold": {
-			Type:     schema.TypeInt,
+			Type:     schema.TypeFloat,
 			Optional: true,
 		},
 
 		"upscaling_mem_threshold": {
-			Type:     schema.TypeInt,
+			Type:     schema.TypeFloat,
 			Optional: true,
 		},
 
@@ -553,9 +553,9 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, client *opsworks.Ops
 	}
 
 	/* Update Autoscaling */
-	_, err := client.SetLoadBasedAutoScaling(lt.Autoscaling(d))
-	if err != nil {
-		return err
+	_, erra := client.SetLoadBasedAutoScaling(lt.Autoscaling(d))
+	if erra != nil {
+		return erra
 	}
 
 	_, err := client.UpdateLayer(req)
