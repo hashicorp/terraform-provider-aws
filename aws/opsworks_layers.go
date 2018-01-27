@@ -552,6 +552,12 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, client *opsworks.Ops
 		}
 	}
 
+	/* Update Autoscaling */
+	_, err := client.SetLoadBasedAutoScaling(lt.Autoscaling(d))
+	if err != nil {
+		return err
+	}
+
 	_, err := client.UpdateLayer(req)
 	if err != nil {
 		return err
