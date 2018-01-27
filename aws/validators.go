@@ -1099,6 +1099,45 @@ func validateDmsReplicationTaskId(v interface{}, k string) (ws []string, es []er
 	return
 }
 
+func validateAutoscalingPredefinedMetricSpecificationPredefinedMetricType(v interface{}, k string) (ws []string, errors []error) {
+	validMetricType := []string{
+		"ASGAverageCPUUtilization",
+		"ASGAverageNetworkIn",
+		"ASGAverageNetworkOut",
+		"ALBRequestCountPerTarget",
+	}
+	metricType := v.(string)
+	for _, o := range validMetricType {
+		if metricType == o {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid type %q. Valid type are %q.",
+		k, metricType, validMetricType))
+	return
+}
+
+func validateAutoscalingCustomizedMetricSpecificationStatistic(v interface{}, k string) (ws []string, errors []error) {
+	validStatistic := []string{
+		"Average",
+		"Minimum",
+		"Maximum",
+		"SampleCount",
+		"Sum",
+	}
+	statistic := v.(string)
+	for _, o := range validStatistic {
+		if statistic == o {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q contains an invalid statistic %q. Valid statistic are %q.",
+		k, statistic, validStatistic))
+	return
+}
+
 func validateAppautoscalingScalableDimension(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	dimensions := map[string]bool{
