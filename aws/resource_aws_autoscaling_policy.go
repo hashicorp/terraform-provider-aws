@@ -31,7 +31,7 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 			},
 			"adjustment_type": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"autoscaling_group_name": &schema.Schema{
 				Type:     schema.TypeString,
@@ -93,6 +93,86 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 				},
 				Set: resourceAwsAutoscalingScalingAdjustmentHash,
 			},
+			"target_tracking_configuration": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"customized_metric_specification": &schema.Schema{
+							Type:          schema.TypeList,
+							MaxItems:      1,
+							Optional:      true,
+							ConflictsWith: []string{"target_tracking_configuration.0.predefined_metric_specification"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"dimensions": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"value": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+									"metric_name": &schema.Schema{
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"namespace": &schema.Schema{
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"statistic": &schema.Schema{
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateAutoscalingCustomizedMetricSpecificationStatistic,
+									},
+									"unit": &schema.Schema{
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"predefined_metric_specification": &schema.Schema{
+							Type:          schema.TypeList,
+							MaxItems:      1,
+							Optional:      true,
+							ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"predefined_metric_type": &schema.Schema{
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateAutoscalingPredefinedMetricSpecificationPredefinedMetricType,
+									},
+									"resource_label": &schema.Schema{
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"disable_scale_in": &schema.Schema{
+							Type:     schema.TypeBool,
+							Default:  false,
+							Optional: true,
+						},
+						"target_value": &schema.Schema{
+							Type:     schema.TypeFloat,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -147,6 +227,7 @@ func resourceAwsAutoscalingPolicyRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("name", p.PolicyName)
 	d.Set("scaling_adjustment", p.ScalingAdjustment)
 	d.Set("step_adjustment", flattenStepAdjustments(p.StepAdjustments))
+	d.Set("target_tracking_configuration", flattenTargetTrackingConfiguration(p.TargetTrackingConfiguration))
 
 	return nil
 }
@@ -233,6 +314,10 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 		params.StepAdjustments = steps
 	}
 
+	if v, ok := d.GetOk("target_tracking_configuration"); ok {
+		params.TargetTrackingConfiguration = expandTargetTrackingConfiguration(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("min_adjustment_magnitude"); ok {
 		// params.MinAdjustmentMagnitude = aws.Int64(int64(d.Get("min_adjustment_magnitude").(int)))
 		params.MinAdjustmentMagnitude = aws.Int64(int64(v.(int)))
@@ -252,6 +337,9 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 	if *params.PolicyType == "SimpleScaling" && params.EstimatedInstanceWarmup != nil {
 		return params, fmt.Errorf("SimpleScaling policy types cannot use estimated_instance_warmup!")
 	}
+	if *params.PolicyType == "SimpleScaling" && params.TargetTrackingConfiguration != nil {
+		return params, fmt.Errorf("SimpleScaling policy types cannot use target_tracking_configuration!")
+	}
 
 	// Second, StepScaling policy types...
 	if *params.PolicyType == "StepScaling" && params.ScalingAdjustment != nil {
@@ -259,6 +347,29 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 	}
 	if *params.PolicyType == "StepScaling" && params.Cooldown != nil {
 		return params, fmt.Errorf("StepScaling policy types cannot use cooldown!")
+	}
+	if *params.PolicyType == "StepScaling" && params.TargetTrackingConfiguration != nil {
+		return params, fmt.Errorf("StepScaling policy types cannot use target_tracking_configuration!")
+	}
+
+	// Third, TargetTrackingScaling policy types...
+	if *params.PolicyType == "TargetTrackingScaling" && params.AdjustmentType != nil {
+		return params, fmt.Errorf("TargetTrackingScaling policy types cannot use adjustment_type!")
+	}
+	if *params.PolicyType == "TargetTrackingScaling" && params.ScalingAdjustment != nil {
+		return params, fmt.Errorf("TargetTrackingScaling policy types cannot use scaling_adjustment!")
+	}
+	if *params.PolicyType == "TargetTrackingScaling" && params.Cooldown != nil {
+		return params, fmt.Errorf("TargetTrackingScaling policy types cannot use cooldown!")
+	}
+	if *params.PolicyType == "TargetTrackingScaling" && params.MetricAggregationType != nil {
+		return params, fmt.Errorf("TargetTrackingScaling policy types cannot use metric_aggregation_type!")
+	}
+	if *params.PolicyType == "TargetTrackingScaling" && params.MinAdjustmentStep != nil {
+		return params, fmt.Errorf("TargetTrackingScaling policy types cannot use min_adjustment_step!")
+	}
+	if *params.PolicyType == "TargetTrackingScaling" && params.StepAdjustments != nil {
+		return params, fmt.Errorf("TargetTrackingScaling policy types cannot use step_adjustments!")
 	}
 
 	return params, nil
@@ -295,6 +406,150 @@ func getAwsAutoscalingPolicy(d *schema.ResourceData, meta interface{}) (*autosca
 
 	// policy not found
 	return nil, nil
+}
+
+func expandTargetTrackingConfiguration(cfg []interface{}) *autoscaling.TargetTrackingConfiguration {
+	if len(cfg) < 1 {
+		return nil
+	}
+
+	m := cfg[0].(map[string]interface{})
+	out := &autoscaling.TargetTrackingConfiguration{
+		TargetValue: aws.Float64(m["target_value"].(float64)),
+	}
+
+	if v, ok := m["disable_scale_in"]; ok {
+		out.DisableScaleIn = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["customized_metric_specification"].([]interface{}); ok && len(v) > 0 {
+		out.CustomizedMetricSpecification = expandAutoscalingCustomizedMetricSpecification(v)
+	}
+
+	if v, ok := m["predefined_metric_specification"].([]interface{}); ok && len(v) > 0 {
+		out.PredefinedMetricSpecification = expandAutoscalingPredefinedMetricSpecification(v)
+	}
+
+	return out
+}
+
+func expandAutoscalingCustomizedMetricSpecification(configured []interface{}) *autoscaling.CustomizedMetricSpecification {
+	spec := &autoscaling.CustomizedMetricSpecification{}
+
+	for _, raw := range configured {
+		data := raw.(map[string]interface{})
+		if v, ok := data["metric_name"]; ok {
+			spec.MetricName = aws.String(v.(string))
+		}
+
+		if v, ok := data["namespace"]; ok {
+			spec.Namespace = aws.String(v.(string))
+		}
+
+		if v, ok := data["unit"].(string); ok && v != "" {
+			spec.Unit = aws.String(v)
+		}
+
+		if v, ok := data["statistic"]; ok {
+			spec.Statistic = aws.String(v.(string))
+		}
+
+		if s, ok := data["dimensions"].(*schema.Set); ok && s.Len() > 0 {
+			dimensions := make([]*autoscaling.MetricDimension, s.Len(), s.Len())
+			for i, d := range s.List() {
+				dimension := d.(map[string]interface{})
+				dimensions[i] = &autoscaling.MetricDimension{
+					Name:  aws.String(dimension["name"].(string)),
+					Value: aws.String(dimension["value"].(string)),
+				}
+			}
+			spec.Dimensions = dimensions
+		}
+	}
+	return spec
+}
+
+func expandAutoscalingPredefinedMetricSpecification(configured []interface{}) *autoscaling.PredefinedMetricSpecification {
+	spec := &autoscaling.PredefinedMetricSpecification{}
+
+	for _, raw := range configured {
+		data := raw.(map[string]interface{})
+
+		if v, ok := data["predefined_metric_type"]; ok {
+			spec.PredefinedMetricType = aws.String(v.(string))
+		}
+
+		if v, ok := data["resource_label"].(string); ok && v != "" {
+			spec.ResourceLabel = aws.String(v)
+		}
+	}
+	return spec
+}
+
+func flattenTargetTrackingConfiguration(cfg *autoscaling.TargetTrackingConfiguration) []interface{} {
+	if cfg == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{}, 0)
+	m["target_value"] = *cfg.TargetValue
+
+	if cfg.DisableScaleIn != nil {
+		m["disable_scale_in"] = *cfg.DisableScaleIn
+	}
+	if cfg.CustomizedMetricSpecification != nil {
+		m["customized_metric_specification"] = ec2FlattenCustomizedMetricSpecification(cfg.CustomizedMetricSpecification)
+	}
+	if cfg.PredefinedMetricSpecification != nil {
+		m["predefined_metric_specification"] = ec2FlattenPredefinedMetricSpecification(cfg.PredefinedMetricSpecification)
+	}
+
+	return []interface{}{m}
+}
+
+func ec2FlattenCustomizedMetricSpecification(cfg *autoscaling.CustomizedMetricSpecification) []interface{} {
+	if cfg == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"metric_name": *cfg.MetricName,
+		"namespace":   *cfg.Namespace,
+		"statistic":   *cfg.Statistic,
+	}
+
+	if len(cfg.Dimensions) > 0 {
+		m["dimensions"] = ec2FlattenMetricDimensions(cfg.Dimensions)
+	}
+
+	if cfg.Unit != nil {
+		m["unit"] = *cfg.Unit
+	}
+	return []interface{}{m}
+}
+
+func ec2FlattenMetricDimensions(ds []*autoscaling.MetricDimension) []interface{} {
+	l := make([]interface{}, len(ds), len(ds))
+	for i, d := range ds {
+		l[i] = map[string]interface{}{
+			"name":  *d.Name,
+			"value": *d.Value,
+		}
+	}
+	return l
+}
+
+func ec2FlattenPredefinedMetricSpecification(cfg *autoscaling.PredefinedMetricSpecification) []interface{} {
+	if cfg == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{
+		"predefined_metric_type": *cfg.PredefinedMetricType,
+	}
+	if cfg.ResourceLabel != nil {
+		m["resource_label"] = *cfg.ResourceLabel
+	}
+	return []interface{}{m}
 }
 
 func resourceAwsAutoscalingScalingAdjustmentHash(v interface{}) int {

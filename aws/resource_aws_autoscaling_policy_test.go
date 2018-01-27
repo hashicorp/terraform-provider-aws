@@ -42,6 +42,11 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "metric_aggregation_type", "Minimum"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "estimated_instance_warmup", "200"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "autoscaling_group_name", name),
+					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_targettracking", &policy),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_targettracking", "policy_type", "TargetTrackingScaling"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_targettracking", "name", "foobar_targettracking"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_targettracking", "autoscaling_group_name", name),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_targettracking", "estimated_instance_warmup", "200"),
 				),
 			},
 		},
@@ -124,6 +129,8 @@ func TestAccAWSAutoscalingPolicy_upgrade(t *testing.T) {
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_simple", &policy),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_simple", "min_adjustment_step", "0"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_simple", "min_adjustment_magnitude", "1"),
+					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_targettracking", &policy),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_targettracking", "estimated_instance_warmup", "100"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -134,6 +141,8 @@ func TestAccAWSAutoscalingPolicy_upgrade(t *testing.T) {
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_simple", &policy),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_simple", "min_adjustment_step", "0"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_simple", "min_adjustment_magnitude", "1"),
+					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_targettracking", &policy),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_targettracking", "estimated_instance_warmup", "100"),
 				),
 			},
 		},
@@ -238,6 +247,19 @@ resource "aws_autoscaling_policy" "foobar_step" {
 	}
 	autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
 }
+
+resource "aws_autoscaling_policy" "foobar_targettracking" {
+	name = "foobar_targettracking"
+	policy_type = "TargetTrackingScaling"
+	estimated_instance_warmup = 200
+	target_tracking_configuration {
+		predefined_metric_specification {
+			predefined_metric_type = "ASGAverageCPUUtilization"
+		}
+		target_value = 20
+	}
+	autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
+}
 `, name, name)
 }
 
@@ -276,7 +298,20 @@ resource "aws_autoscaling_policy" "foobar_simple" {
   min_adjustment_step    = 1
   autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
 }
-`, name, name, name)
+
+resource "aws_autoscaling_policy" "foobar_targettracking" {
+  name = "foobar_targettracking_%s"
+  policy_type = "TargetTrackingScaling"
+  estimated_instance_warmup = 100
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+    target_value = 30
+  }
+  autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
+}
+`, name, name, name, name)
 }
 
 func testAccAWSAutoscalingPolicyConfig_upgrade_615(name string) string {
@@ -314,7 +349,20 @@ resource "aws_autoscaling_policy" "foobar_simple" {
   min_adjustment_magnitude = 1
   autoscaling_group_name   = "${aws_autoscaling_group.foobar.name}"
 }
-`, name, name, name)
+
+resource "aws_autoscaling_policy" "foobar_targettracking" {
+  name = "foobar_targettracking_%s"
+  policy_type = "TargetTrackingScaling"
+  estimated_instance_warmup = 100
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+    target_value = 30
+  }
+  autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
+}
+`, name, name, name, name)
 }
 
 func TestAccAWSAutoscalingPolicy_SimpleScalingStepAdjustment(t *testing.T) {
