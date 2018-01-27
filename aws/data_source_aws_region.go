@@ -2,10 +2,9 @@ package aws
 
 import (
 	"fmt"
-	"log"
+	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -36,48 +35,74 @@ func dataSourceAwsRegion() *schema.Resource {
 }
 
 func dataSourceAwsRegionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
 	currentRegion := meta.(*AWSClient).region
 
-	req := &ec2.DescribeRegionsInput{}
+	var matchingRegion *endpoints.Region
 
-	req.RegionNames = make([]*string, 0, 2)
-	if name := d.Get("name").(string); name != "" {
-		req.RegionNames = append(req.RegionNames, aws.String(name))
+	if v, ok := d.GetOk("endpoint"); ok {
+		endpoint := v.(string)
+		for _, partition := range endpoints.DefaultPartitions() {
+			for _, region := range partition.Regions() {
+				regionEndpointEc2, err := region.ResolveEndpoint(endpoints.Ec2ServiceID)
+				if err != nil {
+					return err
+				}
+				if strings.TrimPrefix(regionEndpointEc2.URL, "https://") == endpoint {
+					matchingRegion = &region
+					break
+				}
+			}
+		}
+		if matchingRegion == nil {
+			return fmt.Errorf("region not found for endpoint: %s", endpoint)
+		}
 	}
 
-	if d.Get("current").(bool) {
-		req.RegionNames = append(req.RegionNames, aws.String(currentRegion))
+	if v, ok := d.GetOk("name"); ok {
+		name := v.(string)
+		for _, partition := range endpoints.DefaultPartitions() {
+			for _, region := range partition.Regions() {
+				if region.ID() == name {
+					if matchingRegion != nil && (*matchingRegion).ID() != name {
+						return fmt.Errorf("multiple regions matched; use additional constraints to reduce matches to a single region")
+					}
+					matchingRegion = &region
+					break
+				}
+			}
+		}
+		if matchingRegion == nil {
+			return fmt.Errorf("region not found for name: %s", name)
+		}
 	}
 
-	req.Filters = buildEC2AttributeFilterList(
-		map[string]string{
-			"endpoint": d.Get("endpoint").(string),
-		},
-	)
-	if len(req.Filters) == 0 {
-		// Don't send an empty filters list; the EC2 API won't accept it.
-		req.Filters = nil
+	current := d.Get("current").(bool)
+	for _, partition := range endpoints.DefaultPartitions() {
+		for _, region := range partition.Regions() {
+			if region.ID() == currentRegion {
+				if matchingRegion == nil {
+					matchingRegion = &region
+					break
+				}
+				if current && (*matchingRegion).ID() != currentRegion {
+					return fmt.Errorf("multiple regions matched; use additional constraints to reduce matches to a single region")
+				}
+			}
+		}
 	}
 
-	log.Printf("[DEBUG] Reading Region: %s", req)
-	resp, err := conn.DescribeRegions(req)
+	region := *matchingRegion
+
+	d.SetId(region.ID())
+	d.Set("current", region.ID() == currentRegion)
+
+	regionEndpointEc2, err := region.ResolveEndpoint(endpoints.Ec2ServiceID)
 	if err != nil {
 		return err
 	}
-	if resp == nil || len(resp.Regions) == 0 {
-		return fmt.Errorf("no matching regions found")
-	}
-	if len(resp.Regions) > 1 {
-		return fmt.Errorf("multiple regions matched; use additional constraints to reduce matches to a single region")
-	}
+	d.Set("endpoint", strings.TrimPrefix(regionEndpointEc2.URL, "https://"))
 
-	region := resp.Regions[0]
-
-	d.SetId(*region.RegionName)
-	d.Set("name", region.RegionName)
-	d.Set("endpoint", region.Endpoint)
-	d.Set("current", *region.RegionName == currentRegion)
+	d.Set("name", region.ID())
 
 	return nil
 }
