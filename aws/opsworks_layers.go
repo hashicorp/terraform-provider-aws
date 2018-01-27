@@ -202,6 +202,84 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 				return hashcode.String(m["mount_point"].(string))
 			},
 		},
+
+		"autoscaling": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+
+		"downscaling_alarms": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+		},
+
+		"downscaling_cpu_threshold": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+
+		"downscaling_ignore_metrics_time": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+
+		"downscaling_instance_count": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+
+		"downscaling_load_threshold": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+
+		"downscaling_mem_threshold": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+
+		"downscaling_threshold_wait_time": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+
+		"upscaling_alarms": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+		},
+
+		"upscaling_cpu_threshold": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+
+		"upscaling_ignore_metrics_time": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+
+		"upscaling_instance_count": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+
+		"upscaling_load_threshold": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+
+		"upscaling_mem_threshold": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+
+		"upscaling_threshold_wait_time": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
 	}
 
 	if lt.CustomShortName {
@@ -331,6 +409,26 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, client *opsworks.OpsWo
 		}
 	}
 
+	/* get Autoscaling configuration */
+	ascRequest := &opsworks.DescribeLoadBasedAutoScalingInput{
+		LayerIds: []*string{
+			aws.String(d.Id()),
+		},
+	}
+	autoScalings, err := client.DescribeLoadBasedAutoScaling(ascRequest)
+	if err != nil {
+		return err
+	}
+
+	if autoScalings.LoadBasedAutoScalingConfigurations == nil || len(autoScalings.LoadBasedAutoScalingConfigurations) == 0 {
+		d.Set("autoscaling", false)
+	} else {
+		autoScaling := autoScalings.LoadBasedAutoScalingConfigurations[0]
+		if autoScaling != nil {
+			lt.SetAutoscaling(d, autoScaling)
+		}
+	}
+
 	return nil
 }
 
@@ -372,6 +470,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, client *opsworks.Ops
 	layerId := *resp.LayerId
 	d.SetId(layerId)
 
+	/* Configure ELB */
 	loadBalancer := aws.String(d.Get("elastic_load_balancer").(string))
 	if loadBalancer != nil && *loadBalancer != "" {
 		log.Printf("[DEBUG] Attaching load balancer: %s", *loadBalancer)
@@ -379,6 +478,14 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, client *opsworks.Ops
 			ElasticLoadBalancerName: loadBalancer,
 			LayerId:                 &layerId,
 		})
+		if err != nil {
+			return err
+		}
+	}
+
+	/* Configure Autoscaling */
+	if d.Get("autoscaling").(bool) {
+		_, err := client.SetLoadBasedAutoScaling(lt.Autoscaling(d))
 		if err != nil {
 			return err
 		}
@@ -642,4 +749,78 @@ func (lt *opsworksLayerType) SetVolumeConfigurations(d *schema.ResourceData, v [
 	}
 
 	d.Set("ebs_volume", newValue)
+}
+
+
+func (lt *opsworksLayerType) Autoscaling(d *schema.ResourceData) *opsworks.SetLoadBasedAutoScalingInput {
+	return &opsworks.SetLoadBasedAutoScalingInput{
+			Enable:			aws.Bool(d.Get("autoscaling").(bool)),
+			LayerId:		aws.String(d.Id()),
+			DownScaling:	&opsworks.AutoScalingThresholds{
+				Alarms:				expandStringList(d.Get("downscaling_alarms").([]interface{})),
+				CpuThreshold:		aws.Float64(float64(d.Get("downscaling_cpu_threshold").(float64))),
+				IgnoreMetricsTime:  aws.Int64(int64(d.Get("downscaling_ignore_metrics_time").(int))),
+				InstanceCount:		aws.Int64(int64(d.Get("downscaling_instance_count").(int))),
+				LoadThreshold:		aws.Float64(float64(d.Get("downscaling_load_threshold").(float64))),
+				MemoryThreshold:	aws.Float64(float64(d.Get("downscaling_mem_threshold").(float64))),
+				ThresholdsWaitTime: aws.Int64(int64(d.Get("downscaling_threshold_wait_time").(int))),
+			},
+			UpScaling: 		&opsworks.AutoScalingThresholds{
+				Alarms:				expandStringList(d.Get("upscaling_alarms").([]interface{})),
+				CpuThreshold:		aws.Float64(float64(d.Get("upscaling_cpu_threshold").(float64))),
+				IgnoreMetricsTime:  aws.Int64(int64(d.Get("upscaling_ignore_metrics_time").(int))),
+				InstanceCount:		aws.Int64(int64(d.Get("upscaling_instance_count").(int))),
+				LoadThreshold:		aws.Float64(float64(d.Get("upscaling_load_threshold").(float64))),
+				MemoryThreshold:	aws.Float64(float64(d.Get("upscaling_mem_threshold").(float64))),
+				ThresholdsWaitTime: aws.Int64(int64(d.Get("upscaling_threshold_wait_time").(int))),
+			},
+		}
+}
+
+
+func (lt *opsworksLayerType) SetAutoscaling(d *schema.ResourceData, as *opsworks.LoadBasedAutoScalingConfiguration) {
+	d.Set("autoscaling", as.Enable)
+	d.Set("downscaling_alarms", flattenStringList(as.DownScaling.Alarms))
+
+	if as.DownScaling.CpuThreshold != nil {
+		d.Set("downscaling_cpu_threshold", as.DownScaling.CpuThreshold)
+	}
+
+	if as.DownScaling.InstanceCount != nil {
+		d.Set("downscaling_instance_count", as.DownScaling.InstanceCount)
+	}
+
+	if as.DownScaling.LoadThreshold != nil {
+		d.Set("downscaling_load_threshold", as.DownScaling.LoadThreshold)
+	}
+
+	if as.DownScaling.MemoryThreshold != nil {
+		d.Set("downscaling_mem_threshold", as.DownScaling.MemoryThreshold)
+	}
+
+	if as.DownScaling.ThresholdsWaitTime != nil {
+		d.Set("upscaling_threshold_wait_time", as.DownScaling.ThresholdsWaitTime)
+	}
+
+	d.Set("upscaling_alarms", flattenStringList(as.UpScaling.Alarms))
+
+	if as.UpScaling.CpuThreshold != nil {
+		d.Set("upscaling_cpu_threshold", as.UpScaling.CpuThreshold)
+	}
+
+	if as.UpScaling.InstanceCount != nil {
+		d.Set("upscaling_instance_count", as.UpScaling.InstanceCount)
+	}
+
+	if as.UpScaling.LoadThreshold != nil {
+		d.Set("upscaling_load_threshold", as.UpScaling.LoadThreshold)
+	}
+
+	if as.UpScaling.MemoryThreshold != nil {
+		d.Set("upscaling_mem_threshold", as.UpScaling.MemoryThreshold)
+	}
+
+	if as.UpScaling.ThresholdsWaitTime != nil {
+		d.Set("upscaling_threshold_wait_time", as.UpScaling.ThresholdsWaitTime)
+	}
 }
