@@ -3023,3 +3023,24 @@ func TestValidateServiceDiscoveryServiceHealthCheckConfigType(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateGuardDutyIpsetFormat(t *testing.T) {
+	validTypes := []string{"TXT", "STIX", "OTX_CSV", "ALIEN_VAULT", "PROOF_POINT", "FIRE_EYE"}
+	for _, v := range validTypes {
+		_, errors := validateGuardDutyIpsetFormat(v, "")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid GuardDuty IPSet Format: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"hoge",
+		"txt",
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateGuardDutyIpsetFormat(v, "")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid GuardDuty IPSet Format", v)
+		}
+	}
+}

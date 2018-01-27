@@ -2133,3 +2133,15 @@ func validateGameliftOperatingSystem(v interface{}, k string) (ws []string, erro
 	}
 	return
 }
+
+func validateGuardDutyIpsetFormat(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	validType := []string{"TXT", "STIX", "OTX_CSV", "ALIEN_VAULT", "PROOF_POINT", "FIRE_EYE"}
+	for _, str := range validType {
+		if value == str {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
+	return
+}
