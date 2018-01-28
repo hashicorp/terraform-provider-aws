@@ -778,6 +778,26 @@ func TestValidateIntegerInRange(t *testing.T) {
 	}
 }
 
+func TestValidateStringLengthRange(t *testing.T) {
+	min := 7
+	max := 11
+	validStrings := []string{"1234567", "1234567890", "12345678901"}
+	for _, v := range validStrings {
+		_, errors := validateStringLengthRange(min, max)(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("length of %q %d should be in range [%d, %d]: %q", v, len(v), min, max, errors)
+		}
+	}
+
+	invalidStrings := []string{"123456", "123456789012"}
+	for _, v := range invalidStrings {
+		_, errors := validateStringLengthRange(min, max)(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("length of %q %d should be outside range [%d, %d]", v, len(v), min, max)
+		}
+	}
+}
+
 func TestResourceAWSElastiCacheClusterIdValidation(t *testing.T) {
 	cases := []struct {
 		Value    string

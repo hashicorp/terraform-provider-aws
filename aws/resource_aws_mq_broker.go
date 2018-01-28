@@ -140,9 +140,10 @@ func resourceAwsMqBroker() *schema.Resource {
 							Optional: true,
 						},
 						"password": {
-							Type:      schema.TypeString,
-							Required:  true,
-							Sensitive: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							Sensitive:    true,
+							ValidateFunc: validateStringLengthRange(12, 250),
 						},
 						"username": {
 							Type:     schema.TypeString,
