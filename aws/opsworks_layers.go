@@ -218,31 +218,37 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 		"downscaling_cpu_threshold": {
 			Type:     schema.TypeFloat,
 			Optional: true,
+			Default:  -1,
 		},
 
 		"downscaling_ignore_metrics_time": {
 			Type:     schema.TypeInt,
 			Optional: true,
+			Default:  10,
 		},
 
 		"downscaling_instance_count": {
 			Type:     schema.TypeInt,
 			Optional: true,
+			Default:  1,
 		},
 
 		"downscaling_load_threshold": {
 			Type:     schema.TypeFloat,
 			Optional: true,
+			Default:  -1,
 		},
 
 		"downscaling_mem_threshold": {
 			Type:     schema.TypeFloat,
 			Optional: true,
+			Default:  -1,
 		},
 
 		"downscaling_threshold_wait_time": {
-			Type:     schema.TypeFloat,
+			Type:     schema.TypeInt,
 			Optional: true,
+			Default:  10,
 		},
 
 		"upscaling_alarms": {
@@ -254,31 +260,37 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 		"upscaling_cpu_threshold": {
 			Type:     schema.TypeFloat,
 			Optional: true,
+			Default:  -1,
 		},
 
 		"upscaling_ignore_metrics_time": {
 			Type:     schema.TypeInt,
 			Optional: true,
+			Default:  5,
 		},
 
 		"upscaling_instance_count": {
 			Type:     schema.TypeInt,
 			Optional: true,
+			Default:  1,
 		},
 
 		"upscaling_load_threshold": {
 			Type:     schema.TypeFloat,
 			Optional: true,
+			Default:  -1,
 		},
 
 		"upscaling_mem_threshold": {
 			Type:     schema.TypeFloat,
 			Optional: true,
+			Default:  -1,
 		},
 
 		"upscaling_threshold_wait_time": {
 			Type:     schema.TypeInt,
 			Optional: true,
+			Default:  5,
 		},
 	}
 
@@ -757,36 +769,49 @@ func (lt *opsworksLayerType) SetVolumeConfigurations(d *schema.ResourceData, v [
 	d.Set("ebs_volume", newValue)
 }
 
-
 func (lt *opsworksLayerType) Autoscaling(d *schema.ResourceData) *opsworks.SetLoadBasedAutoScalingInput {
 	return &opsworks.SetLoadBasedAutoScalingInput{
-			Enable:			aws.Bool(d.Get("autoscaling").(bool)),
-			LayerId:		aws.String(d.Id()),
-			DownScaling:	&opsworks.AutoScalingThresholds{
-				Alarms:				expandStringList(d.Get("downscaling_alarms").([]interface{})),
-				CpuThreshold:		aws.Float64(float64(d.Get("downscaling_cpu_threshold").(float64))),
-				IgnoreMetricsTime:  aws.Int64(int64(d.Get("downscaling_ignore_metrics_time").(int))),
-				InstanceCount:		aws.Int64(int64(d.Get("downscaling_instance_count").(int))),
-				LoadThreshold:		aws.Float64(float64(d.Get("downscaling_load_threshold").(float64))),
-				MemoryThreshold:	aws.Float64(float64(d.Get("downscaling_mem_threshold").(float64))),
-				ThresholdsWaitTime: aws.Int64(int64(d.Get("downscaling_threshold_wait_time").(int))),
-			},
-			UpScaling: 		&opsworks.AutoScalingThresholds{
-				Alarms:				expandStringList(d.Get("upscaling_alarms").([]interface{})),
-				CpuThreshold:		aws.Float64(float64(d.Get("upscaling_cpu_threshold").(float64))),
-				IgnoreMetricsTime:  aws.Int64(int64(d.Get("upscaling_ignore_metrics_time").(int))),
-				InstanceCount:		aws.Int64(int64(d.Get("upscaling_instance_count").(int))),
-				LoadThreshold:		aws.Float64(float64(d.Get("upscaling_load_threshold").(float64))),
-				MemoryThreshold:	aws.Float64(float64(d.Get("upscaling_mem_threshold").(float64))),
-				ThresholdsWaitTime: aws.Int64(int64(d.Get("upscaling_threshold_wait_time").(int))),
-			},
-		}
+		Enable:  aws.Bool(d.Get("autoscaling").(bool)),
+		LayerId: aws.String(d.Id()),
+		DownScaling: &opsworks.AutoScalingThresholds{
+			Alarms:             expandStringList(d.Get("downscaling_alarms").([]interface{})),
+			CpuThreshold:       aws.Float64(float64(d.Get("downscaling_cpu_threshold").(float64))),
+			IgnoreMetricsTime:  aws.Int64(int64(d.Get("downscaling_ignore_metrics_time").(int))),
+			InstanceCount:      aws.Int64(int64(d.Get("downscaling_instance_count").(int))),
+			LoadThreshold:      aws.Float64(float64(d.Get("downscaling_load_threshold").(float64))),
+			MemoryThreshold:    aws.Float64(float64(d.Get("downscaling_mem_threshold").(float64))),
+			ThresholdsWaitTime: aws.Int64(int64(d.Get("downscaling_threshold_wait_time").(int))),
+		},
+		UpScaling: &opsworks.AutoScalingThresholds{
+			Alarms:             expandStringList(d.Get("upscaling_alarms").([]interface{})),
+			CpuThreshold:       aws.Float64(float64(d.Get("upscaling_cpu_threshold").(float64))),
+			IgnoreMetricsTime:  aws.Int64(int64(d.Get("upscaling_ignore_metrics_time").(int))),
+			InstanceCount:      aws.Int64(int64(d.Get("upscaling_instance_count").(int))),
+			LoadThreshold:      aws.Float64(float64(d.Get("upscaling_load_threshold").(float64))),
+			MemoryThreshold:    aws.Float64(float64(d.Get("upscaling_mem_threshold").(float64))),
+			ThresholdsWaitTime: aws.Int64(int64(d.Get("upscaling_threshold_wait_time").(int))),
+		},
+	}
 }
-
 
 func (lt *opsworksLayerType) SetAutoscaling(d *schema.ResourceData, as *opsworks.LoadBasedAutoScalingConfiguration) {
 	d.Set("autoscaling", as.Enable)
 	d.Set("downscaling_alarms", flattenStringList(as.DownScaling.Alarms))
+
+	/* TODO: Setup the cpu threshold if nothing is configured */
+	/* In that case, we should use the same default values creates AWS */
+	/* Anyway is commented in doc you should use at least one */
+	/*	if as.DownScaling.CpuThreshold == nil &&
+		as.DownScaling.MemoryThreshold == nil &&
+		as.DownScaling.LoadThreshold == nil &&
+		len(flattenStringList(as.DownScaling.Alarms)) == 0 &&
+		as.UpScaling.CpuThreshold == nil &&
+		as.UpScaling.MemoryThreshold == nil &&
+		as.UpScaling.LoadThreshold == nil &&
+		len(flattenStringList(as.UpScaling.Alarms)) == 0 {
+		d.Set("upscaling_cpu_threshold", 80)
+		d.Set("downscaling_cpu_threshold", 30)
+	}*/
 
 	if as.DownScaling.CpuThreshold != nil {
 		d.Set("downscaling_cpu_threshold", as.DownScaling.CpuThreshold)
@@ -805,7 +830,11 @@ func (lt *opsworksLayerType) SetAutoscaling(d *schema.ResourceData, as *opsworks
 	}
 
 	if as.DownScaling.ThresholdsWaitTime != nil {
-		d.Set("upscaling_threshold_wait_time", as.DownScaling.ThresholdsWaitTime)
+		d.Set("downscaling_threshold_wait_time", as.DownScaling.ThresholdsWaitTime)
+	}
+
+	if as.DownScaling.IgnoreMetricsTime != nil {
+		d.Set("downscaling_ignore_metrics_time", as.DownScaling.IgnoreMetricsTime)
 	}
 
 	d.Set("upscaling_alarms", flattenStringList(as.UpScaling.Alarms))
@@ -828,5 +857,9 @@ func (lt *opsworksLayerType) SetAutoscaling(d *schema.ResourceData, as *opsworks
 
 	if as.UpScaling.ThresholdsWaitTime != nil {
 		d.Set("upscaling_threshold_wait_time", as.UpScaling.ThresholdsWaitTime)
+	}
+
+	if as.UpScaling.IgnoreMetricsTime != nil {
+		d.Set("upscaling_ignore_metrics_time", as.UpScaling.IgnoreMetricsTime)
 	}
 }
