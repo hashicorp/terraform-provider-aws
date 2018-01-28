@@ -794,21 +794,6 @@ func (lt *opsworksLayerType) SetAutoscaling(d *schema.ResourceData, as *opsworks
 	d.Set("autoscaling", as.Enable)
 	d.Set("downscaling_alarms", flattenStringList(as.DownScaling.Alarms))
 
-	/* TODO: Setup the cpu threshold if nothing is configured */
-	/* In that case, we should use the same default values creates AWS */
-	/* Anyway is commented in doc you should use at least one */
-	/*	if as.DownScaling.CpuThreshold == nil &&
-		as.DownScaling.MemoryThreshold == nil &&
-		as.DownScaling.LoadThreshold == nil &&
-		len(flattenStringList(as.DownScaling.Alarms)) == 0 &&
-		as.UpScaling.CpuThreshold == nil &&
-		as.UpScaling.MemoryThreshold == nil &&
-		as.UpScaling.LoadThreshold == nil &&
-		len(flattenStringList(as.UpScaling.Alarms)) == 0 {
-		d.Set("upscaling_cpu_threshold", 80)
-		d.Set("downscaling_cpu_threshold", 30)
-	}*/
-
 	if as.DownScaling.CpuThreshold != nil {
 		d.Set("downscaling_cpu_threshold", as.DownScaling.CpuThreshold)
 	}
