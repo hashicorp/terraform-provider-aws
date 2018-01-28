@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -37,27 +36,18 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
 }
 
-type arnData struct {
-	arn       string
-	notBefore *time.Time
-}
-
-func describeCertificate(arn *arnData, conn *acm.ACM) (*acm.DescribeCertificateOutput, error) {
-	params := &acm.DescribeCertificateInput{}
-	params.CertificateArn = &arn.arn
-
-	description, err := conn.DescribeCertificate(params)
-	if err != nil {
-		return nil, err
+func describeCertificateByArn(arn *string, conn *acm.ACM) (*acm.CertificateDetail, error) {
+	input := &acm.DescribeCertificateInput{
+		CertificateArn: aws.String(*arn),
 	}
-
-	return description, nil
+	log.Printf("[DEBUG] Describing ACM Certificate: %s", input)
+	output, err := conn.DescribeCertificate(input)
+	return output.Certificate, err
 }
 
 func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) error {
@@ -73,88 +63,92 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		params.CertificateStatuses = []*string{aws.String("ISSUED")}
 	}
 
-	var arns []*arnData
+	var arns []*string
 	log.Printf("[DEBUG] Reading ACM Certificate: %s", params)
 	err := conn.ListCertificatesPages(params, func(page *acm.ListCertificatesOutput, lastPage bool) bool {
 		for _, cert := range page.CertificateSummaryList {
 			if *cert.DomainName == target {
-				arns = append(arns, &arnData{*cert.CertificateArn, nil})
+				arns = append(arns, cert.CertificateArn)
 			}
 		}
 
 		return true
 	})
 	if err != nil {
-		return errwrap.Wrapf("Error listing certificates: {{err}}", err)
-	}
-
-	// filter based on certificate type (imported or aws-issued)
-	types, ok := d.GetOk("types")
-	if ok {
-		typesStrings := expandStringList(types.([]interface{}))
-		var matchedArns []*arnData
-		for _, arn := range arns {
-			description, err := describeCertificate(arn, conn)
-			if err != nil {
-				return errwrap.Wrapf("Error describing certificates: {{err}}", err)
-			}
-
-			for _, certType := range typesStrings {
-				if *description.Certificate.Type == *certType {
-					matchedArns = append(
-						matchedArns,
-						&arnData{arn.arn, description.Certificate.NotBefore},
-					)
-					break
-				}
-			}
-		}
-
-		arns = matchedArns
+		return fmt.Errorf("Error listing certificates: %q", err)
 	}
 
 	if len(arns) == 0 {
-		return fmt.Errorf("No certificate for domain %q found in this region.", target)
+		return fmt.Errorf("No certificate for domain %q found in this region", target)
 	}
 
-	if len(arns) > 1 {
-		// Get most recent sorting by notBefore date. Notice that createdAt field is only valid
-		// for ACM issued certificates but not for imported ones so in a mixed scenario only
-		// fields extracted from the certificate are valid.
-		_, ok = d.GetOk("most_recent")
-		if ok {
-			mr := arns[0]
-			if mr.notBefore == nil {
-				description, err := describeCertificate(mr, conn)
-				if err != nil {
-					return errwrap.Wrapf("Error describing certificates: {{err}}", err)
-				}
+	filterMostRecent := d.Get("most_recent").(bool)
+	filterTypes, filterTypesOk := d.GetOk("types")
 
-				mr.notBefore = description.Certificate.NotBefore
+	var matchedCertificate *acm.CertificateDetail
+
+	if !filterMostRecent && !filterTypesOk {
+		if len(arns) > 1 {
+			// Multiple certificates have been found and no flags set. Error
+			return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
+		}
+		// Only 1 certificate has been found and no flags set. Get details and return it.
+		matchedCertificate, err = describeCertificateByArn(arns[0], conn)
+		if err != nil {
+			return fmt.Errorf("Error describing ACM certificate: %q", err)
+		}
+	} else {
+		typesStrings := expandStringList(filterTypes.([]interface{}))
+
+		for _, arn := range arns {
+			certificate, err := describeCertificateByArn(arn, conn)
+			if err != nil {
+				return fmt.Errorf("Error describing ACM certificate: %q", err)
 			}
-			for _, arn := range arns[1:] {
-				if arn.notBefore == nil {
-					description, err := describeCertificate(arn, conn)
-					if err != nil {
-						return errwrap.Wrapf("Error describing certificates: {{err}}", err)
+			if filterTypesOk {
+				for _, certType := range typesStrings {
+					if *certificate.Type == *certType {
+						// We do not have a candidate certificate
+						if matchedCertificate == nil {
+							matchedCertificate = certificate
+							continue
+						}
+						// At this point, we already have a candidate certificate
+						// Check if we are filtering by most recent and update if necessary
+						if filterMostRecent && (*certificate.NotBefore).After(*matchedCertificate.NotBefore) {
+							matchedCertificate = certificate
+							break
+						}
+						// Now we have multiple candidate certificates and we only allow one certificate
+						return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
 					}
-
-					arn.notBefore = description.Certificate.NotBefore
 				}
-
-				if arn.notBefore.After(*mr.notBefore) {
-					mr = arn
-				}
+				continue
 			}
-
-			arns = []*arnData{mr}
-		} else {
-			return fmt.Errorf("Multiple certificates for domain %q found in this region.", target)
+			// At this point, we already have a candidate certificate
+			// Check if we are filtering by most recent and update if necessary
+			if filterMostRecent {
+				// We do not have a candidate certificate
+				if matchedCertificate == nil {
+					matchedCertificate = certificate
+					continue
+				}
+				if (*certificate.NotBefore).After(*matchedCertificate.NotBefore) {
+					matchedCertificate = certificate
+				}
+				continue
+			}
+			// Now we have multiple candidate certificates and we only allow one certificate
+			return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
 		}
 	}
 
+	if matchedCertificate == nil {
+		return fmt.Errorf("No certificate for domain %q found in this region", target)
+	}
+
 	d.SetId(time.Now().UTC().String())
-	d.Set("arn", arns[0].arn)
+	d.Set("arn", matchedCertificate.CertificateArn)
 
 	return nil
 }
