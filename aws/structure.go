@@ -3074,3 +3074,23 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 
 	return l
 }
+
+func flattenApiGatewayStageCanarySettings(canarySettings *apigateway.CanarySettings) []interface{} {
+	settings := make(map[string]interface{})
+	overrides := make(map[string]string)
+
+	if canarySettings == nil {
+		return nil
+	}
+
+	for k, v := range canarySettings.StageVariableOverrides {
+		overrides[k] = *v
+	}
+	if len(overrides) > 0 {
+		settings["stage_variable_overrides"] = overrides
+	}
+	settings["percent_traffic"] = canarySettings.PercentTraffic
+	settings["use_stage_cache"] = canarySettings.UseStageCache
+
+	return []interface{}{settings}
+}
