@@ -317,17 +317,6 @@ func validateMaxLength(length int) schema.SchemaValidateFunc {
 	}
 }
 
-func validateStringLengthRange(min, max int) schema.SchemaValidateFunc {
-	return func(v interface{}, k string) (ws []string, errors []error) {
-		value := v.(string)
-		if len(value) < min || len(value) > max {
-			errors = append(errors, fmt.Errorf(
-				"%q must be %d to %d characters long. provided string length: %d", k, min, max, len(value)))
-		}
-		return
-	}
-}
-
 func validateIntegerInRange(min, max int) schema.SchemaValidateFunc {
 	return func(v interface{}, k string) (ws []string, errors []error) {
 		value := v.(int)
