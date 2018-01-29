@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,6 +18,10 @@ func resourceAwsGuardDutyIpset() *schema.Resource {
 		Read:   resourceAwsGuardDutyIpsetRead,
 		Update: resourceAwsGuardDutyIpsetUpdate,
 		Delete: resourceAwsGuardDutyIpsetDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"detector_id": {
@@ -76,22 +81,26 @@ func resourceAwsGuardDutyIpsetCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("[WARN] Error waiting for GuardDuty IpSet status to be \"%s\": %s", guardduty.IpSetStatusActive, err)
 	}
 
-	d.SetId(*resp.IpSetId)
+	d.SetId(fmt.Sprintf("%s:%s", detectorID, *resp.IpSetId))
 	return resourceAwsGuardDutyIpsetRead(d, meta)
 }
 
 func resourceAwsGuardDutyIpsetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
 
+	ipSetId, detectorId, err := decodeGuardDutyIpsetID(d.Id())
+	if err != nil {
+		return err
+	}
 	input := &guardduty.GetIPSetInput{
-		DetectorId: aws.String(d.Get("detector_id").(string)),
-		IpSetId:    aws.String(d.Id()),
+		DetectorId: aws.String(detectorId),
+		IpSetId:    aws.String(ipSetId),
 	}
 
 	resp, err := conn.GetIPSet(input)
 	if err != nil {
 		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
-			log.Printf("[WARN] GuardDuty IpSet %q not found, removing from state", d.Id())
+			log.Printf("[WARN] GuardDuty IpSet %q not found, removing from state", ipSetId)
 			d.SetId("")
 			return nil
 		}
@@ -101,16 +110,20 @@ func resourceAwsGuardDutyIpsetRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("format", resp.Format)
 	d.Set("location", resp.Location)
 	d.Set("name", resp.Name)
+	d.Set("activate", *resp.Status == guardduty.IpSetStatusActive)
 	return nil
 }
 
 func resourceAwsGuardDutyIpsetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
 
-	detectorID := d.Get("detector_id").(string)
+	ipSetId, detectorId, err := decodeGuardDutyIpsetID(d.Id())
+	if err != nil {
+		return err
+	}
 	input := &guardduty.UpdateIPSetInput{
-		DetectorId: aws.String(detectorID),
-		IpSetId:    aws.String(d.Id()),
+		DetectorId: aws.String(detectorId),
+		IpSetId:    aws.String(ipSetId),
 	}
 
 	if d.HasChange("name") {
@@ -123,7 +136,7 @@ func resourceAwsGuardDutyIpsetUpdate(d *schema.ResourceData, meta interface{}) e
 		input.Activate = aws.Bool(d.Get("activate").(bool))
 	}
 
-	_, err := conn.UpdateIPSet(input)
+	_, err = conn.UpdateIPSet(input)
 	if err != nil {
 		return err
 	}
@@ -134,13 +147,16 @@ func resourceAwsGuardDutyIpsetUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsGuardDutyIpsetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
 
-	detectorID := d.Get("detector_id").(string)
+	ipSetId, detectorId, err := decodeGuardDutyIpsetID(d.Id())
+	if err != nil {
+		return err
+	}
 	input := &guardduty.DeleteIPSetInput{
-		DetectorId: aws.String(detectorID),
-		IpSetId:    aws.String(d.Id()),
+		DetectorId: aws.String(detectorId),
+		IpSetId:    aws.String(ipSetId),
 	}
 
-	_, err := conn.DeleteIPSet(input)
+	_, err = conn.DeleteIPSet(input)
 	if err != nil {
 		return err
 	}
@@ -153,7 +169,7 @@ func resourceAwsGuardDutyIpsetDelete(d *schema.ResourceData, meta interface{}) e
 			guardduty.IpSetStatusDeletePending,
 		},
 		Target:     []string{guardduty.IpSetStatusDeleted},
-		Refresh:    guardDutyIpsetRefreshStatusFunc(conn, d.Id(), detectorID),
+		Refresh:    guardDutyIpsetRefreshStatusFunc(conn, ipSetId, detectorId),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
@@ -178,4 +194,15 @@ func guardDutyIpsetRefreshStatusFunc(conn *guardduty.GuardDuty, ipSetID, detecto
 		}
 		return resp, *resp.Status, nil
 	}
+}
+
+func decodeGuardDutyIpsetID(id string) (ipsetID, detectorID string, err error) {
+	parts := strings.Split(id, ":")
+	if len(parts) != 2 {
+		err = fmt.Errorf("GuardDuty IPSet ID must be of the form <Detector ID>:<IPSet ID>, was provided: %s", id)
+		return
+	}
+	ipsetID = parts[1]
+	detectorID = parts[0]
+	return
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -2136,7 +2137,14 @@ func validateGameliftOperatingSystem(v interface{}, k string) (ws []string, erro
 
 func validateGuardDutyIpsetFormat(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	validType := []string{"TXT", "STIX", "OTX_CSV", "ALIEN_VAULT", "PROOF_POINT", "FIRE_EYE"}
+	validType := []string{
+		guardduty.IpSetFormatTxt,
+		guardduty.IpSetFormatStix,
+		guardduty.IpSetFormatOtxCsv,
+		guardduty.IpSetFormatAlienVault,
+		guardduty.IpSetFormatProofPoint,
+		guardduty.IpSetFormatFireEye,
+	}
 	for _, str := range validType {
 		if value == str {
 			return

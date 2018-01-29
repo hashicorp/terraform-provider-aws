@@ -13,34 +13,61 @@ import (
 )
 
 func TestAccAwsGuardDutyIpset_basic(t *testing.T) {
-	rName := acctest.RandString(5)
-	modName := acctest.RandString(5)
+	bucketName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
+	keyName1 := fmt.Sprintf("tf-%s", acctest.RandString(5))
+	keyName2 := fmt.Sprintf("tf-%s", acctest.RandString(5))
+	ipsetName1 := fmt.Sprintf("tf-%s", acctest.RandString(5))
+	ipsetName2 := fmt.Sprintf("tf-%s", acctest.RandString(5))
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyIpsetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyIpsetConfig_basic(rName),
+				Config: testAccGuardDutyIpsetConfig_basic(bucketName, keyName1, ipsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyIpsetExists("aws_guardduty_ipset.test"),
-					resource.TestCheckResourceAttr("aws_guardduty_ipset.test", "name", fmt.Sprintf("tf-%s", rName)),
+					resource.TestCheckResourceAttr("aws_guardduty_ipset.test", "name", ipsetName1),
 					resource.TestCheckResourceAttr("aws_guardduty_ipset.test", "activate", "true"),
 					resource.TestMatchResourceAttr(
-						"aws_guardduty_ipset.test", "location", regexp.MustCompile(fmt.Sprintf("tf-test-%s/tf-%s$", rName, rName)),
+						"aws_guardduty_ipset.test", "location", regexp.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName1)),
 					),
 				),
 			},
 			{
-				Config: testAccGuardDutyIpsetConfig_update(rName, modName),
+				Config: testAccGuardDutyIpsetConfig_basic(bucketName, keyName2, ipsetName2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyIpsetExists("aws_guardduty_ipset.test"),
-					resource.TestCheckResourceAttr("aws_guardduty_ipset.test", "name", fmt.Sprintf("tf-%s", modName)),
+					resource.TestCheckResourceAttr("aws_guardduty_ipset.test", "name", ipsetName2),
 					resource.TestCheckResourceAttr("aws_guardduty_ipset.test", "activate", "false"),
 					resource.TestMatchResourceAttr(
-						"aws_guardduty_ipset.test", "location", regexp.MustCompile(fmt.Sprintf("tf-test-%s/tf-update-%s$", rName, rName)),
+						"aws_guardduty_ipset.test", "location", regexp.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2)),
 					),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAwsGuardDutyIpset_import(t *testing.T) {
+	resourceName := "aws_guardduty_ipset.test"
+	bucketName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
+	keyName := fmt.Sprintf("tf-%s", acctest.RandString(5))
+	ipsetName := fmt.Sprintf("tf-%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsGuardDutyIpsetDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccGuardDutyIpsetConfig_basic(bucketName, keyName, ipsetName, true),
+			},
+
+			resource.TestStep{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -79,22 +106,38 @@ func testAccCheckAwsGuardDutyIpsetDestroy(s *terraform.State) error {
 
 func testAccCheckAwsGuardDutyIpsetExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+
+		ipSetId, detectorId, err := decodeGuardDutyIpsetID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		input := &guardduty.GetIPSetInput{
+			DetectorId: aws.String(detectorId),
+			IpSetId:    aws.String(ipSetId),
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+		_, err = conn.GetIPSet(input)
+		if err != nil {
+			return err
 		}
 
 		return nil
 	}
 }
 
-func testAccGuardDutyIpsetConfig_basic(rName string) string {
+func testAccGuardDutyIpsetConfig_basic(bucketName, keyName, ipsetName string, activate bool) string {
 	return fmt.Sprintf(`
 %s
 
 resource "aws_s3_bucket" "test" {
   acl = "private"
-  bucket = "tf-test-%s"
+  bucket = "%s"
   force_destroy = true
 }
 
@@ -102,42 +145,15 @@ resource "aws_s3_bucket_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = "${aws_s3_bucket.test.id}"
-  key     = "tf-%s"
+  key     = "%s"
 }
 
 resource "aws_guardduty_ipset" "test" {
-  name = "tf-%s"
-  activate = true
+  name = "%s"
   detector_id = "${aws_guardduty_detector.test.id}"
   format = "TXT"
   location = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  activate = %t
 }
-`, testAccGuardDutyDetectorConfig_basic1, rName, rName, rName)
-}
-
-func testAccGuardDutyIpsetConfig_update(rName, modName string) string {
-	return fmt.Sprintf(`
-%s
-
-resource "aws_s3_bucket" "test" {
-  acl = "private"
-  bucket = "tf-test-%s"
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_object" "test_update" {
-  acl     = "public-read"
-  content = "10.0.0.0/8\n"
-  bucket  = "${aws_s3_bucket.test.id}"
-  key     = "tf-update-%s"
-}
-
-resource "aws_guardduty_ipset" "test" {
-  name = "tf-%s"
-  activate = false
-  detector_id = "${aws_guardduty_detector.test.id}"
-  format = "TXT"
-  location = "https://s3.amazonaws.com/${aws_s3_bucket_object.test_update.bucket}/${aws_s3_bucket_object.test_update.key}"
-}
-`, testAccGuardDutyDetectorConfig_basic1, rName, rName, modName)
+`, testAccGuardDutyDetectorConfig_basic1, bucketName, keyName, ipsetName, activate)
 }
