@@ -16,6 +16,7 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"filter": dataSourceFiltersSchema(),
 			"association": {
@@ -133,24 +134,13 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 func dataSourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	filters, filtersOk := d.GetOk("filter")
-	id, idOk := d.GetOk("id")
-
-	if !idOk && !filtersOk {
-		return fmt.Errorf("One of id or filter must be assigned")
-	}
-
-	if idOk && !filtersOk && id.(string) == "" {
-		return fmt.Errorf("One of id or filter must be assigned")
-	}
-
 	input := &ec2.DescribeNetworkInterfacesInput{}
-	if idOk {
-		input.NetworkInterfaceIds = []*string{aws.String(id.(string))}
+	if v, ok := d.GetOk("id"); ok {
+		input.NetworkInterfaceIds = []*string{aws.String(v.(string))}
 	}
 
-	if filtersOk {
-		input.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+	if v, ok := d.GetOk("filter"); ok {
+		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Reading Network Interface: %s", input)

@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -101,51 +100,9 @@ resource "aws_network_interface" "test" {
 
 data "aws_network_interface" "test" {
   filter {
-	name = "subnet-id"
-	values = ["${aws_subnet.test.id}"]
+    name   = "network-interface-id"
+    values = ["${aws_network_interface.test.id}"]
   }
-
-  filter {
-	name = "group-id"
-	values = ["${aws_security_group.test.id}"]
-  }
-
-  depends_on = ["aws_network_interface.test"]
 }
     `, rName)
-}
-
-func TestAccDataSourceAwsNetworkInterface_error_required(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccDataSourceAwsNetworkInterface_error_required(),
-				ExpectError: regexp.MustCompile("One of id or filter must be assigned"),
-			},
-		},
-	})
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccDataSourceAwsNetworkInterface_error_required_non_empty_id(),
-				ExpectError: regexp.MustCompile("One of id or filter must be assigned"),
-			},
-		},
-	})
-}
-
-func testAccDataSourceAwsNetworkInterface_error_required() string {
-	return `data "aws_network_interface" "test" {}`
-}
-
-func testAccDataSourceAwsNetworkInterface_error_required_non_empty_id() string {
-	return `
-data "aws_network_interface" "test" {
-	id = ""
-}`
 }
