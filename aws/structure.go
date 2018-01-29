@@ -3074,3 +3074,13 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 
 	return l
 }
+
+func flattenVpcEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) []string {
+	result := make([]string, 0, len(allowedPrincipals))
+	for _, allowedPrincipal := range allowedPrincipals {
+		if allowedPrincipal.Principal != nil {
+			result = append(result, *allowedPrincipal.Principal)
+		}
+	}
+	return result
+}
