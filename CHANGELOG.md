@@ -1,4 +1,9 @@
 ## 1.9.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_network_interface: Add filter attribute [GH-2851]
+
 ## 1.8.0 (January 29, 2018)
 
 FEATURES:
