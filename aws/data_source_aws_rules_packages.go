@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -27,6 +28,7 @@ func dataSourceAwsRulesPackagesRead(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*AWSClient).inspectorconn
 
 	log.Printf("[DEBUG] Reading Rules Packages.")
+	d.SetId(time.Now().UTC().String())
 
 	var results int64 = 300
 	request := &inspector.ListRulesPackagesInput{
@@ -46,8 +48,6 @@ func dataSourceAwsRulesPackagesRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	sort.Strings(raw)
-
-	log.Printf("[DEBUG] Output is: %s", raw)
 
 	if err := d.Set("arns", raw); err != nil {
 		return fmt.Errorf("[WARN] Error setting Rules Packages: %s", err)
