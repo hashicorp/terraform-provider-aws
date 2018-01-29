@@ -5,6 +5,10 @@ ENHANCEMENTS:
 * data-source/aws_network_interface: Add filter attribute [GH-2851]
 * resource/aws_mq_broker: validate user password [GH-3164]
 
+BUG FIXES:
+
+* resource/aws_db_parameter_group: fix permanent diff when specifying parameters with database-default values [GH-3182]
+
 ## 1.8.0 (January 29, 2018)
 
 FEATURES:
