@@ -22,7 +22,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-* resource/aws_appautoscaling_policy: Support additional predefined metric types in validation [GH-3122]
+* resource/aws_appautoscaling_policy: Support additional predefined metric types in validation [GH-3122]]
+* resource/aws_dynamodb_table: Recognize changes in `non_key_attributes` [GH-3136]
 * resource/aws_ebs_snapshot: Fix `kms_key_id` attribute handling [GH-3085]
 * resource/aws_eip_assocation: Retry association for pending instances [GH-3072]
 * resource/aws_elastic_beanstalk_application: Prevent crash on reading missing application [GH-3171]
