@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * data-source/aws_network_interface: Add filter attribute [GH-2851]
+* resource/aws_mq_broker: validate user password [GH-3164]
 
 ## 1.8.0 (January 29, 2018)
 
