@@ -383,9 +383,9 @@ func TestAccAWSRedshiftCluster_updateNodeCount(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "number_of_nodes", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "cluster-type", "multi-node"),
+						"aws_redshift_cluster.default", "cluster_type", "multi-node"),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "node-type", "dc1.large"),
+						"aws_redshift_cluster.default", "node_type", "dc1.large"),
 				),
 			},
 		},
@@ -409,7 +409,7 @@ func TestAccAWSRedshiftCluster_updateNodeType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "node-type", "dc1.large"),
+						"aws_redshift_cluster.default", "node_type", "dc1.large"),
 				),
 			},
 
@@ -420,9 +420,9 @@ func TestAccAWSRedshiftCluster_updateNodeType(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "number_of_nodes", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "cluster-type", "single-node"),
+						"aws_redshift_cluster.default", "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "node-type", "dc1.8xlarge"),
+						"aws_redshift_cluster.default", "node_type", "dc1.8xlarge"),
 				),
 			},
 		},
