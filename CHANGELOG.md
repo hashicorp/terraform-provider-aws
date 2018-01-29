@@ -25,6 +25,7 @@ BUG FIXES:
 * resource/aws_appautoscaling_policy: Support additional predefined metric types in validation [GH-3122]
 * resource/aws_ebs_snapshot: Fix `kms_key_id` attribute handling [GH-3085]
 * resource/aws_eip_assocation: Retry association for pending instances [GH-3072]
+* resource/aws_elastic_beanstalk_application: Prevent crash on reading missing application [GH-3171]
 * resource/aws_kinesis_firehose_delivery_stream: Prevent panic on missing S3 configuration prefix [GH-3073]
 * resource/aws_lambda_function: Retry updates for IAM eventual consistency [GH-3116]
 * resource/aws_route53_record: Suppress uppercase alias name diff [GH-3119]
