@@ -26,6 +26,7 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	arnRegexp := regexp.MustCompile(
 		"^arn:aws:s3:::")
+	hostedZoneID, _ := HostedZoneIDForRegion("us-west-2")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
@@ -41,7 +42,7 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
 					resource.TestCheckResourceAttr(
-						"aws_s3_bucket.bucket", "hosted_zone_id", HostedZoneIDForRegion("us-west-2")),
+						"aws_s3_bucket.bucket", "hosted_zone_id", hostedZoneID),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "region", "us-west-2"),
 					resource.TestCheckNoResourceAttr(
