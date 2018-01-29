@@ -210,10 +210,10 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 	req := &dynamodb.CreateTableInput{
 		TableName: aws.String(d.Get("name").(string)),
-		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-			ReadCapacityUnits:  aws.Int64(int64(d.Get("read_capacity").(int))),
-			WriteCapacityUnits: aws.Int64(int64(d.Get("write_capacity").(int))),
-		},
+		ProvisionedThroughput: expandDynamoDbProvisionedThroughput(map[string]interface{}{
+			"read_capacity":  d.Get("read_capacity"),
+			"write_capacity": d.Get("write_capacity"),
+		}),
 		KeySchema: expandDynamoDbKeySchema(keySchemaMap),
 	}
 
@@ -286,16 +286,16 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 	if (d.HasChange("read_capacity") || d.HasChange("write_capacity")) && !d.IsNewResource() {
 		_, err := conn.UpdateTable(&dynamodb.UpdateTableInput{
 			TableName: aws.String(d.Id()),
-			ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-				ReadCapacityUnits:  aws.Int64(int64(d.Get("read_capacity").(int))),
-				WriteCapacityUnits: aws.Int64(int64(d.Get("write_capacity").(int))),
-			},
+			ProvisionedThroughput: expandDynamoDbProvisionedThroughput(map[string]interface{}{
+				"read_capacity":  d.Get("read_capacity"),
+				"write_capacity": d.Get("write_capacity"),
+			}),
 		})
 		if err != nil {
 			return err
 		}
 		if err := waitForDynamoDbTableToBeActive(d.Id(), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-			return fmt.Errorf("Error waiting for Dynamo DB Table update: %s", err)
+			return fmt.Errorf("Error waiting for DynamoDB Table update: %s", err)
 		}
 	}
 
@@ -313,7 +313,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if err := waitForDynamoDbTableToBeActive(d.Id(), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-			return fmt.Errorf("Error waiting for Dynamo DB Table update: %s", err)
+			return fmt.Errorf("Error waiting for DynamoDB Table update: %s", err)
 		}
 	}
 
@@ -324,7 +324,10 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		o, n := d.GetChange("global_secondary_index")
-		ops := diffDynamoDbGSI(o.(*schema.Set).List(), n.(*schema.Set).List())
+		ops, err := diffDynamoDbGSI(o.(*schema.Set).List(), n.(*schema.Set).List())
+		if err != nil {
+			return fmt.Errorf("Computing difference for global_secondary_index failed: %s", err)
+		}
 		log.Printf("[DEBUG] Updating global secondary indexes:\n%s", ops)
 
 		input := &dynamodb.UpdateTableInput{
@@ -342,25 +345,25 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 			if op.Create != nil {
 				idxName := *op.Create.IndexName
 				if err := waitForDynamoDbGSIToBeActive(d.Id(), idxName, conn); err != nil {
-					return fmt.Errorf("Error waiting for Dynamo DB GSI %q to be created: %s", idxName, err)
+					return fmt.Errorf("Error waiting for DynamoDB GSI %q to be created: %s", idxName, err)
 				}
 			}
 			if op.Update != nil {
 				idxName := *op.Update.IndexName
 				if err := waitForDynamoDbGSIToBeActive(d.Id(), idxName, conn); err != nil {
-					return fmt.Errorf("Error waiting for Dynamo DB GSI %q to be updated: %s", idxName, err)
+					return fmt.Errorf("Error waiting for DynamoDB GSI %q to be updated: %s", idxName, err)
 				}
 			}
 			if op.Delete != nil {
 				idxName := *op.Delete.IndexName
 				if err := waitForDynamoDbGSIToBeDeleted(d.Id(), idxName, conn); err != nil {
-					return fmt.Errorf("Error waiting for Dynamo DB GSI %q to be deleted: %s", idxName, err)
+					return fmt.Errorf("Error waiting for DynamoDB GSI %q to be deleted: %s", idxName, err)
 				}
 			}
 		}
 
 		if err := waitForDynamoDbTableToBeActive(d.Id(), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-			return fmt.Errorf("Error waiting for Dynamo DB Table op: %s", err)
+			return fmt.Errorf("Error waiting for DynamoDB Table op: %s", err)
 		}
 	}
 
@@ -388,7 +391,7 @@ func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if err != nil {
-		if isAWSErr(err, "ResourceNotFoundException", "") {
+		if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Dynamodb Table (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -450,7 +453,7 @@ func resourceAwsDynamoDbTableDelete(d *schema.ResourceData, meta interface{}) er
 				TableName: aws.String(d.Id()),
 			})
 			if err != nil {
-				if isAWSErr(err, "ResourceNotFoundException", "") {
+				if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
 					return nil, "", nil
 				}
 
@@ -503,7 +506,7 @@ func updateDynamoDbTimeToLive(d *schema.ResourceData, conn *dynamodb.DynamoDB) e
 
 		err = waitForDynamoDbTtlUpdateToBeCompleted(d.Id(), toBeEnabled, conn)
 		if err != nil {
-			return fmt.Errorf("Error waiting for Dynamo DB TimeToLive to be updated: %s", err)
+			return fmt.Errorf("Error waiting for DynamoDB TimeToLive to be updated: %s", err)
 		}
 	}
 

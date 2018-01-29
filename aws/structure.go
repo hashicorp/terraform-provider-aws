@@ -37,6 +37,7 @@ import (
 	"github.com/beevik/etree"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/mitchellh/copystructure"
 	"gopkg.in/yaml.v2"
 )
 
@@ -3076,7 +3077,7 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 	return l
 }
 
-func diffDynamoDbGSI(oldGsi, newGsi []interface{}) (ops []*dynamodb.GlobalSecondaryIndexUpdate) {
+func diffDynamoDbGSI(oldGsi, newGsi []interface{}) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
 	// Transform slices into maps
 	oldGsis := make(map[string]interface{})
 	for _, gsidata := range oldGsi {
@@ -3121,8 +3122,16 @@ func diffDynamoDbGSI(oldGsi, newGsi []interface{}) (ops []*dynamodb.GlobalSecond
 			newWriteCapacity, newReadCapacity := newMap["write_capacity"].(int), newMap["read_capacity"].(int)
 			capacityChanged := (oldWriteCapacity != newWriteCapacity || oldReadCapacity != newReadCapacity)
 
-			oldAttributes := stripCapacityAttributes(oldMap)
-			newAttributes := stripCapacityAttributes(newMap)
+			oldAttributes, err := stripCapacityAttributes(oldMap)
+			if err != nil {
+				e = err
+				return
+			}
+			newAttributes, err := stripCapacityAttributes(newMap)
+			if err != nil {
+				e = err
+				return
+			}
 			otherAttributesChanged := !reflect.DeepEqual(oldAttributes, newAttributes)
 
 			if capacityChanged && !otherAttributesChanged {
@@ -3162,22 +3171,18 @@ func diffDynamoDbGSI(oldGsi, newGsi []interface{}) (ops []*dynamodb.GlobalSecond
 	return
 }
 
-func stripCapacityAttributes(in map[string]interface{}) map[string]interface{} {
-	m := map[string]interface{}{
-		"hash_key": in["hash_key"].(string),
+func stripCapacityAttributes(in map[string]interface{}) (map[string]interface{}, error) {
+	mapCopy, err := copystructure.Copy(in)
+	if err != nil {
+		return nil, err
 	}
 
-	if v, ok := in["range_key"].(string); ok && v != "" {
-		m["range_key"] = v
-	}
-	if v, ok := in["projection_type"].(string); ok && v != "" {
-		m["projection_type"] = v
-	}
-	if v, ok := in["non_key_attributes"].([]interface{}); ok && len(v) > 0 {
-		m["non_key_attributes"] = v
-	}
+	m := mapCopy.(map[string]interface{})
 
-	return m
+	delete(m, "write_capacity")
+	delete(m, "read_capacity")
+
+	return m, nil
 }
 
 // Expanders + flatteners
@@ -3214,11 +3219,11 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 	d.Set("name", table.TableName)
 
 	for _, attribute := range table.KeySchema {
-		if *attribute.KeyType == "HASH" {
+		if *attribute.KeyType == dynamodb.KeyTypeHash {
 			d.Set("hash_key", attribute.AttributeName)
 		}
 
-		if *attribute.KeyType == "RANGE" {
+		if *attribute.KeyType == dynamodb.KeyTypeRange {
 			d.Set("range_key", attribute.AttributeName)
 		}
 	}
@@ -3232,7 +3237,7 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 
 		for _, attribute := range lsiObject.KeySchema {
 
-			if *attribute.KeyType == "RANGE" {
+			if *attribute.KeyType == dynamodb.KeyTypeRange {
 				lsi["range_key"] = *attribute.AttributeName
 			}
 		}
@@ -3259,11 +3264,11 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 		}
 
 		for _, attribute := range gsiObject.KeySchema {
-			if *attribute.KeyType == "HASH" {
+			if *attribute.KeyType == dynamodb.KeyTypeHash {
 				gsi["hash_key"] = *attribute.AttributeName
 			}
 
-			if *attribute.KeyType == "RANGE" {
+			if *attribute.KeyType == dynamodb.KeyTypeRange {
 				gsi["range_key"] = *attribute.AttributeName
 			}
 		}
@@ -3317,7 +3322,7 @@ func expandDynamoDbLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[strin
 		m := lsi.(map[string]interface{})
 		idxName := m["name"].(string)
 
-		// TODO: Remove this (BC)
+		// TODO: See https://github.com/terraform-providers/terraform-provider-aws/issues/3176
 		if _, ok := m["hash_key"]; !ok {
 			m["hash_key"] = keySchemaM["hash_key"]
 		}
@@ -3365,14 +3370,14 @@ func expandDynamoDbKeySchema(data map[string]interface{}) []*dynamodb.KeySchemaE
 	if v, ok := data["hash_key"]; ok && v != nil && v != "" {
 		keySchema = append(keySchema, &dynamodb.KeySchemaElement{
 			AttributeName: aws.String(v.(string)),
-			KeyType:       aws.String("HASH"),
+			KeyType:       aws.String(dynamodb.KeyTypeHash),
 		})
 	}
 
 	if v, ok := data["range_key"]; ok && v != nil && v != "" {
 		keySchema = append(keySchema, &dynamodb.KeySchemaElement{
 			AttributeName: aws.String(v.(string)),
-			KeyType:       aws.String("RANGE"),
+			KeyType:       aws.String(dynamodb.KeyTypeRange),
 		})
 	}
 
