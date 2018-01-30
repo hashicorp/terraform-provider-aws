@@ -8,6 +8,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * provider: Automatically validate new regions from AWS SDK [GH-3159]
+* data-source/aws_lb_listener: Support load_balancer_arn and port arguments [GH-2886]
 * data-source/aws_network_interface: Add filter attribute [GH-2851]
 * resource/aws_mq_broker: Validate user password [GH-3164]
 * resource/aws_dynamodb_table: Validate attribute types [GH-3188]
