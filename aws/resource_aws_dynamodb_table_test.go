@@ -656,6 +656,65 @@ func TestAccAWSDynamoDbTable_ttl(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAWSDynamoDbTable_attributeUpdate(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigOneAttribute(rName, "firstKey", "firstKey", "S"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+				),
+			},
+			{ // Attribute type change
+				Config: testAccAWSDynamoDbConfigOneAttribute(rName, "firstKey", "firstKey", "N"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+				),
+			},
+			{ // New attribute addition (index update)
+				Config: testAccAWSDynamoDbConfigTwoAttributes(rName, "firstKey", "secondKey", "firstKey", "N", "secondKey", "S"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+				),
+			},
+			{ // Attribute removal (index update)
+				Config: testAccAWSDynamoDbConfigOneAttribute(rName, "firstKey", "firstKey", "S"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSDynamoDbConfigOneAttribute(rName, "firstKey", "unusedKey", "S"),
+				ExpectError: regexp.MustCompile(`All attributes must be indexed. Unused attributes: \["unusedKey"\]$`),
+			},
+			{
+				Config:      testAccAWSDynamoDbConfigTwoAttributes(rName, "firstKey", "secondKey", "firstUnused", "N", "secondUnused", "S"),
+				ExpectError: regexp.MustCompile(`All attributes must be indexed. Unused attributes: \["firstUnused"\ \"secondUnused\"]$`),
+			},
+		},
+	})
+}
+
 func testAccCheckDynamoDbTableTimeToLiveWasUpdated(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		log.Printf("[DEBUG] Trying to create initial table state!")
@@ -1467,4 +1526,66 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 }
 `, rName)
+}
+
+func testAccAWSDynamoDbConfigOneAttribute(rName, hashKey, attrName, attrType string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  read_capacity = 10
+  write_capacity = 10
+  hash_key = "staticHashKey"
+
+  attribute {
+    name = "staticHashKey"
+    type = "S"
+  }
+  attribute {
+    name = "%s"
+    type = "%s"
+  }
+
+  global_secondary_index {
+    name = "gsiName"
+    hash_key = "%s"
+    write_capacity = 10
+    read_capacity = 10
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName, attrName, attrType, hashKey)
+}
+
+func testAccAWSDynamoDbConfigTwoAttributes(rName, hashKey, rangeKey, attrName1, attrType1, attrName2, attrType2 string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  read_capacity = 10
+  write_capacity = 10
+  hash_key = "staticHashKey"
+
+  attribute {
+    name = "staticHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "%s"
+    type = "%s"
+  }
+  attribute {
+    name = "%s"
+    type = "%s"
+  }
+
+  global_secondary_index {
+    name = "gsiName"
+    hash_key = "%s"
+    range_key = "%s"
+    write_capacity = 10
+    read_capacity = 10
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName, attrName1, attrType1, attrName2, attrType2, hashKey, rangeKey)
 }

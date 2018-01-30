@@ -1690,3 +1690,53 @@ func validateIotThingTypeSearchableAttribute(v interface{}, k string) (ws []stri
 	}
 	return
 }
+
+func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
+	// Collect all indexed attributes
+	primaryHashKey := d.Get("hash_key").(string)
+	indexedAttributes := map[string]bool{
+		primaryHashKey: true,
+	}
+	if v, ok := d.GetOk("range_key"); ok {
+		indexedAttributes[v.(string)] = true
+	}
+	if v, ok := d.GetOk("local_secondary_index"); ok {
+		indexes := v.(*schema.Set).List()
+		for _, idx := range indexes {
+			index := idx.(map[string]interface{})
+			rangeKey := index["range_key"].(string)
+			indexedAttributes[rangeKey] = true
+		}
+	}
+	if v, ok := d.GetOk("global_secondary_index"); ok {
+		indexes := v.(*schema.Set).List()
+		for _, idx := range indexes {
+			index := idx.(map[string]interface{})
+
+			hashKey := index["hash_key"].(string)
+			indexedAttributes[hashKey] = true
+
+			if rk, ok := index["range_key"]; ok {
+				indexedAttributes[rk.(string)] = true
+			}
+		}
+	}
+
+	// Check if all indexed attributes have an attribute definition
+	attributes := d.Get("attribute").(*schema.Set).List()
+	missingAttrDefs := []string{}
+	for _, attr := range attributes {
+		attribute := attr.(map[string]interface{})
+		attrName := attribute["name"].(string)
+
+		if _, ok := indexedAttributes[attrName]; !ok {
+			missingAttrDefs = append(missingAttrDefs, attrName)
+		}
+	}
+
+	if len(missingAttrDefs) > 0 {
+		return fmt.Errorf("All attributes must be indexed. Unused attributes: %q", missingAttrDefs)
+	}
+
+	return nil
+}
