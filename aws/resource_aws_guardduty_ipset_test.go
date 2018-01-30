@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsGuardDutyIpset_basic(t *testing.T) {
+func testAccAwsGuardDutyIpset_basic(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
 	keyName1 := fmt.Sprintf("tf-%s", acctest.RandString(5))
 	keyName2 := fmt.Sprintf("tf-%s", acctest.RandString(5))
@@ -49,7 +49,7 @@ func TestAccAwsGuardDutyIpset_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsGuardDutyIpset_import(t *testing.T) {
+func testAccAwsGuardDutyIpset_import(t *testing.T) {
 	resourceName := "aws_guardduty_ipset.test"
 	bucketName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
 	keyName := fmt.Sprintf("tf-%s", acctest.RandString(5))
