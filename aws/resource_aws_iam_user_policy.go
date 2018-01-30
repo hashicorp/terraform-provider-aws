@@ -64,7 +64,10 @@ func resourceAwsIamUserPolicyPut(d *schema.ResourceData, meta interface{}) error
 
 	var policyName string
 	if !d.IsNewResource() {
-		_, policyName = resourceAwsIamUserPolicyParseId(d.Id())
+		_, policyName, err := resourceAwsIamUserPolicyParseId(d.Id())
+		if err != nil {
+			return err
+		}
 	} else if v, ok := d.GetOk("name"); ok {
 		policyName = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
