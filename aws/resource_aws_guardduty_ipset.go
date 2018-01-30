@@ -69,8 +69,8 @@ func resourceAwsGuardDutyIpsetCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{guardduty.IpSetStatusActivating},
-		Target:     []string{guardduty.IpSetStatusActive},
+		Pending:    []string{guardduty.IpSetStatusActivating, guardduty.IpSetStatusDeactivating},
+		Target:     []string{guardduty.IpSetStatusActive, guardduty.IpSetStatusInactive},
 		Refresh:    guardDutyIpsetRefreshStatusFunc(conn, *resp.IpSetId, detectorID),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 3 * time.Second,
@@ -78,7 +78,7 @@ func resourceAwsGuardDutyIpsetCreate(d *schema.ResourceData, meta interface{}) e
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("[WARN] Error waiting for GuardDuty IpSet status to be \"%s\": %s", guardduty.IpSetStatusActive, err)
+		return fmt.Errorf("[WARN] Error waiting for GuardDuty IpSet status to be \"%s\" or \"%s\": %s", guardduty.IpSetStatusActive, guardduty.IpSetStatusInactive, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", detectorID, *resp.IpSetId))
@@ -165,6 +165,7 @@ func resourceAwsGuardDutyIpsetDelete(d *schema.ResourceData, meta interface{}) e
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			guardduty.IpSetStatusActive,
+			guardduty.IpSetStatusActivating,
 			guardduty.IpSetStatusInactive,
 			guardduty.IpSetStatusDeactivating,
 			guardduty.IpSetStatusDeletePending,
