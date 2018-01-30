@@ -25,6 +25,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
@@ -272,7 +273,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(*output.TableDescription.TableName)
 	d.Set("arn", output.TableDescription.TableArn)
 
-	if err := waitForDynamoDbTableToBeActive(d.Id(), 10*time.Minute, conn); err != nil {
+	if err := waitForDynamoDbTableToBeActive(d.Id(), d.Timeout(schema.TimeoutCreate), conn); err != nil {
 		return err
 	}
 
