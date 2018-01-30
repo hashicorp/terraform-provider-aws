@@ -17,36 +17,41 @@ Provides a resource to create an association between a WAF Regional WebACL and A
 ```
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
+  
   ip_set_descriptors {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  depends_on = ["aws_wafregional_ipset.ipset"]
-  name = "tfWAFRule"
+  depends_on  = ["aws_wafregional_ipset.ipset"]
+  name        = "tfWAFRule"
   metric_name = "tfWAFRule"
+  
   predicates {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
-    type = "IPMatch"
+    type    = "IPMatch"
   }
 }
 
 resource "aws_wafregional_web_acl" "wafacl" {
-  depends_on = ["aws_wafregional_ipset.ipset", "aws_wafregional_rule.wafrule"]
-  name = "tfWebACL"
+  depends_on  = ["aws_wafregional_ipset.ipset", "aws_wafregional_rule.wafrule"]
+  name        = "tfWebACL"
   metric_name = "tfWebACL"
+  
   default_action {
     type = "ALLOW"
   }
+  
   rules {
     action {
        type = "BLOCK"
     }
+    
     priority = 1
-    rule_id = "${aws_wafregional_rule.wafrule.id}"
+    rule_id  = "${aws_wafregional_rule.wafrule.id}"
   }
 }
 
@@ -55,12 +60,12 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "foo" {
-	vpc_id = "${aws_vpc.main.id}"
+	vpc_id     = "${aws_vpc.main.id}"
 	cidr_block = "10.1.1.0/24"
 }
 
 resource "aws_subnet" "bar" {
-	vpc_id = "${aws_vpc.main.id}"
+	vpc_id     = "${aws_vpc.main.id}"
 	cidr_block = "10.1.2.0/24"
 }
 
@@ -69,8 +74,8 @@ resource "aws_alb" "alb" {
 }
 
 resource "aws_wafregional_web_acl_association" "wafassociation" {
-    depends_on = ["aws_alb.alb", "aws_wafregional_web_acl.wafacl"]
-    web_acl_id = "${aws_wafregional_web_acl.wafacl.id}"
+    depends_on   = ["aws_alb.alb", "aws_wafregional_web_acl.wafacl"]
+    web_acl_id   = "${aws_wafregional_web_acl.wafacl.id}"
     resource_arn = "${aws_alb.alb.arn}"
 }
 ```

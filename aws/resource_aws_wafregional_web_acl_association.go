@@ -75,11 +75,11 @@ func resourceAwsWafRegionalWebAclAssociationCreate(d *schema.ResourceData, meta 
 func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
 
-	web_acl_id, resource_arn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())
+	webAclId, resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())
 
 	// List all resources for Web ACL and see if we get a match
 	params := &wafregional.ListResourcesForWebACLInput{
-		WebACLId: aws.String(web_acl_id),
+		WebACLId: aws.String(webAclId),
 	}
 
 	resp, err := conn.ListResourcesForWebACL(params)
@@ -89,8 +89,8 @@ func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta in
 
 	// Find match
 	found := false
-	for _, list_resource_arn := range resp.ResourceArns {
-		if resource_arn == *list_resource_arn {
+	for _, listResourceArn := range resp.ResourceArns {
+		if resourceArn == *listResourceArn {
 			found = true
 			break
 		}
@@ -110,15 +110,15 @@ func resourceAwsWafRegionalWebAclAssociationUpdate(d *schema.ResourceData, meta 
 func resourceAwsWafRegionalWebAclAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
 
-	_, resource_arn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())
+	_, resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())
 
-	log.Printf("[INFO] Deleting WAF Regional Web ACL association: %s", resource_arn)
+	log.Printf("[INFO] Deleting WAF Regional Web ACL association: %s", resourceArn)
 
 	params := &wafregional.DisassociateWebACLInput{
-		ResourceArn: aws.String(resource_arn),
+		ResourceArn: aws.String(resourceArn),
 	}
 
-	// If action sucessful HTTP 200 response with an empty body
+	// If action successful HTTP 200 response with an empty body
 	_, err := conn.DisassociateWebACL(params)
 	if err != nil {
 		return err
@@ -127,9 +127,9 @@ func resourceAwsWafRegionalWebAclAssociationDelete(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsWafRegionalWebAclAssociationParseId(id string) (web_acl_id, resource_arn string) {
+func resourceAwsWafRegionalWebAclAssociationParseId(id string) (webAclId, resourceArn string) {
 	parts := strings.SplitN(id, ":", 2)
-	web_acl_id = parts[0]
-	resource_arn = parts[1]
+	webAclId = parts[0]
+	resourceArn = parts[1]
 	return
 }
