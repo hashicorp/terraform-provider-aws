@@ -963,12 +963,16 @@ func testAccCheckAWSS3BucketExistsWithProviders(n string, providers *[]*schema.P
 			})
 
 			if err != nil {
+				// Different than NoSuchBucket -- the S3 bucket is in another provider
+				if isAWSErr(err, "BucketRegionError", "incorrect region") {
+					continue
+				}
 				return fmt.Errorf("S3Bucket error: %v", err)
 			}
 			return nil
 		}
 
-		return fmt.Errorf("Instance not found")
+		return fmt.Errorf("S3 bucket not found")
 	}
 }
 
