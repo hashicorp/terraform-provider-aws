@@ -81,9 +81,13 @@ func testAccCheckAwsGuardDutyIpsetDestroy(s *terraform.State) error {
 			continue
 		}
 
+		ipSetId, detectorId, err := decodeGuardDutyIpsetID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 		input := &guardduty.GetIPSetInput{
-			IpSetId:    aws.String(rs.Primary.ID),
-			DetectorId: aws.String(rs.Primary.Attributes["detector_id"]),
+			IpSetId:    aws.String(ipSetId),
+			DetectorId: aws.String(detectorId),
 		}
 
 		resp, err := conn.GetIPSet(input)
