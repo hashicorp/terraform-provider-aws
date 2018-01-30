@@ -1,5 +1,9 @@
 ## 1.9.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_guardduty_ipset` [GH-3161]
+
 ENHANCEMENTS:
 
 * provider: Automatically validate new regions from AWS SDK [GH-3159]
