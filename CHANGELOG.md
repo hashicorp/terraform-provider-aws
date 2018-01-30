@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_guardduty_ipset` [GH-3161]
+* **New Resource:** `aws_guardduty_threatintelset` [GH-3200]
 
 ENHANCEMENTS:
 
