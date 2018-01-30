@@ -90,6 +90,14 @@ attributes, etc.
 * `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
 * `tags` - (Optional) A map of tags to populate on the created table.
 
+### Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+
+* `create` - (Defaults to 10 mins) Used when creating the table
+* `update` - (Defaults to 10 mins) Used when updating the table
+* `delete` - (Defaults to 10 mins) Used when deleting the table
+
 ### Nested fields
 
 #### `local_secondary_index`
