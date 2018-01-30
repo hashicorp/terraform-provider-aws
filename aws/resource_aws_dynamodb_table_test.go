@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -316,17 +317,38 @@ func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbConfigStreamSpecification(),
+				Config: testAccAWSDynamoDbConfigStreamSpecification(true, "KEYS_ONLY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
-					testAccCheckInitialAWSDynamoDbTableConf("aws_dynamodb_table.basic-dynamodb-table"),
-					resource.TestCheckResourceAttr(
-						"aws_dynamodb_table.basic-dynamodb-table", "stream_enabled", "true"),
-					resource.TestCheckResourceAttr(
-						"aws_dynamodb_table.basic-dynamodb-table", "stream_view_type", "KEYS_ONLY"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "stream_enabled", "true"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "stream_view_type", "KEYS_ONLY"),
 					resource.TestCheckResourceAttrSet("aws_dynamodb_table.basic-dynamodb-table", "stream_arn"),
 					resource.TestCheckResourceAttrSet("aws_dynamodb_table.basic-dynamodb-table", "stream_label"),
 				),
+			},
+			{
+				Config: testAccAWSDynamoDbConfigStreamSpecification(false, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "stream_enabled", "false"),
+					resource.TestCheckNoResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "stream_view_type"),
+					resource.TestCheckNoResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "stream_arn"),
+					resource.TestCheckNoResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "stream_label"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_streamSpecificationValidation(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSDynamoDbConfigStreamSpecification(true, ""),
+				ExpectError: regexp.MustCompile(`stream_view_type is required when stream_enabled = true$`),
 			},
 		},
 	})
@@ -950,53 +972,23 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 }`, rName)
 }
 
-func testAccAWSDynamoDbConfigStreamSpecification() string {
+func testAccAWSDynamoDbConfigStreamSpecification(enabled bool, viewType string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
   name = "TerraformTestStreamTable-%d"
   read_capacity = 10
   write_capacity = 20
   hash_key = "TestTableHashKey"
-  range_key = "TestTableRangeKey"
 
   attribute {
     name = "TestTableHashKey"
     type = "S"
   }
 
-  attribute {
-    name = "TestTableRangeKey"
-    type = "S"
-  }
-
-  attribute {
-    name = "TestLSIRangeKey"
-    type = "N"
-  }
-
-  attribute {
-    name = "TestGSIRangeKey"
-    type = "S"
-  }
-
-  local_secondary_index {
-    name = "TestTableLSI"
-    range_key = "TestLSIRangeKey"
-    projection_type = "ALL"
-  }
-
-  global_secondary_index {
-    name = "InitialTestTableGSI"
-    hash_key = "TestTableHashKey"
-    range_key = "TestGSIRangeKey"
-    write_capacity = 10
-    read_capacity = 10
-    projection_type = "KEYS_ONLY"
-  }
-  stream_enabled = true
-  stream_view_type = "KEYS_ONLY"
+  stream_enabled = %t
+  stream_view_type = "%s"
 }
-`, acctest.RandInt())
+`, acctest.RandInt(), enabled, viewType)
 }
 
 func testAccAWSDynamoDbConfigTags() string {

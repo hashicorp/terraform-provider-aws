@@ -30,6 +30,10 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 
+		CustomizeDiff: func(diff *schema.ResourceDiff, v interface{}) error {
+			return validateDynamoDbStreamSpec(diff)
+		},
+
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsDynamoDbTableMigrateState,
 
@@ -173,7 +177,6 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 			"stream_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"stream_view_type": {
 				Type:     schema.TypeString,
