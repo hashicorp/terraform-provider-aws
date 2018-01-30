@@ -85,6 +85,7 @@ resource "aws_codepipeline" "foo" {
     encryption_key {
       id   = "${data.aws_kms_alias.s3kmskey.arn}"
       type = "KMS"
+    }
   }
 
   stage {
