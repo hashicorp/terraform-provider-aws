@@ -2173,3 +2173,22 @@ func validateGuardDutyIpsetFormat(v interface{}, k string) (ws []string, errors 
 	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
 	return
 }
+
+func validateGuardDutyThreatIntelSetFormat(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	validType := []string{
+		guardduty.ThreatIntelSetFormatTxt,
+		guardduty.ThreatIntelSetFormatStix,
+		guardduty.ThreatIntelSetFormatOtxCsv,
+		guardduty.ThreatIntelSetFormatAlienVault,
+		guardduty.ThreatIntelSetFormatProofPoint,
+		guardduty.ThreatIntelSetFormatFireEye,
+	}
+	for _, str := range validType {
+		if value == str {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
+	return
+}

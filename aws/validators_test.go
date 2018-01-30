@@ -3063,3 +3063,24 @@ func TestValidateGuardDutyIpsetFormat(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateGuardDutyThreatIntelSetFormat(t *testing.T) {
+	validTypes := []string{"TXT", "STIX", "OTX_CSV", "ALIEN_VAULT", "PROOF_POINT", "FIRE_EYE"}
+	for _, v := range validTypes {
+		_, errors := validateGuardDutyThreatIntelSetFormat(v, "")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid GuardDuty ThreatIntelSet Format: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"hoge",
+		"txt",
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateGuardDutyThreatIntelSetFormat(v, "")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid GuardDuty ThreatIntelSet Format", v)
+		}
+	}
+}
