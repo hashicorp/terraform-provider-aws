@@ -14,7 +14,7 @@ Provides a resource to create an association between a WAF Regional WebACL and A
 
 ## Example Usage
 
-```
+```hcl
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
   
