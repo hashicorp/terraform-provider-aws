@@ -12,23 +12,25 @@ Provides a WAF Regional Rule Resource for use with Application Load Balancer.
 
 ## Example Usage
 
-```
+```hcl
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
+  
   ip_set_descriptors {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  depends_on = ["aws_wafregional_ipset.ipset"]
-  name = "tfWAFRule"
+  depends_on  = ["aws_wafregional_ipset.ipset"]
+  name        = "tfWAFRule"
   metric_name = "tfWAFRule"
+  
   predicates {
+    type    = "IPMatch"
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
-    type = "IPMatch"
   }
 }
 ```
@@ -37,9 +39,21 @@ resource "aws_wafregional_rule" "wafrule" {
 
 The following arguments are supported:
 
-* `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
 * `name` - (Required) The name or description of the rule.
+* `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
 * `predicates` - (Optional) The ByteMatchSet, IPSet, SizeConstraintSet, SqlInjectionMatchSet, or XssMatchSet objects to include in a rule.
+
+## Nested Blocks
+
+### `predicates`
+
+See [dcos](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-wafregional-rule-predicates.html)
+
+#### Arguments
+
+* `type` - (Required) The type of predicate in a rule, such as an IPSet (IPMatch)
+* `data_id` - (Required) The unique identifier of a predicate, such as the ID of a ByteMatchSet or IPSet.
+* `negated` - (Required) Whether to use the settings or the negated settings that you specified in the `ByteMatchSet`, `IPSet`, `SizeConstraintSet`, `SqlInjectionMatchSet`, or `XssMatchSet` objects.
 
 ## Remarks
 
