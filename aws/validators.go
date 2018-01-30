@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -195,7 +196,11 @@ func validateStreamViewType(v interface{}, k string) (ws []string, errors []erro
 
 func validateDynamoAttributeType(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	validTypes := []string{"B", "N", "S"}
+	validTypes := []string{
+		dynamodb.ScalarAttributeTypeB,
+		dynamodb.ScalarAttributeTypeN,
+		dynamodb.ScalarAttributeTypeS,
+	}
 
 	for _, t := range validTypes {
 		if t == value {
