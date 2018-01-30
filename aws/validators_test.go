@@ -1959,6 +1959,25 @@ func TestValidateApiGatewayUsagePlanQuotaSettings(t *testing.T) {
 	}
 }
 
+func TestValidateDynamoAttributeType(t *testing.T) {
+	validTypes := []string{"B", "N", "S"}
+
+	for _, s := range validTypes {
+		_, errors := validateDynamoAttributeType(s, "attribute")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid DynamoDB Attribute Type: %v", s, errors)
+		}
+	}
+
+	invalidTypes := []string{"A", "0", "DERP", "SO"}
+	for _, s := range invalidTypes {
+		_, errors := validateDynamoAttributeType(s, "attribute")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid DynamoDB Attribute Type", s)
+		}
+	}
+}
+
 func TestValidateElbName(t *testing.T) {
 	validNames := []string{
 		"tf-test-elb",

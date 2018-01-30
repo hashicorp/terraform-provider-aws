@@ -193,6 +193,21 @@ func validateStreamViewType(v interface{}, k string) (ws []string, errors []erro
 	return
 }
 
+func validateDynamoAttributeType(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	validTypes := []string{"B", "N", "S"}
+
+	for _, t := range validTypes {
+		if t == value {
+			return
+		}
+	}
+
+	errors = append(errors, fmt.Errorf("%q must be a valid DynamoDB attribute type", k))
+
+	return
+}
+
 func validateElbName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) == 0 {
