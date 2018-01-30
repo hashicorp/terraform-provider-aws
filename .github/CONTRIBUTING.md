@@ -255,11 +255,10 @@ into Terraform.
 
 #### New Region
 
-Implementing a new region gives Terraform the ability to connect and interact
-with endpoints in a new geographic area. While baseline region support is fairly
-trivial to add, new regions are generally limited in which services they support.
+While region validation is automatically added with SDK updates, new regions
+are generally limited in which services they support. Below are some
+manually sourced values from documentation.
 
- - [ ] Add region to `aws/config.go`
  - [ ] Check [Regions and Endpoints ELB regions](https://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elb_hosted_zone_id.go`
  - [ ] Check [Regions and Endpoints S3 website endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) and add Route53 Hosted Zone ID if available to `aws/hosted_zones.go`
  - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
