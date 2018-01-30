@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -2151,5 +2152,24 @@ func validateGameliftOperatingSystem(v interface{}, k string) (ws []string, erro
 	if !operatingSystems[value] {
 		errors = append(errors, fmt.Errorf("%q must be a valid operating system value: %q", k, value))
 	}
+	return
+}
+
+func validateGuardDutyIpsetFormat(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	validType := []string{
+		guardduty.IpSetFormatTxt,
+		guardduty.IpSetFormatStix,
+		guardduty.IpSetFormatOtxCsv,
+		guardduty.IpSetFormatAlienVault,
+		guardduty.IpSetFormatProofPoint,
+		guardduty.IpSetFormatFireEye,
+	}
+	for _, str := range validType {
+		if value == str {
+			return
+		}
+	}
+	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
 	return
 }
