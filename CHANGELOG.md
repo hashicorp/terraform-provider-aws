@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* provider: Automatically validate new regions from AWS SDK [GH-3159]
 * data-source/aws_network_interface: Add filter attribute [GH-2851]
 * resource/aws_mq_broker: validate user password [GH-3164]
 
