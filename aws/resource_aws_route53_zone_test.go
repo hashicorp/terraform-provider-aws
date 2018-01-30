@@ -6,13 +6,12 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53"
 )
 
 func TestCleanPrefix(t *testing.T) {
@@ -70,6 +69,9 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 	var td route53.ResourceTagSet
 
+	rString := acctest.RandString(8)
+	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route53_zone.main",
@@ -77,7 +79,7 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRoute53ZoneConfig,
+				Config: testAccRoute53ZoneConfig(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists("aws_route53_zone.main", &zone),
 					testAccLoadTagsR53(&zone, &td),
@@ -90,6 +92,10 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 
 func TestAccAWSRoute53Zone_forceDestroy(t *testing.T) {
 	var zone, zoneWithDot route53.GetHostedZoneOutput
+
+	rString := acctest.RandString(8)
+	zoneName1 := fmt.Sprintf("%s-one.terraformtest.com", rString)
+	zoneName2 := fmt.Sprintf("%s-two.terraformtest.com", rString)
 
 	// record the initialized providers so that we can use them to
 	// check for the instances in each region
@@ -109,7 +115,7 @@ func TestAccAWSRoute53Zone_forceDestroy(t *testing.T) {
 		CheckDestroy:      testAccCheckRoute53ZoneDestroyWithProviders(&providers),
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRoute53ZoneConfig_forceDestroy,
+				Config: testAccRoute53ZoneConfig_forceDestroy(zoneName1, zoneName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExistsWithProviders("aws_route53_zone.destroyable", &zone, &providers),
 					// Add >100 records to verify pagination works ok
@@ -130,6 +136,9 @@ func TestAccAWSRoute53Zone_updateComment(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 	var td route53.ResourceTagSet
 
+	rString := acctest.RandString(8)
+	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route53_zone.main",
@@ -137,7 +146,7 @@ func TestAccAWSRoute53Zone_updateComment(t *testing.T) {
 		CheckDestroy:  testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRoute53ZoneConfig,
+				Config: testAccRoute53ZoneConfig(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists("aws_route53_zone.main", &zone),
 					testAccLoadTagsR53(&zone, &td),
@@ -148,7 +157,7 @@ func TestAccAWSRoute53Zone_updateComment(t *testing.T) {
 			},
 
 			resource.TestStep{
-				Config: testAccRoute53ZoneConfigUpdateComment,
+				Config: testAccRoute53ZoneConfigUpdateComment(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists("aws_route53_zone.main", &zone),
 					testAccLoadTagsR53(&zone, &td),
@@ -163,6 +172,9 @@ func TestAccAWSRoute53Zone_updateComment(t *testing.T) {
 func TestAccAWSRoute53Zone_private_basic(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
+	rString := acctest.RandString(8)
+	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route53_zone.main",
@@ -170,7 +182,7 @@ func TestAccAWSRoute53Zone_private_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRoute53PrivateZoneConfig,
+				Config: testAccRoute53PrivateZoneConfig(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists("aws_route53_zone.main", &zone),
 					testAccCheckRoute53ZoneAssociatesWithVpc("aws_vpc.main", &zone),
@@ -182,6 +194,9 @@ func TestAccAWSRoute53Zone_private_basic(t *testing.T) {
 
 func TestAccAWSRoute53Zone_private_region(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
+
+	rString := acctest.RandString(8)
+	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
 	// record the initialized providers so that we can use them to
 	// check for the instances in each region
@@ -201,7 +216,7 @@ func TestAccAWSRoute53Zone_private_region(t *testing.T) {
 		CheckDestroy:      testAccCheckRoute53ZoneDestroyWithProviders(&providers),
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRoute53PrivateZoneRegionConfig,
+				Config: testAccRoute53PrivateZoneRegionConfig(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExistsWithProviders("aws_route53_zone.main", &zone, &providers),
 					testAccCheckRoute53ZoneAssociatesWithVpc("aws_vpc.main", &zone),
@@ -405,9 +420,10 @@ func testAccLoadTagsR53(zone *route53.GetHostedZoneOutput, td *route53.ResourceT
 	}
 }
 
-const testAccRoute53ZoneConfig = `
+func testAccRoute53ZoneConfig(zoneName string) string {
+	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
-	name = "hashicorp.com."
+	name = "%s."
 	comment = "Custom comment"
 
 	tags {
@@ -415,23 +431,27 @@ resource "aws_route53_zone" "main" {
 		Name = "tf-route53-tag-test"
 	}
 }
-`
+`, zoneName)
+}
 
-const testAccRoute53ZoneConfig_forceDestroy = `
+func testAccRoute53ZoneConfig_forceDestroy(zoneName1, zoneName2 string) string {
+	return fmt.Sprintf(`
 resource "aws_route53_zone" "destroyable" {
-	name = "terraform.io"
+	name = "%s"
 	force_destroy = true
 }
 
 resource "aws_route53_zone" "with_trailing_dot" {
-	name = "hashicorptest.io."
+	name = "%s."
 	force_destroy = true
 }
-`
+`, zoneName1, zoneName2)
+}
 
-const testAccRoute53ZoneConfigUpdateComment = `
+func testAccRoute53ZoneConfigUpdateComment(zoneName string) string {
+	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
-	name = "hashicorp.com."
+	name = "%s."
 	comment = "Change Custom Comment"
 
 	tags {
@@ -439,9 +459,11 @@ resource "aws_route53_zone" "main" {
 		Name = "tf-route53-tag-test"
 	}
 }
-`
+`, zoneName)
+}
 
-const testAccRoute53PrivateZoneConfig = `
+func testAccRoute53PrivateZoneConfig(zoneName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "main" {
 	cidr_block = "172.29.0.0/24"
 	instance_tenancy = "default"
@@ -450,12 +472,14 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_route53_zone" "main" {
-	name = "hashicorp.com."
+	name = "%s."
 	vpc_id = "${aws_vpc.main.id}"
 }
-`
+`, zoneName)
+}
 
-const testAccRoute53PrivateZoneRegionConfig = `
+func testAccRoute53PrivateZoneRegionConfig(zoneName string) string {
+	return fmt.Sprintf(`
 provider "aws" {
 	alias = "west"
 	region = "us-west-2"
@@ -476,8 +500,9 @@ resource "aws_vpc" "main" {
 
 resource "aws_route53_zone" "main" {
 	provider = "aws.west"
-	name = "hashicorp.com."
+	name = "%s."
 	vpc_id = "${aws_vpc.main.id}"
 	vpc_region = "us-east-1"
 }
-`
+`, zoneName)
+}

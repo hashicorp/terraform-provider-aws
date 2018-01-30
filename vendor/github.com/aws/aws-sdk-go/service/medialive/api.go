@@ -522,6 +522,8 @@ func (c *MediaLive) DeleteInputSecurityGroupRequest(input *DeleteInputSecurityGr
 //
 //   * ErrCodeBadGatewayException "BadGatewayException"
 //
+//   * ErrCodeNotFoundException "NotFoundException"
+//
 //   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
@@ -2914,6 +2916,8 @@ type Channel struct {
 	// List of input attachments for channel.
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
 
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
 	// The name of the channel. (user-mutable)
 	Name *string `locationName:"name" type:"string"`
 
@@ -2969,6 +2973,12 @@ func (s *Channel) SetId(v string) *Channel {
 // SetInputAttachments sets the InputAttachments field's value.
 func (s *Channel) SetInputAttachments(v []*InputAttachment) *Channel {
 	s.InputAttachments = v
+	return s
+}
+
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *Channel) SetInputSpecification(v *InputSpecification) *Channel {
+	s.InputSpecification = v
 	return s
 }
 
@@ -3041,6 +3051,8 @@ type ChannelSummary struct {
 	// List of input attachments for channel.
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
 
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
 	// The name of the channel. (user-mutable)
 	Name *string `locationName:"name" type:"string"`
 
@@ -3093,6 +3105,12 @@ func (s *ChannelSummary) SetInputAttachments(v []*InputAttachment) *ChannelSumma
 	return s
 }
 
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *ChannelSummary) SetInputSpecification(v *InputSpecification) *ChannelSummary {
+	s.InputSpecification = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *ChannelSummary) SetName(v string) *ChannelSummary {
 	s.Name = &v
@@ -3126,6 +3144,8 @@ type CreateChannelInput struct {
 	EncoderSettings *EncoderSettings `locationName:"encoderSettings" type:"structure"`
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
 
 	Name *string `locationName:"name" type:"string"`
 
@@ -3161,6 +3181,12 @@ func (s *CreateChannelInput) SetEncoderSettings(v *EncoderSettings) *CreateChann
 // SetInputAttachments sets the InputAttachments field's value.
 func (s *CreateChannelInput) SetInputAttachments(v []*InputAttachment) *CreateChannelInput {
 	s.InputAttachments = v
+	return s
+}
+
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *CreateChannelInput) SetInputSpecification(v *InputSpecification) *CreateChannelInput {
+	s.InputSpecification = v
 	return s
 }
 
@@ -3397,6 +3423,8 @@ type DeleteChannelOutput struct {
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
 
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
 	Name *string `locationName:"name" type:"string"`
 
 	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
@@ -3449,6 +3477,12 @@ func (s *DeleteChannelOutput) SetId(v string) *DeleteChannelOutput {
 // SetInputAttachments sets the InputAttachments field's value.
 func (s *DeleteChannelOutput) SetInputAttachments(v []*InputAttachment) *DeleteChannelOutput {
 	s.InputAttachments = v
+	return s
+}
+
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *DeleteChannelOutput) SetInputSpecification(v *InputSpecification) *DeleteChannelOutput {
+	s.InputSpecification = v
 	return s
 }
 
@@ -3633,6 +3667,8 @@ type DescribeChannelOutput struct {
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
 
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
 	Name *string `locationName:"name" type:"string"`
 
 	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
@@ -3685,6 +3721,12 @@ func (s *DescribeChannelOutput) SetId(v string) *DescribeChannelOutput {
 // SetInputAttachments sets the InputAttachments field's value.
 func (s *DescribeChannelOutput) SetInputAttachments(v []*InputAttachment) *DescribeChannelOutput {
 	s.InputAttachments = v
+	return s
+}
+
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *DescribeChannelOutput) SetInputSpecification(v *InputSpecification) *DescribeChannelOutput {
+	s.InputSpecification = v
 	return s
 }
 
@@ -5402,9 +5444,9 @@ type HlsGroupSettings struct {
 	// Parameters that control interactions with the CDN.
 	HlsCdnSettings *HlsCdnSettings `locationName:"hlsCdnSettings" type:"structure"`
 
-	// Number of segments to keep in the playlist (.m3u8) file. mode must be "vod"
-	// for this setting to have an effect, and this number should be less than or
-	// equal to keepSegments.
+	// If mode is "live", the number of segments to retain in the manifest (.m3u8)
+	// file. This number must be less than or equal to keepSegments. If mode is
+	// "vod", this parameter has no effect.
 	IndexNSegments *int64 `locationName:"indexNSegments" type:"integer"`
 
 	// Parameter that control output group behavior on input loss.
@@ -5422,8 +5464,8 @@ type HlsGroupSettings struct {
 	// constantIv value.
 	IvSource *string `locationName:"ivSource" type:"string" enum:"HlsIvSource"`
 
-	// Number of segments to retain in the destination directory. mode must be "live"
-	// for this setting to have an effect.
+	// If mode is "live", the number of TS segments to retain in the destination
+	// directory. If mode is "vod", this parameter has no effect.
 	KeepSegments *int64 `locationName:"keepSegments" type:"integer"`
 
 	// The value specifies how the key is represented in the resource identified
@@ -5450,9 +5492,12 @@ type HlsGroupSettings struct {
 	// needed.
 	MinSegmentLength *int64 `locationName:"minSegmentLength" type:"integer"`
 
-	// If set to "vod", keeps and indexes all segments starting with the first segment.
-	// If set to "live" segments will age out and only the last keepSegments number
-	// of segments will be retained.
+	// If "vod", all segments are indexed and kept permanently in the destination
+	// and manifest. If "live", only the number segments specified in keepSegments
+	// and indexNSegments are kept; newer segments replace older segments, which
+	// may prevent players from rewinding all the way to the beginning of the event.VOD
+	// mode uses HLS EXT-X-PLAYLIST-TYPE of EVENT while the channel is running,
+	// converting it to a "VOD" type manifest on completion of the stream.
 	Mode *string `locationName:"mode" type:"string" enum:"HlsMode"`
 
 	// Generates the .m3u8 playlist file for this HLS output group. The segmentsOnly
@@ -5985,26 +6030,26 @@ func (s *HlsWebdavSettings) SetRestartDelay(v int64) *HlsWebdavSettings {
 type Input struct {
 	_ struct{} `type:"structure"`
 
-	// Unique ARN of input (generated, immutable)
+	// The Unique ARN of the input (generated, immutable).
 	Arn *string `locationName:"arn" type:"string"`
 
-	// List of channel IDs that that input is attached to (currently an input can
-	// only be attached to one channel)
+	// A list of channel IDs that that input is attached to (currently an input
+	// can only be attached to one channel).
 	AttachedChannels []*string `locationName:"attachedChannels" type:"list"`
 
-	// List of destinations of input (PULL-type)
+	// A list of the destinations of the input (PUSH-type).
 	Destinations []*InputDestination `locationName:"destinations" type:"list"`
 
-	// generated ID of input (unique for user account, immutable)
+	// The generated ID of the input (unique for user account, immutable).
 	Id *string `locationName:"id" type:"string"`
 
-	// user-assigned name (mutable)
+	// The user-assigned name (This is a mutable value).
 	Name *string `locationName:"name" type:"string"`
 
-	// List of IDs for all the security groups attached to the input.
+	// A list of IDs for all the security groups attached to the input.
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 
-	// List of sources of input (PULL-type)
+	// A list of the sources of the input (PULL-type).
 	Sources []*InputSource `locationName:"sources" type:"list"`
 
 	State *string `locationName:"state" type:"string" enum:"InputState"`
@@ -6143,16 +6188,16 @@ func (s *InputChannelLevel) SetInputChannel(v int64) *InputChannelLevel {
 	return s
 }
 
-// Settings for a PUSH type input
+// The settings for a PUSH type input.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputDestination
 type InputDestination struct {
 	_ struct{} `type:"structure"`
 
-	// system-generated static IP address of endpoint.Remains fixed for the lifetime
-	// of the input
+	// The system-generated static IP address of endpoint.It remains fixed for the
+	// lifetime of the input.
 	Ip *string `locationName:"ip" type:"string"`
 
-	// port for input
+	// The port number for the input.
 	Port *string `locationName:"port" type:"string"`
 
 	// This represents the endpoint that the customer stream will bepushed to.
@@ -6187,7 +6232,7 @@ func (s *InputDestination) SetUrl(v string) *InputDestination {
 	return s
 }
 
-// Endpoint settings for a PUSH type input
+// Endpoint settings for a PUSH type input.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputDestinationRequest
 type InputDestinationRequest struct {
 	_ struct{} `type:"structure"`
@@ -6472,18 +6517,18 @@ func (s *InputSettings) SetVideoSelector(v *VideoSelector) *InputSettings {
 	return s
 }
 
-// Settings for a PULL type input
+// The settings for a PULL type input.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputSource
 type InputSource struct {
 	_ struct{} `type:"structure"`
 
-	// key used to extract the password from EC2 Parameter store
+	// The key used to extract the password from EC2 Parameter store.
 	PasswordParam *string `locationName:"passwordParam" type:"string"`
 
 	// This represents the customer's source URL where stream ispulled from.
 	Url *string `locationName:"url" type:"string"`
 
-	// username for input source
+	// The username for the input source.
 	Username *string `locationName:"username" type:"string"`
 }
 
@@ -6515,18 +6560,18 @@ func (s *InputSource) SetUsername(v string) *InputSource {
 	return s
 }
 
-// Settings for for a PULL type input
+// Settings for for a PULL type input.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputSourceRequest
 type InputSourceRequest struct {
 	_ struct{} `type:"structure"`
 
-	// key used to extract the password from EC2 Parameter store
+	// The key used to extract the password from EC2 Parameter store.
 	PasswordParam *string `locationName:"passwordParam" type:"string"`
 
 	// This represents the customer's source URL where stream ispulled from.
 	Url *string `locationName:"url" type:"string"`
 
-	// username for input source
+	// The username for the input source.
 	Username *string `locationName:"username" type:"string"`
 }
 
@@ -6555,6 +6600,48 @@ func (s *InputSourceRequest) SetUrl(v string) *InputSourceRequest {
 // SetUsername sets the Username field's value.
 func (s *InputSourceRequest) SetUsername(v string) *InputSourceRequest {
 	s.Username = &v
+	return s
+}
+
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputSpecification
+type InputSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// Input codec
+	Codec *string `locationName:"codec" type:"string" enum:"InputCodec"`
+
+	// Maximum input bitrate, categorized coarsely
+	MaximumBitrate *string `locationName:"maximumBitrate" type:"string" enum:"InputMaximumBitrate"`
+
+	// Input resolution, categorized coarsely
+	Resolution *string `locationName:"resolution" type:"string" enum:"InputResolution"`
+}
+
+// String returns the string representation
+func (s InputSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputSpecification) GoString() string {
+	return s.String()
+}
+
+// SetCodec sets the Codec field's value.
+func (s *InputSpecification) SetCodec(v string) *InputSpecification {
+	s.Codec = &v
+	return s
+}
+
+// SetMaximumBitrate sets the MaximumBitrate field's value.
+func (s *InputSpecification) SetMaximumBitrate(v string) *InputSpecification {
+	s.MaximumBitrate = &v
+	return s
+}
+
+// SetResolution sets the Resolution field's value.
+func (s *InputSpecification) SetResolution(v string) *InputSpecification {
+	s.Resolution = &v
 	return s
 }
 
@@ -6955,9 +7042,7 @@ type M2tsSettings struct {
 	// EBP markers will be placed on only the video PID.
 	EbpPlacement *string `locationName:"ebpPlacement" type:"string" enum:"M2tsEbpPlacement"`
 
-	// Packet Identifier (PID) for ECM in the transport stream. Only enabled when
-	// Simulcrypt is enabled. Can be entered as a decimal or hexadecimal value.
-	// Valid values are 32 (or 0x20)..8182 (or 0x1ff6).
+	// This field is unused and deprecated.
 	EcmPid *string `locationName:"ecmPid" type:"string"`
 
 	// Include or exclude the ES Rate field in the PES header.
@@ -7383,10 +7468,7 @@ type M3u8Settings struct {
 	// by comma separation. Can be entered as decimal or hexadecimal values.
 	AudioPids *string `locationName:"audioPids" type:"string"`
 
-	// ThePlatform-protected transport streams using 'microsoft' as Target Client
-	// include an ECM stream. This ECM stream contains the size, IV, and PTS of
-	// every sample in the transport stream. This stream PID is specified here.
-	// This PID has no effect on non ThePlatform-protected streams.
+	// This parameter is unused and deprecated.
 	EcmPid *string `locationName:"ecmPid" type:"string"`
 
 	// The number of milliseconds between instances of this table in the output
@@ -8507,6 +8589,8 @@ type StartChannelOutput struct {
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
 
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
 	Name *string `locationName:"name" type:"string"`
 
 	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
@@ -8559,6 +8643,12 @@ func (s *StartChannelOutput) SetId(v string) *StartChannelOutput {
 // SetInputAttachments sets the InputAttachments field's value.
 func (s *StartChannelOutput) SetInputAttachments(v []*InputAttachment) *StartChannelOutput {
 	s.InputAttachments = v
+	return s
+}
+
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *StartChannelOutput) SetInputSpecification(v *InputSpecification) *StartChannelOutput {
+	s.InputSpecification = v
 	return s
 }
 
@@ -8672,6 +8762,8 @@ type StopChannelOutput struct {
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
 
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
 	Name *string `locationName:"name" type:"string"`
 
 	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
@@ -8724,6 +8816,12 @@ func (s *StopChannelOutput) SetId(v string) *StopChannelOutput {
 // SetInputAttachments sets the InputAttachments field's value.
 func (s *StopChannelOutput) SetInputAttachments(v []*InputAttachment) *StopChannelOutput {
 	s.InputAttachments = v
+	return s
+}
+
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *StopChannelOutput) SetInputSpecification(v *InputSpecification) *StopChannelOutput {
+	s.InputSpecification = v
 	return s
 }
 
@@ -10344,6 +10442,18 @@ const (
 	HlsWebdavHttpTransferModeNonChunked = "NON_CHUNKED"
 )
 
+// codec in increasing order of complexity
+const (
+	// InputCodecMpeg2 is a InputCodec enum value
+	InputCodecMpeg2 = "MPEG2"
+
+	// InputCodecAvc is a InputCodec enum value
+	InputCodecAvc = "AVC"
+
+	// InputCodecHevc is a InputCodec enum value
+	InputCodecHevc = "HEVC"
+)
+
 const (
 	// InputDeblockFilterDisabled is a InputDeblockFilter enum value
 	InputDeblockFilterDisabled = "DISABLED"
@@ -10404,6 +10514,32 @@ const (
 
 	// InputLossImageTypeSlate is a InputLossImageType enum value
 	InputLossImageTypeSlate = "SLATE"
+)
+
+// Maximum input bitrate in megabits per second. Bitrates up to 50 Mbps are
+// supported currently.
+const (
+	// InputMaximumBitrateMax10Mbps is a InputMaximumBitrate enum value
+	InputMaximumBitrateMax10Mbps = "MAX_10_MBPS"
+
+	// InputMaximumBitrateMax20Mbps is a InputMaximumBitrate enum value
+	InputMaximumBitrateMax20Mbps = "MAX_20_MBPS"
+
+	// InputMaximumBitrateMax50Mbps is a InputMaximumBitrate enum value
+	InputMaximumBitrateMax50Mbps = "MAX_50_MBPS"
+)
+
+// Input resolution based on lines of vertical resolution in the input; SD is
+// less than 720 lines, HD is 720 to 1080 lines, UHD is greater than 1080 lines
+const (
+	// InputResolutionSd is a InputResolution enum value
+	InputResolutionSd = "SD"
+
+	// InputResolutionHd is a InputResolution enum value
+	InputResolutionHd = "HD"
+
+	// InputResolutionUhd is a InputResolution enum value
+	InputResolutionUhd = "UHD"
 )
 
 const (

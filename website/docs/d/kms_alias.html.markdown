@@ -28,3 +28,4 @@ data "aws_kms_alias" "s3" {
 
 * `arn` - The Amazon Resource Name(ARN) of the key alias.
 * `target_key_id` - Key identifier pointed to by the alias.
+* `target_key_arn` - ARN pointed to by the alias.

@@ -52,6 +52,24 @@ func TestExpandRecordName(t *testing.T) {
 	}
 }
 
+func TestNormalizeAwsAliasName(t *testing.T) {
+	cases := []struct {
+		Input, Output string
+	}{
+		{"www.nonexample.com", "www.nonexample.com"},
+		{"www.nonexample.com.", "www.nonexample.com"},
+		{"dualstack.name-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
+		{"NAME-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
+	}
+
+	for _, tc := range cases {
+		actual := normalizeAwsAliasName(tc.Input)
+		if actual != tc.Output {
+			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
+		}
+	}
+}
+
 func TestParseRecordId(t *testing.T) {
 	cases := []struct {
 		Input, Zone, Name, Type, Set string
@@ -264,6 +282,25 @@ func TestAccAWSRoute53Record_weighted_basic(t *testing.T) {
 func TestAccAWSRoute53Record_alias(t *testing.T) {
 	rs := acctest.RandString(10)
 	config := fmt.Sprintf(testAccRoute53ElbAliasRecord, rs)
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_route53_record.alias",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists("aws_route53_record.alias"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute53Record_aliasUppercase(t *testing.T) {
+	rs := acctest.RandString(10)
+	config := fmt.Sprintf(testAccRoute53ElbAliasRecordUppercase, rs)
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route53_record.alias",
@@ -957,6 +994,36 @@ resource "aws_route53_record" "alias" {
 
 resource "aws_elb" "main" {
   name = "foobar-terraform-elb-%s"
+  availability_zones = ["us-west-2a"]
+
+  listener {
+    instance_port = 80
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+  }
+}
+`
+
+const testAccRoute53ElbAliasRecordUppercase = `
+resource "aws_route53_zone" "main" {
+  name = "notexample.com"
+}
+
+resource "aws_route53_record" "alias" {
+  zone_id = "${aws_route53_zone.main.zone_id}"
+  name = "www"
+  type = "A"
+
+  alias {
+  	zone_id = "${aws_elb.main.zone_id}"
+  	name = "${aws_elb.main.dns_name}"
+  	evaluate_target_health = true
+  }
+}
+
+resource "aws_elb" "main" {
+  name = "FOOBAR-TERRAFORM-ELB-%s"
   availability_zones = ["us-west-2a"]
 
   listener {

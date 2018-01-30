@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -44,6 +45,15 @@ func testAccDataSourceAwsKmsAliasCheck(name string) resource.TestCheckFunc {
 				"arn is %s; want %s",
 				attr["arn"],
 				kmsKeyRs.Primary.Attributes["arn"],
+			)
+		}
+
+		expectedTargetKeyArnSuffix := fmt.Sprintf("key/%s", kmsKeyRs.Primary.Attributes["target_key_id"])
+		if !strings.HasSuffix(attr["target_key_arn"], expectedTargetKeyArnSuffix) {
+			return fmt.Errorf(
+				"target_key_arn is %s; want suffix %s",
+				attr["target_key_arn"],
+				expectedTargetKeyArnSuffix,
 			)
 		}
 

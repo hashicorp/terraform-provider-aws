@@ -22,6 +22,7 @@ func TestAccAWSKmsAlias_basic(t *testing.T) {
 				Config: testAccAWSKmsSingleAlias(rInt, kmsAliasTimestamp),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsAliasExists("aws_kms_alias.single"),
+					resource.TestCheckResourceAttrSet("aws_kms_alias.single", "target_key_arn"),
 				),
 			},
 			{
@@ -46,6 +47,7 @@ func TestAccAWSKmsAlias_name_prefix(t *testing.T) {
 				Config: testAccAWSKmsSingleAlias(rInt, kmsAliasTimestamp),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsAliasExists("aws_kms_alias.name_prefix"),
+					resource.TestCheckResourceAttrSet("aws_kms_alias.name_prefix", "target_key_arn"),
 				),
 			},
 		},
@@ -64,6 +66,7 @@ func TestAccAWSKmsAlias_no_name(t *testing.T) {
 				Config: testAccAWSKmsSingleAlias(rInt, kmsAliasTimestamp),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsAliasExists("aws_kms_alias.nothing"),
+					resource.TestCheckResourceAttrSet("aws_kms_alias.nothing", "target_key_arn"),
 				),
 			},
 		},
@@ -82,7 +85,9 @@ func TestAccAWSKmsAlias_multiple(t *testing.T) {
 				Config: testAccAWSKmsMultipleAliases(rInt, kmsAliasTimestamp),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsAliasExists("aws_kms_alias.one"),
+					resource.TestCheckResourceAttrSet("aws_kms_alias.one", "target_key_arn"),
 					testAccCheckAWSKmsAliasExists("aws_kms_alias.two"),
+					resource.TestCheckResourceAttrSet("aws_kms_alias.two", "target_key_arn"),
 				),
 			},
 		},

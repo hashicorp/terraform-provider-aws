@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
 )
 
 func resourceAwsS3Bucket() *schema.Resource {
@@ -130,7 +131,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validateJsonString,
 							StateFunc: func(v interface{}) string {
-								json, _ := normalizeJsonString(v)
+								json, _ := structure.NormalizeJsonString(v)
 								return json
 							},
 						},
@@ -625,7 +626,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 					return err
 				}
 			} else {
-				policy, err := normalizeJsonString(*v)
+				policy, err := structure.NormalizeJsonString(*v)
 				if err != nil {
 					return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
 				}
@@ -1969,20 +1970,6 @@ func removeNil(data map[string]interface{}) map[string]interface{} {
 	}
 
 	return withoutNil
-}
-
-// DEPRECATED. Please consider using `normalizeJsonString` function instead.
-func normalizeJson(jsonString interface{}) string {
-	if jsonString == nil || jsonString == "" {
-		return ""
-	}
-	var j interface{}
-	err := json.Unmarshal([]byte(jsonString.(string)), &j)
-	if err != nil {
-		return fmt.Sprintf("Error parsing JSON: %s", err)
-	}
-	b, _ := json.Marshal(j)
-	return string(b[:])
 }
 
 func normalizeRegion(region string) string {

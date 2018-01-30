@@ -9,10 +9,13 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
 )
 
 func validateInstanceUserDataSize(v interface{}, k string) (ws []string, errors []error) {
@@ -297,7 +300,7 @@ func validateCloudWatchLogResourcePolicyDocument(v interface{}, k string) (ws []
 	if len(value) > 5120 || (len(value) == 0) {
 		errors = append(errors, fmt.Errorf("CloudWatch log resource policy document must be between 1 and 5120 characters."))
 	}
-	if _, err := normalizeJsonString(v); err != nil {
+	if _, err := structure.NormalizeJsonString(v); err != nil {
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
 	}
 	return
@@ -687,7 +690,7 @@ func validateApiGatewayIntegrationPassthroughBehavior(v interface{}, k string) (
 }
 
 func validateJsonString(v interface{}, k string) (ws []string, errors []error) {
-	if _, err := normalizeJsonString(v); err != nil {
+	if _, err := structure.NormalizeJsonString(v); err != nil {
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
 	}
 	return
@@ -704,7 +707,7 @@ func validateIAMPolicyJson(v interface{}, k string) (ws []string, errors []error
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy", k))
 		return
 	}
-	if _, err := normalizeJsonString(v); err != nil {
+	if _, err := structure.NormalizeJsonString(v); err != nil {
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
 	}
 	return
@@ -712,7 +715,7 @@ func validateIAMPolicyJson(v interface{}, k string) (ws []string, errors []error
 
 func validateCloudFormationTemplate(v interface{}, k string) (ws []string, errors []error) {
 	if looksLikeJsonString(v) {
-		if _, err := normalizeJsonString(v); err != nil {
+		if _, err := structure.NormalizeJsonString(v); err != nil {
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
 		}
 	} else {
@@ -891,6 +894,19 @@ func validateAwsEcsPlacementConstraint(constType, constExpr string) error {
 	return nil
 }
 
+// http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateGlobalTable.html
+func validateAwsDynamoDbGlobalTableName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) > 255) || (len(value) < 3) {
+		errors = append(errors, fmt.Errorf("%s length must be between 3 and 255 characters: %q", k, value))
+	}
+	pattern := `^[a-zA-Z0-9_.-]+$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%s must only include alphanumeric, underscore, period, or hyphen characters: %q", k, value))
+	}
+	return
+}
+
 // Validates that an Ecs placement strategy is set correctly
 // Takes type, and field as strings
 func validateAwsEcsPlacementStrategy(stratType, stratField string) error {
@@ -944,6 +960,20 @@ func validateAwsEmrInstanceGroupRole(v interface{}, k string) (ws []string, erro
 		errors = append(errors, fmt.Errorf(
 			"%q must be one of ['MASTER', 'CORE', 'TASK']", k))
 	}
+	return
+}
+
+func validateAwsEmrCustomAmiId(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 256 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 characters", k))
+	}
+
+	if !regexp.MustCompile(`^ami\-[a-z0-9]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must begin with 'ami-' and be comprised of only [a-z0-9]: %v", k, value))
+	}
+
 	return
 }
 
@@ -1124,8 +1154,16 @@ func validateAppautoscalingCustomizedMetricSpecificationStatistic(v interface{},
 
 func validateAppautoscalingPredefinedMetricSpecification(v interface{}, k string) (ws []string, errors []error) {
 	validMetrics := []string{
-		"DynamoDBReadCapacityUtilization",
-		"DynamoDBWriteCapacityUtilization",
+		applicationautoscaling.MetricTypeAlbrequestCountPerTarget,
+		applicationautoscaling.MetricTypeDynamoDbreadCapacityUtilization,
+		applicationautoscaling.MetricTypeDynamoDbwriteCapacityUtilization,
+		applicationautoscaling.MetricTypeEc2spotFleetRequestAverageCpuutilization,
+		applicationautoscaling.MetricTypeEc2spotFleetRequestAverageNetworkIn,
+		applicationautoscaling.MetricTypeEc2spotFleetRequestAverageNetworkOut,
+		applicationautoscaling.MetricTypeEcsserviceAverageCpuutilization,
+		applicationautoscaling.MetricTypeEcsserviceAverageMemoryUtilization,
+		applicationautoscaling.MetricTypeRdsreaderAverageCpuutilization,
+		applicationautoscaling.MetricTypeRdsreaderAverageDatabaseConnections,
 	}
 	metric := v.(string)
 	for _, o := range validMetrics {
@@ -2080,5 +2118,18 @@ func validateServiceDiscoveryServiceHealthCheckConfigType(v interface{}, k strin
 		}
 	}
 	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
+	return
+}
+
+func validateGameliftOperatingSystem(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	operatingSystems := map[string]bool{
+		gamelift.OperatingSystemAmazonLinux: true,
+		gamelift.OperatingSystemWindows2012: true,
+	}
+
+	if !operatingSystems[value] {
+		errors = append(errors, fmt.Errorf("%q must be a valid operating system value: %q", k, value))
+	}
 	return
 }

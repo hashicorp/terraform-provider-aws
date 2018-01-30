@@ -89,7 +89,6 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 			"content_handling": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validateApiGatewayIntegrationContentHandling,
 			},
 
@@ -377,6 +376,14 @@ func resourceAwsApiGatewayIntegrationUpdate(d *schema.ResourceData, meta interfa
 			Op:    aws.String("replace"),
 			Path:  aws.String("/uri"),
 			Value: aws.String(d.Get("uri").(string)),
+		})
+	}
+
+	if d.HasChange("content_handling") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/contentHandling"),
+			Value: aws.String(d.Get("content_handling").(string)),
 		})
 	}
 
