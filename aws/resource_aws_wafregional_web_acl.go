@@ -106,7 +106,7 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 	resp, err := conn.GetWebACL(params)
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "WAFNonexistentItemException" {
-			log.Printf("[WARN] WAF ACL (%s) not found, error code (404)", d.Id())
+			log.Printf("[WARN] WAF Regional ACL (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -129,7 +129,7 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 func resourceAwsWafRegionalWebAclUpdate(d *schema.ResourceData, meta interface{}) error {
 	err := updateWebAclResourceWR(d, meta, waf.ChangeActionInsert)
 	if err != nil {
-		return fmt.Errorf("Error Updating WAF ACL: %s", err)
+		return fmt.Errorf("Error Updating WAF Regional ACL: %s", err)
 	}
 	return resourceAwsWafRegionalWebAclRead(d, meta)
 }
@@ -140,7 +140,7 @@ func resourceAwsWafRegionalWebAclDelete(d *schema.ResourceData, meta interface{}
 
 	err := updateWebAclResourceWR(d, meta, waf.ChangeActionDelete)
 	if err != nil {
-		return fmt.Errorf("Error Removing WAF ACL Rules: %s", err)
+		return fmt.Errorf("Error Removing WAF Regional ACL Rules: %s", err)
 	}
 
 	wr := newWafRegionalRetryer(conn, region)
@@ -154,7 +154,7 @@ func resourceAwsWafRegionalWebAclDelete(d *schema.ResourceData, meta interface{}
 		return conn.DeleteWebACL(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error Deleting WAF ACL: %s", err)
+		return fmt.Errorf("Error Deleting WAF Regional ACL: %s", err)
 	}
 	return nil
 }
@@ -171,7 +171,7 @@ func updateWebAclResourceWR(d *schema.ResourceData, meta interface{}, ChangeActi
 		}
 
 		if d.HasChange("default_action") {
-			req.DefaultAction = expandDefaultAction(d)
+			req.DefaultAction = expandDefaultActionWR(d)
 		}
 
 		rules := d.Get("rules").(*schema.Set)
@@ -191,7 +191,7 @@ func updateWebAclResourceWR(d *schema.ResourceData, meta interface{}, ChangeActi
 		return conn.UpdateWebACL(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error Updating WAF ACL: %s", err)
+		return fmt.Errorf("Error Updating WAF Regional ACL: %s", err)
 	}
 	return nil
 }
