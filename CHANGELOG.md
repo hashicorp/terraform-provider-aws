@@ -8,7 +8,6 @@ FEATURES:
 ENHANCEMENTS:
 
 * provider: Automatically validate new regions from AWS SDK [GH-3159]
-* data-source/aws_kms_alias: Prevent crash on aliases without target key [GH-3203]
 * data-source/aws_lb_listener: Support load_balancer_arn and port arguments [GH-2886]
 * data-source/aws_network_interface: Add filter attribute [GH-2851]
 * resource/aws_mq_broker: Validate user password [GH-3164]
@@ -17,6 +16,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_kms_alias: Prevent crash on aliases without target key [GH-3203]
+* data-source/aws_ssm_parameter: Fix wrong arn attribute for full path parameter names [GH-3211]
 * resource/aws_db_parameter_group: fix permanent diff when specifying parameters with database-default values [GH-3182]
 * resource/aws_route53_record: Fix dualstack alias name regression trimming too many characters [GH-3187]
 
