@@ -1514,8 +1514,7 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 		// This may happen in Eucalyptus Cloud
 		log.Printf("[WARN] Unable to retrieve VPCs")
 	} else {
-		isInDefaultVpc := *out.Vpcs[0].IsDefault
-		useID = !isInDefaultVpc
+		useID = *out.Vpcs[0].IsDefault
 	}
 
 	if v := d.Get("security_groups"); v != nil {
