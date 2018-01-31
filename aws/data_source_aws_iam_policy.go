@@ -11,7 +11,7 @@ func dataSourceAwsIAMPolicy() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
