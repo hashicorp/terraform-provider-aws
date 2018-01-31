@@ -81,6 +81,10 @@ func testAccCheckAwsAutoscalingGroupsAvailable(attrs map[string]string) ([]strin
 
 func testAccCheckAwsAutoscalingGroupsConfig(rInt1, rInt2, rInt3 int) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_launch_configuration" "foobar" {
   image_id = "ami-21f78e11"
   instance_type = "t1.micro"
@@ -143,6 +147,10 @@ resource "aws_autoscaling_group" "barbaz" {
 
 func testAccCheckAwsAutoscalingGroupsConfigWithDataSource(rInt1, rInt2, rInt3 int) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_launch_configuration" "foobar" {
   image_id = "ami-21f78e11"
   instance_type = "t1.micro"

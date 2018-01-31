@@ -235,9 +235,12 @@ func TestAccAWSInstanceDataSource_VPCSecurityGroups(t *testing.T) {
 
 // Lookup based on InstanceID
 const testAccInstanceDataSourceConfig = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_instance" "web" {
-  # us-west-2
-  ami = "ami-4fccb37f"
+  ami = "ami-4fccb37f" # us-west-2
   instance_type = "m1.small"
   tags {
     Name = "HelloWorld"
@@ -255,9 +258,12 @@ data "aws_instance" "web-instance" {
 // Use the tags attribute to filter
 func testAccInstanceDataSourceConfig_Tags(rInt int) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_instance" "web" {
-  # us-west-2
-  ami = "ami-4fccb37f"
+  ami = "ami-4fccb37f" # us-west-2
   instance_type = "m1.small"
   tags {
     Name = "HelloWorld"
@@ -276,6 +282,10 @@ data "aws_instance" "web-instance" {
 
 // filter on tag, populate more attributes
 const testAccInstanceDataSourceConfig_AzUserData = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_instance" "foo" {
   # us-west-2
   ami = "ami-4fccb37f"
@@ -295,6 +305,10 @@ data "aws_instance" "foo" {
 
 // GP2IopsDevice
 const testAccInstanceDataSourceConfig_gp2IopsDevice = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_instance" "foo" {
   # us-west-2
   ami = "ami-55a7ea65"
@@ -312,6 +326,10 @@ data "aws_instance" "foo" {
 
 // Block Device
 const testAccInstanceDataSourceConfig_blockDevices = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_instance" "foo" {
   # us-west-2
   ami = "ami-55a7ea65"
@@ -351,6 +369,10 @@ data "aws_instance" "foo" {
 `
 
 const testAccInstanceDataSourceConfig_rootInstanceStore = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_instance" "foo" {
   ami = "ami-44c36524"
   instance_type = "m3.medium"
@@ -361,6 +383,10 @@ data "aws_instance" "foo" {
 `
 
 const testAccInstanceDataSourceConfig_privateIP = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
@@ -418,6 +444,10 @@ data "aws_instance" "foo" {
 }
 
 const testAccInstanceDataSourceConfig_VPC = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
@@ -448,6 +478,10 @@ data "aws_instance" "foo" {
 
 func testAccInstanceDataSourceConfig_PlacementGroup(rStr string) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
@@ -515,6 +549,10 @@ data "aws_instance" "foo" {
 }
 
 const testAccInstanceDataSourceConfig_VPCSecurityGroups = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.foo.id}"
 }

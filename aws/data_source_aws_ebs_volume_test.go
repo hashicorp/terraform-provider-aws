@@ -61,6 +61,10 @@ func testAccCheckAwsEbsVolumeDataSourceID(n string) resource.TestCheckFunc {
 }
 
 const testAccCheckAwsEbsVolumeDataSourceConfig = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_ebs_volume" "example" {
   availability_zone = "us-west-2a"
   type = "gp2"
@@ -84,6 +88,10 @@ data "aws_ebs_volume" "ebs_volume" {
 `
 
 const testAccCheckAwsEbsVolumeDataSourceConfigWithMultipleFilters = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_ebs_volume" "external1" {
   availability_zone = "us-west-2a"
   type = "gp2"

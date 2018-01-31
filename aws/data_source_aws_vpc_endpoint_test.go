@@ -87,6 +87,10 @@ func testAccDataSourceAwsVpcEndpointCheckExists(name string) resource.TestCheckF
 }
 
 const testAccDataSourceAwsVpcEndpointConfig = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -110,6 +114,10 @@ data "aws_vpc_endpoint" "s3" {
 `
 
 const testAccDataSourceAwsVpcEndpointConfigById = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -129,6 +137,10 @@ data "aws_vpc_endpoint" "by_id" {
 `
 
 const testAccDataSourceAwsVpcEndpointWithRouteTableConfig = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
