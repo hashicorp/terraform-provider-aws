@@ -64,7 +64,8 @@ func dataSourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(time.Now().UTC().String())
 	d.Set("arn", alias.AliasArn)
 
-	// AWS service aliases do not return TargetKeyId:
+	// Some aliases do not return TargetKeyId (e.g. aliases for AWS services or
+	// aliases not associated with a Customer Managed Key (CMK))
 	// https://docs.aws.amazon.com/kms/latest/APIReference/API_ListAliases.html
 	if alias.TargetKeyId != nil {
 		aliasARN, err := arn.Parse(*alias.AliasArn)
