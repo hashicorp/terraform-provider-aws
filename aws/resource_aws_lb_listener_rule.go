@@ -349,11 +349,7 @@ func getNextAbvailableRulePriority(conn *elbv2.ELBV2, arn string) (priority int6
 		}
 		nextMarker = out.NextMarker
 	}
-	if len(priorities) == 0 {
-		priority = 1
-		return
-	}
-	if len(priorities) == priorities[len(priorities)-1] {
+	if len(priorities) == 0 || len(priorities) == priorities[len(priorities)-1] {
 		priority = int64(len(priorities) + 1)
 		return
 	}
