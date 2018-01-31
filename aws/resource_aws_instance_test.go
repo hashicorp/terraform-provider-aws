@@ -39,16 +39,10 @@ func TestAccAWSInstance_basic(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t) },
-
-		// We ignore security groups because even with EC2 classic
-		// we'll import as VPC security groups, which is fine. We verify
-		// VPC security group import in other tests
-		IDRefreshName:   "aws_instance.foo",
-		IDRefreshIgnore: []string{"security_groups", "vpc_security_group_ids"},
-
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_instance.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			// Create a volume to cover #1249
 			{
@@ -117,16 +111,10 @@ func TestAccAWSInstance_userDataBase64(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t) },
-
-		// We ignore security groups because even with EC2 classic
-		// we'll import as VPC security groups, which is fine. We verify
-		// VPC security group import in other tests
-		IDRefreshName:   "aws_instance.foo",
-		IDRefreshIgnore: []string{"security_groups", "vpc_security_group_ids"},
-
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_instance.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigWithUserDataBase64(rInt),
@@ -165,12 +153,11 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
-		IDRefreshIgnore: []string{
-			"ephemeral_block_device", "user_data", "security_groups", "vpc_security_groups"},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   "aws_instance.foo",
+		IDRefreshIgnore: []string{"ephemeral_block_device", "user_data"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGP2IopsDevice,
@@ -196,12 +183,11 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 func TestAccAWSInstance_GP2WithIopsValue(t *testing.T) {
 	var v ec2.Instance
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
-		IDRefreshIgnore: []string{
-			"ephemeral_block_device", "user_data", "security_groups", "vpc_security_groups"},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   "aws_instance.foo",
+		IDRefreshIgnore: []string{"ephemeral_block_device", "user_data"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGP2WithIopsValue,
@@ -253,12 +239,11 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
-		IDRefreshIgnore: []string{
-			"ephemeral_block_device", "security_groups", "vpc_security_groups"},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   "aws_instance.foo",
+		IDRefreshIgnore: []string{"ephemeral_block_device"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigBlockDevices,
@@ -383,12 +368,11 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
-		IDRefreshIgnore: []string{
-			"ephemeral_block_device", "security_groups", "vpc_security_groups"},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   "aws_instance.foo",
+		IDRefreshIgnore: []string{"ephemeral_block_device"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: `
