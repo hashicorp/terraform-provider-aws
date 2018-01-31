@@ -30,7 +30,7 @@ func TestAccAWSInstance_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_importInDefaultVpc(t *testing.T) {
+func TestAccAWSInstance_importInDefaultVpcBySgName(t *testing.T) {
 	resourceName := "aws_instance.foo"
 	rInt := acctest.RandInt()
 
@@ -40,7 +40,29 @@ func TestAccAWSInstance_importInDefaultVpc(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccInstanceConfigInDefaultVpc(rInt),
+				Config: testAccInstanceConfigInDefaultVpcBySgName(rInt),
+			},
+
+			resource.TestStep{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_importInDefaultVpcBySgId(t *testing.T) {
+	resourceName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccInstanceConfigInDefaultVpcBySgId(rInt),
 			},
 
 			resource.TestStep{
@@ -76,7 +98,7 @@ func TestAccAWSInstance_importInEc2Classic(t *testing.T) {
 	})
 }
 
-func testAccInstanceConfigInDefaultVpc(rInt int) string {
+func testAccInstanceConfigInDefaultVpcBySgName(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_ami" "ubuntu" {
   most_recent = true
@@ -94,15 +116,56 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
+data "aws_vpc" "default" {
+	default = true
+}
+
 resource "aws_security_group" "sg" {
   name = "tf_acc_test_%d"
   description = "Test security group"
+	vpc_id = "${data.aws_vpc.default.id}"
 }
 
 resource "aws_instance" "foo" {
   ami             = "${data.aws_ami.ubuntu.id}"
   instance_type   = "t2.micro"
   security_groups = ["${aws_security_group.sg.name}"]
+}
+`, rInt)
+}
+
+func testAccInstanceConfigInDefaultVpcBySgId(rInt int) string {
+	return fmt.Sprintf(`
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"] # Canonical
+}
+
+data "aws_vpc" "default" {
+	default = true
+}
+
+resource "aws_security_group" "sg" {
+  name = "tf_acc_test_%d"
+  description = "Test security group"
+	vpc_id = "${data.aws_vpc.default.id}"
+}
+
+resource "aws_instance" "foo" {
+  ami             = "${data.aws_ami.ubuntu.id}"
+  instance_type   = "t2.micro"
+  vpc_security_group_ids = ["${aws_security_group.sg.id}"]
 }
 `, rInt)
 }
