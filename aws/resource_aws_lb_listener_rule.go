@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -36,7 +37,8 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 			},
 			"priority": {
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validateAwsLbListenerRulePriority,
 			},
@@ -82,10 +84,20 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 
 func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
+	listenerArn := d.Get("listener_arn").(string)
 
 	params := &elbv2.CreateRuleInput{
-		ListenerArn: aws.String(d.Get("listener_arn").(string)),
-		Priority:    aws.Int64(int64(d.Get("priority").(int))),
+		ListenerArn: aws.String(listenerArn),
+	}
+
+	if v, ok := d.GetOk("priority"); ok {
+		params.Priority = aws.Int64(int64(v.(int)))
+	} else {
+		priority, err := getNextAbvailableRulePriority(elbconn, listenerArn)
+		if err != nil {
+			return err
+		}
+		params.Priority = aws.Int64(priority)
 	}
 
 	actions := d.Get("action").([]interface{})
@@ -311,4 +323,47 @@ func lbListenerARNFromRuleARN(ruleArn string) string {
 func isRuleNotFound(err error) bool {
 	elberr, ok := err.(awserr.Error)
 	return ok && elberr.Code() == "RuleNotFound"
+}
+
+func getNextAbvailableRulePriority(conn *elbv2.ELBV2, arn string) (priority int64, err error) {
+	var priorities []int
+	var nextMarker *string
+
+	for {
+		out, aerr := conn.DescribeRules(&elbv2.DescribeRulesInput{
+			ListenerArn: aws.String(arn),
+			Marker:      nextMarker,
+		})
+		if aerr != nil {
+			err = aerr
+			return
+		}
+		for _, rule := range out.Rules {
+			if *rule.Priority != "default" {
+				p, _ := strconv.Atoi(*rule.Priority)
+				priorities = append(priorities, p)
+			}
+		}
+		if out.NextMarker == nil {
+			break
+		}
+		nextMarker = out.NextMarker
+	}
+	if len(priorities) == 0 {
+		priority = 1
+		return
+	}
+	if len(priorities) == priorities[len(priorities)-1] {
+		priority = int64(len(priorities) + 1)
+		return
+	}
+	sort.IntSlice(priorities).Sort()
+	for i, p := range priorities {
+		if i+1 != p {
+			priority = int64(i + 1)
+			return
+		}
+	}
+
+	return
 }
