@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -77,6 +78,11 @@ func TestAccAWSInstance_importInDefaultVpcBySgId(t *testing.T) {
 func TestAccAWSInstance_importInEc2Classic(t *testing.T) {
 	resourceName := "aws_instance.foo"
 	rInt := acctest.RandInt()
+
+	// EC2 Classic enabled
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
