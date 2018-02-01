@@ -29,6 +29,22 @@ func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRInstanceGroup_spot(t *testing.T) {
+	var ig emr.InstanceGroup
+	rInt := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrInstanceGroupConfig_bid(rInt),
+				Check:  testAccCheckAWSEmrInstanceGroupExists("aws_emr_instance_group.task", &ig),
+			},
+		},
+	})
+}
+
 // Confirm we can scale down the instance count. Regression test for https://github.com/terraform-providers/terraform-provider-aws/issues/1264
 func TestAccAWSEMRInstanceGroup_zero_count(t *testing.T) {
 	var ig emr.InstanceGroup
@@ -402,6 +418,17 @@ func testAccAWSEmrInstanceGroupConfig(r int) string {
     cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
     instance_count = 1
     instance_type  = "c4.large"
+  }
+	`, r, r, r, r, r, r)
+}
+
+func testAccAWSEmrInstanceGroupConfig_bid(r int) string {
+	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
+	resource "aws_emr_instance_group" "task" {
+    cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
+    instance_count = 1
+    instance_type  = "m1.small"
+    bid_price = "0.10"
   }
 	`, r, r, r, r, r, r)
 }

@@ -55,6 +55,12 @@ func resourceAwsEMRInstanceGroup() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"bid_price": {
+				Type: schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validateAwsEmrBidPrice,
+			},
 			"ebs_config": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -116,6 +122,7 @@ func readEmrEBSConfig(d *schema.ResourceData) *emr.EbsConfiguration {
 	return result
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/AddInstanceGroups
 func resourceAwsEMRInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).emrconn
 
@@ -123,6 +130,7 @@ func resourceAwsEMRInstanceGroupCreate(d *schema.ResourceData, meta interface{})
 	instanceType := d.Get("instance_type").(string)
 	instanceCount := d.Get("instance_count").(int)
 	groupName := d.Get("name").(string)
+	bidPrice := d.Get("bid_price").(string)
 
 	ebsConfig := readEmrEBSConfig(d)
 
@@ -133,6 +141,7 @@ func resourceAwsEMRInstanceGroupCreate(d *schema.ResourceData, meta interface{})
 				InstanceCount:    aws.Int64(int64(instanceCount)),
 				InstanceType:     aws.String(instanceType),
 				Name:             aws.String(groupName),
+				BidPrice:         aws.String(bidPrice),
 				EbsConfiguration: ebsConfig,
 			},
 		},

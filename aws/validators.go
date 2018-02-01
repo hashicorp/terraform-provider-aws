@@ -957,6 +957,16 @@ func validateAwsEcsPlacementStrategy(stratType, stratField string) error {
 	return nil
 }
 
+func validateAwsEmrBidPrice(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if len(value) > 256 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 characters", k))
+	}
+
+	return
+}
+
 func validateAwsEmrEbsVolumeType(v interface{}, k string) (ws []string, errors []error) {
 	validTypes := map[string]struct{}{
 		"gp2":      {},
