@@ -23,7 +23,7 @@ BUG FIXES:
 * resource/aws_db_parameter_group: fix permanent diff when specifying parameters with database-default values [GH-3182]
 * resource/aws_route53_record: Fix dualstack alias name regression trimming too many characters [GH-3187]
 * resource/aws_ses_template: Send only specified attributes for update [GH-3214]
-* resource/aws_dynamodb_table: Allow disabling stream with empty `stream_view_type` [GH-3197]
+* resource/aws_dynamodb_table: Allow disabling stream with empty `stream_view_type` [GH-3197] [GH-3224]
 * resource/aws_dx_connection_association: Retry disassociation [GH-3212]
 
 ## 1.8.0 (January 29, 2018)
