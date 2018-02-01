@@ -47,7 +47,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 			},
 			"enabled": {
 				Type:     schema.TypeBool,
-				Optional: true,
+				Required: true,
 			},
 			"sql": {
 				Type:     schema.TypeString,
@@ -340,9 +340,8 @@ func resourceAwsIotTopicRule() *schema.Resource {
 				},
 			},
 			"arn": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				ValidateFunc: validateArn,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -411,14 +410,14 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 				TableName:     aws.String(raw["table_name"].(string)),
 			},
 		}
-		if hkt, ok := raw["hash_key_type"].(string); ok {
-			act.DynamoDB.HashKeyType = aws.String(hkt)
+		if v, ok := raw["hash_key_type"].(string); ok && v != "" {
+			act.DynamoDB.HashKeyType = aws.String(v)
 		}
-		if rkt, ok := raw["range_key_type"].(string); ok {
-			act.DynamoDB.RangeKeyType = aws.String(rkt)
+		if v, ok := raw["range_key_type"].(string); ok && v != "" {
+			act.DynamoDB.RangeKeyType = aws.String(v)
 		}
-		if plf, ok := raw["payload_field"].(string); ok {
-			act.DynamoDB.PayloadField = aws.String(plf)
+		if v, ok := raw["payload_field"].(string); ok && v != "" {
+			act.DynamoDB.PayloadField = aws.String(v)
 		}
 		actions[i] = act
 		i++
@@ -548,12 +547,12 @@ func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) err
 
 	ruleName := d.Get("name").(string)
 
-	log.Printf("Creating IoT Topic Rule %q", ruleName)
-
-	_, err := conn.CreateTopicRule(&iot.CreateTopicRuleInput{
+	params := &iot.CreateTopicRuleInput{
 		RuleName:         aws.String(ruleName),
 		TopicRulePayload: createTopicRulePayload(d),
-	})
+	}
+	log.Printf("[DEBUG] Creating IoT Topic Rule: %s", params)
+	_, err := conn.CreateTopicRule(params)
 
 	if err != nil {
 		return err
@@ -567,11 +566,11 @@ func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) err
 func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
 
-	log.Printf("Reading IoT Topic Rule with id=%q", d.Id())
-
-	out, err := conn.GetTopicRule(&iot.GetTopicRuleInput{
+	params := &iot.GetTopicRuleInput{
 		RuleName: aws.String(d.Id()),
-	})
+	}
+	log.Printf("[DEBUG] Reading IoT Topic Rule: %s", params)
+	out, err := conn.GetTopicRule(params)
 
 	if err != nil {
 		return err
@@ -588,10 +587,12 @@ func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error
 func resourceAwsIotTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
 
-	_, err := conn.ReplaceTopicRule(&iot.ReplaceTopicRuleInput{
+	params := &iot.ReplaceTopicRuleInput{
 		RuleName:         aws.String(d.Get("name").(string)),
 		TopicRulePayload: createTopicRulePayload(d),
-	})
+	}
+	log.Printf("[DEBUG] Updating IoT Topic Rule: %s", params)
+	_, err := conn.ReplaceTopicRule(params)
 
 	if err != nil {
 		return err
@@ -603,9 +604,11 @@ func resourceAwsIotTopicRuleUpdate(d *schema.ResourceData, meta interface{}) err
 func resourceAwsIotTopicRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
 
-	_, err := conn.DeleteTopicRule(&iot.DeleteTopicRuleInput{
+	params := &iot.DeleteTopicRuleInput{
 		RuleName: aws.String(d.Id()),
-	})
+	}
+	log.Printf("[DEBUG] Deleting IoT Topic Rule: %s", params)
+	_, err := conn.DeleteTopicRule(params)
 
 	if err != nil {
 		return err
