@@ -75,6 +75,27 @@ func TestAccAwsServiceDiscoveryService_public(t *testing.T) {
 	})
 }
 
+func TestAccAwsServiceDiscoveryService_import(t *testing.T) {
+	resourceName := "aws_service_discovery_service.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccServiceDiscoveryServiceConfig_private(acctest.RandString(5)),
+			},
+
+			resource.TestStep{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsServiceDiscoveryServiceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).sdconn
 
@@ -100,9 +121,20 @@ func testAccCheckAwsServiceDiscoveryServiceDestroy(s *terraform.State) error {
 
 func testAccCheckAwsServiceDiscoveryServiceExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).sdconn
+
+		input := &servicediscovery.GetServiceInput{
+			Id: aws.String(rs.Primary.ID),
+		}
+
+		_, err := conn.GetService(input)
+		if err != nil {
+			return err
 		}
 
 		return nil
