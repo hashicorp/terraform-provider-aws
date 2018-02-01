@@ -305,12 +305,16 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if (d.HasChange("stream_enabled") || d.HasChange("stream_view_type")) && !d.IsNewResource() {
+		toEnable := d.Get("stream_enabled").(bool)
+		streamSpec := dynamodb.StreamSpecification{
+			StreamEnabled: aws.Bool(toEnable),
+		}
+		if toEnable {
+			streamSpec.StreamViewType = aws.String(d.Get("stream_view_type").(string))
+		}
 		input := &dynamodb.UpdateTableInput{
-			TableName: aws.String(d.Id()),
-			StreamSpecification: &dynamodb.StreamSpecification{
-				StreamEnabled:  aws.Bool(d.Get("stream_enabled").(bool)),
-				StreamViewType: aws.String(d.Get("stream_view_type").(string)),
-			},
+			TableName:           aws.String(d.Id()),
+			StreamSpecification: &streamSpec,
 		}
 		_, err := conn.UpdateTable(input)
 		if err != nil {
