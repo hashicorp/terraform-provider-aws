@@ -41,15 +41,6 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 	}
 }
 
-func describeCertificateByArn(arn *string, conn *acm.ACM) (*acm.CertificateDetail, error) {
-	input := &acm.DescribeCertificateInput{
-		CertificateArn: aws.String(*arn),
-	}
-	log.Printf("[DEBUG] Describing ACM Certificate: %s", input)
-	output, err := conn.DescribeCertificate(input)
-	return output.Certificate, err
-}
-
 func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmconn
 
@@ -87,60 +78,65 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 
 	var matchedCertificate *acm.CertificateDetail
 
-	if !filterMostRecent && !filterTypesOk {
-		if len(arns) > 1 {
-			// Multiple certificates have been found and no flags set. Error
-			return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
+	if !filterMostRecent && !filterTypesOk && len(arns) > 1 {
+		// Multiple certificates have been found and no additional filtering set
+		return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
+	}
+
+	typesStrings := expandStringList(filterTypes.([]interface{}))
+
+	for _, arn := range arns {
+		var err error
+
+		input := &acm.DescribeCertificateInput{
+			CertificateArn: aws.String(*arn),
 		}
-		// Only 1 certificate has been found and no flags set. Get details and return it.
-		matchedCertificate, err = describeCertificateByArn(arns[0], conn)
+		log.Printf("[DEBUG] Describing ACM Certificate: %s", input)
+		output, err := conn.DescribeCertificate(input)
 		if err != nil {
 			return fmt.Errorf("Error describing ACM certificate: %q", err)
 		}
-	} else {
-		typesStrings := expandStringList(filterTypes.([]interface{}))
+		certificate := output.Certificate
 
-		for _, arn := range arns {
-			certificate, err := describeCertificateByArn(arn, conn)
-			if err != nil {
-				return fmt.Errorf("Error describing ACM certificate: %q", err)
-			}
-			if filterTypesOk {
-				for _, certType := range typesStrings {
-					if *certificate.Type == *certType {
-						// We do not have a candidate certificate
-						if matchedCertificate == nil {
-							matchedCertificate = certificate
-							continue
-						}
-						// At this point, we already have a candidate certificate
-						// Check if we are filtering by most recent and update if necessary
-						if filterMostRecent && (*certificate.NotBefore).After(*matchedCertificate.NotBefore) {
-							matchedCertificate = certificate
-							break
-						}
-						// Now we have multiple candidate certificates and we only allow one certificate
-						return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
+		if filterTypesOk {
+			for _, certType := range typesStrings {
+				if *certificate.Type == *certType {
+					// We do not have a candidate certificate
+					if matchedCertificate == nil {
+						matchedCertificate = certificate
+						break
 					}
+					// At this point, we already have a candidate certificate
+					// Check if we are filtering by most recent and update if necessary
+					if filterMostRecent {
+						matchedCertificate, err = mostRecentAcmCertificate(certificate, matchedCertificate)
+						if err != nil {
+							return err
+						}
+						break
+					}
+					// Now we have multiple candidate certificates and we only allow one certificate
+					return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
 				}
-				continue
 			}
-			// At this point, we already have a candidate certificate
-			// Check if we are filtering by most recent and update if necessary
-			if filterMostRecent {
-				// We do not have a candidate certificate
-				if matchedCertificate == nil {
-					matchedCertificate = certificate
-					continue
-				}
-				if (*certificate.NotBefore).After(*matchedCertificate.NotBefore) {
-					matchedCertificate = certificate
-				}
-				continue
-			}
-			// Now we have multiple candidate certificates and we only allow one certificate
-			return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
+			continue
 		}
+		// We do not have a candidate certificate
+		if matchedCertificate == nil {
+			matchedCertificate = certificate
+			continue
+		}
+		// At this point, we already have a candidate certificate
+		// Check if we are filtering by most recent and update if necessary
+		if filterMostRecent {
+			matchedCertificate, err = mostRecentAcmCertificate(certificate, matchedCertificate)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+		// Now we have multiple candidate certificates and we only allow one certificate
+		return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
 	}
 
 	if matchedCertificate == nil {
@@ -151,4 +147,22 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("arn", matchedCertificate.CertificateArn)
 
 	return nil
+}
+
+func mostRecentAcmCertificate(i, j *acm.CertificateDetail) (*acm.CertificateDetail, error) {
+	if *i.Status != *j.Status {
+		return nil, fmt.Errorf("most_recent filtering on different ACM certificate statues is not supported")
+	}
+	// Cover IMPORTED and ISSUED AMAZON_ISSUED certificates
+	if *i.Status == acm.CertificateStatusIssued {
+		if (*i.NotBefore).After(*j.NotBefore) {
+			return i, nil
+		}
+		return j, nil
+	}
+	// Cover non-ISSUED AMAZON_ISSUED certificates
+	if (*i.CreatedAt).After(*j.CreatedAt) {
+		return i, nil
+	}
+	return j, nil
 }
