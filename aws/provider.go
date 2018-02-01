@@ -394,6 +394,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_internet_gateway":                         resourceAwsInternetGateway(),
 			"aws_iot_certificate":                          resourceAwsIotCertificate(),
 			"aws_iot_policy":                               resourceAwsIotPolicy(),
+			"aws_iot_topic_rule":                           resourceAwsIotTopicRule(),
 			"aws_key_pair":                                 resourceAwsKeyPair(),
 			"aws_kinesis_firehose_delivery_stream":         resourceAwsKinesisFirehoseDeliveryStream(),
 			"aws_kinesis_stream":                           resourceAwsKinesisStream(),
