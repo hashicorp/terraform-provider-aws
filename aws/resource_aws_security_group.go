@@ -27,6 +27,9 @@ func resourceAwsSecurityGroup() *schema.Resource {
 			State: resourceAwsSecurityGroupImportState,
 		},
 
+		SchemaVersion: 1,
+		MigrateState:  resourceAwsSecurityGroupMigrateState,
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:          schema.TypeString,
@@ -218,6 +221,12 @@ func resourceAwsSecurityGroup() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+
+			"revoke_rules_on_delete": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -427,6 +436,13 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Failed to delete Lambda ENIs: %s", err)
 	}
 
+	// conditionally revoke rules first before attempting to delete the group
+	if v := d.Get("revoke_rules_on_delete").(bool); v {
+		if err := forceRevokeSecurityGroupRules(conn, d); err != nil {
+			return err
+		}
+	}
+
 	return resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
 			GroupId: aws.String(d.Id()),
@@ -451,6 +467,52 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 
 		return nil
 	})
+}
+
+// Revoke all ingress/egress rules that a Security Group has
+func forceRevokeSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData) error {
+	sgRaw, _, err := SGStateRefreshFunc(conn, d.Id())()
+	if err != nil {
+		return err
+	}
+	if sgRaw == nil {
+		return nil
+	}
+
+	group := sgRaw.(*ec2.SecurityGroup)
+	if len(group.IpPermissions) > 0 {
+		req := &ec2.RevokeSecurityGroupIngressInput{
+			GroupId:       group.GroupId,
+			IpPermissions: group.IpPermissions,
+		}
+		if group.VpcId == nil || *group.VpcId == "" {
+			req.GroupId = nil
+			req.GroupName = group.GroupName
+		}
+		_, err = conn.RevokeSecurityGroupIngress(req)
+
+		if err != nil {
+			return fmt.Errorf(
+				"Error revoking security group %s rules: %s",
+				*group.GroupId, err)
+		}
+	}
+
+	if len(group.IpPermissionsEgress) > 0 {
+		req := &ec2.RevokeSecurityGroupEgressInput{
+			GroupId:       group.GroupId,
+			IpPermissions: group.IpPermissionsEgress,
+		}
+		_, err = conn.RevokeSecurityGroupEgress(req)
+
+		if err != nil {
+			return fmt.Errorf(
+				"Error revoking security group %s rules: %s",
+				*group.GroupId, err)
+		}
+	}
+
+	return nil
 }
 
 func resourceAwsSecurityGroupRuleHash(v interface{}) int {

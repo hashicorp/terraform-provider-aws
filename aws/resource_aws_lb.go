@@ -24,6 +24,8 @@ func resourceAwsLb() *schema.Resource {
 		Read:   resoureAwsLbRead,
 		Update: resourceAwsLbUpdate,
 		Delete: resourceAwsLbDelete,
+		// Subnets are ForceNew for Network Load Balancers
+		CustomizeDiff: customizeDiffNLBSubnets,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -223,9 +225,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if subnetMap["allocation_id"].(string) != "" {
-				elbOpts.SubnetMappings[i] = &elbv2.SubnetMapping{
-					AllocationId: aws.String(subnetMap["allocation_id"].(string)),
-				}
+				elbOpts.SubnetMappings[i].AllocationId = aws.String(subnetMap["allocation_id"].(string))
 			}
 		}
 	}
@@ -389,7 +389,11 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	}
 
-	if d.HasChange("subnets") {
+	// subnets are assigned at Create; the 'change' here is an empty map for old
+	// and current subnets for new, so this change is redundant when the
+	// resource is just created, so we don't attempt if it is a newly created
+	// resource.
+	if d.HasChange("subnets") && !d.IsNewResource() {
 		subnets := expandStringList(d.Get("subnets").(*schema.Set).List())
 
 		params := &elbv2.SetSubnetsInput{
@@ -462,9 +466,16 @@ func resourceAwsLbDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error deleting ALB: %s", err)
 	}
 
-	err := cleanupLBNetworkInterfaces(meta.(*AWSClient).ec2conn, d.Id())
+	conn := meta.(*AWSClient).ec2conn
+
+	err := cleanupLBNetworkInterfaces(conn, d.Id())
 	if err != nil {
 		log.Printf("[WARN] Failed to cleanup ENIs for ALB %q: %#v", d.Id(), err)
+	}
+
+	err = waitForNLBNetworkInterfacesToDetach(conn, d.Id())
+	if err != nil {
+		log.Printf("[WARN] Failed to wait for ENIs to disappear for NLB %q: %#v", d.Id(), err)
 	}
 
 	return nil
@@ -475,14 +486,10 @@ func resourceAwsLbDelete(d *schema.ResourceData, meta interface{}) error {
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
 func cleanupLBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
-	re := regexp.MustCompile("([^/]+/[^/]+/[^/]+)$")
-	matches := re.FindStringSubmatch(lbArn)
-	if len(matches) != 2 {
-		return fmt.Errorf("Unexpected ARN format: %q", lbArn)
+	name, err := getLbNameFromArn(lbArn)
+	if err != nil {
+		return err
 	}
-
-	// e.g. app/example-alb/b26e625cdde161e6
-	name := matches[1]
 
 	out, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
 		Filters: []*ec2.Filter{
@@ -500,7 +507,7 @@ func cleanupLBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
 		return err
 	}
 
-	log.Printf("[DEBUG] Found %d ENIs to cleanup for ALB %q",
+	log.Printf("[DEBUG] Found %d ENIs to cleanup for LB %q",
 		len(out.NetworkInterfaces), name)
 
 	if len(out.NetworkInterfaces) == 0 {
@@ -519,6 +526,59 @@ func cleanupLBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
 	}
 
 	return nil
+}
+
+func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
+	name, err := getLbNameFromArn(lbArn)
+	if err != nil {
+		return err
+	}
+
+	// We cannot cleanup these ENIs ourselves as that would result in
+	// OperationNotPermitted: You are not allowed to manage 'ela-attach' attachments.
+	// yet presence of these ENIs may prevent us from deleting EIPs associated w/ the NLB
+
+	return resource.Retry(1*time.Minute, func() *resource.RetryError {
+		out, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String("attachment.instance-owner-id"),
+					Values: []*string{aws.String("amazon-aws")},
+				},
+				{
+					Name:   aws.String("attachment.attachment-id"),
+					Values: []*string{aws.String("ela-attach-*")},
+				},
+				{
+					Name:   aws.String("description"),
+					Values: []*string{aws.String("ELB " + name)},
+				},
+			},
+		})
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		niCount := len(out.NetworkInterfaces)
+		if niCount > 0 {
+			log.Printf("[DEBUG] Found %d ENIs to cleanup for NLB %q", niCount, lbArn)
+			return resource.RetryableError(fmt.Errorf("Waiting for %d ENIs of %q to clean up", niCount, lbArn))
+		}
+		log.Printf("[DEBUG] ENIs gone for NLB %q", lbArn)
+
+		return nil
+	})
+}
+
+func getLbNameFromArn(arn string) (string, error) {
+	re := regexp.MustCompile("([^/]+/[^/]+/[^/]+)$")
+	matches := re.FindStringSubmatch(arn)
+	if len(matches) != 2 {
+		return "", fmt.Errorf("Unexpected ARN format: %q", arn)
+	}
+
+	// e.g. app/example-alb/b26e625cdde161e6
+	return matches[1], nil
 }
 
 // flattenSubnetsFromAvailabilityZones creates a slice of strings containing the subnet IDs
@@ -589,7 +649,10 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 	if len(respTags.TagDescriptions) > 0 {
 		et = respTags.TagDescriptions[0].Tags
 	}
-	d.Set("tags", tagsToMapELBv2(et))
+
+	if err := d.Set("tags", tagsToMapELBv2(et)); err != nil {
+		log.Printf("[WARN] Error setting tags for AWS LB (%s): %s", d.Id(), err)
+	}
 
 	attributesResp, err := elbconn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(d.Id()),
@@ -628,5 +691,52 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		d.Set("access_logs", []interface{}{})
 	}
 
+	return nil
+}
+
+// Load balancers of type 'network' cannot have their subnets updated at
+// this time. If the type is 'network' and subnets have changed, mark the
+// diff as a ForceNew operation
+func customizeDiffNLBSubnets(diff *schema.ResourceDiff, v interface{}) error {
+	// The current criteria for determining if the operation should be ForceNew:
+	// - lb of type "network"
+	// - existing resource (id is not "")
+	// - there are actual changes to be made in the subnets
+	//
+	// Any other combination should be treated as normal. At this time, subnet
+	// handling is the only known difference between Network Load Balancers and
+	// Application Load Balancers, so the logic below is simple individual checks.
+	// If other differences arise we'll want to refactor to check other
+	// conditions in combinations, but for now all we handle is subnets
+	lbType := diff.Get("load_balancer_type").(string)
+	if "network" != lbType {
+		return nil
+	}
+
+	if "" == diff.Id() {
+		return nil
+	}
+
+	o, n := diff.GetChange("subnets")
+	if o == nil {
+		o = new(schema.Set)
+	}
+	if n == nil {
+		n = new(schema.Set)
+	}
+	os := o.(*schema.Set)
+	ns := n.(*schema.Set)
+	remove := os.Difference(ns).List()
+	add := ns.Difference(os).List()
+	delta := len(remove) > 0 || len(add) > 0
+	if delta {
+		if err := diff.SetNew("subnets", n); err != nil {
+			return err
+		}
+
+		if err := diff.ForceNew("subnets"); err != nil {
+			return err
+		}
+	}
 	return nil
 }

@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks User Profile resource.
 ---
 
-# aws\_opsworks\_user\_profile
+# aws_opsworks_user_profile
 
 Provides an OpsWorks User Profile resource.
 

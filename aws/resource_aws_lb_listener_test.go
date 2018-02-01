@@ -184,7 +184,7 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -217,7 +217,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -229,7 +229,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -253,7 +253,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }`, lbName, targetGroupName)
 }
@@ -280,7 +280,7 @@ resource "aws_alb" "alb_test" {
   enable_deletion_protection = false
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -313,7 +313,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -325,7 +325,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -349,7 +349,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }`, lbName, targetGroupName)
 }
@@ -378,7 +378,7 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -411,7 +411,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -419,7 +419,7 @@ resource "aws_internet_gateway" "gw" {
     vpc_id = "${aws_vpc.alb_test.id}"
 
     tags {
-        TestName = "TestAccAWSALB_basic"
+        Name = "TestAccAWSALB_basic"
     }
 }
 
@@ -431,7 +431,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 
@@ -455,7 +455,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "TestAccAWSALB_basic"
   }
 }
 

@@ -215,8 +215,8 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 
 	request := resp.SpotInstanceRequests[0]
 
-	// if the request is cancelled, then it is gone
-	if *request.State == "cancelled" {
+	// if the request is cancelled or closed, then it is gone
+	if *request.State == "cancelled" || *request.State == "closed" {
 		d.SetId("")
 		return nil
 	}

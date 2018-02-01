@@ -6,11 +6,11 @@ description: |-
   Provides an Elastic Load Balancer resource.
 ---
 
-# aws\_elb
+# aws_elb
 
 Provides an Elastic Load Balancer resource, also known as a "Classic
 Load Balancer" after the release of
-[Application Load Balancers](/docs/providers/aws/r/alb.html).
+[Application/Network Load Balancers](/docs/providers/aws/r/lb.html).
 
 ~> **NOTE on ELB Instances and ELB Attachments:** Terraform currently
 provides both a standalone [ELB Attachment resource](elb_attachment.html)
@@ -135,6 +135,7 @@ browser.
 The following attributes are exported:
 
 * `id` - The name of the ELB
+* `arn` - The ARN of the ELB
 * `name` - The name of the ELB
 * `dns_name` - The DNS name of the ELB
 * `instances` - The list of instances in the ELB

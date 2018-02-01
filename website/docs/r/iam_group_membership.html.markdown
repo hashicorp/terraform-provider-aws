@@ -6,7 +6,7 @@ description: |-
   Provides a top level resource to manage IAM Group membership for IAM Users.
 ---
 
-# aws\_iam\_group\_membership
+# aws_iam_group_membership
 
 Provides a top level resource to manage IAM Group membership for IAM Users. For
 more information on managing IAM Groups or IAM Users, see [IAM Groups][1] or

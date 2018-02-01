@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,64 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+// add sweeper to delete known test vpcs
+func init() {
+	resource.AddTestSweepers("aws_vpc", &resource.Sweeper{
+		Name: "aws_vpc",
+		Dependencies: []string{
+			"aws_security_group",
+			"aws_subnet",
+			"aws_vpn_gateway",
+		},
+		F: testSweepVPCs,
+	})
+}
+
+func testSweepVPCs(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	req := &ec2.DescribeVpcsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name: aws.String("tag-value"),
+				Values: []*string{
+					aws.String("tf-acc-revoke*"),
+					aws.String("terraform-testacc-vpc-data-source-*"),
+					aws.String("terraform-testacc-subnet-data-source*"),
+					aws.String("terraform-testacc-vpn-gateway*"),
+				},
+			},
+		},
+	}
+	resp, err := conn.DescribeVpcs(req)
+	if err != nil {
+		return fmt.Errorf("Error describing vpcs: %s", err)
+	}
+
+	if len(resp.Vpcs) == 0 {
+		log.Print("[DEBUG] No aws vpcs to sweep")
+		return nil
+	}
+
+	for _, vpc := range resp.Vpcs {
+		// delete the vpc
+		_, err := conn.DeleteVpc(&ec2.DeleteVpcInput{
+			VpcId: vpc.VpcId,
+		})
+		if err != nil {
+			return fmt.Errorf(
+				"Error deleting VPC (%s): %s",
+				*vpc.VpcId, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSVpc_basic(t *testing.T) {
 	var vpc ec2.Vpc

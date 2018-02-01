@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -236,6 +237,71 @@ func TestAccAWSEIP_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSEIPAssociate_not_associated(t *testing.T) {
+	var conf ec2.Address
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_eip.bar",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSEIPAssociate_not_associated,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+				),
+			},
+
+			resource.TestStep{
+				Config: testAccAWSEIPAssociate_associated,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+					testAccCheckAWSEIPAssociated(&conf),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEIP_tags(t *testing.T) {
+	var conf ec2.Address
+	resourceName := "aws_eip.bar"
+	rName1 := fmt.Sprintf("%s-%d", t.Name(), acctest.RandInt())
+	rName2 := fmt.Sprintf("%s-%d", t.Name(), acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_eip.bar",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSEIPConfig_tags(rName1, t.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.RandomName", rName1),
+					resource.TestCheckResourceAttr(resourceName, "tags.TestName", t.Name()),
+				),
+			},
+			resource.TestStep{
+				Config: testAccAWSEIPConfig_tags(rName2, t.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.RandomName", rName2),
+					resource.TestCheckResourceAttr(resourceName, "tags.TestName", t.Name()),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEIPDisappears(v *ec2.Address) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -372,6 +438,17 @@ const testAccAWSEIPConfig = `
 resource "aws_eip" "bar" {
 }
 `
+
+func testAccAWSEIPConfig_tags(rName, testName string) string {
+	return fmt.Sprintf(`
+resource "aws_eip" "bar" {
+  tags {
+    RandomName = "%[1]s"
+    TestName   = "%[2]s"
+  }
+}
+`, rName, testName)
+}
 
 const testAccAWSEIPInstanceEc2Classic = `
 provider "aws" {
@@ -580,6 +657,7 @@ resource "aws_network_interface" "bar" {
 resource "aws_eip" "bar" {
 	vpc = "true"
 	network_interface = "${aws_network_interface.bar.id}"
+	depends_on = ["aws_internet_gateway.bar"]
 }
 `
 
@@ -611,12 +689,14 @@ resource "aws_eip" "one" {
   vpc                       = "true"
   network_interface         = "${aws_network_interface.bar.id}"
   associate_with_private_ip = "10.0.0.10"
+  depends_on                = ["aws_internet_gateway.bar"]
 }
 
 resource "aws_eip" "two" {
   vpc                       = "true"
   network_interface         = "${aws_network_interface.bar.id}"
   associate_with_private_ip = "10.0.0.11"
+  depends_on                = ["aws_internet_gateway.bar"]
 }
 `
 
@@ -686,3 +766,26 @@ resource "aws_route_table_association" "us-east-1b-public" {
   route_table_id = "${aws_route_table.us-east-1-public.id}"
 }`, ami)
 }
+
+const testAccAWSEIPAssociate_not_associated = `
+resource "aws_instance" "foo" {
+	# us-west-2
+	ami = "ami-4fccb37f"
+	instance_type = "m1.small"
+}
+
+resource "aws_eip" "bar" {
+}
+`
+
+const testAccAWSEIPAssociate_associated = `
+resource "aws_instance" "foo" {
+	# us-west-2
+	ami = "ami-4fccb37f"
+	instance_type = "m1.small"
+}
+
+resource "aws_eip" "bar" {
+	instance = "${aws_instance.foo.id}"
+}
+`

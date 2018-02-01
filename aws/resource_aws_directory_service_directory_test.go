@@ -98,6 +98,7 @@ func TestAccAWSDirectoryServiceDirectory_basic(t *testing.T) {
 				Config: testAccDirectoryServiceDirectoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
+					resource.TestCheckResourceAttrSet("aws_directory_service_directory.bar", "security_group_id"),
 				),
 			},
 		},

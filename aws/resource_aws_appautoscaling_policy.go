@@ -49,16 +49,14 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 				Required: true,
 			},
 			"scalable_dimension": &schema.Schema{
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAppautoscalingScalableDimension,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"service_namespace": &schema.Schema{
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAppautoscalingServiceNamespace,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"step_scaling_policy_configuration": {
 				Type:     schema.TypeList,
@@ -212,9 +210,8 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"predefined_metric_type": &schema.Schema{
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateAppautoscalingPredefinedMetricSpecification,
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"resource_label": &schema.Schema{
 										Type:         schema.TypeString,
@@ -262,7 +259,13 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 		var err error
 		resp, err = conn.PutScalingPolicy(&params)
 		if err != nil {
+			if isAWSErr(err, "FailedResourceAccessException", "Rate exceeded") {
+				return resource.RetryableError(err)
+			}
 			if isAWSErr(err, "FailedResourceAccessException", "is not authorized to perform") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "FailedResourceAccessException", "token included in the request is invalid") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(fmt.Errorf("Error putting scaling policy: %s", err))
@@ -270,7 +273,7 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 		return nil
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to create scaling policy: %s", err)
 	}
 
 	d.Set("arn", resp.PolicyARN)
@@ -286,6 +289,7 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 	if p == nil {
+		log.Printf("[WARN] Application AutoScaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -317,7 +321,7 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Application Autoscaling Update Scaling Policy: %#v", params)
 	_, err := conn.PutScalingPolicy(&params)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to update scaling policy: %s", err)
 	}
 
 	return resourceAwsAppautoscalingPolicyRead(d, meta)
@@ -341,7 +345,7 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 	}
 	log.Printf("[DEBUG] Deleting Application AutoScaling Policy opts: %#v", params)
 	if _, err := conn.DeleteScalingPolicy(&params); err != nil {
-		return fmt.Errorf("Application AutoScaling Policy: %s", err)
+		return fmt.Errorf("Failed to delete autoscaling policy: %s", err)
 	}
 
 	d.SetId("")
@@ -560,8 +564,10 @@ func getAwsAppautoscalingPolicy(d *schema.ResourceData, meta interface{}) (*appl
 	conn := meta.(*AWSClient).appautoscalingconn
 
 	params := applicationautoscaling.DescribeScalingPoliciesInput{
-		PolicyNames:      []*string{aws.String(d.Get("name").(string))},
-		ServiceNamespace: aws.String(d.Get("service_namespace").(string)),
+		PolicyNames:       []*string{aws.String(d.Get("name").(string))},
+		ResourceId:        aws.String(d.Get("resource_id").(string)),
+		ScalableDimension: aws.String(d.Get("scalable_dimension").(string)),
+		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
 	}
 
 	log.Printf("[DEBUG] Application AutoScaling Policy Describe Params: %#v", params)
@@ -569,17 +575,11 @@ func getAwsAppautoscalingPolicy(d *schema.ResourceData, meta interface{}) (*appl
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving scaling policies: %s", err)
 	}
-
-	// find scaling policy
-	name := d.Get("name")
-	for idx, sp := range resp.ScalingPolicies {
-		if *sp.PolicyName == name {
-			return resp.ScalingPolicies[idx], nil
-		}
+	if len(resp.ScalingPolicies) == 0 {
+		return nil, nil
 	}
 
-	// policy not found
-	return nil, nil
+	return resp.ScalingPolicies[0], nil
 }
 
 func expandStepScalingPolicyConfiguration(cfg []interface{}) *applicationautoscaling.StepScalingPolicyConfiguration {

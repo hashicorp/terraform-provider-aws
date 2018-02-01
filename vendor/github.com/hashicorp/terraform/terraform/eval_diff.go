@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform/config"
+	"github.com/hashicorp/terraform/version"
 )
 
 // EvalCompareDiff is an EvalNode implementation that compares two diffs
@@ -60,7 +61,7 @@ func (n *EvalCompareDiff) Eval(ctx EvalContext) (interface{}, error) {
 				"\n"+
 				"Also include as much context as you can about your config, state, "+
 				"and the steps you performed to trigger this error.\n",
-			n.Info.Id, Version, n.Info.Id, reason, one, two)
+			n.Info.Id, version.Version, n.Info.Id, reason, one, two)
 	}
 
 	return nil, nil
@@ -257,9 +258,11 @@ func (n *EvalDiff) processIgnoreChanges(diff *InstanceDiff) error {
 		for _, v := range containers {
 			if v.keepDiff() {
 				// At least one key has changes, so list all the sibling keys
-				// to keep in the diff.
+				// to keep in the diff if any values have changed
 				for k := range v {
-					keep[k] = true
+					if v[k].Modified() {
+						keep[k] = true
+					}
 				}
 			}
 		}

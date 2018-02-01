@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF SQL Injection Match Set resource.
 ---
 
-# aws\_waf\_sql\_injection\_match\_set
+# aws_waf_sql_injection_match_set
 
 Provides a WAF SQL Injection Match Set Resource
 

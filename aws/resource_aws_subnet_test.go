@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,57 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+// add sweeper to delete known test subnets
+func init() {
+	resource.AddTestSweepers("aws_subnet", &resource.Sweeper{
+		Name: "aws_subnet",
+		F:    testSweepSubnets,
+	})
+}
+
+func testSweepSubnets(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	req := &ec2.DescribeSubnetsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name: aws.String("tag-value"),
+				Values: []*string{
+					aws.String("tf-acc-revoke*"),
+					aws.String("terraform-testacc-subnet-data-source*"),
+				},
+			},
+		},
+	}
+	resp, err := conn.DescribeSubnets(req)
+	if err != nil {
+		return fmt.Errorf("Error describing subnets: %s", err)
+	}
+
+	if len(resp.Subnets) == 0 {
+		log.Print("[DEBUG] No aws subnets to sweep")
+		return nil
+	}
+
+	for _, subnet := range resp.Subnets {
+		// delete the subnet
+		_, err := conn.DeleteSubnet(&ec2.DeleteSubnetInput{
+			SubnetId: subnet.SubnetId,
+		})
+		if err != nil {
+			return fmt.Errorf(
+				"Error deleting Subnet (%s): %s",
+				*subnet.SubnetId, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSSubnet_basic(t *testing.T) {
 	var v ec2.Subnet

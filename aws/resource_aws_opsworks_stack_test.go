@@ -613,6 +613,7 @@ func testAccAwsOpsworksStackConfigNoVpcCreate(name string) string {
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_opsworks_stack" "tf-acc" {
   name = "%s"
   region = "us-east-1"
@@ -627,8 +628,8 @@ resource "aws_opsworks_stack" "tf-acc" {
 }
 
 resource "aws_iam_role" "opsworks_service" {
-    name = "%s_opsworks_service"
-    assume_role_policy = <<EOT
+  name = "%s_opsworks_service"
+  assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -646,9 +647,9 @@ EOT
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
-    name = "%s_opsworks_service"
-    role = "${aws_iam_role.opsworks_service.id}"
-    policy = <<EOT
+  name = "%s_opsworks_service"
+  role = "${aws_iam_role.opsworks_service.id}"
+  policy = <<EOT
 {
   "Statement": [
     {
@@ -668,8 +669,8 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-    name = "%s_opsworks_instance"
-    assume_role_policy = <<EOT
+  name = "%s_opsworks_instance"
+  assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -687,9 +688,10 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-    name = "%s_opsworks_instance"
-    roles = ["${aws_iam_role.opsworks_instance.name}"]
-}`, name, name, name, name, name)
+  name = "%s_opsworks_instance"
+  roles = ["${aws_iam_role.opsworks_instance.name}"]
+}
+`, name, name, name, name, name)
 }
 
 func testAccAwsOpsworksStackConfigNoVpcCreateTags(name string) string {
@@ -714,8 +716,8 @@ resource "aws_opsworks_stack" "tf-acc" {
 }
 
 resource "aws_iam_role" "opsworks_service" {
-    name = "%s_opsworks_service"
-    assume_role_policy = <<EOT
+  name = "%s_opsworks_service"
+  assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -733,9 +735,9 @@ EOT
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
-    name = "%s_opsworks_service"
-    role = "${aws_iam_role.opsworks_service.id}"
-    policy = <<EOT
+  name = "%s_opsworks_service"
+  role = "${aws_iam_role.opsworks_service.id}"
+  policy = <<EOT
 {
   "Statement": [
     {
@@ -755,8 +757,8 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-    name = "%s_opsworks_instance"
-    assume_role_policy = <<EOT
+  name = "%s_opsworks_instance"
+  assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -774,9 +776,10 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-    name = "%s_opsworks_instance"
-    roles = ["${aws_iam_role.opsworks_instance.name}"]
-}`, name, name, name, name, name)
+  name = "%s_opsworks_instance"
+  roles = ["${aws_iam_role.opsworks_instance.name}"]
+}
+`, name, name, name, name, name)
 }
 
 func testAccAwsOpsworksStackConfigNoVpcUpdateTags(name string) string {
@@ -784,6 +787,7 @@ func testAccAwsOpsworksStackConfigNoVpcUpdateTags(name string) string {
 provider "aws" {
   region = "us-west-2"
 }
+
 resource "aws_opsworks_stack" "tf-acc" {
   name = "%s"
   region = "us-west-2"
@@ -801,8 +805,8 @@ resource "aws_opsworks_stack" "tf-acc" {
 }
 
 resource "aws_iam_role" "opsworks_service" {
-    name = "%s_opsworks_service"
-    assume_role_policy = <<EOT
+  name = "%s_opsworks_service"
+  assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -820,9 +824,9 @@ EOT
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
-    name = "%s_opsworks_service"
-    role = "${aws_iam_role.opsworks_service.id}"
-    policy = <<EOT
+  name = "%s_opsworks_service"
+  role = "${aws_iam_role.opsworks_service.id}"
+  policy = <<EOT
 {
   "Statement": [
     {
@@ -842,8 +846,8 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-    name = "%s_opsworks_instance"
-    assume_role_policy = <<EOT
+  name = "%s_opsworks_instance"
+  assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -861,9 +865,10 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-    name = "%s_opsworks_instance"
-    roles = ["${aws_iam_role.opsworks_instance.name}"]
-}`, name, name, name, name, name)
+  name = "%s_opsworks_instance"
+  roles = ["${aws_iam_role.opsworks_instance.name}"]
+}
+`, name, name, name, name, name)
 }
 
 func testAccAwsOpsworksStackConfigNoVpcCreateUpdateServiceRole(name string) string {
@@ -904,8 +909,8 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_service_new" {
-    name = "%s_opsworks_service_new"
-    assume_role_policy = <<EOT
+  name = "%s_opsworks_service_new"
+  assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -923,9 +928,9 @@ EOT
 }
 
 resource "aws_iam_role_policy" "opsworks_service_new" {
-    name = "%s_opsworks_service_new"
-    role = "${aws_iam_role.opsworks_service_new.id}"
-    policy = <<EOT
+  name = "%s_opsworks_service_new"
+  role = "${aws_iam_role.opsworks_service_new.id}"
+  policy = <<EOT
 {
   "Statement": [
     {
@@ -945,9 +950,9 @@ EOT
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
-    name = "%s_opsworks_service"
-    role = "${aws_iam_role.opsworks_service.id}"
-    policy = <<EOT
+  name = "%s_opsworks_service"
+  role = "${aws_iam_role.opsworks_service.id}"
+  policy = <<EOT
 {
   "Statement": [
     {
@@ -967,8 +972,8 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-    name = "%s_opsworks_instance"
-    assume_role_policy = <<EOT
+  name = "%s_opsworks_instance"
+  assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -986,8 +991,8 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-    name = "%s_opsworks_instance"
-    roles = ["${aws_iam_role.opsworks_instance.name}"]
+  name = "%s_opsworks_instance"
+  roles = ["${aws_iam_role.opsworks_instance.name}"]
 }`, name, name, name, name, name, name, name)
 }
 
@@ -999,9 +1004,9 @@ func testAccAwsOpsworksStackConfigVpcCreate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "tf-acc" {
   cidr_block = "10.3.5.0/24"
-	tags {
-		Name = "testAccAwsOpsworksStackConfigVpcCreate"
-	}
+  tags {
+    Name = "testAccAwsOpsworksStackConfigVpcCreate"
+  }
 }
 resource "aws_subnet" "tf-acc" {
   vpc_id = "${aws_vpc.tf-acc.id}"
@@ -1023,8 +1028,8 @@ resource "aws_opsworks_stack" "tf-acc" {
 }
 
 resource "aws_iam_role" "opsworks_service" {
-    name = "%s_opsworks_service"
-    assume_role_policy = <<EOT
+  name = "%s_opsworks_service"
+  assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -1042,9 +1047,9 @@ EOT
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
-    name = "%s_opsworks_service"
-    role = "${aws_iam_role.opsworks_service.id}"
-    policy = <<EOT
+  name = "%s_opsworks_service"
+  role = "${aws_iam_role.opsworks_service.id}"
+  policy = <<EOT
 {
   "Statement": [
     {
@@ -1064,8 +1069,8 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-    name = "%s_opsworks_instance"
-    assume_role_policy = <<EOT
+  name = "%s_opsworks_instance"
+  assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -1083,8 +1088,8 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-    name = "%s_opsworks_instance"
-    roles = ["${aws_iam_role.opsworks_instance.name}"]
+  name = "%s_opsworks_instance"
+  roles = ["${aws_iam_role.opsworks_instance.name}"]
 }
 `, name, name, name, name, name)
 }
@@ -1093,9 +1098,9 @@ func testAccAWSOpsworksStackConfigVpcUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "tf-acc" {
   cidr_block = "10.3.5.0/24"
-	tags {
-		Name = "testAccAWSOpsworksStackConfigVpcUpdate"
-	}
+  tags {
+    Name = "testAccAWSOpsworksStackConfigVpcUpdate"
+  }
 }
 resource "aws_subnet" "tf-acc" {
   vpc_id = "${aws_vpc.tf-acc.id}"
@@ -1124,8 +1129,8 @@ resource "aws_opsworks_stack" "tf-acc" {
 }
 
 resource "aws_iam_role" "opsworks_service" {
-    name = "%s_opsworks_service"
-    assume_role_policy = <<EOT
+  name = "%s_opsworks_service"
+  assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -1143,9 +1148,9 @@ EOT
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
-    name = "%s_opsworks_service"
-    role = "${aws_iam_role.opsworks_service.id}"
-    policy = <<EOT
+  name = "%s_opsworks_service"
+  role = "${aws_iam_role.opsworks_service.id}"
+  policy = <<EOT
 {
   "Statement": [
     {
@@ -1165,8 +1170,8 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-    name = "%s_opsworks_instance"
-    assume_role_policy = <<EOT
+  name = "%s_opsworks_instance"
+  assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -1184,9 +1189,8 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-    name = "%s_opsworks_instance"
-    roles = ["${aws_iam_role.opsworks_instance.name}"]
+  name = "%s_opsworks_instance"
+  roles = ["${aws_iam_role.opsworks_instance.name}"]
 }
-
 `, name, name, name, name, name)
 }

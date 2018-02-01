@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a VPC VPN Gateway.
 ---
 
-# aws\_vpn\_gateway
+# aws_vpn_gateway
 
 Provides a resource to create a VPC VPN Gateway.
 

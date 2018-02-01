@@ -30,6 +30,7 @@ func (n *NodeRefreshableManagedResource) DynamicExpand(ctx EvalContext) (*Graph,
 	concreteResource := func(a *NodeAbstractResource) dag.Vertex {
 		// Add the config and state since we don't do that via transforms
 		a.Config = n.Config
+		a.ResolvedProvider = n.ResolvedProvider
 
 		return &NodeRefreshableManagedResourceInstance{
 			NodeAbstractResource: a,
@@ -149,7 +150,7 @@ func (n *NodeRefreshableManagedResourceInstance) evalTreeManagedResource() EvalN
 	return &EvalSequence{
 		Nodes: []EvalNode{
 			&EvalGetProvider{
-				Name:   n.ProvidedBy()[0],
+				Name:   n.ResolvedProvider,
 				Output: &provider,
 			},
 			&EvalReadState{
@@ -165,7 +166,7 @@ func (n *NodeRefreshableManagedResourceInstance) evalTreeManagedResource() EvalN
 			&EvalWriteState{
 				Name:         stateId,
 				ResourceType: n.ResourceState.Type,
-				Provider:     n.ResourceState.Provider,
+				Provider:     n.ResolvedProvider,
 				Dependencies: n.ResourceState.Dependencies,
 				State:        &state,
 			},
@@ -220,7 +221,7 @@ func (n *NodeRefreshableManagedResourceInstance) evalTreeManagedResourceNoState(
 				Output:   &resourceConfig,
 			},
 			&EvalGetProvider{
-				Name:   n.ProvidedBy()[0],
+				Name:   n.ResolvedProvider,
 				Output: &provider,
 			},
 			// Re-run validation to catch any errors we missed, e.g. type
@@ -250,7 +251,7 @@ func (n *NodeRefreshableManagedResourceInstance) evalTreeManagedResourceNoState(
 			&EvalWriteState{
 				Name:         stateID,
 				ResourceType: n.Config.Type,
-				Provider:     n.Config.Provider,
+				Provider:     n.ResolvedProvider,
 				Dependencies: stateDeps,
 				State:        &state,
 			},

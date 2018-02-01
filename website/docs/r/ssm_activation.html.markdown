@@ -6,7 +6,7 @@ description: |-
   Registers an on-premises server or virtual machine with Amazon EC2 so that it can be managed using Run Command.
 ---
 
-# aws\_ssm\_activation
+# aws_ssm_activation
 
 Registers an on-premises server or virtual machine with Amazon EC2 so that it can be managed using Run Command.
 

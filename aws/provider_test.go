@@ -51,14 +51,23 @@ func testAccPreCheck(t *testing.T) {
 			t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
 		}
 	}
-	if v := os.Getenv("AWS_DEFAULT_REGION"); v == "" {
-		log.Println("[INFO] Test: Using us-west-2 as test region")
-		os.Setenv("AWS_DEFAULT_REGION", "us-west-2")
-	}
+
+	region := testAccGetRegion()
+	log.Printf("[INFO] Test: Using %s as test region", region)
+	os.Setenv("AWS_DEFAULT_REGION", region)
+
 	err := testAccProvider.Configure(terraform.NewResourceConfig(nil))
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func testAccGetRegion() string {
+	v := os.Getenv("AWS_DEFAULT_REGION")
+	if v == "" {
+		return "us-west-2"
+	}
+	return v
 }
 
 func testAccEC2ClassicPreCheck(t *testing.T) {

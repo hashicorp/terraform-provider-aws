@@ -6,7 +6,7 @@ description: |-
   Creates and manages a custom Amazon Machine Image (AMI).
 ---
 
-# aws\_ami
+# aws_ami
 
 The AMI resource allows the creation and management of a completely-custom
 *Amazon Machine Image* (AMI).
@@ -71,7 +71,7 @@ Nested `ebs_block_device` blocks have the following structure:
 * `device_name` - (Required) The path at which the device is exposed to created instances.
 * `delete_on_termination` - (Optional) Boolean controlling whether the EBS volumes created to
   support each created instance will be deleted once that instance is terminated.
-* `encrypted` - (Optional) Boolean controlling whether the created EBS volumes will be encrypted.
+* `encrypted` - (Optional) Boolean controlling whether the created EBS volumes will be encrypted. Can't be used with `snapshot_id`.
 * `iops` - (Required only when `volume_type` is "io1") Number of I/O operations per second the
   created volumes will support.
 * `snapshot_id` - (Optional) The id of an EBS snapshot that will be used to initialize the created
@@ -93,6 +93,14 @@ Nested `ephemeral_block_device` blocks have the following structure:
 * `device_name` - (Required) The path at which the device is exposed to created instances.
 * `virtual_name` - (Required) A name for the ephemeral device, of the form "ephemeralN" where
   *N* is a volume number starting from zero.
+
+### Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+
+* `create` - (Defaults to 40 mins) Used when creating the AMI
+* `update` - (Defaults to 40 mins) Used when updating the AMI
+* `delete` - (Defaults to 90 mins) Used when deregistering the AMI
 
 ## Attributes Reference
 

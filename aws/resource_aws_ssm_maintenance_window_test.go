@@ -30,6 +30,8 @@ func TestAccAWSSSMMaintenanceWindow_basic(t *testing.T) {
 						"aws_ssm_maintenance_window.foo", "cutoff", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_maintenance_window.foo", "name", fmt.Sprintf("maintenance-window-%s", name)),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_maintenance_window.foo", "enabled", "false"),
 				),
 			},
 			{
@@ -44,6 +46,8 @@ func TestAccAWSSSMMaintenanceWindow_basic(t *testing.T) {
 						"aws_ssm_maintenance_window.foo", "cutoff", "8"),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_maintenance_window.foo", "name", fmt.Sprintf("updated-maintenance-window-%s", name)),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_maintenance_window.foo", "enabled", "true"),
 				),
 			},
 		},
@@ -123,6 +127,7 @@ resource "aws_ssm_maintenance_window" "foo" {
   schedule = "cron(0 16 ? * TUE *)"
   duration = 3
   cutoff = 1
+  enabled = false
 }
 
 `, rName)
@@ -135,6 +140,7 @@ resource "aws_ssm_maintenance_window" "foo" {
   schedule = "cron(0 16 ? * WED *)"
   duration = 10
   cutoff = 8
+  enabled = true
 }
 
 `, rName)

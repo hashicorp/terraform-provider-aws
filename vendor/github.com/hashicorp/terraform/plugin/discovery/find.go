@@ -3,6 +3,7 @@ package discovery
 import (
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -59,7 +60,6 @@ func findPluginPaths(kind string, dirs []string) []string {
 			fullName := item.Name()
 
 			if !strings.HasPrefix(fullName, prefix) {
-				log.Printf("[DEBUG] skipping %q, not a %s", fullName, kind)
 				continue
 			}
 
@@ -68,6 +68,12 @@ func findPluginPaths(kind string, dirs []string) []string {
 				absPath, err := filepath.Abs(filepath.Join(dir, fullName))
 				if err != nil {
 					log.Printf("[ERROR] plugin filepath error: %s", err)
+					continue
+				}
+
+				// Check that the file we found is usable
+				if !pathIsFile(absPath) {
+					log.Printf("[ERROR] ignoring non-file %s", absPath)
 					continue
 				}
 
@@ -83,6 +89,12 @@ func findPluginPaths(kind string, dirs []string) []string {
 				continue
 			}
 
+			// Check that the file we found is usable
+			if !pathIsFile(absPath) {
+				log.Printf("[ERROR] ignoring non-file %s", absPath)
+				continue
+			}
+
 			log.Printf("[WARNING] found legacy %s %q", kind, fullName)
 
 			ret = append(ret, filepath.Clean(absPath))
@@ -90,6 +102,17 @@ func findPluginPaths(kind string, dirs []string) []string {
 	}
 
 	return ret
+}
+
+// Returns true if and only if the given path refers to a file or a symlink
+// to a file.
+func pathIsFile(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+
+	return !info.IsDir()
 }
 
 // ResolvePluginPaths takes a list of paths to plugin executables (as returned

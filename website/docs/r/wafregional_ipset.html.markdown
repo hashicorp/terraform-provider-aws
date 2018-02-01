@@ -6,13 +6,13 @@ description: |-
   Provides a AWS WAF Regional IPSet resource for use with ALB.
 ---
 
-# aws\_wafregional\_ipset
+# aws_wafregional_ipset
 
 Provides a WAF Regional IPSet Resource for use with Application Load Balancer.
 
 ## Example Usage
 
-```
+```hcl
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
   ip_set_descriptor {

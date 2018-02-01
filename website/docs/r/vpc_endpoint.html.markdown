@@ -6,7 +6,7 @@ description: |-
   Provides a VPC Endpoint resource.
 ---
 
-# aws\_vpc\_endpoint
+# aws_vpc_endpoint
 
 Provides a VPC Endpoint resource.
 
