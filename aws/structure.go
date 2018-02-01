@@ -3287,9 +3287,13 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 	if table.StreamSpecification != nil {
 		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
 		d.Set("stream_enabled", table.StreamSpecification.StreamEnabled)
-		d.Set("stream_arn", table.LatestStreamArn)
-		d.Set("stream_label", table.LatestStreamLabel)
+	} else {
+		d.Set("stream_view_type", "")
+		d.Set("stream_enabled", false)
 	}
+
+	d.Set("stream_arn", table.LatestStreamArn)
+	d.Set("stream_label", table.LatestStreamLabel)
 
 	err = d.Set("global_secondary_index", gsiList)
 	if err != nil {
