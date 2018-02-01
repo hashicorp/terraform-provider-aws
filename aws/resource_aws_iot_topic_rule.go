@@ -272,7 +272,8 @@ func resourceAwsIotTopicRule() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"message_format": {
 							Type:     schema.TypeString,
-							Required: true,
+							Default:  iot.MessageFormatRaw,
+							Optional: true,
 						},
 						"target_arn": {
 							Type:         schema.TypeString,

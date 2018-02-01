@@ -470,7 +470,6 @@ resource "aws_iot_topic_rule" "rule" {
   sql_version = "2015-10-08"
 
   sns {
-    message_format = "RAW"
     role_arn = "${aws_iam_role.iot_role.arn}"
     target_arn = "arn:aws:sns:us-east-1:123456789012:my_corporate_topic"
   }

@@ -16,7 +16,7 @@ resource "aws_iot_topic_rule" "rule" {
   description = "Example rule"
   enabled = true
   sql = "SELECT * FROM 'topic/test'"
-  sql_version = ""
+  sql_version = "2015-10-08"
 
   sns {
     message_format = "RAW"
@@ -69,91 +69,91 @@ EOF
 
 ## Argument Reference
 
-* `name` - (Required) Name of the topic rule
-* `description` - (Optional) Human readable description of the topic rule
-* `enabled` - (Required) Boolean flag to indicate if the topic rule is enabled
-* `sql` - (Required) The SQL statement of the topic rule
-* `sql_version` - (Required) Version of the SQL statement
+* `name` - (Required) The name of the rule.
+* `description` - (Optional) The description of the rule.
+* `enabled` - (Required) Specifies whether the rule is enabled.
+* `sql` - (Required) The SQL statement used to query the topic. For more information, see AWS IoT SQL Reference (http://docs.aws.amazon.com/iot/latest/developerguide/iot-rules.html#aws-iot-sql-reference) in the AWS IoT Developer Guide.
+* `sql_version` - (Required) The version of the SQL rules engine to use when evaluating the rule.
 
 The `cloudwatch_alarm` object takes the following arguments:
 
-* `alarm_name` - (Required) The CloudWatch alarm name
-* `role_arn` - (Required) The IAM role arn that allows to access the CloudWatch alarm
-* `state_reason` - (Required) The reason for the alarm change
-* `state_value` - (Required) The value of the alarm state. Acceptable values are: OK, ALARM, INSUFFICIENT_DATA
+* `alarm_name` - (Required) The CloudWatch alarm name.
+* `role_arn` - (Required) The IAM role ARN that allows access to the CloudWatch alarm.
+* `state_reason` - (Required) The reason for the alarm change.
+* `state_value` - (Required) The value of the alarm state. Acceptable values are: OK, ALARM, INSUFFICIENT_DATA.
 
 The `cloudwatch_metric` object takes the following arguments:
 
-* `metric_name` - (Required) The CloudWatch metric name
-* `metric_namespace` - (Required) The CloudWatch metric namespace
-* `metric_timestamp` - (Optional) The CloudWatch metric timestamp
-* `metric_unit` - (Required) The CloudWatch metric unit (supported units can be found here: http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/cloudwatch_concepts.html#Unit)
-* `metric_value` - (Required) The CloudWatch metric value
-* `role_arn` - (Required) The IAM role arn that allows to access the CloudWatch metric
+* `metric_name` - (Required) The CloudWatch metric name.
+* `metric_namespace` - (Required) The CloudWatch metric namespace name.
+* `metric_timestamp` - (Optional) An optional Unix timestamp (http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/cloudwatch_concepts.html#about_timestamp).
+* `metric_unit` - (Required) The metric unit (supported units can be found here: http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/cloudwatch_concepts.html#Unit)
+* `metric_value` - (Required) The CloudWatch metric value.
+* `role_arn` - (Required) The IAM role ARN that allows access to the CloudWatch metric.
 
 The `dynamodb` object takes the following arguments:
 
-* `hash_key_field` - (Required) The hash key field
-* `hash_key_type` - (Optional) The hash key type, can be STRING or NUMBER
-* `hash_key_value` - (Required) The hash key value
-* `payload_field` - (Optional) The action payload
-* `range_key_field` - (Optional) The range key field
-* `range_key_type` - (Optional) The range key type, can be STRING or NUMBer
-* `range_key_value` - (Optional) The range key value
-* `role_arn` - (Required) The IAM role arn that allows to access the DynamoDB table
-* `table_name` - (Required) The DynamoDB table name
+* `hash_key_field` - (Required) The hash key name.
+* `hash_key_type` - (Optional) The hash key type. Valid values are "STRING" or "NUMBER".
+* `hash_key_value` - (Required) The hash key value.
+* `payload_field` - (Optional) The action payload.
+* `range_key_field` - (Optional) The range key name.
+* `range_key_type` - (Optional) The range key type. Valid values are "STRING" or "NUMBER".
+* `range_key_value` - (Optional) The range key value.
+* `role_arn` - (Required) The ARN of the IAM role that grants access to the DynamoDB table.
+* `table_name` - (Required) The name of the DynamoDB table.
 
 The `elasticsearch` object takes the following arguments:
 
-* `endpoint` - (Required) The ElasticSearch endpoint
-* `id` - (Required) Unique ID for the document
-* `index` - (Required) The ElasticSearch index
-* `role_arn` - (Required) The IAM role arn that allows to access the ElasticSearch domain
-* `type` - (Required) The type of the document
+* `endpoint` - (Required) The endpoint of your Elasticsearch domain.
+* `id` - (Required) The unique identifier for the document you are storing.
+* `index` - (Required) The Elasticsearch index where you want to store your data.
+* `role_arn` - (Required) The IAM role ARN that has access to Elasticsearch.
+* `type` - (Required) The type of document you are storing.
 
 The `firehose` object takes the following arguments:
 
-* `delivery_stream_name` - (Required) The name of the Firehose delivery stream
-* `role_arn` - (Required) The IAM role arn that allows to access the Firehose delivery stream
+* `delivery_stream_name` - (Required) The delivery stream name.
+* `role_arn` - (Required) The IAM role ARN that grants access to the Amazon Kinesis Firehose stream.
 
 The `kinesis` object takes the following arguments:
 
-* `partition_key` - (Optional) The partition key
-* `role_arn` - (Required) The IAM role arn that allows to access the Kinesis stream
-* `stream_name` - (Required) The Kinesis stream name
+* `partition_key` - (Optional) The partition key.
+* `role_arn` - (Required) The ARN of the IAM role that grants access to the Amazon Kinesis stream.
+* `stream_name` - (Required) The name of the Amazon Kinesis stream.
 
 The `lambda` object takes the following arguments:
 
-* `function_arn` - (Required) The arn of the lambda function
+* `function_arn` - (Required) The ARN of the Lambda function.
 
 The `republish` object takes the following arguments:
 
-* `role_arn` - (Required) The IAM role arn that allows to access the topic
-* `topic` - (Required) The topic the message should be republished to
+* `role_arn` - (Required) The ARN of the IAM role that grants access.
+* `topic` - (Required) The name of the MQTT topic the message should be republished to.
 
 The `s3` object takes the following arguments:
 
-* `bucket_name` - (Required) The name of the S3 bucket
-* `key` - (Required) The key of the object
-* `role_arn` - (Required) The IAM role arn that allows to access the S3 bucket
+* `bucket_name` - (Required) The Amazon S3 bucket name.
+* `key` - (Required) The object key.
+* `role_arn` - (Required) The ARN of the IAM role that grants access.
 
 The `sns` object takes the following arguments:
 
-* `message_format` - (Required) The message format, allowed values are "RAW" or "JSON"
-* `role_arn` - (Required) The IAM role arn that allows to access the SNS topic
-* `target_arn` - (Required) The arn of the SNS topic
+* `message_format` - (Required) The message format of the message to publish. Accepted values are "JSON" and "RAW".
+* `role_arn` - (Required) The ARN of the IAM role that grants access.
+* `target_arn` - (Required) The ARN of the SNS topic.
 
 The `sqs` object takes the following arguments:
 
-* `queue_url` - (Required) The URL of the SQS queue
-* `role_arn` - (Required) The IAM role arn that allows to access the SQS queue
-* `use_base64` - (Required) Boolean to enable base64 encoding
+* `queue_url` - (Required) The URL of the Amazon SQS queue.
+* `role_arn` - (Required) The ARN of the IAM role that grants access.
+* `use_base64` - (Required) Specifies whether to use Base64 encoding.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The name of th topic rule
+* `id` - The name of the topic rule
 * `arn` - The ARN of the topic rule
 
 ## Import
