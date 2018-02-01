@@ -1511,3 +1511,56 @@ func validateSecurityGroupRuleDescription(v interface{}, k string) (ws []string,
 	}
 	return
 }
+
+func validateIoTTopicRuleName(v interface{}, s string) ([]string, []error) {
+	name := v.(string)
+	if len(name) < 1 || len(name) > 128 {
+		return nil, []error{fmt.Errorf("Name must between 1 and 128 characters long")}
+	}
+
+	matched, err := regexp.MatchReader("^[a-zA-Z0-9_]+$", strings.NewReader(name))
+
+	if err != nil {
+		return nil, []error{err}
+	}
+
+	if !matched {
+		return nil, []error{fmt.Errorf("Name must match the pattern ^[a-zA-Z0-9_]+$")}
+	}
+
+	return nil, nil
+}
+
+func validateIoTTopicRuleCloudWatchAlarmStateValue(v interface{}, s string) ([]string, []error) {
+	switch v.(string) {
+	case
+		"OK",
+		"ALARM",
+		"INSUFFICIENT_DATA":
+		return nil, nil
+	}
+
+	return nil, []error{fmt.Errorf("State must be one of OK, ALARM, or INSUFFICIENT_DATA")}
+}
+
+func validateIoTTopicRuleCloudWatchMetricTimestamp(v interface{}, s string) ([]string, []error) {
+	dateString := v.(string)
+
+	// https://docs.aws.amazon.com/iot/latest/apireference/API_CloudwatchMetricAction.html
+	if _, err := time.Parse(time.RFC3339, dateString); err != nil {
+		return nil, []error{err}
+	}
+	return nil, nil
+}
+
+func validateIoTTopicRuleElasticSearchEndpoint(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	// https://docs.aws.amazon.com/iot/latest/apireference/API_ElasticsearchAction.html
+	if !regexp.MustCompile(`https?://.*`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q should be an URL: %q",
+			k, value))
+	}
+	return
+}

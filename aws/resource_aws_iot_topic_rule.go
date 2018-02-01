@@ -1,11 +1,7 @@
 package aws
 
 import (
-	"fmt"
 	"log"
-	"regexp"
-	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -20,26 +16,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 		Delete: resourceAwsIotTopicRuleDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: func(v interface{}, s string) ([]string, []error) {
-					name := v.(string)
-					if len(name) < 1 || len(name) > 128 {
-						return nil, []error{fmt.Errorf("Name must between 1 and 128 characters long")}
-					}
-
-					matched, err := regexp.MatchReader("^[a-zA-Z0-9_]+$", strings.NewReader(name))
-
-					if err != nil {
-						return nil, []error{err}
-					}
-
-					if !matched {
-						return nil, []error{fmt.Errorf("Name must match the pattern ^[a-zA-Z0-9_]+$")}
-					}
-
-					return nil, nil
-				},
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateIoTTopicRuleName,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -76,19 +55,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Required: true,
 						},
 						"state_value": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: func(v interface{}, s string) ([]string, []error) {
-								switch v.(string) {
-								case
-									"OK",
-									"ALARM",
-									"INSUFFICIENT_DATA":
-									return nil, nil
-								}
-
-								return nil, []error{fmt.Errorf("State must be one of OK, ALARM, or INSUFFICIENT_DATA")}
-							},
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateIoTTopicRuleCloudWatchAlarmStateValue,
 						},
 					},
 				},
@@ -107,15 +76,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Required: true,
 						},
 						"metric_timestamp": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: func(v interface{}, s string) ([]string, []error) {
-								dateString := v.(string)
-								if _, err := time.Parse(time.RFC3339, dateString); err != nil {
-									return nil, []error{err}
-								}
-								return nil, nil
-							},
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateIoTTopicRuleCloudWatchMetricTimestamp,
 						},
 						"metric_unit": {
 							Type:     schema.TypeString,
@@ -184,8 +147,9 @@ func resourceAwsIotTopicRule() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"endpoint": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateIoTTopicRuleElasticSearchEndpoint,
 						},
 						"id": {
 							Type:     schema.TypeString,
@@ -231,7 +195,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"partition_key": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"role_arn": {
 							Type:         schema.TypeString,
@@ -456,13 +420,16 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 
 	for _, a := range kinesisActions {
 		raw := a.(map[string]interface{})
-		actions[i] = &iot.Action{
+		act := &iot.Action{
 			Kinesis: &iot.KinesisAction{
-				RoleArn:      aws.String(raw["role_arn"].(string)),
-				StreamName:   aws.String(raw["stream_name"].(string)),
-				PartitionKey: aws.String(raw["partition_key"].(string)),
+				RoleArn:    aws.String(raw["role_arn"].(string)),
+				StreamName: aws.String(raw["stream_name"].(string)),
 			},
 		}
+		if v, ok := raw["partition_key"].(string); ok && v != "" {
+			act.Kinesis.PartitionKey = aws.String(v)
+		}
+		actions[i] = act
 		i++
 	}
 
