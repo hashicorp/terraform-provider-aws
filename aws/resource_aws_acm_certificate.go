@@ -44,7 +44,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 					return
 				},
 			},
-			"certificate_arn": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -134,7 +134,7 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		if err := d.Set("domain_name", resp.Certificate.DomainName); err != nil {
 			return resource.NonRetryableError(err)
 		}
-		if err := d.Set("certificate_arn", resp.Certificate.CertificateArn); err != nil {
+		if err := d.Set("arn", resp.Certificate.CertificateArn); err != nil {
 			return resource.NonRetryableError(err)
 		}
 		if err := d.Set("validation_method", resp.Certificate.DomainValidationOptions[0].ValidationMethod); err != nil {

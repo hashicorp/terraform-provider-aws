@@ -123,7 +123,7 @@ resource "aws_acm_certificate" "cert" {
 
 
 resource "aws_acm_certificate_validation" "cert" {
-  certificate_arn = "${aws_acm_certificate.cert.certificate_arn}"
+  certificate_arn = "${aws_acm_certificate.cert.arn}"
   timeout = "20s"
 }
 `, domain, sanDomain)
@@ -144,7 +144,7 @@ resource "aws_acm_certificate" "cert" {
 
 
 resource "aws_acm_certificate_validation" "cert" {
-  certificate_arn = "${aws_acm_certificate.cert.certificate_arn}"
+  certificate_arn = "${aws_acm_certificate.cert.arn}"
   validation_record_fqdns = ["some-wrong-fqdn.example.com"]
   timeout = "20s"
 }
@@ -187,7 +187,7 @@ resource "aws_route53_record" "cert_validation_san" {
 }
 
 resource "aws_acm_certificate_validation" "cert" {
-  certificate_arn = "${aws_acm_certificate.cert.certificate_arn}"
+  certificate_arn = "${aws_acm_certificate.cert.arn}"
   validation_record_fqdns = [
 	"${aws_route53_record.cert_validation.fqdn}",
 	"${aws_route53_record.cert_validation_san.fqdn}"
@@ -207,18 +207,18 @@ func testAccCheckAcmCertificateExists(n string, res *acm.DescribeCertificateOutp
 			return fmt.Errorf("No id is set")
 		}
 
-		if rs.Primary.Attributes["certificate_arn"] == "" {
-			return fmt.Errorf("No certificate_arn is set")
+		if rs.Primary.Attributes["arn"] == "" {
+			return fmt.Errorf("No arn is set")
 		}
 
-		if rs.Primary.Attributes["certificate_arn"] != rs.Primary.ID {
-			return fmt.Errorf("No certificate_arn and ID are different: %s %s", rs.Primary.Attributes["certificate_arn"], rs.Primary.ID)
+		if rs.Primary.Attributes["arn"] != rs.Primary.ID {
+			return fmt.Errorf("No arn and ID are different: %s %s", rs.Primary.Attributes["arn"], rs.Primary.ID)
 		}
 
 		acmconn := testAccProvider.Meta().(*AWSClient).acmconn
 
 		resp, err := acmconn.DescribeCertificate(&acm.DescribeCertificateInput{
-			CertificateArn: aws.String(rs.Primary.Attributes["certificate_arn"]),
+			CertificateArn: aws.String(rs.Primary.Attributes["arn"]),
 		})
 
 		if err != nil {
@@ -226,7 +226,7 @@ func testAccCheckAcmCertificateExists(n string, res *acm.DescribeCertificateOutp
 		}
 
 		tagsResp, err := acmconn.ListTagsForCertificate(&acm.ListTagsForCertificateInput{
-			CertificateArn: aws.String(rs.Primary.Attributes["certificate_arn"]),
+			CertificateArn: aws.String(rs.Primary.Attributes["arn"]),
 		})
 
 		if err != nil {

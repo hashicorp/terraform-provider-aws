@@ -45,7 +45,7 @@ resource "aws_route53_record" "cert_validation" {
 }
 
 resource "aws_acm_certificate_validation" "cert" {
-  certificate_arn = "${aws_acm_certificate.cert.certificate_arn}"
+  certificate_arn = "${aws_acm_certificate.cert.arn}"
   validation_record_fqdns = ["${aws_route53_record.cert_validation.fqdn}"]
 }
 
@@ -68,7 +68,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `certificate_arn` - The ARN of the certificate
+* `arn` - The ARN of the certificate
 * `domain_validation_options` - A list of attributes to feed into other resources to complete certificate validation. Can have more than one element, e.g. if SANs are defined
 
 Domain validation objects export the following attributes:

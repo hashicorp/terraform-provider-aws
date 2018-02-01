@@ -19,7 +19,7 @@ func setTagsACM(conn *acm.ACM, d *schema.ResourceData) error {
 		// Set tags
 		if len(remove) > 0 {
 			input := acm.RemoveTagsFromCertificateInput{
-				CertificateArn: aws.String(d.Get("certificate_arn").(string)),
+				CertificateArn: aws.String(d.Get("arn").(string)),
 				Tags:           remove,
 			}
 			log.Printf("[DEBUG] Removing ACM tags: %s", input)
@@ -30,7 +30,7 @@ func setTagsACM(conn *acm.ACM, d *schema.ResourceData) error {
 		}
 		if len(create) > 0 {
 			input := acm.AddTagsToCertificateInput{
-				CertificateArn: aws.String(d.Get("certificate_arn").(string)),
+				CertificateArn: aws.String(d.Get("arn").(string)),
 				Tags:           create,
 			}
 			log.Printf("[DEBUG] Adding ACM tags: %s", input)
