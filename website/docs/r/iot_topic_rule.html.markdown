@@ -15,17 +15,17 @@ resource "aws_iot_topic_rule" "rule" {
   name = "MyRule"
   description = "Example rule"
   enabled = true
-  sql = "SELECT * FROM 'topic/test'";
+  sql = "SELECT * FROM 'topic/test'"
   sql_version = ""
 
   sns {
     message_format = "RAW"
     role_arn = "${aws_iam_role.role.arn}"
-    target_arn = ""
+    target_arn = "${aws_sns_topic.mytopic.arn}"
   }
 }
 
-resource "aws_sns_topic" "user_updates" {
+resource "aws_sns_topic" "mytopic" {
   name = "mytopic"
 }
 
@@ -59,8 +59,8 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
         "Action": [
             "sns:Publish"
         ],
-        "Resource": "arn:aws:logs:*:*:dynamodb"
-    },
+        "Resource": "${aws_sns_topic.mytopic.arn}"
+    }
   ]
 }
 EOF
@@ -118,7 +118,7 @@ The `firehose` object takes the following arguments:
 
 The `kinesis` object takes the following arguments:
 
-* `partition_key` - (Required) The partition key
+* `partition_key` - (Optional) The partition key
 * `role_arn` - (Required) The IAM role arn that allows to access the Kinesis stream
 * `stream_name` - (Required) The Kinesis stream name
 
@@ -150,5 +150,7 @@ The `sqs` object takes the following arguments:
 * `use_base64` - (Required) Boolean to enable base64 encoding
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the topic rule

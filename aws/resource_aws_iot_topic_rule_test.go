@@ -18,7 +18,7 @@ func TestAccAWSIoTTopicRule_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSIoTTopicRule_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
@@ -42,7 +42,7 @@ func TestAccAWSIoTTopicRule_cloudwatchalarm(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSIoTTopicRule_cloudwatchalarm(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
@@ -60,7 +60,7 @@ func TestAccAWSIoTTopicRule_cloudwatchmetric(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSIoTTopicRule_cloudwatchmetric(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
@@ -78,7 +78,7 @@ func TestAccAWSIoTTopicRule_elasticsearch(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSIoTTopicRule_elasticsearch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
@@ -96,7 +96,7 @@ func TestAccAWSIoTTopicRule_firehose(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSIoTTopicRule_firehose(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
@@ -114,7 +114,7 @@ func TestAccAWSIoTTopicRule_kinesis(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSIoTTopicRule_kinesis(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
@@ -132,7 +132,7 @@ func TestAccAWSIoTTopicRule_lambda(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSIoTTopicRule_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
@@ -150,7 +150,7 @@ func TestAccAWSIoTTopicRule_republish(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSIoTTopicRule_republish(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
@@ -168,7 +168,7 @@ func TestAccAWSIoTTopicRule_s3(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSIoTTopicRule_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
@@ -186,7 +186,7 @@ func TestAccAWSIoTTopicRule_sns(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSIoTTopicRule_sns(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
@@ -204,7 +204,7 @@ func TestAccAWSIoTTopicRule_sqs(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSIoTTopicRule_sqs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
@@ -250,7 +250,7 @@ func testAccCheckAWSIoTTopicRuleExists_basic(name string) resource.TestCheckFunc
 	}
 }
 
-const testAccAWSIoTTopicRule_role = `
+const testAccAWSIoTTopicRuleRole = `
 resource "aws_iam_role" "iot_role" {
     name = "test_role_%[1]s"
     assume_role_policy = <<EOF
@@ -291,7 +291,7 @@ resource "aws_iam_policy_attachment" "attach_policy" {
 `
 
 func testAccAWSIoTTopicRule_basic(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRule_role+`
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
 resource "aws_iot_topic_rule" "rule" {
   name = "test_rule_%[1]s"
   description = "Example rule"
@@ -314,7 +314,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_cloudwatchalarm(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRule_role+`
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -333,7 +333,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_cloudwatchmetric(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRule_role+`
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -353,7 +353,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_elasticsearch(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRule_role+`
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
 data "aws_region" "current" {
   current = true
 }
@@ -377,7 +377,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_firehose(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRule_role+`
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -394,7 +394,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_kinesis(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRule_role+`
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -411,7 +411,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_lambda(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRule_role+`
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -427,7 +427,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_republish(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRule_role+`
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -444,7 +444,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_s3(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRule_role+`
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -462,7 +462,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_sns(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRule_role+`
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -480,7 +480,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_sqs(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRule_role+`
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
