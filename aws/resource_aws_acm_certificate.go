@@ -2,12 +2,13 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
-	"time"
 )
 
 func resourceAwsAcmCertificate() *schema.Resource {
@@ -21,51 +22,50 @@ func resourceAwsAcmCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"domain_name": &schema.Schema{
+			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"subject_alternative_names": &schema.Schema{
+			"subject_alternative_names": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"validation_method": &schema.Schema{
+			"validation_method": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					if v.(string) != "DNS" {
+					if v.(string) != acm.ValidationMethodDns {
 						errors = append(errors, fmt.Errorf("only validation_method DNS is supported at the moment"))
 					}
 					return
 				},
 			},
-			"certificate_arn": &schema.Schema{
+			"certificate_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-				ForceNew: true,
 			},
-			"domain_validation_options": &schema.Schema{
+			"domain_validation_options": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domain_name": &schema.Schema{
+						"domain_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"resource_record_name": &schema.Schema{
+						"resource_record_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"resource_record_type": &schema.Schema{
+						"resource_record_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"resource_record_value": &schema.Schema{
+						"resource_record_value": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -81,7 +81,7 @@ func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) e
 	acmconn := meta.(*AWSClient).acmconn
 	params := &acm.RequestCertificateInput{
 		DomainName:       aws.String(d.Get("domain_name").(string)),
-		ValidationMethod: aws.String("DNS"),
+		ValidationMethod: aws.String(acm.ValidationMethodDns),
 	}
 
 	sans, ok := d.GetOk("subject_alternative_names")
@@ -127,7 +127,7 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 			return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %s", err))
 		}
 
-		if *resp.Certificate.Type != "AMAZON_ISSUED" {
+		if *resp.Certificate.Type != acm.CertificateTypeAmazonIssued {
 			return resource.NonRetryableError(fmt.Errorf("Certificate has type %s, only AMAZON_ISSUED is supported at the moment", *resp.Certificate.Type))
 		}
 

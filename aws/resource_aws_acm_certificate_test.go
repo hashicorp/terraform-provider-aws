@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"os"
+	"regexp"
+
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"os"
-	"regexp"
 )
 
 func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
@@ -297,12 +297,7 @@ func testAccCheckAcmCertificateDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error is what we want
-		acmerr, ok := err.(awserr.Error)
-
-		if !ok {
-			return err
-		}
-		if acmerr.Code() != "ResourceNotFoundException" {
+		if !isAWSErr(err, acm.ErrCodeResourceNotFoundException, "") {
 			return err
 		}
 	}

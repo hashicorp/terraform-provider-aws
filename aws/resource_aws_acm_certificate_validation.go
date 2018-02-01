@@ -2,15 +2,16 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
 	"log"
 	"reflect"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsAcmCertificateValidation() *schema.Resource {
@@ -93,7 +94,7 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 func resourceAwsAcmCertificateCheckValidationRecords(validation_record_fqdns []interface{}, cert *acm.CertificateDetail) error {
 	expected_fqdns := make([]string, len(cert.DomainValidationOptions))
 	for i, v := range cert.DomainValidationOptions {
-		if *v.ValidationMethod == "DNS" {
+		if *v.ValidationMethod == acm.ValidationMethodDns {
 			expected_fqdns[i] = strings.TrimSuffix(*v.ResourceRecord.Name, ".")
 		}
 	}
