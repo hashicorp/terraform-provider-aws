@@ -153,4 +153,13 @@ The `sqs` object takes the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - The ARN of the topic rule
 * `arn` - The ARN of the topic rule
+
+## Import
+
+IoT Topic Rules can be imported using the `name`, e.g.
+
+```
+$ terraform import aws_iot_topic_rule.rule <name>
+```

@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -2166,6 +2167,227 @@ func flattenFieldToMatch(fm *waf.FieldToMatch) []interface{} {
 		m["type"] = *fm.Type
 	}
 	return []interface{}{m}
+}
+
+func flattenIoTRuleCloudWatchAlarmActions(actions []*iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	for _, a := range actions {
+		result := make(map[string]interface{})
+		v := a.CloudwatchAlarm
+		if v != nil {
+			result["alarm_name"] = *v.AlarmName
+			result["role_arn"] = *v.RoleArn
+			result["state_reason"] = *v.StateReason
+			result["state_value"] = *v.StateValue
+
+			results = append(results, result)
+		}
+	}
+
+	return results
+}
+
+func flattenIoTRuleCloudWatchMetricActions(actions []*iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	for _, a := range actions {
+		result := make(map[string]interface{})
+		v := a.CloudwatchMetric
+		if v != nil {
+			result["metric_name"] = *v.MetricName
+			result["role_arn"] = *v.RoleArn
+			result["metric_namespace"] = *v.MetricNamespace
+			result["metric_unit"] = *v.MetricUnit
+			result["metric_value"] = *v.MetricValue
+
+			if v.MetricTimestamp != nil {
+				result["metric_timestamp"] = *v.MetricTimestamp
+			}
+
+			results = append(results, result)
+		}
+	}
+
+	return results
+}
+
+func flattenIoTRuleDynamoDbActions(actions []*iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	for _, a := range actions {
+		result := make(map[string]interface{})
+		v := a.DynamoDB
+		if v != nil {
+			result["hash_key_field"] = *v.HashKeyField
+			result["hash_key_value"] = *v.HashKeyValue
+			result["range_key_field"] = *v.RangeKeyField
+			result["range_key_value"] = *v.RangeKeyValue
+			result["role_arn"] = *v.RoleArn
+			result["table_name"] = *v.TableName
+
+			if v.HashKeyType != nil {
+				result["hash_key_type"] = *v.HashKeyType
+			}
+
+			if v.PayloadField != nil {
+				result["payload_field"] = *v.PayloadField
+			}
+
+			if v.RangeKeyType != nil {
+				result["range_key_type"] = *v.RangeKeyType
+			}
+
+			results = append(results, result)
+		}
+	}
+
+	return results
+}
+
+func flattenIoTRuleElasticSearchActions(actions []*iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	for _, a := range actions {
+		result := make(map[string]interface{})
+		v := a.Elasticsearch
+		if v != nil {
+			result["role_arn"] = *v.RoleArn
+			result["endpoint"] = *v.Endpoint
+			result["id"] = *v.Id
+			result["index"] = *v.Index
+			result["type"] = *v.Type
+
+			results = append(results, result)
+		}
+	}
+
+	return results
+}
+
+func flattenIoTRuleFirehoseActions(actions []*iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	for _, a := range actions {
+		result := make(map[string]interface{})
+		v := a.Firehose
+		if v != nil {
+			result["role_arn"] = *v.RoleArn
+			result["delivery_stream_name"] = *v.DeliveryStreamName
+
+			results = append(results, result)
+		}
+	}
+
+	return results
+}
+
+func flattenIoTRuleKinesisActions(actions []*iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	for _, a := range actions {
+		result := make(map[string]interface{})
+		v := a.Kinesis
+		if v != nil {
+			result["role_arn"] = *v.RoleArn
+			result["stream_name"] = *v.StreamName
+
+			if v.PartitionKey != nil {
+				result["partition_key"] = *v.PartitionKey
+			}
+
+			results = append(results, result)
+		}
+	}
+
+	return results
+}
+
+func flattenIoTRuleLambdaActions(actions []*iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	for _, a := range actions {
+		result := make(map[string]interface{})
+		v := a.Lambda
+		if v != nil {
+			result["function_arn"] = *v.FunctionArn
+
+			results = append(results, result)
+		}
+	}
+
+	return results
+}
+
+func flattenIoTRuleRepublishActions(actions []*iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	for _, a := range actions {
+		result := make(map[string]interface{})
+		v := a.Republish
+		if v != nil {
+			result["role_arn"] = *v.RoleArn
+			result["topic"] = *v.Topic
+
+			results = append(results, result)
+		}
+	}
+
+	return results
+}
+
+func flattenIoTRuleS3Actions(actions []*iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	for _, a := range actions {
+		result := make(map[string]interface{})
+		v := a.S3
+		if v != nil {
+			result["role_arn"] = *v.RoleArn
+			result["bucket_name"] = *v.BucketName
+			result["key"] = *v.Key
+
+			results = append(results, result)
+		}
+	}
+
+	return results
+}
+
+func flattenIoTRuleSnsActions(actions []*iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	for _, a := range actions {
+		result := make(map[string]interface{})
+		v := a.Sns
+		if v != nil {
+			result["message_format"] = *v.MessageFormat
+			result["role_arn"] = *v.RoleArn
+			result["target_arn"] = *v.TargetArn
+
+			results = append(results, result)
+		}
+	}
+
+	return results
+}
+
+func flattenIoTRuleSqsActions(actions []*iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	for _, a := range actions {
+		result := make(map[string]interface{})
+		v := a.Sqs
+		if v != nil {
+			result["role_arn"] = *v.RoleArn
+			result["use_base64"] = *v.UseBase64
+			result["queue_url"] = *v.QueueUrl
+
+			results = append(results, result)
+		}
+	}
+
+	return results
 }
 
 // escapeJsonPointer escapes string per RFC 6901

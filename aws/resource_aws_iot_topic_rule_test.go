@@ -16,7 +16,7 @@ func TestAccAWSIoTTopicRule_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIoTTopicRule_basic(rName),
@@ -27,7 +27,6 @@ func TestAccAWSIoTTopicRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iot_topic_rule.rule", "enabled", "true"),
 					resource.TestCheckResourceAttr("aws_iot_topic_rule.rule", "sql", "SELECT * FROM 'topic/test'"),
 					resource.TestCheckResourceAttr("aws_iot_topic_rule.rule", "sql_version", "2015-10-08"),
-					// resource.TestCheckResourceAttr("aws_iot_topic_rule.rule", "dynamodb.3246635938.table_name", "table_name"),
 				),
 			},
 		},
@@ -40,7 +39,7 @@ func TestAccAWSIoTTopicRule_cloudwatchalarm(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIoTTopicRule_cloudwatchalarm(rName),
@@ -58,7 +57,7 @@ func TestAccAWSIoTTopicRule_cloudwatchmetric(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIoTTopicRule_cloudwatchmetric(rName),
@@ -76,7 +75,7 @@ func TestAccAWSIoTTopicRule_elasticsearch(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIoTTopicRule_elasticsearch(rName),
@@ -94,7 +93,7 @@ func TestAccAWSIoTTopicRule_firehose(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIoTTopicRule_firehose(rName),
@@ -112,7 +111,7 @@ func TestAccAWSIoTTopicRule_kinesis(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIoTTopicRule_kinesis(rName),
@@ -130,7 +129,7 @@ func TestAccAWSIoTTopicRule_lambda(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIoTTopicRule_lambda(rName),
@@ -148,7 +147,7 @@ func TestAccAWSIoTTopicRule_republish(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIoTTopicRule_republish(rName),
@@ -166,7 +165,7 @@ func TestAccAWSIoTTopicRule_s3(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIoTTopicRule_s3(rName),
@@ -184,7 +183,7 @@ func TestAccAWSIoTTopicRule_sns(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIoTTopicRule_sns(rName),
@@ -202,7 +201,7 @@ func TestAccAWSIoTTopicRule_sqs(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy_basic,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIoTTopicRule_sqs(rName),
@@ -214,7 +213,7 @@ func TestAccAWSIoTTopicRule_sqs(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSIoTTopicRuleDestroy_basic(s *terraform.State) error {
+func testAccCheckAWSIoTTopicRuleDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).iotconn
 
 	for _, rs := range s.RootModule().Resources {

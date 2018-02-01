@@ -14,6 +14,11 @@ func resourceAwsIotTopicRule() *schema.Resource {
 		Read:   resourceAwsIotTopicRuleRead,
 		Update: resourceAwsIotTopicRuleUpdate,
 		Delete: resourceAwsIotTopicRuleDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:         schema.TypeString,
@@ -545,8 +550,21 @@ func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error
 
 	d.Set("arn", out.RuleArn)
 	d.Set("name", out.Rule.RuleName)
+	d.Set("description", out.Rule.Description)
 	d.Set("enabled", !(*out.Rule.RuleDisabled))
 	d.Set("sql", out.Rule.Sql)
+	d.Set("sql_version", out.Rule.AwsIotSqlVersion)
+	d.Set("cloudwatch_alarm", flattenIoTRuleCloudWatchAlarmActions(out.Rule.Actions))
+	d.Set("cloudwatch_metric", flattenIoTRuleCloudWatchMetricActions(out.Rule.Actions))
+	d.Set("dynamodb", flattenIoTRuleDynamoDbActions(out.Rule.Actions))
+	d.Set("elasticsearch", flattenIoTRuleElasticSearchActions(out.Rule.Actions))
+	d.Set("firehose", flattenIoTRuleFirehoseActions(out.Rule.Actions))
+	d.Set("kinesis", flattenIoTRuleKinesisActions(out.Rule.Actions))
+	d.Set("lambda", flattenIoTRuleLambdaActions(out.Rule.Actions))
+	d.Set("republish", flattenIoTRuleRepublishActions(out.Rule.Actions))
+	d.Set("s3", flattenIoTRuleS3Actions(out.Rule.Actions))
+	d.Set("sns", flattenIoTRuleSnsActions(out.Rule.Actions))
+	d.Set("sqs", flattenIoTRuleSqsActions(out.Rule.Actions))
 
 	return nil
 }
