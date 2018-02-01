@@ -2646,14 +2646,6 @@ func flattenIoTRuleSqsActions(actions []*iot.Action) []map[string]interface{} {
 	return results
 }
 
-// escapeJsonPointer escapes string per RFC 6901
-// so it can be used as path in JSON patch operations
-func escapeJsonPointer(path string) string {
-	path = strings.Replace(path, "~", "~0", -1)
-	path = strings.Replace(path, "/", "~1", -1)
-	return path
-}
-
 func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPolicyType) []map[string]interface{} {
 	m := map[string]interface{}{}
 
