@@ -209,21 +209,13 @@ func convertDomainValidationOptions(validations []*acm.DomainValidation) ([]map[
 func resourceAwsAcmCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	acmconn := meta.(*AWSClient).acmconn
 
-	if err := resourceAwsAcmCertificateRead(d, meta); err != nil {
-		return err
-	}
-	if d.Id() == "" {
-		// This might happen from the read
-		return nil
-	}
-
 	params := &acm.DeleteCertificateInput{
 		CertificateArn: aws.String(d.Id()),
 	}
 
 	_, err := acmconn.DeleteCertificate(params)
 
-	if err != nil {
+	if err != nil && !isAWSErr(err, acm.ErrCodeResourceNotFoundException, "") {
 		return fmt.Errorf("Error deleting certificate: %s", err)
 	}
 
