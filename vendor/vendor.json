@@ -1132,11 +1132,6 @@
 			"revisionTime": "2015-06-09T07:04:31Z"
 		},
 		{
-			"path": "github.com/hashicorp/terraform...",
-			"revision": "v0.11.3",
-			"version": "v0.11.3"
-		},
-		{
 			"checksumSHA1": "D2qVXjDywJu6wLj/4NCTsFnRrvw=",
 			"path": "github.com/hashicorp/terraform/config",
 			"revision": "3802b14260603f90c7a1faf55994dcc8933e2069",
