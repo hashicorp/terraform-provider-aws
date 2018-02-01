@@ -153,7 +153,7 @@ The `sqs` object takes the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ARN of the topic rule
+* `id` - The name of th topic rule
 * `arn` - The ARN of the topic rule
 
 ## Import
