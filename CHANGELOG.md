@@ -5,6 +5,7 @@ FEATURES:
 * **New Data Source:** `aws_iam_policy` [GH-1999]
 * **New Resource:** `aws_guardduty_ipset` [GH-3161]
 * **New Resource:** `aws_guardduty_threatintelset` [GH-3200]
+* **New Resource:** `aws_iot_topic_rule` [GH-1858]
 
 ENHANCEMENTS:
 
