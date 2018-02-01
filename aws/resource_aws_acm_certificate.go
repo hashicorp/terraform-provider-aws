@@ -131,15 +131,10 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 			return resource.NonRetryableError(fmt.Errorf("Certificate has type %s, only AMAZON_ISSUED is supported at the moment", *resp.Certificate.Type))
 		}
 
-		if err := d.Set("domain_name", resp.Certificate.DomainName); err != nil {
-			return resource.NonRetryableError(err)
-		}
-		if err := d.Set("arn", resp.Certificate.CertificateArn); err != nil {
-			return resource.NonRetryableError(err)
-		}
-		if err := d.Set("validation_method", resp.Certificate.DomainValidationOptions[0].ValidationMethod); err != nil {
-			return resource.NonRetryableError(err)
-		}
+		d.Set("domain_name", resp.Certificate.DomainName)
+		d.Set("arn", resp.Certificate.CertificateArn)
+		d.Set("validation_method", resp.Certificate.DomainValidationOptions[0].ValidationMethod)
+
 		if err := d.Set("subject_alternative_names", cleanUpSubjectAlternativeNames(resp.Certificate)); err != nil {
 			return resource.NonRetryableError(err)
 		}
