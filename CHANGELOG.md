@@ -16,6 +16,7 @@ ENHANCEMENTS:
 * resource/aws_mq_broker: Validate user password [GH-3164]
 * resource/aws_dynamodb_table: Validate attribute types [GH-3188]
 * resource/aws_dynamodb_table: Add custom creation timeout [GH-3195]
+* resource/ssm_resource_data_sync: Support import [GH-3232]
 
 BUG FIXES:
 
