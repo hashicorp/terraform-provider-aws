@@ -133,7 +133,7 @@ func resourceAwsEcsService() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"assign_public_ip": &schema.Schema{
+						"assign_public_ip": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
