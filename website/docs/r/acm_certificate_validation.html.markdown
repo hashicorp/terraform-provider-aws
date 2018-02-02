@@ -22,8 +22,8 @@ deploy the required validation records and wait for validation to complete.
 
 ```hcl
 resource "aws_acm_certificate" "cert" {
-    domain_name = "example.com"
-	validation_method = "DNS"
+  domain_name = "example.com"
+  validation_method = "DNS"
 }
 
 data "aws_route53_zone" "zone" {

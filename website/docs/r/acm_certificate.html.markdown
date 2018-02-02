@@ -30,29 +30,6 @@ resource "aws_acm_certificate" "cert" {
     Environment = "test"
   }
 }
-
-data "aws_route53_zone" "zone" {
-  name = "example.com."
-  private_zone = false
-}
-
-resource "aws_route53_record" "cert_validation" {
-  name = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_name}"
-  type = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_type}"
-  zone_id = "${data.aws_route53_zone.zone.id}"
-  records = ["${aws_acm_certificate.cert.domain_validation_options.0.resource_record_value}"]
-  ttl = 60
-}
-
-resource "aws_acm_certificate_validation" "cert" {
-  certificate_arn = "${aws_acm_certificate.cert.arn}"
-  validation_record_fqdns = ["${aws_route53_record.cert_validation.fqdn}"]
-}
-
-resource "aws_lb_listener" "front_end" {
-  # [...]
-  certificate_arn   = "${aws_acm_certificate_validation.cert.certificate_arn}"
-}
 ```
 
 ## Argument Reference
@@ -66,8 +43,9 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+The following additional attributes are exported:
 
+* `id` - The ARN of the certificate
 * `arn` - The ARN of the certificate
 * `domain_validation_options` - A list of attributes to feed into other resources to complete certificate validation. Can have more than one element, e.g. if SANs are defined
 
