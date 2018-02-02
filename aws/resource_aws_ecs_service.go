@@ -133,6 +133,11 @@ func resourceAwsEcsService() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
+						"assign_public_ip": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -410,9 +415,14 @@ func flattenEcsNetworkConfigration(nc *ecs.NetworkConfiguration) []interface{} {
 	if nc == nil {
 		return nil
 	}
+
 	result := make(map[string]interface{})
 	result["security_groups"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.SecurityGroups))
 	result["subnets"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.Subnets))
+	result["assign_public_ip"] = "true"
+	if *nc.AwsvpcConfiguration.AssignPublicIp == ecs.AssignPublicIpDisabled {
+		result["assign_public_ip"] = "false"
+	}
 	return []interface{}{result}
 }
 
@@ -426,6 +436,13 @@ func expandEcsNetworkConfigration(nc []interface{}) *ecs.NetworkConfiguration {
 		awsVpcConfig.SecurityGroups = expandStringSet(val.(*schema.Set))
 	}
 	awsVpcConfig.Subnets = expandStringSet(raw["subnets"].(*schema.Set))
+	if val, ok := raw["assign_public_ip"].(bool); ok {
+		awsVpcConfig.AssignPublicIp = aws.String(ecs.AssignPublicIpDisabled)
+		if val {
+			awsVpcConfig.AssignPublicIp = aws.String(ecs.AssignPublicIpEnabled)
+		}
+	}
+
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
@@ -495,9 +512,8 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("network_configration") {
-		input.NetworkConfiguration = expandEcsNetworkConfigration(d.Get("network_configuration").([]interface{}))
-	}
+	//d.HasChange("network_configration") is not working, so explicity calling method.
+	input.NetworkConfiguration = expandEcsNetworkConfigration(d.Get("network_configuration").([]interface{}))
 
 	// Retry due to IAM & ECS eventual consistency
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {

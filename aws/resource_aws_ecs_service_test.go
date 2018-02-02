@@ -486,7 +486,7 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withNetworkConfiguration(t *testing.T) {
+func TestAccAWSEcsService_withNetworkConfigurationAssignPublicIp(t *testing.T) {
 	rString := acctest.RandString(8)
 
 	sg1Name := fmt.Sprintf("tf-acc-sg-1-svc-w-nc-%s", rString)
@@ -501,7 +501,31 @@ func TestAccAWSEcsService_withNetworkConfiguration(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithNetworkConfigration(sg1Name, sg2Name, clusterName, tdName, svcName),
+				Config: testAccAWSEcsServiceWithNetworkConfigration(sg1Name, sg2Name, clusterName, tdName, svcName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_withNetworkConfigurationDoNotAssignPublicIp(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	sg1Name := fmt.Sprintf("tf-acc-sg-1-svc-w-nc-%s", rString)
+	sg2Name := fmt.Sprintf("tf-acc-sg-2-svc-w-nc-%s", rString)
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-nc-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-nc-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-nc-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithNetworkConfigration(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
 				),
@@ -1448,7 +1472,7 @@ resource "aws_ecs_service" "with_alb" {
 `, clusterName, tdName, roleName, policyName, tgName, lbName, svcName)
 }
 
-func testAccAWSEcsServiceWithNetworkConfigration(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
+func testAccAWSEcsServiceWithNetworkConfigration(sg1Name, sg2Name, clusterName, tdName, svcName, assignPublicIp string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
@@ -1517,7 +1541,8 @@ resource "aws_ecs_service" "main" {
 	network_configuration {
 		security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
 		subnets = ["${aws_subnet.main.*.id}"]
+		assign_public_ip = %s
 	}
 }
-`, sg1Name, sg2Name, clusterName, tdName, svcName)
+`, sg1Name, sg2Name, clusterName, tdName, svcName, assignPublicIp)
 }
