@@ -40,8 +40,17 @@ func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcmCertificateExists("aws_acm_certificate.cert", &conf, &tags),
 					testAccCheckAcmCertificateAttributes("aws_acm_certificate.cert", &conf, domain, sanDomain, "PENDING_VALIDATION"),
+
 					testAccCheckTagsACM(&tags.Tags, "Hello", "World"),
 					testAccCheckTagsACM(&tags.Tags, "Foo", "Bar"),
+
+					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", regexp.MustCompile(`^arn:aws:acm:[^:]+:[^:]+:certificate/.+$`)),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", domain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.0", sanDomain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "tags.Hello", "World"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "tags.Foo", "Bar"),
 				),
 			},
 			// Test that we can change the tags
@@ -50,8 +59,13 @@ func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcmCertificateExists("aws_acm_certificate.cert", &conf, &tags),
 					testAccCheckAcmCertificateAttributes("aws_acm_certificate.cert", &conf, domain, sanDomain, "PENDING_VALIDATION"),
+
 					testAccCheckTagsACM(&tags.Tags, "Environment", "Test"),
 					testAccCheckTagsACM(&tags.Tags, "Foo", "Baz"),
+
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "tags.Environment", "Test"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "tags.Foo", "Baz"),
 				),
 			},
 			// Test that validation times out if certificate can't be validated
