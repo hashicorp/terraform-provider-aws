@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -22,8 +23,11 @@ func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 	}
 
 	root_zone_domain := os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
-	domain := fmt.Sprintf("certtest.%s", root_zone_domain)
-	sanDomain := fmt.Sprintf("certtest2.%s", root_zone_domain)
+
+	rInt1 := acctest.RandInt()
+
+	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, root_zone_domain)
+	sanDomain := fmt.Sprintf("tf-acc-%d-san.%s", rInt1, root_zone_domain)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
