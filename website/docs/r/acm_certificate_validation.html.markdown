@@ -57,9 +57,3 @@ The following arguments are supported:
 * `certificate_arn` - (Required) The ARN of the certificate that is being validated.
 * `validation_record_fqdns` - (Optional) List of FQDNs that implement the validation. If this is set, the resource can implement additional sanity checks and has an explicit dependency on the resource that is implementing the validation
 * `timeout` - (Optional) How long to wait for a certificate to be issued. Defaults to `"45m"` but ACM usually validates certificates much faster.
-
-## Attributes Reference
-
-The following attributes are exported:
-
-* `certificate_arn` - The ARN of the certificate that was validated. The same as the input but once this resouce completes, consumers can assume the certificate was issued successfully
