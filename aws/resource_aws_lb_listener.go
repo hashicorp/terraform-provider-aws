@@ -34,6 +34,7 @@ func resourceAwsLbListener() *schema.Resource {
 			"load_balancer_arn": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 
 			"port": {
