@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -292,21 +291,12 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		out, err = conn.CreateService(&input)
 
 		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if !ok {
-				return resource.NonRetryableError(err)
-			}
-			if awsErr.Code() == "InvalidParameterException" {
-				log.Printf("[DEBUG] Trying to create ECS service again: %q",
-					awsErr.Message())
+			if isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
-			if awsErr.Code() == "ClusterNotFoundException" {
-				log.Printf("[DEBUG] Trying to create ECS service again: %q",
-					awsErr.Message())
+			if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "Please verify that the ECS service role being passed has the proper permissions.") {
 				return resource.RetryableError(err)
 			}
-
 			return resource.NonRetryableError(err)
 		}
 
@@ -517,20 +507,13 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		input.NetworkConfiguration = expandEcsNetworkConfigration(d.Get("network_configuration").([]interface{}))
 	}
 
-	// Retry due to IAM & ECS eventual consistency
+	// Retry due to IAM eventual consistency
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		out, err := conn.UpdateService(&input)
 		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "InvalidParameterException" {
-				log.Printf("[DEBUG] Trying to update ECS service again: %#v", err)
+			if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "Please verify that the ECS service role being passed has the proper permissions.") {
 				return resource.RetryableError(err)
 			}
-			if ok && awsErr.Code() == "ServiceNotFoundException" {
-				log.Printf("[DEBUG] Trying to update ECS service again: %#v", err)
-				return resource.RetryableError(err)
-			}
-
 			return resource.NonRetryableError(err)
 		}
 
@@ -553,11 +536,17 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 		Cluster:  aws.String(d.Get("cluster").(string)),
 	})
 	if err != nil {
+		if isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") {
+			log.Printf("[DEBUG] Removing ECS Service from state, %q is already gone", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
 	if len(resp.Services) == 0 {
-		log.Printf("[DEBUG] ECS Service %q is already gone", d.Id())
+		log.Printf("[DEBUG] Removing ECS Service from state, %q is already gone", d.Id())
+		d.SetId("")
 		return nil
 	}
 
@@ -580,33 +569,23 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
+	input := ecs.DeleteServiceInput{
+		Service: aws.String(d.Id()),
+		Cluster: aws.String(d.Get("cluster").(string)),
+	}
 	// Wait until the ECS service is drained
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		input := ecs.DeleteServiceInput{
-			Service: aws.String(d.Id()),
-			Cluster: aws.String(d.Get("cluster").(string)),
-		}
-
 		log.Printf("[DEBUG] Trying to delete ECS service %s", input)
 		_, err := conn.DeleteService(&input)
-		if err == nil {
-			return nil
-		}
-
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
+		if err != nil {
+			if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "The service cannot be stopped while deployments are active.") {
+				return resource.RetryableError(err)
+			}
 			return resource.NonRetryableError(err)
 		}
-		if ec2err.Code() == "InvalidParameterException" {
-			// Prevent "The service cannot be stopped while deployments are active."
-			log.Printf("[DEBUG] Trying to delete ECS service again: %q",
-				ec2err.Message())
-			return resource.RetryableError(err)
-		}
-
-		return resource.NonRetryableError(err)
-
+		return nil
 	})
+
 	if err != nil {
 		return err
 	}
