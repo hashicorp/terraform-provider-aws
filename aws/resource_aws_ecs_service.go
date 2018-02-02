@@ -420,7 +420,7 @@ func flattenEcsNetworkConfigration(nc *ecs.NetworkConfiguration) []interface{} {
 	result["security_groups"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.SecurityGroups))
 	result["subnets"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.Subnets))
 	result["assign_public_ip"] = "true"
-	if *nc.AwsvpcConfiguration.AssignPublicIp == "DISABLED" {
+	if *nc.AwsvpcConfiguration.AssignPublicIp == ecs.AssignPublicIpDisabled {
 		result["assign_public_ip"] = "false"
 	}
 	return []interface{}{result}
@@ -437,11 +437,12 @@ func expandEcsNetworkConfigration(nc []interface{}) *ecs.NetworkConfiguration {
 	}
 	awsVpcConfig.Subnets = expandStringSet(raw["subnets"].(*schema.Set))
 	if val, ok := raw["assign_public_ip"].(bool); ok {
-		awsVpcConfig.AssignPublicIp = aws.String("DISABLED")
+		awsVpcConfig.AssignPublicIp = aws.String(ecs.AssignPublicIpDisabled)
 		if val {
-			awsVpcConfig.AssignPublicIp = aws.String("ENABLED")
+			awsVpcConfig.AssignPublicIp = aws.String(ecs.AssignPublicIpEnabled)
 		}
 	}
+
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
