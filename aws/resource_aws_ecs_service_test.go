@@ -480,6 +480,7 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "launch_type", "FARGATE"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
 				),
 			},
 		},
@@ -501,24 +502,28 @@ func TestAccAWSEcsService_withNetworkConfigurationAssignPublicIp(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithNetworkConfigration(sg1Name, sg2Name, clusterName, tdName, svcName, "true"),
+				Config: testAccAWSEcsServiceWithNetworkConfigration(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
 				),
 			},
 		},
 	})
-}
-
-func TestAccAWSEcsService_withNetworkConfigurationDoNotAssignPublicIp(t *testing.T) {
-	rString := acctest.RandString(8)
-
-	sg1Name := fmt.Sprintf("tf-acc-sg-1-svc-w-nc-%s", rString)
-	sg2Name := fmt.Sprintf("tf-acc-sg-2-svc-w-nc-%s", rString)
-	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-nc-%s", rString)
-	tdName := fmt.Sprintf("tf-acc-td-svc-w-nc-%s", rString)
-	svcName := fmt.Sprintf("tf-acc-svc-w-nc-%s", rString)
-
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithNetworkConfigration(sg1Name, sg2Name, clusterName, tdName, svcName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "true"),
+				),
+			},
+		},
+	})
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -528,6 +533,7 @@ func TestAccAWSEcsService_withNetworkConfigurationDoNotAssignPublicIp(t *testing
 				Config: testAccAWSEcsServiceWithNetworkConfigration(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
 				),
 			},
 		},
@@ -1537,7 +1543,7 @@ resource "aws_ecs_service" "main" {
   name = "%s"
   cluster = "${aws_ecs_cluster.main.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+  desired_count = 0
 	network_configuration {
 		security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
 		subnets = ["${aws_subnet.main.*.id}"]

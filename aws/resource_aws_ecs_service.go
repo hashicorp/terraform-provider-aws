@@ -419,10 +419,11 @@ func flattenEcsNetworkConfigration(nc *ecs.NetworkConfiguration) []interface{} {
 	result := make(map[string]interface{})
 	result["security_groups"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.SecurityGroups))
 	result["subnets"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.Subnets))
-	result["assign_public_ip"] = "true"
-	if *nc.AwsvpcConfiguration.AssignPublicIp == ecs.AssignPublicIpDisabled {
-		result["assign_public_ip"] = "false"
+
+	if nc.AwsvpcConfiguration.AssignPublicIp != nil {
+		result["assign_public_ip"] = *nc.AwsvpcConfiguration.AssignPublicIp == ecs.AssignPublicIpEnabled
 	}
+
 	return []interface{}{result}
 }
 
@@ -512,8 +513,9 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	//d.HasChange("network_configration") is not working, so explicity calling method.
-	input.NetworkConfiguration = expandEcsNetworkConfigration(d.Get("network_configuration").([]interface{}))
+	if d.HasChange("network_configuration") {
+		input.NetworkConfiguration = expandEcsNetworkConfigration(d.Get("network_configuration").([]interface{}))
+	}
 
 	// Retry due to IAM & ECS eventual consistency
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
