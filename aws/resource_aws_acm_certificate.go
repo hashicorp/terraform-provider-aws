@@ -123,7 +123,10 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 	return resource.Retry(time.Duration(1)*time.Minute, func() *resource.RetryError {
 		resp, err := acmconn.DescribeCertificate(params)
 
-		if err != nil {
+		if err != nil && isAWSErr(err, acm.ErrCodeResourceNotFoundException, "") {
+			d.SetId("")
+			return nil
+		} else if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %s", err))
 		}
 
