@@ -95,3 +95,11 @@ The following attributes are exported:
 
 * `id` - The ID of the service.
 * `arn` - The ARN of the service.
+
+## Import
+
+Service Discovery Service can be imported using the service ID, e.g.
+
+```
+$ terraform import aws_service_discovery_service.example 0123456789
+```
