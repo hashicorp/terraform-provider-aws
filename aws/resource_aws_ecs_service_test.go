@@ -532,7 +532,7 @@ func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T)
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithNetworkConfigration(sg1Name, sg2Name, clusterName, tdName, svcName),
+				Config: testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
@@ -1483,7 +1483,7 @@ resource "aws_ecs_service" "with_alb" {
 `, clusterName, tdName, roleName, policyName, tgName, lbName, svcName)
 }
 
-func testAccAWSEcsServiceWithNetworkConfigration(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
+func testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
