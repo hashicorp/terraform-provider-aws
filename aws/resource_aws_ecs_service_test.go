@@ -504,6 +504,16 @@ func TestAccAWSEcsService_withNetworkConfiguration(t *testing.T) {
 				Config: testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					testAccCheckAWSEcsServiceExists(sg1Name),
+					testAccCheckAWSEcsServiceExists(sg2Name),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceWithNetworkConfiguration_modified(sg1Name, sg2Name, clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					testAccCheckAWSEcsServiceExists(sg1Name),
+					testAccCheckAWSEcsServiceNotExists(sg2Name),
 				),
 			},
 		},
@@ -544,6 +554,17 @@ func testAccCheckAWSEcsServiceDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSEcsServiceNotExists(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		_, ok := s.RootModule().Resources[name]
+		if ok {
+			return fmt.Errorf("Found when not expected: %s", name)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAWSEcsServiceExists(name string) resource.TestCheckFunc {
@@ -1449,6 +1470,19 @@ resource "aws_ecs_service" "with_alb" {
 }
 
 func testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
+	return tpl_testAccAWSEcsServiceWithNetworkConfiguration(
+		sg1Name, sg2Name, clusterName, tdName, svcName,
+		"\"${aws_security_group.allow_all_a.id}\", \"${aws_security_group.allow_all_b.id}\"",
+	)
+}
+func testAccAWSEcsServiceWithNetworkConfiguration_modified(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
+	return tpl_testAccAWSEcsServiceWithNetworkConfiguration(
+		sg1Name, sg2Name, clusterName, tdName, svcName,
+		"\"${aws_security_group.allow_all_a.id}\"",
+	)
+}
+
+func tpl_testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName string, securityGroups string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
@@ -1515,9 +1549,9 @@ resource "aws_ecs_service" "main" {
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
 	network_configuration {
-		security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
+		security_groups = ["%s"]
 		subnets = ["${aws_subnet.main.*.id}"]
 	}
 }
-`, sg1Name, sg2Name, clusterName, tdName, svcName)
+`, sg1Name, sg2Name, clusterName, tdName, svcName, securityGroups)
 }
