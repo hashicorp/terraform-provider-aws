@@ -540,6 +540,15 @@ func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T)
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
 				),
 			},
+			{
+				Config: testAccAWSEcsServiceWithNetworkConfiguration_modified(sg1Name, sg2Name, clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.security_groups.#", "1"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
+				),
+			},
 		},
 	})
 }
@@ -1484,6 +1493,19 @@ resource "aws_ecs_service" "with_alb" {
 }
 
 func testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
+	return tpl_testAccAWSEcsServiceWithNetworkConfiguration(
+		sg1Name, sg2Name, clusterName, tdName, svcName,
+		`"${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"`,
+	)
+}
+func testAccAWSEcsServiceWithNetworkConfiguration_modified(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
+	return tpl_testAccAWSEcsServiceWithNetworkConfiguration(
+		sg1Name, sg2Name, clusterName, tdName, svcName,
+		`"${aws_security_group.allow_all_a.id}"`,
+	)
+}
+
+func tpl_testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName string, securityGroups string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
@@ -1550,9 +1572,9 @@ resource "aws_ecs_service" "main" {
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
 	network_configuration {
-		security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
+		security_groups = [%s]
 		subnets = ["${aws_subnet.main.*.id}"]
 	}
 }
-`, sg1Name, sg2Name, clusterName, tdName, svcName)
+`, sg1Name, sg2Name, clusterName, tdName, svcName, securityGroups)
 }
