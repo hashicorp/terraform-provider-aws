@@ -6,6 +6,10 @@ FEATURES:
 * **New Resource:** `aws_guardduty_ipset` [GH-3161]
 * **New Resource:** `aws_guardduty_threatintelset` [GH-3200]
 * **New Resource:** `aws_iot_topic_rule` [GH-1858]
+* **New Resource:** `aws_vpc_endpoint_service_allowed_principal` [GH-2515]
+* **New Resource:** `aws_vpc_endpoint_service_connection_notification` [GH-2515]
+* **New Resource:** `aws_vpc_endpoint_service` [GH-2515]
+* **New Resource:** `aws_vpc_endpoint_subnet_association` [GH-2515]
 
 ENHANCEMENTS:
 
@@ -13,12 +17,16 @@ ENHANCEMENTS:
 * data-source/aws_acm_certificate Add `most_recent` attribute for filtering [GH-1837]
 * data-source/aws_lb_listener: Support load_balancer_arn and port arguments [GH-2886]
 * data-source/aws_network_interface: Add filter attribute [GH-2851]
-* resource/aws_mq_broker: Validate user password [GH-3164]
-* resource/aws_dynamodb_table: Validate attribute types [GH-3188]
-* resource/aws_dynamodb_table: Add custom creation timeout [GH-3195]
-* resource/ssm_resource_data_sync: Support import [GH-3232]
+* data-source/aws_vpc_endpoint: Support AWS PrivateLink [GH-2515]
+* data-source/aws_vpc_endpoint_service: Support AWS PrivateLink [GH-2515]
 * resource/athena_named_query: Support import [GH-3231]
+* resource/aws_dynamodb_table: Add custom creation timeout [GH-3195]
+* resource/aws_dynamodb_table: Validate attribute types [GH-3188]
+* resource/aws_mq_broker: Validate user password [GH-3164]
 * resource/aws_service_discovery_service: Support import [GH-3227]
+* resource/aws_vpc_endpoint: Support AWS PrivateLink [GH-2515]
+* resource/aws_vpc_endpoint_service: Support AWS PrivateLink [GH-2515]
+* resource/ssm_resource_data_sync: Support import [GH-3232]
 
 BUG FIXES:
 
