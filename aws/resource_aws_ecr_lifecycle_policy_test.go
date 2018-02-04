@@ -31,6 +31,29 @@ func TestAccAWSEcrLifecyclePolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcrLifecyclePolicy_import(t *testing.T) {
+	resourceName := "aws_ecr_lifecycle_policy.foo"
+	randString := acctest.RandString(10)
+	rName := fmt.Sprintf("tf-acc-test-lifecycle-%s", randString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcrLifecyclePolicyDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccEcrLifecyclePolicyConfig(rName),
+			},
+
+			resource.TestStep{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEcrLifecyclePolicyDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ecrconn
 
