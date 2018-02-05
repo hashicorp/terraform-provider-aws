@@ -14,6 +14,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* provider: Automatically determine AWS partition from configured region [GH-3173]
 * provider: Automatically validate new regions from AWS SDK [GH-3159]
 * data-source/aws_acm_certificate Add `most_recent` attribute for filtering [GH-1837]
 * data-source/aws_iam_policy_document: Support layering via source_json and override_json attributes [GH-2890]
