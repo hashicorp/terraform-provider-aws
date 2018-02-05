@@ -364,11 +364,15 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	}
 
+	// Infer AWS partition from configured region
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), client.region); ok {
+		client.partition = partition.ID()
+	}
+
 	if !c.SkipRequestingAccountId {
-		partition, accountId, err := GetAccountInfo(client.iamconn, client.stsconn, cp.ProviderName)
+		accountID, err := GetAccountID(client.iamconn, client.stsconn, cp.ProviderName)
 		if err == nil {
-			client.partition = partition
-			client.accountid = accountId
+			client.accountid = accountID
 		}
 	}
 
