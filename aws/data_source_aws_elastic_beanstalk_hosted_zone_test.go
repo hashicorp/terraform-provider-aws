@@ -33,7 +33,7 @@ func TestAccAwsDataSourceElasticBeanstalkHostedZone(t *testing.T) {
 			},
 			{
 				Config:      testAccCheckAwsElasticBeanstalkHostedZoneDataSource_byRegion("ss-pluto-1"),
-				ExpectError: regexp.MustCompile("Unknown region or elasticbeanstalk not supported"),
+				ExpectError: regexp.MustCompile("Unsupported region"),
 			},
 		},
 	})

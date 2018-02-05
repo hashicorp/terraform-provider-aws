@@ -44,10 +44,10 @@ func dataSourceAwsElasticBeanstalkHostedZoneRead(d *schema.ResourceData, meta in
 		region = v.(string)
 	}
 
-	zoneID := elasticBeanstalkHostedZoneIds[region]
+	zoneID, ok := elasticBeanstalkHostedZoneIds[region]
 
-	if zoneID == "" {
-		return fmt.Errorf("Unknown region or elasticbeanstalk not supported (%q)", region)
+	if !ok {
+		return fmt.Errorf("Unsupported region: %s", region)
 	}
 
 	d.SetId(zoneID)
