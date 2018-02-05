@@ -26,7 +26,15 @@ func dataSourceAwsIamPolicyDocument() *schema.Resource {
 		Read: dataSourceAwsIamPolicyDocumentRead,
 
 		Schema: map[string]*schema.Schema{
+			"override_json": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"policy_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"source_json": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -84,10 +92,6 @@ func dataSourceAwsIamPolicyDocument() *schema.Resource {
 						},
 					},
 				},
-			},
-			"source_json": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"json": {
 				Type:     schema.TypeString,
@@ -158,6 +162,24 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 	}
 
 	doc.Statements = append(doc.Statements, stmts...)
+
+	// merge in our override_json
+	if overrideJson, hasOverrideJson := d.GetOk("override_json"); hasOverrideJson {
+		overrideDoc := &IAMPolicyDoc{}
+		if err := json.Unmarshal([]byte(overrideJson.(string)), overrideDoc); err != nil {
+			return err
+		}
+
+		if len(overrideDoc.Id) > 0 {
+			doc.Id = overrideDoc.Id
+		}
+
+		if len(overrideDoc.Statements) > 0 {
+			doc.Statements = append(doc.Statements, overrideDoc.Statements...)
+		}
+	}
+
+	doc.DeDupSids()
 
 	jsonDoc, err := json.MarshalIndent(doc, "", "  ")
 	if err != nil {

@@ -38,6 +38,22 @@ type IAMPolicyStatementCondition struct {
 type IAMPolicyStatementPrincipalSet []IAMPolicyStatementPrincipal
 type IAMPolicyStatementConditionSet []IAMPolicyStatementCondition
 
+func (self *IAMPolicyDoc) DeDupSids() {
+	// de-dupe the statements by traversing backwards and removing duplicate Sids
+	sidsSeen := map[string]bool{}
+	l := len(self.Statements) - 1
+	for i := range self.Statements {
+		if sid := self.Statements[l-i].Sid; len(sid) > 0 {
+			if sidsSeen[sid] {
+				// we've seen this sid already so remove the duplicate
+				self.Statements = append(self.Statements[:l-i], self.Statements[l-i+1:]...)
+			}
+			// mark this sid seen
+			sidsSeen[sid] = true
+		}
+	}
+}
+
 func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 	raw := map[string]interface{}{}
 

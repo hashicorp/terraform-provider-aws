@@ -56,6 +56,40 @@ func TestAccAWSDataSourceIAMPolicyDocument_source(t *testing.T) {
 	})
 }
 
+func TestAccAWSDataSourceIAMPolicyDocument_sourceConflicting(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMPolicyDocumentSourceConflictingConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStateValue("data.aws_iam_policy_document.test_source_conflicting", "json",
+						testAccAWSIAMPolicyDocumentSourceConflictingExpectedJSON,
+					),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDataSourceIAMPolicyDocument_override(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMPolicyDocumentOverrideConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStateValue("data.aws_iam_policy_document.test_override", "json",
+						testAccAWSIAMPolicyDocumentOverrideExpectedJSON,
+					),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckStateValue(id, name, value string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[id]
@@ -391,6 +425,87 @@ var testAccAWSIAMPolicyDocumentSourceBlankExpectedJSON = `{
       "Sid": "SourceJSONTest2",
       "Effect": "Allow",
       "Action": "*",
+      "Resource": "*"
+    }
+  ]
+}`
+
+var testAccAWSIAMPolicyDocumentSourceConflictingConfig = `
+data "aws_iam_policy_document" "test_source" {
+    statement {
+        sid       = "SourceJSONTestConflicting"
+        actions   = ["iam:*"]
+        resources = ["*"]
+    }
+}
+
+data "aws_iam_policy_document" "test_source_conflicting" {
+    source_json = "${data.aws_iam_policy_document.test_source.json}"
+
+    statement {
+        sid       = "SourceJSONTestConflicting"
+        actions   = ["*"]
+        resources = ["*"]
+    }
+}
+`
+
+var testAccAWSIAMPolicyDocumentSourceConflictingExpectedJSON = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SourceJSONTestConflicting",
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*"
+    }
+  ]
+}`
+
+var testAccAWSIAMPolicyDocumentOverrideConfig = `
+data "aws_iam_policy_document" "override" {
+  statement {
+    sid = "SidToOverwrite"
+
+    actions   = ["s3:*"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "test_override" {
+  override_json = "${data.aws_iam_policy_document.override.json}"
+
+  statement {
+    actions   = ["ec2:*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "SidToOverwrite"
+
+    actions = ["s3:*"]
+
+    resources = [
+      "arn:aws:s3:::somebucket",
+      "arn:aws:s3:::somebucket/*",
+    ]
+  }
+}
+`
+
+var testAccAWSIAMPolicyDocumentOverrideExpectedJSON = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "ec2:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "SidToOverwrite",
+      "Effect": "Allow",
+      "Action": "s3:*",
       "Resource": "*"
     }
   ]
