@@ -15,6 +15,7 @@ ENHANCEMENTS:
 
 * provider: Automatically validate new regions from AWS SDK [GH-3159]
 * data-source/aws_acm_certificate Add `most_recent` attribute for filtering [GH-1837]
+* data-source/aws_iam_policy_document: Support layering via source_json and override_json attributes [GH-2890]
 * data-source/aws_lb_listener: Support load_balancer_arn and port arguments [GH-2886]
 * data-source/aws_network_interface: Add filter attribute [GH-2851]
 * data-source/aws_vpc_endpoint: Support AWS PrivateLink [GH-2515]
