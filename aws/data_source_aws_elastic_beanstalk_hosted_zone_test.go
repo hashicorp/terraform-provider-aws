@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -18,10 +20,20 @@ func TestAccAwsDataSourceElasticBeanstalkHostedZone(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckAwsElasticBeanstalkHostedZoneDataSource_sydney,
+				Config: testAccCheckAwsElasticBeanstalkHostedZoneDataSource_byRegion("ap-southeast-2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_elastic_beanstalk_hosted_zone.sydney", "id", "Z2PCDNR3VC2G1N"),
+					resource.TestCheckResourceAttr("data.aws_elastic_beanstalk_hosted_zone.test", "id", "Z2PCDNR3VC2G1N"),
 				),
+			},
+			{
+				Config: testAccCheckAwsElasticBeanstalkHostedZoneDataSource_byRegion("eu-west-1"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_elastic_beanstalk_hosted_zone.test", "id", "Z2NYPWQ7DFZAZH"),
+				),
+			},
+			{
+				Config:      testAccCheckAwsElasticBeanstalkHostedZoneDataSource_byRegion("ss-pluto-1"),
+				ExpectError: regexp.MustCompile("Unknown region or elasticbeanstalk not supported"),
 			},
 		},
 	})
@@ -34,8 +46,10 @@ provider "aws" {
 data "aws_elastic_beanstalk_hosted_zone" "current" {}
 `
 
-const testAccCheckAwsElasticBeanstalkHostedZoneDataSource_sydney = `
-data "aws_elastic_beanstalk_hosted_zone" "sydney" {
-	region = "ap-southeast-2"
+func testAccCheckAwsElasticBeanstalkHostedZoneDataSource_byRegion(r string) string {
+	return fmt.Sprintf(`
+data "aws_elastic_beanstalk_hosted_zone" "test" {
+  region = "%s"
 }
-`
+`, r)
+}
