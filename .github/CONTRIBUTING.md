@@ -264,6 +264,7 @@ manually sourced values from documentation.
  - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
  - [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to `aws/data_source_aws_elb_service_account.go`
  - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
+ - [ ] Check [Regions and Endpoints Elastic Beanstalk](https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`]
 
 #### Terraform Schema and Code Idiosyncracies
 
@@ -279,17 +280,17 @@ and style
  - [ ] __`Computed`__: The `Computed` attribute is generally used in isolation for
    any IDs or anything not defined in the config and returned by the API.
  - [ ] __`Computed` with `Optional`__: The `Computed` attribute is generally used
-   in conjunction with `Optional` when the API automatically sets unpredictable 
-   default value or when the value is generally not static and depends on other 
+   in conjunction with `Optional` when the API automatically sets unpredictable
+   default value or when the value is generally not static and depends on other
    attributes.
- - [ ] __Spelling__: When referencing reosources in the AWS API, use spelling which 
+ - [ ] __Spelling__: When referencing resources in the AWS API, use spelling which
    matches that of official AWS documentation. In all other cases, use American
    spelling for variables, functions, and constants.
  - [ ] __Removed Resources__:  If a resource is removed from AWS outside of
    Terraform (e.g. via different tool, API or web UI), make sure to catch this case.
    Print a `[WARN]` log message, and use `d.SetId("")` to remove the resource from
    state inside `Read()`.
- 
+
 
 ### Writing Acceptance Tests
 
