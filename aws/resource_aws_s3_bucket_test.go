@@ -763,18 +763,20 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 			{
 				Config: testAccAWSS3BucketConfigReplication(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.bucket", &providers),
+					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.bucket", "us-west-2", &providers),
+					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.destination", "eu-west-1", &providers),
 				),
 			},
 			{
 				Config: testAccAWSS3BucketConfigReplicationWithConfiguration(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.bucket", &providers),
+					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.bucket", "us-west-2", &providers),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "1"),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.#", "1"),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.2229345141.id", "foobar"),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.2229345141.prefix", "foo"),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.2229345141.status", s3.ReplicationRuleStatusEnabled),
+					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.destination", "eu-west-1", &providers),
 				),
 			},
 		},
@@ -803,7 +805,8 @@ func TestAccAWSS3Bucket_ReplicationWithoutStorageClass(t *testing.T) {
 			{
 				Config: testAccAWSS3BucketConfigReplicationWithoutStorageClass(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.bucket", &providers),
+					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.bucket", "us-west-2", &providers),
+					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.destination", "eu-west-1", &providers),
 				),
 			},
 		},
@@ -899,7 +902,7 @@ func TestAWSS3BucketName(t *testing.T) {
 }
 
 func testAccCheckAWSS3BucketDestroy(s *terraform.State) error {
-	return testAccCheckInstanceDestroyWithProvider(s, testAccProvider)
+	return testAccCheckAWSS3BucketDestroyWithProvider(s, testAccProvider)
 }
 
 func testAccCheckAWSS3BucketDestroyWithProviders(providers *[]*schema.Provider) resource.TestCheckFunc {
@@ -917,6 +920,10 @@ func testAccCheckAWSS3BucketDestroyWithProviders(providers *[]*schema.Provider) 
 }
 
 func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
+	if provider == nil || provider.Meta() == nil {
+		return fmt.Errorf("Provider is missing")
+	}
+
 	conn := provider.Meta().(*AWSClient).s3conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -927,7 +934,7 @@ func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *sc
 			Bucket: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoSuchBucket" {
+			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
 				return nil
 			}
 			return err
@@ -937,11 +944,10 @@ func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *sc
 }
 
 func testAccCheckAWSS3BucketExists(n string) resource.TestCheckFunc {
-	providers := []*schema.Provider{testAccProvider}
-	return testAccCheckAWSS3BucketExistsWithProviders(n, &providers)
+	return testAccCheckAWSS3BucketExistsWithProviders(n, "", nil)
 }
 
-func testAccCheckAWSS3BucketExistsWithProviders(n string, providers *[]*schema.Provider) resource.TestCheckFunc {
+func testAccCheckAWSS3BucketExistsWithProviders(n, region string, providers *[]*schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -951,28 +957,31 @@ func testAccCheckAWSS3BucketExistsWithProviders(n string, providers *[]*schema.P
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No ID is set")
 		}
-		for _, provider := range *providers {
-			// Ignore if Meta is empty, this can happen for validation providers
-			if provider.Meta() == nil {
-				continue
-			}
 
-			conn := provider.Meta().(*AWSClient).s3conn
-			_, err := conn.HeadBucket(&s3.HeadBucketInput{
-				Bucket: aws.String(rs.Primary.ID),
-			})
-
-			if err != nil {
-				// Different than NoSuchBucket -- the S3 bucket is in another provider
-				if isAWSErr(err, "BucketRegionError", "incorrect region") {
-					continue
-				}
-				return fmt.Errorf("S3Bucket error: %v", err)
-			}
-			return nil
+		var provider *schema.Provider
+		if providers == nil || region == "" {
+			provider = testAccProvider
+		} else {
+			provider = testAccAwsRegionProvider(region, providers)
 		}
 
-		return fmt.Errorf("S3 bucket not found")
+		if provider == nil || provider.Meta() == nil {
+			return fmt.Errorf("Provider is missing")
+		}
+
+		conn := provider.Meta().(*AWSClient).s3conn
+		_, err := conn.HeadBucket(&s3.HeadBucketInput{
+			Bucket: aws.String(rs.Primary.ID),
+		})
+
+		if err != nil {
+			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+				return fmt.Errorf("S3 bucket not found")
+			}
+			return err
+		}
+		return nil
+
 	}
 }
 
