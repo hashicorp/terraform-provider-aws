@@ -22,6 +22,7 @@ ENHANCEMENTS:
 * resource/athena_named_query: Support import [GH-3231]
 * resource/aws_dynamodb_table: Add custom creation timeout [GH-3195]
 * resource/aws_dynamodb_table: Validate attribute types [GH-3188]
+* resource/aws_ecr_lifecycle_policy: Support import [GH-3246]
 * resource/aws_mq_broker: Validate user password [GH-3164]
 * resource/aws_service_discovery_service: Support import [GH-3227]
 * resource/aws_vpc_endpoint: Support AWS PrivateLink [GH-2515]
