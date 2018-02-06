@@ -70,7 +70,10 @@ func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Test that we can request a certificate
 			resource.TestStep{
-				Config: testAccAcmCertificateConfig(domain, sanDomain),
+				Config: testAccAcmCertificateConfig(
+					domain, sanDomain,
+					"Hello", "World",
+					"Foo", "Bar"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", certificateArnRegex),
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", domain),
@@ -83,7 +86,10 @@ func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 			},
 			// Test that we can change the tags
 			resource.TestStep{
-				Config: testAccAcmCertificateConfigWithChangedTags(domain, sanDomain),
+				Config: testAccAcmCertificateConfig(
+					domain, sanDomain,
+					"Environment", "Test",
+					"Foo", "Baz"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "tags.%", "2"),
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "tags.Environment", "Test"),
@@ -126,7 +132,7 @@ resource "aws_acm_certificate" "cert" {
 
 }
 
-func testAccAcmCertificateConfig(domain string, sanDomain string) string {
+func testAccAcmCertificateConfig(domain string, sanDomain string, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "cert" {
   domain_name = "%s"
@@ -134,26 +140,11 @@ resource "aws_acm_certificate" "cert" {
   subject_alternative_names = ["%s"]
 
   tags {
-    "Hello" = "World"
-    "Foo" = "Bar"
+    "%s" = "%s"
+    "%s" = "%s"
   }
 }
-`, domain, sanDomain)
-}
-
-func testAccAcmCertificateConfigWithChangedTags(domain string, sanDomain string) string {
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "cert" {
-  domain_name = "%s"
-  validation_method = "DNS"
-  subject_alternative_names = ["%s"]
-
-  tags {
-    "Environment" = "Test"
-    "Foo" = "Baz"
-  }
-}
-`, domain, sanDomain)
+`, domain, sanDomain, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
 func testAccAcmCertificateWithValidationConfig(domain string, sanDomain string) string {
