@@ -532,7 +532,7 @@ func flattenAwsCodebuildProjectSource(source *codebuild.ProjectSource) []interfa
 	m["type"] = *source.Type
 
 	if source.Auth != nil {
-		m["auth"] = sourceAuthToMap(source.Auth)
+		m["auth"] = []interface{}{sourceAuthToMap(source.Auth)}
 	}
 
 	if source.Buildspec != nil {
