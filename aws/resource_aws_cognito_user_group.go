@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -79,7 +78,7 @@ func resourceAwsCognitoUserGroupCreate(d *schema.ResourceData, meta interface{})
 
 	resp, err := conn.CreateGroup(params)
 	if err != nil {
-		return errwrap.Wrapf("Error creating Cognito User Group: {{err}}", err)
+		return fmt.Errorf("Error creating Cognito User Group: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", *resp.Group.UserPoolId, *resp.Group.GroupName))
@@ -104,7 +103,7 @@ func resourceAwsCognitoUserGroupRead(d *schema.ResourceData, meta interface{}) e
 			d.SetId("")
 			return nil
 		}
-		return errwrap.Wrapf("Error reading Cognito User Group: {{err}}", err)
+		return fmt.Errorf("Error reading Cognito User Group: %s", err)
 	}
 
 	d.Set("description", resp.Group.Description)
@@ -138,7 +137,7 @@ func resourceAwsCognitoUserGroupUpdate(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.UpdateGroup(params)
 	if err != nil {
-		return errwrap.Wrapf("Error updating Cognito User Group: {{err}}", err)
+		return fmt.Errorf("Error updating Cognito User Group: %s", err)
 	}
 
 	return resourceAwsCognitoUserGroupRead(d, meta)
@@ -156,7 +155,7 @@ func resourceAwsCognitoUserGroupDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.DeleteGroup(params)
 	if err != nil {
-		return errwrap.Wrapf("Error deleting Cognito User Group: {{err}}", err)
+		return fmt.Errorf("Error deleting Cognito User Group: %s", err)
 	}
 
 	return nil

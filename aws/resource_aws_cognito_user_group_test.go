@@ -14,9 +14,9 @@ import (
 )
 
 func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
-	poolName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	groupName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	updatedGroupName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	poolName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	groupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	updatedGroupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -27,14 +27,14 @@ func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
 				Config: testAccAWSCognitoUserGroupConfig_basic(poolName, groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserGroupExists("aws_cognito_user_group.main"),
-					resource.TestCheckResourceAttr("aws_cognito_user_group.main", "name", fmt.Sprintf("user-group-%s", groupName)),
+					resource.TestCheckResourceAttr("aws_cognito_user_group.main", "name", fmt.Sprintf("%s", groupName)),
 				),
 			},
 			{
 				Config: testAccAWSCognitoUserGroupConfig_basic(poolName, updatedGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserGroupExists("aws_cognito_user_group.main"),
-					resource.TestCheckResourceAttr("aws_cognito_user_group.main", "name", fmt.Sprintf("user-group-%s", updatedGroupName)),
+					resource.TestCheckResourceAttr("aws_cognito_user_group.main", "name", fmt.Sprintf("%s", updatedGroupName)),
 				),
 			},
 		},
@@ -42,9 +42,9 @@ func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
-	poolName := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	groupName := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	updatedGroupName := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	poolName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	groupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	updatedGroupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -55,7 +55,7 @@ func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
 				Config: testAccAWSCognitoUserGroupConfig_complex(poolName, groupName, "This is the user group description", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserGroupExists("aws_cognito_user_group.main"),
-					resource.TestCheckResourceAttr("aws_cognito_user_group.main", "name", fmt.Sprintf("user-group-%s", groupName)),
+					resource.TestCheckResourceAttr("aws_cognito_user_group.main", "name", fmt.Sprintf("%s", groupName)),
 					resource.TestCheckResourceAttr("aws_cognito_user_group.main", "description", "This is the user group description"),
 					resource.TestCheckResourceAttr("aws_cognito_user_group.main", "precedence", "1"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_group.main", "role_arn"),
@@ -65,7 +65,7 @@ func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
 				Config: testAccAWSCognitoUserGroupConfig_complex(poolName, updatedGroupName, "This is the updated user group description", 42),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserGroupExists("aws_cognito_user_group.main"),
-					resource.TestCheckResourceAttr("aws_cognito_user_group.main", "name", fmt.Sprintf("user-group-%s", updatedGroupName)),
+					resource.TestCheckResourceAttr("aws_cognito_user_group.main", "name", fmt.Sprintf("%s", updatedGroupName)),
 					resource.TestCheckResourceAttr("aws_cognito_user_group.main", "description", "This is the updated user group description"),
 					resource.TestCheckResourceAttr("aws_cognito_user_group.main", "precedence", "42"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_group.main", "role_arn"),
@@ -77,8 +77,8 @@ func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
 
 func TestAccAWSCognitoUserGroup_importBasic(t *testing.T) {
 	resourceName := "aws_cognito_user_group.main"
-	poolName := acctest.RandString(10)
-	groupName := acctest.RandString(10)
+	poolName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	groupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -170,7 +170,7 @@ resource "aws_cognito_user_pool" "main" {
 }
 
 resource "aws_cognito_user_group" "main" {
-  name         = "user-group-%s"
+  name         = "%s"
   user_pool_id = "${aws_cognito_user_pool.main.id}"
 }
 `, poolName, groupName)
@@ -183,7 +183,7 @@ resource "aws_cognito_user_pool" "main" {
 }
 
 resource "aws_iam_role" "group_role" {
-  name = "user-group-%s"
+  name = "%s"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -210,7 +210,7 @@ EOF
 }
 
 resource "aws_cognito_user_group" "main" {
-  name         = "user-group-%s"
+  name         = "%s"
   user_pool_id = "${aws_cognito_user_pool.main.id}"
   description  = "%s"
   precedence   = %v
