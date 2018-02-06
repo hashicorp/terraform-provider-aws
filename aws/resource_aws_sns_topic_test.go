@@ -15,6 +15,23 @@ import (
 )
 
 func TestAccAWSSNSTopic_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_sns_topic.test_topic",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSSNSTopicConfig_withGeneratedName,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSNSTopic_name(t *testing.T) {
 	rName := acctest.RandString(10)
 
 	resource.Test(t, resource.TestCase{
@@ -24,9 +41,29 @@ func TestAccAWSSNSTopic_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSSNSTopicConfig(rName),
+				Config: testAccAWSSNSTopicConfig_withName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSNSTopic_namePrefix(t *testing.T) {
+	startsWithPrefix := regexp.MustCompile("^terraform-test-topic-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_sns_topic.test_topic",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSSNSTopicConfig_withNamePrefix(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
+					resource.TestMatchResourceAttr("aws_sns_topic.test_topic", "name", startsWithPrefix),
 				),
 			},
 		},
@@ -250,12 +287,24 @@ func testAccCheckAWSSNSTopicExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSSNSTopicConfig(r string) string {
+const testAccAWSSNSTopicConfig_withGeneratedName = `
+resource "aws_sns_topic" "test_topic" {}
+`
+
+func testAccAWSSNSTopicConfig_withName(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
     name = "terraform-test-topic-%s"
 }
 `, r)
+}
+
+func testAccAWSSNSTopicConfig_withNamePrefix() string {
+	return `
+resource "aws_sns_topic" "test_topic" {
+    name_prefix = "terraform-test-topic-"
+}
+`
 }
 
 func testAccAWSSNSTopicWithPolicy(r string) string {
