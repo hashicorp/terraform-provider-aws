@@ -43,8 +43,7 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 }
 
 func TestAccAWSCodeBuildProject_sourceAuth(t *testing.T) {
-	authResource1 := "FAKERESOURCE1"
-	authResource2 := "FAKERESOURCE2"
+	authResource := "FAKERESOURCE1"
 	authType := "OAUTH"
 	name := acctest.RandString(10)
 	resourceName := "aws_codebuild_project.foo"
@@ -55,23 +54,15 @@ func TestAccAWSCodeBuildProject_sourceAuth(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSCodeBuildProjectConfig_sourceAuth(name, authResource1, "INVALID"),
+				Config:      testAccAWSCodeBuildProjectConfig_sourceAuth(name, authResource, "INVALID"),
 				ExpectError: regexp.MustCompile(`Source Auth Type can only be`),
 			},
 			{
-				Config: testAccAWSCodeBuildProjectConfig_sourceAuth(name, authResource1, authType),
+				Config: testAccAWSCodeBuildProjectConfig_sourceAuth(name, authResource, authType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "source.1060593600.auth.0.resource", authResource1),
-					resource.TestCheckResourceAttr(resourceName, "source.1060593600.auth.0.type", authType),
-				),
-			},
-			{
-				Config: testAccAWSCodeBuildProjectConfig_sourceAuth(name, authResource2, authType),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildProjectExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "source.1060593600.auth.0.resource", authResource2),
-					resource.TestCheckResourceAttr(resourceName, "source.1060593600.auth.0.type", authType),
+					resource.TestCheckResourceAttr(resourceName, "source.1060593600.auth.2706882902.resource", authResource),
+					resource.TestCheckResourceAttr(resourceName, "source.1060593600.auth.2706882902.type", authType),
 				),
 			},
 		},
