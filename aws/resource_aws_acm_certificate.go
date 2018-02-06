@@ -130,10 +130,6 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 			return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %s", err))
 		}
 
-		if *resp.Certificate.Type != acm.CertificateTypeAmazonIssued {
-			return resource.NonRetryableError(fmt.Errorf("Certificate has type %s, only AMAZON_ISSUED is supported at the moment", *resp.Certificate.Type))
-		}
-
 		d.Set("domain_name", resp.Certificate.DomainName)
 		d.Set("arn", resp.Certificate.CertificateArn)
 
@@ -141,7 +137,7 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 			return resource.NonRetryableError(err)
 		}
 
-		domainValidationOptions, emailValidationOptions, err := convertValidationOptions(resp.Certificate.DomainValidationOptions)
+		domainValidationOptions, emailValidationOptions, err := convertValidationOptions(resp.Certificate)
 
 		if err != nil {
 			return resource.RetryableError(err)
@@ -202,26 +198,28 @@ func cleanUpSubjectAlternativeNames(cert *acm.CertificateDetail) []string {
 
 }
 
-func convertValidationOptions(validations []*acm.DomainValidation) ([]map[string]interface{}, []string, error) {
+func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]interface{}, []string, error) {
 	var domainValidationResult []map[string]interface{}
 	var emailValidationResult []string
 
-	for _, o := range validations {
-		if o.ResourceRecord != nil {
-			validationOption := map[string]interface{}{
-				"domain_name":           *o.DomainName,
-				"resource_record_name":  *o.ResourceRecord.Name,
-				"resource_record_type":  *o.ResourceRecord.Type,
-				"resource_record_value": *o.ResourceRecord.Value,
+	if *certificate.Type == acm.CertificateTypeAmazonIssued {
+		for _, o := range certificate.DomainValidationOptions {
+			if o.ResourceRecord != nil {
+				validationOption := map[string]interface{}{
+					"domain_name":           *o.DomainName,
+					"resource_record_name":  *o.ResourceRecord.Name,
+					"resource_record_type":  *o.ResourceRecord.Type,
+					"resource_record_value": *o.ResourceRecord.Value,
+				}
+				domainValidationResult = append(domainValidationResult, validationOption)
+			} else if o.ValidationEmails != nil && len(o.ValidationEmails) > 0 {
+				for _, validationEmail := range o.ValidationEmails {
+					emailValidationResult = append(emailValidationResult, *validationEmail)
+				}
+			} else {
+				log.Printf("[DEBUG] No validation options need to retry: %#v", o)
+				return nil, nil, fmt.Errorf("No validation options need to retry: %#v", o)
 			}
-			domainValidationResult = append(domainValidationResult, validationOption)
-		} else if o.ValidationEmails != nil && len(o.ValidationEmails) > 0 {
-			for _, validationEmail := range o.ValidationEmails {
-				emailValidationResult = append(emailValidationResult, *validationEmail)
-			}
-		} else {
-			log.Printf("[DEBUG] No validation options need to retry: %#v", o)
-			return nil, nil, fmt.Errorf("No validation options need to retry: %#v", o)
 		}
 	}
 

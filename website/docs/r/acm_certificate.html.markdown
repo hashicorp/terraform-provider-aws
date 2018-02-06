@@ -41,7 +41,7 @@ The following arguments are supported:
 
 * `domain_name` - (Required) A domain name for which the certificate should be issued
 * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
-* `validation_method` - (Required) Which method to use for validation (`DNS` or `EMAIL`)
+* `validation_method` - (Required) Which method to use for validation. `DNS` or `EMAIL` are valid, `NONE` can be used for certificates that were imported into ACM and then into Terraform.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
@@ -65,5 +65,5 @@ Domain validation objects export the following attributes:
 Certificates can be imported using their ARN, e.g.
 
 ```
-$ terraform import aws_acm_certificate.cert aws_acm_certificate.cert arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a
+$ terraform import aws_acm_certificate.cert arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a
 ```
