@@ -6,7 +6,7 @@ description: |-
   Provides an SNS application resource.
 ---
 
-# aws\_sns\_application
+# aws_sns_application
 
 Provides an SNS application resource
 
@@ -14,11 +14,9 @@ Provides an SNS application resource
 
 ```
 resource "aws_sns_application" "gcm_application" {
-  resource "aws_sns_application" "gcm_application" {
-  	name = "aws_sns_gcm_application"
-  	platform = "GCM"
-  	credential = "<GCM API KEY>"
-  }
+  name = "aws_sns_gcm_application"
+  platform = "GCM"
+  credential = "<GCM API KEY>"
 }
 ```
 
@@ -31,12 +29,12 @@ The following arguments are supported:
 * `credential` - (Required) Application Platform credential. See [Credential][1] for type of credential required for platform.
 * `principal` - (Optional) Application Platform principal. See [Principal][2] for type of principal required for platform.
 * `created_topic` - (Optional) SNS Topic triggered when a new platform endpoint is added to your platform application.
-* `deleted_topic` - (Optional) SNS Topic triggered when any of the platform endpoints associated with your platform application is deleted.
-* `updated_topic` - (Optional) SNS Topic triggered when any of the attributes of the platform endpoints associated with your platform application are changed.
+* `deleted_topic` - (Optional) SNS Topic triggered when an existing platform endpoint is deleted from your platform application.
+* `failure_iam_role` - (Optional) The IAM role permitted to receive failure feedback for this application.
 * `failure_topic` - (Optional) SNS Topic triggered when a delivery to any of the platform endpoints associated with your platform application encounters a permanent failure.
 * `success_iam_role` - (Optional) The IAM role permitted to receive success feedback for this application.
-* `failure_iam_role` - (Optional) The percentage of success to sample (0-100)
-* `success_sample_rate` - (Optional) The IAM role permitted to receive failure feedback for this application.
+* `success_sample_rate` - (Optional) The percentage of success to sample (0-100)
+* `updated_topic` - (Optional) SNS Topic triggered when an existing platform endpoint is changed from your platform application.
 
 ## Platforms supported
 
@@ -59,17 +57,17 @@ Unsupported SNS Application Platforms include
 
 ## Attributes Reference
 
-The following attributes are exported:
+The following additional attributes are exported:
 
 * `id` - The ARN of the SNS application
-* `arn` - The ARN of the SNS application, as a more obvious property (clone of id)
+* `arn` - The ARN of the SNS application
 
 [1]: http://docs.aws.amazon.com/sns/latest/dg/mobile-push-send-register.html
 [2]: http://docs.aws.amazon.com/sns/latest/api/API_CreatePlatformApplication.html
 
 ## Import
 
-SNS Applications can be imported using the `application arn`, e.g.
+SNS Applications can be imported using the ARN, e.g.
 
 ```
 $ terraform import aws_sns_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/aws_sns_gcm_application
