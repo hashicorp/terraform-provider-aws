@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -60,6 +61,28 @@ func TestAccAWSEIPAssociation_ec2Classic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_eip_association.test", "public_ip"),
 					resource.TestCheckResourceAttr("aws_eip_association.test", "allocation_id", ""),
 					testAccCheckAWSEIPAssociationHasIpBasedId("aws_eip_association.test", &a),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEIPAssociation_spotInstance(t *testing.T) {
+	var a ec2.Address
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPAssociationConfig_spotInstance(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists("aws_eip.test", &a),
+					testAccCheckAWSEIPAssociationExists("aws_eip_association.test", &a),
+					resource.TestCheckResourceAttrSet("aws_eip_association.test", "allocation_id"),
+					resource.TestCheckResourceAttrSet("aws_eip_association.test", "instance_id"),
 				),
 			},
 		},
@@ -303,3 +326,16 @@ resource "aws_eip_association" "test" {
   instance_id = "${aws_instance.test.id}"
 }
 `
+
+func testAccAWSEIPAssociationConfig_spotInstance(rInt int) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_eip" "test" {}
+
+resource "aws_eip_association" "test" {
+  allocation_id = "${aws_eip.test.id}"
+  instance_id   = "${aws_spot_instance_request.foo.spot_instance_id}"
+}
+`, testAccAWSSpotInstanceRequestConfig(rInt))
+}

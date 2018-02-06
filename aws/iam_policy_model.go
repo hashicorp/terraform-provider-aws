@@ -2,6 +2,7 @@ package aws
 
 import (
 	"encoding/json"
+	"fmt"
 	"sort"
 )
 
@@ -36,6 +37,22 @@ type IAMPolicyStatementCondition struct {
 
 type IAMPolicyStatementPrincipalSet []IAMPolicyStatementPrincipal
 type IAMPolicyStatementConditionSet []IAMPolicyStatementCondition
+
+func (self *IAMPolicyDoc) DeDupSids() {
+	// de-dupe the statements by traversing backwards and removing duplicate Sids
+	sidsSeen := map[string]bool{}
+	l := len(self.Statements) - 1
+	for i := range self.Statements {
+		if sid := self.Statements[l-i].Sid; len(sid) > 0 {
+			if sidsSeen[sid] {
+				// we've seen this sid already so remove the duplicate
+				self.Statements = append(self.Statements[:l-i], self.Statements[l-i+1:]...)
+			}
+			// mark this sid seen
+			sidsSeen[sid] = true
+		}
+	}
+}
 
 func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 	raw := map[string]interface{}{}
@@ -75,6 +92,29 @@ func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&raw)
 }
 
+func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
+	var out IAMPolicyStatementPrincipalSet
+
+	var data interface{}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+
+	switch t := data.(type) {
+	case string:
+		out = append(out, IAMPolicyStatementPrincipal{Type: "*", Identifiers: []string{"*"}})
+	case map[string]interface{}:
+		for key, value := range data.(map[string]interface{}) {
+			out = append(out, IAMPolicyStatementPrincipal{Type: key, Identifiers: value})
+		}
+	default:
+		return fmt.Errorf("Unsupported data type %s for IAMPolicyStatementPrincipalSet", t)
+	}
+
+	*ps = out
+	return nil
+}
+
 func (cs IAMPolicyStatementConditionSet) MarshalJSON() ([]byte, error) {
 	raw := map[string]map[string]interface{}{}
 
@@ -97,6 +137,33 @@ func (cs IAMPolicyStatementConditionSet) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&raw)
+}
+
+func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
+	var out IAMPolicyStatementConditionSet
+
+	var data map[string]map[string]interface{}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+
+	for test_key, test_value := range data {
+		for var_key, var_values := range test_value {
+			switch var_values.(type) {
+			case string:
+				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: []string{var_values.(string)}})
+			case []interface{}:
+				values := []string{}
+				for _, v := range var_values.([]interface{}) {
+					values = append(values, v.(string))
+				}
+				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: values})
+			}
+		}
+	}
+
+	*cs = out
+	return nil
 }
 
 func iamPolicyDecodeConfigStringList(lI []interface{}) interface{} {

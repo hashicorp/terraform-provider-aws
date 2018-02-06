@@ -1357,6 +1357,9 @@ type CostTypes struct {
 	// A boolean value whether to include credits in the cost budget.
 	IncludeCredit *bool `type:"boolean"`
 
+	// A boolean value whether to include discounts in the cost budget.
+	IncludeDiscount *bool `type:"boolean"`
+
 	// A boolean value whether to include other subscription costs in the cost budget.
 	IncludeOtherSubscription *bool `type:"boolean"`
 
@@ -1378,6 +1381,9 @@ type CostTypes struct {
 	// A boolean value whether to include upfront costs in the cost budget.
 	IncludeUpfront *bool `type:"boolean"`
 
+	// A boolean value whether to include amortized costs in the cost budget.
+	UseAmortized *bool `type:"boolean"`
+
 	// A boolean value whether to use blended costs in the cost budget.
 	UseBlended *bool `type:"boolean"`
 }
@@ -1395,6 +1401,12 @@ func (s CostTypes) GoString() string {
 // SetIncludeCredit sets the IncludeCredit field's value.
 func (s *CostTypes) SetIncludeCredit(v bool) *CostTypes {
 	s.IncludeCredit = &v
+	return s
+}
+
+// SetIncludeDiscount sets the IncludeDiscount field's value.
+func (s *CostTypes) SetIncludeDiscount(v bool) *CostTypes {
+	s.IncludeDiscount = &v
 	return s
 }
 
@@ -1437,6 +1449,12 @@ func (s *CostTypes) SetIncludeTax(v bool) *CostTypes {
 // SetIncludeUpfront sets the IncludeUpfront field's value.
 func (s *CostTypes) SetIncludeUpfront(v bool) *CostTypes {
 	s.IncludeUpfront = &v
+	return s
+}
+
+// SetUseAmortized sets the UseAmortized field's value.
+func (s *CostTypes) SetUseAmortized(v bool) *CostTypes {
+	s.UseAmortized = &v
 	return s
 }
 

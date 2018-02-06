@@ -75,7 +75,7 @@ func resourceAwsSsmAssociation() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
-				MaxItems: 1,
+				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"key": {

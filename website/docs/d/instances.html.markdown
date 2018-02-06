@@ -28,6 +28,10 @@ data "aws_instances" "test" {
   instance_tags {
     Role = "HardWorker"
   }
+  filter {
+    name   = "instance.group-id"
+    values = ["sg-12345678"]
+  }
 }
 
 resource "aws_eip" "test" {

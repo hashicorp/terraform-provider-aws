@@ -657,6 +657,7 @@ resource "aws_network_interface" "bar" {
 resource "aws_eip" "bar" {
 	vpc = "true"
 	network_interface = "${aws_network_interface.bar.id}"
+	depends_on = ["aws_internet_gateway.bar"]
 }
 `
 

@@ -71,6 +71,9 @@ func (c *CodeDeploy) AddTagsToOnPremisesInstancesRequest(input *AddTagsToOnPremi
 //   * ErrCodeInstanceNameRequiredException "InstanceNameRequiredException"
 //   An on-premises instance name was not specified.
 //
+//   * ErrCodeInvalidInstanceNameException "InvalidInstanceNameException"
+//   The specified on-premises instance name was specified in an invalid format.
+//
 //   * ErrCodeTagRequiredException "TagRequiredException"
 //   A tag was not specified.
 //
@@ -818,6 +821,9 @@ func (c *CodeDeploy) CreateApplicationRequest(input *CreateApplicationInput) (re
 //   * ErrCodeApplicationLimitExceededException "ApplicationLimitExceededException"
 //   More applications were attempted to be created than are allowed.
 //
+//   * ErrCodeInvalidComputePlatformException "InvalidComputePlatformException"
+//   The computePlatform is invalid. The computePlatform should be Lambda or Server.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/CreateApplication
 func (c *CodeDeploy) CreateApplication(input *CreateApplicationInput) (*CreateApplicationOutput, error) {
 	req, out := c.CreateApplicationRequest(input)
@@ -961,6 +967,25 @@ func (c *CodeDeploy) CreateDeploymentRequest(input *CreateDeploymentInput) (req 
 //   but weren't part of the previous successful deployment. Valid values include
 //   "DISALLOW", "OVERWRITE", and "RETAIN".
 //
+//   * ErrCodeInvalidRoleException "InvalidRoleException"
+//   The service role ARN was specified in an invalid format. Or, if an Auto Scaling
+//   group was specified, the specified service role does not grant the appropriate
+//   permissions to Auto Scaling.
+//
+//   * ErrCodeInvalidAutoScalingGroupException "InvalidAutoScalingGroupException"
+//   The Auto Scaling group was specified in an invalid format or does not exist.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   An API function was called too frequently.
+//
+//   * ErrCodeInvalidUpdateOutdatedInstancesOnlyValueException "InvalidUpdateOutdatedInstancesOnlyValueException"
+//   The UpdateOutdatedInstancesOnly value is invalid. For AWS Lambda deployments,
+//   false is expected. For EC2/On-premises deployments, true or false is expected.
+//
+//   * ErrCodeInvalidIgnoreApplicationStopFailuresValueException "InvalidIgnoreApplicationStopFailuresValueException"
+//   The IgnoreApplicationStopFailures value is invalid. For AWS Lambda deployments,
+//   false is expected. For EC2/On-premises deployments, true or false is expected.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/CreateDeployment
 func (c *CodeDeploy) CreateDeployment(input *CreateDeploymentInput) (*CreateDeploymentOutput, error) {
 	req, out := c.CreateDeploymentRequest(input)
@@ -1052,6 +1077,13 @@ func (c *CodeDeploy) CreateDeploymentConfigRequest(input *CreateDeploymentConfig
 //
 //   * ErrCodeDeploymentConfigLimitExceededException "DeploymentConfigLimitExceededException"
 //   The deployment configurations limit was exceeded.
+//
+//   * ErrCodeInvalidComputePlatformException "InvalidComputePlatformException"
+//   The computePlatform is invalid. The computePlatform should be Lambda or Server.
+//
+//   * ErrCodeInvalidTrafficRoutingConfigurationException "InvalidTrafficRoutingConfigurationException"
+//   The configuration that specifies how traffic is routed during a deployment
+//   is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/CreateDeploymentConfig
 func (c *CodeDeploy) CreateDeploymentConfig(input *CreateDeploymentConfigInput) (*CreateDeploymentConfigOutput, error) {
@@ -1229,6 +1261,9 @@ func (c *CodeDeploy) CreateDeploymentGroupRequest(input *CreateDeploymentGroupIn
 //   * ErrCodeTagSetListLimitExceededException "TagSetListLimitExceededException"
 //   The number of tag groups included in the tag set list exceeded the maximum
 //   allowed limit of 3.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The specified input was specified in an invalid format.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/CreateDeploymentGroup
 func (c *CodeDeploy) CreateDeploymentGroup(input *CreateDeploymentGroupInput) (*CreateDeploymentGroupOutput, error) {
@@ -1517,6 +1552,97 @@ func (c *CodeDeploy) DeleteDeploymentGroup(input *DeleteDeploymentGroupInput) (*
 // for more information on using Contexts.
 func (c *CodeDeploy) DeleteDeploymentGroupWithContext(ctx aws.Context, input *DeleteDeploymentGroupInput, opts ...request.Option) (*DeleteDeploymentGroupOutput, error) {
 	req, out := c.DeleteDeploymentGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteGitHubAccountToken = "DeleteGitHubAccountToken"
+
+// DeleteGitHubAccountTokenRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteGitHubAccountToken operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteGitHubAccountToken for more information on using the DeleteGitHubAccountToken
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteGitHubAccountTokenRequest method.
+//    req, resp := client.DeleteGitHubAccountTokenRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/DeleteGitHubAccountToken
+func (c *CodeDeploy) DeleteGitHubAccountTokenRequest(input *DeleteGitHubAccountTokenInput) (req *request.Request, output *DeleteGitHubAccountTokenOutput) {
+	op := &request.Operation{
+		Name:       opDeleteGitHubAccountToken,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteGitHubAccountTokenInput{}
+	}
+
+	output = &DeleteGitHubAccountTokenOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteGitHubAccountToken API operation for AWS CodeDeploy.
+//
+// Deletes a GitHub account connection.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeDeploy's
+// API operation DeleteGitHubAccountToken for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeGitHubAccountTokenNameRequiredException "GitHubAccountTokenNameRequiredException"
+//   The call is missing a required GitHub account connection name.
+//
+//   * ErrCodeGitHubAccountTokenDoesNotExistException "GitHubAccountTokenDoesNotExistException"
+//   No GitHub account connection exists with the named specified in the call.
+//
+//   * ErrCodeInvalidGitHubAccountTokenNameException "InvalidGitHubAccountTokenNameException"
+//   The format of the specified GitHub account connection name is invalid.
+//
+//   * ErrCodeResourceValidationException "ResourceValidationException"
+//   The specified resource could not be validated.
+//
+//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   The API used does not support the deployment.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/DeleteGitHubAccountToken
+func (c *CodeDeploy) DeleteGitHubAccountToken(input *DeleteGitHubAccountTokenInput) (*DeleteGitHubAccountTokenOutput, error) {
+	req, out := c.DeleteGitHubAccountTokenRequest(input)
+	return out, req.Send()
+}
+
+// DeleteGitHubAccountTokenWithContext is the same as DeleteGitHubAccountToken with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteGitHubAccountToken for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeDeploy) DeleteGitHubAccountTokenWithContext(ctx aws.Context, input *DeleteGitHubAccountTokenInput, opts ...request.Option) (*DeleteGitHubAccountTokenOutput, error) {
+	req, out := c.DeleteGitHubAccountTokenRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3189,6 +3315,9 @@ func (c *CodeDeploy) ListGitHubAccountTokenNamesRequest(input *ListGitHubAccount
 //   * ErrCodeResourceValidationException "ResourceValidationException"
 //   The specified resource could not be validated.
 //
+//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   The API used does not support the deployment.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/ListGitHubAccountTokenNames
 func (c *CodeDeploy) ListGitHubAccountTokenNames(input *ListGitHubAccountTokenNamesInput) (*ListGitHubAccountTokenNamesOutput, error) {
 	req, out := c.ListGitHubAccountTokenNamesRequest(input)
@@ -3295,6 +3424,107 @@ func (c *CodeDeploy) ListOnPremisesInstances(input *ListOnPremisesInstancesInput
 // for more information on using Contexts.
 func (c *CodeDeploy) ListOnPremisesInstancesWithContext(ctx aws.Context, input *ListOnPremisesInstancesInput, opts ...request.Option) (*ListOnPremisesInstancesOutput, error) {
 	req, out := c.ListOnPremisesInstancesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutLifecycleEventHookExecutionStatus = "PutLifecycleEventHookExecutionStatus"
+
+// PutLifecycleEventHookExecutionStatusRequest generates a "aws/request.Request" representing the
+// client's request for the PutLifecycleEventHookExecutionStatus operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutLifecycleEventHookExecutionStatus for more information on using the PutLifecycleEventHookExecutionStatus
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutLifecycleEventHookExecutionStatusRequest method.
+//    req, resp := client.PutLifecycleEventHookExecutionStatusRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/PutLifecycleEventHookExecutionStatus
+func (c *CodeDeploy) PutLifecycleEventHookExecutionStatusRequest(input *PutLifecycleEventHookExecutionStatusInput) (req *request.Request, output *PutLifecycleEventHookExecutionStatusOutput) {
+	op := &request.Operation{
+		Name:       opPutLifecycleEventHookExecutionStatus,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutLifecycleEventHookExecutionStatusInput{}
+	}
+
+	output = &PutLifecycleEventHookExecutionStatusOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutLifecycleEventHookExecutionStatus API operation for AWS CodeDeploy.
+//
+// Sets the result of a Lambda validation function. The function validates one
+// or both lifecycle events (BeforeAllowTraffic and AfterAllowTraffic) and returns
+// Succeeded or Failed.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeDeploy's
+// API operation PutLifecycleEventHookExecutionStatus for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidLifecycleEventHookExecutionStatusException "InvalidLifecycleEventHookExecutionStatusException"
+//   The result of a Lambda validation function that verifies a lifecycle event
+//   is invalid. It should return Succeeded or Failed.
+//
+//   * ErrCodeInvalidLifecycleEventHookExecutionIdException "InvalidLifecycleEventHookExecutionIdException"
+//   A lifecycle event hook is invalid. Review the hooks section in your AppSpec
+//   file to ensure the lifecycle events and hooks functions are valid.
+//
+//   * ErrCodeLifecycleEventAlreadyCompletedException "LifecycleEventAlreadyCompletedException"
+//   An attempt to return the status of an already completed lifecycle event occurred.
+//
+//   * ErrCodeDeploymentIdRequiredException "DeploymentIdRequiredException"
+//   At least one deployment ID must be specified.
+//
+//   * ErrCodeDeploymentDoesNotExistException "DeploymentDoesNotExistException"
+//   The deployment does not exist with the applicable IAM user or AWS account.
+//
+//   * ErrCodeInvalidDeploymentIdException "InvalidDeploymentIdException"
+//   At least one of the deployment IDs was specified in an invalid format.
+//
+//   * ErrCodeUnsupportedActionForDeploymentTypeException "UnsupportedActionForDeploymentTypeException"
+//   A call was submitted that is not supported for the specified deployment type.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/PutLifecycleEventHookExecutionStatus
+func (c *CodeDeploy) PutLifecycleEventHookExecutionStatus(input *PutLifecycleEventHookExecutionStatusInput) (*PutLifecycleEventHookExecutionStatusOutput, error) {
+	req, out := c.PutLifecycleEventHookExecutionStatusRequest(input)
+	return out, req.Send()
+}
+
+// PutLifecycleEventHookExecutionStatusWithContext is the same as PutLifecycleEventHookExecutionStatus with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutLifecycleEventHookExecutionStatus for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeDeploy) PutLifecycleEventHookExecutionStatusWithContext(ctx aws.Context, input *PutLifecycleEventHookExecutionStatusInput, opts ...request.Option) (*PutLifecycleEventHookExecutionStatusOutput, error) {
+	req, out := c.PutLifecycleEventHookExecutionStatusRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3568,6 +3798,9 @@ func (c *CodeDeploy) RemoveTagsFromOnPremisesInstancesRequest(input *RemoveTagsF
 // Returned Error Codes:
 //   * ErrCodeInstanceNameRequiredException "InstanceNameRequiredException"
 //   An on-premises instance name was not specified.
+//
+//   * ErrCodeInvalidInstanceNameException "InvalidInstanceNameException"
+//   The specified on-premises instance name was specified in an invalid format.
 //
 //   * ErrCodeTagRequiredException "TagRequiredException"
 //   A tag was not specified.
@@ -4036,6 +4269,9 @@ func (c *CodeDeploy) UpdateDeploymentGroupRequest(input *UpdateDeploymentGroupIn
 //   The number of tag groups included in the tag set list exceeded the maximum
 //   allowed limit of 3.
 //
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The specified input was specified in an invalid format.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/UpdateDeploymentGroup
 func (c *CodeDeploy) UpdateDeploymentGroup(input *UpdateDeploymentGroupInput) (*UpdateDeploymentGroupOutput, error) {
 	req, out := c.UpdateDeploymentGroupRequest(input)
@@ -4219,6 +4455,10 @@ type ApplicationInfo struct {
 	// The application name.
 	ApplicationName *string `locationName:"applicationName" min:"1" type:"string"`
 
+	// The destination platform type for deployment of the application (Lambda or
+	// Server).
+	ComputePlatform *string `locationName:"computePlatform" type:"string" enum:"ComputePlatform"`
+
 	// The time at which the application was created.
 	CreateTime *time.Time `locationName:"createTime" type:"timestamp" timestampFormat:"unix"`
 
@@ -4249,6 +4489,12 @@ func (s *ApplicationInfo) SetApplicationId(v string) *ApplicationInfo {
 // SetApplicationName sets the ApplicationName field's value.
 func (s *ApplicationInfo) SetApplicationName(v string) *ApplicationInfo {
 	s.ApplicationName = &v
+	return s
+}
+
+// SetComputePlatform sets the ComputePlatform field's value.
+func (s *ApplicationInfo) SetComputePlatform(v string) *ApplicationInfo {
+	s.ComputePlatform = &v
 	return s
 }
 
@@ -4446,7 +4692,9 @@ type BatchGetApplicationsInput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of application names separated by spaces.
-	ApplicationNames []*string `locationName:"applicationNames" type:"list"`
+	//
+	// ApplicationNames is a required field
+	ApplicationNames []*string `locationName:"applicationNames" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -4457,6 +4705,19 @@ func (s BatchGetApplicationsInput) String() string {
 // GoString returns the string representation
 func (s BatchGetApplicationsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchGetApplicationsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchGetApplicationsInput"}
+	if s.ApplicationNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplicationNames"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetApplicationNames sets the ApplicationNames field's value.
@@ -4676,7 +4937,9 @@ type BatchGetDeploymentsInput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of deployment IDs, separated by spaces.
-	DeploymentIds []*string `locationName:"deploymentIds" type:"list"`
+	//
+	// DeploymentIds is a required field
+	DeploymentIds []*string `locationName:"deploymentIds" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -4687,6 +4950,19 @@ func (s BatchGetDeploymentsInput) String() string {
 // GoString returns the string representation
 func (s BatchGetDeploymentsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchGetDeploymentsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchGetDeploymentsInput"}
+	if s.DeploymentIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("DeploymentIds"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDeploymentIds sets the DeploymentIds field's value.
@@ -4726,7 +5002,9 @@ type BatchGetOnPremisesInstancesInput struct {
 	_ struct{} `type:"structure"`
 
 	// The names of the on-premises instances about which to get information.
-	InstanceNames []*string `locationName:"instanceNames" type:"list"`
+	//
+	// InstanceNames is a required field
+	InstanceNames []*string `locationName:"instanceNames" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -4737,6 +5015,19 @@ func (s BatchGetOnPremisesInstancesInput) String() string {
 // GoString returns the string representation
 func (s BatchGetOnPremisesInstancesInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchGetOnPremisesInstancesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchGetOnPremisesInstancesInput"}
+	if s.InstanceNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceNames"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetInstanceNames sets the InstanceNames field's value.
@@ -4908,6 +5199,9 @@ type CreateApplicationInput struct {
 	//
 	// ApplicationName is a required field
 	ApplicationName *string `locationName:"applicationName" min:"1" type:"string" required:"true"`
+
+	// The destination platform type for the deployment (Lambda or Server).
+	ComputePlatform *string `locationName:"computePlatform" type:"string" enum:"ComputePlatform"`
 }
 
 // String returns the string representation
@@ -4942,6 +5236,12 @@ func (s *CreateApplicationInput) SetApplicationName(v string) *CreateApplication
 	return s
 }
 
+// SetComputePlatform sets the ComputePlatform field's value.
+func (s *CreateApplicationInput) SetComputePlatform(v string) *CreateApplicationInput {
+	s.ComputePlatform = &v
+	return s
+}
+
 // Represents the output of a CreateApplication operation.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/CreateApplicationOutput
 type CreateApplicationOutput struct {
@@ -4972,6 +5272,9 @@ func (s *CreateApplicationOutput) SetApplicationId(v string) *CreateApplicationO
 type CreateDeploymentConfigInput struct {
 	_ struct{} `type:"structure"`
 
+	// The destination platform type for the deployment (Lambda or Server>).
+	ComputePlatform *string `locationName:"computePlatform" type:"string" enum:"ComputePlatform"`
+
 	// The name of the deployment configuration to create.
 	//
 	// DeploymentConfigName is a required field
@@ -4996,9 +5299,10 @@ type CreateDeploymentConfigInput struct {
 	//
 	// For example, to set a minimum of 95% healthy instance, specify a type of
 	// FLEET_PERCENT and a value of 95.
-	//
-	// MinimumHealthyHosts is a required field
-	MinimumHealthyHosts *MinimumHealthyHosts `locationName:"minimumHealthyHosts" type:"structure" required:"true"`
+	MinimumHealthyHosts *MinimumHealthyHosts `locationName:"minimumHealthyHosts" type:"structure"`
+
+	// The configuration that specifies how the deployment traffic will be routed.
+	TrafficRoutingConfig *TrafficRoutingConfig `locationName:"trafficRoutingConfig" type:"structure"`
 }
 
 // String returns the string representation
@@ -5020,14 +5324,17 @@ func (s *CreateDeploymentConfigInput) Validate() error {
 	if s.DeploymentConfigName != nil && len(*s.DeploymentConfigName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("DeploymentConfigName", 1))
 	}
-	if s.MinimumHealthyHosts == nil {
-		invalidParams.Add(request.NewErrParamRequired("MinimumHealthyHosts"))
-	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetComputePlatform sets the ComputePlatform field's value.
+func (s *CreateDeploymentConfigInput) SetComputePlatform(v string) *CreateDeploymentConfigInput {
+	s.ComputePlatform = &v
+	return s
 }
 
 // SetDeploymentConfigName sets the DeploymentConfigName field's value.
@@ -5039,6 +5346,12 @@ func (s *CreateDeploymentConfigInput) SetDeploymentConfigName(v string) *CreateD
 // SetMinimumHealthyHosts sets the MinimumHealthyHosts field's value.
 func (s *CreateDeploymentConfigInput) SetMinimumHealthyHosts(v *MinimumHealthyHosts) *CreateDeploymentConfigInput {
 	s.MinimumHealthyHosts = v
+	return s
+}
+
+// SetTrafficRoutingConfig sets the TrafficRoutingConfig field's value.
+func (s *CreateDeploymentConfigInput) SetTrafficRoutingConfig(v *TrafficRoutingConfig) *CreateDeploymentConfigInput {
+	s.TrafficRoutingConfig = v
 	return s
 }
 
@@ -5697,10 +6010,63 @@ func (s *DeleteDeploymentGroupOutput) SetHooksNotCleanedUp(v []*AutoScalingGroup
 	return s
 }
 
+// Represents the input of a DeleteGitHubAccount operation.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/DeleteGitHubAccountTokenInput
+type DeleteGitHubAccountTokenInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the GitHub account connection to delete.
+	TokenName *string `locationName:"tokenName" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteGitHubAccountTokenInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteGitHubAccountTokenInput) GoString() string {
+	return s.String()
+}
+
+// SetTokenName sets the TokenName field's value.
+func (s *DeleteGitHubAccountTokenInput) SetTokenName(v string) *DeleteGitHubAccountTokenInput {
+	s.TokenName = &v
+	return s
+}
+
+// Represents the output of a DeleteGitHubAccountToken operation.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/DeleteGitHubAccountTokenOutput
+type DeleteGitHubAccountTokenOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the GitHub account connection that was deleted.
+	TokenName *string `locationName:"tokenName" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteGitHubAccountTokenOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteGitHubAccountTokenOutput) GoString() string {
+	return s.String()
+}
+
+// SetTokenName sets the TokenName field's value.
+func (s *DeleteGitHubAccountTokenOutput) SetTokenName(v string) *DeleteGitHubAccountTokenOutput {
+	s.TokenName = &v
+	return s
+}
+
 // Information about a deployment configuration.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/DeploymentConfigInfo
 type DeploymentConfigInfo struct {
 	_ struct{} `type:"structure"`
+
+	// The destination platform type for the deployment (Lambda or Server).
+	ComputePlatform *string `locationName:"computePlatform" type:"string" enum:"ComputePlatform"`
 
 	// The time at which the deployment configuration was created.
 	CreateTime *time.Time `locationName:"createTime" type:"timestamp" timestampFormat:"unix"`
@@ -5713,6 +6079,10 @@ type DeploymentConfigInfo struct {
 
 	// Information about the number or percentage of minimum healthy instance.
 	MinimumHealthyHosts *MinimumHealthyHosts `locationName:"minimumHealthyHosts" type:"structure"`
+
+	// The configuration specifying how the deployment traffic will be routed. Only
+	// deployments with a Lambda compute platform can specify this.
+	TrafficRoutingConfig *TrafficRoutingConfig `locationName:"trafficRoutingConfig" type:"structure"`
 }
 
 // String returns the string representation
@@ -5723,6 +6093,12 @@ func (s DeploymentConfigInfo) String() string {
 // GoString returns the string representation
 func (s DeploymentConfigInfo) GoString() string {
 	return s.String()
+}
+
+// SetComputePlatform sets the ComputePlatform field's value.
+func (s *DeploymentConfigInfo) SetComputePlatform(v string) *DeploymentConfigInfo {
+	s.ComputePlatform = &v
+	return s
 }
 
 // SetCreateTime sets the CreateTime field's value.
@@ -5749,6 +6125,12 @@ func (s *DeploymentConfigInfo) SetMinimumHealthyHosts(v *MinimumHealthyHosts) *D
 	return s
 }
 
+// SetTrafficRoutingConfig sets the TrafficRoutingConfig field's value.
+func (s *DeploymentConfigInfo) SetTrafficRoutingConfig(v *TrafficRoutingConfig) *DeploymentConfigInfo {
+	s.TrafficRoutingConfig = v
+	return s
+}
+
 // Information about a deployment group.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/DeploymentGroupInfo
 type DeploymentGroupInfo struct {
@@ -5769,6 +6151,9 @@ type DeploymentGroupInfo struct {
 
 	// Information about blue/green deployment options for a deployment group.
 	BlueGreenDeploymentConfiguration *BlueGreenDeploymentConfiguration `locationName:"blueGreenDeploymentConfiguration" type:"structure"`
+
+	// The destination platform type for the deployment group (Lambda or Server).
+	ComputePlatform *string `locationName:"computePlatform" type:"string" enum:"ComputePlatform"`
 
 	// The deployment configuration name.
 	DeploymentConfigName *string `locationName:"deploymentConfigName" min:"1" type:"string"`
@@ -5863,6 +6248,12 @@ func (s *DeploymentGroupInfo) SetBlueGreenDeploymentConfiguration(v *BlueGreenDe
 	return s
 }
 
+// SetComputePlatform sets the ComputePlatform field's value.
+func (s *DeploymentGroupInfo) SetComputePlatform(v string) *DeploymentGroupInfo {
+	s.ComputePlatform = &v
+	return s
+}
+
 // SetDeploymentConfigName sets the DeploymentConfigName field's value.
 func (s *DeploymentGroupInfo) SetDeploymentConfigName(v string) *DeploymentGroupInfo {
 	s.DeploymentConfigName = &v
@@ -5954,7 +6345,7 @@ type DeploymentInfo struct {
 
 	// Provides information about the results of a deployment, such as whether instances
 	// in the original environment in a blue/green deployment were not terminated.
-	AdditionalDeploymentStatusInfo *string `locationName:"additionalDeploymentStatusInfo" type:"string"`
+	AdditionalDeploymentStatusInfo *string `locationName:"additionalDeploymentStatusInfo" deprecated:"true" type:"string"`
 
 	// The application name.
 	ApplicationName *string `locationName:"applicationName" min:"1" type:"string"`
@@ -5968,6 +6359,9 @@ type DeploymentInfo struct {
 
 	// A timestamp indicating when the deployment was complete.
 	CompleteTime *time.Time `locationName:"completeTime" type:"timestamp" timestampFormat:"unix"`
+
+	// The destination platform type for the deployment (Lambda or Server).
+	ComputePlatform *string `locationName:"computePlatform" type:"string" enum:"ComputePlatform"`
 
 	// A timestamp indicating when the deployment was created.
 	CreateTime *time.Time `locationName:"createTime" type:"timestamp" timestampFormat:"unix"`
@@ -5992,6 +6386,9 @@ type DeploymentInfo struct {
 
 	// A summary of the deployment status of the instances in the deployment.
 	DeploymentOverview *DeploymentOverview `locationName:"deploymentOverview" type:"structure"`
+
+	// Messages that contain information about the status of a deployment.
+	DeploymentStatusMessages []*string `locationName:"deploymentStatusMessages" type:"list"`
 
 	// Information about the type of deployment, either in-place or blue/green,
 	// you want to run and whether to route deployment traffic behind a load balancer.
@@ -6108,6 +6505,12 @@ func (s *DeploymentInfo) SetCompleteTime(v time.Time) *DeploymentInfo {
 	return s
 }
 
+// SetComputePlatform sets the ComputePlatform field's value.
+func (s *DeploymentInfo) SetComputePlatform(v string) *DeploymentInfo {
+	s.ComputePlatform = &v
+	return s
+}
+
 // SetCreateTime sets the CreateTime field's value.
 func (s *DeploymentInfo) SetCreateTime(v time.Time) *DeploymentInfo {
 	s.CreateTime = &v
@@ -6141,6 +6544,12 @@ func (s *DeploymentInfo) SetDeploymentId(v string) *DeploymentInfo {
 // SetDeploymentOverview sets the DeploymentOverview field's value.
 func (s *DeploymentInfo) SetDeploymentOverview(v *DeploymentOverview) *DeploymentInfo {
 	s.DeploymentOverview = v
+	return s
+}
+
+// SetDeploymentStatusMessages sets the DeploymentStatusMessages field's value.
+func (s *DeploymentInfo) SetDeploymentStatusMessages(v []*string) *DeploymentInfo {
+	s.DeploymentStatusMessages = v
 	return s
 }
 
@@ -6592,7 +7001,7 @@ type ELBInfo struct {
 	// For blue/green deployments, the name of the load balancer that will be used
 	// to route traffic from original instances to replacement instances in a blue/green
 	// deployment. For in-place deployments, the name of the load balancer that
-	// instances are deregistered from, so they are not serving traffic during a
+	// instances are deregistered from so they are not serving traffic during a
 	// deployment, and then re-registered with after the deployment completes.
 	Name *string `locationName:"name" type:"string"`
 }
@@ -8554,6 +8963,114 @@ func (s *OnPremisesTagSet) SetOnPremisesTagSetList(v [][]*TagFilter) *OnPremises
 	return s
 }
 
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/PutLifecycleEventHookExecutionStatusInput
+type PutLifecycleEventHookExecutionStatusInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the deployment. Pass this ID to a Lambda function that validates
+	// a deployment lifecycle event.
+	DeploymentId *string `locationName:"deploymentId" type:"string"`
+
+	// The execution ID of a deployment's lifecycle hook. A deployment lifecycle
+	// hook is specified in the hooks section of the AppSpec file.
+	LifecycleEventHookExecutionId *string `locationName:"lifecycleEventHookExecutionId" type:"string"`
+
+	// The result of a Lambda function that validates a deployment lifecycle event
+	// (Succeeded or Failed).
+	Status *string `locationName:"status" type:"string" enum:"LifecycleEventStatus"`
+}
+
+// String returns the string representation
+func (s PutLifecycleEventHookExecutionStatusInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutLifecycleEventHookExecutionStatusInput) GoString() string {
+	return s.String()
+}
+
+// SetDeploymentId sets the DeploymentId field's value.
+func (s *PutLifecycleEventHookExecutionStatusInput) SetDeploymentId(v string) *PutLifecycleEventHookExecutionStatusInput {
+	s.DeploymentId = &v
+	return s
+}
+
+// SetLifecycleEventHookExecutionId sets the LifecycleEventHookExecutionId field's value.
+func (s *PutLifecycleEventHookExecutionStatusInput) SetLifecycleEventHookExecutionId(v string) *PutLifecycleEventHookExecutionStatusInput {
+	s.LifecycleEventHookExecutionId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *PutLifecycleEventHookExecutionStatusInput) SetStatus(v string) *PutLifecycleEventHookExecutionStatusInput {
+	s.Status = &v
+	return s
+}
+
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/PutLifecycleEventHookExecutionStatusOutput
+type PutLifecycleEventHookExecutionStatusOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The execution ID of the lifecycle event hook. A hook is specified in the
+	// hooks section of the deployment's AppSpec file.
+	LifecycleEventHookExecutionId *string `locationName:"lifecycleEventHookExecutionId" type:"string"`
+}
+
+// String returns the string representation
+func (s PutLifecycleEventHookExecutionStatusOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutLifecycleEventHookExecutionStatusOutput) GoString() string {
+	return s.String()
+}
+
+// SetLifecycleEventHookExecutionId sets the LifecycleEventHookExecutionId field's value.
+func (s *PutLifecycleEventHookExecutionStatusOutput) SetLifecycleEventHookExecutionId(v string) *PutLifecycleEventHookExecutionStatusOutput {
+	s.LifecycleEventHookExecutionId = &v
+	return s
+}
+
+// A revision for an AWS Lambda deployment that is a YAML-formatted or JSON-formatted
+// string. For AWS Lambda deployments, the revision is the same as the AppSpec
+// file.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/RawString
+type RawString struct {
+	_ struct{} `type:"structure"`
+
+	// The YAML-formatted or JSON-formatted revision string. It includes information
+	// about which Lambda function to update and optional Lambda functions that
+	// validate deployment lifecycle events.
+	Content *string `locationName:"content" type:"string"`
+
+	// The SHA256 hash value of the revision that is specified as a RawString.
+	Sha256 *string `locationName:"sha256" type:"string"`
+}
+
+// String returns the string representation
+func (s RawString) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RawString) GoString() string {
+	return s.String()
+}
+
+// SetContent sets the Content field's value.
+func (s *RawString) SetContent(v string) *RawString {
+	s.Content = &v
+	return s
+}
+
+// SetSha256 sets the Sha256 field's value.
+func (s *RawString) SetSha256(v string) *RawString {
+	s.Sha256 = &v
+	return s
+}
+
 // Represents the input of a RegisterApplicationRevision operation.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/RegisterApplicationRevisionInput
 type RegisterApplicationRevisionInput struct {
@@ -8826,12 +9343,19 @@ type RevisionLocation struct {
 	//
 	//    * S3: An application revision stored in Amazon S3.
 	//
-	//    * GitHub: An application revision stored in GitHub.
+	//    * GitHub: An application revision stored in GitHub (EC2/On-premises deployments
+	//    only)
+	//
+	//    * String: A YAML-formatted or JSON-formatted string (AWS Lambda deployments
+	//    only)
 	RevisionType *string `locationName:"revisionType" type:"string" enum:"RevisionLocationType"`
 
-	// Information about the location of application artifacts stored in Amazon
-	// S3.
+	// Information about the location of a revision stored in Amazon S3.
 	S3Location *S3Location `locationName:"s3Location" type:"structure"`
+
+	// Information about the location of an AWS Lambda deployment revision stored
+	// as a RawString.
+	String_ *RawString `locationName:"string" type:"structure"`
 }
 
 // String returns the string representation
@@ -8859,6 +9383,12 @@ func (s *RevisionLocation) SetRevisionType(v string) *RevisionLocation {
 // SetS3Location sets the S3Location field's value.
 func (s *RevisionLocation) SetS3Location(v *S3Location) *RevisionLocation {
 	s.S3Location = v
+	return s
+}
+
+// SetString_ sets the String_ field's value.
+func (s *RevisionLocation) SetString_(v *RawString) *RevisionLocation {
+	s.String_ = v
 	return s
 }
 
@@ -9276,6 +9806,83 @@ func (s *TargetInstances) SetTagFilters(v []*EC2TagFilter) *TargetInstances {
 	return s
 }
 
+// A configuration that shifts traffic from one version of a Lambda function
+// to another in two increments. The original and target Lambda function versions
+// are specified in the deployment's AppSpec file.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/TimeBasedCanary
+type TimeBasedCanary struct {
+	_ struct{} `type:"structure"`
+
+	// The number of minutes between the first and second traffic shifts of a TimeBasedCanary
+	// deployment.
+	CanaryInterval *int64 `locationName:"canaryInterval" type:"integer"`
+
+	// The percentage of traffic to shift in the first increment of a TimeBasedCanary
+	// deployment.
+	CanaryPercentage *int64 `locationName:"canaryPercentage" type:"integer"`
+}
+
+// String returns the string representation
+func (s TimeBasedCanary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TimeBasedCanary) GoString() string {
+	return s.String()
+}
+
+// SetCanaryInterval sets the CanaryInterval field's value.
+func (s *TimeBasedCanary) SetCanaryInterval(v int64) *TimeBasedCanary {
+	s.CanaryInterval = &v
+	return s
+}
+
+// SetCanaryPercentage sets the CanaryPercentage field's value.
+func (s *TimeBasedCanary) SetCanaryPercentage(v int64) *TimeBasedCanary {
+	s.CanaryPercentage = &v
+	return s
+}
+
+// A configuration that shifts traffic from one version of a Lambda function
+// to another in equal increments, with an equal number of minutes between each
+// increment. The original and target Lambda function versions are specified
+// in the deployment's AppSpec file.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/TimeBasedLinear
+type TimeBasedLinear struct {
+	_ struct{} `type:"structure"`
+
+	// The number of minutes between each incremental traffic shift of a TimeBasedLinear
+	// deployment.
+	LinearInterval *int64 `locationName:"linearInterval" type:"integer"`
+
+	// The percentage of traffic that is shifted at the start of each increment
+	// of a TimeBasedLinear deployment.
+	LinearPercentage *int64 `locationName:"linearPercentage" type:"integer"`
+}
+
+// String returns the string representation
+func (s TimeBasedLinear) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TimeBasedLinear) GoString() string {
+	return s.String()
+}
+
+// SetLinearInterval sets the LinearInterval field's value.
+func (s *TimeBasedLinear) SetLinearInterval(v int64) *TimeBasedLinear {
+	s.LinearInterval = &v
+	return s
+}
+
+// SetLinearPercentage sets the LinearPercentage field's value.
+func (s *TimeBasedLinear) SetLinearPercentage(v int64) *TimeBasedLinear {
+	s.LinearPercentage = &v
+	return s
+}
+
 // Information about a time range.
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/TimeRange
 type TimeRange struct {
@@ -9311,6 +9918,56 @@ func (s *TimeRange) SetEnd(v time.Time) *TimeRange {
 // SetStart sets the Start field's value.
 func (s *TimeRange) SetStart(v time.Time) *TimeRange {
 	s.Start = &v
+	return s
+}
+
+// The configuration that specifies how traffic is shifted from one version
+// of a Lambda function to another version during an AWS Lambda deployment.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/TrafficRoutingConfig
+type TrafficRoutingConfig struct {
+	_ struct{} `type:"structure"`
+
+	// A configuration that shifts traffic from one version of a Lambda function
+	// to another in two increments. The original and target Lambda function versions
+	// are specified in the deployment's AppSpec file.
+	TimeBasedCanary *TimeBasedCanary `locationName:"timeBasedCanary" type:"structure"`
+
+	// A configuration that shifts traffic from one version of a Lambda function
+	// to another in equal increments, with an equal number of minutes between each
+	// increment. The original and target Lambda function versions are specified
+	// in the deployment's AppSpec file.
+	TimeBasedLinear *TimeBasedLinear `locationName:"timeBasedLinear" type:"structure"`
+
+	// The type of traffic shifting (TimeBasedCanary or TimeBasedLinear) used by
+	// a deployment configuration .
+	Type *string `locationName:"type" type:"string" enum:"TrafficRoutingType"`
+}
+
+// String returns the string representation
+func (s TrafficRoutingConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TrafficRoutingConfig) GoString() string {
+	return s.String()
+}
+
+// SetTimeBasedCanary sets the TimeBasedCanary field's value.
+func (s *TrafficRoutingConfig) SetTimeBasedCanary(v *TimeBasedCanary) *TrafficRoutingConfig {
+	s.TimeBasedCanary = v
+	return s
+}
+
+// SetTimeBasedLinear sets the TimeBasedLinear field's value.
+func (s *TrafficRoutingConfig) SetTimeBasedLinear(v *TimeBasedLinear) *TrafficRoutingConfig {
+	s.TimeBasedLinear = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *TrafficRoutingConfig) SetType(v string) *TrafficRoutingConfig {
+	s.Type = &v
 	return s
 }
 
@@ -9690,6 +10347,20 @@ const (
 
 	// BundleTypeZip is a BundleType enum value
 	BundleTypeZip = "zip"
+
+	// BundleTypeYaml is a BundleType enum value
+	BundleTypeYaml = "YAML"
+
+	// BundleTypeJson is a BundleType enum value
+	BundleTypeJson = "JSON"
+)
+
+const (
+	// ComputePlatformServer is a ComputePlatform enum value
+	ComputePlatformServer = "Server"
+
+	// ComputePlatformLambda is a ComputePlatform enum value
+	ComputePlatformLambda = "Lambda"
 )
 
 const (
@@ -9815,6 +10486,30 @@ const (
 
 	// ErrorCodeManualStop is a ErrorCode enum value
 	ErrorCodeManualStop = "MANUAL_STOP"
+
+	// ErrorCodeMissingBlueGreenDeploymentConfiguration is a ErrorCode enum value
+	ErrorCodeMissingBlueGreenDeploymentConfiguration = "MISSING_BLUE_GREEN_DEPLOYMENT_CONFIGURATION"
+
+	// ErrorCodeMissingElbInformation is a ErrorCode enum value
+	ErrorCodeMissingElbInformation = "MISSING_ELB_INFORMATION"
+
+	// ErrorCodeMissingGithubToken is a ErrorCode enum value
+	ErrorCodeMissingGithubToken = "MISSING_GITHUB_TOKEN"
+
+	// ErrorCodeElasticLoadBalancingInvalid is a ErrorCode enum value
+	ErrorCodeElasticLoadBalancingInvalid = "ELASTIC_LOAD_BALANCING_INVALID"
+
+	// ErrorCodeElbInvalidInstance is a ErrorCode enum value
+	ErrorCodeElbInvalidInstance = "ELB_INVALID_INSTANCE"
+
+	// ErrorCodeInvalidLambdaConfiguration is a ErrorCode enum value
+	ErrorCodeInvalidLambdaConfiguration = "INVALID_LAMBDA_CONFIGURATION"
+
+	// ErrorCodeInvalidLambdaFunction is a ErrorCode enum value
+	ErrorCodeInvalidLambdaFunction = "INVALID_LAMBDA_FUNCTION"
+
+	// ErrorCodeHookExecutionFailure is a ErrorCode enum value
+	ErrorCodeHookExecutionFailure = "HOOK_EXECUTION_FAILURE"
 )
 
 const (
@@ -9948,6 +10643,9 @@ const (
 
 	// RevisionLocationTypeGitHub is a RevisionLocationType enum value
 	RevisionLocationTypeGitHub = "GitHub"
+
+	// RevisionLocationTypeString is a RevisionLocationType enum value
+	RevisionLocationTypeString = "String"
 )
 
 const (
@@ -9975,6 +10673,17 @@ const (
 
 	// TagFilterTypeKeyAndValue is a TagFilterType enum value
 	TagFilterTypeKeyAndValue = "KEY_AND_VALUE"
+)
+
+const (
+	// TrafficRoutingTypeTimeBasedCanary is a TrafficRoutingType enum value
+	TrafficRoutingTypeTimeBasedCanary = "TimeBasedCanary"
+
+	// TrafficRoutingTypeTimeBasedLinear is a TrafficRoutingType enum value
+	TrafficRoutingTypeTimeBasedLinear = "TimeBasedLinear"
+
+	// TrafficRoutingTypeAllAtOnce is a TrafficRoutingType enum value
+	TrafficRoutingTypeAllAtOnce = "AllAtOnce"
 )
 
 const (

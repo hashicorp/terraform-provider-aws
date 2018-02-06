@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/acm"
@@ -50,7 +51,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
+	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glacier"
+	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -175,6 +179,7 @@ type AWSClient struct {
 	iamconn               *iam.IAM
 	kinesisconn           *kinesis.Kinesis
 	kmsconn               *kms.KMS
+	gameliftconn          *gamelift.GameLift
 	firehoseconn          *firehose.Firehose
 	inspectorconn         *inspector.Inspector
 	elasticacheconn       *elasticache.ElastiCache
@@ -185,6 +190,7 @@ type AWSClient struct {
 	mqconn                *mq.MQ
 	opsworksconn          *opsworks.OpsWorks
 	glacierconn           *glacier.Glacier
+	guarddutyconn         *guardduty.GuardDuty
 	codebuildconn         *codebuild.CodeBuild
 	codedeployconn        *codedeploy.CodeDeploy
 	codecommitconn        *codecommit.CodeCommit
@@ -196,6 +202,7 @@ type AWSClient struct {
 	wafregionalconn       *wafregional.WAFRegional
 	iotconn               *iot.IoT
 	batchconn             *batch.Batch
+	glueconn              *glue.Glue
 	athenaconn            *athena.Athena
 	dxconn                *directconnect.DirectConnect
 	mediastoreconn        *mediastore.MediaStore
@@ -210,17 +217,13 @@ func (c *AWSClient) DynamoDB() *dynamodb.DynamoDB {
 }
 
 func (c *AWSClient) IsGovCloud() bool {
-	if c.region == "us-gov-west-1" {
-		return true
-	}
-	return false
+	_, isGovCloud := endpoints.PartitionForRegion([]endpoints.Partition{endpoints.AwsUsGovPartition()}, c.region)
+	return isGovCloud
 }
 
 func (c *AWSClient) IsChinaCloud() bool {
-	if c.region == "cn-north-1" {
-		return true
-	}
-	return false
+	_, isChinaCloud := endpoints.PartitionForRegion([]endpoints.Partition{endpoints.AwsCnPartition()}, c.region)
+	return isChinaCloud
 }
 
 // Client configures and returns a fully initialized AWSClient
@@ -361,11 +364,15 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	}
 
+	// Infer AWS partition from configured region
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), client.region); ok {
+		client.partition = partition.ID()
+	}
+
 	if !c.SkipRequestingAccountId {
-		partition, accountId, err := GetAccountInfo(client.iamconn, client.stsconn, cp.ProviderName)
+		accountID, err := GetAccountID(client.iamconn, client.stsconn, cp.ProviderName)
 		if err == nil {
-			client.partition = partition
-			client.accountid = accountId
+			client.accountid = accountID
 		}
 	}
 
@@ -419,7 +426,9 @@ func (c *Config) Client() (interface{}, error) {
 	client.esconn = elasticsearch.New(sess)
 	client.firehoseconn = firehose.New(sess)
 	client.inspectorconn = inspector.New(sess)
+	client.gameliftconn = gamelift.New(sess)
 	client.glacierconn = glacier.New(sess)
+	client.guarddutyconn = guardduty.New(sess)
 	client.iotconn = iot.New(sess)
 	client.kinesisconn = kinesis.New(awsKinesisSess)
 	client.kmsconn = kms.New(awsKmsSess)
@@ -442,6 +451,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
 	client.batchconn = batch.New(sess)
+	client.glueconn = glue.New(sess)
 	client.athenaconn = athena.New(sess)
 	client.dxconn = directconnect.New(sess)
 	client.mediastoreconn = mediastore.New(sess)
@@ -489,31 +499,14 @@ func hasEc2Classic(platforms []string) bool {
 // ValidateRegion returns an error if the configured region is not a
 // valid aws region and nil otherwise.
 func (c *Config) ValidateRegion() error {
-	var regions = []string{
-		"ap-northeast-1",
-		"ap-northeast-2",
-		"ap-south-1",
-		"ap-southeast-1",
-		"ap-southeast-2",
-		"ca-central-1",
-		"cn-north-1",
-		"eu-central-1",
-		"eu-west-1",
-		"eu-west-2",
-		"eu-west-3",
-		"sa-east-1",
-		"us-east-1",
-		"us-east-2",
-		"us-gov-west-1",
-		"us-west-1",
-		"us-west-2",
-	}
-
-	for _, valid := range regions {
-		if c.Region == valid {
-			return nil
+	for _, partition := range endpoints.DefaultPartitions() {
+		for _, region := range partition.Regions() {
+			if c.Region == region.ID() {
+				return nil
+			}
 		}
 	}
+
 	return fmt.Errorf("Not a valid region: %s", c.Region)
 }
 

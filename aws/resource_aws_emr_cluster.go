@@ -245,6 +245,12 @@ func resourceAwsEMRCluster() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
+			"custom_ami_id": {
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				ValidateFunc: validateAwsEmrCustomAmiId,
+			},
 		},
 	}
 }
@@ -358,6 +364,10 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		params.EbsRootVolumeSize = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("custom_ami_id"); ok {
+		params.CustomAmiId = aws.String(v.(string))
+	}
+
 	if instanceProfile != "" {
 		params.JobFlowRole = aws.String(instanceProfile)
 	}
@@ -376,17 +386,29 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[DEBUG] EMR Cluster create options: %s", params)
-	resp, err := conn.RunJobFlow(params)
 
+	var resp *emr.RunJobFlowOutput
+	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+		var err error
+		resp, err = conn.RunJobFlow(params)
+		if err != nil {
+			if isAWSErr(err, "ValidationException", "Invalid InstanceProfile:") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "AccessDeniedException", "Failed to authorize instance profile") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
-		log.Printf("[ERROR] %s", err)
 		return err
 	}
 
 	d.SetId(*resp.JobFlowId)
 
-	log.Println(
-		"[INFO] Waiting for EMR Cluster to be available")
+	log.Println("[INFO] Waiting for EMR Cluster to be available")
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"STARTING", "BOOTSTRAPPING"},
@@ -462,6 +484,10 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("visible_to_all_users", cluster.VisibleToAllUsers)
 	d.Set("tags", tagsToMapEMR(cluster.Tags))
 	d.Set("ebs_root_volume_size", cluster.EbsRootVolumeSize)
+
+	if cluster.CustomAmiId != nil {
+		d.Set("custom_ami_id", cluster.CustomAmiId)
+	}
 
 	if err := d.Set("applications", flattenApplications(cluster.Applications)); err != nil {
 		log.Printf("[ERR] Error setting EMR Applications for cluster (%s): %s", d.Id(), err)

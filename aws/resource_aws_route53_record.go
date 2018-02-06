@@ -101,6 +101,9 @@ func resourceAwsRoute53Record() *schema.Resource {
 							Type:      schema.TypeString,
 							Required:  true,
 							StateFunc: normalizeAwsAliasName,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return strings.ToLower(old) == strings.ToLower(new)
+							},
 						},
 
 						"evaluate_target_health": {
@@ -897,12 +900,9 @@ func nilString(s string) *string {
 }
 
 func normalizeAwsAliasName(alias interface{}) string {
-	input := alias.(string)
-	if strings.HasPrefix(input, "dualstack.") {
-		return strings.Replace(input, "dualstack.", "", -1)
-	}
-
-	return strings.TrimRight(input, ".")
+	input := strings.ToLower(alias.(string))
+	output := strings.TrimPrefix(input, "dualstack.")
+	return strings.TrimSuffix(output, ".")
 }
 
 func parseRecordId(id string) [4]string {
