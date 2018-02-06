@@ -33,22 +33,14 @@ func resourceAwsAcmCertificateValidation() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"timeout": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "45m",
-			},
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(45 * time.Minute),
 		},
 	}
 }
 
 func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta interface{}) error {
-	timeout, err := time.ParseDuration(d.Get("timeout").(string))
-	if err != nil {
-		return err
-	}
-
 	certificate_arn := d.Get("certificate_arn").(string)
 
 	acmconn := meta.(*AWSClient).acmconn
@@ -75,7 +67,7 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 		log.Printf("[INFO] No validation_record_fqdns set, skipping check")
 	}
 
-	return resource.Retry(timeout, func() *resource.RetryError {
+	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		resp, err := acmconn.DescribeCertificate(params)
 
 		if err != nil {

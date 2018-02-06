@@ -61,7 +61,9 @@ func testAccAcmCertificateWithValidationConfig(domain string, sanDomain string) 
 
 resource "aws_acm_certificate_validation" "cert" {
   certificate_arn = "${aws_acm_certificate.cert.arn}"
-  timeout = "20s"
+  timeouts {
+    create = "20s"
+  }
 }
 `, testAccAcmCertificateConfig(
 		domain, sanDomain,
@@ -76,7 +78,9 @@ func testAccAcmCertificateWithValidationConfigAndWrongFQDN(domain string, sanDom
 resource "aws_acm_certificate_validation" "cert" {
   certificate_arn = "${aws_acm_certificate.cert.arn}"
   validation_record_fqdns = ["some-wrong-fqdn.example.com"]
-  timeout = "20s"
+  timeouts {
+    create = "20s"
+  }
 }
 `, testAccAcmCertificateConfig(
 		domain, sanDomain,
