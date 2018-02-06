@@ -1,14 +1,13 @@
 package aws
 
 import (
-	"fmt"
-
 	"encoding/json"
+	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
-	"strconv"
 )
 
 var dataSourceAwsIamPolicyDocumentVarReplacer = strings.NewReplacer("&{", "${")
@@ -102,13 +101,17 @@ func dataSourceAwsIamPolicyDocument() *schema.Resource {
 }
 
 func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}) error {
-	doc := &IAMPolicyDoc{}
+	mergedDoc := &IAMPolicyDoc{}
 
+	// populate mergedDoc directly with any source_json
 	if sourceJson, hasSourceJson := d.GetOk("source_json"); hasSourceJson {
-		if err := json.Unmarshal([]byte(sourceJson.(string)), doc); err != nil {
+		if err := json.Unmarshal([]byte(sourceJson.(string)), mergedDoc); err != nil {
 			return err
 		}
 	}
+
+	// process the current document
+	doc := &IAMPolicyDoc{}
 
 	doc.Version = "2012-10-17"
 
@@ -161,27 +164,22 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 		stmts[i] = stmt
 	}
 
-	doc.Statements = append(doc.Statements, stmts...)
+	doc.Statements = stmts
 
-	// merge in our override_json
+	// merge our current document into mergedDoc
+	mergedDoc.Merge(doc)
+
+	// merge in override_json
 	if overrideJson, hasOverrideJson := d.GetOk("override_json"); hasOverrideJson {
 		overrideDoc := &IAMPolicyDoc{}
 		if err := json.Unmarshal([]byte(overrideJson.(string)), overrideDoc); err != nil {
 			return err
 		}
 
-		if len(overrideDoc.Id) > 0 {
-			doc.Id = overrideDoc.Id
-		}
-
-		if len(overrideDoc.Statements) > 0 {
-			doc.Statements = append(doc.Statements, overrideDoc.Statements...)
-		}
+		mergedDoc.Merge(overrideDoc)
 	}
 
-	doc.DeDupSids()
-
-	jsonDoc, err := json.MarshalIndent(doc, "", "  ")
+	jsonDoc, err := json.MarshalIndent(mergedDoc, "", "  ")
 	if err != nil {
 		// should never happen if the above code is correct
 		return err

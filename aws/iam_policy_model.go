@@ -38,18 +38,34 @@ type IAMPolicyStatementCondition struct {
 type IAMPolicyStatementPrincipalSet []IAMPolicyStatementPrincipal
 type IAMPolicyStatementConditionSet []IAMPolicyStatementCondition
 
-func (self *IAMPolicyDoc) DeDupSids() {
-	// de-dupe the statements by traversing backwards and removing duplicate Sids
-	sidsSeen := map[string]bool{}
-	l := len(self.Statements) - 1
-	for i := range self.Statements {
-		if sid := self.Statements[l-i].Sid; len(sid) > 0 {
-			if sidsSeen[sid] {
-				// we've seen this sid already so remove the duplicate
-				self.Statements = append(self.Statements[:l-i], self.Statements[l-i+1:]...)
+func (self *IAMPolicyDoc) Merge(newDoc *IAMPolicyDoc) {
+	// adopt newDoc's Id
+	if len(newDoc.Id) > 0 {
+		self.Id = newDoc.Id
+	}
+
+	// let newDoc upgrade our Version
+	if newDoc.Version > self.Version {
+		self.Version = newDoc.Version
+	}
+
+	// merge in newDoc's statements, overwriting any existing Sids
+	var seen bool
+	for _, newStatement := range newDoc.Statements {
+		if len(newStatement.Sid) == 0 {
+			self.Statements = append(self.Statements, newStatement)
+			continue
+		}
+		seen = false
+		for i, existingStatement := range self.Statements {
+			if existingStatement.Sid == newStatement.Sid {
+				self.Statements[i] = newStatement
+				seen = true
+				break
 			}
-			// mark this sid seen
-			sidsSeen[sid] = true
+		}
+		if !seen {
+			self.Statements = append(self.Statements, newStatement)
 		}
 	}
 }
