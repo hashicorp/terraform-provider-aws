@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_elastic_beanstalk_hosted_zone` [GH-3208]
 * **New Data Source:** `aws_iam_policy` [GH-1999]
+* **New Resource:** `aws_cognito_user_group` [GH-3010]
 * **New Resource:** `aws_guardduty_ipset` [GH-3161]
 * **New Resource:** `aws_guardduty_threatintelset` [GH-3200]
 * **New Resource:** `aws_iot_topic_rule` [GH-1858]
