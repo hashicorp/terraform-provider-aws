@@ -2601,6 +2601,63 @@ func TestValidateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(t *testin
 	}
 }
 
+func TestValidateCognitoRoleMappingsRulesConfiguration(t *testing.T) {
+	cases := []struct {
+		MappingRule []interface{}
+		Type        string
+		ErrCount    int
+	}{
+		{
+			MappingRule: nil,
+			Type:        cognitoidentity.RoleMappingTypeRules,
+			ErrCount:    1,
+		},
+		{
+			MappingRule: []interface{}{
+				map[string]interface{}{
+					"Claim":     "isAdmin",
+					"MatchType": "Equals",
+					"RoleARN":   "arn:foo",
+					"Value":     "paid",
+				},
+			},
+			Type:     cognitoidentity.RoleMappingTypeRules,
+			ErrCount: 0,
+		},
+		{
+			MappingRule: []interface{}{
+				map[string]interface{}{
+					"Claim":     "isAdmin",
+					"MatchType": "Equals",
+					"RoleARN":   "arn:foo",
+					"Value":     "paid",
+				},
+			},
+			Type:     cognitoidentity.RoleMappingTypeToken,
+			ErrCount: 1,
+		},
+		{
+			MappingRule: nil,
+			Type:        cognitoidentity.RoleMappingTypeToken,
+			ErrCount:    0,
+		},
+	}
+
+	for _, tc := range cases {
+		m := make(map[string]interface{})
+		// Reproducing the undefined mapping_rule
+		if tc.MappingRule != nil {
+			m["mapping_rule"] = tc.MappingRule
+		}
+		m["type"] = tc.Type
+
+		errors := validateCognitoRoleMappingsRulesConfiguration(m)
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Cognito Role Mappings validation failed: %v, expected err count %d, got %d, for config %#v", errors, tc.ErrCount, len(errors), m)
+		}
+	}
+}
+
 func TestValidateCognitoRoleMappingsAmbiguousRoleResolution(t *testing.T) {
 	validValues := []string{
 		cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
