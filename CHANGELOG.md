@@ -39,6 +39,7 @@ BUG FIXES:
 * data-source/aws_kms_alias: Prevent crash on aliases without target key [GH-3203]
 * data-source/aws_ssm_parameter: Fix wrong arn attribute for full path parameter names [GH-3211]
 * resource/aws_instance: Fix perpertual diff on default VPC instances using vpc_security_group_ids [GH-2338]
+* resource/aws_cognito_identity_pool_roles_attachment: Fix validation for Token types [GH-2894]
 * resource/aws_db_parameter_group: fix permanent diff when specifying parameters with database-default values [GH-3182]
 * resource/aws_route53_record: Fix dualstack alias name regression trimming too many characters [GH-3187]
 * resource/aws_ses_template: Send only specified attributes for update [GH-3214]
