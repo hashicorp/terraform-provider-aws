@@ -30,6 +30,7 @@ ENHANCEMENTS:
 * resource/aws_mq_broker: Validate user password [GH-3164]
 * resource/aws_service_discovery_public_dns_namespace: Support import [GH-3229]
 * resource/aws_service_discovery_service: Support import [GH-3227]
+* resource/aws_sns_topic: Add support for name prefixes and fully generated names [GH-2753]
 * resource/aws_vpc_endpoint: Support AWS PrivateLink [GH-2515]
 * resource/aws_vpc_endpoint_service: Support AWS PrivateLink [GH-2515]
 * resource/ssm_resource_data_sync: Support import [GH-3232]
