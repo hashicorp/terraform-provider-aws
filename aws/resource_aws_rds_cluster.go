@@ -590,6 +590,7 @@ func flattenAwsRdsClusterResource(d *schema.ResourceData, meta interface{}, dbc 
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
+	d.Set("hosted_zone_id", dbc.HostedZoneId)
 
 	var vpcg []string
 	for _, g := range dbc.VpcSecurityGroups {
