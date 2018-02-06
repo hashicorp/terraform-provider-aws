@@ -60,6 +60,26 @@ func dataSourceAwsEcsContainerDefinition() *schema.Resource {
 				Computed: true,
 				Elem:     schema.TypeString,
 			},
+			"port_mappings": &schema.Schema{
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"host_port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"container_port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -96,10 +116,20 @@ func dataSourceAwsEcsContainerDefinitionRead(d *schema.ResourceData, meta interf
 		d.Set("docker_labels", aws.StringValueMap(def.DockerLabels))
 
 		var environment = map[string]string{}
-		for _, keyValuePair := range def.Environment {
-			environment[aws.StringValue(keyValuePair.Name)] = aws.StringValue(keyValuePair.Value)
+		for _, envKeyValuePair := range def.Environment {
+			environment[aws.StringValue(envKeyValuePair.Name)] = aws.StringValue(envKeyValuePair.Value)
 		}
 		d.Set("environment", environment)
+
+		var portMappings = make([]map[string]string, len(def.PortMappings), len(def.PortMappings))
+		for _, portKeyValuePair := range def.PortMappings {
+			var portMapping = make(map[string]string)
+			portMapping["container_port"] = fmt.Sprintf("%d", aws.Int64Value(portKeyValuePair.ContainerPort))
+			portMapping["host_port"] = fmt.Sprintf("%d", aws.Int64Value(portKeyValuePair.HostPort))
+			portMapping["protocol"] = aws.StringValue(portKeyValuePair.Protocol)
+			portMappings = append(portMappings, portMapping)
+		}
+		d.Set("port_mappings", portMappings)
 	}
 
 	if d.Id() == "" {
