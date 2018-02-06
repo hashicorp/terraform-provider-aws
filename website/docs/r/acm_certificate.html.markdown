@@ -20,6 +20,9 @@ Most commonly, this resource is used to together with [`aws_route53_record`](rou
 [`aws_acm_certificate_validation`](acm_certificate_validation.html) to request a DNS validated certificate,
 deploy the required validation records and wait for validation to complete.
 
+Domain validation through E-Mail is also supported but should be avoided as it requires a manual step outside
+of Terraform.
+
 ## Example Usage
 
 ```hcl
@@ -38,7 +41,7 @@ The following arguments are supported:
 
 * `domain_name` - (Required) A domain name for which the certificate should be issued
 * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
-* `validation_method` - (Required) Which method to use for validation (only `DNS` is supported at the moment)
+* `validation_method` - (Required) Which method to use for validation (`DNS` or `EMAIL`)
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
@@ -47,7 +50,8 @@ The following additional attributes are exported:
 
 * `id` - The ARN of the certificate
 * `arn` - The ARN of the certificate
-* `domain_validation_options` - A list of attributes to feed into other resources to complete certificate validation. Can have more than one element, e.g. if SANs are defined
+* `domain_validation_options` - A list of attributes to feed into other resources to complete certificate validation. Can have more than one element, e.g. if SANs are defined. Only set if `DNS`-validation was used.
+* `validation_emails` - A list of addresses that received a validation E-Mail. Only set if `EMAIL`-validation was used.
 
 Domain validation objects export the following attributes:
 

@@ -14,6 +14,41 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAwsAcmResource_emailValidation(t *testing.T) {
+	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
+		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
+	}
+
+	root_zone_domain := os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
+
+	rInt1 := acctest.RandInt()
+
+	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, root_zone_domain)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			// Test that we can request a certificate
+			resource.TestStep{
+				Config: testAccAcmCertificateConfigWithEMailValidation(domain),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", regexp.MustCompile(`^arn:aws:acm:[^:]+:[^:]+:certificate/.+$`)),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", domain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "0"),
+					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "validation_emails.0", regexp.MustCompile(`^[^@]+@.+$`)),
+				),
+			},
+			resource.TestStep{
+				ResourceName:      "aws_acm_certificate.cert",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+
+}
 func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 	var conf acm.DescribeCertificateOutput
 	var tags acm.ListTagsForCertificateOutput
@@ -94,6 +129,16 @@ func TestAccAwsAcmResource_certificateIssuingFlow(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccAcmCertificateConfigWithEMailValidation(domain string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "cert" {
+  domain_name = "%s"
+  validation_method = "EMAIL"
+}
+`, domain)
+
 }
 
 func testAccAcmCertificateConfig(domain string, sanDomain string) string {

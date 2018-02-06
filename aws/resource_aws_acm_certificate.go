@@ -37,12 +37,6 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					if v.(string) != acm.ValidationMethodDns {
-						errors = append(errors, fmt.Errorf("only validation_method DNS is supported at the moment"))
-					}
-					return
-				},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -72,6 +66,11 @@ func resourceAwsAcmCertificate() *schema.Resource {
 					},
 				},
 			},
+			"validation_emails": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -81,7 +80,7 @@ func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) e
 	acmconn := meta.(*AWSClient).acmconn
 	params := &acm.RequestCertificateInput{
 		DomainName:       aws.String(d.Get("domain_name").(string)),
-		ValidationMethod: aws.String(acm.ValidationMethodDns),
+		ValidationMethod: aws.String(d.Get("validation_method").(string)),
 	}
 
 	sans, ok := d.GetOk("subject_alternative_names")
@@ -136,13 +135,12 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 
 		d.Set("domain_name", resp.Certificate.DomainName)
 		d.Set("arn", resp.Certificate.CertificateArn)
-		d.Set("validation_method", resp.Certificate.DomainValidationOptions[0].ValidationMethod)
 
 		if err := d.Set("subject_alternative_names", cleanUpSubjectAlternativeNames(resp.Certificate)); err != nil {
 			return resource.NonRetryableError(err)
 		}
 
-		domainValidationOptions, err := convertDomainValidationOptions(resp.Certificate.DomainValidationOptions)
+		domainValidationOptions, emailValidationOptions, err := convertValidationOptions(resp.Certificate.DomainValidationOptions)
 
 		if err != nil {
 			return resource.RetryableError(err)
@@ -151,6 +149,10 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
 			return resource.NonRetryableError(err)
 		}
+		if err := d.Set("validation_emails", emailValidationOptions); err != nil {
+			return resource.NonRetryableError(err)
+		}
+		d.Set("validation_method", resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions, emailValidationOptions))
 
 		params := &acm.ListTagsForCertificateInput{
 			CertificateArn: aws.String(d.Id()),
@@ -163,6 +165,17 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 
 		return nil
 	})
+}
+func resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions []map[string]interface{}, emailValidationOptions []string) string {
+	// The DescribeCertificate Response doesn't have information on what validation method was used
+	// so we need to guess from the validation options we see...
+	if len(domainValidationOptions) > 0 {
+		return acm.ValidationMethodDns
+	} else if len(emailValidationOptions) > 0 {
+		return acm.ValidationMethodEmail
+	} else {
+		return "NONE"
+	}
 }
 
 func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -188,8 +201,9 @@ func cleanUpSubjectAlternativeNames(cert *acm.CertificateDetail) []string {
 
 }
 
-func convertDomainValidationOptions(validations []*acm.DomainValidation) ([]map[string]interface{}, error) {
-	var result []map[string]interface{}
+func convertValidationOptions(validations []*acm.DomainValidation) ([]map[string]interface{}, []string, error) {
+	var domainValidationResult []map[string]interface{}
+	var emailValidationResult []string
 
 	for _, o := range validations {
 		if o.ResourceRecord != nil {
@@ -199,14 +213,18 @@ func convertDomainValidationOptions(validations []*acm.DomainValidation) ([]map[
 				"resource_record_type":  *o.ResourceRecord.Type,
 				"resource_record_value": *o.ResourceRecord.Value,
 			}
-			result = append(result, validationOption)
+			domainValidationResult = append(domainValidationResult, validationOption)
+		} else if o.ValidationEmails != nil && len(o.ValidationEmails) > 0 {
+			for _, validationEmail := range o.ValidationEmails {
+				emailValidationResult = append(emailValidationResult, *validationEmail)
+			}
 		} else {
-			log.Printf("[DEBUG] No resource record found in validation options, need to retry: %#v", o)
-			return nil, fmt.Errorf("No resource record found in DNS DomainValidationOptions: %v", o)
+			log.Printf("[DEBUG] No validation options need to retry: %#v", o)
+			return nil, nil, fmt.Errorf("No validation options need to retry: %#v", o)
 		}
 	}
 
-	return result, nil
+	return domainValidationResult, emailValidationResult, nil
 }
 
 func resourceAwsAcmCertificateDelete(d *schema.ResourceData, meta interface{}) error {
