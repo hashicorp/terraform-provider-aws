@@ -74,55 +74,55 @@ func resourceAwsSnsTopic() *schema.Resource {
 					return json
 				},
 			},
-			"application_success_feedback_role_arn": &schema.Schema{
+			"application_success_feedback_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"application_success_feedback_sample_rate": &schema.Schema{
+			"application_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validateIntegerInRange(0, 100),
 			},
-			"application_failure_feedback_role_arn": &schema.Schema{
+			"application_failure_feedback_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"http_success_feedback_role_arn": &schema.Schema{
+			"http_success_feedback_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"http_success_feedback_sample_rate": &schema.Schema{
+			"http_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validateIntegerInRange(0, 100),
 			},
-			"http_failure_feedback_role_arn": &schema.Schema{
+			"http_failure_feedback_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"lambda_success_feedback_role_arn": &schema.Schema{
+			"lambda_success_feedback_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"lambda_success_feedback_sample_rate": &schema.Schema{
+			"lambda_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validateIntegerInRange(0, 100),
 			},
-			"lambda_failure_feedback_role_arn": &schema.Schema{
+			"lambda_failure_feedback_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"sqs_success_feedback_role_arn": &schema.Schema{
+			"sqs_success_feedback_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"sqs_success_feedback_sample_rate": &schema.Schema{
+			"sqs_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validateIntegerInRange(0, 100),
 			},
-			"sqs_failure_feedback_role_arn": &schema.Schema{
+			"sqs_failure_feedback_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
