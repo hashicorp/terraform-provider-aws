@@ -676,17 +676,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"hec_acknowledgment_timeout": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  180,
-							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								value := v.(int)
-								if value < 180 || value > 600 {
-									errors = append(errors, fmt.Errorf(
-										"%q must be in the range from 180 to 600 seconds.", k))
-								}
-								return
-							},
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      180,
+							ValidateFunc: validateIntegerInRange(180, 600),
 						},
 
 						"hec_endpoint": {
@@ -697,10 +690,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"hec_endpoint_type": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "Raw",
+							Default:  firehose.HECEndpointTypeRaw,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 								value := v.(string)
-								if value != "Raw" && value != "Event" {
+								if value != firehose.HECEndpointTypeRaw && value != firehose.HECEndpointTypeEvent {
 									errors = append(errors, fmt.Errorf(
 										"%q must be one of 'Raw', 'Event'", k))
 								}
@@ -716,10 +709,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"s3_backup_mode": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "FailedEventsOnly",
+							Default:  firehose.SplunkS3BackupModeFailedEventsOnly,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 								value := v.(string)
-								if value != "FailedEventsOnly" && value != "AllEvents" {
+								if value != firehose.SplunkS3BackupModeFailedEventsOnly && value != firehose.SplunkS3BackupModeAllEvents {
 									errors = append(errors, fmt.Errorf(
 										"%q must be one of 'FailedEventsOnly', 'AllEvents'", k))
 								}
@@ -728,17 +721,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						},
 
 						"retry_duration": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  3600,
-							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								value := v.(int)
-								if value < 0 || value > 7200 {
-									errors = append(errors, fmt.Errorf(
-										"%q must be in the range from 0 to 7200 seconds.", k))
-								}
-								return
-							},
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      3600,
+							ValidateFunc: validateIntegerInRange(0, 7200),
 						},
 
 						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
