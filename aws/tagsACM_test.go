@@ -1,14 +1,11 @@
 package aws
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestDiffTagsACM(t *testing.T) {
@@ -76,28 +73,5 @@ func TestIgnoringTagsACM(t *testing.T) {
 		if !tagIgnoredACM(tag) {
 			t.Fatalf("Tag %v with value %v not ignored, but should be!", *tag.Key, *tag.Value)
 		}
-	}
-}
-
-// testAccCheckTags can be used to check the tags on a resource.
-func testAccCheckTagsACM(
-	ts *[]*acm.Tag, key string, value string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		m := tagsToMapACM(*ts)
-		v, ok := m[key]
-		if value != "" && !ok {
-			return fmt.Errorf("Missing tag: %s", key)
-		} else if value == "" && ok {
-			return fmt.Errorf("Extra tag: %s", key)
-		}
-		if value == "" {
-			return nil
-		}
-
-		if v != value {
-			return fmt.Errorf("%s: bad value: %s", key, v)
-		}
-
-		return nil
 	}
 }
