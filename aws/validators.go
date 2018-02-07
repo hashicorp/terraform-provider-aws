@@ -1452,6 +1452,7 @@ func validateWafPredicatesType() schema.SchemaValidateFunc {
 		waf.PredicateTypeSqlInjectionMatch,
 		waf.PredicateTypeSizeConstraint,
 		waf.PredicateTypeXssMatch,
+		waf.PredicateTypeGeoMatch,
 	}, false)
 }
 
