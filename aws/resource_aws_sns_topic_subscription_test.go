@@ -31,6 +31,27 @@ func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSNSTopicSubscription_withFilterPolicy(t *testing.T) {
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfigWithFilterPolicy(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
+					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription"),
+					resource.TestCheckResourceAttr("aws_sns_topic_subscription.test_subscription", "filter_policy",
+						"{\"store\": [\"example_corp\"], \"event\": [\"order_placed\"]}"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 	ri := acctest.RandInt()
 
@@ -142,7 +163,25 @@ func TestObfuscateEndpointPassword(t *testing.T) {
 func testAccAWSSNSTopicSubscriptionConfig(i int) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
-    name = "terraform-test-topic-%d"
+  name = "terraform-test-topic-%d"
+}
+
+resource "aws_sqs_queue" "test_queue" {
+  name = "terraform-subscription-test-queue-%d"
+}
+
+resource "aws_sns_topic_subscription" "test_subscription" {
+  topic_arn = "${aws_sns_topic.test_topic.arn}"
+  protocol = "sqs"
+  endpoint = "${aws_sqs_queue.test_queue.arn}"
+}
+`, i, i)
+}
+
+func testAccAWSSNSTopicSubscriptionConfigWithFilterPolicy(i int) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test_topic" {
+  name = "terraform-test-topic-%d"
 }
 
 resource "aws_sqs_queue" "test_queue" {
@@ -150,9 +189,10 @@ resource "aws_sqs_queue" "test_queue" {
 }
 
 resource "aws_sns_topic_subscription" "test_subscription" {
-    topic_arn = "${aws_sns_topic.test_topic.arn}"
-    protocol = "sqs"
-    endpoint = "${aws_sqs_queue.test_queue.arn}"
+  topic_arn = "${aws_sns_topic.test_topic.arn}"
+  protocol = "sqs"
+  endpoint = "${aws_sqs_queue.test_queue.arn}"
+  filter_policy = "{\"store\": [\"example_corp\"], \"event\": [\"order_placed\"]}"
 }
 `, i, i)
 }
