@@ -2,16 +2,17 @@ package aws
 
 import (
 	"fmt"
-	"testing"
-
 	"os"
 	"regexp"
+	"strconv"
+	"testing"
 
+	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAwsAcmResource_certificateIssuingAndValidationFlow(t *testing.T) {
+func TestAccAwsAcmCertificateValidation_basic(t *testing.T) {
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -30,17 +31,17 @@ func TestAccAwsAcmResource_certificateIssuingAndValidationFlow(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Test that validation times out if certificate can't be validated
 			resource.TestStep{
-				Config:      testAccAcmCertificateWithValidationConfig(domain, sanDomain),
+				Config:      testAccAcmCertificateValidation_basic(domain),
 				ExpectError: regexp.MustCompile("Expected certificate to be issued but was in state PENDING_VALIDATION"),
 			},
 			// Test that validation fails if given validation_fqdns don't match
 			resource.TestStep{
-				Config:      testAccAcmCertificateWithValidationConfigAndWrongFQDN(domain, sanDomain),
+				Config:      testAccAcmCertificateValidation_validationRecordFqdns(domain, `"some-wrong-fqdn.example.com"`),
 				ExpectError: regexp.MustCompile("Certificate needs .* to be set but only .* was passed to validation_record_fqdns"),
 			},
 			// Test that validation succeeds once we provide the right DNS validation records
 			resource.TestStep{
-				Config: testAccAcmCertificateWithValidationAndRecordsConfig(root_zone_domain, domain, sanDomain),
+				Config: testAccAcmCertificateValidation_withRoute53Records(root_zone_domain, domain, strconv.Quote(sanDomain)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr("aws_acm_certificate_validation.cert", "certificate_arn", certificateArnRegex),
 				),
@@ -55,7 +56,7 @@ func TestAccAwsAcmResource_certificateIssuingAndValidationFlow(t *testing.T) {
 	})
 }
 
-func testAccAcmCertificateWithValidationConfig(domain string, sanDomain string) string {
+func testAccAcmCertificateValidation_basic(domainName string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -65,30 +66,24 @@ resource "aws_acm_certificate_validation" "cert" {
     create = "20s"
   }
 }
-`, testAccAcmCertificateConfig(
-		domain, sanDomain,
-		"Environment", "Test",
-		"Foo", "Baz"))
+`, testAccAcmCertificateConfig(domainName, acm.ValidationMethodDns))
 }
 
-func testAccAcmCertificateWithValidationConfigAndWrongFQDN(domain string, sanDomain string) string {
+func testAccAcmCertificateValidation_validationRecordFqdns(domainName, validationRecordFqdns string) string {
 	return fmt.Sprintf(`
 %s
 
 resource "aws_acm_certificate_validation" "cert" {
   certificate_arn = "${aws_acm_certificate.cert.arn}"
-  validation_record_fqdns = ["some-wrong-fqdn.example.com"]
+  validation_record_fqdns = [%s]
   timeouts {
     create = "20s"
   }
 }
-`, testAccAcmCertificateConfig(
-		domain, sanDomain,
-		"Environment", "Test",
-		"Foo", "Baz"))
+`, testAccAcmCertificateConfig(domainName, acm.ValidationMethodDns), validationRecordFqdns)
 }
 
-func testAccAcmCertificateWithValidationAndRecordsConfig(rootZoneDomain string, domain string, sanDomain string) string {
+func testAccAcmCertificateValidation_withRoute53Records(rootZoneDomain, domainName, subjectAlternativeNames string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -120,9 +115,5 @@ resource "aws_acm_certificate_validation" "cert" {
 	"${aws_route53_record.cert_validation_san.fqdn}"
   ]
 }
-`, testAccAcmCertificateConfig(
-		domain, sanDomain,
-		"Environment", "Test",
-		"Foo", "Baz"),
-		rootZoneDomain)
+`, testAccAcmCertificateConfig_subjectAlternativeNames(domainName, subjectAlternativeNames, acm.ValidationMethodDns), rootZoneDomain)
 }
