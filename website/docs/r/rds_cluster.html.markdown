@@ -31,7 +31,22 @@ for more information.
 
 ## Example Usage
 
-### Aurora with Default engine (MySQL)
+### Aurora MySQL 2.x (MySQL 5.7)
+
+```hcl
+resource "aws_rds_cluster" "default" {
+  cluster_identifier      = "aurora-cluster-demo"
+  engine                  = "aurora-mysql"
+  availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name           = "mydb"
+  master_username         = "foo"
+  master_password         = "bar"
+  backup_retention_period = 5
+  preferred_backup_window = "07:00-09:00"
+}
+```
+
+### Aurora MySQL 1.x (MySQL 5.6)
 
 ```hcl
 resource "aws_rds_cluster" "default" {

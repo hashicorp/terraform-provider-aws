@@ -73,6 +73,7 @@ func validateRdsEngine(v interface{}, k string) (ws []string, errors []error) {
 
 	validTypes := map[string]bool{
 		"aurora":            true,
+		"aurora-mysql":      true,
 		"aurora-postgresql": true,
 	}
 
