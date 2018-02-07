@@ -12,11 +12,24 @@ Provides an SNS application resource
 
 ## Example Usage
 
+### Apple Push Notification Service (APNS)
+
+```hcl
+resource "aws_sns_application" "apns_application" {
+  name                = "apns_application"
+  platform            = "APNS"
+  platform_credential = "<APNS PRIVATE KEY>"
+  platform_principal  = "<APNS CERTIFICATE>"
+}
 ```
+
+### Google Cloud Messaging (GCM)
+
+```hcl
 resource "aws_sns_application" "gcm_application" {
-  name = "aws_sns_gcm_application"
-  platform = "GCM"
-  credential = "<GCM API KEY>"
+  name                = "gcm_application"
+  platform            = "GCM"
+  platform_credential = "<GCM API KEY>"
 }
 ```
 
@@ -36,25 +49,6 @@ The following arguments are supported:
 * `success_feedback_role_arn` - (Optional) The IAM role permitted to receive success feedback for this application.
 * `success_feedback_sample_rate` - (Optional) The percentage of success to sample (0-100)
 
-## Platforms supported
-
-Supported SNS Application Platforms include
-
-* `APNS` - Apple iOS Push Notification Service
-* `APNS_SANDBOX` - Apple iOS Push Notification Service Development
-* `APNS_VOIP` - Apple VOIP Push Notification Service
-* `APNS_VOIP_SANDBOX` - Apple VOIP Push Notification Service Development
-* `MACOS` - Apple MacOS Push Notification Service
-* `MACOS_SANDBOX` - Apple MacOS Push Notification Service Development
-* `GCM` - Google Cloud Messaging
-
-Unsupported SNS Application Platforms include
-
-* `ADM` - Amazon Device Messaging
-* `Baidu` - Baidu Cloud Push for Android in China
-* `MPNS` - Microsoft MPNS for Windows Phone 7+
-* `WNS` - Microsoft WNS for Windows 8+ & Windows Phone 8.1+
-
 ## Attributes Reference
 
 The following additional attributes are exported:
@@ -70,5 +64,5 @@ The following additional attributes are exported:
 SNS Applications can be imported using the ARN, e.g.
 
 ```
-$ terraform import aws_sns_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/aws_sns_gcm_application
+$ terraform import aws_sns_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application
 ```
