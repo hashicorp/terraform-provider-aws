@@ -351,6 +351,14 @@
 			"versionExact": "v1.12.72"
 		},
 		{
+			"checksumSHA1": "XJAlmauOOHsHEUW7n0XO/eEpcWI=",
+			"path": "github.com/aws/aws-sdk-go/service/cloudsearch",
+			"revision": "586c9ba6027a527800564282bb843d7e6e7985c9",
+			"revisionTime": "2018-02-07T00:16:19Z",
+			"version": "v1.12.72",
+			"versionExact": "v1.12.72"
+		},
+		{
 			"checksumSHA1": "VTc9UOMqIwuhWJ6oGQDsMkTW09I=",
 			"path": "github.com/aws/aws-sdk-go/service/cloudtrail",
 			"revision": "586c9ba6027a527800564282bb843d7e6e7985c9",
