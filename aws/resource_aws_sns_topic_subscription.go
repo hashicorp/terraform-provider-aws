@@ -167,7 +167,7 @@ func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interfac
 		_, err := snsconn.SetSubscriptionAttributes(req)
 
 		if err != nil {
-			return fmt.Errorf("Unable to set filter policy attribute on subscription")
+			return fmt.Errorf("Unable to set filter policy attribute on subscription: %s", err)
 		}
 	}
 	return resourceAwsSnsTopicSubscriptionRead(d, meta)

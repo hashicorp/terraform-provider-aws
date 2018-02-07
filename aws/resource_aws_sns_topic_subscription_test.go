@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -31,8 +32,10 @@ func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopicSubscription_attributes(t *testing.T) {
+func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
 	ri := acctest.RandInt()
+	filterPolicy1 := `{"key1": ["val1"], "key2": ["val2"]}`
+	filterPolicy2 := `{"key3": ["val3"], "key4": ["val4"]}`
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -40,12 +43,12 @@ func TestAccAWSSNSTopicSubscription_attributes(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_attributes(ri),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
-					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription"),
-					testAccCheckAWSSNSTopicSubscriptionAttributesExists("aws_sns_topic_subscription.test_subscription"),
-				),
+				Config: testAccAWSSNSTopicSubscriptionConfig_filterPolicy(ri, strconv.Quote(filterPolicy1)),
+				Check:  resource.TestCheckResourceAttr("aws_sns_topic_subscription.test_subscription", "filter_policy", filterPolicy1),
+			},
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig_filterPolicy(ri, strconv.Quote(filterPolicy2)),
+				Check:  resource.TestCheckResourceAttr("aws_sns_topic_subscription.test_subscription", "filter_policy", filterPolicy2),
 			},
 		},
 	})
@@ -143,37 +146,6 @@ func testAccCheckAWSSNSTopicSubscriptionExists(n string) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckAWSSNSTopicSubscriptionAttributesExists(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SNS subscription with that ARN exists")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).snsconn
-
-		params := &sns.GetSubscriptionAttributesInput{
-			SubscriptionArn: aws.String(rs.Primary.ID),
-		}
-		out, err := conn.GetSubscriptionAttributes(params)
-		if err != nil {
-			return err
-		}
-
-		expected := "{\"key1\": [\"val1\"], \"key2\": [\"val2\"]}"
-		actual := *out.Attributes["FilterPolicy"]
-		if expected != actual {
-			return fmt.Errorf("Expected %v, got %v", expected, actual)
-		}
-
-		return nil
-	}
-}
-
 func TestObfuscateEndpointPassword(t *testing.T) {
 	checks := map[string]string{
 		"https://example.com/myroute":                   "https://example.com/myroute",
@@ -207,7 +179,7 @@ resource "aws_sns_topic_subscription" "test_subscription" {
 `, i, i)
 }
 
-func testAccAWSSNSTopicSubscriptionConfig_attributes(i int) string {
+func testAccAWSSNSTopicSubscriptionConfig_filterPolicy(i int, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
     name = "terraform-test-topic-%d"
@@ -221,9 +193,9 @@ resource "aws_sns_topic_subscription" "test_subscription" {
     topic_arn = "${aws_sns_topic.test_topic.arn}"
     protocol = "sqs"
     endpoint = "${aws_sqs_queue.test_queue.arn}"
-    filter_policy = "{\"key1\": [\"val1\"], \"key2\": [\"val2\"]}"
+    filter_policy = %s
   }
-`, i, i)
+`, i, i, policy)
 }
 
 func testAccAWSSNSTopicSubscriptionConfig_autoConfirmingEndpoint(i int) string {
