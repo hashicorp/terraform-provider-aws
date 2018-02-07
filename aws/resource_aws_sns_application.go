@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -182,10 +184,32 @@ func resourceAwsSnsApplicationUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsSnsApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	snsconn := meta.(*AWSClient).snsconn
 
-	d.Set("arn", d.Id())
+	// There is no SNS Describe/GetPlatformApplication to fetch attributes like name and platform
+	// We will use the ID, which should be a platform application ARN, to:
+	//  * Validate its an appropriate ARN on import
+	//  * Parse out the name and platform
+	platformApplicationArn, err := arn.Parse(d.Id())
+	if err != nil {
+		return fmt.Errorf(
+			"SNS Platform Application ID must be of the form "+
+				"arn:PARTITION:sns:REGION:ACCOUNTID:app/PLATFORM/NAME, "+
+				"was provided %q and received error: %s", platformApplicationArn.String(), err)
+	}
+
+	platformApplicationArnResourceParts := strings.Split(platformApplicationArn.Resource, "/")
+	if len(platformApplicationArnResourceParts) != 3 || platformApplicationArnResourceParts[0] != "app" {
+		return fmt.Errorf(
+			"SNS Platform Application ID must be of the form "+
+				"arn:PARTITION:sns:REGION:ACCOUNTID:app/PLATFORM/NAME, "+
+				"was provided: %s", platformApplicationArn.String())
+	}
+
+	d.Set("arn", platformApplicationArn.String())
+	d.Set("name", platformApplicationArnResourceParts[2])
+	d.Set("platform", platformApplicationArnResourceParts[1])
 
 	attributeOutput, err := snsconn.GetPlatformApplicationAttributes(&sns.GetPlatformApplicationAttributesInput{
-		PlatformApplicationArn: aws.String(d.Id()),
+		PlatformApplicationArn: aws.String(platformApplicationArn.String()),
 	})
 
 	if err != nil {
