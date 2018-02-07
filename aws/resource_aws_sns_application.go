@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform/helper/schema"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 var SupportedPlatforms = map[string]bool{
@@ -22,14 +21,14 @@ var SupportedPlatforms = map[string]bool{
 // Mutable attributes
 // http://docs.aws.amazon.com/sns/latest/api/API_SetPlatformApplicationAttributes.html
 var SNSPlatformAppAttributeMap = map[string]string{
-	"principal":           "PlatformPrincipal",
-	"created_topic":       "EventEndpointCreated",
-	"deleted_topic":       "EventEndpointDeleted",
-	"updated_topic":       "EventEndpointUpdated",
-	"failure_topic":       "EventDeliveryFailure",
-	"success_iam_arn":     "SuccessFeedbackRoleArn",
-	"failure_iam_arn":     "FailureFeedbackRoleArn",
-	"success_sample_rate": "SuccessFeedbackSampleRate",
+	"event_delivery_failure_topic_arn": "EventDeliveryFailure",
+	"event_endpoint_created_topic_arn": "EventEndpointCreated",
+	"event_endpoint_deleted_topic_arn": "EventEndpointDeleted",
+	"event_endpoint_updated_topic_arn": "EventEndpointUpdated",
+	"failure_feedback_role_arn":        "FailureFeedbackRoleArn",
+	"platform_principal":               "PlatformPrincipal",
+	"success_feedback_role_arn":        "SuccessFeedbackRoleArn",
+	"success_feedback_sample_rate":     "SuccessFeedbackSampleRate",
 }
 
 func resourceAwsSnsApplication() *schema.Resource {
@@ -43,66 +42,57 @@ func resourceAwsSnsApplication() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"platform": &schema.Schema{
+			"platform": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"credential": &schema.Schema{
+			"platform_credential": {
 				Type:      schema.TypeString,
 				Required:  true,
-				ForceNew:  false,
 				StateFunc: hashSum,
 			},
-			"principal": &schema.Schema{
-				Type:      schema.TypeString,
-				Optional:  true,
-				ForceNew:  false,
-				StateFunc: hashSum,
-			},
-			"created_topic": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: false,
-			},
-			"deleted_topic": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: false,
-			},
-			"updated_topic": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: false,
-			},
-			"failure_topic": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: false,
-			},
-			"success_iam_role": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: false,
-			},
-			"failure_iam_role": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: false,
-			},
-			"success_sample_rate": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: false,
-			},
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"event_delivery_failure_topic_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"event_endpoint_created_topic_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"event_endpoint_deleted_topic_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"event_endpoint_updated_topic_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"failure_feedback_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"platform_principal": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				StateFunc: hashSum,
+			},
+			"success_feedback_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"success_feedback_sample_rate": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
@@ -114,9 +104,9 @@ func resourceAwsSnsApplicationCreate(d *schema.ResourceData, meta interface{}) e
 	attributes := make(map[string]*string)
 	name := d.Get("name").(string)
 	platform := d.Get("platform").(string)
-	principal := d.Get("principal").(string)
+	principal := d.Get("platform_principal").(string)
 
-	attributes["PlatformCredential"] = aws.String(d.Get("credential").(string))
+	attributes["PlatformCredential"] = aws.String(d.Get("platform_credential").(string))
 
 	if _, ok := SupportedPlatforms[platform]; !ok {
 		return errors.New(fmt.Sprintf("Platform %s is not supported", platform))
@@ -145,9 +135,6 @@ func resourceAwsSnsApplicationCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(*output.PlatformApplicationArn)
 
-	// Write the ARN to the 'arn' field for export
-	d.Set("arn", *output.PlatformApplicationArn)
-
 	return resourceAwsSnsApplicationUpdate(d, meta)
 }
 
@@ -168,13 +155,13 @@ func resourceAwsSnsApplicationUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if d.HasChange("credential") {
-		attributes["PlatformCredential"] = aws.String(d.Get("credential").(string))
+	if d.HasChange("platform_credential") {
+		attributes["PlatformCredential"] = aws.String(d.Get("platform_credential").(string))
 		// If the platform requires a principal it must also be specified, even if it didn't change
 		// since credential is stored as a hash, the only way to update principal is to update both
 		// as they must be specified together in the request.
 		if v, _ := SupportedPlatforms[d.Get("platform").(string)]; v {
-			attributes["PlatformPrincipal"] = aws.String(d.Get("principal").(string))
+			attributes["PlatformPrincipal"] = aws.String(d.Get("platform_principal").(string))
 		}
 	}
 
@@ -194,6 +181,8 @@ func resourceAwsSnsApplicationUpdate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsSnsApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	snsconn := meta.(*AWSClient).snsconn
+
+	d.Set("arn", d.Id())
 
 	attributeOutput, err := snsconn.GetPlatformApplicationAttributes(&sns.GetPlatformApplicationAttributesInput{
 		PlatformApplicationArn: aws.String(d.Id()),

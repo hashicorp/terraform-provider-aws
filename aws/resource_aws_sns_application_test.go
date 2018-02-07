@@ -38,15 +38,15 @@ func TestAccAWSSNSApplication_gcm_create_update(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_sns_application.gcm_test", "platform", "GCM"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "success_sample_rate", "100"),
+						"aws_sns_application.gcm_test", "success_feedback_sample_rate", "100"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "created_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic"),
+						"aws_sns_application.gcm_test", "event_endpoint_created_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "updated_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic"),
+						"aws_sns_application.gcm_test", "event_endpoint_updated_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "failure_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic"),
+						"aws_sns_application.gcm_test", "event_delivery_failure_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "deleted_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic"),
+						"aws_sns_application.gcm_test", "event_endpoint_deleted_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic"),
 				),
 			},
 			resource.TestStep{
@@ -57,15 +57,15 @@ func TestAccAWSSNSApplication_gcm_create_update(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_sns_application.gcm_test", "platform", "GCM"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "success_sample_rate", "99"),
+						"aws_sns_application.gcm_test", "success_feedback_sample_rate", "99"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "created_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic-update"),
+						"aws_sns_application.gcm_test", "event_endpoint_created_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic-update"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "updated_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic-update"),
+						"aws_sns_application.gcm_test", "event_endpoint_updated_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic-update"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "failure_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic-update"),
+						"aws_sns_application.gcm_test", "event_delivery_failure_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic-update"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "deleted_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic-update"),
+						"aws_sns_application.gcm_test", "event_endpoint_deleted_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic-update"),
 				),
 			},
 		},
@@ -95,15 +95,15 @@ func TestAccAWSSNSApplication_apns_sandbox_create_update(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_sns_application.apns_test", "platform", "APNS_SANDBOX"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "success_sample_rate", "100"),
+						"aws_sns_application.apns_test", "success_feedback_sample_rate", "100"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "created_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic"),
+						"aws_sns_application.apns_test", "event_endpoint_created_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "updated_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic"),
+						"aws_sns_application.apns_test", "event_endpoint_updated_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "failure_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic"),
+						"aws_sns_application.apns_test", "event_delivery_failure_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "deleted_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic"),
+						"aws_sns_application.apns_test", "event_endpoint_deleted_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic"),
 				),
 			},
 			resource.TestStep{
@@ -114,15 +114,15 @@ func TestAccAWSSNSApplication_apns_sandbox_create_update(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_sns_application.apns_test", "platform", "APNS_SANDBOX"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "success_sample_rate", "99"),
+						"aws_sns_application.apns_test", "success_feedback_sample_rate", "99"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "created_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic-update"),
+						"aws_sns_application.apns_test", "event_endpoint_created_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic-update"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "updated_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic-update"),
+						"aws_sns_application.apns_test", "event_endpoint_updated_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic-update"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "failure_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic-update"),
+						"aws_sns_application.apns_test", "event_delivery_failure_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic-update"),
 					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "deleted_topic", "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic-update"),
+						"aws_sns_application.apns_test", "event_endpoint_deleted_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic-update"),
 				),
 			},
 		},
@@ -151,54 +151,54 @@ func testAccCheckAWSSNSApplicationDestroy(s *terraform.State) error {
 
 var testAccAWSSNSApplicationGCMConfig = `
 resource "aws_sns_application" "gcm_test" {
+	event_delivery_failure_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic"
+	event_endpoint_created_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic"
+	event_endpoint_deleted_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic"
+	event_endpoint_updated_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic"
 	name = "aws_sns_application_test"
 	platform = "GCM"
-	created_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic"
-	deleted_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic"
-	updated_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic"
-	failure_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic"
-	success_sample_rate = 100
-	credential = "` + os.Getenv("GCM_API_KEY") + `"
+	platform_credential = "` + os.Getenv("GCM_API_KEY") + `"
+	success_feedback_sample_rate = 100
 }
 `
 
 var testAccAWSSNSApplicationGCMConfigUpdate = `
-	resource "aws_sns_application" "gcm_test" {
+	event_delivery_failure_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic-update"
+	event_endpoint_created_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic-update"
+	event_endpoint_deleted_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic-update"
+	event_endpoint_updated_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic-update"
 	name = "aws_sns_application_test"
 	platform = "GCM"
-	created_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic-update"
-	deleted_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic-update"
-	updated_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic-update"
-	failure_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic-update"
-	success_sample_rate = 99
-	credential = "` + os.Getenv("GCM_API_KEY") + `"
+	platform_credential = "` + os.Getenv("GCM_API_KEY") + `"
+	resource "aws_sns_application" "gcm_test" {
+	success_feedback_sample_rate = 99
 }
 `
 
 var testAccAWSSNSApplicationAPNSSandBoxConfig = `
 resource "aws_sns_application" "apns_test" {
+	event_delivery_failure_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic"
+	event_endpoint_created_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic"
+	event_endpoint_deleted_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic"
+	event_endpoint_updated_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic"
 	name = "aws_sns_application_test"
 	platform = "APNS_SANDBOX"
-	created_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic"
-	deleted_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic"
-	updated_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic"
-	failure_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic"
-	success_sample_rate = 100
-	credential = "` + os.Getenv("APNS_SANDBOX_CREDENTIAL") + `"
-	principal = "` + os.Getenv("APNS_SANDBOX_PRINCIPAL") + `"
+	platform_credential = "` + os.Getenv("APNS_SANDBOX_CREDENTIAL") + `"
+	platform_principal = "` + os.Getenv("APNS_SANDBOX_PRINCIPAL") + `"
+	success_feedback_sample_rate = 100
 }
 `
 
 var testAccAWSSNSApplicationAPNSSandBoxConfigUpdate = `
-	resource "aws_sns_application" "apns_test" {
+resource "aws_sns_application" "apns_test" {
+	event_delivery_failure_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic-update"
+	event_endpoint_created_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic-update"
+	event_endpoint_deleted_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic-update"
+	event_endpoint_updated_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic-update"
 	name = "aws_sns_application_test"
 	platform = "APNS_SANDBOX"
-	created_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic-update"
-	deleted_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic-update"
-	updated_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic-update"
-	failure_topic = "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic-update"
-	success_sample_rate = 99
-	credential = "` + os.Getenv("APNS_SANDBOX_CREDENTIAL") + `"
-	principal = "` + os.Getenv("APNS_SANDBOX_PRINCIPAL") + `"
+	platform_credential = "` + os.Getenv("APNS_SANDBOX_CREDENTIAL") + `"
+	platform_principal = "` + os.Getenv("APNS_SANDBOX_PRINCIPAL") + `"
+	success_feedback_sample_rate = 99
 }
 `

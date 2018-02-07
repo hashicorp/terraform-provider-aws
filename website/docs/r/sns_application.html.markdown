@@ -26,15 +26,15 @@ The following arguments are supported:
 
 * `name` - (Required) The friendly name for the SNS application
 * `platform` - (Required) The platform that the app is registered with. See [Platform][1] for supported platforms.
-* `credential` - (Required) Application Platform credential. See [Credential][1] for type of credential required for platform.
-* `principal` - (Optional) Application Platform principal. See [Principal][2] for type of principal required for platform.
-* `created_topic` - (Optional) SNS Topic triggered when a new platform endpoint is added to your platform application.
-* `deleted_topic` - (Optional) SNS Topic triggered when an existing platform endpoint is deleted from your platform application.
-* `failure_iam_role` - (Optional) The IAM role permitted to receive failure feedback for this application.
-* `failure_topic` - (Optional) SNS Topic triggered when a delivery to any of the platform endpoints associated with your platform application encounters a permanent failure.
-* `success_iam_role` - (Optional) The IAM role permitted to receive success feedback for this application.
-* `success_sample_rate` - (Optional) The percentage of success to sample (0-100)
-* `updated_topic` - (Optional) SNS Topic triggered when an existing platform endpoint is changed from your platform application.
+* `platform_credential` - (Required) Application Platform credential. See [Credential][1] for type of credential required for platform.
+* `event_delivery_failure_topic_arn` - (Optional) SNS Topic triggered when a delivery to any of the platform endpoints associated with your platform application encounters a permanent failure.
+* `event_endpoint_created_topic_arn` - (Optional) SNS Topic triggered when a new platform endpoint is added to your platform application.
+* `event_endpoint_deleted_topic_arn` - (Optional) SNS Topic triggered when an existing platform endpoint is deleted from your platform application.
+* `event_endpoint_updated_topic` - (Optional) SNS Topic triggered when an existing platform endpoint is changed from your platform application.
+* `failure_feedback_role_arn` - (Optional) The IAM role permitted to receive failure feedback for this application.
+* `platform_principal` - (Optional) Application Platform principal. See [Principal][2] for type of principal required for platform.
+* `success_feedback_role_arn` - (Optional) The IAM role permitted to receive success feedback for this application.
+* `success_feedback_sample_rate` - (Optional) The percentage of success to sample (0-100)
 
 ## Platforms supported
 
