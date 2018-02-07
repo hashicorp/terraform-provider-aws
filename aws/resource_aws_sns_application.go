@@ -2,7 +2,6 @@ package aws
 
 import (
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -13,11 +12,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-var SupportedPlatforms = map[string]bool{
-	//"ADM":          true,  // (Amazon Device Messaging)
-	"APNS":         true,  // (Apple Push Notification Service)
-	"APNS_SANDBOX": true,  // (Apple Push Notification Service)
-	"GCM":          false, // (Google Cloud Messaging).
+var snsPlatformRequiresPlatformPrincipal = map[string]bool{
+	"APNS":         true,
+	"APNS_SANDBOX": true,
 }
 
 // Mutable attributes
@@ -41,6 +38,10 @@ func resourceAwsSnsApplication() *schema.Resource {
 		Delete: resourceAwsSnsApplicationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		CustomizeDiff: func(diff *schema.ResourceDiff, v interface{}) error {
+			return validateAwsSnsPlatformApplication(diff)
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -106,29 +107,19 @@ func resourceAwsSnsApplicationCreate(d *schema.ResourceData, meta interface{}) e
 	attributes := make(map[string]*string)
 	name := d.Get("name").(string)
 	platform := d.Get("platform").(string)
-	principal := d.Get("platform_principal").(string)
 
 	attributes["PlatformCredential"] = aws.String(d.Get("platform_credential").(string))
-
-	if _, ok := SupportedPlatforms[platform]; !ok {
-		return errors.New(fmt.Sprintf("Platform %s is not supported", platform))
+	if v, ok := d.GetOk("platform_principal"); ok {
+		attributes["PlatformPrincipal"] = aws.String(v.(string))
 	}
-
-	if value, _ := SupportedPlatforms[platform]; value {
-		if principal == "" {
-			return errors.New(fmt.Sprintf("Principal is required for %s", platform))
-		} else {
-			attributes["PlatformPrincipal"] = aws.String(principal)
-		}
-	}
-
-	log.Printf("[DEBUG] SNS create application: %s", name)
 
 	req := &sns.CreatePlatformApplicationInput{
 		Name:       aws.String(name),
 		Platform:   aws.String(platform),
 		Attributes: attributes,
 	}
+
+	log.Printf("[DEBUG] SNS create application: %s", req)
 
 	output, err := snsconn.CreatePlatformApplication(req)
 	if err != nil {
@@ -162,8 +153,8 @@ func resourceAwsSnsApplicationUpdate(d *schema.ResourceData, meta interface{}) e
 		// If the platform requires a principal it must also be specified, even if it didn't change
 		// since credential is stored as a hash, the only way to update principal is to update both
 		// as they must be specified together in the request.
-		if v, _ := SupportedPlatforms[d.Get("platform").(string)]; v {
-			attributes["PlatformPrincipal"] = aws.String(d.Get("platform_principal").(string))
+		if v, ok := d.GetOk("platform_principal"); ok {
+			attributes["PlatformPrincipal"] = aws.String(v.(string))
 		}
 	}
 
@@ -253,4 +244,19 @@ func resourceAwsSnsApplicationDelete(d *schema.ResourceData, meta interface{}) e
 
 func hashSum(contents interface{}) string {
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(contents.(string))))
+}
+
+func validateAwsSnsPlatformApplication(d *schema.ResourceDiff) error {
+	platform := d.Get("platform").(string)
+	if snsPlatformRequiresPlatformPrincipal[platform] {
+		if v, ok := d.GetOk("platform_principal"); ok {
+			value := v.(string)
+			if len(value) == 0 {
+				return fmt.Errorf("platform_principal must be non-empty when platform = %s", platform)
+			}
+			return nil
+		}
+		return fmt.Errorf("platform_principal is required when platform = %s", platform)
+	}
+	return nil
 }
