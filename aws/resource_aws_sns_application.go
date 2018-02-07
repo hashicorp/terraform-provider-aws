@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -134,11 +136,9 @@ func resourceAwsSnsApplicationCreate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsSnsApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	snsconn := meta.(*AWSClient).snsconn
 
-	resource := *resourceAwsSnsApplication()
-
 	attributes := make(map[string]*string)
 
-	for k, _ := range resource.Schema {
+	for k, _ := range resourceAwsSnsApplication().Schema {
 		if attrKey, ok := SNSPlatformAppAttributeMap[k]; ok {
 			if d.HasChange(k) {
 				log.Printf("[DEBUG] Updating %s", attrKey)
@@ -163,7 +163,17 @@ func resourceAwsSnsApplicationUpdate(d *schema.ResourceData, meta interface{}) e
 		PlatformApplicationArn: aws.String(d.Id()),
 		Attributes:             attributes,
 	}
-	_, err := snsconn.SetPlatformApplicationAttributes(req)
+
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := snsconn.SetPlatformApplicationAttributes(req)
+		if err != nil {
+			if isAWSErr(err, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 
 	if err != nil {
 		return fmt.Errorf("Error updating SNS application: %s", err)
