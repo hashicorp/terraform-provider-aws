@@ -82,7 +82,7 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 				ValidateFunc:     validateJsonString,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				StateFunc: func(v interface{}) string {
-					json, _ := structure.normalizeJsonString(v)
+					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
 			},
