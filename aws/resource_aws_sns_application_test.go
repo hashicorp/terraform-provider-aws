@@ -1,132 +1,347 @@
 package aws
 
 import (
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
+	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	homedir "github.com/mitchellh/go-homedir"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sns"
 )
 
 /**
- Before running this test, a few ENV variables must be set:
+ Before running this test, at least one of these ENV variables combinations must be set:
+
  GCM_API_KEY - Google Cloud Messaging API Key
- APNS_SANDBOX_CREDENTIAL - Apple Push Notification Sandbox Private Key
- APNS_SANDBOX_PRINCIPAL - Apple Push Notification Sandbox Certificate
+
+ APNS_SANDBOX_CREDENTIAL_PATH - Apple Push Notification Sandbox Private Key file location
+ APNS_SANDBOX_PRINCIPAL_PATH - Apple Push Notification Sandbox Certificate file location
 **/
 
-func TestAccAWSSNSApplication_gcm_create_update(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			if os.Getenv("GCM_API_KEY") == "" {
-				t.Fatal("GCM_API_KEY must be set.")
-			}
-		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSNSApplicationDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccAWSSNSApplicationGCMConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "name", "aws_sns_application_test"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "platform", "GCM"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "success_feedback_sample_rate", "100"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "event_endpoint_created_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "event_endpoint_updated_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "event_delivery_failure_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "event_endpoint_deleted_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic"),
-				),
-			},
-			resource.TestStep{
-				Config: testAccAWSSNSApplicationGCMConfigUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "name", "aws_sns_application_test"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "platform", "GCM"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "success_feedback_sample_rate", "99"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "event_endpoint_created_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic-update"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "event_endpoint_updated_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic-update"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "event_delivery_failure_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic-update"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.gcm_test", "event_endpoint_deleted_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic-update"),
-				),
-			},
-		},
-	})
+type testAccAwsSnsApplicationPlatform struct {
+	Name           string
+	Credential     string
+	CredentialHash string
+	Principal      string
+	PrincipalHash  string
 }
 
-func TestAccAWSSNSApplication_apns_sandbox_create_update(t *testing.T) {
+func testAccAwsSnsApplicationPlatformFromEnv() ([]*testAccAwsSnsApplicationPlatform, error) {
+	platforms := make([]*testAccAwsSnsApplicationPlatform, 0, 2)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			if os.Getenv("APNS_SANDBOX_CREDENTIAL") == "" {
-				t.Fatal("APNS_SANDBOX_CREDENTIAL must be set.")
-			}
-			if os.Getenv("APNS_SANDBOX_PRINCIPAL") == "" {
-				t.Fatal("APNS_SANDBOX_PRINCIPAL must be set.")
-			}
+	if os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH") != "" {
+		if os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH") == "" {
+			return platforms, errors.New("APNS_SANDBOX_CREDENTIAL_PATH set but missing APNS_SANDBOX_PRINCIPAL_PATH")
+		}
+		credentialHash, err := testAccHashSumPath(os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH"))
+		if err != nil {
+			return platforms, err
+		}
+		principalHash, err := testAccHashSumPath(os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH"))
+		if err != nil {
+			return platforms, err
+		}
+
+		platform := &testAccAwsSnsApplicationPlatform{
+			Name:           "APNS_SANDBOX",
+			Credential:     fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH")),
+			CredentialHash: credentialHash,
+			Principal:      fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH")),
+			PrincipalHash:  principalHash,
+		}
+		platforms = append(platforms, platform)
+	}
+
+	if os.Getenv("GCM_API_KEY") != "" {
+		platform := &testAccAwsSnsApplicationPlatform{
+			Name:           "GCM",
+			Credential:     os.Getenv("GCM_API_KEY"),
+			CredentialHash: hashSum(os.Getenv("GCM_API_KEY")),
+		}
+		platforms = append(platforms, platform)
+	}
+
+	if len(platforms) == 0 {
+		return platforms, errors.New("no SNS Platform Application environment variables found")
+	}
+	return platforms, nil
+}
+
+func testAccHashSumPath(path string) (string, error) {
+	path, err := homedir.Expand(path)
+	if err != nil {
+		return "", err
+	}
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	return hashSum(string(data)), nil
+}
+
+func TestAccAwsSnsApplication_basic(t *testing.T) {
+	platforms, err := testAccAwsSnsApplicationPlatformFromEnv()
+	if err != nil {
+		t.Skip(err)
+	}
+
+	resourceName := "aws_sns_application.test"
+
+	for _, platform := range platforms {
+		name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
+		platformPrincipalCheck := resource.TestCheckNoResourceAttr(resourceName, "platform_principal")
+		if platform.Principal != "" {
+			platformPrincipalCheck = resource.TestCheckResourceAttr(resourceName, "platform_principal", platform.PrincipalHash)
+		}
+
+		t.Run(platform.Name, func(*testing.T) {
+			resource.Test(t, resource.TestCase{
+				PreCheck:     func() { testAccPreCheck(t) },
+				Providers:    testAccProviders,
+				CheckDestroy: testAccCheckAWSSNSApplicationDestroy,
+				Steps: []resource.TestStep{
+					{
+						Config: testAccAwsSnsApplicationConfig_basic(name, &testAccAwsSnsApplicationPlatform{
+							Name:       "APNS",
+							Credential: "NOTEMPTY",
+							Principal:  "",
+						}),
+						ExpectError: regexp.MustCompile(`platform_principal is required when platform =`),
+					},
+					{
+						Config: testAccAwsSnsApplicationConfig_basic(name, &testAccAwsSnsApplicationPlatform{
+							Name:       "APNS_SANDBOX",
+							Credential: "NOTEMPTY",
+							Principal:  "",
+						}),
+						ExpectError: regexp.MustCompile(`platform_principal is required when platform =`),
+					},
+					{
+						Config: testAccAwsSnsApplicationConfig_basic(name, platform),
+						Check: resource.ComposeTestCheckFunc(
+							testAccCheckAwsSnsApplicationExists(resourceName),
+							resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:sns:[^:]+:[^:]+:app/%s/%s$", platform.Name, name))),
+							resource.TestCheckResourceAttr(resourceName, "name", name),
+							resource.TestCheckResourceAttr(resourceName, "platform", platform.Name),
+							resource.TestCheckResourceAttr(resourceName, "platform_credential", platform.CredentialHash),
+							platformPrincipalCheck,
+						),
+					},
+					{
+						ResourceName:            resourceName,
+						ImportState:             true,
+						ImportStateVerify:       true,
+						ImportStateVerifyIgnore: []string{"platform_credential", "platform_principal"},
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestAccAwsSnsApplication_basicAttributes(t *testing.T) {
+	platforms, err := testAccAwsSnsApplicationPlatformFromEnv()
+	if err != nil {
+		t.Skip(err)
+	}
+
+	resourceName := "aws_sns_application.test"
+
+	var testCases = []struct {
+		AttributeKey         string
+		AttributeValue       string
+		AttributeValueUpdate string
+	}{
+		{
+			AttributeKey:         "success_feedback_sample_rate",
+			AttributeValue:       "100",
+			AttributeValueUpdate: "99",
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSNSApplicationDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccAWSSNSApplicationAPNSSandBoxConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "name", "aws_sns_application_test"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "platform", "APNS_SANDBOX"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "success_feedback_sample_rate", "100"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "event_endpoint_created_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "event_endpoint_updated_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "event_delivery_failure_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "event_endpoint_deleted_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic"),
-				),
-			},
-			resource.TestStep{
-				Config: testAccAWSSNSApplicationAPNSSandBoxConfigUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "name", "aws_sns_application_test"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "platform", "APNS_SANDBOX"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "success_feedback_sample_rate", "99"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "event_endpoint_created_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic-update"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "event_endpoint_updated_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic-update"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "event_delivery_failure_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic-update"),
-					resource.TestCheckResourceAttr(
-						"aws_sns_application.apns_test", "event_endpoint_deleted_topic_arn", "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic-update"),
-				),
-			},
-		},
-	})
+	}
+
+	for _, platform := range platforms {
+		t.Run(platform.Name, func(*testing.T) {
+			for _, tc := range testCases {
+				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc.AttributeKey), func(*testing.T) {
+					name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
+
+					resource.Test(t, resource.TestCase{
+						PreCheck:     func() { testAccPreCheck(t) },
+						Providers:    testAccProviders,
+						CheckDestroy: testAccCheckAWSSNSApplicationDestroy,
+						Steps: []resource.TestStep{
+							{
+								Config: testAccAwsSnsApplicationConfig_basicAttribute(name, platform, tc.AttributeKey, tc.AttributeValue),
+								Check: resource.ComposeTestCheckFunc(
+									testAccCheckAwsSnsApplicationExists(resourceName),
+									resource.TestCheckResourceAttr(resourceName, tc.AttributeKey, tc.AttributeValue),
+								),
+							},
+							{
+								Config: testAccAwsSnsApplicationConfig_basicAttribute(name, platform, tc.AttributeKey, tc.AttributeValueUpdate),
+								Check: resource.ComposeTestCheckFunc(
+									testAccCheckAwsSnsApplicationExists(resourceName),
+									resource.TestCheckResourceAttr(resourceName, tc.AttributeKey, tc.AttributeValueUpdate),
+								),
+							},
+							{
+								ResourceName:            resourceName,
+								ImportState:             true,
+								ImportStateVerify:       true,
+								ImportStateVerifyIgnore: []string{"platform_credential", "platform_principal"},
+							},
+						},
+					})
+				})
+			}
+		})
+	}
+}
+
+func TestAccAwsSnsApplication_iamRoleAttributes(t *testing.T) {
+	platforms, err := testAccAwsSnsApplicationPlatformFromEnv()
+	if err != nil {
+		t.Skip(err)
+	}
+
+	resourceName := "aws_sns_application.test"
+
+	var testCases = []string{
+		"failure_feedback_role_arn",
+		"success_feedback_role_arn",
+	}
+
+	for _, platform := range platforms {
+		t.Run(platform.Name, func(*testing.T) {
+			for _, tc := range testCases {
+				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc), func(*testing.T) {
+					iamRoleName1 := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
+					iamRoleName2 := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
+					name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
+
+					resource.Test(t, resource.TestCase{
+						PreCheck:     func() { testAccPreCheck(t) },
+						Providers:    testAccProviders,
+						CheckDestroy: testAccCheckAWSSNSApplicationDestroy,
+						Steps: []resource.TestStep{
+							{
+								Config: testAccAwsSnsApplicationConfig_iamRoleAttribute(name, platform, tc, iamRoleName1),
+								Check: resource.ComposeTestCheckFunc(
+									testAccCheckAwsSnsApplicationExists(resourceName),
+									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:iam::[^:]+:role/%s$", iamRoleName1))),
+								),
+							},
+							{
+								Config: testAccAwsSnsApplicationConfig_iamRoleAttribute(name, platform, tc, iamRoleName2),
+								Check: resource.ComposeTestCheckFunc(
+									testAccCheckAwsSnsApplicationExists(resourceName),
+									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:iam::[^:]+:role/%s$", iamRoleName2))),
+								),
+							},
+							{
+								ResourceName:            resourceName,
+								ImportState:             true,
+								ImportStateVerify:       true,
+								ImportStateVerifyIgnore: []string{"platform_credential", "platform_principal"},
+							},
+						},
+					})
+				})
+			}
+		})
+	}
+}
+
+func TestAccAwsSnsApplication_snsTopicAttributes(t *testing.T) {
+	platforms, err := testAccAwsSnsApplicationPlatformFromEnv()
+	if err != nil {
+		t.Skip(err)
+	}
+
+	resourceName := "aws_sns_application.test"
+
+	var testCases = []string{
+		"event_delivery_failure_topic_arn",
+		"event_endpoint_created_topic_arn",
+		"event_endpoint_deleted_topic_arn",
+		"event_endpoint_updated_topic_arn",
+	}
+
+	for _, platform := range platforms {
+		t.Run(platform.Name, func(*testing.T) {
+			for _, tc := range testCases {
+				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc), func(*testing.T) {
+					snsTopicName1 := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
+					snsTopicName2 := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
+					name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
+
+					resource.Test(t, resource.TestCase{
+						PreCheck:     func() { testAccPreCheck(t) },
+						Providers:    testAccProviders,
+						CheckDestroy: testAccCheckAWSSNSApplicationDestroy,
+						Steps: []resource.TestStep{
+							{
+								Config: testAccAwsSnsApplicationConfig_snsTopicAttribute(name, platform, tc, snsTopicName1),
+								Check: resource.ComposeTestCheckFunc(
+									testAccCheckAwsSnsApplicationExists(resourceName),
+									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:sns:[^:]+:[^:]+:%s$", snsTopicName1))),
+								),
+							},
+							{
+								Config: testAccAwsSnsApplicationConfig_snsTopicAttribute(name, platform, tc, snsTopicName2),
+								Check: resource.ComposeTestCheckFunc(
+									testAccCheckAwsSnsApplicationExists(resourceName),
+									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:sns:[^:]+:[^:]+:%s$", snsTopicName2))),
+								),
+							},
+							{
+								ResourceName:            resourceName,
+								ImportState:             true,
+								ImportStateVerify:       true,
+								ImportStateVerifyIgnore: []string{"platform_credential", "platform_principal"},
+							},
+						},
+					})
+				})
+			}
+		})
+	}
+}
+
+func testAccCheckAwsSnsApplicationExists(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("missing ID: %s", name)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).snsconn
+
+		input := &sns.GetPlatformApplicationAttributesInput{
+			PlatformApplicationArn: aws.String(rs.Primary.ID),
+		}
+
+		log.Printf("[DEBUG] Reading SNS Platform Application attributes: %s", input)
+		_, err := conn.GetPlatformApplicationAttributes(input)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAWSSNSApplicationDestroy(s *terraform.State) error {
@@ -136,11 +351,15 @@ func testAccCheckAWSSNSApplicationDestroy(s *terraform.State) error {
 		if rs.Type != "aws_sns_application" {
 			continue
 		}
-		_, err := conn.DeletePlatformApplication(&sns.DeletePlatformApplicationInput{
+
+		input := &sns.GetPlatformApplicationAttributesInput{
 			PlatformApplicationArn: aws.String(rs.Primary.ID),
-		})
+		}
+
+		log.Printf("[DEBUG] Reading SNS Platform Application attributes: %s", input)
+		_, err := conn.GetPlatformApplicationAttributes(input)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoSNSApplication" {
+			if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -149,56 +368,80 @@ func testAccCheckAWSSNSApplicationDestroy(s *terraform.State) error {
 	return nil
 }
 
-var testAccAWSSNSApplicationGCMConfig = `
-resource "aws_sns_application" "gcm_test" {
-	event_delivery_failure_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic"
-	event_endpoint_created_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic"
-	event_endpoint_deleted_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic"
-	event_endpoint_updated_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic"
-	name = "aws_sns_application_test"
-	platform = "GCM"
-	platform_credential = "` + os.Getenv("GCM_API_KEY") + `"
-	success_feedback_sample_rate = 100
+func testAccAwsSnsApplicationConfig_basic(name string, platform *testAccAwsSnsApplicationPlatform) string {
+	if platform.Principal == "" {
+		return fmt.Sprintf(`
+resource "aws_sns_application" "test" {
+  name                = "%s"
+  platform            = "%s"
+  platform_credential = "%s"
 }
-`
+`, name, platform.Name, platform.Credential)
+	}
+	return fmt.Sprintf(`
+resource "aws_sns_application" "test" {
+  name                = "%s"
+  platform            = "%s"
+  platform_credential = "%s"
+  platform_principal  = "%s"
+}
+`, name, platform.Name, platform.Credential, platform.Principal)
+}
 
-var testAccAWSSNSApplicationGCMConfigUpdate = `
-	event_delivery_failure_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic-update"
-	event_endpoint_created_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic-update"
-	event_endpoint_deleted_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic-update"
-	event_endpoint_updated_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic-update"
-	name = "aws_sns_application_test"
-	platform = "GCM"
-	platform_credential = "` + os.Getenv("GCM_API_KEY") + `"
-	resource "aws_sns_application" "gcm_test" {
-	success_feedback_sample_rate = 99
+func testAccAwsSnsApplicationConfig_basicAttribute(name string, platform *testAccAwsSnsApplicationPlatform, attributeKey, attributeValue string) string {
+	if platform.Principal == "" {
+		return fmt.Sprintf(`
+resource "aws_sns_application" "test" {
+  name                = "%s"
+  platform            = "%s"
+  platform_credential = "%s"
+  %s                  = "%s"
 }
-`
+`, name, platform.Name, platform.Credential, attributeKey, attributeValue)
+	}
+	return fmt.Sprintf(`
+resource "aws_sns_application" "test" {
+  name                = "%s"
+  platform            = "%s"
+  platform_credential = "%s"
+  platform_principal  = "%s"
+  %s                  = "%s"
+}
+`, name, platform.Name, platform.Credential, platform.Principal, attributeKey, attributeValue)
+}
 
-var testAccAWSSNSApplicationAPNSSandBoxConfig = `
-resource "aws_sns_application" "apns_test" {
-	event_delivery_failure_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic"
-	event_endpoint_created_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic"
-	event_endpoint_deleted_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic"
-	event_endpoint_updated_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic"
-	name = "aws_sns_application_test"
-	platform = "APNS_SANDBOX"
-	platform_credential = "` + os.Getenv("APNS_SANDBOX_CREDENTIAL") + `"
-	platform_principal = "` + os.Getenv("APNS_SANDBOX_PRINCIPAL") + `"
-	success_feedback_sample_rate = 100
+func testAccAwsSnsApplicationConfig_iamRoleAttribute(name string, platform *testAccAwsSnsApplicationPlatform, attributeKey, iamRoleName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Principal": {"Service": "sns.amazonaws.com"},
+    "Action": "sts:AssumeRole"
+  }
 }
-`
+EOF
 
-var testAccAWSSNSApplicationAPNSSandBoxConfigUpdate = `
-resource "aws_sns_application" "apns_test" {
-	event_delivery_failure_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-failure-topic-update"
-	event_endpoint_created_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-created-topic-update"
-	event_endpoint_deleted_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-deleted-topic-update"
-	event_endpoint_updated_topic_arn = "arn:aws:sns:us-east-1:638386993804:endpoint-updated-topic-update"
-	name = "aws_sns_application_test"
-	platform = "APNS_SANDBOX"
-	platform_credential = "` + os.Getenv("APNS_SANDBOX_CREDENTIAL") + `"
-	platform_principal = "` + os.Getenv("APNS_SANDBOX_PRINCIPAL") + `"
-	success_feedback_sample_rate = 99
+  name = "%s"
 }
-`
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+  role       = "${aws_iam_role.test.id}"
+}
+
+%s
+`, iamRoleName, testAccAwsSnsApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_iam_role.test.arn}"))
+}
+
+func testAccAwsSnsApplicationConfig_snsTopicAttribute(name string, platform *testAccAwsSnsApplicationPlatform, attributeKey, snsTopicName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = "%s"
+}
+
+%s
+`, snsTopicName, testAccAwsSnsApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_sns_topic.test.arn}"))
+}
