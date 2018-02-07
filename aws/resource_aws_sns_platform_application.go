@@ -21,7 +21,7 @@ var snsPlatformRequiresPlatformPrincipal = map[string]bool{
 
 // Mutable attributes
 // http://docs.aws.amazon.com/sns/latest/api/API_SetPlatformApplicationAttributes.html
-var SNSPlatformAppAttributeMap = map[string]string{
+var snsPlatformApplicationAttributeMap = map[string]string{
 	"event_delivery_failure_topic_arn": "EventDeliveryFailure",
 	"event_endpoint_created_topic_arn": "EventEndpointCreated",
 	"event_endpoint_deleted_topic_arn": "EventEndpointDeleted",
@@ -32,12 +32,12 @@ var SNSPlatformAppAttributeMap = map[string]string{
 	"success_feedback_sample_rate":     "SuccessFeedbackSampleRate",
 }
 
-func resourceAwsSnsApplication() *schema.Resource {
+func resourceAwsSnsPlatformApplication() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSnsApplicationCreate,
-		Read:   resourceAwsSnsApplicationRead,
-		Update: resourceAwsSnsApplicationUpdate,
-		Delete: resourceAwsSnsApplicationDelete,
+		Create: resourceAwsSnsPlatformApplicationCreate,
+		Read:   resourceAwsSnsPlatformApplicationRead,
+		Update: resourceAwsSnsPlatformApplicationUpdate,
+		Delete: resourceAwsSnsPlatformApplicationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -103,7 +103,7 @@ func resourceAwsSnsApplication() *schema.Resource {
 	}
 }
 
-func resourceAwsSnsApplicationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSnsPlatformApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	snsconn := meta.(*AWSClient).snsconn
 
 	attributes := make(map[string]*string)
@@ -125,21 +125,21 @@ func resourceAwsSnsApplicationCreate(d *schema.ResourceData, meta interface{}) e
 
 	output, err := snsconn.CreatePlatformApplication(req)
 	if err != nil {
-		return fmt.Errorf("Error creating SNS application: %s", err)
+		return fmt.Errorf("Error creating SNS platform application: %s", err)
 	}
 
 	d.SetId(*output.PlatformApplicationArn)
 
-	return resourceAwsSnsApplicationUpdate(d, meta)
+	return resourceAwsSnsPlatformApplicationUpdate(d, meta)
 }
 
-func resourceAwsSnsApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	snsconn := meta.(*AWSClient).snsconn
 
 	attributes := make(map[string]*string)
 
-	for k, _ := range resourceAwsSnsApplication().Schema {
-		if attrKey, ok := SNSPlatformAppAttributeMap[k]; ok {
+	for k, _ := range resourceAwsSnsPlatformApplication().Schema {
+		if attrKey, ok := snsPlatformApplicationAttributeMap[k]; ok {
 			if d.HasChange(k) {
 				log.Printf("[DEBUG] Updating %s", attrKey)
 				_, n := d.GetChange(k)
@@ -176,13 +176,13 @@ func resourceAwsSnsApplicationUpdate(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error updating SNS application: %s", err)
+		return fmt.Errorf("Error updating SNS platform application: %s", err)
 	}
 
-	return resourceAwsSnsApplicationRead(d, meta)
+	return resourceAwsSnsPlatformApplicationRead(d, meta)
 }
 
-func resourceAwsSnsApplicationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSnsPlatformApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	snsconn := meta.(*AWSClient).snsconn
 
 	// There is no SNS Describe/GetPlatformApplication to fetch attributes like name and platform
@@ -219,9 +219,9 @@ func resourceAwsSnsApplicationRead(d *schema.ResourceData, meta interface{}) err
 
 	if attributeOutput.Attributes != nil && len(attributeOutput.Attributes) > 0 {
 		attrmap := attributeOutput.Attributes
-		resource := *resourceAwsSnsApplication()
+		resource := *resourceAwsSnsPlatformApplication()
 		// iKey = internal struct key, oKey = AWS Attribute Map key
-		for iKey, oKey := range SNSPlatformAppAttributeMap {
+		for iKey, oKey := range snsPlatformApplicationAttributeMap {
 			log.Printf("[DEBUG] Updating %s => %s", iKey, oKey)
 
 			if attrmap[oKey] != nil {
@@ -239,7 +239,7 @@ func resourceAwsSnsApplicationRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsSnsApplicationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSnsPlatformApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	snsconn := meta.(*AWSClient).snsconn
 
 	log.Printf("[DEBUG] SNS Delete Application: %s", d.Id())
