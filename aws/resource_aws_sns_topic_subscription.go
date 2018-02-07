@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -81,7 +82,7 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 				ValidateFunc:     validateJsonString,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				StateFunc: func(v interface{}) string {
-					json, _ := normalizeJsonString(v)
+					json, _ := structure.normalizeJsonString(v)
 					return json
 				},
 			},
