@@ -8161,7 +8161,6 @@ func (c *GameLift) ValidateMatchmakingRuleSetWithContext(ctx aws.Context, input 
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/AcceptMatchInput
 type AcceptMatchInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8233,7 +8232,6 @@ func (s *AcceptMatchInput) SetTicketId(v string) *AcceptMatchInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/AcceptMatchOutput
 type AcceptMatchOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8263,7 +8261,6 @@ func (s AcceptMatchOutput) GoString() string {
 //    * DeleteAlias
 //
 //    * ResolveAlias
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/Alias
 type Alias struct {
 	_ struct{} `type:"structure"`
 
@@ -8348,7 +8345,6 @@ func (s *Alias) SetRoutingStrategy(v *RoutingStrategy) *Alias {
 // specify an attribute value using any of the valid data types: string, number,
 // string array or data map. Each AttributeValue object can use only one of
 // the available properties.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/AttributeValue
 type AttributeValue struct {
 	_ struct{} `type:"structure"`
 
@@ -8418,7 +8414,6 @@ func (s *AttributeValue) SetSL(v []*string) *AttributeValue {
 // Temporary access credentials used for uploading game build files to Amazon
 // GameLift. They are valid for a limited time. If they expire before you upload
 // your game build, get a new set by calling RequestUploadCredentials.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/AwsCredentials
 type AwsCredentials struct {
 	_ struct{} `type:"structure"`
 
@@ -8474,7 +8469,6 @@ func (s *AwsCredentials) SetSessionToken(v string) *AwsCredentials {
 //    * UpdateBuild
 //
 //    * DeleteBuild
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/Build
 type Build struct {
 	_ struct{} `type:"structure"`
 
@@ -8571,7 +8565,6 @@ func (s *Build) SetVersion(v string) *Build {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateAliasInput
 type CreateAliasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8641,7 +8634,6 @@ func (s *CreateAliasInput) SetRoutingStrategy(v *RoutingStrategy) *CreateAliasIn
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateAliasOutput
 type CreateAliasOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8666,7 +8658,6 @@ func (s *CreateAliasOutput) SetAlias(v *Alias) *CreateAliasOutput {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateBuildInput
 type CreateBuildInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8749,7 +8740,6 @@ func (s *CreateBuildInput) SetVersion(v string) *CreateBuildInput {
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateBuildOutput
 type CreateBuildOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8792,7 +8782,6 @@ func (s *CreateBuildOutput) SetUploadCredentials(v *AwsCredentials) *CreateBuild
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateFleetInput
 type CreateFleetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9040,7 +9029,6 @@ func (s *CreateFleetInput) SetServerLaunchPath(v string) *CreateFleetInput {
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateFleetOutput
 type CreateFleetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9065,7 +9053,6 @@ func (s *CreateFleetOutput) SetFleetAttributes(v *FleetAttributes) *CreateFleetO
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateGameSessionInput
 type CreateGameSessionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9226,7 +9213,6 @@ func (s *CreateGameSessionInput) SetName(v string) *CreateGameSessionInput {
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateGameSessionOutput
 type CreateGameSessionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9251,7 +9237,6 @@ func (s *CreateGameSessionOutput) SetGameSession(v *GameSession) *CreateGameSess
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateGameSessionQueueInput
 type CreateGameSessionQueueInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9345,7 +9330,6 @@ func (s *CreateGameSessionQueueInput) SetTimeoutInSeconds(v int64) *CreateGameSe
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateGameSessionQueueOutput
 type CreateGameSessionQueueOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9370,7 +9354,6 @@ func (s *CreateGameSessionQueueOutput) SetGameSessionQueue(v *GameSessionQueue) 
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateMatchmakingConfigurationInput
 type CreateMatchmakingConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9581,7 +9564,6 @@ func (s *CreateMatchmakingConfigurationInput) SetRuleSetName(v string) *CreateMa
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateMatchmakingConfigurationOutput
 type CreateMatchmakingConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9606,7 +9588,6 @@ func (s *CreateMatchmakingConfigurationOutput) SetConfiguration(v *MatchmakingCo
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateMatchmakingRuleSetInput
 type CreateMatchmakingRuleSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9668,7 +9649,6 @@ func (s *CreateMatchmakingRuleSetInput) SetRuleSetBody(v string) *CreateMatchmak
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateMatchmakingRuleSetOutput
 type CreateMatchmakingRuleSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9695,7 +9675,6 @@ func (s *CreateMatchmakingRuleSetOutput) SetRuleSet(v *MatchmakingRuleSet) *Crea
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreatePlayerSessionInput
 type CreatePlayerSessionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9768,7 +9747,6 @@ func (s *CreatePlayerSessionInput) SetPlayerId(v string) *CreatePlayerSessionInp
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreatePlayerSessionOutput
 type CreatePlayerSessionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9793,7 +9771,6 @@ func (s *CreatePlayerSessionOutput) SetPlayerSession(v *PlayerSession) *CreatePl
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreatePlayerSessionsInput
 type CreatePlayerSessionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9865,7 +9842,6 @@ func (s *CreatePlayerSessionsInput) SetPlayerIds(v []*string) *CreatePlayerSessi
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreatePlayerSessionsOutput
 type CreatePlayerSessionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9890,7 +9866,6 @@ func (s *CreatePlayerSessionsOutput) SetPlayerSessions(v []*PlayerSession) *Crea
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateVpcPeeringAuthorizationInput
 type CreateVpcPeeringAuthorizationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9955,7 +9930,6 @@ func (s *CreateVpcPeeringAuthorizationInput) SetPeerVpcId(v string) *CreateVpcPe
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateVpcPeeringAuthorizationOutput
 type CreateVpcPeeringAuthorizationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9980,7 +9954,6 @@ func (s *CreateVpcPeeringAuthorizationOutput) SetVpcPeeringAuthorization(v *VpcP
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateVpcPeeringConnectionInput
 type CreateVpcPeeringConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10059,7 +10032,6 @@ func (s *CreateVpcPeeringConnectionInput) SetPeerVpcId(v string) *CreateVpcPeeri
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/CreateVpcPeeringConnectionOutput
 type CreateVpcPeeringConnectionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10075,7 +10047,6 @@ func (s CreateVpcPeeringConnectionOutput) GoString() string {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteAliasInput
 type DeleteAliasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10114,7 +10085,6 @@ func (s *DeleteAliasInput) SetAliasId(v string) *DeleteAliasInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteAliasOutput
 type DeleteAliasOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10130,7 +10100,6 @@ func (s DeleteAliasOutput) GoString() string {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteBuildInput
 type DeleteBuildInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10169,7 +10138,6 @@ func (s *DeleteBuildInput) SetBuildId(v string) *DeleteBuildInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteBuildOutput
 type DeleteBuildOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10185,7 +10153,6 @@ func (s DeleteBuildOutput) GoString() string {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteFleetInput
 type DeleteFleetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10224,7 +10191,6 @@ func (s *DeleteFleetInput) SetFleetId(v string) *DeleteFleetInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteFleetOutput
 type DeleteFleetOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10240,7 +10206,6 @@ func (s DeleteFleetOutput) GoString() string {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteGameSessionQueueInput
 type DeleteGameSessionQueueInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10283,7 +10248,6 @@ func (s *DeleteGameSessionQueueInput) SetName(v string) *DeleteGameSessionQueueI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteGameSessionQueueOutput
 type DeleteGameSessionQueueOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10299,7 +10263,6 @@ func (s DeleteGameSessionQueueOutput) GoString() string {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteMatchmakingConfigurationInput
 type DeleteMatchmakingConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10341,7 +10304,6 @@ func (s *DeleteMatchmakingConfigurationInput) SetName(v string) *DeleteMatchmaki
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteMatchmakingConfigurationOutput
 type DeleteMatchmakingConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10357,7 +10319,6 @@ func (s DeleteMatchmakingConfigurationOutput) GoString() string {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteScalingPolicyInput
 type DeleteScalingPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10414,7 +10375,6 @@ func (s *DeleteScalingPolicyInput) SetName(v string) *DeleteScalingPolicyInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteScalingPolicyOutput
 type DeleteScalingPolicyOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10430,7 +10390,6 @@ func (s DeleteScalingPolicyOutput) GoString() string {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteVpcPeeringAuthorizationInput
 type DeleteVpcPeeringAuthorizationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10494,7 +10453,6 @@ func (s *DeleteVpcPeeringAuthorizationInput) SetPeerVpcId(v string) *DeleteVpcPe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteVpcPeeringAuthorizationOutput
 type DeleteVpcPeeringAuthorizationOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10510,7 +10468,6 @@ func (s DeleteVpcPeeringAuthorizationOutput) GoString() string {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteVpcPeeringConnectionInput
 type DeleteVpcPeeringConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10568,7 +10525,6 @@ func (s *DeleteVpcPeeringConnectionInput) SetVpcPeeringConnectionId(v string) *D
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DeleteVpcPeeringConnectionOutput
 type DeleteVpcPeeringConnectionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10584,7 +10540,6 @@ func (s DeleteVpcPeeringConnectionOutput) GoString() string {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeAliasInput
 type DescribeAliasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10624,7 +10579,6 @@ func (s *DescribeAliasInput) SetAliasId(v string) *DescribeAliasInput {
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeAliasOutput
 type DescribeAliasOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10649,7 +10603,6 @@ func (s *DescribeAliasOutput) SetAlias(v *Alias) *DescribeAliasOutput {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeBuildInput
 type DescribeBuildInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10689,7 +10642,6 @@ func (s *DescribeBuildInput) SetBuildId(v string) *DescribeBuildInput {
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeBuildOutput
 type DescribeBuildOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10714,7 +10666,6 @@ func (s *DescribeBuildOutput) SetBuild(v *Build) *DescribeBuildOutput {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeEC2InstanceLimitsInput
 type DescribeEC2InstanceLimitsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10744,7 +10695,6 @@ func (s *DescribeEC2InstanceLimitsInput) SetEC2InstanceType(v string) *DescribeE
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeEC2InstanceLimitsOutput
 type DescribeEC2InstanceLimitsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10770,7 +10720,6 @@ func (s *DescribeEC2InstanceLimitsOutput) SetEC2InstanceLimits(v []*EC2InstanceL
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeFleetAttributesInput
 type DescribeFleetAttributesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10838,7 +10787,6 @@ func (s *DescribeFleetAttributesInput) SetNextToken(v string) *DescribeFleetAttr
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeFleetAttributesOutput
 type DescribeFleetAttributesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10875,7 +10823,6 @@ func (s *DescribeFleetAttributesOutput) SetNextToken(v string) *DescribeFleetAtt
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeFleetCapacityInput
 type DescribeFleetCapacityInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10943,7 +10890,6 @@ func (s *DescribeFleetCapacityInput) SetNextToken(v string) *DescribeFleetCapaci
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeFleetCapacityOutput
 type DescribeFleetCapacityOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10981,7 +10927,6 @@ func (s *DescribeFleetCapacityOutput) SetNextToken(v string) *DescribeFleetCapac
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeFleetEventsInput
 type DescribeFleetEventsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11071,7 +11016,6 @@ func (s *DescribeFleetEventsInput) SetStartTime(v time.Time) *DescribeFleetEvent
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeFleetEventsOutput
 type DescribeFleetEventsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11107,7 +11051,6 @@ func (s *DescribeFleetEventsOutput) SetNextToken(v string) *DescribeFleetEventsO
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeFleetPortSettingsInput
 type DescribeFleetPortSettingsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11147,7 +11090,6 @@ func (s *DescribeFleetPortSettingsInput) SetFleetId(v string) *DescribeFleetPort
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeFleetPortSettingsOutput
 type DescribeFleetPortSettingsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11172,7 +11114,6 @@ func (s *DescribeFleetPortSettingsOutput) SetInboundPermissions(v []*IpPermissio
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeFleetUtilizationInput
 type DescribeFleetUtilizationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11240,7 +11181,6 @@ func (s *DescribeFleetUtilizationInput) SetNextToken(v string) *DescribeFleetUti
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeFleetUtilizationOutput
 type DescribeFleetUtilizationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11277,7 +11217,6 @@ func (s *DescribeFleetUtilizationOutput) SetNextToken(v string) *DescribeFleetUt
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeGameSessionDetailsInput
 type DescribeGameSessionDetailsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11376,7 +11315,6 @@ func (s *DescribeGameSessionDetailsInput) SetStatusFilter(v string) *DescribeGam
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeGameSessionDetailsOutput
 type DescribeGameSessionDetailsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11413,7 +11351,6 @@ func (s *DescribeGameSessionDetailsOutput) SetNextToken(v string) *DescribeGameS
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeGameSessionPlacementInput
 type DescribeGameSessionPlacementInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11456,7 +11393,6 @@ func (s *DescribeGameSessionPlacementInput) SetPlacementId(v string) *DescribeGa
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeGameSessionPlacementOutput
 type DescribeGameSessionPlacementOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11481,7 +11417,6 @@ func (s *DescribeGameSessionPlacementOutput) SetGameSessionPlacement(v *GameSess
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeGameSessionQueuesInput
 type DescribeGameSessionQueuesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11544,7 +11479,6 @@ func (s *DescribeGameSessionQueuesInput) SetNextToken(v string) *DescribeGameSes
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeGameSessionQueuesOutput
 type DescribeGameSessionQueuesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11580,7 +11514,6 @@ func (s *DescribeGameSessionQueuesOutput) SetNextToken(v string) *DescribeGameSe
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeGameSessionsInput
 type DescribeGameSessionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11679,7 +11612,6 @@ func (s *DescribeGameSessionsInput) SetStatusFilter(v string) *DescribeGameSessi
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeGameSessionsOutput
 type DescribeGameSessionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11716,7 +11648,6 @@ func (s *DescribeGameSessionsOutput) SetNextToken(v string) *DescribeGameSession
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeInstancesInput
 type DescribeInstancesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11793,7 +11724,6 @@ func (s *DescribeInstancesInput) SetNextToken(v string) *DescribeInstancesInput 
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeInstancesOutput
 type DescribeInstancesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11829,7 +11759,6 @@ func (s *DescribeInstancesOutput) SetNextToken(v string) *DescribeInstancesOutpu
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeMatchmakingConfigurationsInput
 type DescribeMatchmakingConfigurationsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11905,7 +11834,6 @@ func (s *DescribeMatchmakingConfigurationsInput) SetRuleSetName(v string) *Descr
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeMatchmakingConfigurationsOutput
 type DescribeMatchmakingConfigurationsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11941,7 +11869,6 @@ func (s *DescribeMatchmakingConfigurationsOutput) SetNextToken(v string) *Descri
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeMatchmakingInput
 type DescribeMatchmakingInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11982,7 +11909,6 @@ func (s *DescribeMatchmakingInput) SetTicketIds(v []*string) *DescribeMatchmakin
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeMatchmakingOutput
 type DescribeMatchmakingOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12007,7 +11933,6 @@ func (s *DescribeMatchmakingOutput) SetTicketList(v []*MatchmakingTicket) *Descr
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeMatchmakingRuleSetsInput
 type DescribeMatchmakingRuleSetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12073,7 +11998,6 @@ func (s *DescribeMatchmakingRuleSetsInput) SetNextToken(v string) *DescribeMatch
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeMatchmakingRuleSetsOutput
 type DescribeMatchmakingRuleSetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12111,7 +12035,6 @@ func (s *DescribeMatchmakingRuleSetsOutput) SetRuleSets(v []*MatchmakingRuleSet)
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribePlayerSessionsInput
 type DescribePlayerSessionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12224,7 +12147,6 @@ func (s *DescribePlayerSessionsInput) SetPlayerSessionStatusFilter(v string) *De
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribePlayerSessionsOutput
 type DescribePlayerSessionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12261,7 +12183,6 @@ func (s *DescribePlayerSessionsOutput) SetPlayerSessions(v []*PlayerSession) *De
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeRuntimeConfigurationInput
 type DescribeRuntimeConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12301,7 +12222,6 @@ func (s *DescribeRuntimeConfigurationInput) SetFleetId(v string) *DescribeRuntim
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeRuntimeConfigurationOutput
 type DescribeRuntimeConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12327,7 +12247,6 @@ func (s *DescribeRuntimeConfigurationOutput) SetRuntimeConfiguration(v *RuntimeC
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeScalingPoliciesInput
 type DescribeScalingPoliciesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12419,7 +12338,6 @@ func (s *DescribeScalingPoliciesInput) SetStatusFilter(v string) *DescribeScalin
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeScalingPoliciesOutput
 type DescribeScalingPoliciesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12454,7 +12372,6 @@ func (s *DescribeScalingPoliciesOutput) SetScalingPolicies(v []*ScalingPolicy) *
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeVpcPeeringAuthorizationsInput
 type DescribeVpcPeeringAuthorizationsInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -12469,7 +12386,6 @@ func (s DescribeVpcPeeringAuthorizationsInput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeVpcPeeringAuthorizationsOutput
 type DescribeVpcPeeringAuthorizationsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12495,7 +12411,6 @@ func (s *DescribeVpcPeeringAuthorizationsOutput) SetVpcPeeringAuthorizations(v [
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeVpcPeeringConnectionsInput
 type DescribeVpcPeeringConnectionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12520,7 +12435,6 @@ func (s *DescribeVpcPeeringConnectionsInput) SetFleetId(v string) *DescribeVpcPe
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeVpcPeeringConnectionsOutput
 type DescribeVpcPeeringConnectionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12546,7 +12460,6 @@ func (s *DescribeVpcPeeringConnectionsOutput) SetVpcPeeringConnections(v []*VpcP
 
 // Player information for use when creating player sessions using a game session
 // placement request with StartGameSessionPlacement.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DesiredPlayerSession
 type DesiredPlayerSession struct {
 	_ struct{} `type:"structure"`
 
@@ -12645,7 +12558,6 @@ func (s *DesiredPlayerSession) SetPlayerId(v string) *DesiredPlayerSession {
 // DescribeEC2InstanceLimits
 //
 //    * DeleteFleet
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/EC2InstanceCounts
 type EC2InstanceCounts struct {
 	_ struct{} `type:"structure"`
 
@@ -12727,7 +12639,6 @@ func (s *EC2InstanceCounts) SetTERMINATING(v int64) *EC2InstanceCounts {
 
 // Maximum number of instances allowed based on the Amazon Elastic Compute Cloud
 // (Amazon EC2) instance type. Instance limits can be retrieved by calling DescribeEC2InstanceLimits.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/EC2InstanceLimit
 type EC2InstanceLimit struct {
 	_ struct{} `type:"structure"`
 
@@ -12777,7 +12688,6 @@ func (s *EC2InstanceLimit) SetInstanceLimit(v int64) *EC2InstanceLimit {
 // Log entry describing an event that involves Amazon GameLift resources (such
 // as a fleet). In addition to tracking activity, event codes and messages can
 // provide additional information for troubleshooting and debugging problems.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/Event
 type Event struct {
 	_ struct{} `type:"structure"`
 
@@ -12985,7 +12895,6 @@ func (s *Event) SetResourceId(v string) *Event {
 // DescribeEC2InstanceLimits
 //
 //    * DeleteFleet
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/FleetAttributes
 type FleetAttributes struct {
 	_ struct{} `type:"structure"`
 
@@ -13228,7 +13137,6 @@ func (s *FleetAttributes) SetTerminationTime(v time.Time) *FleetAttributes {
 // DescribeEC2InstanceLimits
 //
 //    * DeleteFleet
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/FleetCapacity
 type FleetCapacity struct {
 	_ struct{} `type:"structure"`
 
@@ -13320,7 +13228,6 @@ func (s *FleetCapacity) SetInstanceType(v string) *FleetCapacity {
 // DescribeEC2InstanceLimits
 //
 //    * DeleteFleet
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/FleetUtilization
 type FleetUtilization struct {
 	_ struct{} `type:"structure"`
 
@@ -13391,7 +13298,6 @@ func (s *FleetUtilization) SetMaximumPlayerSessionCount(v int64) *FleetUtilizati
 // when initiating a new game session; the server process uses the properties
 // as appropriate. For more information, see the  Amazon GameLift Developer
 // Guide (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-client-api.html#gamelift-sdk-client-api-create).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/GameProperty
 type GameProperty struct {
 	_ struct{} `type:"structure"`
 
@@ -13474,7 +13380,6 @@ func (s *GameProperty) SetValue(v string) *GameProperty {
 // DescribeGameSessionPlacement
 //
 // StopGameSessionPlacement
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/GameSession
 type GameSession struct {
 	_ struct{} `type:"structure"`
 
@@ -13638,7 +13543,6 @@ func (s *GameSession) SetTerminationTime(v time.Time) *GameSession {
 // the game session endpoint and player sessions for each player in the original
 // matchmaking request, is added to the MatchmakingTicket, which can be retrieved
 // by calling DescribeMatchmaking.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/GameSessionConnectionInfo
 type GameSessionConnectionInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -13694,7 +13598,6 @@ func (s *GameSessionConnectionInfo) SetPort(v int64) *GameSessionConnectionInfo 
 }
 
 // A game session's properties plus the protection policy currently in force.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/GameSessionDetail
 type GameSessionDetail struct {
 	_ struct{} `type:"structure"`
 
@@ -13744,7 +13647,6 @@ func (s *GameSessionDetail) SetProtectionPolicy(v string) *GameSessionDetail {
 //    * DescribeGameSessionPlacement
 //
 //    * StopGameSessionPlacement
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/GameSessionPlacement
 type GameSessionPlacement struct {
 	_ struct{} `type:"structure"`
 
@@ -13968,7 +13870,6 @@ func (s *GameSessionPlacement) SetStatus(v string) *GameSessionPlacement {
 //    * UpdateGameSessionQueue
 //
 //    * DeleteGameSessionQueue
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/GameSessionQueue
 type GameSessionQueue struct {
 	_ struct{} `type:"structure"`
 
@@ -14055,7 +13956,6 @@ func (s *GameSessionQueue) SetTimeoutInSeconds(v int64) *GameSessionQueue {
 //    * UpdateGameSessionQueue
 //
 //    * DeleteGameSessionQueue
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/GameSessionQueueDestination
 type GameSessionQueueDestination struct {
 	_ struct{} `type:"structure"`
 
@@ -14095,7 +13995,6 @@ func (s *GameSessionQueueDestination) SetDestinationArn(v string) *GameSessionQu
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/GetGameSessionLogUrlInput
 type GetGameSessionLogUrlInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14138,7 +14037,6 @@ func (s *GetGameSessionLogUrlInput) SetGameSessionId(v string) *GetGameSessionLo
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/GetGameSessionLogUrlOutput
 type GetGameSessionLogUrlOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14163,7 +14061,6 @@ func (s *GetGameSessionLogUrlOutput) SetPreSignedUrl(v string) *GetGameSessionLo
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/GetInstanceAccessInput
 type GetInstanceAccessInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14221,7 +14118,6 @@ func (s *GetInstanceAccessInput) SetInstanceId(v string) *GetInstanceAccessInput
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/GetInstanceAccessOutput
 type GetInstanceAccessOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14248,7 +14144,6 @@ func (s *GetInstanceAccessOutput) SetInstanceAccess(v *InstanceAccess) *GetInsta
 
 // Properties that describe an instance of a virtual computing resource that
 // hosts one or more game servers. A fleet may contain zero or more instances.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/Instance
 type Instance struct {
 	_ struct{} `type:"structure"`
 
@@ -14341,7 +14236,6 @@ func (s *Instance) SetType(v string) *Instance {
 
 // Information required to remotely connect to a fleet instance. Access is requested
 // by calling GetInstanceAccess.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/InstanceAccess
 type InstanceAccess struct {
 	_ struct{} `type:"structure"`
 
@@ -14404,7 +14298,6 @@ func (s *InstanceAccess) SetOperatingSystem(v string) *InstanceAccess {
 // Set of credentials required to remotely access a fleet instance. Access credentials
 // are requested by calling GetInstanceAccess and returned in an InstanceAccess
 // object.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/InstanceCredentials
 type InstanceCredentials struct {
 	_ struct{} `type:"structure"`
 
@@ -14444,7 +14337,6 @@ func (s *InstanceCredentials) SetUserName(v string) *InstanceCredentials {
 // is assigned a unique combination of IP address and port number, which must
 // fall into the fleet's allowed ranges. This combination is included in the
 // GameSession object.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/IpPermission
 type IpPermission struct {
 	_ struct{} `type:"structure"`
 
@@ -14535,7 +14427,6 @@ func (s *IpPermission) SetToPort(v int64) *IpPermission {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/ListAliasesInput
 type ListAliasesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14621,7 +14512,6 @@ func (s *ListAliasesInput) SetRoutingStrategyType(v string) *ListAliasesInput {
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/ListAliasesOutput
 type ListAliasesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14657,7 +14547,6 @@ func (s *ListAliasesOutput) SetNextToken(v string) *ListAliasesOutput {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/ListBuildsInput
 type ListBuildsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14733,7 +14622,6 @@ func (s *ListBuildsInput) SetStatus(v string) *ListBuildsInput {
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/ListBuildsOutput
 type ListBuildsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14769,7 +14657,6 @@ func (s *ListBuildsOutput) SetNextToken(v string) *ListBuildsOutput {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/ListFleetsInput
 type ListFleetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14833,7 +14720,6 @@ func (s *ListFleetsInput) SetNextToken(v string) *ListFleetsInput {
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/ListFleetsOutput
 type ListFleetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14876,7 +14762,6 @@ func (s *ListFleetsOutput) SetNextToken(v string) *ListFleetsOutput {
 //
 // When players connect to the match's game session, they must include both
 // player ID and player session ID in order to claim their assigned player slot.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/MatchedPlayerSession
 type MatchedPlayerSession struct {
 	_ struct{} `type:"structure"`
 
@@ -14911,7 +14796,6 @@ func (s *MatchedPlayerSession) SetPlayerSessionId(v string) *MatchedPlayerSessio
 
 // Guidelines for use with FlexMatch to match players into games. All matchmaking
 // requests must specify a matchmaking configuration.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/MatchmakingConfiguration
 type MatchmakingConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -15100,7 +14984,6 @@ func (s *MatchmakingConfiguration) SetRuleSetName(v string) *MatchmakingConfigur
 //    instead of making them wait indefinitely for the best possible match.
 //    For example, you might use an expansion to increase the maximum skill
 //    variance between players after 30 seconds.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/MatchmakingRuleSet
 type MatchmakingRuleSet struct {
 	_ struct{} `type:"structure"`
 
@@ -15150,7 +15033,6 @@ func (s *MatchmakingRuleSet) SetRuleSetName(v string) *MatchmakingRuleSet {
 // is uniquely identified by a ticket ID, supplied by the requester, when creating
 // a matchmaking request with StartMatchmaking. Tickets can be retrieved by
 // calling DescribeMatchmaking with the ticket ID.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/MatchmakingTicket
 type MatchmakingTicket struct {
 	_ struct{} `type:"structure"`
 
@@ -15314,7 +15196,6 @@ func (s *MatchmakingTicket) SetTicketId(v string) *MatchmakingTicket {
 // DescribeGameSessionPlacement
 //
 // StopGameSessionPlacement
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/PlacedPlayerSession
 type PlacedPlayerSession struct {
 	_ struct{} `type:"structure"`
 
@@ -15350,7 +15231,6 @@ func (s *PlacedPlayerSession) SetPlayerSessionId(v string) *PlacedPlayerSession 
 // Represents a player in matchmaking. When starting a matchmaking request,
 // a player has a player ID, attributes, and may have latency data. Team information
 // is added after a match has been successfully completed.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/Player
 type Player struct {
 	_ struct{} `type:"structure"`
 
@@ -15445,7 +15325,6 @@ func (s *Player) SetTeam(v string) *Player {
 // region. The relative difference between a player's latency values for multiple
 // regions are used to determine which fleets are best suited to place a new
 // game session for the player.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/PlayerLatency
 type PlayerLatency struct {
 	_ struct{} `type:"structure"`
 
@@ -15519,7 +15398,6 @@ func (s *PlayerLatency) SetRegionIdentifier(v string) *PlayerLatency {
 //    * UpdateGameSessionQueue
 //
 //    * DeleteGameSessionQueue
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/PlayerLatencyPolicy
 type PlayerLatencyPolicy struct {
 	_ struct{} `type:"structure"`
 
@@ -15582,7 +15460,6 @@ func (s *PlayerLatencyPolicy) SetPolicyDurationSeconds(v int64) *PlayerLatencyPo
 // DescribeGameSessionPlacement
 //
 // StopGameSessionPlacement
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/PlayerSession
 type PlayerSession struct {
 	_ struct{} `type:"structure"`
 
@@ -15707,7 +15584,6 @@ func (s *PlayerSession) SetTerminationTime(v time.Time) *PlayerSession {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/PutScalingPolicyInput
 type PutScalingPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15885,7 +15761,6 @@ func (s *PutScalingPolicyInput) SetThreshold(v float64) *PutScalingPolicyInput {
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/PutScalingPolicyOutput
 type PutScalingPolicyOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -15911,7 +15786,6 @@ func (s *PutScalingPolicyOutput) SetName(v string) *PutScalingPolicyOutput {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/RequestUploadCredentialsInput
 type RequestUploadCredentialsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15951,7 +15825,6 @@ func (s *RequestUploadCredentialsInput) SetBuildId(v string) *RequestUploadCrede
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/RequestUploadCredentialsOutput
 type RequestUploadCredentialsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -15987,7 +15860,6 @@ func (s *RequestUploadCredentialsOutput) SetUploadCredentials(v *AwsCredentials)
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/ResolveAliasInput
 type ResolveAliasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16027,7 +15899,6 @@ func (s *ResolveAliasInput) SetAliasId(v string) *ResolveAliasInput {
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/ResolveAliasOutput
 type ResolveAliasOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16062,7 +15933,6 @@ func (s *ResolveAliasOutput) SetFleetId(v string) *ResolveAliasOutput {
 // minutes, on receiving a CreateGameSession request, Amazon GameLift checks
 // that the player (identified by CreatorId) has created fewer than 10 game
 // sessions in the past 60 minutes.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/ResourceCreationLimitPolicy
 type ResourceCreationLimitPolicy struct {
 	_ struct{} `type:"structure"`
 
@@ -16141,7 +16011,6 @@ func (s *ResourceCreationLimitPolicy) SetPolicyPeriodInMinutes(v int64) *Resourc
 // DescribeEC2InstanceLimits
 //
 //    * DeleteFleet
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/RoutingStrategy
 type RoutingStrategy struct {
 	_ struct{} `type:"structure"`
 
@@ -16257,7 +16126,6 @@ func (s *RoutingStrategy) SetType(v string) *RoutingStrategy {
 // DescribeEC2InstanceLimits
 //
 //    * DeleteFleet
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/RuntimeConfiguration
 type RuntimeConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -16337,7 +16205,6 @@ func (s *RuntimeConfiguration) SetServerProcesses(v []*ServerProcess) *RuntimeCo
 // be stored for access by Amazon GameLift. This location is specified in a
 // CreateBuild request. For more details, see the Create a Build with Files
 // in Amazon S3 (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-build-cli-uploading.html#gamelift-build-cli-uploading-create-build).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/S3Location
 type S3Location struct {
 	_ struct{} `type:"structure"`
 
@@ -16445,7 +16312,6 @@ func (s *S3Location) SetRoleArn(v string) *S3Location {
 // DescribeEC2InstanceLimits
 //
 //    * DeleteFleet
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/ScalingPolicy
 type ScalingPolicy struct {
 	_ struct{} `type:"structure"`
 
@@ -16592,7 +16458,6 @@ func (s *ScalingPolicy) SetThreshold(v float64) *ScalingPolicy {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/SearchGameSessionsInput
 type SearchGameSessionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16741,7 +16606,6 @@ func (s *SearchGameSessionsInput) SetSortExpression(v string) *SearchGameSession
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/SearchGameSessionsOutput
 type SearchGameSessionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16782,7 +16646,6 @@ func (s *SearchGameSessionsOutput) SetNextToken(v string) *SearchGameSessionsOut
 // optional launch parameters, and the number of server processes with this
 // configuration to maintain concurrently on the instance. Server process configurations
 // make up a fleet's RuntimeConfiguration.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/ServerProcess
 type ServerProcess struct {
 	_ struct{} `type:"structure"`
 
@@ -16860,7 +16723,6 @@ func (s *ServerProcess) SetParameters(v string) *ServerProcess {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StartGameSessionPlacementInput
 type StartGameSessionPlacementInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17028,7 +16890,6 @@ func (s *StartGameSessionPlacementInput) SetPlayerLatencies(v []*PlayerLatency) 
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StartGameSessionPlacementOutput
 type StartGameSessionPlacementOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17055,7 +16916,6 @@ func (s *StartGameSessionPlacementOutput) SetGameSessionPlacement(v *GameSession
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StartMatchmakingInput
 type StartMatchmakingInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17139,7 +16999,6 @@ func (s *StartMatchmakingInput) SetTicketId(v string) *StartMatchmakingInput {
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StartMatchmakingOutput
 type StartMatchmakingOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17166,7 +17025,6 @@ func (s *StartMatchmakingOutput) SetMatchmakingTicket(v *MatchmakingTicket) *Sta
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StopGameSessionPlacementInput
 type StopGameSessionPlacementInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17209,7 +17067,6 @@ func (s *StopGameSessionPlacementInput) SetPlacementId(v string) *StopGameSessio
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StopGameSessionPlacementOutput
 type StopGameSessionPlacementOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17235,7 +17092,6 @@ func (s *StopGameSessionPlacementOutput) SetGameSessionPlacement(v *GameSessionP
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StopMatchmakingInput
 type StopMatchmakingInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17277,7 +17133,6 @@ func (s *StopMatchmakingInput) SetTicketId(v string) *StopMatchmakingInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StopMatchmakingOutput
 type StopMatchmakingOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -17293,7 +17148,6 @@ func (s StopMatchmakingOutput) GoString() string {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateAliasInput
 type UpdateAliasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17367,7 +17221,6 @@ func (s *UpdateAliasInput) SetRoutingStrategy(v *RoutingStrategy) *UpdateAliasIn
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateAliasOutput
 type UpdateAliasOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17392,7 +17245,6 @@ func (s *UpdateAliasOutput) SetAlias(v *Alias) *UpdateAliasOutput {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateBuildInput
 type UpdateBuildInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17458,7 +17310,6 @@ func (s *UpdateBuildInput) SetVersion(v string) *UpdateBuildInput {
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateBuildOutput
 type UpdateBuildOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17483,7 +17334,6 @@ func (s *UpdateBuildOutput) SetBuild(v *Build) *UpdateBuildOutput {
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateFleetAttributesInput
 type UpdateFleetAttributesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17588,7 +17438,6 @@ func (s *UpdateFleetAttributesInput) SetResourceCreationLimitPolicy(v *ResourceC
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateFleetAttributesOutput
 type UpdateFleetAttributesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17613,7 +17462,6 @@ func (s *UpdateFleetAttributesOutput) SetFleetId(v string) *UpdateFleetAttribute
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateFleetCapacityInput
 type UpdateFleetCapacityInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17682,7 +17530,6 @@ func (s *UpdateFleetCapacityInput) SetMinSize(v int64) *UpdateFleetCapacityInput
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateFleetCapacityOutput
 type UpdateFleetCapacityOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17707,7 +17554,6 @@ func (s *UpdateFleetCapacityOutput) SetFleetId(v string) *UpdateFleetCapacityOut
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateFleetPortSettingsInput
 type UpdateFleetPortSettingsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17785,7 +17631,6 @@ func (s *UpdateFleetPortSettingsInput) SetInboundPermissionRevocations(v []*IpPe
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateFleetPortSettingsOutput
 type UpdateFleetPortSettingsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17810,7 +17655,6 @@ func (s *UpdateFleetPortSettingsOutput) SetFleetId(v string) *UpdateFleetPortSet
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateGameSessionInput
 type UpdateGameSessionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17900,7 +17744,6 @@ func (s *UpdateGameSessionInput) SetProtectionPolicy(v string) *UpdateGameSessio
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateGameSessionOutput
 type UpdateGameSessionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17925,7 +17768,6 @@ func (s *UpdateGameSessionOutput) SetGameSession(v *GameSession) *UpdateGameSess
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateGameSessionQueueInput
 type UpdateGameSessionQueueInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18019,7 +17861,6 @@ func (s *UpdateGameSessionQueueInput) SetTimeoutInSeconds(v int64) *UpdateGameSe
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateGameSessionQueueOutput
 type UpdateGameSessionQueueOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -18044,7 +17885,6 @@ func (s *UpdateGameSessionQueueOutput) SetGameSessionQueue(v *GameSessionQueue) 
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateMatchmakingConfigurationInput
 type UpdateMatchmakingConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18236,7 +18076,6 @@ func (s *UpdateMatchmakingConfigurationInput) SetRuleSetName(v string) *UpdateMa
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateMatchmakingConfigurationOutput
 type UpdateMatchmakingConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -18261,7 +18100,6 @@ func (s *UpdateMatchmakingConfigurationOutput) SetConfiguration(v *MatchmakingCo
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateRuntimeConfigurationInput
 type UpdateRuntimeConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18325,7 +18163,6 @@ func (s *UpdateRuntimeConfigurationInput) SetRuntimeConfiguration(v *RuntimeConf
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateRuntimeConfigurationOutput
 type UpdateRuntimeConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -18351,7 +18188,6 @@ func (s *UpdateRuntimeConfigurationOutput) SetRuntimeConfiguration(v *RuntimeCon
 }
 
 // Represents the input for a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/ValidateMatchmakingRuleSetInput
 type ValidateMatchmakingRuleSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18394,7 +18230,6 @@ func (s *ValidateMatchmakingRuleSetInput) SetRuleSetBody(v string) *ValidateMatc
 }
 
 // Represents the returned data in response to a request action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/ValidateMatchmakingRuleSetOutput
 type ValidateMatchmakingRuleSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -18436,7 +18271,6 @@ func (s *ValidateMatchmakingRuleSetOutput) SetValid(v bool) *ValidateMatchmaking
 //    * DescribeVpcPeeringConnections
 //
 //    * DeleteVpcPeeringConnection
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/VpcPeeringAuthorization
 type VpcPeeringAuthorization struct {
 	_ struct{} `type:"structure"`
 
@@ -18519,7 +18353,6 @@ func (s *VpcPeeringAuthorization) SetPeerVpcId(v string) *VpcPeeringAuthorizatio
 //    * DescribeVpcPeeringConnections
 //
 //    * DeleteVpcPeeringConnection
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/VpcPeeringConnection
 type VpcPeeringConnection struct {
 	_ struct{} `type:"structure"`
 
@@ -18603,7 +18436,6 @@ func (s *VpcPeeringConnection) SetVpcPeeringConnectionId(v string) *VpcPeeringCo
 // with a VpcPeeringConnection object. Status codes and messages are provided
 // from EC2 (). (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_VpcPeeringConnectionStateReason.html)
 // Connection status information is also communicated as a fleet Event.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/VpcPeeringConnectionStatus
 type VpcPeeringConnectionStatus struct {
 	_ struct{} `type:"structure"`
 

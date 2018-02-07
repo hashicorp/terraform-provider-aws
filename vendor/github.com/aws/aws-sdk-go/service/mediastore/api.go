@@ -627,7 +627,6 @@ func (c *MediaStore) PutContainerPolicyWithContext(ctx aws.Context, input *PutCo
 
 // This section describes operations that you can perform on an AWS Elemental
 // MediaStore container.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/Container
 type Container struct {
 	_ struct{} `type:"structure"`
 
@@ -696,7 +695,6 @@ func (s *Container) SetStatus(v string) *Container {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/CreateContainerInput
 type CreateContainerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -741,7 +739,6 @@ func (s *CreateContainerInput) SetContainerName(v string) *CreateContainerInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/CreateContainerOutput
 type CreateContainerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -781,7 +778,6 @@ func (s *CreateContainerOutput) SetContainer(v *Container) *CreateContainerOutpu
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerInput
 type DeleteContainerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -823,7 +819,6 @@ func (s *DeleteContainerInput) SetContainerName(v string) *DeleteContainerInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerOutput
 type DeleteContainerOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -838,7 +833,6 @@ func (s DeleteContainerOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerPolicyInput
 type DeleteContainerPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -880,7 +874,6 @@ func (s *DeleteContainerPolicyInput) SetContainerName(v string) *DeleteContainer
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerPolicyOutput
 type DeleteContainerPolicyOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -895,7 +888,6 @@ func (s DeleteContainerPolicyOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DescribeContainerInput
 type DescribeContainerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -932,7 +924,6 @@ func (s *DescribeContainerInput) SetContainerName(v string) *DescribeContainerIn
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DescribeContainerOutput
 type DescribeContainerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -956,7 +947,6 @@ func (s *DescribeContainerOutput) SetContainer(v *Container) *DescribeContainerO
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetContainerPolicyInput
 type GetContainerPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -998,7 +988,6 @@ func (s *GetContainerPolicyInput) SetContainerName(v string) *GetContainerPolicy
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetContainerPolicyOutput
 type GetContainerPolicyOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1024,7 +1013,6 @@ func (s *GetContainerPolicyOutput) SetPolicy(v string) *GetContainerPolicyOutput
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListContainersInput
 type ListContainersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1077,7 +1065,6 @@ func (s *ListContainersInput) SetNextToken(v string) *ListContainersInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListContainersOutput
 type ListContainersOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1114,7 +1101,6 @@ func (s *ListContainersOutput) SetNextToken(v string) *ListContainersOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutContainerPolicyInput
 type PutContainerPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1177,7 +1163,6 @@ func (s *PutContainerPolicyInput) SetPolicy(v string) *PutContainerPolicyInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutContainerPolicyOutput
 type PutContainerPolicyOutput struct {
 	_ struct{} `type:"structure"`
 }

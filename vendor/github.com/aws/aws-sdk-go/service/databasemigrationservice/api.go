@@ -4328,7 +4328,6 @@ func (c *DatabaseMigrationService) TestConnectionWithContext(ctx aws.Context, in
 
 // Describes a quota for an AWS account, for example, the number of replication
 // instances allowed.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/AccountQuota
 type AccountQuota struct {
 	_ struct{} `type:"structure"`
 
@@ -4370,7 +4369,6 @@ func (s *AccountQuota) SetUsed(v int64) *AccountQuota {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/AddTagsToResourceMessage
 type AddTagsToResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4425,7 +4423,6 @@ func (s *AddTagsToResourceInput) SetTags(v []*Tag) *AddTagsToResourceInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/AddTagsToResourceResponse
 type AddTagsToResourceOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4440,7 +4437,6 @@ func (s AddTagsToResourceOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/AvailabilityZone
 type AvailabilityZone struct {
 	_ struct{} `type:"structure"`
 
@@ -4466,7 +4462,6 @@ func (s *AvailabilityZone) SetName(v string) *AvailabilityZone {
 
 // The SSL certificate that can be used to encrypt connections between the endpoints
 // and the replication instance.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/Certificate
 type Certificate struct {
 	_ struct{} `type:"structure"`
 
@@ -4574,7 +4569,6 @@ func (s *Certificate) SetValidToDate(v time.Time) *Certificate {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/Connection
 type Connection struct {
 	_ struct{} `type:"structure"`
 
@@ -4646,7 +4640,6 @@ func (s *Connection) SetStatus(v string) *Connection {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateEndpointMessage
 type CreateEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4855,7 +4848,6 @@ func (s *CreateEndpointInput) SetUsername(v string) *CreateEndpointInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateEndpointResponse
 type CreateEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4879,7 +4871,6 @@ func (s *CreateEndpointOutput) SetEndpoint(v *Endpoint) *CreateEndpointOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateEventSubscriptionMessage
 type CreateEventSubscriptionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4994,7 +4985,6 @@ func (s *CreateEventSubscriptionInput) SetTags(v []*Tag) *CreateEventSubscriptio
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateEventSubscriptionResponse
 type CreateEventSubscriptionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5018,7 +5008,6 @@ func (s *CreateEventSubscriptionOutput) SetEventSubscription(v *EventSubscriptio
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateReplicationInstanceMessage
 type CreateReplicationInstanceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5212,7 +5201,6 @@ func (s *CreateReplicationInstanceInput) SetVpcSecurityGroupIds(v []*string) *Cr
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateReplicationInstanceResponse
 type CreateReplicationInstanceOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5236,7 +5224,6 @@ func (s *CreateReplicationInstanceOutput) SetReplicationInstance(v *ReplicationI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateReplicationSubnetGroupMessage
 type CreateReplicationSubnetGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5318,7 +5305,6 @@ func (s *CreateReplicationSubnetGroupInput) SetTags(v []*Tag) *CreateReplication
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateReplicationSubnetGroupResponse
 type CreateReplicationSubnetGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5342,7 +5328,6 @@ func (s *CreateReplicationSubnetGroupOutput) SetReplicationSubnetGroup(v *Replic
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateReplicationTaskMessage
 type CreateReplicationTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5492,7 +5477,6 @@ func (s *CreateReplicationTaskInput) SetTargetEndpointArn(v string) *CreateRepli
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateReplicationTaskResponse
 type CreateReplicationTaskOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5516,7 +5500,6 @@ func (s *CreateReplicationTaskOutput) SetReplicationTask(v *ReplicationTask) *Cr
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteCertificateMessage
 type DeleteCertificateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5555,7 +5538,6 @@ func (s *DeleteCertificateInput) SetCertificateArn(v string) *DeleteCertificateI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteCertificateResponse
 type DeleteCertificateOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5579,7 +5561,6 @@ func (s *DeleteCertificateOutput) SetCertificate(v *Certificate) *DeleteCertific
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteEndpointMessage
 type DeleteEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5618,7 +5599,6 @@ func (s *DeleteEndpointInput) SetEndpointArn(v string) *DeleteEndpointInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteEndpointResponse
 type DeleteEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5642,7 +5622,6 @@ func (s *DeleteEndpointOutput) SetEndpoint(v *Endpoint) *DeleteEndpointOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteEventSubscriptionMessage
 type DeleteEventSubscriptionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5681,7 +5660,6 @@ func (s *DeleteEventSubscriptionInput) SetSubscriptionName(v string) *DeleteEven
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteEventSubscriptionResponse
 type DeleteEventSubscriptionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5705,7 +5683,6 @@ func (s *DeleteEventSubscriptionOutput) SetEventSubscription(v *EventSubscriptio
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteReplicationInstanceMessage
 type DeleteReplicationInstanceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5744,7 +5721,6 @@ func (s *DeleteReplicationInstanceInput) SetReplicationInstanceArn(v string) *De
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteReplicationInstanceResponse
 type DeleteReplicationInstanceOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5768,7 +5744,6 @@ func (s *DeleteReplicationInstanceOutput) SetReplicationInstance(v *ReplicationI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteReplicationSubnetGroupMessage
 type DeleteReplicationSubnetGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5807,7 +5782,6 @@ func (s *DeleteReplicationSubnetGroupInput) SetReplicationSubnetGroupIdentifier(
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteReplicationSubnetGroupResponse
 type DeleteReplicationSubnetGroupOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5822,7 +5796,6 @@ func (s DeleteReplicationSubnetGroupOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteReplicationTaskMessage
 type DeleteReplicationTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5861,7 +5834,6 @@ func (s *DeleteReplicationTaskInput) SetReplicationTaskArn(v string) *DeleteRepl
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteReplicationTaskResponse
 type DeleteReplicationTaskOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5885,7 +5857,6 @@ func (s *DeleteReplicationTaskOutput) SetReplicationTask(v *ReplicationTask) *De
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeAccountAttributesMessage
 type DescribeAccountAttributesInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5900,7 +5871,6 @@ func (s DescribeAccountAttributesInput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeAccountAttributesResponse
 type DescribeAccountAttributesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5924,7 +5894,6 @@ func (s *DescribeAccountAttributesOutput) SetAccountQuotas(v []*AccountQuota) *D
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeCertificatesMessage
 type DescribeCertificatesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5992,7 +5961,6 @@ func (s *DescribeCertificatesInput) SetMaxRecords(v int64) *DescribeCertificates
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeCertificatesResponse
 type DescribeCertificatesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6026,7 +5994,6 @@ func (s *DescribeCertificatesOutput) SetMarker(v string) *DescribeCertificatesOu
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeConnectionsMessage
 type DescribeConnectionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6098,7 +6065,6 @@ func (s *DescribeConnectionsInput) SetMaxRecords(v int64) *DescribeConnectionsIn
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeConnectionsResponse
 type DescribeConnectionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6133,7 +6099,6 @@ func (s *DescribeConnectionsOutput) SetMarker(v string) *DescribeConnectionsOutp
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeEndpointTypesMessage
 type DescribeEndpointTypesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6205,7 +6170,6 @@ func (s *DescribeEndpointTypesInput) SetMaxRecords(v int64) *DescribeEndpointTyp
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeEndpointTypesResponse
 type DescribeEndpointTypesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6240,7 +6204,6 @@ func (s *DescribeEndpointTypesOutput) SetSupportedEndpointTypes(v []*SupportedEn
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeEndpointsMessage
 type DescribeEndpointsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6312,7 +6275,6 @@ func (s *DescribeEndpointsInput) SetMaxRecords(v int64) *DescribeEndpointsInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeEndpointsResponse
 type DescribeEndpointsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6347,7 +6309,6 @@ func (s *DescribeEndpointsOutput) SetMarker(v string) *DescribeEndpointsOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeEventCategoriesMessage
 type DescribeEventCategoriesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6402,7 +6363,6 @@ func (s *DescribeEventCategoriesInput) SetSourceType(v string) *DescribeEventCat
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeEventCategoriesResponse
 type DescribeEventCategoriesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6426,7 +6386,6 @@ func (s *DescribeEventCategoriesOutput) SetEventCategoryGroupList(v []*EventCate
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeEventSubscriptionsMessage
 type DescribeEventSubscriptionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6505,7 +6464,6 @@ func (s *DescribeEventSubscriptionsInput) SetSubscriptionName(v string) *Describ
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeEventSubscriptionsResponse
 type DescribeEventSubscriptionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6540,7 +6498,6 @@ func (s *DescribeEventSubscriptionsOutput) SetMarker(v string) *DescribeEventSub
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeEventsMessage
 type DescribeEventsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6668,7 +6625,6 @@ func (s *DescribeEventsInput) SetStartTime(v time.Time) *DescribeEventsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeEventsResponse
 type DescribeEventsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6703,7 +6659,6 @@ func (s *DescribeEventsOutput) SetMarker(v string) *DescribeEventsOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeOrderableReplicationInstancesMessage
 type DescribeOrderableReplicationInstancesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6744,7 +6699,6 @@ func (s *DescribeOrderableReplicationInstancesInput) SetMaxRecords(v int64) *Des
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeOrderableReplicationInstancesResponse
 type DescribeOrderableReplicationInstancesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6779,7 +6733,6 @@ func (s *DescribeOrderableReplicationInstancesOutput) SetOrderableReplicationIns
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeRefreshSchemasStatusMessage
 type DescribeRefreshSchemasStatusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6818,7 +6771,6 @@ func (s *DescribeRefreshSchemasStatusInput) SetEndpointArn(v string) *DescribeRe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeRefreshSchemasStatusResponse
 type DescribeRefreshSchemasStatusOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6842,7 +6794,6 @@ func (s *DescribeRefreshSchemasStatusOutput) SetRefreshSchemasStatus(v *RefreshS
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationInstancesMessage
 type DescribeReplicationInstancesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6915,7 +6866,6 @@ func (s *DescribeReplicationInstancesInput) SetMaxRecords(v int64) *DescribeRepl
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationInstancesResponse
 type DescribeReplicationInstancesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6950,7 +6900,6 @@ func (s *DescribeReplicationInstancesOutput) SetReplicationInstances(v []*Replic
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationSubnetGroupsMessage
 type DescribeReplicationSubnetGroupsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7020,7 +6969,6 @@ func (s *DescribeReplicationSubnetGroupsInput) SetMaxRecords(v int64) *DescribeR
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationSubnetGroupsResponse
 type DescribeReplicationSubnetGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7055,7 +7003,6 @@ func (s *DescribeReplicationSubnetGroupsOutput) SetReplicationSubnetGroups(v []*
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTaskAssessmentResultsMessage
 type DescribeReplicationTaskAssessmentResultsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7107,7 +7054,6 @@ func (s *DescribeReplicationTaskAssessmentResultsInput) SetReplicationTaskArn(v 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTaskAssessmentResultsResponse
 type DescribeReplicationTaskAssessmentResultsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7151,7 +7097,6 @@ func (s *DescribeReplicationTaskAssessmentResultsOutput) SetReplicationTaskAsses
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTasksMessage
 type DescribeReplicationTasksInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7224,7 +7169,6 @@ func (s *DescribeReplicationTasksInput) SetMaxRecords(v int64) *DescribeReplicat
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTasksResponse
 type DescribeReplicationTasksOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7259,7 +7203,6 @@ func (s *DescribeReplicationTasksOutput) SetReplicationTasks(v []*ReplicationTas
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeSchemasMessage
 type DescribeSchemasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7324,7 +7267,6 @@ func (s *DescribeSchemasInput) SetMaxRecords(v int64) *DescribeSchemasInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeSchemasResponse
 type DescribeSchemasOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7359,7 +7301,6 @@ func (s *DescribeSchemasOutput) SetSchemas(v []*string) *DescribeSchemasOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeTableStatisticsMessage
 type DescribeTableStatisticsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7448,7 +7389,6 @@ func (s *DescribeTableStatisticsInput) SetReplicationTaskArn(v string) *Describe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeTableStatisticsResponse
 type DescribeTableStatisticsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7492,7 +7432,6 @@ func (s *DescribeTableStatisticsOutput) SetTableStatistics(v []*TableStatistics)
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DynamoDbSettings
 type DynamoDbSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -7531,7 +7470,6 @@ func (s *DynamoDbSettings) SetServiceAccessRoleArn(v string) *DynamoDbSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/Endpoint
 type Endpoint struct {
 	_ struct{} `type:"structure"`
 
@@ -7716,7 +7654,6 @@ func (s *Endpoint) SetUsername(v string) *Endpoint {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/Event
 type Event struct {
 	_ struct{} `type:"structure"`
 
@@ -7782,7 +7719,6 @@ func (s *Event) SetSourceType(v string) *Event {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/EventCategoryGroup
 type EventCategoryGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -7818,7 +7754,6 @@ func (s *EventCategoryGroup) SetSourceType(v string) *EventCategoryGroup {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/EventSubscription
 type EventSubscription struct {
 	_ struct{} `type:"structure"`
 
@@ -7926,7 +7861,6 @@ func (s *EventSubscription) SetSubscriptionCreationTime(v string) *EventSubscrip
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/Filter
 type Filter struct {
 	_ struct{} `type:"structure"`
 
@@ -7979,7 +7913,6 @@ func (s *Filter) SetValues(v []*string) *Filter {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ImportCertificateMessage
 type ImportCertificateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8048,7 +7981,6 @@ func (s *ImportCertificateInput) SetTags(v []*Tag) *ImportCertificateInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ImportCertificateResponse
 type ImportCertificateOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8072,7 +8004,6 @@ func (s *ImportCertificateOutput) SetCertificate(v *Certificate) *ImportCertific
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ListTagsForResourceMessage
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8112,7 +8043,6 @@ func (s *ListTagsForResourceInput) SetResourceArn(v string) *ListTagsForResource
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ListTagsForResourceResponse
 type ListTagsForResourceOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8136,7 +8066,6 @@ func (s *ListTagsForResourceOutput) SetTagList(v []*Tag) *ListTagsForResourceOut
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyEndpointMessage
 type ModifyEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8323,7 +8252,6 @@ func (s *ModifyEndpointInput) SetUsername(v string) *ModifyEndpointInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyEndpointResponse
 type ModifyEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8347,7 +8275,6 @@ func (s *ModifyEndpointOutput) SetEndpoint(v *Endpoint) *ModifyEndpointOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyEventSubscriptionMessage
 type ModifyEventSubscriptionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8428,7 +8355,6 @@ func (s *ModifyEventSubscriptionInput) SetSubscriptionName(v string) *ModifyEven
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyEventSubscriptionResponse
 type ModifyEventSubscriptionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8452,7 +8378,6 @@ func (s *ModifyEventSubscriptionOutput) SetEventSubscription(v *EventSubscriptio
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyReplicationInstanceMessage
 type ModifyReplicationInstanceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8615,7 +8540,6 @@ func (s *ModifyReplicationInstanceInput) SetVpcSecurityGroupIds(v []*string) *Mo
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyReplicationInstanceResponse
 type ModifyReplicationInstanceOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8639,7 +8563,6 @@ func (s *ModifyReplicationInstanceOutput) SetReplicationInstance(v *ReplicationI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyReplicationSubnetGroupMessage
 type ModifyReplicationSubnetGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8701,7 +8624,6 @@ func (s *ModifyReplicationSubnetGroupInput) SetSubnetIds(v []*string) *ModifyRep
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyReplicationSubnetGroupResponse
 type ModifyReplicationSubnetGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8725,7 +8647,6 @@ func (s *ModifyReplicationSubnetGroupOutput) SetReplicationSubnetGroup(v *Replic
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyReplicationTaskMessage
 type ModifyReplicationTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8823,7 +8744,6 @@ func (s *ModifyReplicationTaskInput) SetTableMappings(v string) *ModifyReplicati
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyReplicationTaskResponse
 type ModifyReplicationTaskOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8847,7 +8767,6 @@ func (s *ModifyReplicationTaskOutput) SetReplicationTask(v *ReplicationTask) *Mo
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/MongoDbSettings
 type MongoDbSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8984,7 +8903,6 @@ func (s *MongoDbSettings) SetUsername(v string) *MongoDbSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/OrderableReplicationInstance
 type OrderableReplicationInstance struct {
 	_ struct{} `type:"structure"`
 
@@ -9069,7 +8987,6 @@ func (s *OrderableReplicationInstance) SetStorageType(v string) *OrderableReplic
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/RefreshSchemasMessage
 type RefreshSchemasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9122,7 +9039,6 @@ func (s *RefreshSchemasInput) SetReplicationInstanceArn(v string) *RefreshSchema
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/RefreshSchemasResponse
 type RefreshSchemasOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9146,7 +9062,6 @@ func (s *RefreshSchemasOutput) SetRefreshSchemasStatus(v *RefreshSchemasStatus) 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/RefreshSchemasStatus
 type RefreshSchemasStatus struct {
 	_ struct{} `type:"structure"`
 
@@ -9206,7 +9121,6 @@ func (s *RefreshSchemasStatus) SetStatus(v string) *RefreshSchemasStatus {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ReloadTablesMessage
 type ReloadTablesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9259,7 +9173,6 @@ func (s *ReloadTablesInput) SetTablesToReload(v []*TableToReload) *ReloadTablesI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ReloadTablesResponse
 type ReloadTablesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9283,7 +9196,6 @@ func (s *ReloadTablesOutput) SetReplicationTaskArn(v string) *ReloadTablesOutput
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/RemoveTagsFromResourceMessage
 type RemoveTagsFromResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9337,7 +9249,6 @@ func (s *RemoveTagsFromResourceInput) SetTagKeys(v []*string) *RemoveTagsFromRes
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/RemoveTagsFromResourceResponse
 type RemoveTagsFromResourceOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -9352,7 +9263,6 @@ func (s RemoveTagsFromResourceOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ReplicationInstance
 type ReplicationInstance struct {
 	_ struct{} `type:"structure"`
 
@@ -9579,7 +9489,6 @@ func (s *ReplicationInstance) SetVpcSecurityGroups(v []*VpcSecurityGroupMembersh
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ReplicationPendingModifiedValues
 type ReplicationPendingModifiedValues struct {
 	_ struct{} `type:"structure"`
 
@@ -9635,7 +9544,6 @@ func (s *ReplicationPendingModifiedValues) SetReplicationInstanceClass(v string)
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ReplicationSubnetGroup
 type ReplicationSubnetGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -9695,7 +9603,6 @@ func (s *ReplicationSubnetGroup) SetVpcId(v string) *ReplicationSubnetGroup {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ReplicationTask
 type ReplicationTask struct {
 	_ struct{} `type:"structure"`
 
@@ -9846,7 +9753,6 @@ func (s *ReplicationTask) SetTargetEndpointArn(v string) *ReplicationTask {
 }
 
 // The task assessment report in JSON format.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ReplicationTaskAssessmentResult
 type ReplicationTaskAssessmentResult struct {
 	_ struct{} `type:"structure"`
 
@@ -9925,7 +9831,6 @@ func (s *ReplicationTaskAssessmentResult) SetS3ObjectUrl(v string) *ReplicationT
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ReplicationTaskStats
 type ReplicationTaskStats struct {
 	_ struct{} `type:"structure"`
 
@@ -9994,7 +9899,6 @@ func (s *ReplicationTaskStats) SetTablesQueued(v int64) *ReplicationTaskStats {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/S3Settings
 type S3Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -10077,7 +9981,6 @@ func (s *S3Settings) SetServiceAccessRoleArn(v string) *S3Settings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StartReplicationTaskAssessmentMessage
 type StartReplicationTaskAssessmentInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10116,7 +10019,6 @@ func (s *StartReplicationTaskAssessmentInput) SetReplicationTaskArn(v string) *S
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StartReplicationTaskAssessmentResponse
 type StartReplicationTaskAssessmentOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10140,7 +10042,6 @@ func (s *StartReplicationTaskAssessmentOutput) SetReplicationTask(v *Replication
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StartReplicationTaskMessage
 type StartReplicationTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10202,7 +10103,6 @@ func (s *StartReplicationTaskInput) SetStartReplicationTaskType(v string) *Start
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StartReplicationTaskResponse
 type StartReplicationTaskOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10226,7 +10126,6 @@ func (s *StartReplicationTaskOutput) SetReplicationTask(v *ReplicationTask) *Sta
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StopReplicationTaskMessage
 type StopReplicationTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10265,7 +10164,6 @@ func (s *StopReplicationTaskInput) SetReplicationTaskArn(v string) *StopReplicat
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StopReplicationTaskResponse
 type StopReplicationTaskOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10289,7 +10187,6 @@ func (s *StopReplicationTaskOutput) SetReplicationTask(v *ReplicationTask) *Stop
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/Subnet
 type Subnet struct {
 	_ struct{} `type:"structure"`
 
@@ -10331,7 +10228,6 @@ func (s *Subnet) SetSubnetStatus(v string) *Subnet {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/SupportedEndpointType
 type SupportedEndpointType struct {
 	_ struct{} `type:"structure"`
 
@@ -10375,7 +10271,6 @@ func (s *SupportedEndpointType) SetSupportsCDC(v bool) *SupportedEndpointType {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/TableStatistics
 type TableStatistics struct {
 	_ struct{} `type:"structure"`
 
@@ -10555,7 +10450,6 @@ func (s *TableStatistics) SetValidationSuspendedRecords(v int64) *TableStatistic
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/TableToReload
 type TableToReload struct {
 	_ struct{} `type:"structure"`
 
@@ -10588,7 +10482,6 @@ func (s *TableToReload) SetTableName(v string) *TableToReload {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/Tag
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -10627,7 +10520,6 @@ func (s *Tag) SetValue(v string) *Tag {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/TestConnectionMessage
 type TestConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10680,7 +10572,6 @@ func (s *TestConnectionInput) SetReplicationInstanceArn(v string) *TestConnectio
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/TestConnectionResponse
 type TestConnectionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10704,7 +10595,6 @@ func (s *TestConnectionOutput) SetConnection(v *Connection) *TestConnectionOutpu
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/VpcSecurityGroupMembership
 type VpcSecurityGroupMembership struct {
 	_ struct{} `type:"structure"`
 
