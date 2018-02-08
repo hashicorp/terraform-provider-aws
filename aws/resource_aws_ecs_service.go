@@ -311,7 +311,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] ECS service created: %s", *service.ServiceArn)
 	d.SetId(*service.ServiceArn)
 
-	return resourceAwsEcsServiceUpdate(d, meta)
+	return resourceAwsEcsServiceRead(d, meta)
 }
 
 func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
@@ -323,7 +323,18 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		Cluster:  aws.String(d.Get("cluster").(string)),
 	}
 
-	out, err := conn.DescribeServices(&input)
+	var out *ecs.DescribeServicesOutput
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
+		out, err = conn.DescribeServices(&input)
+		if err != nil {
+			if d.IsNewResource() && isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
