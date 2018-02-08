@@ -140,17 +140,17 @@ func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	if d.HasChange("filter_policy") {
-		_, f := d.GetChange("filter_policy")
+		_, n := d.GetChange("filter_policy")
 
-		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "filter_policy", f.(string)); err != nil {
+		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "filter_policy", n.(string)); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("delivery_policy") {
-		_, dp := d.GetChange("delivery_policy")
+		_, n := d.GetChange("delivery_policy")
 
-		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "delivery_policy", dp.(string)); err != nil {
+		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "delivery_policy", n.(string)); err != nil {
 			return err
 		}
 	}
@@ -329,17 +329,17 @@ func obfuscateEndpoint(endpoint string) string {
 	return obfuscatedEndpoint
 }
 
-func snsSubscriptionAttributeUpdate(snsconn *sns.SNS, tfId string, tfName string, val string) error {
-	awsAttrName := SNSSubscriptionAttributeMap[tfName]
+func snsSubscriptionAttributeUpdate(snsconn *sns.SNS, subscriptionArn, attributeName, attributeValue string) error {
+	awsAttributeName := SNSSubscriptionAttributeMap[attributeName]
 	req := &sns.SetSubscriptionAttributesInput{
-		SubscriptionArn: aws.String(tfId),
-		AttributeName:   aws.String(awsAttrName),
-		AttributeValue:  aws.String(val),
+		SubscriptionArn: aws.String(subscriptionArn),
+		AttributeName:   aws.String(awsAttributeName),
+		AttributeValue:  aws.String(attributeValue),
 	}
 	_, err := snsconn.SetSubscriptionAttributes(req)
 
 	if err != nil {
-		return fmt.Errorf("Unable to set %s attribute on subscription", awsAttrName)
+		return fmt.Errorf("Unable to set %s attribute on subscription: %s", attributeName, err)
 	}
 	return nil
 }

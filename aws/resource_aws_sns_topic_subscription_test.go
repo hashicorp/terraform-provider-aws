@@ -56,8 +56,8 @@ func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
 
 func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 	ri := acctest.RandInt()
-	deliveryPolicy1 := `{"healthyRetryPolicy": {"numRetries": 5}}`
-	deliveryPolicy2 := `{"healthyRetryPolicy": {"numRetries": 11}}`
+	deliveryPolicy1 := `{"healthyRetryPolicy": {"minDelayTarget": 5, "maxDelayTarget": 20, "numRetries": 5}}`
+	deliveryPolicy2 := `{"healthyRetryPolicy": {"minDelayTarget": 3, "maxDelayTarget": 78, "numRetries": 11}}`
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
