@@ -278,6 +278,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_autoscaling_notification":                 resourceAwsAutoscalingNotification(),
 			"aws_autoscaling_policy":                       resourceAwsAutoscalingPolicy(),
 			"aws_autoscaling_schedule":                     resourceAwsAutoscalingSchedule(),
+			"aws_cloud9_environment_ec2":                   resourceAwsCloud9EnvironmentEc2(),
 			"aws_cloudformation_stack":                     resourceAwsCloudFormationStack(),
 			"aws_cloudfront_distribution":                  resourceAwsCloudFrontDistribution(),
 			"aws_cloudfront_origin_access_identity":        resourceAwsCloudFrontOriginAccessIdentity(),
