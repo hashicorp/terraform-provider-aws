@@ -188,6 +188,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 			"badge_url": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Optional: true,
 			},
 			"tags": tagsSchema(),
 		},
