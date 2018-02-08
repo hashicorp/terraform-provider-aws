@@ -335,6 +335,14 @@
 			"versionExact": "v1.12.72"
 		},
 		{
+			"checksumSHA1": "EoaTzMilW+OIi5eETJUpd+giyTc=",
+			"path": "github.com/aws/aws-sdk-go/service/cloud9",
+			"revision": "586c9ba6027a527800564282bb843d7e6e7985c9",
+			"revisionTime": "2018-02-07T00:16:19Z",
+			"version": "v1.12.72",
+			"versionExact": "v1.12.72"
+		},
+		{
 			"checksumSHA1": "yuFNzmUIWppfji/Xx6Aao0EE4cY=",
 			"path": "github.com/aws/aws-sdk-go/service/cloudformation",
 			"revision": "586c9ba6027a527800564282bb843d7e6e7985c9",
