@@ -113,6 +113,7 @@ The following arguments are supported:
 * `artifacts` - (Required) Information about the project's build output artifacts. Artifact blocks are documented below.
 * `environment` - (Required) Information about the project's build environment. Environment blocks are documented below.
 * `source` - (Required) Information about the project's input source code. Source blocks are documented below.
+* `badge_enabled` - (Optional) Generates a publicly-accessible URL for the project's build badge.
 
 `artifacts` supports the following:
 
@@ -156,4 +157,5 @@ The following attributes are exported:
 * `encryption_key` - The AWS Key Management Service (AWS KMS) customer master key (CMK) that was used for encrypting the build project's build output artifacts.
 * `name` - The projects name.
 * `service_role` - The ARN of the IAM service role.
+* `badge_url` - The URL of the build badge
 
