@@ -53,6 +53,7 @@ BUG FIXES:
 * resource/aws_ses_template: Send only specified attributes for update [GH-3214]
 * resource/aws_dynamodb_table: Allow disabling stream with empty `stream_view_type` [GH-3197] [GH-3224]
 * resource/aws_dx_connection_association: Retry disassociation [GH-3212]
+* resource/aws_volume_attachment: Allow updating `skip_destroy` and `force_detach` [GH-2810]
 
 ## 1.8.0 (January 29, 2018)
 
