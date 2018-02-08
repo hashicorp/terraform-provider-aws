@@ -79,3 +79,32 @@ func testAccEC2ClassicPreCheck(t *testing.T) {
 			region, platforms)
 	}
 }
+
+func testAccAwsRegionProvider(region string, providers *[]*schema.Provider) *schema.Provider {
+	if region == "" || providers == nil {
+		return nil
+	}
+	log.Printf("[DEBUG] Checking providers for AWS region: %s", region)
+	for _, provider := range *providers {
+		// Ignore if Meta is empty, this can happen for validation providers
+		if provider == nil || provider.Meta() == nil {
+			log.Printf("[DEBUG] Skipping empty provider")
+			continue
+		}
+
+		// Ignore if Meta is not AWSClient, this will happen for other providers
+		client, ok := provider.Meta().(*AWSClient)
+		if !ok {
+			log.Printf("[DEBUG] Skipping non-AWS provider")
+			continue
+		}
+
+		clientRegion := client.region
+		log.Printf("[DEBUG] Checking AWS provider region %q against %q", clientRegion, region)
+		if clientRegion == region {
+			log.Printf("[DEBUG] Found AWS provider with region: %s", region)
+			return provider
+		}
+	}
+	return nil
+}
