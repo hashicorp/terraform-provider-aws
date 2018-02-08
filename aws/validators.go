@@ -2257,3 +2257,38 @@ func validateAmazonSideAsn(v interface{}, k string) (ws []string, errors []error
 	}
 	return
 }
+
+func validateIotThingTypeName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`[a-zA-Z0-9:_-]+`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, colons, underscores and hyphens allowed in %q", k))
+	}
+	return
+}
+
+func validateIotThingTypeDescription(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 2028 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 2028 characters", k))
+	}
+	if !regexp.MustCompile(`[\\p{Graph}\\x20]*`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must match pattern [\\p{Graph}\\x20]*", k))
+	}
+	return
+}
+
+func validateIotThingTypeSearchableAttribute(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 128 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 128 characters", k))
+	}
+	if !regexp.MustCompile(`[a-zA-Z0-9_.,@/:#-]+`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, underscores, dots, commas, arobases, slashes, colons, hashes and hyphens allowed in %q", k))
+	}
+	return
+}
