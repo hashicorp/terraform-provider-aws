@@ -29,6 +29,7 @@ ENHANCEMENTS:
 * resource/aws_dynamodb_table: Add custom creation timeout [GH-3195]
 * resource/aws_dynamodb_table: Validate attribute types [GH-3188]
 * resource/aws_ecr_lifecycle_policy: Support import [GH-3246]
+* resource/aws_ecs_service: Support import [GH-2764]
 * resource/aws_kinesis_firehose_delivery_stream: Add splunk configuration [GH-3117]
 * resource/aws_mq_broker: Validate user password [GH-3164]
 * resource/aws_service_discovery_public_dns_namespace: Support import [GH-3229]
