@@ -113,3 +113,11 @@ The following attributes are exported:
 * `cluster` - The Amazon Resource Name (ARN) of cluster which the service runs on
 * `iam_role` - The ARN of IAM role used for ELB
 * `desired_count` - The number of instances of the task definition
+
+## Import
+
+ECS services can be imported using the `name` together with ecs cluster `name`, e.g.
+
+```
+$ terraform import aws_ecs_service.imported cluster-name/service-name
+```

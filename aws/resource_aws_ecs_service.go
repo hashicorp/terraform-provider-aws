@@ -24,6 +24,9 @@ func resourceAwsEcsService() *schema.Resource {
 		Read:   resourceAwsEcsServiceRead,
 		Update: resourceAwsEcsServiceUpdate,
 		Delete: resourceAwsEcsServiceDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsEcsServiceImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -199,6 +202,26 @@ func resourceAwsEcsService() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceAwsEcsServiceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	if len(strings.Split(d.Id(), "/")) != 2 {
+		return []*schema.ResourceData{}, fmt.Errorf("[ERR] Wrong format of resource: %s. Please follow 'cluster-name/service-name'", d.Id())
+	}
+	cluster := strings.Split(d.Id(), "/")[0]
+	name := strings.Split(d.Id(), "/")[1]
+	log.Printf("[DEBUG] Importing ECS service %s from cluster %s", name, cluster)
+
+	d.SetId(name)
+	clusterArn := arnString(
+		meta.(*AWSClient).partition,
+		meta.(*AWSClient).region,
+		"ecs",
+		meta.(*AWSClient).accountid,
+		fmt.Sprintf("cluster/%s", cluster),
+	)
+	d.Set("cluster", clusterArn)
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error {

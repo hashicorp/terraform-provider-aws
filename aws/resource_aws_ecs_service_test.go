@@ -113,6 +113,34 @@ func TestAccAWSEcsService_withARN(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsService_basicImport(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-%s", rString)
+
+	resourceName := "aws_ecs_service.jenkins"
+	importInput := fmt.Sprintf("%s/%s", clusterName, svcName)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithFamilyAndRevision(clusterName, tdName, svcName),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     importInput,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsService_withUnnormalizedPlacementStrategy(t *testing.T) {
 	rString := acctest.RandString(8)
 
