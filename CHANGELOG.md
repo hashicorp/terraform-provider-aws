@@ -37,9 +37,10 @@ ENHANCEMENTS:
 * resource/aws_sns_topic: Add support for delivery status [GH-2872]
 * resource/aws_sns_topic: Add support for name prefixes and fully generated names [GH-2753]
 * resource/aws_sns_topic_subscription: Support filter policy [GH-2806]
+* resource/aws_ssm_resource_data_sync: Support import [GH-3232]
 * resource/aws_vpc_endpoint: Support AWS PrivateLink [GH-2515]
 * resource/aws_vpc_endpoint_service: Support AWS PrivateLink [GH-2515]
-* resource/ssm_resource_data_sync: Support import [GH-3232]
+* resource/aws_vpn_gateway: Add support for Amazon side private ASN [GH-1888]
 
 BUG FIXES:
 
