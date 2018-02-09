@@ -67,9 +67,9 @@ func testAccAwsSnsPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAws
 
 		platform := &testAccAwsSnsPlatformApplicationPlatform{
 			Name:           "APNS_SANDBOX",
-			Credential:     fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH")),
+			Credential:     strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH"))),
 			CredentialHash: credentialHash,
-			Principal:      fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH")),
+			Principal:      strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH"))),
 			PrincipalHash:  principalHash,
 		}
 		platforms = append(platforms, platform)
