@@ -1,5 +1,9 @@
 ## 1.9.0 (Unreleased)
 
+NOTES:
+
+* data-source/aws_region: `current` field is deprecated and the data source defaults to the provider region if no endpoint or name is specified [GH-3157]
+
 FEATURES:
 
 * **New Data Source:** `aws_elastic_beanstalk_hosted_zone` [GH-3208]
@@ -26,6 +30,7 @@ ENHANCEMENTS:
 * data-source/aws_iam_policy_document: Support layering via source_json and override_json attributes [GH-2890]
 * data-source/aws_lb_listener: Support load_balancer_arn and port arguments [GH-2886]
 * data-source/aws_network_interface: Add filter attribute [GH-2851]
+* data-source/aws_region: Remove EC2 API call and default to current if no endpoint or name specified [GH-3157]
 * data-source/aws_vpc_endpoint: Support AWS PrivateLink [GH-2515]
 * data-source/aws_vpc_endpoint_service: Support AWS PrivateLink [GH-2515]
 * resource/aws_athena_named_query: Support import [GH-3231]
