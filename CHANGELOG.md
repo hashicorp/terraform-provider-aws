@@ -9,6 +9,7 @@ FEATURES:
 * **New Resource:** `aws_api_gateway_documentation_version` [GH-3287]
 * **New Resource:** `aws_cloud9_environment_ec2` [GH-3291]
 * **New Resource:** `aws_cognito_user_group` [GH-3010]
+* **New Resource:** `aws_dynamodb_table_item` [GH-3238]
 * **New Resource:** `aws_guardduty_ipset` [GH-3161]
 * **New Resource:** `aws_guardduty_threatintelset` [GH-3200]
 * **New Resource:** `aws_iot_topic_rule` [GH-1858]
