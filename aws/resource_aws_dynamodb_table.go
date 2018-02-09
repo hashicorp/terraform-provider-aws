@@ -196,6 +196,21 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"encrypt_at_rest": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -248,6 +263,16 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 			StreamEnabled:  aws.Bool(v.(bool)),
 			StreamViewType: aws.String(d.Get("stream_view_type").(string)),
 		}
+	}
+
+	if v, ok := d.GetOk("encrypt_at_rest"); ok {
+		options := v.([]interface{})
+		if options[0] == nil {
+			return fmt.Errorf("At least one field is expected inside encrypt_at_rest")
+		}
+
+		s := options[0].(map[string]interface{})
+		req.SSESpecification = expandDynamoDbEncryptAtRestOptions(s)
 	}
 
 	var output *dynamodb.CreateTableOutput
