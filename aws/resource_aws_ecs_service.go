@@ -259,7 +259,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		input.Role = aws.String(v.(string))
 	}
 
-	input.NetworkConfiguration = expandEcsNetworkConfigration(d.Get("network_configuration").([]interface{}))
+	input.NetworkConfiguration = expandEcsNetworkConfiguration(d.Get("network_configuration").([]interface{}))
 
 	strategies := d.Get("placement_strategy").(*schema.Set).List()
 	if len(strategies) > 0 {
@@ -422,14 +422,14 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[ERR] Error setting placement_constraints for (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("network_configuration", flattenEcsNetworkConfigration(service.NetworkConfiguration)); err != nil {
+	if err := d.Set("network_configuration", flattenEcsNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return fmt.Errorf("[ERR] Error setting network_configuration for (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func flattenEcsNetworkConfigration(nc *ecs.NetworkConfiguration) []interface{} {
+func flattenEcsNetworkConfiguration(nc *ecs.NetworkConfiguration) []interface{} {
 	if nc == nil {
 		return nil
 	}
@@ -439,7 +439,7 @@ func flattenEcsNetworkConfigration(nc *ecs.NetworkConfiguration) []interface{} {
 	return []interface{}{result}
 }
 
-func expandEcsNetworkConfigration(nc []interface{}) *ecs.NetworkConfiguration {
+func expandEcsNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
 	if len(nc) == 0 {
 		return nil
 	}
@@ -518,8 +518,8 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("network_configration") {
-		input.NetworkConfiguration = expandEcsNetworkConfigration(d.Get("network_configuration").([]interface{}))
+	if d.HasChange("network_configuration") {
+		input.NetworkConfiguration = expandEcsNetworkConfiguration(d.Get("network_configuration").([]interface{}))
 	}
 
 	// Retry due to IAM & ECS eventual consistency
