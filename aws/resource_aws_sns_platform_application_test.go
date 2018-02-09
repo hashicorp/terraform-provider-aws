@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -37,7 +39,20 @@ type testAccAwsSnsPlatformApplicationPlatform struct {
 func testAccAwsSnsPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAwsSnsPlatformApplicationPlatform {
 	platforms := make([]*testAccAwsSnsPlatformApplicationPlatform, 0, 2)
 
-	if os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH") != "" {
+	if os.Getenv("APNS_SANDBOX_CREDENTIAL") != "" {
+		if os.Getenv("APNS_SANDBOX_PRINCIPAL") == "" {
+			t.Fatalf("APNS_SANDBOX_CREDENTIAL set but missing APNS_SANDBOX_PRINCIPAL")
+		}
+
+		platform := &testAccAwsSnsPlatformApplicationPlatform{
+			Name:           "APNS_SANDBOX",
+			Credential:     fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CREDENTIAL"))),
+			CredentialHash: hashSum(fmt.Sprintf("%s\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CREDENTIAL")))),
+			Principal:      fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_PRINCIPAL"))),
+			PrincipalHash:  hashSum(fmt.Sprintf("%s\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_PRINCIPAL")))),
+		}
+		platforms = append(platforms, platform)
+	} else if os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH") != "" {
 		if os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH") == "" {
 			t.Fatalf("APNS_SANDBOX_CREDENTIAL_PATH set but missing APNS_SANDBOX_PRINCIPAL_PATH")
 		}
@@ -63,7 +78,7 @@ func testAccAwsSnsPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAws
 	if os.Getenv("GCM_API_KEY") != "" {
 		platform := &testAccAwsSnsPlatformApplicationPlatform{
 			Name:           "GCM",
-			Credential:     os.Getenv("GCM_API_KEY"),
+			Credential:     strconv.Quote(os.Getenv("GCM_API_KEY")),
 			CredentialHash: hashSum(os.Getenv("GCM_API_KEY")),
 		}
 		platforms = append(platforms, platform)
@@ -180,16 +195,16 @@ func TestAccAwsSnsPlatformApplication_basic(t *testing.T) {
 					{
 						Config: testAccAwsSnsPlatformApplicationConfig_basic(name, &testAccAwsSnsPlatformApplicationPlatform{
 							Name:       "APNS",
-							Credential: "NOTEMPTY",
-							Principal:  "",
+							Credential: strconv.Quote("NOTEMPTY"),
+							Principal:  strconv.Quote(""),
 						}),
 						ExpectError: regexp.MustCompile(`platform_principal is required when platform =`),
 					},
 					{
 						Config: testAccAwsSnsPlatformApplicationConfig_basic(name, &testAccAwsSnsPlatformApplicationPlatform{
 							Name:       "APNS_SANDBOX",
-							Credential: "NOTEMPTY",
-							Principal:  "",
+							Credential: strconv.Quote("NOTEMPTY"),
+							Principal:  strconv.Quote(""),
 						}),
 						ExpectError: regexp.MustCompile(`platform_principal is required when platform =`),
 					},
@@ -430,7 +445,7 @@ func testAccAwsSnsPlatformApplicationConfig_basic(name string, platform *testAcc
 resource "aws_sns_platform_application" "test" {
   name                = "%s"
   platform            = "%s"
-  platform_credential = "%s"
+  platform_credential = %s
 }
 `, name, platform.Name, platform.Credential)
 	}
@@ -438,8 +453,8 @@ resource "aws_sns_platform_application" "test" {
 resource "aws_sns_platform_application" "test" {
   name                = "%s"
   platform            = "%s"
-  platform_credential = "%s"
-  platform_principal  = "%s"
+  platform_credential = %s
+  platform_principal  = %s
 }
 `, name, platform.Name, platform.Credential, platform.Principal)
 }
@@ -450,7 +465,7 @@ func testAccAwsSnsPlatformApplicationConfig_basicAttribute(name string, platform
 resource "aws_sns_platform_application" "test" {
   name                = "%s"
   platform            = "%s"
-  platform_credential = "%s"
+  platform_credential = %s
   %s                  = "%s"
 }
 `, name, platform.Name, platform.Credential, attributeKey, attributeValue)
@@ -459,8 +474,8 @@ resource "aws_sns_platform_application" "test" {
 resource "aws_sns_platform_application" "test" {
   name                = "%s"
   platform            = "%s"
-  platform_credential = "%s"
-  platform_principal  = "%s"
+  platform_credential = %s
+  platform_principal  = %s
   %s                  = "%s"
 }
 `, name, platform.Name, platform.Credential, platform.Principal, attributeKey, attributeValue)
