@@ -32,9 +32,6 @@ exported as attributes.
 
 * `name` - (Optional) The full name of the region to select.
 
-* `current` - (Optional) Set to `true` to match only the region configured
-  in the provider. Defaults to `true` if `endpoint` or `name` is not given.
-
 * `endpoint` - (Optional) The EC2 endpoint of the region to select.
 
 ## Attributes Reference
