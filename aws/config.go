@@ -487,6 +487,16 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	// See https://github.com/aws/aws-sdk-go/pull/1276
+	client.dynamodbconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name != "PutItem" && r.Operation.Name != "UpdateItem" && r.Operation.Name != "DeleteItem" {
+			return
+		}
+		if isAWSErr(r.Error, dynamodb.ErrCodeLimitExceededException, "Subscriber limit exceeded:") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
 	return &client, nil
 }
 
