@@ -54,6 +54,7 @@ BUG FIXES:
 * resource/aws_codebuild_project: Prevent crash when using source auth configuration [GH-3271]
 * resource/aws_cognito_identity_pool_roles_attachment: Fix validation for Token types [GH-2894]
 * resource/aws_db_parameter_group: fix permanent diff when specifying parameters with database-default values [GH-3182]
+* resource/aws_kinesis_stream: Retry deletion on `LimitExceededException` [GH-3108]
 * resource/aws_route53_record: Fix dualstack alias name regression trimming too many characters [GH-3187]
 * resource/aws_ses_template: Send only specified attributes for update [GH-3214]
 * resource/aws_dynamodb_table: Allow disabling stream with empty `stream_view_type` [GH-3197] [GH-3224]
