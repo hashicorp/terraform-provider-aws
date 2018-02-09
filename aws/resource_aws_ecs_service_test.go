@@ -504,17 +504,48 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName),
+				Config: testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "launch_type", "FARGATE"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.security_groups.#", "2"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
+				),
+			},
+		},
+	})
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "true"),
+				),
+			},
+		},
+	})
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSEcsService_withNetworkConfiguration(t *testing.T) {
+func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T) {
 	rString := acctest.RandString(8)
 
 	sg1Name := fmt.Sprintf("tf-acc-sg-1-svc-w-nc-%s", rString)
@@ -529,9 +560,21 @@ func TestAccAWSEcsService_withNetworkConfiguration(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithNetworkConfigration(sg1Name, sg2Name, clusterName, tdName, svcName),
+				Config: testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.security_groups.#", "2"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceWithNetworkConfiguration_modified(sg1Name, sg2Name, clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.security_groups.#", "1"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
 				),
 			},
 		},
@@ -778,7 +821,7 @@ resource "aws_ecs_service" "mongo" {
 `, clusterName, tdName, svcName)
 }
 
-func testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
+func testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, assignPublicIP string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -856,9 +899,10 @@ resource "aws_ecs_service" "main" {
   network_configuration {
     security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
     subnets = ["${aws_subnet.main.*.id}"]
+    assign_public_ip = %s
   }
 }
-`, sg1Name, sg2Name, clusterName, tdName, svcName)
+`, sg1Name, sg2Name, clusterName, tdName, svcName, assignPublicIP)
 }
 
 func testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName, roleName, policyName,
@@ -1476,7 +1520,20 @@ resource "aws_ecs_service" "with_alb" {
 `, clusterName, tdName, roleName, policyName, tgName, lbName, svcName)
 }
 
-func testAccAWSEcsServiceWithNetworkConfigration(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
+func testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
+	return tpl_testAccAWSEcsServiceWithNetworkConfiguration(
+		sg1Name, sg2Name, clusterName, tdName, svcName,
+		`"${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"`,
+	)
+}
+func testAccAWSEcsServiceWithNetworkConfiguration_modified(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
+	return tpl_testAccAWSEcsServiceWithNetworkConfiguration(
+		sg1Name, sg2Name, clusterName, tdName, svcName,
+		`"${aws_security_group.allow_all_a.id}"`,
+	)
+}
+
+func tpl_testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName string, securityGroups string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
@@ -1543,9 +1600,9 @@ resource "aws_ecs_service" "main" {
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
 	network_configuration {
-		security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
+		security_groups = [%s]
 		subnets = ["${aws_subnet.main.*.id}"]
 	}
 }
-`, sg1Name, sg2Name, clusterName, tdName, svcName)
+`, sg1Name, sg2Name, clusterName, tdName, svcName, securityGroups)
 }
