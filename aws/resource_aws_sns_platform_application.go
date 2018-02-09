@@ -189,28 +189,17 @@ func resourceAwsSnsPlatformApplicationRead(d *schema.ResourceData, meta interfac
 	// We will use the ID, which should be a platform application ARN, to:
 	//  * Validate its an appropriate ARN on import
 	//  * Parse out the name and platform
-	platformApplicationArn, err := arn.Parse(d.Id())
+	arn, name, platform, err := decodeResourceAwsSnsPlatformApplicationID(d.Id())
 	if err != nil {
-		return fmt.Errorf(
-			"SNS Platform Application ID must be of the form "+
-				"arn:PARTITION:sns:REGION:ACCOUNTID:app/PLATFORM/NAME, "+
-				"was provided %q and received error: %s", platformApplicationArn.String(), err)
+		return err
 	}
 
-	platformApplicationArnResourceParts := strings.Split(platformApplicationArn.Resource, "/")
-	if len(platformApplicationArnResourceParts) != 3 || platformApplicationArnResourceParts[0] != "app" {
-		return fmt.Errorf(
-			"SNS Platform Application ID must be of the form "+
-				"arn:PARTITION:sns:REGION:ACCOUNTID:app/PLATFORM/NAME, "+
-				"was provided: %s", platformApplicationArn.String())
-	}
-
-	d.Set("arn", platformApplicationArn.String())
-	d.Set("name", platformApplicationArnResourceParts[2])
-	d.Set("platform", platformApplicationArnResourceParts[1])
+	d.Set("arn", arn)
+	d.Set("name", name)
+	d.Set("platform", platform)
 
 	attributeOutput, err := snsconn.GetPlatformApplicationAttributes(&sns.GetPlatformApplicationAttributesInput{
-		PlatformApplicationArn: aws.String(platformApplicationArn.String()),
+		PlatformApplicationArn: aws.String(arn),
 	})
 
 	if err != nil {
@@ -250,6 +239,31 @@ func resourceAwsSnsPlatformApplicationDelete(d *schema.ResourceData, meta interf
 		return err
 	}
 	return nil
+}
+
+func decodeResourceAwsSnsPlatformApplicationID(input string) (arnS, name, platform string, err error) {
+	platformApplicationArn, err := arn.Parse(input)
+	if err != nil {
+		err = fmt.Errorf(
+			"SNS Platform Application ID must be of the form "+
+				"arn:PARTITION:sns:REGION:ACCOUNTID:app/PLATFORM/NAME, "+
+				"was provided %q and received error: %s", input, err)
+		return
+	}
+
+	platformApplicationArnResourceParts := strings.Split(platformApplicationArn.Resource, "/")
+	if len(platformApplicationArnResourceParts) != 3 || platformApplicationArnResourceParts[0] != "app" {
+		err = fmt.Errorf(
+			"SNS Platform Application ID must be of the form "+
+				"arn:PARTITION:sns:REGION:ACCOUNTID:app/PLATFORM/NAME, "+
+				"was provided: %s", input)
+		return
+	}
+
+	arnS = platformApplicationArn.String()
+	name = platformApplicationArnResourceParts[2]
+	platform = platformApplicationArnResourceParts[1]
+	return
 }
 
 func hashSum(contents interface{}) string {

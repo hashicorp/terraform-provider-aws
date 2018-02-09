@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -35,20 +34,20 @@ type testAccAwsSnsPlatformApplicationPlatform struct {
 	PrincipalHash  string
 }
 
-func testAccAwsSnsPlatformApplicationPlatformFromEnv() ([]*testAccAwsSnsPlatformApplicationPlatform, error) {
+func testAccAwsSnsPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAwsSnsPlatformApplicationPlatform {
 	platforms := make([]*testAccAwsSnsPlatformApplicationPlatform, 0, 2)
 
 	if os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH") != "" {
 		if os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH") == "" {
-			return platforms, errors.New("APNS_SANDBOX_CREDENTIAL_PATH set but missing APNS_SANDBOX_PRINCIPAL_PATH")
+			t.Fatalf("APNS_SANDBOX_CREDENTIAL_PATH set but missing APNS_SANDBOX_PRINCIPAL_PATH")
 		}
 		credentialHash, err := testAccHashSumPath(os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH"))
 		if err != nil {
-			return platforms, err
+			t.Fatal(err)
 		}
 		principalHash, err := testAccHashSumPath(os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH"))
 		if err != nil {
-			return platforms, err
+			t.Fatal(err)
 		}
 
 		platform := &testAccAwsSnsPlatformApplicationPlatform{
@@ -71,9 +70,9 @@ func testAccAwsSnsPlatformApplicationPlatformFromEnv() ([]*testAccAwsSnsPlatform
 	}
 
 	if len(platforms) == 0 {
-		return platforms, errors.New("no SNS Platform Application environment variables found")
+		t.Skipf("no SNS Platform Application environment variables found")
 	}
-	return platforms, nil
+	return platforms
 }
 
 func testAccHashSumPath(path string) (string, error) {
@@ -88,12 +87,81 @@ func testAccHashSumPath(path string) (string, error) {
 	return hashSum(string(data)), nil
 }
 
-func TestAccAwsSnsPlatformApplication_basic(t *testing.T) {
-	platforms, err := testAccAwsSnsPlatformApplicationPlatformFromEnv()
-	if err != nil {
-		t.Skip(err)
+func TestDecodeResourceAwsSnsPlatformApplicationID(t *testing.T) {
+
+	var testCases = []struct {
+		Input            string
+		ExpectedArn      string
+		ExpectedName     string
+		ExpectedPlatform string
+		ErrCount         int
+	}{
+		{
+			Input:            "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName",
+			ExpectedArn:      "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName",
+			ExpectedName:     "myAppName",
+			ExpectedPlatform: "APNS_SANDBOX",
+			ErrCount:         0,
+		},
+		{
+			Input:            "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName/extra",
+			ExpectedArn:      "",
+			ExpectedName:     "",
+			ExpectedPlatform: "",
+			ErrCount:         1,
+		},
+		{
+			Input:            "arn:aws:sns:us-east-1:123456789012:endpoint/APNS_SANDBOX/myAppName/someID",
+			ExpectedArn:      "",
+			ExpectedName:     "",
+			ExpectedPlatform: "",
+			ErrCount:         1,
+		},
+		{
+			Input:            "arn:aws:sns:us-east-1:123456789012:APNS_SANDBOX/myAppName",
+			ExpectedArn:      "",
+			ExpectedName:     "",
+			ExpectedPlatform: "",
+			ErrCount:         1,
+		},
+		{
+			Input:            "arn:aws:sns:us-east-1:123456789012:app",
+			ExpectedArn:      "",
+			ExpectedName:     "",
+			ExpectedPlatform: "",
+			ErrCount:         1,
+		},
+		{
+			Input:            "myAppName",
+			ExpectedArn:      "",
+			ExpectedName:     "",
+			ExpectedPlatform: "",
+			ErrCount:         1,
+		},
 	}
 
+	for _, tc := range testCases {
+		arn, name, platform, err := decodeResourceAwsSnsPlatformApplicationID(tc.Input)
+		if tc.ErrCount == 0 && err != nil {
+			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
+		}
+		if tc.ErrCount > 0 && err == nil {
+			t.Fatalf("expected %q to trigger an error", tc.Input)
+		}
+		if arn != tc.ExpectedArn {
+			t.Fatalf("expected %q to return arn: %s", tc.Input, arn)
+		}
+		if name != tc.ExpectedName {
+			t.Fatalf("expected %q to return name: %s", tc.Input, name)
+		}
+		if platform != tc.ExpectedPlatform {
+			t.Fatalf("expected %q to return platform: %s", tc.Input, platform)
+		}
+	}
+}
+
+func TestAccAwsSnsPlatformApplication_basic(t *testing.T) {
+	platforms := testAccAwsSnsPlatformApplicationPlatformFromEnv(t)
 	resourceName := "aws_sns_platform_application.test"
 
 	for _, platform := range platforms {
@@ -149,11 +217,7 @@ func TestAccAwsSnsPlatformApplication_basic(t *testing.T) {
 }
 
 func TestAccAwsSnsPlatformApplication_basicAttributes(t *testing.T) {
-	platforms, err := testAccAwsSnsPlatformApplicationPlatformFromEnv()
-	if err != nil {
-		t.Skip(err)
-	}
-
+	platforms := testAccAwsSnsPlatformApplicationPlatformFromEnv(t)
 	resourceName := "aws_sns_platform_application.test"
 
 	var testCases = []struct {
@@ -208,11 +272,7 @@ func TestAccAwsSnsPlatformApplication_basicAttributes(t *testing.T) {
 }
 
 func TestAccAwsSnsPlatformApplication_iamRoleAttributes(t *testing.T) {
-	platforms, err := testAccAwsSnsPlatformApplicationPlatformFromEnv()
-	if err != nil {
-		t.Skip(err)
-	}
-
+	platforms := testAccAwsSnsPlatformApplicationPlatformFromEnv(t)
 	resourceName := "aws_sns_platform_application.test"
 
 	var testCases = []string{
@@ -262,11 +322,7 @@ func TestAccAwsSnsPlatformApplication_iamRoleAttributes(t *testing.T) {
 }
 
 func TestAccAwsSnsPlatformApplication_snsTopicAttributes(t *testing.T) {
-	platforms, err := testAccAwsSnsPlatformApplicationPlatformFromEnv()
-	if err != nil {
-		t.Skip(err)
-	}
-
+	platforms := testAccAwsSnsPlatformApplicationPlatformFromEnv(t)
 	resourceName := "aws_sns_platform_application.test"
 
 	var testCases = []string{
