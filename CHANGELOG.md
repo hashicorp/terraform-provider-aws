@@ -17,6 +17,7 @@ FEATURES:
 * **New Resource:** `aws_guardduty_ipset` [GH-3161]
 * **New Resource:** `aws_guardduty_threatintelset` [GH-3200]
 * **New Resource:** `aws_iot_topic_rule` [GH-1858]
+* **New Resource:** `aws_sns_platform_application` [GH-1101] [GH-3283]
 * **New Resource:** `aws_vpc_endpoint_service_allowed_principal` [GH-2515]
 * **New Resource:** `aws_vpc_endpoint_service_connection_notification` [GH-2515]
 * **New Resource:** `aws_vpc_endpoint_service` [GH-2515]
