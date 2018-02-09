@@ -106,19 +106,7 @@ func resourceAwsKinesisStreamCreate(d *schema.ResourceData, meta interface{}) er
 		StreamName: aws.String(sn),
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.CreateStream(createOpts)
-		if isAWSErr(err, kinesis.ErrCodeLimitExceededException, "simultaneously be in CREATING or DELETING") {
-			return resource.RetryableError(err)
-		}
-		// AWS (un)helpfully raises LimitExceededException
-		// rather than ThrottlingException here
-		if isAWSErr(err, kinesis.ErrCodeLimitExceededException, "Rate exceeded for stream") {
-			return resource.RetryableError(err)
-		}
-		return resource.NonRetryableError(err)
-	})
-
+	_, err := conn.CreateStream(createOpts)
 	if err != nil {
 		return fmt.Errorf("Unable to create stream: %s", err)
 	}
@@ -222,18 +210,8 @@ func resourceAwsKinesisStreamDelete(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*AWSClient).kinesisconn
 	sn := d.Get("name").(string)
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteStream(&kinesis.DeleteStreamInput{
-			StreamName: aws.String(sn),
-		})
-		if err != nil {
-			if isAWSErr(err, kinesis.ErrCodeLimitExceededException, "Rate exceeded for stream") {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-		return nil
+	_, err := conn.DeleteStream(&kinesis.DeleteStreamInput{
+		StreamName: aws.String(sn),
 	})
 	if err != nil {
 		return err
