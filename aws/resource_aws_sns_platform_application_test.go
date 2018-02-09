@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -13,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	homedir "github.com/mitchellh/go-homedir"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
@@ -29,11 +27,9 @@ import (
 **/
 
 type testAccAwsSnsPlatformApplicationPlatform struct {
-	Name           string
-	Credential     string
-	CredentialHash string
-	Principal      string
-	PrincipalHash  string
+	Name       string
+	Credential string
+	Principal  string
 }
 
 func testAccAwsSnsPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAwsSnsPlatformApplicationPlatform {
@@ -45,41 +41,28 @@ func testAccAwsSnsPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAws
 		}
 
 		platform := &testAccAwsSnsPlatformApplicationPlatform{
-			Name:           "APNS_SANDBOX",
-			Credential:     fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CREDENTIAL"))),
-			CredentialHash: hashSum(fmt.Sprintf("%s\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CREDENTIAL")))),
-			Principal:      fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_PRINCIPAL"))),
-			PrincipalHash:  hashSum(fmt.Sprintf("%s\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_PRINCIPAL")))),
+			Name:       "APNS_SANDBOX",
+			Credential: fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CREDENTIAL"))),
+			Principal:  fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_PRINCIPAL"))),
 		}
 		platforms = append(platforms, platform)
 	} else if os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH") != "" {
 		if os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH") == "" {
 			t.Fatalf("APNS_SANDBOX_CREDENTIAL_PATH set but missing APNS_SANDBOX_PRINCIPAL_PATH")
 		}
-		credentialHash, err := testAccHashSumPath(os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH"))
-		if err != nil {
-			t.Fatal(err)
-		}
-		principalHash, err := testAccHashSumPath(os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH"))
-		if err != nil {
-			t.Fatal(err)
-		}
 
 		platform := &testAccAwsSnsPlatformApplicationPlatform{
-			Name:           "APNS_SANDBOX",
-			Credential:     strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH"))),
-			CredentialHash: credentialHash,
-			Principal:      strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH"))),
-			PrincipalHash:  principalHash,
+			Name:       "APNS_SANDBOX",
+			Credential: strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH"))),
+			Principal:  strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH"))),
 		}
 		platforms = append(platforms, platform)
 	}
 
 	if os.Getenv("GCM_API_KEY") != "" {
 		platform := &testAccAwsSnsPlatformApplicationPlatform{
-			Name:           "GCM",
-			Credential:     strconv.Quote(os.Getenv("GCM_API_KEY")),
-			CredentialHash: hashSum(os.Getenv("GCM_API_KEY")),
+			Name:       "GCM",
+			Credential: strconv.Quote(os.Getenv("GCM_API_KEY")),
 		}
 		platforms = append(platforms, platform)
 	}
@@ -88,18 +71,6 @@ func testAccAwsSnsPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAws
 		t.Skipf("no SNS Platform Application environment variables found")
 	}
 	return platforms
-}
-
-func testAccHashSumPath(path string) (string, error) {
-	path, err := homedir.Expand(path)
-	if err != nil {
-		return "", err
-	}
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-	return hashSum(string(data)), nil
 }
 
 func TestDecodeResourceAwsSnsPlatformApplicationID(t *testing.T) {
@@ -183,7 +154,7 @@ func TestAccAwsSnsPlatformApplication_basic(t *testing.T) {
 		name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
 		platformPrincipalCheck := resource.TestCheckNoResourceAttr(resourceName, "platform_principal")
 		if platform.Principal != "" {
-			platformPrincipalCheck = resource.TestCheckResourceAttr(resourceName, "platform_principal", platform.PrincipalHash)
+			platformPrincipalCheck = resource.TestCheckResourceAttrSet(resourceName, "platform_principal")
 		}
 
 		t.Run(platform.Name, func(*testing.T) {
@@ -215,7 +186,7 @@ func TestAccAwsSnsPlatformApplication_basic(t *testing.T) {
 							resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:sns:[^:]+:[^:]+:app/%s/%s$", platform.Name, name))),
 							resource.TestCheckResourceAttr(resourceName, "name", name),
 							resource.TestCheckResourceAttr(resourceName, "platform", platform.Name),
-							resource.TestCheckResourceAttr(resourceName, "platform_credential", platform.CredentialHash),
+							resource.TestCheckResourceAttrSet(resourceName, "platform_credential"),
 							platformPrincipalCheck,
 						),
 					},
