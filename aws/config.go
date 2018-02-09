@@ -497,6 +497,19 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name == "CreateStream" {
+			if isAWSErr(r.Error, kinesis.ErrCodeLimitExceededException, "simultaneously be in CREATING or DELETING") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+		if r.Operation.Name == "CreateStream" || r.Operation.Name == "DeleteStream" {
+			if isAWSErr(r.Error, kinesis.ErrCodeLimitExceededException, "Rate exceeded for stream") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
 	return &client, nil
 }
 
