@@ -56,6 +56,8 @@ BUG FIXES:
 * resource/aws_cognito_identity_pool_roles_attachment: Fix validation for Token types [GH-2894]
 * resource/aws_db_parameter_group: fix permanent diff when specifying parameters with database-default values [GH-3182]
 * resource/aws_ecs_service: Retry only on ECS and IAM related InvalidParameterException [GH-3240]
+* resource/aws_kinesis_firehose_delivery_stream: Prevent crashes on empty CloudWatchLoggingOptions [GH-3301]
+* resource/aws_kinesis_firehose_delivery_stream: Fix extended_s3_configuration kms_key_arn handling from AWS API [GH-3301]
 * resource/aws_kinesis_stream: Retry deletion on `LimitExceededException` [GH-3108]
 * resource/aws_route53_record: Fix dualstack alias name regression trimming too many characters [GH-3187]
 * resource/aws_ses_template: Send only specified attributes for update [GH-3214]
