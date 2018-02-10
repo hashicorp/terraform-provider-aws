@@ -73,7 +73,6 @@ func resourceAwsSsmAssociation() *schema.Resource {
 			"targets": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
 				MaxItems: 5,
 				Elem: &schema.Resource{
