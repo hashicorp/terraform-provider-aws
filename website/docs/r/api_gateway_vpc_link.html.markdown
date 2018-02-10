@@ -36,7 +36,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name used to label and identify the VPC link.
 * `description` - (Optional) The description of the VPC link.
-* `target_arn` - (Required, ForceNew) The ARN of network load balancer of the VPC targeted by the VPC link.
+* `target_arn` - (Required, ForceNew) The ARN of a network load balancer in the VPC targeted by the VPC link.
 
 ## Attributes Reference
 

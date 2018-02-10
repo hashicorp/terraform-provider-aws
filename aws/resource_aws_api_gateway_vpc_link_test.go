@@ -24,6 +24,7 @@ func TestAccAwsAPIGatewayVpcLink_basic(t *testing.T) {
 					testAccCheckAwsAPIGatewayVpcLinkExists("aws_api_gateway_vpc_link.test"),
 					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "name", fmt.Sprintf("tf-apigateway-%s", rName)),
 					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "description", "test"),
+					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "target_arns.#", "2"),
 				),
 			},
 			{
@@ -32,6 +33,7 @@ func TestAccAwsAPIGatewayVpcLink_basic(t *testing.T) {
 					testAccCheckAwsAPIGatewayVpcLinkExists("aws_api_gateway_vpc_link.test"),
 					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "name", fmt.Sprintf("tf-apigateway-update-%s", rName)),
 					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "description", "test update"),
+					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "target_arns.#", "2"),
 				),
 			},
 		},
@@ -50,7 +52,7 @@ func testAccCheckAwsAPIGatewayVpcLinkDestroy(s *terraform.State) error {
 			VpcLinkId: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := conn.GetVpcLink(input)
+		_, err := conn.GetVpcLink(input)
 		if err != nil {
 			if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
 				return nil
@@ -58,9 +60,7 @@ func testAccCheckAwsAPIGatewayVpcLinkDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if *resp.Status != apigateway.VpcLinkStatusDeleting {
-			return fmt.Errorf("APIGateway VPC Link (%s) not deleted", rs.Primary.ID)
-		}
+		return fmt.Errorf("Expected VPC Link to be destroyed, %s found", rs.Primary.ID)
 	}
 
 	return nil
@@ -68,19 +68,37 @@ func testAccCheckAwsAPIGatewayVpcLinkDestroy(s *terraform.State) error {
 
 func testAccCheckAwsAPIGatewayVpcLinkExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).apigateway
+
+		input := &apigateway.GetVpcLinkInput{
+			VpcLinkId: aws.String(rs.Primary.ID),
+		}
+
+		_, err := conn.GetVpcLink(input)
+		if err != nil {
+			return err
 		}
 
 		return nil
 	}
 }
 
-func testAccAPIGatewayVpcLinkConfig(rName string) string {
+func testAccAPIGatewayVpcLinkConfig_basis(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb" "test_a" {
-  name = "tf-lb-a-%s"
+  name = "tf-lb-%s"
+  internal = true
+  load_balancer_type = "network"
+  subnets = ["${aws_subnet.test.id}"]
+}
+
+resource "aws_lb" "test_b" {
+  name = "tf-lb-%s"
   internal = true
   load_balancer_type = "network"
   subnets = ["${aws_subnet.test.id}"]
@@ -90,43 +108,32 @@ resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
 }
 
+data "aws_availability_zones" "test" {}
+
 resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.10.0.0/21"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.test.names[0]}"
+}
+`, rName, rName)
 }
 
+func testAccAPIGatewayVpcLinkConfig(rName string) string {
+	return testAccAPIGatewayVpcLinkConfig_basis(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_vpc_link" "test" {
   name = "tf-apigateway-%s"
   description = "test"
-  target_arn = "${aws_lb.test_a.arn}"
+  target_arns = ["${aws_lb.test_a.arn}","${aws_lb.test_b.arn}"]
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAPIGatewayVpcLinkConfig_Update(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb" "test_a" {
-  name = "tf-lb-a-%s"
-  internal = true
-  load_balancer_type = "network"
-  subnets = ["${aws_subnet.test.id}"]
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.10.0.0/21"
-  availability_zone = "us-west-2a"
-}
-
+	return testAccAPIGatewayVpcLinkConfig_basis(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_vpc_link" "test" {
   name = "tf-apigateway-update-%s"
   description = "test update"
-  target_arn = "${aws_lb.test_a.arn}"
+  target_arns = ["${aws_lb.test_a.arn}","${aws_lb.test_b.arn}"]
 }
-`, rName, rName)
+`, rName)
 }

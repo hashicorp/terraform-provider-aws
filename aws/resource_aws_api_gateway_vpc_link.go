@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -26,10 +27,11 @@ func resourceAwsApiGatewayVpcLink() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"target_arn": {
-				Type:     schema.TypeString,
+			"target_arns": {
+				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -40,7 +42,7 @@ func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}
 
 	input := &apigateway.CreateVpcLinkInput{
 		Name:       aws.String(d.Get("name").(string)),
-		TargetArns: []*string{aws.String(d.Get("target_arn").(string))},
+		TargetArns: expandStringList(d.Get("target_arns").(*schema.Set).List()),
 	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -50,6 +52,8 @@ func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
+
+	d.SetId(*resp.Id)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{apigateway.VpcLinkStatusPending},
@@ -61,10 +65,10 @@ func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
+		d.SetId("")
 		return fmt.Errorf("[WARN] Error waiting for APIGateway Vpc Link status to be \"%s\": %s", apigateway.VpcLinkStatusAvailable, err)
 	}
 
-	d.SetId(*resp.Id)
 	return nil
 }
 
@@ -78,6 +82,7 @@ func resourceAwsApiGatewayVpcLinkRead(d *schema.ResourceData, meta interface{}) 
 	resp, err := conn.GetVpcLink(input)
 	if err != nil {
 		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+			log.Printf("[WARN] VPC Link %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -86,7 +91,7 @@ func resourceAwsApiGatewayVpcLinkRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("name", resp.Name)
 	d.Set("description", resp.Description)
-	d.Set("target_arn", resp.TargetArns[0])
+	d.Set("target_arn", flattenStringList(resp.TargetArns))
 	return nil
 }
 
@@ -119,6 +124,7 @@ func resourceAwsApiGatewayVpcLinkUpdate(d *schema.ResourceData, meta interface{}
 	_, err := conn.UpdateVpcLink(input)
 	if err != nil {
 		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+			log.Printf("[WARN] VPC Link %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -151,7 +157,6 @@ func resourceAwsApiGatewayVpcLinkDelete(d *schema.ResourceData, meta interface{}
 	_, err := conn.DeleteVpcLink(input)
 	if err != nil {
 		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
-			d.SetId("")
 			return nil
 		}
 		return err
@@ -161,7 +166,7 @@ func resourceAwsApiGatewayVpcLinkDelete(d *schema.ResourceData, meta interface{}
 		Pending: []string{apigateway.VpcLinkStatusPending,
 			apigateway.VpcLinkStatusAvailable,
 			apigateway.VpcLinkStatusDeleting},
-		Target:     []string{"deleted"},
+		Target:     []string{""},
 		Timeout:    5 * time.Minute,
 		MinTimeout: 1 * time.Second,
 		Refresh: func() (interface{}, string, error) {
@@ -170,7 +175,7 @@ func resourceAwsApiGatewayVpcLinkDelete(d *schema.ResourceData, meta interface{}
 			})
 			if err != nil {
 				if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
-					return 1, "deleted", nil
+					return 1, "", nil
 				}
 				return nil, "failed", err
 			}
@@ -182,7 +187,6 @@ func resourceAwsApiGatewayVpcLinkDelete(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	d.SetId("")
 	return nil
 }
 
