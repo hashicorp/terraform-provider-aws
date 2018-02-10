@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -39,6 +40,20 @@ func resourceAwsLambdaAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"routing_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"additional_version_weights": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     schema.TypeFloat,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -58,6 +73,23 @@ func resourceAwsLambdaAliasCreate(d *schema.ResourceData, meta interface{}) erro
 		FunctionName:    aws.String(functionName),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
 		Name:            aws.String(aliasName),
+	}
+
+	if v, ok := d.GetOk("routing_config"); ok {
+		routingConfigs := v.([]interface{})
+		routingConfig, ok := routingConfigs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("At least one field is expected inside routing_config")
+		}
+
+		if additionalVersionWeights, ok := routingConfig["additional_version_weights"]; ok {
+			weights := readAdditionalVersionWeights(additionalVersionWeights.(map[string]interface{}))
+
+			params.RoutingConfig = &lambda.AliasRoutingConfiguration{
+				AdditionalVersionWeights: aws.Float64Map(weights),
+			}
+		}
 	}
 
 	aliasConfiguration, err := conn.CreateAlias(params)
@@ -97,6 +129,7 @@ func resourceAwsLambdaAliasRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("function_version", aliasConfiguration.FunctionVersion)
 	d.Set("name", aliasConfiguration.Name)
 	d.Set("arn", aliasConfiguration.AliasArn)
+	d.Set("routing_config", aliasConfiguration.RoutingConfig)
 
 	return nil
 }
@@ -137,10 +170,36 @@ func resourceAwsLambdaAliasUpdate(d *schema.ResourceData, meta interface{}) erro
 		Name:            aws.String(d.Get("name").(string)),
 	}
 
+	if v, ok := d.GetOk("routing_config"); ok {
+		routingConfigs := v.([]interface{})
+		routingConfig, ok := routingConfigs[0].(map[string]interface{})
+
+		if !ok {
+			return errors.New("At least one field is expected inside routing_config")
+		}
+
+		if additionalVersionWeights, ok := routingConfig["additional_version_weights"]; ok {
+			weights := readAdditionalVersionWeights(additionalVersionWeights.(map[string]interface{}))
+
+			params.RoutingConfig = &lambda.AliasRoutingConfiguration{
+				AdditionalVersionWeights: aws.Float64Map(weights),
+			}
+		}
+	}
+
 	_, err := conn.UpdateAlias(params)
 	if err != nil {
 		return fmt.Errorf("Error updating Lambda alias: %s", err)
 	}
 
 	return nil
+}
+
+func readAdditionalVersionWeights(avw map[string]interface{}) map[string]float64 {
+	weights := make(map[string]float64)
+	for k, v := range avw {
+		weights[k] = v.(float64)
+	}
+
+	return weights
 }
