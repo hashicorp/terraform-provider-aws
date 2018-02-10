@@ -53,6 +53,8 @@ Stickiness Blocks (`stickiness`) support the following:
 * `cookie_duration` - (Optional) The time period, in seconds, during which requests from a client should be routed to the same target. After this time period expires, the load balancer-generated cookie is considered stale. The range is 1 second to 1 week (604800 seconds). The default value is 1 day (86400 seconds).
 * `enabled` - (Optional) Boolean to enable / disable `stickiness`. Default is `true`
 
+~> **NOTE:** To help facilitate the authoring of modules that support target groups of any protocol, you can define `stickiness` regardless of the protocol chosen. However, for `TCP` target groups, `enabled` must be `false`.
+
 Health Check Blocks (`health_check`):
 
 ~> **Note:** The Health Check parameters you can set vary by the `protocol` of
