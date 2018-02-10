@@ -135,5 +135,5 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 	vpce := resp.VpcEndpoints[0]
 	d.SetId(aws.StringValue(vpce.VpcEndpointId))
 
-	return vpcEndpointAttributes(d, vpce, conn)
+	return vpcEndpointAttributes(d, vpce, conn, meta.(*AWSClient).IsGovCloud())
 }

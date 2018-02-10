@@ -192,7 +192,7 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
-	return vpcEndpointAttributes(d, vpce.(*ec2.VpcEndpoint), conn)
+	return vpcEndpointAttributes(d, vpce.(*ec2.VpcEndpoint), conn, meta.(*AWSClient).IsGovCloud())
 }
 
 func resourceAwsVpcEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -341,14 +341,18 @@ func vpcEndpointWaitUntilAvailable(d *schema.ResourceData, conn *ec2.EC2) error 
 	return nil
 }
 
-func vpcEndpointAttributes(d *schema.ResourceData, vpce *ec2.VpcEndpoint, conn *ec2.EC2) error {
+func vpcEndpointAttributes(d *schema.ResourceData, vpce *ec2.VpcEndpoint, conn *ec2.EC2, isGovCloud bool) error {
 	d.Set("state", vpce.State)
 	d.Set("vpc_id", vpce.VpcId)
 
 	serviceName := aws.StringValue(vpce.ServiceName)
 	d.Set("service_name", serviceName)
-	vpceType := aws.StringValue(vpce.VpcEndpointType)
-	d.Set("vpc_endpoint_type", vpceType)
+	if isGovCloud {
+		d.Set("vpc_endpoint_type", ec2.VpcEndpointTypeGateway)
+	} else {
+		vpceType := aws.StringValue(vpce.VpcEndpointType)
+		d.Set("vpc_endpoint_type", vpceType)
+	}
 
 	policy, err := structure.NormalizeJsonString(aws.StringValue(vpce.PolicyDocument))
 	if err != nil {
