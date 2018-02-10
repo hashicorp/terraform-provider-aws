@@ -2,12 +2,13 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsAppsyncGraphqlApi() *schema.Resource {
@@ -21,20 +22,11 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 			"authentication_type": {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := strings.ToUpper(v.(string))
-					validTypes := []string{"API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS"}
-					for _, str := range validTypes {
-						if value == str {
-							return
-						}
-					}
-					errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validTypes, value))
-					return
-				},
-				StateFunc: func(v interface{}) string {
-					return strings.ToUpper(v.(string))
-				},
+				ValidateFunc: validation.StringInSlice([]string{
+					appsync.AuthenticationTypeApiKey,
+					appsync.AuthenticationTypeAwsIam,
+					appsync.AuthenticationTypeAmazonCognitoUserPools,
+				}, false),
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -64,20 +56,10 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 						"default_action": {
 							Type:     schema.TypeString,
 							Required: true,
-							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								value := strings.ToUpper(v.(string))
-								validTypes := []string{"ALLOW", "DENY"}
-								for _, str := range validTypes {
-									if value == str {
-										return
-									}
-								}
-								errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validTypes, value))
-								return
-							},
-							StateFunc: func(v interface{}) string {
-								return strings.ToUpper(v.(string))
-							},
+							ValidateFunc: validation.StringInSlice([]string{
+								appsync.DefaultActionAllow,
+								appsync.DefaultActionDeny,
+							}, false),
 						},
 						"user_pool_id": {
 							Type:     schema.TypeString,
@@ -100,7 +82,10 @@ func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}
 	input := &appsync.CreateGraphqlApiInput{
 		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
 		Name:               aws.String(d.Get("name").(string)),
-		UserPoolConfig:     expandAppsyncGraphqlApiUserPoolConfig(d.Get("user_pool_config").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("user_pool_config"); ok {
+		input.UserPoolConfig = expandAppsyncGraphqlApiUserPoolConfig(v.([]interface{}))
 	}
 
 	resp, err := conn.CreateGraphqlApi(input)
@@ -123,6 +108,7 @@ func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) 
 	resp, err := conn.GetGraphqlApi(input)
 	if err != nil {
 		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+			log.Printf("[WARN] No such entity found for Appsync Graphql API (%s)", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -154,6 +140,7 @@ func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}
 	_, err := conn.UpdateGraphqlApi(input)
 	if err != nil {
 		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+			log.Printf("[WARN] No such entity found for Appsync Graphql API (%s)", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -172,13 +159,11 @@ func resourceAwsAppsyncGraphqlApiDelete(d *schema.ResourceData, meta interface{}
 	_, err := conn.DeleteGraphqlApi(input)
 	if err != nil {
 		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
-			d.SetId("")
 			return nil
 		}
 		return err
 	}
 
-	d.SetId("")
 	return nil
 }
 

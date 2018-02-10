@@ -24,6 +24,16 @@ func TestAccAwsAppsyncGraphqlApi_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_appsync_graphql_api.test_apikey", "arn"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAwsAppsyncGraphqlApi_iam(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
+		Steps: []resource.TestStep{
 			{
 				Config: testAccAppsyncGraphqlApiConfig_iam(acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
@@ -31,6 +41,16 @@ func TestAccAwsAppsyncGraphqlApi_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_appsync_graphql_api.test_iam", "arn"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAwsAppsyncGraphqlApi_cognito(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
+		Steps: []resource.TestStep{
 			{
 				Config: testAccAppsyncGraphqlApiConfig_cognito(acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
@@ -66,9 +86,20 @@ func testAccCheckAwsAppsyncGraphqlApiDestroy(s *terraform.State) error {
 
 func testAccCheckAwsAppsyncGraphqlApiExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+
+		input := &appsync.GetGraphqlApiInput{
+			ApiId: aws.String(rs.Primary.ID),
+		}
+
+		_, err := conn.GetGraphqlApi(input)
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -95,6 +126,10 @@ resource "aws_appsync_graphql_api" "test_iam" {
 
 func testAccAppsyncGraphqlApiConfig_cognito(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "test" {
+  current = true
+}
+
 resource "aws_cognito_user_pool" "test" {
   name = "tf-%s"
 }
@@ -103,7 +138,7 @@ resource "aws_appsync_graphql_api" "test_cognito" {
   authentication_type = "AMAZON_COGNITO_USER_POOLS"
   name = "tf_appsync_%s"
   user_pool_config {
-    aws_region = "us-west-2"
+    aws_region = "${data.aws_region.test.name}"
     default_action = "ALLOW"
     user_pool_id = "${aws_cognito_user_pool.test.id}"
   }
