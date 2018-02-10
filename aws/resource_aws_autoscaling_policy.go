@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsAutoscalingPolicy() *schema.Resource {
@@ -57,8 +58,9 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 				Computed: true,
 			},
 			"min_adjustment_magnitude": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"min_adjustment_step": &schema.Schema{
 				Type:          schema.TypeInt,
