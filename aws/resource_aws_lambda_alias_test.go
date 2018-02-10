@@ -178,11 +178,11 @@ resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
 }
 
 resource "aws_lambda_function" "lambda_function_test_create" {
-  filename      	 = "test-fixtures/lambdatest.zip"
-  function_name 	 = "%s"
-  role          	 = "${aws_iam_role.iam_for_lambda.arn}"
-  handler       	 = "exports.example"
-  runtime       	 = "nodejs4.3"
+  filename         = "test-fixtures/lambdatest.zip"
+  function_name    = "%s"
+  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  handler          = "exports.example"
+  runtime          = "nodejs4.3"
   source_code_hash = "${base64sha256(file("test-fixtures/lambdatest.zip"))}"
   publish          = "true"
 }
@@ -245,11 +245,11 @@ resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
 }
 
 resource "aws_lambda_function" "lambda_function_test_create" {
-  filename      	 = "test-fixtures/lambdatest_modified.zip"
-  function_name 	 = "%s"
-  role          	 = "${aws_iam_role.iam_for_lambda.arn}"
-  handler       	 = "exports.example"
-  runtime       	 = "nodejs4.3"
+  filename         = "test-fixtures/lambdatest_modified.zip"
+  function_name    = "%s"
+  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  handler          = "exports.example"
+  runtime          = "nodejs4.3"
   source_code_hash = "${base64sha256(file("test-fixtures/lambdatest_modified.zip"))}"
   publish          = "true"
 }
@@ -259,10 +259,10 @@ resource "aws_lambda_alias" "lambda_alias_test" {
   description      = "a sample description"
   function_name    = "${aws_lambda_function.lambda_function_test_create.arn}"
   function_version = "1"
-	routing_config   = {
-		additional_version_weights = {
-			"2" = 0.5
-		}
-	}
+  routing_config   = {
+    additional_version_weights = {
+      "2" = 0.5
+    }
+  }
 }`, roleName, policyName, attachmentName, funcName, aliasName)
 }
