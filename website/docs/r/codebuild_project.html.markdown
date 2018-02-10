@@ -132,8 +132,10 @@ The following arguments are supported:
 * `environment_variable` - (Optional) A set of environment variables to make available to builds for this build project.
 
 `environment_variable` supports the following:
+
 * `name` - (Required) The environment variable's name or key.
 * `value` - (Required) The environment variable's value.
+* `type` - (Optional) The type of environment variable. Valid values: `PARAMETER_STORE`, `PLAINTEXT`.
 
 `source` supports the following:
 
