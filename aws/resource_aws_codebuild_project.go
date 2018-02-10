@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsCodeBuildProject() *schema.Resource {
@@ -98,17 +99,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 									"type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-											value := v.(string)
-											validType := []string{"PARAMETER_STORE", "PLAINTEXT"}
-											for _, str := range validType {
-												if value == str {
-													return
-												}
-											}
-											errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
-											return
-										},
+										ValidateFunc: validation.StringInSlice([]string{
+											codebuild.EnvironmentVariableTypeParameterStore,
+											codebuild.EnvironmentVariableTypePlaintext,
+										}, false),
 									},
 								},
 							},
