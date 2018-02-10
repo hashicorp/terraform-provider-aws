@@ -418,14 +418,26 @@ resource "aws_autoscaling_policy" "foobar_simple" {
 
 func testAccAwsAutoscalingPolicyConfig_TargetTracking_Predefined(rName string) string {
 	return fmt.Sprintf(`
+data "aws_ami" "amzn" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "test" {}
+
 resource "aws_launch_configuration" "test" {
   name          = "tf-test-%s"
-  image_id      = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id      = "${data.aws_ami.amzn.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "test" {
-  availability_zones        = ["us-west-2a"]
+  availability_zones        = ["${data.aws_availability_zones.test.names[0]}"]
   name                      = "tf-test-%s"
   max_size                  = 5
   min_size                  = 0
@@ -453,14 +465,26 @@ resource "aws_autoscaling_policy" "test" {
 
 func testAccAwsAutoscalingPolicyConfig_TargetTracking_Custom(rName string) string {
 	return fmt.Sprintf(`
+data "aws_ami" "amzn" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "test" {}
+
 resource "aws_launch_configuration" "test" {
   name          = "tf-test-%s"
-  image_id      = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id      = "${data.aws_ami.amzn.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "test" {
-  availability_zones        = ["us-west-2a"]
+  availability_zones        = ["${data.aws_availability_zones.test.names[0]}"]
   name                      = "tf-test-%s"
   max_size                  = 5
   min_size                  = 0

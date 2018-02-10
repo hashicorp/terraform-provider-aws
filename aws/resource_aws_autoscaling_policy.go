@@ -94,14 +94,16 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 				Set: resourceAwsAutoscalingScalingAdjustmentHash,
 			},
 			"target_tracking_configuration": &schema.Schema{
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"predefined_metric_specification": &schema.Schema{
-							Type:          schema.TypeSet,
+							Type:          schema.TypeList,
 							Optional:      true,
-							ConflictsWith: []string{"target_tracking_configuration.customized_metric_specification"},
+							MaxItems:      1,
+							ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"predefined_metric_type": &schema.Schema{
@@ -116,9 +118,10 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 							},
 						},
 						"customized_metric_specification": &schema.Schema{
-							Type:          schema.TypeSet,
+							Type:          schema.TypeList,
 							Optional:      true,
-							ConflictsWith: []string{"target_tracking_configuration.predefined_metric_specification"},
+							MaxItems:      1,
+							ConflictsWith: []string{"target_tracking_configuration.0.predefined_metric_specification"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"metric_dimension": &schema.Schema{
@@ -317,7 +320,7 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 	}
 
 	if v, ok := d.GetOk("target_tracking_configuration"); ok {
-		params.TargetTrackingConfiguration = expandTargetTrackingConfiguration(v.(*schema.Set).List()[0].(map[string]interface{}))
+		params.TargetTrackingConfiguration = expandTargetTrackingConfiguration(v.([]interface{}))
 	}
 
 	// Validate our final input to confirm it won't error when sent to AWS.
@@ -416,15 +419,21 @@ func resourceAwsAutoscalingScalingAdjustmentHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
-func expandTargetTrackingConfiguration(config map[string]interface{}) *autoscaling.TargetTrackingConfiguration {
+func expandTargetTrackingConfiguration(configs []interface{}) *autoscaling.TargetTrackingConfiguration {
+	if len(configs) < 1 {
+		return nil
+	}
+
+	config := configs[0].(map[string]interface{})
+
 	result := &autoscaling.TargetTrackingConfiguration{}
 
 	result.TargetValue = aws.Float64(config["target_value"].(float64))
 	if v, ok := config["disable_scale_in"]; ok {
 		result.DisableScaleIn = aws.Bool(v.(bool))
 	}
-	if v, ok := config["predefined_metric_specification"]; ok && len(v.(*schema.Set).List()) > 0 {
-		spec := v.(*schema.Set).List()[0].(map[string]interface{})
+	if v, ok := config["predefined_metric_specification"]; ok && len(v.([]interface{})) > 0 {
+		spec := v.([]interface{})[0].(map[string]interface{})
 		predSpec := &autoscaling.PredefinedMetricSpecification{
 			PredefinedMetricType: aws.String(spec["predefined_metric_type"].(string)),
 		}
@@ -433,8 +442,8 @@ func expandTargetTrackingConfiguration(config map[string]interface{}) *autoscali
 		}
 		result.PredefinedMetricSpecification = predSpec
 	}
-	if v, ok := config["customized_metric_specification"]; ok && len(v.(*schema.Set).List()) > 0 {
-		spec := v.(*schema.Set).List()[0].(map[string]interface{})
+	if v, ok := config["customized_metric_specification"]; ok && len(v.([]interface{})) > 0 {
+		spec := v.([]interface{})[0].(map[string]interface{})
 		customSpec := &autoscaling.CustomizedMetricSpecification{
 			Namespace:  aws.String(spec["namespace"].(string)),
 			MetricName: aws.String(spec["metric_name"].(string)),
@@ -461,7 +470,11 @@ func expandTargetTrackingConfiguration(config map[string]interface{}) *autoscali
 	return result
 }
 
-func flattenTargetTrackingConfiguration(config *autoscaling.TargetTrackingConfiguration) []map[string]interface{} {
+func flattenTargetTrackingConfiguration(config *autoscaling.TargetTrackingConfiguration) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
 	result := map[string]interface{}{}
 	result["disable_scale_in"] = *config.DisableScaleIn
 	result["target_value"] = *config.TargetValue
@@ -494,5 +507,5 @@ func flattenTargetTrackingConfiguration(config *autoscaling.TargetTrackingConfig
 		}
 		result["customized_metric_specification"] = []map[string]interface{}{spec}
 	}
-	return []map[string]interface{}{result}
+	return []interface{}{result}
 }
