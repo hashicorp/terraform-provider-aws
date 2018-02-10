@@ -78,7 +78,6 @@ func resourceAwsLambdaAliasCreate(d *schema.ResourceData, meta interface{}) erro
 	if v, ok := d.GetOk("routing_config"); ok {
 		routingConfigs := v.([]interface{})
 		routingConfig, ok := routingConfigs[0].(map[string]interface{})
-
 		if !ok {
 			return errors.New("At least one field is expected inside routing_config")
 		}
@@ -173,7 +172,6 @@ func resourceAwsLambdaAliasUpdate(d *schema.ResourceData, meta interface{}) erro
 	if v, ok := d.GetOk("routing_config"); ok {
 		routingConfigs := v.([]interface{})
 		routingConfig, ok := routingConfigs[0].(map[string]interface{})
-
 		if !ok {
 			return errors.New("At least one field is expected inside routing_config")
 		}
