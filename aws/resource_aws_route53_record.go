@@ -922,5 +922,6 @@ func parseRecordId(id string) [4]string {
 			}
 		}
 	}
+	recName = strings.TrimSuffix(recName, ".")
 	return [4]string{recZone, recName, recType, recSet}
 }
