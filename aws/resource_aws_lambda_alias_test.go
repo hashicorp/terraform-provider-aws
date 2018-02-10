@@ -28,7 +28,35 @@ func TestAccAWSLambdaAlias_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAwsLambdaAliasConfig(roleName, policyName, attachmentName, funcName, aliasName),
+				Config: testAccAwsLambdaAliasConfigWithoutRoutingConfig(roleName, policyName, attachmentName, funcName, aliasName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaAliasExists("aws_lambda_alias.lambda_alias_test", &conf),
+					testAccCheckAwsLambdaAttributes(&conf),
+					resource.TestMatchResourceAttr("aws_lambda_alias.lambda_alias_test", "arn",
+						regexp.MustCompile(`^arn:aws:lambda:[a-z]+-[a-z]+-[0-9]+:\d{12}:function:`+funcName+`:`+aliasName+`$`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaAlias_routingConfig(t *testing.T) {
+	var conf lambda.AliasConfiguration
+
+	rString := acctest.RandString(8)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_alias_basic_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_alias_basic_%s", rString)
+	attachmentName := fmt.Sprintf("tf_acc_attachment_%s", rString)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_alias_basic_%s", rString)
+	aliasName := fmt.Sprintf("tf_acc_lambda_alias_basic_%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAwsLambdaAliasConfigWithoutRoutingConfig(roleName, policyName, attachmentName, funcName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaAliasExists("aws_lambda_alias.lambda_alias_test", &conf),
 					testAccCheckAwsLambdaAttributes(&conf),
@@ -41,7 +69,17 @@ func TestAccAWSLambdaAlias_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaAliasExists("aws_lambda_alias.lambda_alias_test", &conf),
 					testAccCheckAwsLambdaAttributes(&conf),
-					testAccCheckAwsLambdaAliasRoutingConfig(&conf),
+					testAccCheckAwsLambdaAliasRoutingConfigExists(&conf),
+					resource.TestMatchResourceAttr("aws_lambda_alias.lambda_alias_test", "arn",
+						regexp.MustCompile(`^arn:aws:lambda:[a-z]+-[a-z]+-[0-9]+:\d{12}:function:`+funcName+`:`+aliasName+`$`)),
+				),
+			},
+			resource.TestStep{
+				Config: testAccAwsLambdaAliasConfigWithoutRoutingConfig(roleName, policyName, attachmentName, funcName, aliasName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaAliasExists("aws_lambda_alias.lambda_alias_test", &conf),
+					testAccCheckAwsLambdaAttributes(&conf),
+					testAccCheckAwsLambdaAliasRoutingConfigDoesNotExist(&conf),
 					resource.TestMatchResourceAttr("aws_lambda_alias.lambda_alias_test", "arn",
 						regexp.MustCompile(`^arn:aws:lambda:[a-z]+-[a-z]+-[0-9]+:\d{12}:function:`+funcName+`:`+aliasName+`$`)),
 				),
@@ -114,7 +152,7 @@ func testAccCheckAwsLambdaAttributes(mapping *lambda.AliasConfiguration) resourc
 	}
 }
 
-func testAccCheckAwsLambdaAliasRoutingConfig(mapping *lambda.AliasConfiguration) resource.TestCheckFunc {
+func testAccCheckAwsLambdaAliasRoutingConfigExists(mapping *lambda.AliasConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		routingConfig := mapping.RoutingConfig
 
@@ -128,7 +166,18 @@ func testAccCheckAwsLambdaAliasRoutingConfig(mapping *lambda.AliasConfiguration)
 	}
 }
 
-func testAccAwsLambdaAliasConfig(roleName, policyName, attachmentName, funcName, aliasName string) string {
+func testAccCheckAwsLambdaAliasRoutingConfigDoesNotExist(mapping *lambda.AliasConfiguration) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		routingConfig := mapping.RoutingConfig
+
+		if routingConfig != nil {
+			return fmt.Errorf("Lambda alias routing config still exists after removal")
+		}
+		return nil
+	}
+}
+
+func testAccAwsLambdaAliasConfigWithoutRoutingConfig(roleName, policyName, attachmentName, funcName, aliasName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%s"

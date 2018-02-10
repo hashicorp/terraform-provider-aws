@@ -73,6 +73,7 @@ func resourceAwsLambdaAliasCreate(d *schema.ResourceData, meta interface{}) erro
 		FunctionName:    aws.String(functionName),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
 		Name:            aws.String(aliasName),
+		RoutingConfig:   &lambda.AliasRoutingConfiguration{},
 	}
 
 	if v, ok := d.GetOk("routing_config"); ok {
@@ -84,10 +85,7 @@ func resourceAwsLambdaAliasCreate(d *schema.ResourceData, meta interface{}) erro
 
 		if additionalVersionWeights, ok := routingConfig["additional_version_weights"]; ok {
 			weights := readAdditionalVersionWeights(additionalVersionWeights.(map[string]interface{}))
-
-			params.RoutingConfig = &lambda.AliasRoutingConfiguration{
-				AdditionalVersionWeights: aws.Float64Map(weights),
-			}
+			params.RoutingConfig.AdditionalVersionWeights = aws.Float64Map(weights)
 		}
 	}
 
@@ -167,6 +165,7 @@ func resourceAwsLambdaAliasUpdate(d *schema.ResourceData, meta interface{}) erro
 		FunctionName:    aws.String(d.Get("function_name").(string)),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
 		Name:            aws.String(d.Get("name").(string)),
+		RoutingConfig:   &lambda.AliasRoutingConfiguration{},
 	}
 
 	if v, ok := d.GetOk("routing_config"); ok {
@@ -178,10 +177,7 @@ func resourceAwsLambdaAliasUpdate(d *schema.ResourceData, meta interface{}) erro
 
 		if additionalVersionWeights, ok := routingConfig["additional_version_weights"]; ok {
 			weights := readAdditionalVersionWeights(additionalVersionWeights.(map[string]interface{}))
-
-			params.RoutingConfig = &lambda.AliasRoutingConfiguration{
-				AdditionalVersionWeights: aws.Float64Map(weights),
-			}
+			params.RoutingConfig.AdditionalVersionWeights = aws.Float64Map(weights)
 		}
 	}
 
