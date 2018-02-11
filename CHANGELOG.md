@@ -1,5 +1,9 @@
 ## 1.10.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_rds_cluster: Add hosted_zone_id attribute [GH-3267]
+
 BUG FIXES:
 
 * data-source/aws_elb_service_account: Correct GovCloud region [GH-3315]
