@@ -95,6 +95,11 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"hosted_zone_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"engine": {
 				Type:         schema.TypeString,
 				Optional:     true,

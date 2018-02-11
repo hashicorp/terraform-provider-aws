@@ -40,6 +40,8 @@ func TestAccAWSRDSCluster_basic(t *testing.T) {
 						"aws_rds_cluster.default", "engine", "aurora"),
 					resource.TestCheckResourceAttrSet(
 						"aws_rds_cluster.default", "engine_version"),
+					resource.TestCheckResourceAttrSet(
+						"aws_rds_cluster.default", "hosted_zone_id"),
 				),
 			},
 		},
