@@ -182,7 +182,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 			},
 			"tags": tagsSchema(),
 			"vpc_config": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -192,15 +192,17 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Required: true,
 						},
 						"subnets": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+							// Set:      schema.HashString,
 							MaxItems: 16,
 						},
 						"security_group_ids": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+							// Set:      schema.HashString,
 							MaxItems: 5,
 						},
 					},
@@ -240,9 +242,8 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		params.TimeoutInMinutes = aws.Int64(int64(v.(int)))
 	}
 
-	if _, ok := d.GetOk("vpc_config"); ok {
-		vpcConfig := expandVpcConfig(d)
-		params.VpcConfig = vpcConfig
+	if v, ok := d.GetOk("vpc_config"); ok {
+		params.VpcConfig = expandCodeBuildVpcConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
@@ -360,27 +361,19 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 	return projectEnv
 }
 
-func expandVpcConfig(d *schema.ResourceData) *codebuild.VpcConfig {
-	configs := d.Get("vpc_config").(*schema.Set).List()
-	data := configs[0].(map[string]interface{})
+func expandCodeBuildVpcConfig(rawVpcConfig []interface{}) *codebuild.VpcConfig {
+	vpcConfig := codebuild.VpcConfig{}
+	if len(rawVpcConfig) == 0 {
+		return &vpcConfig
+	} else {
 
-	vpcConfig := codebuild.VpcConfig{
-		VpcId: aws.String(data["vpc_id"].(string)),
+		data := rawVpcConfig[0].(map[string]interface{})
+		vpcConfig.VpcId = aws.String(data["vpc_id"].(string))
+		vpcConfig.Subnets = expandStringList(data["subnets"].(*schema.Set).List())
+		vpcConfig.SecurityGroupIds = expandStringList(data["security_group_ids"].(*schema.Set).List())
+
+		return &vpcConfig
 	}
-
-	var vpcConfigSubnets []*string
-	for _, v := range data["subnets"].([]interface{}) {
-		vpcConfigSubnets = append(vpcConfigSubnets, aws.String(v.(string)))
-	}
-	vpcConfig.Subnets = vpcConfigSubnets
-
-	var vpcSecurityGroupIds []*string
-	for _, s := range data["security_group_ids"].([]interface{}) {
-		vpcSecurityGroupIds = append(vpcSecurityGroupIds, aws.String(s.(string)))
-	}
-	vpcConfig.SecurityGroupIds = vpcSecurityGroupIds
-
-	return &vpcConfig
 }
 
 func expandProjectSource(d *schema.ResourceData) codebuild.ProjectSource {
@@ -437,19 +430,19 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 
 	project := resp.Projects[0]
 
-	if err := d.Set("artifacts", flattenAwsCodebuildProjectArtifacts(project.Artifacts)); err != nil {
+	if err := d.Set("artifacts", flattenAwsCodeBuildProjectArtifacts(project.Artifacts)); err != nil {
 		return err
 	}
 
-	if err := d.Set("environment", schema.NewSet(resourceAwsCodeBuildProjectEnvironmentHash, flattenAwsCodebuildProjectEnvironment(project.Environment))); err != nil {
+	if err := d.Set("environment", schema.NewSet(resourceAwsCodeBuildProjectEnvironmentHash, flattenAwsCodeBuildProjectEnvironment(project.Environment))); err != nil {
 		return err
 	}
 
-	if err := d.Set("source", flattenAwsCodebuildProjectSource(project.Source)); err != nil {
+	if err := d.Set("source", flattenAwsCodeBuildProjectSource(project.Source)); err != nil {
 		return err
 	}
 
-	if err := d.Set("vpc_config", schema.NewSet(resourceAwsCodeBuildVpcConfigHash, flattenAwsCodebuildVpcConfig(project.VpcConfig))); err != nil {
+	if err := d.Set("vpc_config", flattenAwsCodeBuildVpcConfig(project.VpcConfig)); err != nil {
 		return err
 	}
 
@@ -489,8 +482,7 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("vpc_config") {
-		vpcConfig := expandVpcConfig(d)
-		params.VpcConfig = vpcConfig
+		params.VpcConfig = expandCodeBuildVpcConfig(d.Get("vpc_config").([]interface{}))
 	}
 
 	if d.HasChange("description") {
@@ -540,7 +532,7 @@ func resourceAwsCodeBuildProjectDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func flattenAwsCodebuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) *schema.Set {
+func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) *schema.Set {
 
 	artifactSet := schema.Set{
 		F: resourceAwsCodeBuildProjectArtifactsHash,
@@ -575,7 +567,7 @@ func flattenAwsCodebuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) 
 	return &artifactSet
 }
 
-func flattenAwsCodebuildProjectEnvironment(environment *codebuild.ProjectEnvironment) []interface{} {
+func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnvironment) []interface{} {
 	envConfig := map[string]interface{}{}
 
 	envConfig["type"] = *environment.Type
@@ -591,7 +583,7 @@ func flattenAwsCodebuildProjectEnvironment(environment *codebuild.ProjectEnviron
 
 }
 
-func flattenAwsCodebuildProjectSource(source *codebuild.ProjectSource) []interface{} {
+func flattenAwsCodeBuildProjectSource(source *codebuild.ProjectSource) []interface{} {
 	l := make([]interface{}, 1)
 	m := map[string]interface{}{}
 
@@ -614,24 +606,17 @@ func flattenAwsCodebuildProjectSource(source *codebuild.ProjectSource) []interfa
 	return l
 }
 
-func flattenAwsCodebuildVpcConfig(vpcConfig *codebuild.VpcConfig) []interface{} {
-	values := map[string]interface{}{}
+func flattenAwsCodeBuildVpcConfig(vpcConfig *codebuild.VpcConfig) []interface{} {
+	if vpcConfig != nil {
+		values := map[string]interface{}{}
 
-	values["vpc_id"] = *vpcConfig.VpcId
+		values["vpc_id"] = *vpcConfig.VpcId
+		values["subnets"] = schema.NewSet(schema.HashString, flattenStringList(vpcConfig.Subnets))
+		values["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SecurityGroupIds))
 
-	var subnets []string
-	for _, s := range vpcConfig.Subnets {
-		subnets = append(subnets, *s)
+		return []interface{}{values}
 	}
-	values["subnets"] = subnets
-
-	var securityGroupIds []string
-	for _, s := range vpcConfig.SecurityGroupIds {
-		securityGroupIds = append(securityGroupIds, *s)
-	}
-	values["security_group_ids"] = securityGroupIds
-
-	return []interface{}{values}
+	return nil
 }
 
 func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
@@ -641,25 +626,6 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	artifactType := m["type"].(string)
 
 	buf.WriteString(fmt.Sprintf("%s-", artifactType))
-
-	return hashcode.String(buf.String())
-}
-
-func resourceAwsCodeBuildVpcConfigHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-
-	buf.WriteString(fmt.Sprintf("%s-", m["vpc_id"].(string)))
-
-	for _, s := range m["subnets"].([]string) {
-		buf.WriteString(fmt.Sprintf("%s-", s))
-	}
-
-	if m["security_group_ids"] != nil {
-		for _, s := range m["security_group_ids"].([]string) {
-			buf.WriteString(fmt.Sprintf("%s-", s))
-		}
-	}
 
 	return hashcode.String(buf.String())
 }
