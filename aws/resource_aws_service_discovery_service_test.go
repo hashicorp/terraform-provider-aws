@@ -163,7 +163,7 @@ resource "aws_service_discovery_service" "test" {
       ttl = 5
       type = "A"
     }
-		routing_policy = "MULTIVALUE"
+    routing_policy = "MULTIVALUE"
   }
 }
 `, rName, rName)
@@ -193,7 +193,7 @@ resource "aws_service_discovery_service" "test" {
       ttl = 5
       type = "AAAA"
     }
-		routing_policy = "MULTIVALUE"
+    routing_policy = "MULTIVALUE"
   }
 }
 `, rName, rName)
@@ -214,7 +214,7 @@ resource "aws_service_discovery_service" "test" {
       ttl = 5
       type = "A"
     }
-		routing_policy = "WEIGHTED"
+    routing_policy = "WEIGHTED"
   }
   health_check_config {
     failure_threshold = %d
