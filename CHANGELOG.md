@@ -1,4 +1,9 @@
 ## 1.10.0 (Unreleased)
+
+BUG FIXES:
+
+* data-source/aws_elb_service_account: Correct GovCloud region [GH-3315]
+
 ## 1.9.0 (February 09, 2018)
 
 NOTES:
