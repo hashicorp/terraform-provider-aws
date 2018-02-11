@@ -142,6 +142,7 @@ load-balanced across replicas
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted
 * `preferred_backup_window` - The daily time range during which the backups happen
 * `replication_source_identifier` - ARN  of the source DB cluster if this DB cluster is created as a Read Replica.
+* `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
 [2]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Aurora.html
