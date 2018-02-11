@@ -17,7 +17,7 @@ func TestAccAWSSNSTopic_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSSNSTopicConfig(rName),
+				Config: testAccAWSSNSTopicConfig_withName(rName),
 			},
 
 			resource.TestStep{

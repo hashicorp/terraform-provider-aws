@@ -259,7 +259,7 @@ func TestAccAWSLambdaFunction_encryptedEnvVariables(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSLambdaConfigEncryptedEnvVariablesModified(funcName, policyName, roleName, sgName),
+				Config: testAccAWSLambdaConfigEncryptedEnvVariablesModified(keyDesc, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
@@ -1349,8 +1349,29 @@ resource "aws_lambda_function" "lambda_function_test" {
 `, keyDesc, funcName)
 }
 
-func testAccAWSLambdaConfigEncryptedEnvVariablesModified(funcName, policyName, roleName, sgName string) string {
+func testAccAWSLambdaConfigEncryptedEnvVariablesModified(keyDesc, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_kms_key" "foo" {
+    description = "%s"
+    policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
 resource "aws_lambda_function" "lambda_function_test" {
     filename = "test-fixtures/lambdatest.zip"
     function_name = "%s"
@@ -1363,7 +1384,7 @@ resource "aws_lambda_function" "lambda_function_test" {
         }
     }
 }
-`, funcName)
+`, keyDesc, funcName)
 }
 
 func testAccAWSLambdaConfigVersioned(funcName, policyName, roleName, sgName string) string {

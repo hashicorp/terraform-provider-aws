@@ -67,6 +67,9 @@ func NewClient(services *disco.Disco, creds auth.CredentialsSource, client *http
 // Discover qeuries the host, and returns the url for the registry.
 func (c *Client) Discover(host svchost.Hostname) *url.URL {
 	service := c.services.DiscoverServiceURL(host, serviceID)
+	if service == nil {
+		return nil
+	}
 	if !strings.HasSuffix(service.Path, "/") {
 		service.Path += "/"
 	}
@@ -140,7 +143,7 @@ func (c *Client) addRequestCreds(host svchost.Hostname, req *http.Request) {
 
 	creds, err := c.creds.ForHost(host)
 	if err != nil {
-		log.Printf("[WARNING] Failed to get credentials for %s: %s (ignoring)", host, err)
+		log.Printf("[WARN] Failed to get credentials for %s: %s (ignoring)", host, err)
 		return
 	}
 
