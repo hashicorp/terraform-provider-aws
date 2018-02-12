@@ -8,6 +8,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_elb_service_account: Correct GovCloud region [GH-3315]
+* resource/aws_cloudtrail: Now respects initial `include_global_service_events = false` [GH-2817]
 
 ## 1.9.0 (February 09, 2018)
 
