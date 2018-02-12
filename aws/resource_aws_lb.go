@@ -140,6 +140,7 @@ func resourceAwsLb() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
+							Default:  true,
 						},
 					},
 				},
