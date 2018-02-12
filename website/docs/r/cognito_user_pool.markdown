@@ -107,7 +107,7 @@ The following arguments are supported:
 #### SMS Configuration
 
   * `external_id` (Required) - The external ID used in IAM role trust relationships. For more information about using external IDs, see [How to Use an External ID When Granting Access to Your AWS Resources to a Third Party](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html).
-  * `source_arn` (Required) - The ARN of the Amazon SNS caller.
+  * `sns_caller_arn` (Required) - The ARN of the Amazon SNS caller.
 
 #### Verification Message Template
 
