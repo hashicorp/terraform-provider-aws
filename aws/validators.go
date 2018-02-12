@@ -2147,30 +2147,6 @@ func validateAwsElastiCacheReplicationGroupAuthToken(v interface{}, k string) (w
 	return
 }
 
-func validateServiceDiscoveryServiceDnsRecordsType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	validType := []string{"SRV", "A", "AAAA"}
-	for _, str := range validType {
-		if value == str {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
-	return
-}
-
-func validateServiceDiscoveryServiceHealthCheckConfigType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	validType := []string{"HTTP", "HTTPS", "TCP"}
-	for _, str := range validType {
-		if value == str {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
-	return
-}
-
 func validateGameliftOperatingSystem(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	operatingSystems := map[string]bool{
