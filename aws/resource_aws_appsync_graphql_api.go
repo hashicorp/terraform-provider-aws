@@ -139,11 +139,6 @@ func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.UpdateGraphqlApi(input)
 	if err != nil {
-		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] No such entity found for Appsync Graphql API (%s)", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return err
 	}
 
