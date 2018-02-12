@@ -347,7 +347,7 @@ func vpcEndpointAttributes(d *schema.ResourceData, vpce *ec2.VpcEndpoint, meta i
 
 	serviceName := aws.StringValue(vpce.ServiceName)
 	d.Set("service_name", serviceName)
-	if meta.(*AWSClient).IsGovCloud() {
+	if meta.(*AWSClient).IsGovCloud() && aws.StringValue(vpce.VpcEndpointType) == "" {
 		d.Set("vpc_endpoint_type", ec2.VpcEndpointTypeGateway)
 	} else {
 		d.Set("vpc_endpoint_type", vpce.VpcEndpointType)
