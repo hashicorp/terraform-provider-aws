@@ -129,9 +129,10 @@ logs, and it will be stored in the state file.
 accessible. Default is `false`.
 * `replicate_source_db` - (Optional) Specifies that this resource is a Replicate
 database, and to use this value as the source database. This correlates to the
-`identifier` of another Amazon RDS Database to replicate. See [DB Instance
-Replication][1] and [Working with PostgreSQL and MySQL Read
-Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html)
+`identifier` of another Amazon RDS Database to replicate. Note that if you are 
+creating a cross-region replica of an encrypted database you will also need to
+specify a `kms_key_id`. See [DB Instance Replication][1] and [Working with 
+PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html)
 for more information on using Replication.
 * `security_group_names` - (Optional/Deprecated) List of DB Security Groups to
 associate. Only used for [DB Instances on the _EC2-Classic_
@@ -144,8 +145,10 @@ is `false`.
 * `snapshot_identifier` - (Optional) Specifies whether or not to create this
 database from a snapshot. This correlates to the snapshot ID you'd find in the
 RDS console, e.g: rds:production-2015-06-26-06-05.
-* `storage_encrypted` - (Optional) Specifies whether the DB instance is
-encrypted. The default is `false` if not specified.
+* `storage_encrypted` - (Optional) Specifies whether the DB instance is 
+encrypted. Note that if you are creating a cross-region read replica this field 
+is ignored and you should instead declare `kms_key_id` with a valid ARN. The 
+default is `false` if not specified.
 * `storage_type` - (Optional) One of "standard" (magnetic), "gp2" (general
 purpose SSD), or "io1" (provisioned IOPS SSD). The default is "io1" if `iops` is
 specified, "standard" if not. Note that this behaviour is different from the AWS
