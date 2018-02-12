@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_inspector_rules_packages` [GH-3175]
 * **New Resource:** `aws_appsync_graphql_api` [GH-2494]
 
 ENHANCEMENTS:
