@@ -1,5 +1,9 @@
 ## 1.10.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_appsync_graphql_api` [GH-2494]
+
 ENHANCEMENTS:
 
 * resource/aws_autoscaling_policy: Add support for `target_tracking_configuration` [GH-2611]
