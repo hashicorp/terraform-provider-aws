@@ -5,23 +5,49 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSEcrLifecyclePolicy_basic(t *testing.T) {
+	randString := acctest.RandString(10)
+	rName := fmt.Sprintf("tf-acc-test-lifecycle-%s", randString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEcrLifecyclePolicyConfig,
+				Config: testAccEcrLifecyclePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrLifecyclePolicyExists("aws_ecr_lifecycle_policy.foo"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcrLifecyclePolicy_import(t *testing.T) {
+	resourceName := "aws_ecr_lifecycle_policy.foo"
+	randString := acctest.RandString(10)
+	rName := fmt.Sprintf("tf-acc-test-lifecycle-%s", randString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcrLifecyclePolicyDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccEcrLifecyclePolicyConfig(rName),
+			},
+
+			resource.TestStep{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -36,19 +62,16 @@ func testAccCheckAWSEcrLifecyclePolicyDestroy(s *terraform.State) error {
 		}
 
 		input := &ecr.GetLifecyclePolicyInput{
-			RegistryId:     aws.String(rs.Primary.Attributes["registry_id"]),
-			RepositoryName: aws.String(rs.Primary.Attributes["repository"]),
+			RepositoryName: aws.String(rs.Primary.ID),
 		}
 
 		_, err := conn.GetLifecyclePolicy(input)
 		if err != nil {
-			if aerr, ok := err.(awserr.Error); ok {
-				switch aerr.Code() {
-				case ecr.ErrCodeRepositoryNotFoundException:
-					return nil
-				default:
-					return err
-				}
+			if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+				return nil
+			}
+			if isAWSErr(err, ecr.ErrCodeLifecyclePolicyNotFoundException, "") {
+				return nil
 			}
 			return err
 		}
@@ -59,18 +82,30 @@ func testAccCheckAWSEcrLifecyclePolicyDestroy(s *terraform.State) error {
 
 func testAccCheckAWSEcrLifecyclePolicyExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ecrconn
+
+		input := &ecr.GetLifecyclePolicyInput{
+			RepositoryName: aws.String(rs.Primary.ID),
+		}
+
+		_, err := conn.GetLifecyclePolicy(input)
+		if err != nil {
+			return err
 		}
 
 		return nil
 	}
 }
 
-const testAccEcrLifecyclePolicyConfig = `
+func testAccEcrLifecyclePolicyConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_ecr_repository" "foo" {
-  name = "bar"
+  name = "%s"
 }
 resource "aws_ecr_lifecycle_policy" "foo" {
 	repository = "${aws_ecr_repository.foo.name}"
@@ -94,4 +129,5 @@ resource "aws_ecr_lifecycle_policy" "foo" {
 }
 EOF
 }
-`
+`, rName)
+}

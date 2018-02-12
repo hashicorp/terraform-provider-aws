@@ -26,6 +26,8 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
+					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "arn",
+						regexp.MustCompile("^arn:aws:cognito-idp:[^:]+:[0-9]{12}:userpool/[\\w-]+_[0-9a-zA-Z]+$")),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "name", "terraform-test-pool-"+name),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "creation_date"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "last_modified_date"),
@@ -344,6 +346,7 @@ func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.post_confirmation"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_authentication"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_sign_up"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_token_generation"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.verify_auth_challenge_response"),
 				),
 			},
@@ -358,6 +361,7 @@ func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.post_confirmation"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_authentication"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_sign_up"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_token_generation"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.verify_auth_challenge_response"),
 				),
 			},
@@ -790,6 +794,7 @@ resource "aws_cognito_user_pool" "main" {
     post_confirmation              = "${aws_lambda_function.main.arn}"
     pre_authentication             = "${aws_lambda_function.main.arn}"
     pre_sign_up                    = "${aws_lambda_function.main.arn}"
+    pre_token_generation           = "${aws_lambda_function.main.arn}"
     verify_auth_challenge_response = "${aws_lambda_function.main.arn}"
   }
 }`, name)
@@ -843,6 +848,7 @@ resource "aws_cognito_user_pool" "main" {
     post_confirmation              = "${aws_lambda_function.second.arn}"
     pre_authentication             = "${aws_lambda_function.second.arn}"
     pre_sign_up                    = "${aws_lambda_function.second.arn}"
+    pre_token_generation           = "${aws_lambda_function.second.arn}"
     verify_auth_challenge_response = "${aws_lambda_function.second.arn}"
   }
 }`, name)

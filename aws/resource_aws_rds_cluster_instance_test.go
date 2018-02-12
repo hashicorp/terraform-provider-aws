@@ -52,6 +52,7 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 
 func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 	var v rds.DBInstance
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -59,10 +60,12 @@ func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterInstanceConfig_namePrefix(acctest.RandInt()),
+				Config: testAccAWSClusterInstanceConfig_namePrefix(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.test", &v),
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster_instance.test", "db_subnet_group_name", fmt.Sprintf("tf-test-%d", rInt)),
 					resource.TestMatchResourceAttr(
 						"aws_rds_cluster_instance.test", "identifier", regexp.MustCompile("^tf-cluster-instance-")),
 				),
@@ -138,8 +141,8 @@ func TestAccAWSRDSClusterInstance_disappears(t *testing.T) {
 func testAccCheckAWSDBClusterInstanceAttributes(v *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		if *v.Engine != "aurora" {
-			return fmt.Errorf("bad engine, expected \"aurora\": %#v", *v.Engine)
+		if *v.Engine != "aurora" && *v.Engine != "aurora-postgresql" && *v.Engine != "aurora-mysql" {
+			return fmt.Errorf("bad engine, expected \"aurora\", \"aurora-mysql\" or \"aurora-postgresql\": %#v", *v.Engine)
 		}
 
 		if !strings.HasPrefix(*v.DBClusterIdentifier, "tf-aurora-cluster") {
@@ -228,6 +231,30 @@ func TestAccAWSRDSClusterInstance_withInstanceEnhancedMonitor(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSClusterInstance_withInstancePerformanceInsights(t *testing.T) {
+	var v rds.DBInstance
+	keyRegex := regexp.MustCompile("^arn:aws:kms:")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterInstancePerformanceInsights(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &v),
+					testAccCheckAWSDBClusterInstanceAttributes(&v),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster_instance.cluster_instances", "performance_insights_enabled", "true"),
+					resource.TestMatchResourceAttr(
+						"aws_rds_cluster_instance.cluster_instances", "performance_insights_kms_key_id", keyRegex),
+				),
+			},
+		},
+	})
+}
+
 // Add some random to the name, to avoid collision
 func testAccAWSClusterInstanceConfig(n int) string {
 	return fmt.Sprintf(`
@@ -243,7 +270,7 @@ resource "aws_rds_cluster" "default" {
 resource "aws_rds_cluster_instance" "cluster_instances" {
   identifier              = "tf-cluster-instance-%d"
   cluster_identifier      = "${aws_rds_cluster.default.id}"
-  instance_class          = "db.r3.large"
+  instance_class          = "db.t2.small"
   db_parameter_group_name = "${aws_db_parameter_group.bar.name}"
   promotion_tier          = "3"
 }
@@ -279,7 +306,7 @@ resource "aws_rds_cluster" "default" {
 resource "aws_rds_cluster_instance" "cluster_instances" {
   identifier                 = "tf-cluster-instance-%d"
   cluster_identifier         = "${aws_rds_cluster.default.id}"
-  instance_class             = "db.r3.large"
+  instance_class             = "db.t2.small"
   db_parameter_group_name    = "${aws_db_parameter_group.bar.name}"
   auto_minor_version_upgrade = false
   promotion_tier             = "3"
@@ -307,7 +334,7 @@ func testAccAWSClusterInstanceConfig_namePrefix(n int) string {
 resource "aws_rds_cluster_instance" "test" {
   identifier_prefix = "tf-cluster-instance-"
   cluster_identifier = "${aws_rds_cluster.test.id}"
-  instance_class = "db.r3.large"
+  instance_class = "db.t2.small"
 }
 
 resource "aws_rds_cluster" "test" {
@@ -348,7 +375,7 @@ func testAccAWSClusterInstanceConfig_generatedName(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
   cluster_identifier = "${aws_rds_cluster.test.id}"
-  instance_class = "db.r3.large"
+  instance_class = "db.t2.small"
 }
 
 resource "aws_rds_cluster" "test" {
@@ -423,7 +450,7 @@ resource "aws_rds_cluster" "default" {
 resource "aws_rds_cluster_instance" "cluster_instances" {
   identifier              = "tf-cluster-instance-%d"
   cluster_identifier      = "${aws_rds_cluster.default.id}"
-  instance_class          = "db.r3.large"
+  instance_class          = "db.t2.small"
   db_parameter_group_name = "${aws_db_parameter_group.bar.name}"
 }
 
@@ -458,7 +485,7 @@ resource "aws_rds_cluster" "default" {
 resource "aws_rds_cluster_instance" "cluster_instances" {
   identifier              = "tf-cluster-instance-%d"
   cluster_identifier      = "${aws_rds_cluster.default.id}"
-  instance_class          = "db.r3.large"
+  instance_class          = "db.t2.small"
   db_parameter_group_name = "${aws_db_parameter_group.bar.name}"
   monitoring_interval     = "60"
   monitoring_role_arn     = "${aws_iam_role.tf_enhanced_monitor_role.arn}"
@@ -484,9 +511,44 @@ EOF
 }
 
 resource "aws_iam_policy_attachment" "rds_m_attach" {
-    name = "AmazonRDSEnhancedMonitoringRole"
+    name = "tf-enhanced-monitoring-attachment-%d"
     roles = ["${aws_iam_role.tf_enhanced_monitor_role.name}"]
-    policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+    policy_arn = "${aws_iam_policy.test.arn}"
+}
+
+resource "aws_iam_policy" "test" {
+  name   = "tf-enhanced-monitoring-policy-%d"
+  policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogGroups",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:PutRetentionPolicy"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:RDS*"
+            ]
+        },
+        {
+            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogStreams",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams",
+                "logs:GetLogEvents"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:RDS*:log-stream:*"
+            ]
+        }
+    ]
+}
+POLICY
 }
 
 resource "aws_db_parameter_group" "bar" {
@@ -497,6 +559,67 @@ resource "aws_db_parameter_group" "bar" {
     name         = "back_log"
     value        = "32767"
     apply_method = "pending-reboot"
+  }
+
+  tags {
+    foo = "bar"
+  }
+}
+`, n, n, n, n, n, n)
+}
+
+func testAccAWSClusterInstancePerformanceInsights(n int) string {
+	return fmt.Sprintf(`
+
+resource "aws_kms_key" "foo" {
+    description = "Terraform acc test %d"
+    policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_rds_cluster" "default" {
+  engine             = "aurora-postgresql"
+  cluster_identifier = "tf-aurora-cluster-test-%d"
+  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name      = "mydb"
+  master_username    = "foo"
+  master_password    = "mustbeeightcharaters"
+  storage_encrypted = true
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster_instance" "cluster_instances" {
+  engine                  = "aurora-postgresql"
+  identifier              = "tf-cluster-instance-%d"
+  cluster_identifier      = "${aws_rds_cluster.default.id}"
+  instance_class          = "db.r4.large"
+  db_parameter_group_name = "${aws_db_parameter_group.bar.name}"
+  performance_insights_enabled = true
+  performance_insights_kms_key_id = "${aws_kms_key.foo.arn}"
+}
+
+resource "aws_db_parameter_group" "bar" {
+  name   = "tfcluster-test-group-%d"
+  family = "aurora-postgresql9.6"
+
+  parameter {
+    name  = "authentication_timeout"
+    value = "10"
   }
 
   tags {

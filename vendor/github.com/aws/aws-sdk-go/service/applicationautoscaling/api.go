@@ -36,7 +36,7 @@ const opDeleteScalingPolicy = "DeleteScalingPolicy"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScalingPolicy
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScalingPolicy
 func (c *ApplicationAutoScaling) DeleteScalingPolicyRequest(input *DeleteScalingPolicyInput) (req *request.Request, output *DeleteScalingPolicyOutput) {
 	op := &request.Operation{
 		Name:       opDeleteScalingPolicy,
@@ -76,12 +76,11 @@ func (c *ApplicationAutoScaling) DeleteScalingPolicyRequest(input *DeleteScaling
 //   for the API request.
 //
 //   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
-//   The specified object could not be found. For any Put or Register API operation,
-//   which depends on the existence of a scalable target, this exception is thrown
-//   if the scalable target with the specified service namespace, resource ID,
-//   and scalable dimension does not exist. For any Delete or Deregister API operation,
-//   this exception is thrown if the resource that is to be deleted or deregistered
-//   cannot be found.
+//   The specified object could not be found. For any operation that depends on
+//   the existence of a scalable target, this exception is thrown if the scalable
+//   target with the specified service namespace, resource ID, and scalable dimension
+//   does not exist. For any operation that deletes or deregisters a resource,
+//   this exception is thrown if the resource cannot be found.
 //
 //   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
 //   Concurrent updates caused an exception, for example, if you request an update
@@ -90,7 +89,7 @@ func (c *ApplicationAutoScaling) DeleteScalingPolicyRequest(input *DeleteScaling
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   The service encountered an internal error.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScalingPolicy
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScalingPolicy
 func (c *ApplicationAutoScaling) DeleteScalingPolicy(input *DeleteScalingPolicyInput) (*DeleteScalingPolicyOutput, error) {
 	req, out := c.DeleteScalingPolicyRequest(input)
 	return out, req.Send()
@@ -137,7 +136,7 @@ const opDeleteScheduledAction = "DeleteScheduledAction"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScheduledAction
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScheduledAction
 func (c *ApplicationAutoScaling) DeleteScheduledActionRequest(input *DeleteScheduledActionInput) (req *request.Request, output *DeleteScheduledActionOutput) {
 	op := &request.Operation{
 		Name:       opDeleteScheduledAction,
@@ -171,12 +170,11 @@ func (c *ApplicationAutoScaling) DeleteScheduledActionRequest(input *DeleteSched
 //   for the API request.
 //
 //   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
-//   The specified object could not be found. For any Put or Register API operation,
-//   which depends on the existence of a scalable target, this exception is thrown
-//   if the scalable target with the specified service namespace, resource ID,
-//   and scalable dimension does not exist. For any Delete or Deregister API operation,
-//   this exception is thrown if the resource that is to be deleted or deregistered
-//   cannot be found.
+//   The specified object could not be found. For any operation that depends on
+//   the existence of a scalable target, this exception is thrown if the scalable
+//   target with the specified service namespace, resource ID, and scalable dimension
+//   does not exist. For any operation that deletes or deregisters a resource,
+//   this exception is thrown if the resource cannot be found.
 //
 //   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
 //   Concurrent updates caused an exception, for example, if you request an update
@@ -185,7 +183,7 @@ func (c *ApplicationAutoScaling) DeleteScheduledActionRequest(input *DeleteSched
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   The service encountered an internal error.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScheduledAction
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScheduledAction
 func (c *ApplicationAutoScaling) DeleteScheduledAction(input *DeleteScheduledActionInput) (*DeleteScheduledActionOutput, error) {
 	req, out := c.DeleteScheduledActionRequest(input)
 	return out, req.Send()
@@ -232,7 +230,7 @@ const opDeregisterScalableTarget = "DeregisterScalableTarget"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeregisterScalableTarget
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeregisterScalableTarget
 func (c *ApplicationAutoScaling) DeregisterScalableTargetRequest(input *DeregisterScalableTargetInput) (req *request.Request, output *DeregisterScalableTargetOutput) {
 	op := &request.Operation{
 		Name:       opDeregisterScalableTarget,
@@ -271,12 +269,11 @@ func (c *ApplicationAutoScaling) DeregisterScalableTargetRequest(input *Deregist
 //   for the API request.
 //
 //   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
-//   The specified object could not be found. For any Put or Register API operation,
-//   which depends on the existence of a scalable target, this exception is thrown
-//   if the scalable target with the specified service namespace, resource ID,
-//   and scalable dimension does not exist. For any Delete or Deregister API operation,
-//   this exception is thrown if the resource that is to be deleted or deregistered
-//   cannot be found.
+//   The specified object could not be found. For any operation that depends on
+//   the existence of a scalable target, this exception is thrown if the scalable
+//   target with the specified service namespace, resource ID, and scalable dimension
+//   does not exist. For any operation that deletes or deregisters a resource,
+//   this exception is thrown if the resource cannot be found.
 //
 //   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
 //   Concurrent updates caused an exception, for example, if you request an update
@@ -285,7 +282,7 @@ func (c *ApplicationAutoScaling) DeregisterScalableTargetRequest(input *Deregist
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   The service encountered an internal error.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeregisterScalableTarget
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeregisterScalableTarget
 func (c *ApplicationAutoScaling) DeregisterScalableTarget(input *DeregisterScalableTargetInput) (*DeregisterScalableTargetOutput, error) {
 	req, out := c.DeregisterScalableTargetRequest(input)
 	return out, req.Send()
@@ -332,7 +329,7 @@ const opDescribeScalableTargets = "DescribeScalableTargets"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalableTargets
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalableTargets
 func (c *ApplicationAutoScaling) DescribeScalableTargetsRequest(input *DescribeScalableTargetsInput) (req *request.Request, output *DescribeScalableTargetsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeScalableTargets,
@@ -357,8 +354,7 @@ func (c *ApplicationAutoScaling) DescribeScalableTargetsRequest(input *DescribeS
 
 // DescribeScalableTargets API operation for Application Auto Scaling.
 //
-// Provides descriptive information about the scalable targets in the specified
-// namespace.
+// Gets information about the scalable targets in the specified namespace.
 //
 // You can filter the results using the ResourceIds and ScalableDimension parameters.
 //
@@ -388,7 +384,7 @@ func (c *ApplicationAutoScaling) DescribeScalableTargetsRequest(input *DescribeS
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   The service encountered an internal error.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalableTargets
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalableTargets
 func (c *ApplicationAutoScaling) DescribeScalableTargets(input *DescribeScalableTargetsInput) (*DescribeScalableTargetsOutput, error) {
 	req, out := c.DescribeScalableTargetsRequest(input)
 	return out, req.Send()
@@ -485,7 +481,7 @@ const opDescribeScalingActivities = "DescribeScalingActivities"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingActivities
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingActivities
 func (c *ApplicationAutoScaling) DescribeScalingActivitiesRequest(input *DescribeScalingActivitiesInput) (req *request.Request, output *DescribeScalingActivitiesOutput) {
 	op := &request.Operation{
 		Name:       opDescribeScalingActivities,
@@ -542,7 +538,7 @@ func (c *ApplicationAutoScaling) DescribeScalingActivitiesRequest(input *Describ
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   The service encountered an internal error.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingActivities
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingActivities
 func (c *ApplicationAutoScaling) DescribeScalingActivities(input *DescribeScalingActivitiesInput) (*DescribeScalingActivitiesOutput, error) {
 	req, out := c.DescribeScalingActivitiesRequest(input)
 	return out, req.Send()
@@ -639,7 +635,7 @@ const opDescribeScalingPolicies = "DescribeScalingPolicies"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingPolicies
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingPolicies
 func (c *ApplicationAutoScaling) DescribeScalingPoliciesRequest(input *DescribeScalingPoliciesInput) (req *request.Request, output *DescribeScalingPoliciesOutput) {
 	op := &request.Operation{
 		Name:       opDescribeScalingPolicies,
@@ -690,7 +686,7 @@ func (c *ApplicationAutoScaling) DescribeScalingPoliciesRequest(input *DescribeS
 //   with a scaling policy due to a client error, for example, if the role ARN
 //   specified for a scalable target does not have permission to call the CloudWatch
 //   DescribeAlarms (http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarms.html)
-//   API operation on behalf of your account.
+//   on your behalf.
 //
 //   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
 //   The next token supplied was invalid.
@@ -702,7 +698,7 @@ func (c *ApplicationAutoScaling) DescribeScalingPoliciesRequest(input *DescribeS
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   The service encountered an internal error.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingPolicies
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingPolicies
 func (c *ApplicationAutoScaling) DescribeScalingPolicies(input *DescribeScalingPoliciesInput) (*DescribeScalingPoliciesOutput, error) {
 	req, out := c.DescribeScalingPoliciesRequest(input)
 	return out, req.Send()
@@ -799,7 +795,7 @@ const opDescribeScheduledActions = "DescribeScheduledActions"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScheduledActions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScheduledActions
 func (c *ApplicationAutoScaling) DescribeScheduledActionsRequest(input *DescribeScheduledActionsInput) (req *request.Request, output *DescribeScheduledActionsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeScheduledActions,
@@ -848,7 +844,7 @@ func (c *ApplicationAutoScaling) DescribeScheduledActionsRequest(input *Describe
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   The service encountered an internal error.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScheduledActions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScheduledActions
 func (c *ApplicationAutoScaling) DescribeScheduledActions(input *DescribeScheduledActionsInput) (*DescribeScheduledActionsOutput, error) {
 	req, out := c.DescribeScheduledActionsRequest(input)
 	return out, req.Send()
@@ -895,7 +891,7 @@ const opPutScalingPolicy = "PutScalingPolicy"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScalingPolicy
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScalingPolicy
 func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicyInput) (req *request.Request, output *PutScalingPolicyOutput) {
 	op := &request.Operation{
 		Name:       opPutScalingPolicy,
@@ -918,8 +914,8 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 //
 // Each scalable target is identified by a service namespace, resource ID, and
 // scalable dimension. A scaling policy applies to the scalable target identified
-// by those three attributes. You cannot create a scaling policy without first
-// registering a scalable target using RegisterScalableTarget.
+// by those three attributes. You cannot create a scaling policy until you register
+// the scalable target using RegisterScalableTarget.
 //
 // To update a policy, specify its policy name and the parameters that you want
 // to change. Any parameters that you don't specify are not changed by this
@@ -941,17 +937,15 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 //   for the API request.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   Your account exceeded a limit. This exception is thrown when a per-account
-//   resource limit is exceeded. For more information, see Application Auto Scaling
-//   Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_as-app).
+//   A per-account resource limit is exceeded. For more information, see Application
+//   Auto Scaling Limits (http://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
 //
 //   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
-//   The specified object could not be found. For any Put or Register API operation,
-//   which depends on the existence of a scalable target, this exception is thrown
-//   if the scalable target with the specified service namespace, resource ID,
-//   and scalable dimension does not exist. For any Delete or Deregister API operation,
-//   this exception is thrown if the resource that is to be deleted or deregistered
-//   cannot be found.
+//   The specified object could not be found. For any operation that depends on
+//   the existence of a scalable target, this exception is thrown if the scalable
+//   target with the specified service namespace, resource ID, and scalable dimension
+//   does not exist. For any operation that deletes or deregisters a resource,
+//   this exception is thrown if the resource cannot be found.
 //
 //   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
 //   Concurrent updates caused an exception, for example, if you request an update
@@ -963,12 +957,12 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 //   with a scaling policy due to a client error, for example, if the role ARN
 //   specified for a scalable target does not have permission to call the CloudWatch
 //   DescribeAlarms (http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarms.html)
-//   API operation on behalf of your account.
+//   on your behalf.
 //
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   The service encountered an internal error.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScalingPolicy
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScalingPolicy
 func (c *ApplicationAutoScaling) PutScalingPolicy(input *PutScalingPolicyInput) (*PutScalingPolicyOutput, error) {
 	req, out := c.PutScalingPolicyRequest(input)
 	return out, req.Send()
@@ -1015,7 +1009,7 @@ const opPutScheduledAction = "PutScheduledAction"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScheduledAction
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScheduledAction
 func (c *ApplicationAutoScaling) PutScheduledActionRequest(input *PutScheduledActionInput) (req *request.Request, output *PutScheduledActionOutput) {
 	op := &request.Operation{
 		Name:       opPutScheduledAction,
@@ -1039,8 +1033,8 @@ func (c *ApplicationAutoScaling) PutScheduledActionRequest(input *PutScheduledAc
 //
 // Each scalable target is identified by a service namespace, resource ID, and
 // scalable dimension. A scheduled action applies to the scalable target identified
-// by those three attributes. You cannot create a scheduled action without first
-// registering a scalable target using RegisterScalableTarget.
+// by those three attributes. You cannot create a scheduled action until you
+// register the scalable target using RegisterScalableTarget.
 //
 // To update an action, specify its name and the parameters that you want to
 // change. If you don't specify start and end times, the old values are deleted.
@@ -1063,17 +1057,15 @@ func (c *ApplicationAutoScaling) PutScheduledActionRequest(input *PutScheduledAc
 //   for the API request.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   Your account exceeded a limit. This exception is thrown when a per-account
-//   resource limit is exceeded. For more information, see Application Auto Scaling
-//   Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_as-app).
+//   A per-account resource limit is exceeded. For more information, see Application
+//   Auto Scaling Limits (http://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
 //
 //   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
-//   The specified object could not be found. For any Put or Register API operation,
-//   which depends on the existence of a scalable target, this exception is thrown
-//   if the scalable target with the specified service namespace, resource ID,
-//   and scalable dimension does not exist. For any Delete or Deregister API operation,
-//   this exception is thrown if the resource that is to be deleted or deregistered
-//   cannot be found.
+//   The specified object could not be found. For any operation that depends on
+//   the existence of a scalable target, this exception is thrown if the scalable
+//   target with the specified service namespace, resource ID, and scalable dimension
+//   does not exist. For any operation that deletes or deregisters a resource,
+//   this exception is thrown if the resource cannot be found.
 //
 //   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
 //   Concurrent updates caused an exception, for example, if you request an update
@@ -1082,7 +1074,7 @@ func (c *ApplicationAutoScaling) PutScheduledActionRequest(input *PutScheduledAc
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   The service encountered an internal error.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScheduledAction
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScheduledAction
 func (c *ApplicationAutoScaling) PutScheduledAction(input *PutScheduledActionInput) (*PutScheduledActionOutput, error) {
 	req, out := c.PutScheduledActionRequest(input)
 	return out, req.Send()
@@ -1129,7 +1121,7 @@ const opRegisterScalableTarget = "RegisterScalableTarget"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/RegisterScalableTarget
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/RegisterScalableTarget
 func (c *ApplicationAutoScaling) RegisterScalableTargetRequest(input *RegisterScalableTargetInput) (req *request.Request, output *RegisterScalableTargetOutput) {
 	op := &request.Operation{
 		Name:       opRegisterScalableTarget,
@@ -1151,12 +1143,12 @@ func (c *ApplicationAutoScaling) RegisterScalableTargetRequest(input *RegisterSc
 // Registers or updates a scalable target. A scalable target is a resource that
 // Application Auto Scaling can scale out or scale in. After you have registered
 // a scalable target, you can use this operation to update the minimum and maximum
-// values for your scalable dimension.
+// values for its scalable dimension.
 //
 // After you register a scalable target, you can create and apply scaling policies
 // using PutScalingPolicy. You can view the scaling policies for a service namespace
-// using DescribeScalableTargets. If you are no longer using a scalable target,
-// you can deregister it using DeregisterScalableTarget.
+// using DescribeScalableTargets. If you no longer need a scalable target, you
+// can deregister it using DeregisterScalableTarget.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1171,9 +1163,8 @@ func (c *ApplicationAutoScaling) RegisterScalableTargetRequest(input *RegisterSc
 //   for the API request.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   Your account exceeded a limit. This exception is thrown when a per-account
-//   resource limit is exceeded. For more information, see Application Auto Scaling
-//   Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_as-app).
+//   A per-account resource limit is exceeded. For more information, see Application
+//   Auto Scaling Limits (http://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
 //
 //   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
 //   Concurrent updates caused an exception, for example, if you request an update
@@ -1182,7 +1173,7 @@ func (c *ApplicationAutoScaling) RegisterScalableTargetRequest(input *RegisterSc
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   The service encountered an internal error.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/RegisterScalableTarget
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/RegisterScalableTarget
 func (c *ApplicationAutoScaling) RegisterScalableTarget(input *RegisterScalableTargetInput) (*RegisterScalableTargetOutput, error) {
 	req, out := c.RegisterScalableTargetRequest(input)
 	return out, req.Send()
@@ -1205,7 +1196,6 @@ func (c *ApplicationAutoScaling) RegisterScalableTargetWithContext(ctx aws.Conte
 }
 
 // Represents a CloudWatch alarm associated with a scaling policy.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/Alarm
 type Alarm struct {
 	_ struct{} `type:"structure"`
 
@@ -1243,7 +1233,6 @@ func (s *Alarm) SetAlarmName(v string) *Alarm {
 }
 
 // Configures a customized metric for a target tracking policy.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/CustomizedMetricSpecification
 type CustomizedMetricSpecification struct {
 	_ struct{} `type:"structure"`
 
@@ -1338,7 +1327,6 @@ func (s *CustomizedMetricSpecification) SetUnit(v string) *CustomizedMetricSpeci
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScalingPolicyRequest
 type DeleteScalingPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1368,6 +1356,9 @@ type DeleteScalingPolicyInput struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -1396,6 +1387,9 @@ type DeleteScalingPolicyInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -1470,7 +1464,6 @@ func (s *DeleteScalingPolicyInput) SetServiceNamespace(v string) *DeleteScalingP
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScalingPolicyResponse
 type DeleteScalingPolicyOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -1485,7 +1478,6 @@ func (s DeleteScalingPolicyOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScheduledActionRequest
 type DeleteScheduledActionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1509,6 +1501,9 @@ type DeleteScheduledActionInput struct {
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -1538,6 +1533,9 @@ type DeleteScheduledActionInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The name of the scheduled action.
@@ -1612,7 +1610,6 @@ func (s *DeleteScheduledActionInput) SetServiceNamespace(v string) *DeleteSchedu
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScheduledActionResponse
 type DeleteScheduledActionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -1627,7 +1624,6 @@ func (s DeleteScheduledActionOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeregisterScalableTargetRequest
 type DeregisterScalableTargetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1651,6 +1647,9 @@ type DeregisterScalableTargetInput struct {
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -1680,6 +1679,9 @@ type DeregisterScalableTargetInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -1742,7 +1744,6 @@ func (s *DeregisterScalableTargetInput) SetServiceNamespace(v string) *Deregiste
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeregisterScalableTargetResponse
 type DeregisterScalableTargetOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -1757,12 +1758,11 @@ func (s DeregisterScalableTargetOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalableTargetsRequest
 type DescribeScalableTargetsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of scalable target results. This value can be between
-	// 1 and 50. The default value is 50.
+	// The maximum number of scalable targets. This value can be between 1 and 50.
+	// The default value is 50.
 	//
 	// If this parameter is used, the operation returns up to MaxResults results
 	// at a time, along with a NextToken value. To get the next set of results,
@@ -1794,6 +1794,9 @@ type DescribeScalableTargetsInput struct {
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
 	ResourceIds []*string `type:"list"`
 
 	// The scalable dimension associated with the scalable target. This string consists
@@ -1822,6 +1825,9 @@ type DescribeScalableTargetsInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The namespace of the AWS service. For more information, see AWS Service Namespaces
@@ -1885,7 +1891,6 @@ func (s *DescribeScalableTargetsInput) SetServiceNamespace(v string) *DescribeSc
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalableTargetsResponse
 type DescribeScalableTargetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1893,7 +1898,7 @@ type DescribeScalableTargetsOutput struct {
 	// there are no more results to return.
 	NextToken *string `type:"string"`
 
-	// The list of scalable targets that matches the request parameters.
+	// The scalable targets that match the request parameters.
 	ScalableTargets []*ScalableTarget `type:"list"`
 }
 
@@ -1919,12 +1924,11 @@ func (s *DescribeScalableTargetsOutput) SetScalableTargets(v []*ScalableTarget) 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingActivitiesRequest
 type DescribeScalingActivitiesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of scalable target results. This value can be between
-	// 1 and 50. The default value is 50.
+	// The maximum number of scalable targets. This value can be between 1 and 50.
+	// The default value is 50.
 	//
 	// If this parameter is used, the operation returns up to MaxResults results
 	// at a time, along with a NextToken value. To get the next set of results,
@@ -1956,6 +1960,9 @@ type DescribeScalingActivitiesInput struct {
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -1984,6 +1991,9 @@ type DescribeScalingActivitiesInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The namespace of the AWS service. For more information, see AWS Service Namespaces
@@ -2050,7 +2060,6 @@ func (s *DescribeScalingActivitiesInput) SetServiceNamespace(v string) *Describe
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingActivitiesResponse
 type DescribeScalingActivitiesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2084,12 +2093,11 @@ func (s *DescribeScalingActivitiesOutput) SetScalingActivities(v []*ScalingActiv
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingPoliciesRequest
 type DescribeScalingPoliciesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of scalable target results. This value can be between
-	// 1 and 50. The default value is 50.
+	// The maximum number of scalable targets. This value can be between 1 and 50.
+	// The default value is 50.
 	//
 	// If this parameter is used, the operation returns up to MaxResults results
 	// at a time, along with a NextToken value. To get the next set of results,
@@ -2124,6 +2132,9 @@ type DescribeScalingPoliciesInput struct {
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2152,6 +2163,9 @@ type DescribeScalingPoliciesInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The namespace of the AWS service. For more information, see AWS Service Namespaces
@@ -2224,7 +2238,6 @@ func (s *DescribeScalingPoliciesInput) SetServiceNamespace(v string) *DescribeSc
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingPoliciesResponse
 type DescribeScalingPoliciesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2258,11 +2271,10 @@ func (s *DescribeScalingPoliciesOutput) SetScalingPolicies(v []*ScalingPolicy) *
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScheduledActionsRequest
 type DescribeScheduledActionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of scalable target results. This value can be between
+	// The maximum number of scheduled action results. This value can be between
 	// 1 and 50. The default value is 50.
 	//
 	// If this parameter is used, the operation returns up to MaxResults results
@@ -2295,6 +2307,9 @@ type DescribeScheduledActionsInput struct {
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2323,6 +2338,9 @@ type DescribeScheduledActionsInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The names of the scheduled actions to describe.
@@ -2398,7 +2416,6 @@ func (s *DescribeScheduledActionsInput) SetServiceNamespace(v string) *DescribeS
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScheduledActionsResponse
 type DescribeScheduledActionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2433,7 +2450,6 @@ func (s *DescribeScheduledActionsOutput) SetScheduledActions(v []*ScheduledActio
 }
 
 // Describes the dimension of a metric.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/MetricDimension
 type MetricDimension struct {
 	_ struct{} `type:"structure"`
 
@@ -2487,16 +2503,27 @@ func (s *MetricDimension) SetValue(v string) *MetricDimension {
 }
 
 // Configures a predefined metric for a target tracking policy.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PredefinedMetricSpecification
 type PredefinedMetricSpecification struct {
 	_ struct{} `type:"structure"`
 
-	// The metric type.
+	// The metric type. The ALBRequestCountPerTarget metric type applies only to
+	// Spot fleet requests and ECS services.
 	//
 	// PredefinedMetricType is a required field
 	PredefinedMetricType *string `type:"string" required:"true" enum:"MetricType"`
 
-	// Reserved for future use.
+	// Identifies the resource associated with the metric type. You can't specify
+	// a resource label unless the metric type is ALBRequestCountPerTarget and there
+	// is a target group attached to the Spot fleet request or ECS service.
+	//
+	// The format is app/<load-balancer-name>/<load-balancer-id>/targetgroup/<target-group-name>/<target-group-id>,
+	// where:
+	//
+	//    * app/<load-balancer-name>/<load-balancer-id> is the final portion of
+	//    the load balancer ARN
+	//
+	//    * targetgroup/<target-group-name>/<target-group-id> is the final portion
+	//    of the target group ARN.
 	ResourceLabel *string `min:"1" type:"string"`
 }
 
@@ -2538,7 +2565,6 @@ func (s *PredefinedMetricSpecification) SetResourceLabel(v string) *PredefinedMe
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScalingPolicyRequest
 type PutScalingPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2547,11 +2573,11 @@ type PutScalingPolicyInput struct {
 	// PolicyName is a required field
 	PolicyName *string `min:"1" type:"string" required:"true"`
 
-	// The policy type. If you are creating a new policy, this parameter is required.
-	// If you are updating a policy, this parameter is not required.
+	// The policy type. This parameter is required if you are creating a policy.
 	//
-	// For DynamoDB, only TargetTrackingScaling is supported. For any other service,
-	// only StepScaling is supported.
+	// For DynamoDB, only TargetTrackingScaling is supported. For Amazon ECS, Spot
+	// Fleet, and Amazon RDS, both StepScaling and TargetTrackingScaling are supported.
+	// For any other service, only StepScaling is supported.
 	PolicyType *string `type:"string" enum:"PolicyType"`
 
 	// The identifier of the resource associated with the scaling policy. This string
@@ -2574,6 +2600,9 @@ type PutScalingPolicyInput struct {
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -2604,6 +2633,9 @@ type PutScalingPolicyInput struct {
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
 	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
@@ -2622,8 +2654,8 @@ type PutScalingPolicyInput struct {
 
 	// A target tracking policy.
 	//
-	// This parameter is required if you are creating a new policy and the policy
-	// type is TargetTrackingScaling.
+	// This parameter is required if you are creating a policy and the policy type
+	// is TargetTrackingScaling.
 	TargetTrackingScalingPolicyConfiguration *TargetTrackingScalingPolicyConfiguration `type:"structure"`
 }
 
@@ -2717,7 +2749,6 @@ func (s *PutScalingPolicyInput) SetTargetTrackingScalingPolicyConfiguration(v *T
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScalingPolicyResponse
 type PutScalingPolicyOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2752,7 +2783,6 @@ func (s *PutScalingPolicyOutput) SetPolicyARN(v string) *PutScalingPolicyOutput 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScheduledActionRequest
 type PutScheduledActionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2780,10 +2810,14 @@ type PutScheduledActionInput struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
-	// The scalable dimension. This string consists of the service namespace, resource
+	// The scalable dimension. This parameter is required if you are creating a
+	// scheduled action. This string consists of the service namespace, resource
 	// type, and scaling property.
 	//
 	//    * ecs:service:DesiredCount - The desired task count of an ECS service.
@@ -2808,6 +2842,9 @@ type PutScheduledActionInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The new minimum and maximum capacity. You can set both values or just one.
@@ -2935,7 +2972,6 @@ func (s *PutScheduledActionInput) SetStartTime(v time.Time) *PutScheduledActionI
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScheduledActionResponse
 type PutScheduledActionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2950,18 +2986,15 @@ func (s PutScheduledActionOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/RegisterScalableTargetRequest
 type RegisterScalableTargetInput struct {
 	_ struct{} `type:"structure"`
 
 	// The maximum value to scale to in response to a scale out event. This parameter
-	// is required if you are registering a scalable target and optional if you
-	// are updating one.
+	// is required if you are registering a scalable target.
 	MaxCapacity *int64 `type:"integer"`
 
 	// The minimum value to scale to in response to a scale in event. This parameter
-	// is required if you are registering a scalable target and optional if you
-	// are updating one.
+	// is required if you are registering a scalable target.
 	MinCapacity *int64 `type:"integer"`
 
 	// The identifier of the resource associated with the scalable target. This
@@ -2985,12 +3018,19 @@ type RegisterScalableTargetInput struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
-	// The ARN of an IAM role that allows Application Auto Scaling to modify the
-	// scalable target on your behalf. This parameter is required when you register
-	// a scalable target and optional when you update one.
+	// Application Auto Scaling creates a service-linked role that grants it permissions
+	// to modify the scalable target on your behalf. For more information, see Service-Linked
+	// Roles for Application Auto Scaling (http://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/application-autoscaling-service-linked-roles.html).
+	//
+	// For resources that are not supported using a service-linked role, this parameter
+	// is required and must specify the ARN of an IAM role that allows Application
+	// Auto Scaling to modify the scalable target on your behalf.
 	RoleARN *string `min:"1" type:"string"`
 
 	// The scalable dimension associated with the scalable target. This string consists
@@ -3018,6 +3058,9 @@ type RegisterScalableTargetInput struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3101,7 +3144,6 @@ func (s *RegisterScalableTargetInput) SetServiceNamespace(v string) *RegisterSca
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/RegisterScalableTargetResponse
 type RegisterScalableTargetOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -3117,7 +3159,6 @@ func (s RegisterScalableTargetOutput) GoString() string {
 }
 
 // Represents a scalable target.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/ScalableTarget
 type ScalableTarget struct {
 	_ struct{} `type:"structure"`
 
@@ -3157,6 +3198,9 @@ type ScalableTarget struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -3191,6 +3235,9 @@ type ScalableTarget struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3256,7 +3303,6 @@ func (s *ScalableTarget) SetServiceNamespace(v string) *ScalableTarget {
 }
 
 // Represents the minimum and maximum capacity for a scheduled action.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/ScalableTargetAction
 type ScalableTargetAction struct {
 	_ struct{} `type:"structure"`
 
@@ -3290,7 +3336,6 @@ func (s *ScalableTargetAction) SetMinCapacity(v int64) *ScalableTargetAction {
 }
 
 // Represents a scaling activity.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/ScalingActivity
 type ScalingActivity struct {
 	_ struct{} `type:"structure"`
 
@@ -3336,6 +3381,9 @@ type ScalingActivity struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -3364,6 +3412,9 @@ type ScalingActivity struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3466,7 +3517,6 @@ func (s *ScalingActivity) SetStatusMessage(v string) *ScalingActivity {
 }
 
 // Represents a scaling policy.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/ScalingPolicy
 type ScalingPolicy struct {
 	_ struct{} `type:"structure"`
 
@@ -3514,6 +3564,9 @@ type ScalingPolicy struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -3542,6 +3595,9 @@ type ScalingPolicy struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3631,7 +3687,6 @@ func (s *ScalingPolicy) SetTargetTrackingScalingPolicyConfiguration(v *TargetTra
 }
 
 // Represents a scheduled action.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/ScheduledAction
 type ScheduledAction struct {
 	_ struct{} `type:"structure"`
 
@@ -3664,6 +3719,9 @@ type ScheduledAction struct {
 	//    * DynamoDB global secondary index - The resource type is index and the
 	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
 	//
+	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
+	//    is the cluster name. Example: cluster:my-db-cluster.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -3692,6 +3750,9 @@ type ScheduledAction struct {
 	//
 	//    * dynamodb:index:WriteCapacityUnits - The provisioned write capacity for
 	//    a DynamoDB global secondary index.
+	//
+	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
+	//    DB cluster. Available for Aurora MySQL-compatible edition.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The new minimum and maximum capacity. You can set both values or just one.
@@ -3838,7 +3899,6 @@ func (s *ScheduledAction) SetStartTime(v time.Time) *ScheduledAction {
 //    with a null upper bound.
 //
 //    * The upper and lower bound can't be null in the same step adjustment.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/StepAdjustment
 type StepAdjustment struct {
 	_ struct{} `type:"structure"`
 
@@ -3909,7 +3969,6 @@ func (s *StepAdjustment) SetScalingAdjustment(v int64) *StepAdjustment {
 }
 
 // Represents a step scaling policy configuration.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/StepScalingPolicyConfiguration
 type StepScalingPolicyConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -4015,7 +4074,6 @@ func (s *StepScalingPolicyConfiguration) SetStepAdjustments(v []*StepAdjustment)
 }
 
 // Represents a target tracking scaling policy configuration.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/TargetTrackingScalingPolicyConfiguration
 type TargetTrackingScalingPolicyConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -4172,6 +4230,30 @@ const (
 
 	// MetricTypeDynamoDbwriteCapacityUtilization is a MetricType enum value
 	MetricTypeDynamoDbwriteCapacityUtilization = "DynamoDBWriteCapacityUtilization"
+
+	// MetricTypeAlbrequestCountPerTarget is a MetricType enum value
+	MetricTypeAlbrequestCountPerTarget = "ALBRequestCountPerTarget"
+
+	// MetricTypeRdsreaderAverageCpuutilization is a MetricType enum value
+	MetricTypeRdsreaderAverageCpuutilization = "RDSReaderAverageCPUUtilization"
+
+	// MetricTypeRdsreaderAverageDatabaseConnections is a MetricType enum value
+	MetricTypeRdsreaderAverageDatabaseConnections = "RDSReaderAverageDatabaseConnections"
+
+	// MetricTypeEc2spotFleetRequestAverageCpuutilization is a MetricType enum value
+	MetricTypeEc2spotFleetRequestAverageCpuutilization = "EC2SpotFleetRequestAverageCPUUtilization"
+
+	// MetricTypeEc2spotFleetRequestAverageNetworkIn is a MetricType enum value
+	MetricTypeEc2spotFleetRequestAverageNetworkIn = "EC2SpotFleetRequestAverageNetworkIn"
+
+	// MetricTypeEc2spotFleetRequestAverageNetworkOut is a MetricType enum value
+	MetricTypeEc2spotFleetRequestAverageNetworkOut = "EC2SpotFleetRequestAverageNetworkOut"
+
+	// MetricTypeEcsserviceAverageCpuutilization is a MetricType enum value
+	MetricTypeEcsserviceAverageCpuutilization = "ECSServiceAverageCPUUtilization"
+
+	// MetricTypeEcsserviceAverageMemoryUtilization is a MetricType enum value
+	MetricTypeEcsserviceAverageMemoryUtilization = "ECSServiceAverageMemoryUtilization"
 )
 
 const (
@@ -4206,6 +4288,9 @@ const (
 
 	// ScalableDimensionDynamodbIndexWriteCapacityUnits is a ScalableDimension enum value
 	ScalableDimensionDynamodbIndexWriteCapacityUnits = "dynamodb:index:WriteCapacityUnits"
+
+	// ScalableDimensionRdsClusterReadReplicaCount is a ScalableDimension enum value
+	ScalableDimensionRdsClusterReadReplicaCount = "rds:cluster:ReadReplicaCount"
 )
 
 const (
@@ -4243,4 +4328,7 @@ const (
 
 	// ServiceNamespaceDynamodb is a ServiceNamespace enum value
 	ServiceNamespaceDynamodb = "dynamodb"
+
+	// ServiceNamespaceRds is a ServiceNamespace enum value
+	ServiceNamespaceRds = "rds"
 )

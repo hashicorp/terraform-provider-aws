@@ -6,7 +6,7 @@ description: |-
   Provides a Route53 private Hosted Zone to VPC association resource.
 ---
 
-# aws\_route53\_zone\_association
+# aws_route53_zone_association
 
 Provides a Route53 private Hosted Zone to VPC association resource.
 

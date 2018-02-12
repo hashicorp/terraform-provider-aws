@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/errwrap"
@@ -82,6 +83,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					ValidateFunc: validateCognitoUserPoolAliasAttribute,
 				},
 				ConflictsWith: []string{"username_attributes"},
+			},
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"auto_verified_attributes": {
@@ -192,6 +198,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validateArn,
 						},
+						"pre_token_generation": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
 						"verify_auth_challenge_response": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -261,7 +272,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"attribute_data_type": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								cognitoidentityprovider.AttributeDataTypeString,
 								cognitoidentityprovider.AttributeDataTypeNumber,
@@ -279,7 +290,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						},
 						"name": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validateCognitoUserPoolSchemaName,
 						},
 						"number_attribute_constraints": {
@@ -606,6 +617,14 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	if resp.UserPool.AliasAttributes != nil {
 		d.Set("alias_attributes", flattenStringList(resp.UserPool.AliasAttributes))
 	}
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "cognito-idp",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("userpool/%s", d.Id()),
+	}
+	d.Set("arn", arn.String())
 	if resp.UserPool.AutoVerifiedAttributes != nil {
 		d.Set("auto_verified_attributes", flattenStringList(resp.UserPool.AutoVerifiedAttributes))
 	}

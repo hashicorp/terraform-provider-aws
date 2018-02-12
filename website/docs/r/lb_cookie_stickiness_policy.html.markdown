@@ -6,7 +6,7 @@ description: |-
   Provides a load balancer cookie stickiness policy, which allows an ELB to control the sticky session lifetime of the browser.
 ---
 
-# aws\_lb\_cookie\_stickiness\_policy
+# aws_lb_cookie_stickiness_policy
 
 Provides a load balancer cookie stickiness policy, which allows an ELB to control the sticky session lifetime of the browser.
 

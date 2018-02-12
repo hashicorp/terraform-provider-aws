@@ -3,8 +3,8 @@
 // Package workspaces provides the client and types for making API
 // requests to Amazon WorkSpaces.
 //
-// This reference provides detailed information about the Amazon WorkSpaces
-// operations.
+// Amazon WorkSpaces enables you to provision virtual, cloud-based Microsoft
+// Windows desktops for your users.
 //
 // See https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08 for more information on this service.
 //

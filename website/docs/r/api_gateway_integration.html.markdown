@@ -6,7 +6,7 @@ description: |-
   Provides an HTTP Method Integration for an API Gateway Integration.
 ---
 
-# aws\_api\_gateway\_integration
+# aws_api_gateway_integration
 
 Provides an HTTP Method Integration for an API Gateway Integration.
 

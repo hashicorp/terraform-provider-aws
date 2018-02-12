@@ -6,7 +6,7 @@ description: |-
   Provides an SSM Document resource
 ---
 
-# aws\_ssm\_document
+# aws_ssm_document
 
 Provides an SSM Document resource
 

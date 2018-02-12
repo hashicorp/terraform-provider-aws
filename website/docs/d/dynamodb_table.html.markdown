@@ -6,7 +6,7 @@ description: |-
   Provides a DynamoDB table data source.
 ---
 
-# aws_dynamodb_table
+# Data Source: aws_dynamodb_table
 
 Provides information about a DynamoDB table.
 

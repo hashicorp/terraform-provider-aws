@@ -291,6 +291,26 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBParameterGroup_Disappears(t *testing.T) {
+	var v rds.DBParameterGroup
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSDBParameterGroupConfig(groupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.bar", &v),
+					testAccCheckAWSDbParamaterGroupDisappears(&v),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDBParameterGroup_namePrefix(t *testing.T) {
 	var v rds.DBParameterGroup
 
@@ -392,6 +412,29 @@ func TestAccAWSDBParameterGroup_Only(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBParameterGroup_MatchDefault(t *testing.T) {
+	var v rds.DBParameterGroup
+
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSDBParameterGroupIncludeDefaultConfig(groupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.bar", &v),
+					resource.TestCheckResourceAttr(
+						"aws_db_parameter_group.bar", "name", groupName),
+					resource.TestCheckResourceAttr(
+						"aws_db_parameter_group.bar", "family", "postgres9.4"),
+				),
+			},
+		},
+	})
+}
+
 func TestResourceAWSDBParameterGroupName_validation(t *testing.T) {
 	cases := []struct {
 		Value    string
@@ -433,6 +476,23 @@ func TestResourceAWSDBParameterGroupName_validation(t *testing.T) {
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the DB Parameter Group Name to trigger a validation error")
 		}
+	}
+}
+
+func testAccCheckAWSDbParamaterGroupDisappears(v *rds.DBParameterGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_db_parameter_group" {
+				continue
+			}
+			_, err := conn.DeleteDBParameterGroup(&rds.DeleteDBParameterGroupInput{
+				DBParameterGroupName: v.DBParameterGroupName,
+			})
+			return err
+		}
+		return nil
 	}
 }
 
@@ -712,6 +772,20 @@ resource "aws_db_parameter_group" "large" {
     parameter { name = "table_open_cache"                    value = 4096                                              }
     parameter { name = "tmp_table_size"                      value = 67108864                                          }
     parameter { name = "tx_isolation"                        value = "REPEATABLE-READ"                                 }
+}`, n)
+}
+
+func testAccAWSDBParameterGroupIncludeDefaultConfig(n string) string {
+	return fmt.Sprintf(`
+resource "aws_db_parameter_group" "bar" {
+  name = "%s"
+  family = "postgres9.4"
+
+  parameter {
+    name = "client_encoding"
+    value = "UTF8"
+    apply_method = "pending-reboot"
+  }
 }`, n)
 }
 

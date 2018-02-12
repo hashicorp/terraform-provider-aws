@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 	"unicode"
@@ -35,6 +36,33 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
 					resource.TestCheckResourceAttr(
 						"aws_codebuild_project.foo", "build_timeout", "50"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_sourceAuth(t *testing.T) {
+	authResource := "FAKERESOURCE1"
+	authType := "OAUTH"
+	name := acctest.RandString(10)
+	resourceName := "aws_codebuild_project.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSCodeBuildProjectConfig_sourceAuth(name, authResource, "INVALID"),
+				ExpectError: regexp.MustCompile(`Source Auth Type can only be`),
+			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_sourceAuth(name, authResource, authType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "source.1060593600.auth.2706882902.resource", authResource),
+					resource.TestCheckResourceAttr(resourceName, "source.1060593600.auth.2706882902.type", authType),
 				),
 			},
 		},
@@ -569,4 +597,92 @@ resource "aws_codebuild_project" "foo" {
   }
 }
 `, rName, rName, rName, rName)
+}
+
+func testAccAWSCodeBuildProjectConfig_sourceAuth(rName, authResource, authType string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "codebuild_role" {
+  name = "codebuild-role-%[1]s"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "codebuild.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "codebuild_policy" {
+    name        = "codebuild-policy-%[1]s"
+    path        = "/service-role/"
+    description = "Policy used in trust relationship with CodeBuild"
+    policy      = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Resource": [
+        "*"
+      ],
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_policy_attachment" "codebuild_policy_attachment" {
+  name       = "codebuild-policy-attachment-%[1]s"
+  policy_arn = "${aws_iam_policy.codebuild_policy.arn}"
+  roles      = ["${aws_iam_role.codebuild_role.id}"]
+}
+
+resource "aws_codebuild_project" "foo" {
+  name         = "test-project-%[1]s"
+  description  = "test_codebuild_project"
+  build_timeout      = "5"
+  service_role = "${aws_iam_role.codebuild_role.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+
+    environment_variable = {
+      "name"  = "SOME_KEY"
+      "value" = "SOME_VALUE"
+    }
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+
+    auth {
+      resource = "%[2]s"
+      type     = "%[3]s"
+    }
+  }
+
+  tags {
+    "Environment" = "Test"
+  }
+}
+`, rName, authResource, authType)
 }

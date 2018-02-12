@@ -18,7 +18,7 @@ func TestAccAWSSSMParameter_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterBasicConfig(randName, randValue),
+				Config: testAccAWSSSMParameterBasicConfig(randName, "String", randValue),
 			},
 
 			{

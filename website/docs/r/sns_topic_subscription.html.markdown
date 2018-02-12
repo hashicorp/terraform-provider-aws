@@ -6,7 +6,7 @@ description: |-
   Provides a resource for subscribing to SNS topics.
 ---
 
-# aws\_sns\_topic\_subscription
+# aws_sns_topic_subscription
 
   Provides a resource for subscribing to SNS topics. Requires that an SNS topic exist for the subscription to attach to.
 This resource allows you to automatically place messages sent to SNS topics in SQS queues, send them as HTTP(S) POST requests
