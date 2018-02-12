@@ -12,13 +12,15 @@ This resource represents a successful validation of an ACM certificate in concer
 with other resources.
 
 Most commonly, this resource is used to together with [`aws_route53_record`](route53_record.html) and
-[`aws_acm_certificate_validation`](acm_certificate_validation.html) to request a DNS validated certificate,
+[`aws_acm_certificate`](acm_certificate.html) to request a DNS validated certificate,
 deploy the required validation records and wait for validation to complete.
 
 ~> **WARNING:** This resource implements a part of the validation workflow. It does not represent a real-world entity in AWS, therefore changing or deleting this resource on its own has no immediate effect.
 
 
 ## Example Usage
+
+### DNS Validation with Route 53
 
 ```hcl
 resource "aws_acm_certificate" "cert" {
@@ -50,12 +52,27 @@ resource "aws_lb_listener" "front_end" {
 }
 ```
 
+### Email Validation
+
+In this situation, the resource is simply a waiter for manual email approval of ACM certificates.
+
+```hcl
+resource "aws_acm_certificate" "cert" {
+  domain_name       = "example.com"
+  validation_method = "EMAIL"
+}
+
+resource "aws_acm_certificate_validation" "cert" {
+  certificate_arn = "${aws_acm_certificate.cert.arn}"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `certificate_arn` - (Required) The ARN of the certificate that is being validated.
-* `validation_record_fqdns` - (Optional) List of FQDNs that implement the validation. If this is set, the resource can implement additional sanity checks and has an explicit dependency on the resource that is implementing the validation
+* `validation_record_fqdns` - (Optional) List of FQDNs that implement the validation. Only valid for DNS validation method ACM certificates. If this is set, the resource can implement additional sanity checks and has an explicit dependency on the resource that is implementing the validation
 
 ## Timeouts
 
