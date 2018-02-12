@@ -2,7 +2,8 @@
 
 ENHANCEMENTS:
 
-* resource/aws_rds_cluster: Add hosted_zone_id attribute [GH-3267]
+* resource/aws_autoscaling_policy: Add support for `target_tracking_configuration` [GH-2611]
+* resource/aws_rds_cluster: Add `hosted_zone_id` attribute [GH-3267]
 
 BUG FIXES:
 
