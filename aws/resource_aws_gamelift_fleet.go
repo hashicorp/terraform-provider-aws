@@ -62,14 +62,16 @@ func resourceAwsGameliftFleet() *schema.Resource {
 							ValidateFunc: validation.IntBetween(1, 60000),
 						},
 						"ip_range": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateCIDRNetworkAddress,
 						},
 						"protocol": {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"TCP", "UDP",
+								gamelift.IpProtocolTcp,
+								gamelift.IpProtocolUdp,
 							}, false),
 						},
 						"to_port": {
@@ -79,6 +81,11 @@ func resourceAwsGameliftFleet() *schema.Resource {
 						},
 					},
 				},
+			},
+			"log_paths": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"metric_groups": {
 				Type:     schema.TypeList,
@@ -275,7 +282,8 @@ func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("build_id", fleet.BuildId)
 	d.Set("description", fleet.Description)
-	d.Set("fleet_arn", fleet.FleetArn)
+	d.Set("arn", fleet.FleetArn)
+	d.Set("log_paths", aws.StringValueSlice(fleet.LogPaths))
 	d.Set("metric_groups", flattenStringList(fleet.MetricGroups))
 	d.Set("name", fleet.Name)
 	d.Set("new_game_session_protection_policy", fleet.NewGameSessionProtectionPolicy)
@@ -541,23 +549,23 @@ func _getGameliftFleetFailures(conn *gamelift.GameLift, id string, nextToken *st
 
 func isGameliftEventFailure(event *gamelift.Event) bool {
 	failureCodes := []string{
-		"FLEET_STATE_ERROR",
-		"FLEET_INITIALIZATION_FAILED",
-		"FLEET_BINARY_DOWNLOAD_FAILED",
-		"FLEET_VALIDATION_LAUNCH_PATH_NOT_FOUND",
-		"FLEET_VALIDATION_EXECUTABLE_RUNTIME_FAILURE",
-		"FLEET_VALIDATION_TIMED_OUT",
-		"FLEET_ACTIVATION_FAILED",
-		"FLEET_ACTIVATION_FAILED_NO_INSTANCES",
-		"SERVER_PROCESS_INVALID_PATH",
-		"SERVER_PROCESS_SDK_INITIALIZATION_TIMEOUT",
-		"SERVER_PROCESS_PROCESS_READY_TIMEOUT",
-		"SERVER_PROCESS_CRASHED",
-		"SERVER_PROCESS_TERMINATED_UNHEALTHY",
-		"SERVER_PROCESS_FORCE_TERMINATED",
-		"SERVER_PROCESS_PROCESS_EXIT_TIMEOUT",
-		"GAME_SESSION_ACTIVATION_TIMEOUT",
-		"FLEET_VPC_PEERING_FAILED",
+		gamelift.EventCodeFleetActivationFailed,
+		gamelift.EventCodeFleetActivationFailedNoInstances,
+		gamelift.EventCodeFleetBinaryDownloadFailed,
+		gamelift.EventCodeFleetInitializationFailed,
+		gamelift.EventCodeFleetStateError,
+		gamelift.EventCodeFleetValidationExecutableRuntimeFailure,
+		gamelift.EventCodeFleetValidationLaunchPathNotFound,
+		gamelift.EventCodeFleetValidationTimedOut,
+		gamelift.EventCodeFleetVpcPeeringFailed,
+		gamelift.EventCodeGameSessionActivationTimeout,
+		gamelift.EventCodeServerProcessCrashed,
+		gamelift.EventCodeServerProcessForceTerminated,
+		gamelift.EventCodeServerProcessInvalidPath,
+		gamelift.EventCodeServerProcessProcessExitTimeout,
+		gamelift.EventCodeServerProcessProcessReadyTimeout,
+		gamelift.EventCodeServerProcessSdkInitializationTimeout,
+		gamelift.EventCodeServerProcessTerminatedUnhealthy,
 	}
 	for _, fc := range failureCodes {
 		if *event.EventCode == fc {

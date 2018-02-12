@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -33,56 +34,70 @@ func testSweepGameliftFleets(region string) error {
 	}
 	conn := client.(*AWSClient).gameliftconn
 
-	resp, err := conn.ListFleets(&gamelift.ListFleetsInput{})
+	return testAccGameliftListFleets(conn, nil, func(fleetIds []*string) error {
+		if len(fleetIds) == 0 {
+			log.Print("[DEBUG] No Gamelift Fleets to sweep")
+			return nil
+		}
+
+		out, err := conn.DescribeFleetAttributes(&gamelift.DescribeFleetAttributesInput{
+			FleetIds: fleetIds,
+		})
+		if err != nil {
+			return fmt.Errorf("Error describing Gamelift Fleet attributes: %s", err)
+		}
+
+		log.Printf("[INFO] Found %d Gamelift Fleets", len(out.FleetAttributes))
+
+		for _, attr := range out.FleetAttributes {
+			if !strings.HasPrefix(*attr.Name, testAccGameliftFleetPrefix) {
+				continue
+			}
+
+			log.Printf("[INFO] Deleting Gamelift Fleet %q", *attr.FleetId)
+			err := resource.Retry(60*time.Minute, func() *resource.RetryError {
+				_, err := conn.DeleteFleet(&gamelift.DeleteFleetInput{
+					FleetId: attr.FleetId,
+				})
+				if err != nil {
+					msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", *attr.FleetId)
+					if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, msg) {
+						return resource.RetryableError(err)
+					}
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+			if err != nil {
+				return fmt.Errorf("Error deleting Gamelift Fleet (%s): %s",
+					*attr.FleetId, err)
+			}
+
+			err = waitForGameliftFleetToBeDeleted(conn, *attr.FleetId, 5*time.Minute)
+			if err != nil {
+				return fmt.Errorf("Error waiting for Gamelift Fleet (%s) to be deleted: %s",
+					*attr.FleetId, err)
+			}
+		}
+		return nil
+	})
+}
+
+func testAccGameliftListFleets(conn *gamelift.GameLift, nextToken *string, f func([]*string) error) error {
+	resp, err := conn.ListFleets(&gamelift.ListFleetsInput{
+		NextToken: nextToken,
+	})
 	if err != nil {
 		return fmt.Errorf("Error listing Gamelift Fleets: %s", err)
 	}
 
-	if len(resp.FleetIds) == 0 {
-		log.Print("[DEBUG] No Gamelift Fleets to sweep")
-		return nil
-	}
-
-	out, err := conn.DescribeFleetAttributes(&gamelift.DescribeFleetAttributesInput{
-		FleetIds: resp.FleetIds,
-	})
+	err = f(resp.FleetIds)
 	if err != nil {
-		return fmt.Errorf("Error describing Gamelift Fleet attributes: %s", err)
+		return err
 	}
-
-	log.Printf("[INFO] Found %d Gamelift Fleets", len(out.FleetAttributes))
-
-	for _, attr := range out.FleetAttributes {
-		if !strings.HasPrefix(*attr.Name, testAccGameliftFleetPrefix) {
-			continue
-		}
-
-		log.Printf("[INFO] Deleting Gamelift Fleet %q", *attr.FleetId)
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			_, err := conn.DeleteFleet(&gamelift.DeleteFleetInput{
-				FleetId: attr.FleetId,
-			})
-			if err != nil {
-				msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", *attr.FleetId)
-				if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, msg) {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting Gamelift Fleet (%s): %s",
-				*attr.FleetId, err)
-		}
-
-		err = waitForGameliftFleetToBeDeleted(conn, *attr.FleetId, 5*time.Minute)
-		if err != nil {
-			return fmt.Errorf("Error waiting for Gamelift Fleet (%s) to be deleted: %s",
-				*attr.FleetId, err)
-		}
+	if nextToken != nil {
+		return testAccGameliftListFleets(conn, nextToken, f)
 	}
-
 	return nil
 }
 
@@ -231,7 +246,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 	desc := fmt.Sprintf("Updated description %s", rString)
 
 	region := testAccGetRegion()
-	g, err := testAccAWSGameliftSampleGameLocation(region)
+	g, err := testAccAWSGameliftSampleGame(region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -254,7 +269,9 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists("aws_gamelift_fleet.test", &conf),
 					resource.TestCheckResourceAttrSet("aws_gamelift_fleet.test", "build_id"),
+					resource.TestMatchResourceAttr("aws_gamelift_fleet.test", "arn", regexp.MustCompile(`^arn:[^:]+:gamelift:[^:]+:[^:]+:.+$`)),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_instance_type", "c4.large"),
+					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "log_paths.#", "0"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "name", fleetName),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.#", "1"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.0", "default"),
@@ -271,7 +288,9 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists("aws_gamelift_fleet.test", &conf),
 					resource.TestCheckResourceAttrSet("aws_gamelift_fleet.test", "build_id"),
+					resource.TestMatchResourceAttr("aws_gamelift_fleet.test", "arn", regexp.MustCompile(`^arn:[^:]+:gamelift:[^:]+:[^:]+:.+$`)),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_instance_type", "c4.large"),
+					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "log_paths.#", "0"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "name", uFleetName),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "description", desc),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.#", "1"),
@@ -301,7 +320,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 	desc := fmt.Sprintf("Terraform Acceptance Test %s", rString)
 
 	region := testAccGetRegion()
-	g, err := testAccAWSGameliftSampleGameLocation(region)
+	g, err := testAccAWSGameliftSampleGame(region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -327,6 +346,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists("aws_gamelift_fleet.test", &conf),
 					resource.TestCheckResourceAttrSet("aws_gamelift_fleet.test", "build_id"),
+					resource.TestMatchResourceAttr("aws_gamelift_fleet.test", "arn", regexp.MustCompile(`^arn:[^:]+:gamelift:[^:]+:[^:]+:.+$`)),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "name", fleetName),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "description", desc),
@@ -343,6 +363,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.2.ip_range", "8.8.8.8/32"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.2.protocol", "UDP"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.2.to_port", "60000"),
+					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "log_paths.#", "0"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.#", "1"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.0", "TerraformAccTest"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "new_game_session_protection_policy", "FullProtection"),
@@ -364,6 +385,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists("aws_gamelift_fleet.test", &conf),
 					resource.TestCheckResourceAttrSet("aws_gamelift_fleet.test", "build_id"),
+					resource.TestMatchResourceAttr("aws_gamelift_fleet.test", "arn", regexp.MustCompile(`^arn:[^:]+:gamelift:[^:]+:[^:]+:.+$`)),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "name", fleetName),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "description", desc),
@@ -380,6 +402,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.2.ip_range", "8.8.8.8/32"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.2.protocol", "UDP"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.2.to_port", "60000"),
+					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "log_paths.#", "0"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.#", "1"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.0", "TerraformAccTest"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "new_game_session_protection_policy", "FullProtection"),
