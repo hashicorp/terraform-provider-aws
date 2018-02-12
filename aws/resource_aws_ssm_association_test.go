@@ -31,12 +31,12 @@ func TestAccAWSSSMAssociation_basic(t *testing.T) {
 
 func TestAccAWSSSMAssociation_withTargets(t *testing.T) {
 	name := acctest.RandString(10)
-	onetarget := `
+	oneTarget := `
 	targets {
     key = "tag:Name"
     values = ["acceptanceTest"]
   }`
-	twotarget := `
+	twoTargets := `
 	targets {
     key = "tag:Name"
     values = ["acceptanceTest"]
@@ -51,7 +51,7 @@ func TestAccAWSSSMAssociation_withTargets(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMAssociationBasicConfigWithTargets(name, onetarget),
+				Config: testAccAWSSSMAssociationBasicConfigWithTargets(name, oneTarget),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
 					resource.TestCheckResourceAttr(
@@ -63,7 +63,7 @@ func TestAccAWSSSMAssociation_withTargets(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSSSMAssociationBasicConfigWithTargets(name, twotarget),
+				Config: testAccAWSSSMAssociationBasicConfigWithTargets(name, twoTargets),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
 					resource.TestCheckResourceAttr(
@@ -79,7 +79,7 @@ func TestAccAWSSSMAssociation_withTargets(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSSSMAssociationBasicConfigWithTargets(name, onetarget),
+				Config: testAccAWSSSMAssociationBasicConfigWithTargets(name, oneTarget),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
 					resource.TestCheckResourceAttr(
