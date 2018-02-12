@@ -218,4 +218,6 @@ https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Ma
 
 DB Instances can be imported using the `identifier`, e.g.
 
-``` $ terraform import aws_db_instance.default mydb-rds-instance ```
+```
+$ terraform import aws_db_instance.default mydb-rds-instance
+```
