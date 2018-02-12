@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/batch"
@@ -208,6 +209,7 @@ type AWSClient struct {
 	athenaconn            *athena.Athena
 	dxconn                *directconnect.DirectConnect
 	mediastoreconn        *mediastore.MediaStore
+	appsyncconn           *appsync.AppSync
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -458,6 +460,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.athenaconn = athena.New(sess)
 	client.dxconn = directconnect.New(sess)
 	client.mediastoreconn = mediastore.New(sess)
+	client.appsyncconn = appsync.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
