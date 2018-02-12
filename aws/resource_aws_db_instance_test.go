@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 )
@@ -603,12 +604,13 @@ func testAccCheckAWSDBInstanceSnapshot(rInt int) resource.TestCheckFunc {
 				}
 			} else { // snapshot was found,
 				// verify we have the tags copied to the snapshot
-				instanceARN, err := buildRDSARN(snapshot_identifier, testAccProvider.Meta().(*AWSClient).partition, testAccProvider.Meta().(*AWSClient).accountid, testAccProvider.Meta().(*AWSClient).region)
-				// tags have a different ARN, just swapping :db: for :snapshot:
-				tagsARN := strings.Replace(instanceARN, ":db:", ":snapshot:", 1)
-				if err != nil {
-					return fmt.Errorf("Error building ARN for tags check with ARN (%s): %s", tagsARN, err)
-				}
+				tagsARN := arn.ARN{
+					Partition: testAccProvider.Meta().(*AWSClient).partition,
+					Service:   "rds",
+					Region:    testAccProvider.Meta().(*AWSClient).region,
+					AccountID: testAccProvider.Meta().(*AWSClient).accountid,
+					Resource:  fmt.Sprintf("snapshot:%s", snapshot_identifier),
+				}.String()
 				resp, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
 					ResourceName: aws.String(tagsARN),
 				})
