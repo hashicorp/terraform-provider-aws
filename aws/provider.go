@@ -200,6 +200,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_iam_server_certificate":           dataSourceAwsIAMServerCertificate(),
 			"aws_iam_user":                         dataSourceAwsIAMUser(),
 			"aws_internet_gateway":                 dataSourceAwsInternetGateway(),
+			"aws_inspector_rules_packages":         dataSourceAwsInspectorRulesPackages(),
 			"aws_instance":                         dataSourceAwsInstance(),
 			"aws_instances":                        dataSourceAwsInstances(),
 			"aws_ip_ranges":                        dataSourceAwsIPRanges(),
