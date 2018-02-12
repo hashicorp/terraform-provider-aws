@@ -163,7 +163,6 @@ resource "aws_service_discovery_service" "test" {
       ttl = 5
       type = "A"
     }
-    routing_policy = "MULTIVALUE"
   }
 }
 `, rName, rName)
