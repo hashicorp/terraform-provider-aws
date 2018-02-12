@@ -80,8 +80,8 @@ func validateRdsEngine(v interface{}, k string) (ws []string, errors []error) {
 
 	if _, ok := validTypes[value]; !ok {
 		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid engine type %q. Valid types are either %q or %q.",
-			k, value, "aurora", "aurora-postgresql"))
+			"%q contains an invalid engine type %q. Valid types are either %q, %q or %q.",
+			k, value, "aurora", "aurora-mysql", "aurora-postgresql"))
 	}
 	return
 }
