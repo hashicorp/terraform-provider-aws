@@ -6,7 +6,7 @@ description: |-
   Provides a CodeCommit Trigger Resource.
 ---
 
-# aws\_codecommit\_trigger
+# aws_codecommit_trigger
 
 Provides a CodeCommit Trigger Resource.
 

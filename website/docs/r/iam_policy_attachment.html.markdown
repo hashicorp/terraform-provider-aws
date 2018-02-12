@@ -6,7 +6,7 @@ description: |-
   Attaches a Managed IAM Policy to user(s), role(s), and/or group(s)
 ---
 
-# aws\_iam\_policy\_attachment
+# aws_iam_policy_attachment
 
 Attaches a Managed IAM Policy to user(s), role(s), and/or group(s)
 

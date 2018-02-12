@@ -65,7 +65,7 @@ func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error 
 		)...)
 	}
 
-	log.Printf("[INFO] Describing EC2 instances: %s", params)
+	log.Printf("[DEBUG] Reading EC2 instances: %s", params)
 
 	var instanceIds, privateIps, publicIps []string
 	err := conn.DescribeInstancesPages(params, func(resp *ec2.DescribeInstancesOutput, isLast bool) bool {

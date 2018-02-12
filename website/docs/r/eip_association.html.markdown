@@ -6,7 +6,7 @@ description: |-
   Provides an AWS EIP Association
 ---
 
-# aws\_eip\_association
+# aws_eip_association
 
 Provides an AWS EIP Association as a top level resource, to associate and
 disassociate Elastic IPs from AWS Instances and Network Interfaces.

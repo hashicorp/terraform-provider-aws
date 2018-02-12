@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks NodeJS application layer resource.
 ---
 
-# aws\_opsworks\_nodejs\_app\_layer
+# aws_opsworks_nodejs_app_layer
 
 Provides an OpsWorks NodeJS application layer resource.
 

@@ -6,7 +6,7 @@ description: |-
   Provides a load balancer SSL negotiation policy, which allows an ELB to control which ciphers and protocols are supported during SSL negotiations between a client and a load balancer.
 ---
 
-# aws\_lb\_ssl\_negotiation\_policy
+# aws_lb_ssl_negotiation_policy
 
 Provides a load balancer SSL negotiation policy, which allows an ELB to control the ciphers and protocols that are supported during SSL negotiations between a client and a load balancer.
 

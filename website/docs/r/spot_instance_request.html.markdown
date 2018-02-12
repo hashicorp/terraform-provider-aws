@@ -6,7 +6,7 @@ description: |-
   Provides a Spot Instance Request resource.
 ---
 
-# aws\_spot\_instance\_request
+# aws_spot_instance_request
 
 Provides an EC2 Spot Instance Request resource. This allows instances to be
 requested on the spot market.

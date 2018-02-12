@@ -84,39 +84,27 @@ func TestParseTaskDefinition(t *testing.T) {
 	}
 }
 
-func TestAccAWSEcsServiceWithARN(t *testing.T) {
-	rInt := acctest.RandInt()
+func TestAccAWSEcsService_withARN(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-arn-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-arn-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-arn-%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsService(rInt),
+				Config: testAccAWSEcsService(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo"),
 				),
 			},
 
 			{
-				Config: testAccAWSEcsServiceModified(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEcsServiceWithUnnormalizedPlacementStrategy(t *testing.T) {
-	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEcsServiceWithInterchangeablePlacementStrategy(rInt),
+				Config: testAccAWSEcsServiceModified(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo"),
 				),
@@ -125,22 +113,77 @@ func TestAccAWSEcsServiceWithUnnormalizedPlacementStrategy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsServiceWithFamilyAndRevision(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-test")
+func TestAccAWSEcsService_basicImport(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-%s", rString)
+
+	resourceName := "aws_ecs_service.jenkins"
+	importInput := fmt.Sprintf("%s/%s", clusterName, svcName)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithFamilyAndRevision(rName),
+				Config: testAccAWSEcsServiceWithFamilyAndRevision(clusterName, tdName, svcName),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     importInput,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_withUnnormalizedPlacementStrategy(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ups-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-ups-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-ups-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithInterchangeablePlacementStrategy(clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_withFamilyAndRevision(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-far-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-far-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-far-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithFamilyAndRevision(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.jenkins"),
 				),
 			},
 
 			{
-				Config: testAccAWSEcsServiceWithFamilyAndRevisionModified(rName),
+				Config: testAccAWSEcsServiceWithFamilyAndRevisionModified(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.jenkins"),
 				),
@@ -150,11 +193,18 @@ func TestAccAWSEcsServiceWithFamilyAndRevision(t *testing.T) {
 }
 
 // Regression for https://github.com/hashicorp/terraform/issues/2427
-func TestAccAWSEcsServiceWithRenamedCluster(t *testing.T) {
+func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-rc-%s", rString)
+	uClusterName := fmt.Sprintf("tf-acc-cluster-svc-w-rc-updated-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-rc-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-rc-%s", rString)
+
 	originalRegexp := regexp.MustCompile(
-		"^arn:aws:ecs:[^:]+:[0-9]+:cluster/terraformecstest3$")
+		"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + clusterName + "$")
 	modifiedRegexp := regexp.MustCompile(
-		"^arn:aws:ecs:[^:]+:[0-9]+:cluster/terraformecstest3modified$")
+		"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + uClusterName + "$")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -162,7 +212,7 @@ func TestAccAWSEcsServiceWithRenamedCluster(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithRenamedCluster,
+				Config: testAccAWSEcsServiceWithRenamedCluster(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost"),
 					resource.TestMatchResourceAttr(
@@ -171,7 +221,7 @@ func TestAccAWSEcsServiceWithRenamedCluster(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSEcsServiceWithRenamedClusterModified,
+				Config: testAccAWSEcsServiceWithRenamedCluster(uClusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost"),
 					resource.TestMatchResourceAttr(
@@ -182,14 +232,71 @@ func TestAccAWSEcsServiceWithRenamedCluster(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withIamRole(t *testing.T) {
+func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	vpcNameTag := fmt.Sprintf("tf-acc-vpc-svc-w-hcgps-%s", rString)
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-hcgps-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-hcgps-%s", rString)
+	roleName := fmt.Sprintf("tf-acc-role-svc-w-hcgps-%s", rString)
+	policyName := fmt.Sprintf("tf-acc-policy-svc-w-hcgps-%s", rString)
+	tgName := fmt.Sprintf("tf-acc-tg-svc-w-hcgps-%s", rString)
+	lbName := fmt.Sprintf("tf-acc-lb-svc-w-hcgps-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-hcgps-%s", rString)
+
+	resourceName := "aws_ecs_service.with_alb"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsService_withIamRole,
+				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
+					roleName, policyName, tgName, lbName, svcName, -1),
+				ExpectError: regexp.MustCompile(`must be between 0 and 1800`),
+			},
+			{
+				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
+					roleName, policyName, tgName, lbName, svcName, 1801),
+				ExpectError: regexp.MustCompile(`must be between 0 and 1800`),
+			},
+			{
+				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
+					roleName, policyName, tgName, lbName, svcName, 300),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "300"),
+				),
+			},
+			{
+				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
+					roleName, policyName, tgName, lbName, svcName, 600),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "600"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_withIamRole(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-iam-role-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-iam-role-%s", rString)
+	roleName := fmt.Sprintf("tf-acc-role-svc-w-iam-role-%s", rString)
+	policyName := fmt.Sprintf("tf-acc-policy-svc-w-iam-role-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-iam-role-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsService_withIamRole(clusterName, tdName, roleName, policyName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost"),
 				),
@@ -199,14 +306,19 @@ func TestAccAWSEcsService_withIamRole(t *testing.T) {
 }
 
 func TestAccAWSEcsService_withDeploymentValues(t *testing.T) {
-	rInt := acctest.RandInt()
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-dv-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-dv-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-dv-%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithDeploymentValues(rInt),
+				Config: testAccAWSEcsServiceWithDeploymentValues(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo"),
 					resource.TestCheckResourceAttr(
@@ -221,19 +333,27 @@ func TestAccAWSEcsService_withDeploymentValues(t *testing.T) {
 
 // Regression for https://github.com/hashicorp/terraform/issues/3444
 func TestAccAWSEcsService_withLbChanges(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-lbc-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-lbc-%s", rString)
+	roleName := fmt.Sprintf("tf-acc-role-svc-w-lbc-%s", rString)
+	policyName := fmt.Sprintf("tf-acc-policy-svc-w-lbc-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-lbc-%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsService_withLbChanges,
+				Config: testAccAWSEcsService_withLbChanges(clusterName, tdName, roleName, policyName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.with_lb_changes"),
 				),
 			},
 			{
-				Config: testAccAWSEcsService_withLbChanges_modified,
+				Config: testAccAWSEcsService_withLbChanges_modified(clusterName, tdName, roleName, policyName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.with_lb_changes"),
 				),
@@ -244,17 +364,22 @@ func TestAccAWSEcsService_withLbChanges(t *testing.T) {
 
 // Regression for https://github.com/hashicorp/terraform/issues/3361
 func TestAccAWSEcsService_withEcsClusterName(t *testing.T) {
-	clusterName := regexp.MustCompile("^terraformecstestcluster$")
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-cluster-name-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-cluster-name-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-cluster-name-%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithEcsClusterName,
+				Config: testAccAWSEcsServiceWithEcsClusterName(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.jenkins"),
-					resource.TestMatchResourceAttr(
+					resource.TestCheckResourceAttr(
 						"aws_ecs_service.jenkins", "cluster", clusterName),
 				),
 			},
@@ -263,7 +388,15 @@ func TestAccAWSEcsService_withEcsClusterName(t *testing.T) {
 }
 
 func TestAccAWSEcsService_withAlb(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-alb-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-alb-%s", rString)
+	roleName := fmt.Sprintf("tf-acc-role-svc-w-alb-%s", rString)
+	policyName := fmt.Sprintf("tf-acc-policy-svc-w-alb-%s", rString)
+	tgName := fmt.Sprintf("tf-acc-tg-svc-w-alb-%s", rString)
+	lbName := fmt.Sprintf("tf-acc-lb-svc-w-alb-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-alb-%s", rString)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -271,7 +404,7 @@ func TestAccAWSEcsService_withAlb(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithAlb(rName),
+				Config: testAccAWSEcsServiceWithAlb(clusterName, tdName, roleName, policyName, tgName, lbName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.with_alb"),
 				),
@@ -280,22 +413,27 @@ func TestAccAWSEcsService_withAlb(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsServiceWithPlacementStrategy(t *testing.T) {
-	rInt := acctest.RandInt()
+func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ps-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-ps-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-ps-%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsService(rInt),
+				Config: testAccAWSEcsService(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo"),
 					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_strategy.#", "0"),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceWithPlacementStrategy(rInt),
+				Config: testAccAWSEcsServiceWithPlacementStrategy(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo"),
 					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_strategy.#", "1"),
@@ -305,15 +443,20 @@ func TestAccAWSEcsServiceWithPlacementStrategy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsServiceWithPlacementConstraints(t *testing.T) {
-	rInt := acctest.RandInt()
+func TestAccAWSEcsService_withPlacementConstraints(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-pc-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-pc-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-pc-%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithPlacementConstraint(rInt),
+				Config: testAccAWSEcsServiceWithPlacementConstraint(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo"),
 					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_constraints.#", "1"),
@@ -323,18 +466,115 @@ func TestAccAWSEcsServiceWithPlacementConstraints(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsServiceWithPlacementConstraints_emptyExpression(t *testing.T) {
-	rInt := acctest.RandInt()
+func TestAccAWSEcsService_withPlacementConstraints_emptyExpression(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-pc-ee-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-pc-ee-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-pc-ee-%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithPlacementConstraintEmptyExpression(rInt),
+				Config: testAccAWSEcsServiceWithPlacementConstraintEmptyExpression(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo"),
 					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_constraints.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	sg1Name := fmt.Sprintf("tf-acc-sg-1-svc-w-ltf-%s", rString)
+	sg2Name := fmt.Sprintf("tf-acc-sg-2-svc-w-ltf-%s", rString)
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ltf-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-ltf-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-ltf-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "launch_type", "FARGATE"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.security_groups.#", "2"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
+				),
+			},
+		},
+	})
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "true"),
+				),
+			},
+		},
+	})
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	sg1Name := fmt.Sprintf("tf-acc-sg-1-svc-w-nc-%s", rString)
+	sg2Name := fmt.Sprintf("tf-acc-sg-2-svc-w-nc-%s", rString)
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-nc-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-nc-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-nc-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.security_groups.#", "2"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceWithNetworkConfiguration_modified(sg1Name, sg2Name, clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.security_groups.#", "1"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
 				),
 			},
 		},
@@ -388,14 +628,14 @@ func testAccCheckAWSEcsServiceExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSEcsService(rInt int) string {
+func testAccAWSEcsService(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "terraformecstest%d"
+	name = "%s"
 }
 
 resource "aws_ecs_task_definition" "mongo" {
-  family = "mongodb"
+  family = "%s"
   container_definitions = <<DEFINITION
 [
   {
@@ -410,22 +650,22 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "mongodb-%d"
+  name = "%s"
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
 }
-`, rInt, rInt)
+`, clusterName, tdName, svcName)
 }
 
-func testAccAWSEcsServiceModified(rInt int) string {
+func testAccAWSEcsServiceModified(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "terraformecstest%d"
+	name = "%s"
 }
 
 resource "aws_ecs_task_definition" "mongo" {
-  family = "mongodb"
+  family = "%s"
   container_definitions = <<DEFINITION
 [
   {
@@ -440,22 +680,22 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "mongodb-%d"
+  name = "%s"
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 2
 }
-`, rInt, rInt)
+`, clusterName, tdName, svcName)
 }
 
-func testAccAWSEcsServiceWithInterchangeablePlacementStrategy(rInt int) string {
+func testAccAWSEcsServiceWithInterchangeablePlacementStrategy(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "terraformecstest%d"
+	name = "%s"
 }
 
 resource "aws_ecs_task_definition" "mongo" {
-  family = "mongodb"
+  family = "%s"
   container_definitions = <<DEFINITION
 [
   {
@@ -470,7 +710,7 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "mongodb-%d"
+  name = "%s"
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
@@ -479,17 +719,17 @@ resource "aws_ecs_service" "mongo" {
 	  type = "spread"
   }
 }
-`, rInt, rInt)
+`, clusterName, tdName, svcName)
 }
 
-func testAccAWSEcsServiceWithPlacementStrategy(rInt int) string {
+func testAccAWSEcsServiceWithPlacementStrategy(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "terraformecstest%d"
+	name = "%s"
 }
 
 resource "aws_ecs_task_definition" "mongo" {
-  family = "mongodb"
+  family = "%s"
   container_definitions = <<DEFINITION
 [
   {
@@ -504,7 +744,7 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "mongodb-%d"
+  name = "%s"
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
@@ -513,17 +753,17 @@ resource "aws_ecs_service" "mongo" {
 	field = "memory"
   }
 }
-`, rInt, rInt)
+`, clusterName, tdName, svcName)
 }
 
-func testAccAWSEcsServiceWithPlacementConstraint(rInt int) string {
+func testAccAWSEcsServiceWithPlacementConstraint(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 	resource "aws_ecs_cluster" "default" {
-		name = "terraformecstest%d"
+		name = "%s"
 	}
 
 	resource "aws_ecs_task_definition" "mongo" {
-	  family = "mongodb"
+	  family = "%s"
 	  container_definitions = <<DEFINITION
 	[
 	  {
@@ -538,7 +778,7 @@ func testAccAWSEcsServiceWithPlacementConstraint(rInt int) string {
 	}
 
 	resource "aws_ecs_service" "mongo" {
-	  name = "mongodb-%d"
+	  name = "%s"
 	  cluster = "${aws_ecs_cluster.default.id}"
 	  task_definition = "${aws_ecs_task_definition.mongo.arn}"
 	  desired_count = 1
@@ -547,16 +787,16 @@ func testAccAWSEcsServiceWithPlacementConstraint(rInt int) string {
 		expression = "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]"
 	  }
 	}
-	`, rInt, rInt)
+	`, clusterName, tdName, svcName)
 }
 
-func testAccAWSEcsServiceWithPlacementConstraintEmptyExpression(rInt int) string {
+func testAccAWSEcsServiceWithPlacementConstraintEmptyExpression(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "terraformecstest%d"
+	name = "%s"
 }
 resource "aws_ecs_task_definition" "mongo" {
-  family = "mongodb"
+  family = "%s"
   container_definitions = <<DEFINITION
 [
   {
@@ -570,7 +810,7 @@ resource "aws_ecs_task_definition" "mongo" {
 DEFINITION
 }
 resource "aws_ecs_service" "mongo" {
-  name = "mongodb-%d"
+  name = "%s"
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
@@ -578,16 +818,235 @@ resource "aws_ecs_service" "mongo" {
 	  type = "distinctInstance"
   }
 }
-`, rInt, rInt)
+`, clusterName, tdName, svcName)
 }
 
-var testAccAWSEcsService_withIamRole = `
+func testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, assignPublicIP string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-east-1"
+}
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.10.0.0/16"
+}
+
+resource "aws_subnet" "main" {
+  count = 2
+  cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  vpc_id = "${aws_vpc.main.id}"
+}
+
+resource "aws_security_group" "allow_all_a" {
+  name        = "%s"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["${aws_vpc.main.cidr_block}"]
+  }
+}
+
+resource "aws_security_group" "allow_all_b" {
+  name        = "%s"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["${aws_vpc.main.cidr_block}"]
+  }
+}
+
 resource "aws_ecs_cluster" "main" {
-	name = "terraformecstest11"
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "%s"
+  network_mode = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu = "256"
+  memory = "512"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 512,
+    "name": "mongodb",
+    "networkMode": "awsvpc"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "main" {
+  name = "%s"
+  cluster = "${aws_ecs_cluster.main.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count = 1
+  launch_type = "FARGATE"
+  network_configuration {
+    security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
+    subnets = ["${aws_subnet.main.*.id}"]
+    assign_public_ip = %s
+  }
+}
+`, sg1Name, sg2Name, clusterName, tdName, svcName, assignPublicIP)
+}
+
+func testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName, roleName, policyName,
+	tgName, lbName, svcName string, healthCheckGracePeriodSeconds int) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.10.0.0/16"
+  tags {
+    Name = "%s"
+  }
+}
+
+resource "aws_subnet" "main" {
+  count = 2
+  cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  vpc_id = "${aws_vpc.main.id}"
+}
+
+resource "aws_ecs_cluster" "main" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "with_lb_changes" {
+  family = "%s"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "ghost:latest",
+    "memory": 512,
+    "name": "ghost",
+    "portMappings": [
+      {
+        "containerPort": 2368,
+        "hostPort": 8080
+      }
+    ]
+  }
+]
+DEFINITION
+}
+
+resource "aws_iam_role" "ecs_service" {
+  name = "%s"
+  assume_role_policy = <<EOF
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ecs.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "ecs_service" {
+  name = "%s"
+  role = "${aws_iam_role.ecs_service.name}"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:Describe*",
+        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+        "elasticloadbalancing:DeregisterTargets",
+        "elasticloadbalancing:Describe*",
+        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+        "elasticloadbalancing:RegisterTargets"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lb_target_group" "test" {
+  name = "%s"
+  port = 80
+  protocol = "HTTP"
+  vpc_id = "${aws_vpc.main.id}"
+}
+
+resource "aws_lb" "main" {
+  name            = "%s"
+  internal        = true
+  subnets         = ["${aws_subnet.main.*.id}"]
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = "${aws_lb.main.id}"
+  port = "80"
+  protocol = "HTTP"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type = "forward"
+  }
+}
+
+resource "aws_ecs_service" "with_alb" {
+  name = "%s"
+  cluster = "${aws_ecs_cluster.main.id}"
+  task_definition = "${aws_ecs_task_definition.with_lb_changes.arn}"
+  desired_count = 1
+  health_check_grace_period_seconds = %d
+  iam_role = "${aws_iam_role.ecs_service.name}"
+
+  load_balancer {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    container_name = "ghost"
+    container_port = "2368"
+  }
+
+  depends_on = [
+    "aws_iam_role_policy.ecs_service",
+    "aws_lb_listener.front_end"
+  ]
+}
+`, vpcNameTag, clusterName, tdName, roleName, policyName,
+		tgName, lbName, svcName, healthCheckGracePeriodSeconds)
+}
+
+func testAccAWSEcsService_withIamRole(clusterName, tdName, roleName, policyName, svcName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "main" {
+	name = "%s"
 }
 
 resource "aws_ecs_task_definition" "ghost" {
-  family = "ghost_service"
+  family = "%s"
   container_definitions = <<DEFINITION
 [
   {
@@ -608,7 +1067,7 @@ DEFINITION
 }
 
 resource "aws_iam_role" "ecs_service" {
-    name = "EcsService"
+    name = "%s"
     assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -625,7 +1084,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
-    name = "EcsService"
+    name = "%s"
     role = "${aws_iam_role.ecs_service.name}"
     policy = <<EOF
 {
@@ -659,7 +1118,7 @@ resource "aws_elb" "main" {
 }
 
 resource "aws_ecs_service" "ghost" {
-  name = "ghost"
+  name = "%s"
   cluster = "${aws_ecs_cluster.main.id}"
   task_definition = "${aws_ecs_task_definition.ghost.arn}"
   desired_count = 1
@@ -673,16 +1132,17 @@ resource "aws_ecs_service" "ghost" {
 
   depends_on = ["aws_iam_role_policy.ecs_service"]
 }
-`
+`, clusterName, tdName, roleName, policyName, svcName)
+}
 
-func testAccAWSEcsServiceWithDeploymentValues(rInt int) string {
+func testAccAWSEcsServiceWithDeploymentValues(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "terraformecstest-%d"
+	name = "%s"
 }
 
 resource "aws_ecs_task_definition" "mongo" {
-  family = "mongodb"
+  family = "%s"
   container_definitions = <<DEFINITION
 [
   {
@@ -697,33 +1157,36 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "mongodb-%d"
+  name = "%s"
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
 }
-`, rInt, rInt)
+`, clusterName, tdName, svcName)
 }
 
-var tpl_testAccAWSEcsService_withLbChanges = `
+func tpl_testAccAWSEcsService_withLbChanges(clusterName, tdName, image,
+	containerName string, containerPort, hostPort int, roleName, policyName string,
+	instancePort int, svcName string) string {
+	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "main" {
-	name = "terraformecstest12"
+	name = "%[1]s"
 }
 
 resource "aws_ecs_task_definition" "with_lb_changes" {
-  family = "ghost_lbd"
+  family = "%[2]s"
   container_definitions = <<DEFINITION
 [
   {
     "cpu": 128,
     "essential": true,
-    "image": "%s",
+    "image": "%[3]s",
     "memory": 128,
-    "name": "%s",
+    "name": "%[4]s",
     "portMappings": [
       {
-        "containerPort": %d,
-        "hostPort": %d
+        "containerPort": %[5]d,
+        "hostPort": %[6]d
       }
     ]
   }
@@ -732,7 +1195,7 @@ DEFINITION
 }
 
 resource "aws_iam_role" "ecs_service" {
-    name = "EcsServiceLbd"
+    name = "%[7]s"
     assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -749,7 +1212,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
-    name = "EcsServiceLbd"
+    name = "%[8]s"
     role = "${aws_iam_role.ecs_service.name}"
     policy = <<EOF
 {
@@ -775,7 +1238,7 @@ resource "aws_elb" "main" {
   availability_zones = ["us-west-2a"]
 
   listener {
-    instance_port = %d
+    instance_port = %[6]d
     instance_protocol = "http"
     lb_port = 80
     lb_protocol = "http"
@@ -783,7 +1246,7 @@ resource "aws_elb" "main" {
 }
 
 resource "aws_ecs_service" "with_lb_changes" {
-  name = "ghost"
+  name = "%[10]s"
   cluster = "${aws_ecs_cluster.main.id}"
   task_definition = "${aws_ecs_task_definition.with_lb_changes.arn}"
   desired_count = 1
@@ -791,22 +1254,26 @@ resource "aws_ecs_service" "with_lb_changes" {
 
   load_balancer {
     elb_name = "${aws_elb.main.id}"
-    container_name = "%s"
-    container_port = "%d"
+    container_name = "%[4]s"
+    container_port = "%[5]d"
   }
 
   depends_on = ["aws_iam_role_policy.ecs_service"]
 }
-`
+`, clusterName, tdName, image, containerName, containerPort, hostPort, roleName, policyName, instancePort, svcName)
+}
 
-var testAccAWSEcsService_withLbChanges = fmt.Sprintf(
-	tpl_testAccAWSEcsService_withLbChanges,
-	"ghost:latest", "ghost", 2368, 8080, 8080, "ghost", 2368)
-var testAccAWSEcsService_withLbChanges_modified = fmt.Sprintf(
-	tpl_testAccAWSEcsService_withLbChanges,
-	"nginx:latest", "nginx", 80, 8080, 8080, "nginx", 80)
+func testAccAWSEcsService_withLbChanges(clusterName, tdName, roleName, policyName, svcName string) string {
+	return tpl_testAccAWSEcsService_withLbChanges(
+		clusterName, tdName, "ghost:latest", "ghost", 2368, 8080, roleName, policyName, 2368, svcName)
+}
 
-func testAccAWSEcsServiceWithFamilyAndRevision(rName string) string {
+func testAccAWSEcsService_withLbChanges_modified(clusterName, tdName, roleName, policyName, svcName string) string {
+	return tpl_testAccAWSEcsService_withLbChanges(
+		clusterName, tdName, "nginx:latest", "nginx", 80, 8080, roleName, policyName, 80, svcName)
+}
+
+func testAccAWSEcsServiceWithFamilyAndRevision(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
 	name = "%s"
@@ -832,10 +1299,10 @@ resource "aws_ecs_service" "jenkins" {
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.jenkins.family}:${aws_ecs_task_definition.jenkins.revision}"
   desired_count = 1
-}`, rName, rName, rName)
+}`, clusterName, tdName, svcName)
 }
 
-func testAccAWSEcsServiceWithFamilyAndRevisionModified(rName string) string {
+func testAccAWSEcsServiceWithFamilyAndRevisionModified(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
 	name = "%s"
@@ -861,15 +1328,16 @@ resource "aws_ecs_service" "jenkins" {
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.jenkins.family}:${aws_ecs_task_definition.jenkins.revision}"
   desired_count = 1
-}`, rName, rName, rName)
+}`, clusterName, tdName, svcName)
 }
 
-var testAccAWSEcsServiceWithRenamedCluster = `
+func testAccAWSEcsServiceWithRenamedCluster(clusterName, tdName, svcName string) string {
+	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "terraformecstest3"
+	name = "%s"
 }
 resource "aws_ecs_task_definition" "ghost" {
-  family = "ghost"
+  family = "%s"
   container_definitions = <<DEFINITION
 [
   {
@@ -883,46 +1351,22 @@ resource "aws_ecs_task_definition" "ghost" {
 DEFINITION
 }
 resource "aws_ecs_service" "ghost" {
-  name = "ghost"
+  name = "%s"
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
   desired_count = 1
 }
-`
+`, clusterName, tdName, svcName)
+}
 
-var testAccAWSEcsServiceWithRenamedClusterModified = `
+func testAccAWSEcsServiceWithEcsClusterName(clusterName, tdName, svcName string) string {
+	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "terraformecstest3modified"
-}
-resource "aws_ecs_task_definition" "ghost" {
-  family = "ghost"
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 128,
-    "essential": true,
-    "image": "ghost:latest",
-    "memory": 128,
-    "name": "ghost"
-  }
-]
-DEFINITION
-}
-resource "aws_ecs_service" "ghost" {
-  name = "ghost"
-  cluster = "${aws_ecs_cluster.default.id}"
-  task_definition = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
-  desired_count = 1
-}
-`
-
-var testAccAWSEcsServiceWithEcsClusterName = `
-resource "aws_ecs_cluster" "default" {
-	name = "terraformecstestcluster"
+	name = "%s"
 }
 
 resource "aws_ecs_task_definition" "jenkins" {
-  family = "jenkins"
+  family = "%s"
   container_definitions = <<DEFINITION
 [
   {
@@ -937,14 +1381,15 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "jenkins" {
-  name = "jenkins"
+  name = "%s"
   cluster = "${aws_ecs_cluster.default.name}"
   task_definition = "${aws_ecs_task_definition.jenkins.arn}"
   desired_count = 1
 }
-`
+`, clusterName, tdName, svcName)
+}
 
-func testAccAWSEcsServiceWithAlb(rName string) string {
+func testAccAWSEcsServiceWithAlb(clusterName, tdName, roleName, policyName, tgName, lbName, svcName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
@@ -1072,5 +1517,92 @@ resource "aws_ecs_service" "with_alb" {
     "aws_lb_listener.front_end"
   ]
 }
-`, rName, rName, rName, rName, rName, rName, rName)
+`, clusterName, tdName, roleName, policyName, tgName, lbName, svcName)
+}
+
+func testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
+	return tpl_testAccAWSEcsServiceWithNetworkConfiguration(
+		sg1Name, sg2Name, clusterName, tdName, svcName,
+		`"${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"`,
+	)
+}
+func testAccAWSEcsServiceWithNetworkConfiguration_modified(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
+	return tpl_testAccAWSEcsServiceWithNetworkConfiguration(
+		sg1Name, sg2Name, clusterName, tdName, svcName,
+		`"${aws_security_group.allow_all_a.id}"`,
+	)
+}
+
+func tpl_testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName string, securityGroups string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.10.0.0/16"
+}
+
+resource "aws_subnet" "main" {
+  count = 2
+  cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  vpc_id = "${aws_vpc.main.id}"
+}
+
+resource "aws_security_group" "allow_all_a" {
+  name        = "%s"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+	ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["${aws_vpc.main.cidr_block}"]
+  }
+}
+
+resource "aws_security_group" "allow_all_b" {
+  name        = "%s"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+	ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["${aws_vpc.main.cidr_block}"]
+  }
+}
+
+resource "aws_ecs_cluster" "main" {
+	name = "%s"
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "%s"
+	network_mode = "awsvpc"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "main" {
+  name = "%s"
+  cluster = "${aws_ecs_cluster.main.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count = 1
+	network_configuration {
+		security_groups = [%s]
+		subnets = ["${aws_subnet.main.*.id}"]
+	}
+}
+`, sg1Name, sg2Name, clusterName, tdName, svcName, securityGroups)
 }

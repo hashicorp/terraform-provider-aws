@@ -6,7 +6,7 @@ description: |-
   Provides an network ACL Rule resource.
 ---
 
-# aws\_network\_acl\_rule
+# aws_network_acl_rule
 
 Creates an entry (a rule) in a network ACL with the specified rule number.
 

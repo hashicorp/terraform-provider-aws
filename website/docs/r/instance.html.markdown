@@ -6,7 +6,7 @@ description: |-
   Provides an EC2 instance resource. This allows instances to be created, updated, and deleted. Instances also support provisioning.
 ---
 
-# aws\_instance
+# aws_instance
 
 Provides an EC2 instance resource. This allows instances to be created, updated,
 and deleted. Instances also support [provisioning](/docs/provisioners/index.html).
@@ -234,6 +234,8 @@ The following attributes are exported:
 * `vpc_security_group_ids` - The associated security groups in non-default VPC
 * `subnet_id` - The VPC subnet ID.
 
+For any `root_block_device` and `ebs_block_device` the `volume_id` is exported.
+e.g. `aws_instance.web.root_block_device.0.volume_id`
 
 ## Import
 
