@@ -63,7 +63,7 @@ The following arguments are supported:
 #### Email Configuration
 
   * `reply_to_email_address` (Optional) - The REPLY-TO email address.
-  * `sns_caller_arn` (Optional) - The ARN of the email source.
+  * `source_arn` (Optional) - The ARN of the email source.
 
 #### Lambda Configuration
 
