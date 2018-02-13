@@ -970,12 +970,12 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	replication := replicationResponse.(*s3.GetBucketReplicationOutput)
 	if err != nil {
 		if awsError, ok := err.(awserr.RequestFailure); ok && awsError.StatusCode() != 404 {
 			return err
 		}
 	}
+	replication := replicationResponse.(*s3.GetBucketReplicationOutput)
 
 	log.Printf("[DEBUG] S3 Bucket: %s, read replication configuration: %v", d.Id(), replication)
 	if r := replication.ReplicationConfiguration; r != nil {
@@ -1019,10 +1019,10 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			},
 		)
 	})
-	location := locationResponse.(*s3.GetBucketLocationOutput)
 	if err != nil {
 		return err
 	}
+	location := locationResponse.(*s3.GetBucketLocationOutput)
 	var region string
 	if location.LocationConstraint != nil {
 		region = *location.LocationConstraint
@@ -1373,10 +1373,10 @@ func websiteEndpoint(s3conn *s3.S3, d *schema.ResourceData) (*S3Website, error) 
 			},
 		)
 	})
-	location := locationResponse.(*s3.GetBucketLocationOutput)
 	if err != nil {
 		return nil, err
 	}
+	location := locationResponse.(*s3.GetBucketLocationOutput)
 	var region string
 	if location.LocationConstraint != nil {
 		region = *location.LocationConstraint
