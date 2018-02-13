@@ -180,7 +180,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 							DiffSuppressFunc: suppressEquivalentJsonDiffs,
 							ValidateFunc:     validateJsonString,
 							StateFunc: func(v interface{}) string {
-								jsonString, _ := normalizeJsonString(v)
+								jsonString, _ := structure.NormalizeJsonString(v)
 								return jsonString
 							},
 						},
