@@ -97,7 +97,7 @@ The following arguments are supported:
 ### Event Selector Arguments
 For **event_selector** the following attributes are supported.
 
-* `read_write_type` (Optional) - Specify if you want your trail to log read-only events, write-only events, or all. By default, the value is All. You can specify only the following value: "ReadOnly", "WriteOnly", "All"
+* `read_write_type` (Optional) - Specify if you want your trail to log read-only events, write-only events, or all. By default, the value is All. You can specify only the following value: "ReadOnly", "WriteOnly", "All". Defaults to `All`.
 * `include_management_events` (Optional) - Specify if you want your event selector to include management events for your trail.
 * `data_resource` (Optional) - Specifies logging data events. Fields documented below.
 
