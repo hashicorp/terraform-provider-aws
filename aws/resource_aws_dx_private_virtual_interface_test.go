@@ -105,7 +105,7 @@ resource "aws_dx_private_virtual_interface" "foo" {
   address_family = "ipv4"
   bgp_asn        = 65352
 }
-    `, n, cid, n)
+`, n, cid, n)
 }
 
 func testAccDxPrivateVirtualInterfaceConfig_tags(cid, n string) string {
@@ -129,5 +129,5 @@ resource "aws_dx_private_virtual_interface" "foo" {
     Environment = "test"
   }
 }
-    `, n, cid, n)
+`, n, cid, n)
 }
