@@ -101,5 +101,5 @@ resource "aws_dx_hosted_public_virtual_interface" "foo" {
 	"175.45.176.0/22"
   ]
 }
-    `, cid, ownerAcctId, n)
+`, cid, ownerAcctId, n)
 }
