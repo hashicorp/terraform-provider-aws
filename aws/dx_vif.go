@@ -13,25 +13,75 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
+// Schemas common to all (public/private, hosted or not) virtual interfaces.
+var dxVirtualInterfaceSchemaWithTags = mergeSchemas(
+	dxVirtualInterfaceSchema,
+	map[string]*schema.Schema{
+		"tags": tagsSchema(),
+	},
+)
+var dxVirtualInterfaceSchema = map[string]*schema.Schema{
+	"arn": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
+	"connection_id": {
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+	},
+	"name": {
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+	},
+	"vlan": {
+		Type:         schema.TypeInt,
+		Required:     true,
+		ForceNew:     true,
+		ValidateFunc: validation.IntBetween(1, 4094),
+	},
+	"bgp_asn": {
+		Type:     schema.TypeInt,
+		Required: true,
+		ForceNew: true,
+	},
+	"bgp_auth_key": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+		ForceNew: true,
+	},
+	"address_family": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ForceNew:     true,
+		ValidateFunc: validation.StringInSlice([]string{directconnect.AddressFamilyIpv4, directconnect.AddressFamilyIpv6}, false),
+	},
+	"customer_address": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+		ForceNew: true,
+	},
+	"amazon_address": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+		ForceNew: true,
+	},
+}
+
 func isNoSuchDxVirtualInterfaceErr(err error) bool {
 	return isAWSErr(err, "DirectConnectClientException", "does not exist")
 }
 
-func dxVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) (*directconnect.VirtualInterface, error) {
-	conn := meta.(*AWSClient).dxconn
-
-	resp, state, err := dxVirtualInterfaceStateRefresh(conn, d.Id())()
+func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*directconnect.VirtualInterface, error) {
+	resp, state, err := dxVirtualInterfaceStateRefresh(conn, id)()
 	if err != nil {
 		return nil, fmt.Errorf("Error reading Direct Connect virtual interface: %s", err.Error())
 	}
-	terminalStates := map[string]bool{
-		directconnect.VirtualInterfaceStateDeleted:  true,
-		directconnect.VirtualInterfaceStateDeleting: true,
-		directconnect.VirtualInterfaceStateRejected: true,
-	}
-	if _, ok := terminalStates[state]; ok {
-		log.Printf("[WARN] Direct Connect virtual interface (%s) not found, removing from state", d.Id())
-		d.SetId("")
+	if state == directconnect.VirtualInterfaceStateDeleted {
 		return nil, nil
 	}
 
@@ -194,63 +244,4 @@ func flattenDxRouteFilterPrefixes(prefixes []*directconnect.RouteFilterPrefix) *
 		out = append(out, aws.StringValue(prefix.Cidr))
 	}
 	return schema.NewSet(schema.HashString, out)
-}
-
-// Schemas common to all (public/private, hosted or not) virtual interfaces.
-var dxVirtualInterfaceSchemaWithTags = mergeSchemas(
-	dxVirtualInterfaceSchema,
-	map[string]*schema.Schema{
-		"tags": tagsSchema(),
-	},
-)
-var dxVirtualInterfaceSchema = map[string]*schema.Schema{
-	"arn": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
-	"connection_id": {
-		Type:     schema.TypeString,
-		Required: true,
-		ForceNew: true,
-	},
-	"name": {
-		Type:     schema.TypeString,
-		Required: true,
-		ForceNew: true,
-	},
-	"vlan": {
-		Type:         schema.TypeInt,
-		Required:     true,
-		ForceNew:     true,
-		ValidateFunc: validation.IntBetween(1, 4094),
-	},
-	"bgp_asn": {
-		Type:     schema.TypeInt,
-		Required: true,
-		ForceNew: true,
-	},
-	"bgp_auth_key": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
-	},
-	"address_family": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		ValidateFunc: validation.StringInSlice([]string{directconnect.AddressFamilyIpv4, directconnect.AddressFamilyIpv6}, false),
-	},
-	"customer_address": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
-	},
-	"amazon_address": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
-	},
 }

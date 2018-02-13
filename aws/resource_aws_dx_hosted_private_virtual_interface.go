@@ -77,11 +77,15 @@ func resourceAwsDxHostedPrivateVirtualInterfaceCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsDxHostedPrivateVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	vif, err := dxVirtualInterfaceRead(d, meta)
+	conn := meta.(*AWSClient).dxconn
+
+	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
 	if err != nil {
 		return err
 	}
 	if vif == nil {
+		log.Printf("[WARN] Direct Connect virtual interface (%s) not found, removing from state", d.Id())
+		d.SetId("")
 		return nil
 	}
 
