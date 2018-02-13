@@ -80,9 +80,13 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"read_write_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"All", "ReadOnly", "WriteOnly"}, false),
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								cloudtrail.ReadWriteTypeAll,
+								cloudtrail.ReadWriteTypeReadOnly,
+								cloudtrail.ReadWriteTypeWriteOnly,
+							}, false),
 						},
 
 						"include_management_events": {
