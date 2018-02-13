@@ -364,7 +364,7 @@ const testAccInstanceDataSourceConfig_privateIP = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "testAccInstanceDataSourceConfig_privateIP"
+    Name = "terraform-testacc-instance-ds-private-ip"
   }
 }
 
@@ -421,7 +421,7 @@ const testAccInstanceDataSourceConfig_VPC = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "testAccInstanceDataSourceConfig_VPC"
+    Name = "terraform-testacc-instance-data-source-vpc"
   }
 }
 
@@ -451,7 +451,7 @@ func testAccInstanceDataSourceConfig_PlacementGroup(rStr string) string {
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "testAccInstanceDataSourceConfig_PlacementGroup_%s"
+    Name = "terraform-testacc-instance-data-source-placement-group"
   }
 }
 
@@ -480,7 +480,7 @@ resource "aws_instance" "foo" {
 data "aws_instance" "foo" {
   instance_id = "${aws_instance.foo.id}"
 }
-`, rStr, rStr)
+`, rStr)
 }
 
 func testAccInstanceDataSourceConfig_SecurityGroups(rInt int) string {
@@ -522,7 +522,7 @@ resource "aws_internet_gateway" "gw" {
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "tf-network-test"
+    Name = "terraform-testacc-instance-data-source-vpc-sgs"
   }
 }
 
