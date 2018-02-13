@@ -38,14 +38,11 @@ func testSweepDynamoDbTables(region string) error {
 
 	err = conn.ListTablesPages(&dynamodb.ListTablesInput{}, func(out *dynamodb.ListTablesOutput, lastPage bool) bool {
 		for _, tableName := range out.TableNames {
-			hasPrefix := false
 			for _, prefix := range prefixes {
-				if strings.HasPrefix(*tableName, prefix) {
-					hasPrefix = true
+				if !strings.HasPrefix(*tableName, prefix) {
+					log.Printf("[INFO] Skipping DynamoDB Table: %s", *tableName)
+					continue
 				}
-			}
-			if !hasPrefix {
-				continue
 			}
 			log.Printf("[INFO] Deleting DynamoDB Table: %s", *tableName)
 
