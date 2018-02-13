@@ -1293,10 +1293,10 @@ func (c *LexModelBuildingService) DeleteUtterancesRequest(input *DeleteUtterance
 //
 // Deletes stored utterances.
 //
-// Amazon Lex stores the utterances that users send to your bot unless the childDirected
-// field in the bot is set to true. Utterances are stored for 15 days for use
-// with the GetUtterancesView operation, and then stored indefinitely for use
-// in improving the ability of your bot to respond to user input.
+// Amazon Lex stores the utterances that users send to your bot. Utterances
+// are stored for 15 days for use with the GetUtterancesView operation, and
+// then stored indefinitely for use in improving the ability of your bot to
+// respond to user input.
 //
 // Use the DeleteStoredUtterances operation to manually delete stored utterances
 // for a specific user.
@@ -3565,13 +3565,10 @@ func (c *LexModelBuildingService) GetUtterancesViewRequest(input *GetUtterancesV
 // old version and the new so that you can compare the performance across the
 // two versions.
 //
-// Data is available for the last 15 days. You can request information for up
-// to 5 versions in each request. The response contains information about a
-// maximum of 100 utterances for each version.
-//
-// If the bot's childDirected field is set to true, utterances for the bot are
-// not stored and cannot be retrieved with the GetUtterancesView operation.
-// For more information, see PutBot.
+// Utterance statistics are generated once a day. Data is available for the
+// last 15 days. You can request information for up to 5 versions in each request.
+// The response contains information about a maximum of 100 utterances for each
+// version.
 //
 // This operation requires permissions for the lex:GetUtterancesView action.
 //
@@ -3660,10 +3657,11 @@ func (c *LexModelBuildingService) PutBotRequest(input *PutBotInput) (req *reques
 // PutBot API operation for Amazon Lex Model Building Service.
 //
 // Creates an Amazon Lex conversational bot or replaces an existing bot. When
-// you create or update a bot you are only required to specify a name. You can
-// use this to add intents later, or to remove intents from an existing bot.
-// When you create a bot with a name only, the bot is created or updated but
-// Amazon Lex returns the response FAILED. You can build the bot after you add one or more intents. For more information
+// you create or update a bot you are only required to specify a name, a locale,
+// and whether the bot is directed toward children under age 13. You can use
+// this to add intents later, or to remove intents from an existing bot. When
+// you create a bot with the minimum information, the bot is created or updated
+// but Amazon Lex returns the response FAILED. You can build the bot after you add one or more intents. For more information
 // about Amazon Lex bots, see how-it-works.
 //
 // If you specify the name of an existing bot, the fields in the request replace
@@ -8343,6 +8341,11 @@ type Message struct {
 	//
 	// ContentType is a required field
 	ContentType *string `locationName:"contentType" type:"string" required:"true" enum:"ContentType"`
+
+	// Identifies the message group that the message belongs to. When a group is
+	// assigned to a message, Amazon Lex returns one message from each group in
+	// the response.
+	GroupNumber *int64 `locationName:"groupNumber" min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -8367,6 +8370,9 @@ func (s *Message) Validate() error {
 	if s.ContentType == nil {
 		invalidParams.Add(request.NewErrParamRequired("ContentType"))
 	}
+	if s.GroupNumber != nil && *s.GroupNumber < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("GroupNumber", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8383,6 +8389,12 @@ func (s *Message) SetContent(v string) *Message {
 // SetContentType sets the ContentType field's value.
 func (s *Message) SetContentType(v string) *Message {
 	s.ContentType = &v
+	return s
+}
+
+// SetGroupNumber sets the GroupNumber field's value.
+func (s *Message) SetGroupNumber(v int64) *Message {
+	s.GroupNumber = &v
 	return s
 }
 
@@ -10135,6 +10147,9 @@ const (
 
 	// ChannelTypeTwilioSms is a ChannelType enum value
 	ChannelTypeTwilioSms = "Twilio-Sms"
+
+	// ChannelTypeKik is a ChannelType enum value
+	ChannelTypeKik = "Kik"
 )
 
 const (
@@ -10143,6 +10158,9 @@ const (
 
 	// ContentTypeSsml is a ContentType enum value
 	ContentTypeSsml = "SSML"
+
+	// ContentTypeCustomPayload is a ContentType enum value
+	ContentTypeCustomPayload = "CustomPayload"
 )
 
 const (
