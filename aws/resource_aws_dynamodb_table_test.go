@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -46,20 +45,7 @@ func testSweepDynamoDbTables(region string) error {
 			}
 			log.Printf("[INFO] Deleting DynamoDB Table: %s", *tableName)
 
-			input := &dynamodb.DeleteTableInput{
-				TableName: tableName,
-			}
-			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-				_, err := conn.DeleteTable(input)
-				if err != nil {
-					// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
-					if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
-						return resource.RetryableError(err)
-					}
-					return resource.NonRetryableError(err)
-				}
-				return nil
-			})
+			err := deleteAwsDynamoDbTable(*tableName, conn)
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete DynamoDB Table %s: %s", *tableName, err)
 				continue
