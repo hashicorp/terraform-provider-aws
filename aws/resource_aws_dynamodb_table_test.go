@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -13,6 +15,67 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_dynamodb_table", &resource.Sweeper{
+		Name: "aws_dynamodb_table",
+		F:    testSweepDynamoDbTables,
+	})
+}
+
+func testSweepDynamoDbTables(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).dynamodbconn
+
+	prefixes := []string{
+		"TerraformTest",
+		"tf-acc-test-",
+		"tf-autoscaled-table-",
+	}
+
+	err = conn.ListTablesPages(&dynamodb.ListTablesInput{}, func(out *dynamodb.ListTablesOutput, lastPage bool) bool {
+		for _, tableName := range out.TableNames {
+			hasPrefix := false
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(*tableName, prefix) {
+					hasPrefix = true
+				}
+			}
+			if !hasPrefix {
+				continue
+			}
+			log.Printf("[INFO] Deleting DynamoDB Table: %s", *tableName)
+
+			input := &dynamodb.DeleteTableInput{
+				TableName: tableName,
+			}
+			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+				_, err := conn.DeleteTable(input)
+				if err != nil {
+					// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
+					if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
+						return resource.RetryableError(err)
+					}
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete DynamoDB Table %s: %s", *tableName, err)
+				continue
+			}
+		}
+		return !lastPage
+	})
+	if err != nil {
+		return fmt.Errorf("Error retrieving DynamoDB Tables: %s", err)
+	}
+
+	return nil
+}
 
 func TestDiffDynamoDbGSI(t *testing.T) {
 	testCases := []struct {
