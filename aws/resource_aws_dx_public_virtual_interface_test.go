@@ -105,7 +105,7 @@ resource "aws_dx_public_virtual_interface" "foo" {
 	"175.45.176.0/22"
   ]
 }
-    `, cid, n)
+`, cid, n)
 }
 
 func testAccDxPublicVirtualInterfaceConfig_tags(cid, n string) string {
@@ -129,5 +129,5 @@ resource "aws_dx_public_virtual_interface" "foo" {
     Environment = "test"
   }
 }
-    `, cid, n)
+`, cid, n)
 }
