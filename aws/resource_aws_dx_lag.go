@@ -101,11 +101,8 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 	if d.Id() != aws.StringValue(lag.LagId) {
 		return fmt.Errorf("[ERROR] Direct Connect LAG (%s) not found", d.Id())
 	}
-	terminalStates := map[string]bool{
-		directconnect.LagStateDeleted:  true,
-		directconnect.LagStateDeleting: true,
-	}
-	if _, ok := terminalStates[aws.StringValue(lag.LagState)]; ok {
+
+	if aws.StringValue(lag.LagState) == directconnect.LagStateDeleted {
 		log.Printf("[WARN] Direct Connect LAG (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
