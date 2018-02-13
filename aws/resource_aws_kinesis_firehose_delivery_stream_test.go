@@ -964,11 +964,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     		}]
     	}]
     }],
-    s3_backup_mode = "Disabled",
-    s3_backup_configuration {
-      role_arn = "${aws_iam_role.firehose.arn}"
-      bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    }
+    s3_backup_mode = "Disabled"
   }
 }
 `
@@ -1064,8 +1060,12 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     }]
     buffer_size = 10
     buffer_interval = 400
-    compression_format = "GZIP",
+    compression_format = "GZIP"
     s3_backup_mode = "Enabled"
+    s3_backup_configuration {
+      role_arn = "${aws_iam_role.firehose.arn}"
+      bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    }
   }
 }
 `
