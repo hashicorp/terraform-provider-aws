@@ -31,7 +31,7 @@ func resourceAwsDaxCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

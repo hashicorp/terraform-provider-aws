@@ -2,7 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,6 +13,49 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_dax_cluster", &resource.Sweeper{
+		Name: "aws_dax_cluster",
+		F:    testSweepDAXClusters,
+	})
+}
+
+func testSweepDAXClusters(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).daxconn
+
+	resp, err := conn.DescribeClusters(&dax.DescribeClustersInput{})
+	if err != nil {
+		return fmt.Errorf("Error retrieving DAX clusters: %s", err)
+	}
+
+	if len(resp.Clusters) == 0 {
+		log.Print("[DEBUG] No DAX clusters to sweep")
+		return nil
+	}
+
+	log.Printf("[INFO] Found %d DAX clusters", len(resp.Clusters))
+
+	for _, cluster := range resp.Clusters {
+		if !strings.HasPrefix(*cluster.ClusterName, "tf-") {
+			continue
+		}
+
+		log.Printf("[INFO] Deleting DAX cluster %s", *cluster.ClusterName)
+		_, err := conn.DeleteCluster(&dax.DeleteClusterInput{
+			ClusterName: cluster.ClusterName,
+		})
+		if err != nil {
+			return fmt.Errorf("Error deleting DAX cluster %s: %s", *cluster.ClusterName, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSDAXCluster_basic(t *testing.T) {
 	var dc dax.Cluster
