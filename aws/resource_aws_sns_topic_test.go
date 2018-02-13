@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -278,15 +277,13 @@ func testAccCheckAWSSNSTopicDestroy(s *terraform.State) error {
 			TopicArn: aws.String(rs.Primary.ID),
 		}
 		_, err := conn.GetTopicAttributes(params)
-		if err == nil {
-			return fmt.Errorf("Topic exists when it should be destroyed!")
-		}
-
-		// Verify the error is an API error, not something else
-		_, ok := err.(awserr.Error)
-		if !ok {
+		if err != nil {
+			if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+				return nil
+			}
 			return err
 		}
+		return fmt.Errorf("Topic exists when it should be destroyed!")
 	}
 
 	return nil
