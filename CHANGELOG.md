@@ -19,6 +19,7 @@ BUG FIXES:
 
 * data-source/aws_elb_service_account: Correct GovCloud region [GH-3315]
 * resource/aws_acm_certificate_validation: Prevent crash on validation_record_fqdns [GH-3336]
+* resource/aws_dynamodb_table: Retry deletion on ResourceInUseException [GH-3355]
 * resource/aws_cloudtrail: Now respects initial `include_global_service_events = false` [GH-2817]
 * resource/aws_s3_bucket: Prevent crashes on location and replication read retry timeouts [GH-3338]
 
