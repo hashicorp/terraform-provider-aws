@@ -74,7 +74,6 @@ resource "aws_vpc_peering_connection" "foo" {
   peer_vpc_id   = "${aws_vpc.bar.id}"
   vpc_id        = "${aws_vpc.foo.id}"
   peer_region   = "us-east-1"
-  auto_accept   = true
 }
 
 resource "aws_vpc" "foo" {
@@ -137,8 +136,6 @@ The following attributes are exported:
 
 
 ## Notes
-
-AWS only supports VPC peering within the same AWS region.
 
 If both VPCs are not in the same AWS account do not enable the `auto_accept` attribute.
 The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource

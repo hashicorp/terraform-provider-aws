@@ -7,12 +7,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSIamGroupPolicyAttachment_basic(t *testing.T) {
+func TestAccAWSIAMGroupPolicyAttachment_basic(t *testing.T) {
 	var out iam.ListAttachedGroupPoliciesOutput
+
+	rString := acctest.RandString(8)
+	groupName := fmt.Sprintf("tf-acc-group-gpa-basic-%s", rString)
+	policyName := fmt.Sprintf("tf-acc-policy-gpa-basic-%s", rString)
+	policyName2 := fmt.Sprintf("tf-acc-policy-gpa-basic-2-%s", rString)
+	policyName3 := fmt.Sprintf("tf-acc-policy-gpa-basic-3-%s", rString)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -20,17 +27,17 @@ func TestAccAWSIamGroupPolicyAttachment_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGroupPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSGroupPolicyAttachConfig,
+				Config: testAccAWSGroupPolicyAttachConfig(groupName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGroupPolicyAttachmentExists("aws_iam_group_policy_attachment.test-attach", 1, &out),
-					testAccCheckAWSGroupPolicyAttachmentAttributes([]string{"test-policy"}, &out),
+					testAccCheckAWSGroupPolicyAttachmentAttributes([]string{policyName}, &out),
 				),
 			},
 			resource.TestStep{
-				Config: testAccAWSGroupPolicyAttachConfigUpdate,
+				Config: testAccAWSGroupPolicyAttachConfigUpdate(groupName, policyName, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGroupPolicyAttachmentExists("aws_iam_group_policy_attachment.test-attach", 2, &out),
-					testAccCheckAWSGroupPolicyAttachmentAttributes([]string{"test-policy2", "test-policy3"}, &out),
+					testAccCheckAWSGroupPolicyAttachmentAttributes([]string{policyName2, policyName3}, &out),
 				),
 			},
 		},
@@ -88,13 +95,14 @@ func testAccCheckAWSGroupPolicyAttachmentAttributes(policies []string, out *iam.
 	}
 }
 
-const testAccAWSGroupPolicyAttachConfig = `
+func testAccAWSGroupPolicyAttachConfig(groupName, policyName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
-    name = "test-group"
+    name = "%s"
 }
 
 resource "aws_iam_policy" "policy" {
-    name = "test-policy"
+    name = "%s"
     description = "A test policy"
     policy = <<EOF
 {
@@ -116,15 +124,17 @@ resource "aws_iam_group_policy_attachment" "test-attach" {
     group = "${aws_iam_group.group.name}"
     policy_arn = "${aws_iam_policy.policy.arn}"
 }
-`
+`, groupName, policyName)
+}
 
-const testAccAWSGroupPolicyAttachConfigUpdate = `
+func testAccAWSGroupPolicyAttachConfigUpdate(groupName, policyName, policyName2, policyName3 string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
-    name = "test-group"
+    name = "%s"
 }
 
 resource "aws_iam_policy" "policy" {
-    name = "test-policy"
+    name = "%s"
     description = "A test policy"
     policy = <<EOF
 {
@@ -143,7 +153,7 @@ EOF
 }
 
 resource "aws_iam_policy" "policy2" {
-    name = "test-policy2"
+    name = "%s"
     description = "A test policy"
     policy = <<EOF
 {
@@ -162,7 +172,7 @@ EOF
 }
 
 resource "aws_iam_policy" "policy3" {
-    name = "test-policy3"
+    name = "%s"
     description = "A test policy"
     policy = <<EOF
 {
@@ -189,4 +199,5 @@ resource "aws_iam_group_policy_attachment" "test-attach2" {
     group = "${aws_iam_group.group.name}"
     policy_arn = "${aws_iam_policy.policy3.arn}"
 }
-`
+`, groupName, policyName, policyName2, policyName3)
+}

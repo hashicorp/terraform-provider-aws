@@ -15,6 +15,23 @@ import (
 )
 
 func TestAccAWSSNSTopic_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_sns_topic.test_topic",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSSNSTopicConfig_withGeneratedName,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSNSTopic_name(t *testing.T) {
 	rName := acctest.RandString(10)
 
 	resource.Test(t, resource.TestCase{
@@ -24,9 +41,29 @@ func TestAccAWSSNSTopic_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSSNSTopicConfig(rName),
+				Config: testAccAWSSNSTopicConfig_withName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSNSTopic_namePrefix(t *testing.T) {
+	startsWithPrefix := regexp.MustCompile("^terraform-test-topic-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_sns_topic.test_topic",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSSNSTopicConfig_withNamePrefix(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
+					resource.TestMatchResourceAttr("aws_sns_topic.test_topic", "name", startsWithPrefix),
 				),
 			},
 		},
@@ -101,6 +138,37 @@ func TestAccAWSSNSTopic_withDeliveryPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
 					testAccCheckAWSNSTopicHasDeliveryPolicy("aws_sns_topic.test_topic", expectedPolicy),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSNSTopic_deliveryStatus(t *testing.T) {
+	rName := acctest.RandString(10)
+	arnRegex := regexp.MustCompile("^arn:aws:iam::[0-9]{12}:role/sns-delivery-status-role-")
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_sns_topic.test_topic",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSSNSTopicConfig_deliveryStatus(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
+					resource.TestMatchResourceAttr("aws_sns_topic.test_topic", "application_success_feedback_role_arn", arnRegex),
+					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "application_success_feedback_sample_rate", "100"),
+					resource.TestMatchResourceAttr("aws_sns_topic.test_topic", "application_failure_feedback_role_arn", arnRegex),
+					resource.TestMatchResourceAttr("aws_sns_topic.test_topic", "lambda_success_feedback_role_arn", arnRegex),
+					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "lambda_success_feedback_sample_rate", "90"),
+					resource.TestMatchResourceAttr("aws_sns_topic.test_topic", "lambda_failure_feedback_role_arn", arnRegex),
+					resource.TestMatchResourceAttr("aws_sns_topic.test_topic", "http_success_feedback_role_arn", arnRegex),
+					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "http_success_feedback_sample_rate", "80"),
+					resource.TestMatchResourceAttr("aws_sns_topic.test_topic", "http_failure_feedback_role_arn", arnRegex),
+					resource.TestMatchResourceAttr("aws_sns_topic.test_topic", "sqs_success_feedback_role_arn", arnRegex),
+					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "sqs_success_feedback_sample_rate", "70"),
+					resource.TestMatchResourceAttr("aws_sns_topic.test_topic", "sqs_failure_feedback_role_arn", arnRegex),
 				),
 			},
 		},
@@ -250,12 +318,24 @@ func testAccCheckAWSSNSTopicExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSSNSTopicConfig(r string) string {
+const testAccAWSSNSTopicConfig_withGeneratedName = `
+resource "aws_sns_topic" "test_topic" {}
+`
+
+func testAccAWSSNSTopicConfig_withName(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
     name = "terraform-test-topic-%s"
 }
 `, r)
+}
+
+func testAccAWSSNSTopicConfig_withNamePrefix() string {
+	return `
+resource "aws_sns_topic" "test_topic" {
+    name_prefix = "terraform-test-topic-"
+}
+`
 }
 
 func testAccAWSSNSTopicWithPolicy(r string) string {
@@ -378,4 +458,71 @@ resource "aws_sns_topic" "test_topic" {
 EOF
 }
 `, r)
+}
+
+func testAccAWSSNSTopicConfig_deliveryStatus(r string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test_topic" {
+  depends_on                               = ["aws_iam_role_policy.example"]
+  name                                     = "sns-delivery-status-topic-%s"
+  application_success_feedback_role_arn    = "${aws_iam_role.example.arn}"
+  application_success_feedback_sample_rate = 100
+  application_failure_feedback_role_arn    = "${aws_iam_role.example.arn}"
+  lambda_success_feedback_role_arn         = "${aws_iam_role.example.arn}"
+  lambda_success_feedback_sample_rate      = 90
+  lambda_failure_feedback_role_arn         = "${aws_iam_role.example.arn}"
+  http_success_feedback_role_arn           = "${aws_iam_role.example.arn}"
+  http_success_feedback_sample_rate        = 80
+  http_failure_feedback_role_arn           = "${aws_iam_role.example.arn}"
+  sqs_success_feedback_role_arn            = "${aws_iam_role.example.arn}"
+  sqs_success_feedback_sample_rate         = 70
+  sqs_failure_feedback_role_arn            = "${aws_iam_role.example.arn}"
+}
+
+resource "aws_iam_role" "example" {
+  name = "sns-delivery-status-role-%s"
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "sns.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "example" {
+  name = "sns-delivery-status-role-policy-%s"
+  role = "${aws_iam_role.example.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:PutMetricFilter",
+        "logs:PutRetentionPolicy"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+}
+`, r, r, r)
 }

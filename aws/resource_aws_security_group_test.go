@@ -506,7 +506,7 @@ func TestAccAWSSecurityGroup_forceRevokeRules_true(t *testing.T) {
 					testAddCycle,
 				),
 			},
-			// Verify the DependencyViolation error by using a configration with the
+			// Verify the DependencyViolation error by using a configuration with the
 			// groups removed. Terraform tries to destroy them but cannot. Expect a
 			// DependencyViolation error
 			{
@@ -579,7 +579,7 @@ func TestAccAWSSecurityGroup_forceRevokeRules_false(t *testing.T) {
 					testAddCycle,
 				),
 			},
-			// Verify the DependencyViolation error by using a configration with the
+			// Verify the DependencyViolation error by using a configuration with the
 			// groups removed, and the Groups not configured to revoke their ruls.
 			// Terraform tries to destroy them but cannot. Expect a
 			// DependencyViolation error

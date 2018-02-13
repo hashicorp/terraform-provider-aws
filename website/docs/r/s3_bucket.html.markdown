@@ -417,7 +417,7 @@ The `server_side_encryption_configuration` object supports the following:
 
 * `rule` - (required) A single object for server-side encryption by default configuration. (documented below)
 
-The 'rule' object supports the following:
+The `rule` object supports the following:
 
 * `apply_server_side_encryption_by_default` - (required) A single object for setting server-side encryption by default. (documented below)
 

@@ -259,7 +259,7 @@ func TestAccAWSLambdaFunction_encryptedEnvVariables(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSLambdaConfigEncryptedEnvVariablesModified(funcName, policyName, roleName, sgName),
+				Config: testAccAWSLambdaConfigEncryptedEnvVariablesModified(keyDesc, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
@@ -781,28 +781,7 @@ func TestAccAWSLambdaFunction_runtimeValidation_noRuntime(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSLambdaConfigNoRuntime(funcName, policyName, roleName, sgName),
-				ExpectError: regexp.MustCompile(`\\"runtime\\": required field is not set`),
-			},
-		},
-	})
-}
-
-func TestAccAWSLambdaFunction_runtimeValidation_nodeJs(t *testing.T) {
-	rString := acctest.RandString(8)
-
-	funcName := fmt.Sprintf("tf_acc_lambda_func_runtime_valid_nodejs_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_runtime_valid_nodejs_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_runtime_valid_nodejs_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_runtime_valid_nodejs_%s", rString)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSLambdaConfigNodeJsRuntime(funcName, policyName, roleName, sgName),
-				ExpectError: regexp.MustCompile(fmt.Sprintf("%s has reached end of life since October 2016 and has been deprecated in favor of %s", lambda.RuntimeNodejs, lambda.RuntimeNodejs43)),
+				ExpectError: regexp.MustCompile(`"runtime": required field is not set`),
 			},
 		},
 	})
@@ -1370,8 +1349,29 @@ resource "aws_lambda_function" "lambda_function_test" {
 `, keyDesc, funcName)
 }
 
-func testAccAWSLambdaConfigEncryptedEnvVariablesModified(funcName, policyName, roleName, sgName string) string {
+func testAccAWSLambdaConfigEncryptedEnvVariablesModified(keyDesc, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_kms_key" "foo" {
+    description = "%s"
+    policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
 resource "aws_lambda_function" "lambda_function_test" {
     filename = "test-fixtures/lambdatest.zip"
     function_name = "%s"
@@ -1384,7 +1384,7 @@ resource "aws_lambda_function" "lambda_function_test" {
         }
     }
 }
-`, funcName)
+`, keyDesc, funcName)
 }
 
 func testAccAWSLambdaConfigVersioned(funcName, policyName, roleName, sgName string) string {
@@ -1610,19 +1610,6 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
-}
-`, funcName)
-}
-
-func testAccAWSLambdaConfigNodeJsRuntime(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
-resource "aws_lambda_function" "lambda_function_test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs4.3"
 }
 `, funcName)
 }

@@ -173,6 +173,11 @@ func dataSourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+
+						"volume_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -197,6 +202,11 @@ func dataSourceAwsInstance() *schema.Resource {
 						},
 
 						"volume_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"volume_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

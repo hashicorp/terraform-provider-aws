@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -31,6 +32,27 @@ func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
+	ri := acctest.RandInt()
+	filterPolicy1 := `{"key1": ["val1"], "key2": ["val2"]}`
+	filterPolicy2 := `{"key3": ["val3"], "key4": ["val4"]}`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig_filterPolicy(ri, strconv.Quote(filterPolicy1)),
+				Check:  resource.TestCheckResourceAttr("aws_sns_topic_subscription.test_subscription", "filter_policy", filterPolicy1),
+			},
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig_filterPolicy(ri, strconv.Quote(filterPolicy2)),
+				Check:  resource.TestCheckResourceAttr("aws_sns_topic_subscription.test_subscription", "filter_policy", filterPolicy2),
+			},
+		},
+	})
+}
 func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 	ri := acctest.RandInt()
 
@@ -155,6 +177,25 @@ resource "aws_sns_topic_subscription" "test_subscription" {
     endpoint = "${aws_sqs_queue.test_queue.arn}"
 }
 `, i, i)
+}
+
+func testAccAWSSNSTopicSubscriptionConfig_filterPolicy(i int, policy string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test_topic" {
+    name = "terraform-test-topic-%d"
+}
+
+resource "aws_sqs_queue" "test_queue" {
+	name = "terraform-subscription-test-queue-%d"
+}
+
+resource "aws_sns_topic_subscription" "test_subscription" {
+    topic_arn = "${aws_sns_topic.test_topic.arn}"
+    protocol = "sqs"
+    endpoint = "${aws_sqs_queue.test_queue.arn}"
+    filter_policy = %s
+  }
+`, i, i, policy)
 }
 
 func testAccAWSSNSTopicSubscriptionConfig_autoConfirmingEndpoint(i int) string {

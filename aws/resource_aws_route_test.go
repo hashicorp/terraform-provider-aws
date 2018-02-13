@@ -106,6 +106,46 @@ func TestAccAWSRoute_ipv6ToInternetGateway(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_ipv6ToInstance(t *testing.T) {
+	var route ec2.Route
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigIpv6Instance,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists("aws_route.internal-default-route-ipv6", &route),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute_ipv6ToNetworkInterface(t *testing.T) {
+	var route ec2.Route
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigIpv6NetworkInterface,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists("aws_route.internal-default-route-ipv6", &route),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute_ipv6ToPeeringConnection(t *testing.T) {
 	var route ec2.Route
 
@@ -350,6 +390,187 @@ resource "aws_route" "igw" {
   route_table_id = "${aws_route_table.external.id}"
   destination_ipv6_cidr_block = "::/0"
   gateway_id = "${aws_internet_gateway.foo.id}"
+}
+
+`)
+
+var testAccAWSRouteConfigIpv6NetworkInterface = fmt.Sprintf(`
+resource "aws_vpc" "examplevpc" {
+  cidr_block = "10.100.0.0/16"
+  enable_dns_hostnames = true
+  assign_generated_ipv6_cidr_block = true
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_internet_gateway" "internet" {
+  vpc_id = "${aws_vpc.examplevpc.id}"
+}
+
+resource "aws_route" "igw" {
+  route_table_id = "${aws_vpc.examplevpc.main_route_table_id}"
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id = "${aws_internet_gateway.internet.id}"
+}
+
+resource "aws_route" "igw-ipv6" {
+  route_table_id = "${aws_vpc.examplevpc.main_route_table_id}"
+  destination_ipv6_cidr_block = "::/0"
+  gateway_id = "${aws_internet_gateway.internet.id}"
+}
+
+resource "aws_subnet" "router-network" {
+  cidr_block = "10.100.1.0/24"
+  vpc_id = "${aws_vpc.examplevpc.id}"
+  ipv6_cidr_block = "${cidrsubnet(aws_vpc.examplevpc.ipv6_cidr_block, 8, 1)}"
+  assign_ipv6_address_on_creation = true
+  map_public_ip_on_launch = true
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+}
+
+resource "aws_subnet" "client-network" {
+  cidr_block = "10.100.10.0/24"
+  vpc_id = "${aws_vpc.examplevpc.id}"
+  ipv6_cidr_block = "${cidrsubnet(aws_vpc.examplevpc.ipv6_cidr_block, 8, 2)}"
+  assign_ipv6_address_on_creation = true
+  map_public_ip_on_launch = false
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+}
+
+resource "aws_route_table" "client-routes" {
+  vpc_id = "${aws_vpc.examplevpc.id}"
+}
+
+resource "aws_route_table_association" "client-routes" {
+  route_table_id = "${aws_route_table.client-routes.id}"
+  subnet_id = "${aws_subnet.client-network.id}"
+}
+
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  filter {
+      name   = "name"
+      values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
+  }
+  filter {
+      name   = "virtualization-type"
+      values = ["hvm"]
+  }
+  owners = ["099720109477"]
+}
+
+resource "aws_instance" "test-router" {
+  ami = "${data.aws_ami.ubuntu.image_id}"
+  instance_type = "t2.small"
+  subnet_id = "${aws_subnet.router-network.id}"
+}
+
+resource "aws_network_interface" "router-internal" {
+  subnet_id = "${aws_subnet.client-network.id}"
+  source_dest_check = false
+}
+
+resource "aws_network_interface_attachment" "router-internal" {
+  device_index = 1
+  instance_id = "${aws_instance.test-router.id}"
+  network_interface_id = "${aws_network_interface.router-internal.id}"
+}
+
+resource "aws_route" "internal-default-route" {
+  route_table_id = "${aws_route_table.client-routes.id}"
+  destination_cidr_block = "0.0.0.0/0"
+  network_interface_id = "${aws_network_interface.router-internal.id}"
+}
+
+resource "aws_route" "internal-default-route-ipv6" {
+  route_table_id = "${aws_route_table.client-routes.id}"
+  destination_ipv6_cidr_block = "::/0"
+  network_interface_id = "${aws_network_interface.router-internal.id}"
+}
+
+`)
+
+var testAccAWSRouteConfigIpv6Instance = fmt.Sprintf(`
+resource "aws_vpc" "examplevpc" {
+  cidr_block = "10.100.0.0/16"
+  enable_dns_hostnames = true
+  assign_generated_ipv6_cidr_block = true
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_internet_gateway" "internet" {
+  vpc_id = "${aws_vpc.examplevpc.id}"
+}
+
+resource "aws_route" "igw" {
+  route_table_id = "${aws_vpc.examplevpc.main_route_table_id}"
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id = "${aws_internet_gateway.internet.id}"
+}
+
+resource "aws_route" "igw-ipv6" {
+  route_table_id = "${aws_vpc.examplevpc.main_route_table_id}"
+  destination_ipv6_cidr_block = "::/0"
+  gateway_id = "${aws_internet_gateway.internet.id}"
+}
+
+resource "aws_subnet" "router-network" {
+  cidr_block = "10.100.1.0/24"
+  vpc_id = "${aws_vpc.examplevpc.id}"
+  ipv6_cidr_block = "${cidrsubnet(aws_vpc.examplevpc.ipv6_cidr_block, 8, 1)}"
+  assign_ipv6_address_on_creation = true
+  map_public_ip_on_launch = true
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+}
+
+resource "aws_subnet" "client-network" {
+  cidr_block = "10.100.10.0/24"
+  vpc_id = "${aws_vpc.examplevpc.id}"
+  ipv6_cidr_block = "${cidrsubnet(aws_vpc.examplevpc.ipv6_cidr_block, 8, 2)}"
+  assign_ipv6_address_on_creation = true
+  map_public_ip_on_launch = false
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+}
+
+resource "aws_route_table" "client-routes" {
+  vpc_id = "${aws_vpc.examplevpc.id}"
+}
+
+resource "aws_route_table_association" "client-routes" {
+  route_table_id = "${aws_route_table.client-routes.id}"
+  subnet_id = "${aws_subnet.client-network.id}"
+}
+
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  filter {
+      name   = "name"
+      values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
+  }
+  filter {
+      name   = "virtualization-type"
+      values = ["hvm"]
+  }
+  owners = ["099720109477"]
+}
+
+resource "aws_instance" "test-router" {
+  ami = "${data.aws_ami.ubuntu.image_id}"
+  instance_type = "t2.small"
+  subnet_id = "${aws_subnet.router-network.id}"
+}
+
+resource "aws_route" "internal-default-route" {
+  route_table_id = "${aws_route_table.client-routes.id}"
+  destination_cidr_block = "0.0.0.0/0"
+  instance_id = "${aws_instance.test-router.id}"
+}
+
+resource "aws_route" "internal-default-route-ipv6" {
+  route_table_id = "${aws_route_table.client-routes.id}"
+  destination_ipv6_cidr_block = "::/0"
+  instance_id = "${aws_instance.test-router.id}"
 }
 
 `)
