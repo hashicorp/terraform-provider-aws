@@ -31,6 +31,9 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-eni-data-source-basic"
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -53,7 +56,7 @@ resource "aws_network_interface" "test" {
 data "aws_network_interface" "test" {
   id = "${aws_network_interface.test.id}"
 }
-    `, rName)
+`, rName)
 }
 
 func TestAccDataSourceAwsNetworkInterface_filters(t *testing.T) {
@@ -79,6 +82,9 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-eni-data-source-filters"
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -104,5 +110,5 @@ data "aws_network_interface" "test" {
     values = ["${aws_network_interface.test.id}"]
   }
 }
-    `, rName)
+`, rName)
 }
