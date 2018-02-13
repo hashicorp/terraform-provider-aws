@@ -235,7 +235,7 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 	rString := acctest.RandString(8)
 
-	vpcNameTag := fmt.Sprintf("tf-acc-vpc-svc-w-hcgps-%s", rString)
+	vpcNameTag := "terraform-testacc-ecs-service-health-check-grace-period"
 	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-hcgps-%s", rString)
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-hcgps-%s", rString)
 	roleName := fmt.Sprintf("tf-acc-role-svc-w-hcgps-%s", rString)
@@ -830,6 +830,9 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
+  tags {
+  	Name = "terraform-testacc-ecs-service-with-launch-type-fargate"
+  }
 }
 
 resource "aws_subnet" "main" {
@@ -1396,7 +1399,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
 	tags {
-		Name = "TestAccAWSEcsService_withAlb"
+		Name = "terraform-testacc-ecs-service-with-alb"
 	}
 }
 
@@ -1539,6 +1542,9 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
+  tags {
+  	Name = "terraform-testacc-ecs-service-with-network-config"
+  }
 }
 
 resource "aws_subnet" "main" {

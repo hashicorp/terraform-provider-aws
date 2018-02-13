@@ -213,7 +213,7 @@ const testAccAWSEIPAssociationConfig = `
 resource "aws_vpc" "main" {
 	cidr_block = "192.168.0.0/24"
 	tags {
-		Name = "testAccAWSEIPAssociationConfig"
+		Name = "terraform-testacc-eip-association"
 	}
 }
 resource "aws_subnet" "sub" {
@@ -265,7 +265,7 @@ const testAccAWSEIPAssociationConfigDisappears = `
 resource "aws_vpc" "main" {
 	cidr_block = "192.168.0.0/24"
 	tags {
-		Name = "testAccAWSEIPAssociationConfigDisappears"
+		Name = "terraform-testacc-eip-association-disappears"
 	}
 }
 resource "aws_subnet" "sub" {

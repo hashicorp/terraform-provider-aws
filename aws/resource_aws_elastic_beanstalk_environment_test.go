@@ -917,7 +917,7 @@ func testAccBeanstalkEnv_VPC(name string, rInt int) string {
 resource "aws_vpc" "tf_b_test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccBeanstalkEnv_VPC"
+		Name = "terraform-testacc-elastic-beanstalk-env-vpc"
 	}
 }
 
