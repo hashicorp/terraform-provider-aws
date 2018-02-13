@@ -73,35 +73,35 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validateArn,
 			},
-			"event_selector": &schema.Schema{
+			"event_selector": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"read_write_type": &schema.Schema{
+						"read_write_type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"All", "ReadOnly", "WriteOnly"}, false),
 						},
 
-						"include_management_events": &schema.Schema{
+						"include_management_events": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 						},
 
-						"data_resource": &schema.Schema{
+						"data_resource": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": &schema.Schema{
+									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice([]string{"AWS::S3::Object", "AWS::Lambda::Function"}, false),
 									},
-									"values": &schema.Schema{
+									"values": {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 250,
