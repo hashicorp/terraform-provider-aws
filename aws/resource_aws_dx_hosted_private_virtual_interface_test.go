@@ -94,5 +94,5 @@ resource "aws_dx_hosted_private_virtual_interface" "foo" {
   address_family = "ipv4"
   bgp_asn        = 65352
 }
-    `, cid, ownerAcctId, n)
+`, cid, ownerAcctId, n)
 }
