@@ -13,6 +13,65 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
+// Schemas common to all (public/private, hosted or not) virtual interfaces.
+var dxVirtualInterfaceSchemaWithTags = mergeSchemas(
+	dxVirtualInterfaceSchema,
+	map[string]*schema.Schema{
+		"tags": tagsSchema(),
+	},
+)
+var dxVirtualInterfaceSchema = map[string]*schema.Schema{
+	"arn": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
+	"connection_id": {
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+	},
+	"name": {
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+	},
+	"vlan": {
+		Type:         schema.TypeInt,
+		Required:     true,
+		ForceNew:     true,
+		ValidateFunc: validation.IntBetween(1, 4094),
+	},
+	"bgp_asn": {
+		Type:     schema.TypeInt,
+		Required: true,
+		ForceNew: true,
+	},
+	"bgp_auth_key": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+		ForceNew: true,
+	},
+	"address_family": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ForceNew:     true,
+		ValidateFunc: validation.StringInSlice([]string{directconnect.AddressFamilyIpv4, directconnect.AddressFamilyIpv6}, false),
+	},
+	"customer_address": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+		ForceNew: true,
+	},
+	"amazon_address": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+		ForceNew: true,
+	},
+}
+
 func isNoSuchDxVirtualInterfaceErr(err error) bool {
 	return isAWSErr(err, "DirectConnectClientException", "does not exist")
 }
@@ -194,63 +253,4 @@ func flattenDxRouteFilterPrefixes(prefixes []*directconnect.RouteFilterPrefix) *
 		out = append(out, aws.StringValue(prefix.Cidr))
 	}
 	return schema.NewSet(schema.HashString, out)
-}
-
-// Schemas common to all (public/private, hosted or not) virtual interfaces.
-var dxVirtualInterfaceSchemaWithTags = mergeSchemas(
-	dxVirtualInterfaceSchema,
-	map[string]*schema.Schema{
-		"tags": tagsSchema(),
-	},
-)
-var dxVirtualInterfaceSchema = map[string]*schema.Schema{
-	"arn": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
-	"connection_id": {
-		Type:     schema.TypeString,
-		Required: true,
-		ForceNew: true,
-	},
-	"name": {
-		Type:     schema.TypeString,
-		Required: true,
-		ForceNew: true,
-	},
-	"vlan": {
-		Type:         schema.TypeInt,
-		Required:     true,
-		ForceNew:     true,
-		ValidateFunc: validation.IntBetween(1, 4094),
-	},
-	"bgp_asn": {
-		Type:     schema.TypeInt,
-		Required: true,
-		ForceNew: true,
-	},
-	"bgp_auth_key": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
-	},
-	"address_family": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		ValidateFunc: validation.StringInSlice([]string{directconnect.AddressFamilyIpv4, directconnect.AddressFamilyIpv6}, false),
-	},
-	"customer_address": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
-	},
-	"amazon_address": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
-	},
 }
