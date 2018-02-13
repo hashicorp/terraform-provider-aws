@@ -280,6 +280,9 @@ resource "aws_security_group" "hoge" {
 resource "aws_vpc" "hoge" {
   cidr_block           = "168.31.0.0/16"
   enable_dns_hostnames = true
+  tags {
+    Name = "terraform-testacc-appautoscaling-scheduled-action-emr"
+  }
 }
 
 resource "aws_subnet" "hoge" {
