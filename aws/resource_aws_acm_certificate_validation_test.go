@@ -36,8 +36,13 @@ func TestAccAwsAcmCertificateValidation_basic(t *testing.T) {
 			},
 			// Test that validation fails if given validation_fqdns don't match
 			resource.TestStep{
-				Config:      testAccAcmCertificateValidation_validationRecordFqdns(domain, `"some-wrong-fqdn.example.com"`),
+				Config:      testAccAcmCertificateValidation_validationRecordFqdns(domain, acm.ValidationMethodDns, `"some-wrong-fqdn.example.com"`),
 				ExpectError: regexp.MustCompile("Certificate needs .* to be set but only .* was passed to validation_record_fqdns"),
+			},
+			// Test that validation fails if not DNS validation
+			resource.TestStep{
+				Config:      testAccAcmCertificateValidation_validationRecordFqdns(domain, acm.ValidationMethodEmail, `"some-wrong-fqdn.example.com"`),
+				ExpectError: regexp.MustCompile("validation_record_fqdns is only valid for DNS validation"),
 			},
 			// Test that validation succeeds once we provide the right DNS validation records
 			resource.TestStep{
@@ -69,7 +74,7 @@ resource "aws_acm_certificate_validation" "cert" {
 `, testAccAcmCertificateConfig(domainName, acm.ValidationMethodDns))
 }
 
-func testAccAcmCertificateValidation_validationRecordFqdns(domainName, validationRecordFqdns string) string {
+func testAccAcmCertificateValidation_validationRecordFqdns(domainName, validationMethod, validationRecordFqdns string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -80,7 +85,7 @@ resource "aws_acm_certificate_validation" "cert" {
     create = "20s"
   }
 }
-`, testAccAcmCertificateConfig(domainName, acm.ValidationMethodDns), validationRecordFqdns)
+`, testAccAcmCertificateConfig(domainName, validationMethod), validationRecordFqdns)
 }
 
 func testAccAcmCertificateValidation_withRoute53Records(rootZoneDomain, domainName, subjectAlternativeNames string) string {

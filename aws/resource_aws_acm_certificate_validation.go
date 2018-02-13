@@ -59,7 +59,7 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 	}
 
 	if validation_record_fqdns, ok := d.GetOk("validation_record_fqdns"); ok {
-		err := resourceAwsAcmCertificateCheckValidationRecords(validation_record_fqdns.(*schema.Set).List(), resp.Certificate)
+		err := resourceAwsAcmCertificateCheckValidationRecords(validation_record_fqdns.(*schema.Set).List(), resp.Certificate, acmconn)
 		if err != nil {
 			return err
 		}
@@ -83,11 +83,38 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 	})
 }
 
-func resourceAwsAcmCertificateCheckValidationRecords(validation_record_fqdns []interface{}, cert *acm.CertificateDetail) error {
+func resourceAwsAcmCertificateCheckValidationRecords(validation_record_fqdns []interface{}, cert *acm.CertificateDetail, conn *acm.ACM) error {
 	expected_fqdns := make([]string, len(cert.DomainValidationOptions))
+
+	if len(cert.DomainValidationOptions) == 0 {
+		input := &acm.DescribeCertificateInput{
+			CertificateArn: cert.CertificateArn,
+		}
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			log.Printf("[DEBUG] Certificate domain validation options empty for %q, retrying", cert.CertificateArn)
+			output, err := conn.DescribeCertificate(input)
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			if len(output.Certificate.DomainValidationOptions) == 0 {
+				return resource.RetryableError(fmt.Errorf("Certificate domain validation options empty for %s", *cert.CertificateArn))
+			}
+			cert = output.Certificate
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
 	for i, v := range cert.DomainValidationOptions {
-		if *v.ValidationMethod == acm.ValidationMethodDns {
+		if v.ValidationMethod != nil {
+			if *v.ValidationMethod != acm.ValidationMethodDns {
+				return fmt.Errorf("validation_record_fqdns is only valid for DNS validation")
+			}
 			expected_fqdns[i] = strings.TrimSuffix(*v.ResourceRecord.Name, ".")
+		} else if len(v.ValidationEmails) > 0 {
+			// ACM API sometimes is not sending ValidationMethod for EMAIL validation
+			return fmt.Errorf("validation_record_fqdns is only valid for DNS validation")
 		}
 	}
 
