@@ -766,6 +766,7 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.bucket", "us-west-2", &providers),
 					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.destination", "eu-west-1", &providers),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "0"),
 				),
 			},
 			{
