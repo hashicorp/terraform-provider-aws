@@ -76,21 +76,12 @@ func isNoSuchDxVirtualInterfaceErr(err error) bool {
 	return isAWSErr(err, "DirectConnectClientException", "does not exist")
 }
 
-func dxVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) (*directconnect.VirtualInterface, error) {
-	conn := meta.(*AWSClient).dxconn
-
-	resp, state, err := dxVirtualInterfaceStateRefresh(conn, d.Id())()
+func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*directconnect.VirtualInterface, error) {
+	resp, state, err := dxVirtualInterfaceStateRefresh(conn, id)()
 	if err != nil {
 		return nil, fmt.Errorf("Error reading Direct Connect virtual interface: %s", err.Error())
 	}
-	terminalStates := map[string]bool{
-		directconnect.VirtualInterfaceStateDeleted:  true,
-		directconnect.VirtualInterfaceStateDeleting: true,
-		directconnect.VirtualInterfaceStateRejected: true,
-	}
-	if _, ok := terminalStates[state]; ok {
-		log.Printf("[WARN] Direct Connect virtual interface (%s) not found, removing from state", d.Id())
-		d.SetId("")
+	if state == directconnect.VirtualInterfaceStateDeleted {
 		return nil, nil
 	}
 
