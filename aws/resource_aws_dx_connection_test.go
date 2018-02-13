@@ -106,7 +106,7 @@ resource "aws_dx_connection" "hoge" {
   bandwidth = "1Gbps"
   location = "EqSe2"
 }
-    `, n)
+`, n)
 }
 
 func testAccDxConnectionConfig_tags(n string) string {
@@ -121,7 +121,7 @@ resource "aws_dx_connection" "hoge" {
     Usage = "original"
   }
 }
-    `, n)
+`, n)
 }
 
 func testAccDxConnectionConfig_tagsChanged(n string) string {
@@ -135,5 +135,5 @@ resource "aws_dx_connection" "hoge" {
     Usage = "changed"
   }
 }
-    `, n)
+`, n)
 }

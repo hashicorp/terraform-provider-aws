@@ -130,7 +130,7 @@ resource "aws_dx_lag" "hoge" {
   number_of_connections = 2
   force_destroy = true
 }
-    `, n)
+`, n)
 }
 
 func testAccDxLagConfig_tags(n string) string {
@@ -147,7 +147,7 @@ resource "aws_dx_lag" "hoge" {
     Usage = "original"
   }
 }
-    `, n)
+`, n)
 }
 
 func testAccDxLagConfig_tagsChanged(n string) string {
@@ -163,5 +163,5 @@ resource "aws_dx_lag" "hoge" {
     Usage = "changed"
   }
 }
-    `, n)
+`, n)
 }
