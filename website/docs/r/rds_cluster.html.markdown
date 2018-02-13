@@ -31,7 +31,22 @@ for more information.
 
 ## Example Usage
 
-### Aurora with Default engine (MySQL)
+### Aurora MySQL 2.x (MySQL 5.7)
+
+```hcl
+resource "aws_rds_cluster" "default" {
+  cluster_identifier      = "aurora-cluster-demo"
+  engine                  = "aurora-mysql"
+  availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name           = "mydb"
+  master_username         = "foo"
+  master_password         = "bar"
+  backup_retention_period = 5
+  preferred_backup_window = "07:00-09:00"
+}
+```
+
+### Aurora MySQL 1.x (MySQL 5.6)
 
 ```hcl
 resource "aws_rds_cluster" "default" {
@@ -127,6 +142,7 @@ load-balanced across replicas
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted
 * `preferred_backup_window` - The daily time range during which the backups happen
 * `replication_source_identifier` - ARN  of the source DB cluster if this DB cluster is created as a Read Replica.
+* `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
 [2]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Aurora.html

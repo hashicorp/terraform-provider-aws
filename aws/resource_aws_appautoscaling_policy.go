@@ -49,16 +49,14 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 				Required: true,
 			},
 			"scalable_dimension": &schema.Schema{
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAppautoscalingScalableDimension,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"service_namespace": &schema.Schema{
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAppautoscalingServiceNamespace,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"step_scaling_policy_configuration": {
 				Type:     schema.TypeList,
@@ -212,9 +210,8 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"predefined_metric_type": &schema.Schema{
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateAppautoscalingPredefinedMetricSpecification,
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"resource_label": &schema.Schema{
 										Type:         schema.TypeString,
@@ -567,8 +564,10 @@ func getAwsAppautoscalingPolicy(d *schema.ResourceData, meta interface{}) (*appl
 	conn := meta.(*AWSClient).appautoscalingconn
 
 	params := applicationautoscaling.DescribeScalingPoliciesInput{
-		PolicyNames:      []*string{aws.String(d.Get("name").(string))},
-		ServiceNamespace: aws.String(d.Get("service_namespace").(string)),
+		PolicyNames:       []*string{aws.String(d.Get("name").(string))},
+		ResourceId:        aws.String(d.Get("resource_id").(string)),
+		ScalableDimension: aws.String(d.Get("scalable_dimension").(string)),
+		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
 	}
 
 	log.Printf("[DEBUG] Application AutoScaling Policy Describe Params: %#v", params)
@@ -576,17 +575,11 @@ func getAwsAppautoscalingPolicy(d *schema.ResourceData, meta interface{}) (*appl
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving scaling policies: %s", err)
 	}
-
-	// find scaling policy
-	name := d.Get("name").(string)
-	dimension := d.Get("scalable_dimension").(string)
-	for idx, sp := range resp.ScalingPolicies {
-		if *sp.PolicyName == name && *sp.ScalableDimension == dimension {
-			return resp.ScalingPolicies[idx], nil
-		}
+	if len(resp.ScalingPolicies) == 0 {
+		return nil, nil
 	}
 
-	return nil, nil
+	return resp.ScalingPolicies[0], nil
 }
 
 func expandStepScalingPolicyConfiguration(cfg []interface{}) *applicationautoscaling.StepScalingPolicyConfiguration {

@@ -99,7 +99,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 	if v, ok := d.GetOk("cloud_watch_logs_role_arn"); ok {
 		input.CloudWatchLogsRoleArn = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("include_global_service_events"); ok {
+	if v, ok := d.GetOkExists("include_global_service_events"); ok {
 		input.IncludeGlobalServiceEvents = aws.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("is_multi_region_trail"); ok {

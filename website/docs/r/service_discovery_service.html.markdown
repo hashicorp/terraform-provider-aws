@@ -31,6 +31,7 @@ resource "aws_service_discovery_service" "example" {
       ttl = 10
       type = "A"
     }
+    routing_policy = "MULTIVALUE"
   }
 }
 ```
@@ -73,13 +74,14 @@ The following arguments are supported:
 
 * `namespace_id` - (Required, ForceNew) The ID of the namespace to use for DNS configuration.
 * `dns_records` - (Required) An array that contains one DnsRecord object for each resource record set.
+* `routing_policy` - (Optional) The routing policy that you want to apply to all records that Route 53 creates when you register an instance and specify the service. Valid Values: MULTIVALUE, WEIGHTED
 
 #### dns_records
 
 The following arguments are supported:
 
 * `ttl` - (Required) The amount of time, in seconds, that you want DNS resolvers to cache the settings for this resource record set.
-* `type` - (Required, ForceNew) The type of the resource, which indicates the value that Amazon Route 53 returns in response to DNS queries. Valid Values: A, AAAA, SRV
+* `type` - (Required, ForceNew) The type of the resource, which indicates the value that Amazon Route 53 returns in response to DNS queries. Valid Values: A, AAAA, SRV, CNAME
 
 ### health_check_config
 
@@ -95,3 +97,11 @@ The following attributes are exported:
 
 * `id` - The ID of the service.
 * `arn` - The ARN of the service.
+
+## Import
+
+Service Discovery Service can be imported using the service ID, e.g.
+
+```
+$ terraform import aws_service_discovery_service.example 0123456789
+```

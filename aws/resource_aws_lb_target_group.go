@@ -395,7 +395,7 @@ func validateAwsLbTargetGroupHealthCheckPath(v interface{}, k string) (ws []stri
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 1024 characters: %q", k, value))
 	}
-	if !strings.HasPrefix(value, "/") {
+	if len(value) > 0 && !strings.HasPrefix(value, "/") {
 		errors = append(errors, fmt.Errorf(
 			"%q must begin with a '/' character: %q", k, value))
 	}

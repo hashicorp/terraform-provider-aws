@@ -358,7 +358,7 @@ resource "aws_opsworks_custom_layer" "tf-acc" {
 func testAccAwsOpsworksCustomLayerConfigUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-layer3" {
-  name = "tf-ops-acc-layer3"
+  name = "tf-ops-acc-layer-%[1]s"
   ingress {
     from_port = 8
     to_port = -1
@@ -368,7 +368,7 @@ resource "aws_security_group" "tf-ops-acc-layer3" {
 }
 resource "aws_opsworks_custom_layer" "tf-acc" {
   stack_id = "${aws_opsworks_stack.tf-acc.id}"
-  name = "%s"
+  name = "%[1]s"
   short_name = "tf-ops-acc-custom-layer"
   auto_assign_public_ips = true
   custom_security_group_ids = [

@@ -2,7 +2,7 @@
 layout: "aws"
 page_title: "AWS: aws_dx_lag"
 sidebar_current: "docs-aws-resource-dx-lag"
-description: |-  
+description: |-
   Provides a Direct Connect LAG.
 ---
 
@@ -31,9 +31,11 @@ The following arguments are supported:
 * `location` - (Required) The AWS Direct Connect location in which the LAG should be allocated. See [DescribeLocations](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLocations.html) for the list of AWS Direct Connect locations. Use `locationCode`.
 * `number_of_connections` - (Required) The number of physical connections initially provisioned and bundled by the LAG.
 * `force_destroy` - (Optional, Default:false) A boolean that indicates all connections associated with the LAG should be deleted so that the LAG can be destroyed without error. These objects are *not* recoverable.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
 * `id` - The ID of the LAG.
+* `arn` - The ARN of the LAG.

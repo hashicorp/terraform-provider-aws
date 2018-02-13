@@ -17,6 +17,45 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func init() {
+	resource.AddTestSweepers("aws_redshift_cluster", &resource.Sweeper{
+		Name: "aws_redshift_cluster",
+		F:    testSweepRedshiftClusters,
+	})
+}
+
+func testSweepRedshiftClusters(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).redshiftconn
+
+	return conn.DescribeClustersPages(&redshift.DescribeClustersInput{}, func(resp *redshift.DescribeClustersOutput, isLast bool) bool {
+		if len(resp.Clusters) == 0 {
+			log.Print("[DEBUG] No Redshift clusters to sweep")
+			return false
+		}
+
+		for _, c := range resp.Clusters {
+			id := *c.ClusterIdentifier
+			if !strings.HasPrefix(id, "tf-redshift-cluster-") {
+				continue
+			}
+
+			_, err := deleteAwsRedshiftCluster(&redshift.DeleteClusterInput{
+				ClusterIdentifier:        c.ClusterIdentifier,
+				SkipFinalClusterSnapshot: aws.Bool(true),
+			}, conn)
+			if err != nil {
+				log.Printf("[ERROR] Failed deleting Redshift cluster (%s): %s",
+					*c.ClusterIdentifier, err)
+			}
+		}
+		return !isLast
+	})
+}
+
 func TestValidateRedshiftClusterDbName(t *testing.T) {
 	validNames := []string{
 		"testdbname",
