@@ -135,7 +135,6 @@ The following arguments are supported:
 
 * `name` - (Required) The environment variable's name or key.
 * `value` - (Required) The environment variable's value.
-* `type` - (Optional) The type of environment variable. Valid values: `PARAMETER_STORE`, `PLAINTEXT`.
 
 `source` supports the following:
 
