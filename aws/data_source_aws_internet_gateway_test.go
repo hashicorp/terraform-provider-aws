@@ -73,7 +73,7 @@ resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
 
   tags {
-    Name = "terraform-testacc-data-source-igw-vpc"
+    Name = "terraform-testacc-igw-data-source"
   }
 }
 

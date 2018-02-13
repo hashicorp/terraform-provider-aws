@@ -74,6 +74,21 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
 }
 ```
 
+### Preserve desired count when updating an autoscaled ECS Service
+
+```hcl
+resource "aws_ecs_service" "ecs_service" {
+  name = "serviceName"
+  cluster = "clusterName"
+  task_definition = "taskDefinitionFamily:1"
+  desired_count = 2
+
+  lifecycle {
+    ignore_changes = ["desired_count"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

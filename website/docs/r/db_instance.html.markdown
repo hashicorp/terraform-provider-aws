@@ -217,4 +217,6 @@ On Oracle instances the following is exported additionally:
 
 DB Instances can be imported using the `identifier`, e.g.
 
-``` $ terraform import aws_db_instance.default mydb-rds-instance ```
+```
+$ terraform import aws_db_instance.default mydb-rds-instance
+```

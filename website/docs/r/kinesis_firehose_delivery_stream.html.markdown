@@ -207,6 +207,30 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }
 ```
 
+
+### Splunk Destination
+
+```hcl
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  depends_on = ["aws_iam_role_policy.firehose"]
+  name = "terraform-kinesis-firehose-basicsplunktest-%d"
+  destination = "splunk"
+  s3_configuration {
+    role_arn = "${aws_iam_role.firehose.arn}"
+    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    buffer_size = 10
+    buffer_interval = 400
+    compression_format = "GZIP"
+  }
+  splunk_configuration {
+    hec_endpoint = "https://http-inputs-mydomain.splunkcloud.com:443"
+    hec_token = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
+    hec_acknowledgment_timeout = 600
+    hec_endpoint_type = "Event"
+    s3_backup_mode = "FailedEventsOnly"
+  }
+}
+```
 ~> **NOTE:** Kinesis Firehose is currently only supported in us-east-1, us-west-2 and eu-west-1.
 
 ## Argument Reference
@@ -271,6 +295,16 @@ The `elasticsearch_configuration` object supports the following:
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
 * `type_name` - (Required) The Elasticsearch type name with maximum length of 100 characters.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
+
+The `splunk_configuration` objects supports the following:
+
+* `hec_acknowledgment_timeout` - (Optional) The amount of time, in seconds between 180 and 600, that Kinesis Firehose waits to receive an acknowledgment from Splunk after it sends it data.
+* `hec_endpoint` - (Required) The HTTP Event Collector (HEC) endpoint to which Kinesis Firehose sends your data.
+* `hec_endpoint_type` - (Optional) The HEC endpoint type. Valid values are `Raw` or `Event`. The default value is `Raw`.
+* `hec_token` - The GUID that you obtain from your Splunk cluster when you create a new HEC endpoint.
+* `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
+* `retry_duration` - (Optional) After an initial failure to deliver to Amazon Elasticsearch, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
+* `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below.
 
 The `cloudwatch_logging_options` object supports the following:
 

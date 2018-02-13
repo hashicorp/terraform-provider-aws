@@ -10,6 +10,14 @@ func TestAccAWSGuardDuty(t *testing.T) {
 			"basic":  testAccAwsGuardDutyDetector_basic,
 			"import": testAccAwsGuardDutyDetector_import,
 		},
+		"IPSet": {
+			"basic":  testAccAwsGuardDutyIpset_basic,
+			"import": testAccAwsGuardDutyIpset_import,
+		},
+		"ThreatIntelSet": {
+			"basic":  testAccAwsGuardDutyThreatintelset_basic,
+			"import": testAccAwsGuardDutyThreatintelset_import,
+		},
 		"Member": {
 			"basic":  testAccAwsGuardDutyMember_basic,
 			"import": testAccAwsGuardDutyMember_import,

@@ -177,7 +177,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccDataSourceAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-lb-data-source-target-group-basic"
   }
 }
 
@@ -285,7 +285,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccDataSourceAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-lb-data-source-target-group-bc"
   }
 }
 

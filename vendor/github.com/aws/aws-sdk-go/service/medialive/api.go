@@ -522,6 +522,8 @@ func (c *MediaLive) DeleteInputSecurityGroupRequest(input *DeleteInputSecurityGr
 //
 //   * ErrCodeBadGatewayException "BadGatewayException"
 //
+//   * ErrCodeNotFoundException "NotFoundException"
+//
 //   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
@@ -1434,7 +1436,96 @@ func (c *MediaLive) StopChannelWithContext(ctx aws.Context, input *StopChannelIn
 	return out, req.Send()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AacSettings
+const opUpdateChannel = "UpdateChannel"
+
+// UpdateChannelRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateChannel operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateChannel for more information on using the UpdateChannel
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateChannelRequest method.
+//    req, resp := client.UpdateChannelRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateChannel
+func (c *MediaLive) UpdateChannelRequest(input *UpdateChannelInput) (req *request.Request, output *UpdateChannelOutput) {
+	op := &request.Operation{
+		Name:       opUpdateChannel,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/prod/channels/{channelId}",
+	}
+
+	if input == nil {
+		input = &UpdateChannelInput{}
+	}
+
+	output = &UpdateChannelOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateChannel API operation for AWS Elemental MediaLive.
+//
+// Updates a channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation UpdateChannel for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateChannel
+func (c *MediaLive) UpdateChannel(input *UpdateChannelInput) (*UpdateChannelOutput, error) {
+	req, out := c.UpdateChannelRequest(input)
+	return out, req.Send()
+}
+
+// UpdateChannelWithContext is the same as UpdateChannel with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateChannel for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) UpdateChannelWithContext(ctx aws.Context, input *UpdateChannelInput, opts ...request.Option) (*UpdateChannelOutput, error) {
+	req, out := c.UpdateChannelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 type AacSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -1542,7 +1633,6 @@ func (s *AacSettings) SetVbrQuality(v string) *AacSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Ac3Settings
 type Ac3Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -1626,7 +1716,6 @@ func (s *Ac3Settings) SetMetadataControl(v string) *Ac3Settings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ArchiveContainerSettings
 type ArchiveContainerSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -1649,7 +1738,6 @@ func (s *ArchiveContainerSettings) SetM2tsSettings(v *M2tsSettings) *ArchiveCont
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ArchiveGroupSettings
 type ArchiveGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -1685,7 +1773,6 @@ func (s *ArchiveGroupSettings) SetRolloverInterval(v int64) *ArchiveGroupSetting
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ArchiveOutputSettings
 type ArchiveOutputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -1729,7 +1816,6 @@ func (s *ArchiveOutputSettings) SetNameModifier(v string) *ArchiveOutputSettings
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AribDestinationSettings
 type AribDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -1744,7 +1830,6 @@ func (s AribDestinationSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AribSourceSettings
 type AribSourceSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -1759,7 +1844,6 @@ func (s AribSourceSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioChannelMapping
 type AudioChannelMapping struct {
 	_ struct{} `type:"structure"`
 
@@ -1793,7 +1877,6 @@ func (s *AudioChannelMapping) SetOutputChannel(v int64) *AudioChannelMapping {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioCodecSettings
 type AudioCodecSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -1848,7 +1931,6 @@ func (s *AudioCodecSettings) SetPassThroughSettings(v *PassThroughSettings) *Aud
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioDescription
 type AudioDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -1967,7 +2049,6 @@ func (s *AudioDescription) SetStreamName(v string) *AudioDescription {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioLanguageSelection
 type AudioLanguageSelection struct {
 	_ struct{} `type:"structure"`
 
@@ -2005,7 +2086,6 @@ func (s *AudioLanguageSelection) SetLanguageSelectionPolicy(v string) *AudioLang
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioNormalizationSettings
 type AudioNormalizationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2052,7 +2132,6 @@ func (s *AudioNormalizationSettings) SetTargetLkfs(v float64) *AudioNormalizatio
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioOnlyHlsSettings
 type AudioOnlyHlsSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2110,7 +2189,6 @@ func (s *AudioOnlyHlsSettings) SetAudioTrackType(v string) *AudioOnlyHlsSettings
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioPidSelection
 type AudioPidSelection struct {
 	_ struct{} `type:"structure"`
 
@@ -2134,7 +2212,6 @@ func (s *AudioPidSelection) SetPid(v int64) *AudioPidSelection {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioSelector
 type AudioSelector struct {
 	_ struct{} `type:"structure"`
 
@@ -2168,7 +2245,6 @@ func (s *AudioSelector) SetSelectorSettings(v *AudioSelectorSettings) *AudioSele
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioSelectorSettings
 type AudioSelectorSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2199,7 +2275,6 @@ func (s *AudioSelectorSettings) SetAudioPidSelection(v *AudioPidSelection) *Audi
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AvailBlanking
 type AvailBlanking struct {
 	_ struct{} `type:"structure"`
 
@@ -2234,7 +2309,6 @@ func (s *AvailBlanking) SetState(v string) *AvailBlanking {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AvailConfiguration
 type AvailConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -2258,7 +2332,6 @@ func (s *AvailConfiguration) SetAvailSettings(v *AvailSettings) *AvailConfigurat
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AvailSettings
 type AvailSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2289,7 +2362,6 @@ func (s *AvailSettings) SetScte35TimeSignalApos(v *Scte35TimeSignalApos) *AvailS
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/BlackoutSlate
 type BlackoutSlate struct {
 	_ struct{} `type:"structure"`
 
@@ -2357,7 +2429,6 @@ func (s *BlackoutSlate) SetState(v string) *BlackoutSlate {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/BurnInDestinationSettings
 type BurnInDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2569,7 +2640,6 @@ func (s *BurnInDestinationSettings) SetYPosition(v int64) *BurnInDestinationSett
 
 // Output groups for this Live Event. Output groups contain information about
 // where streams should be distributed.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CaptionDescription
 type CaptionDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -2633,7 +2703,6 @@ func (s *CaptionDescription) SetName(v string) *CaptionDescription {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CaptionDestinationSettings
 type CaptionDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2738,12 +2807,11 @@ func (s *CaptionDestinationSettings) SetWebvttDestinationSettings(v *WebvttDesti
 
 // Maps a caption channel to an ISO 693-2 language code (http://www.loc.gov/standards/iso639-2),
 // with an optional description.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CaptionLanguageMapping
 type CaptionLanguageMapping struct {
 	_ struct{} `type:"structure"`
 
-	// Channel to insert closed captions. Each channel mapping must have a unique
-	// channel number (maximum of 4)
+	// The closed caption channel being described by this CaptionLanguageMapping.
+	// Each channel mapping must have a unique channel number (maximum of 4)
 	CaptionChannel *int64 `locationName:"captionChannel" type:"integer"`
 
 	// Three character ISO 639-2 language code (see http://www.loc.gov/standards/iso639-2)
@@ -2783,7 +2851,6 @@ func (s *CaptionLanguageMapping) SetLanguageDescription(v string) *CaptionLangua
 
 // Output groups for this Live Event. Output groups contain information about
 // where streams should be distributed.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CaptionSelector
 type CaptionSelector struct {
 	_ struct{} `type:"structure"`
 
@@ -2828,7 +2895,6 @@ func (s *CaptionSelector) SetSelectorSettings(v *CaptionSelectorSettings) *Capti
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CaptionSelectorSettings
 type CaptionSelectorSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2891,7 +2957,6 @@ func (s *CaptionSelectorSettings) SetTeletextSourceSettings(v *TeletextSourceSet
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Channel
 type Channel struct {
 	_ struct{} `type:"structure"`
 
@@ -2913,6 +2978,8 @@ type Channel struct {
 
 	// List of input attachments for channel.
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
 
 	// The name of the channel. (user-mutable)
 	Name *string `locationName:"name" type:"string"`
@@ -2972,6 +3039,12 @@ func (s *Channel) SetInputAttachments(v []*InputAttachment) *Channel {
 	return s
 }
 
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *Channel) SetInputSpecification(v *InputSpecification) *Channel {
+	s.InputSpecification = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *Channel) SetName(v string) *Channel {
 	s.Name = &v
@@ -2996,7 +3069,6 @@ func (s *Channel) SetState(v string) *Channel {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ChannelEgressEndpoint
 type ChannelEgressEndpoint struct {
 	_ struct{} `type:"structure"`
 
@@ -3020,7 +3092,6 @@ func (s *ChannelEgressEndpoint) SetSourceIp(v string) *ChannelEgressEndpoint {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ChannelSummary
 type ChannelSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -3040,6 +3111,8 @@ type ChannelSummary struct {
 
 	// List of input attachments for channel.
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
 
 	// The name of the channel. (user-mutable)
 	Name *string `locationName:"name" type:"string"`
@@ -3093,6 +3166,12 @@ func (s *ChannelSummary) SetInputAttachments(v []*InputAttachment) *ChannelSumma
 	return s
 }
 
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *ChannelSummary) SetInputSpecification(v *InputSpecification) *ChannelSummary {
+	s.InputSpecification = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *ChannelSummary) SetName(v string) *ChannelSummary {
 	s.Name = &v
@@ -3117,7 +3196,6 @@ func (s *ChannelSummary) SetState(v string) *ChannelSummary {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateChannelRequest
 type CreateChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3127,11 +3205,13 @@ type CreateChannelInput struct {
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
 
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
 	Name *string `locationName:"name" type:"string"`
 
 	RequestId *string `locationName:"requestId" type:"string" idempotencyToken:"true"`
 
-	Reserved *string `locationName:"reserved" type:"string"`
+	Reserved *string `locationName:"reserved" deprecated:"true" type:"string"`
 
 	RoleArn *string `locationName:"roleArn" type:"string"`
 }
@@ -3164,6 +3244,12 @@ func (s *CreateChannelInput) SetInputAttachments(v []*InputAttachment) *CreateCh
 	return s
 }
 
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *CreateChannelInput) SetInputSpecification(v *InputSpecification) *CreateChannelInput {
+	s.InputSpecification = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *CreateChannelInput) SetName(v string) *CreateChannelInput {
 	s.Name = &v
@@ -3188,7 +3274,6 @@ func (s *CreateChannelInput) SetRoleArn(v string) *CreateChannelInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateChannelResponse
 type CreateChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3211,7 +3296,6 @@ func (s *CreateChannelOutput) SetChannel(v *Channel) *CreateChannelOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateInputRequest
 type CreateInputInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3274,7 +3358,6 @@ func (s *CreateInputInput) SetType(v string) *CreateInputInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateInputResponse
 type CreateInputOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3297,7 +3380,6 @@ func (s *CreateInputOutput) SetInput(v *Input) *CreateInputOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateInputSecurityGroupRequest
 type CreateInputSecurityGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3320,7 +3402,6 @@ func (s *CreateInputSecurityGroupInput) SetWhitelistRules(v []*InputWhitelistRul
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateInputSecurityGroupResponse
 type CreateInputSecurityGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3344,7 +3425,6 @@ func (s *CreateInputSecurityGroupOutput) SetSecurityGroup(v *InputSecurityGroup)
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteChannelRequest
 type DeleteChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3381,7 +3461,6 @@ func (s *DeleteChannelInput) SetChannelId(v string) *DeleteChannelInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteChannelResponse
 type DeleteChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3396,6 +3475,8 @@ type DeleteChannelOutput struct {
 	Id *string `locationName:"id" type:"string"`
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
 
 	Name *string `locationName:"name" type:"string"`
 
@@ -3452,6 +3533,12 @@ func (s *DeleteChannelOutput) SetInputAttachments(v []*InputAttachment) *DeleteC
 	return s
 }
 
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *DeleteChannelOutput) SetInputSpecification(v *InputSpecification) *DeleteChannelOutput {
+	s.InputSpecification = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *DeleteChannelOutput) SetName(v string) *DeleteChannelOutput {
 	s.Name = &v
@@ -3476,7 +3563,6 @@ func (s *DeleteChannelOutput) SetState(v string) *DeleteChannelOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteInputRequest
 type DeleteInputInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3513,7 +3599,6 @@ func (s *DeleteInputInput) SetInputId(v string) *DeleteInputInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteInputResponse
 type DeleteInputOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -3528,7 +3613,6 @@ func (s DeleteInputOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteInputSecurityGroupRequest
 type DeleteInputSecurityGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3565,7 +3649,6 @@ func (s *DeleteInputSecurityGroupInput) SetInputSecurityGroupId(v string) *Delet
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteInputSecurityGroupResponse
 type DeleteInputSecurityGroupOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -3580,7 +3663,6 @@ func (s DeleteInputSecurityGroupOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeChannelRequest
 type DescribeChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3617,7 +3699,6 @@ func (s *DescribeChannelInput) SetChannelId(v string) *DescribeChannelInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeChannelResponse
 type DescribeChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3632,6 +3713,8 @@ type DescribeChannelOutput struct {
 	Id *string `locationName:"id" type:"string"`
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
 
 	Name *string `locationName:"name" type:"string"`
 
@@ -3688,6 +3771,12 @@ func (s *DescribeChannelOutput) SetInputAttachments(v []*InputAttachment) *Descr
 	return s
 }
 
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *DescribeChannelOutput) SetInputSpecification(v *InputSpecification) *DescribeChannelOutput {
+	s.InputSpecification = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *DescribeChannelOutput) SetName(v string) *DescribeChannelOutput {
 	s.Name = &v
@@ -3712,7 +3801,6 @@ func (s *DescribeChannelOutput) SetState(v string) *DescribeChannelOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputRequest
 type DescribeInputInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3749,7 +3837,6 @@ func (s *DescribeInputInput) SetInputId(v string) *DescribeInputInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputResponse
 type DescribeInputOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3836,7 +3923,6 @@ func (s *DescribeInputOutput) SetType(v string) *DescribeInputOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputSecurityGroupRequest
 type DescribeInputSecurityGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3873,7 +3959,6 @@ func (s *DescribeInputSecurityGroupInput) SetInputSecurityGroupId(v string) *Des
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputSecurityGroupResponse
 type DescribeInputSecurityGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3913,7 +3998,6 @@ func (s *DescribeInputSecurityGroupOutput) SetWhitelistRules(v []*InputWhitelist
 }
 
 // DVB Network Information Table (NIT)
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DvbNitSettings
 type DvbNitSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -3958,7 +4042,6 @@ func (s *DvbNitSettings) SetRepInterval(v int64) *DvbNitSettings {
 }
 
 // DVB Service Description Table (SDT)
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DvbSdtSettings
 type DvbSdtSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -4017,7 +4100,6 @@ func (s *DvbSdtSettings) SetServiceProviderName(v string) *DvbSdtSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DvbSubDestinationSettings
 type DvbSubDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -4233,7 +4315,6 @@ func (s *DvbSubDestinationSettings) SetYPosition(v int64) *DvbSubDestinationSett
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DvbSubSourceSettings
 type DvbSubSourceSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -4260,7 +4341,6 @@ func (s *DvbSubSourceSettings) SetPid(v int64) *DvbSubSourceSettings {
 }
 
 // DVB Time and Date Table (SDT)
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DvbTdtSettings
 type DvbTdtSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -4285,7 +4365,6 @@ func (s *DvbTdtSettings) SetRepInterval(v int64) *DvbTdtSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Eac3Settings
 type Eac3Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -4493,7 +4572,6 @@ func (s *Eac3Settings) SetSurroundMode(v string) *Eac3Settings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/EmbeddedDestinationSettings
 type EmbeddedDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -4508,7 +4586,6 @@ func (s EmbeddedDestinationSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/EmbeddedPlusScte20DestinationSettings
 type EmbeddedPlusScte20DestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -4523,7 +4600,6 @@ func (s EmbeddedPlusScte20DestinationSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/EmbeddedSourceSettings
 type EmbeddedSourceSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -4578,7 +4654,6 @@ func (s *EmbeddedSourceSettings) SetSource608TrackNumber(v int64) *EmbeddedSourc
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/EncoderSettings
 type EncoderSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -4671,7 +4746,6 @@ func (s *EncoderSettings) SetVideoDescriptions(v []*VideoDescription) *EncoderSe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/FecOutputSettings
 type FecOutputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -4720,7 +4794,6 @@ func (s *FecOutputSettings) SetRowLength(v int64) *FecOutputSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/GlobalConfiguration
 type GlobalConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -4790,7 +4863,6 @@ func (s *GlobalConfiguration) SetSupportLowFramerateInputs(v string) *GlobalConf
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/H264Settings
 type H264Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -5159,7 +5231,6 @@ func (s *H264Settings) SetTimecodeInsertion(v string) *H264Settings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsAkamaiSettings
 type HlsAkamaiSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5241,7 +5312,6 @@ func (s *HlsAkamaiSettings) SetToken(v string) *HlsAkamaiSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsBasicPutSettings
 type HlsBasicPutSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5295,7 +5365,6 @@ func (s *HlsBasicPutSettings) SetRestartDelay(v int64) *HlsBasicPutSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsCdnSettings
 type HlsCdnSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5342,7 +5411,6 @@ func (s *HlsCdnSettings) SetHlsWebdavSettings(v *HlsWebdavSettings) *HlsCdnSetti
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsGroupSettings
 type HlsGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5402,9 +5470,9 @@ type HlsGroupSettings struct {
 	// Parameters that control interactions with the CDN.
 	HlsCdnSettings *HlsCdnSettings `locationName:"hlsCdnSettings" type:"structure"`
 
-	// Number of segments to keep in the playlist (.m3u8) file. mode must be "vod"
-	// for this setting to have an effect, and this number should be less than or
-	// equal to keepSegments.
+	// If mode is "live", the number of segments to retain in the manifest (.m3u8)
+	// file. This number must be less than or equal to keepSegments. If mode is
+	// "vod", this parameter has no effect.
 	IndexNSegments *int64 `locationName:"indexNSegments" type:"integer"`
 
 	// Parameter that control output group behavior on input loss.
@@ -5422,8 +5490,8 @@ type HlsGroupSettings struct {
 	// constantIv value.
 	IvSource *string `locationName:"ivSource" type:"string" enum:"HlsIvSource"`
 
-	// Number of segments to retain in the destination directory. mode must be "live"
-	// for this setting to have an effect.
+	// If mode is "live", the number of TS segments to retain in the destination
+	// directory. If mode is "vod", this parameter has no effect.
 	KeepSegments *int64 `locationName:"keepSegments" type:"integer"`
 
 	// The value specifies how the key is represented in the resource identified
@@ -5450,9 +5518,12 @@ type HlsGroupSettings struct {
 	// needed.
 	MinSegmentLength *int64 `locationName:"minSegmentLength" type:"integer"`
 
-	// If set to "vod", keeps and indexes all segments starting with the first segment.
-	// If set to "live" segments will age out and only the last keepSegments number
-	// of segments will be retained.
+	// If "vod", all segments are indexed and kept permanently in the destination
+	// and manifest. If "live", only the number segments specified in keepSegments
+	// and indexNSegments are kept; newer segments replace older segments, which
+	// may prevent players from rewinding all the way to the beginning of the event.VOD
+	// mode uses HLS EXT-X-PLAYLIST-TYPE of EVENT while the channel is running,
+	// converting it to a "VOD" type manifest on completion of the stream.
 	Mode *string `locationName:"mode" type:"string" enum:"HlsMode"`
 
 	// Generates the .m3u8 playlist file for this HLS output group. The segmentsOnly
@@ -5721,7 +5792,6 @@ func (s *HlsGroupSettings) SetTsFileMode(v string) *HlsGroupSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsInputSettings
 type HlsInputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5779,7 +5849,6 @@ func (s *HlsInputSettings) SetRetryInterval(v int64) *HlsInputSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsMediaStoreSettings
 type HlsMediaStoreSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5843,7 +5912,6 @@ func (s *HlsMediaStoreSettings) SetRestartDelay(v int64) *HlsMediaStoreSettings 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsOutputSettings
 type HlsOutputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5887,7 +5955,6 @@ func (s *HlsOutputSettings) SetSegmentModifier(v string) *HlsOutputSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsSettings
 type HlsSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5918,7 +5985,6 @@ func (s *HlsSettings) SetStandardHlsSettings(v *StandardHlsSettings) *HlsSetting
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsWebdavSettings
 type HlsWebdavSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5981,30 +6047,29 @@ func (s *HlsWebdavSettings) SetRestartDelay(v int64) *HlsWebdavSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Input
 type Input struct {
 	_ struct{} `type:"structure"`
 
-	// Unique ARN of input (generated, immutable)
+	// The Unique ARN of the input (generated, immutable).
 	Arn *string `locationName:"arn" type:"string"`
 
-	// List of channel IDs that that input is attached to (currently an input can
-	// only be attached to one channel)
+	// A list of channel IDs that that input is attached to (currently an input
+	// can only be attached to one channel).
 	AttachedChannels []*string `locationName:"attachedChannels" type:"list"`
 
-	// List of destinations of input (PULL-type)
+	// A list of the destinations of the input (PUSH-type).
 	Destinations []*InputDestination `locationName:"destinations" type:"list"`
 
-	// generated ID of input (unique for user account, immutable)
+	// The generated ID of the input (unique for user account, immutable).
 	Id *string `locationName:"id" type:"string"`
 
-	// user-assigned name (mutable)
+	// The user-assigned name (This is a mutable value).
 	Name *string `locationName:"name" type:"string"`
 
-	// List of IDs for all the security groups attached to the input.
+	// A list of IDs for all the security groups attached to the input.
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 
-	// List of sources of input (PULL-type)
+	// A list of the sources of the input (PULL-type).
 	Sources []*InputSource `locationName:"sources" type:"list"`
 
 	State *string `locationName:"state" type:"string" enum:"InputState"`
@@ -6076,7 +6141,6 @@ func (s *Input) SetType(v string) *Input {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputAttachment
 type InputAttachment struct {
 	_ struct{} `type:"structure"`
 
@@ -6109,7 +6173,6 @@ func (s *InputAttachment) SetInputSettings(v *InputSettings) *InputAttachment {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputChannelLevel
 type InputChannelLevel struct {
 	_ struct{} `type:"structure"`
 
@@ -6143,16 +6206,15 @@ func (s *InputChannelLevel) SetInputChannel(v int64) *InputChannelLevel {
 	return s
 }
 
-// Settings for a PUSH type input
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputDestination
+// The settings for a PUSH type input.
 type InputDestination struct {
 	_ struct{} `type:"structure"`
 
-	// system-generated static IP address of endpoint.Remains fixed for the lifetime
-	// of the input
+	// The system-generated static IP address of endpoint.It remains fixed for the
+	// lifetime of the input.
 	Ip *string `locationName:"ip" type:"string"`
 
-	// port for input
+	// The port number for the input.
 	Port *string `locationName:"port" type:"string"`
 
 	// This represents the endpoint that the customer stream will bepushed to.
@@ -6187,8 +6249,7 @@ func (s *InputDestination) SetUrl(v string) *InputDestination {
 	return s
 }
 
-// Endpoint settings for a PUSH type input
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputDestinationRequest
+// Endpoint settings for a PUSH type input.
 type InputDestinationRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -6212,7 +6273,6 @@ func (s *InputDestinationRequest) SetStreamName(v string) *InputDestinationReque
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputLocation
 type InputLocation struct {
 	_ struct{} `type:"structure"`
 
@@ -6259,7 +6319,6 @@ func (s *InputLocation) SetUsername(v string) *InputLocation {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputLossBehavior
 type InputLossBehavior struct {
 	_ struct{} `type:"structure"`
 
@@ -6328,7 +6387,6 @@ func (s *InputLossBehavior) SetRepeatFrameMsec(v int64) *InputLossBehavior {
 }
 
 // An Input Security Group
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputSecurityGroup
 type InputSecurityGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -6372,7 +6430,6 @@ func (s *InputSecurityGroup) SetWhitelistRules(v []*InputWhitelistRule) *InputSe
 
 // Live Event input parameters. There can be multiple inputs in a single Live
 // Event.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputSettings
 type InputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -6472,18 +6529,17 @@ func (s *InputSettings) SetVideoSelector(v *VideoSelector) *InputSettings {
 	return s
 }
 
-// Settings for a PULL type input
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputSource
+// The settings for a PULL type input.
 type InputSource struct {
 	_ struct{} `type:"structure"`
 
-	// key used to extract the password from EC2 Parameter store
+	// The key used to extract the password from EC2 Parameter store.
 	PasswordParam *string `locationName:"passwordParam" type:"string"`
 
 	// This represents the customer's source URL where stream ispulled from.
 	Url *string `locationName:"url" type:"string"`
 
-	// username for input source
+	// The username for the input source.
 	Username *string `locationName:"username" type:"string"`
 }
 
@@ -6515,18 +6571,17 @@ func (s *InputSource) SetUsername(v string) *InputSource {
 	return s
 }
 
-// Settings for for a PULL type input
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputSourceRequest
+// Settings for for a PULL type input.
 type InputSourceRequest struct {
 	_ struct{} `type:"structure"`
 
-	// key used to extract the password from EC2 Parameter store
+	// The key used to extract the password from EC2 Parameter store.
 	PasswordParam *string `locationName:"passwordParam" type:"string"`
 
 	// This represents the customer's source URL where stream ispulled from.
 	Url *string `locationName:"url" type:"string"`
 
-	// username for input source
+	// The username for the input source.
 	Username *string `locationName:"username" type:"string"`
 }
 
@@ -6558,8 +6613,48 @@ func (s *InputSourceRequest) SetUsername(v string) *InputSourceRequest {
 	return s
 }
 
+type InputSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// Input codec
+	Codec *string `locationName:"codec" type:"string" enum:"InputCodec"`
+
+	// Maximum input bitrate, categorized coarsely
+	MaximumBitrate *string `locationName:"maximumBitrate" type:"string" enum:"InputMaximumBitrate"`
+
+	// Input resolution, categorized coarsely
+	Resolution *string `locationName:"resolution" type:"string" enum:"InputResolution"`
+}
+
+// String returns the string representation
+func (s InputSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputSpecification) GoString() string {
+	return s.String()
+}
+
+// SetCodec sets the Codec field's value.
+func (s *InputSpecification) SetCodec(v string) *InputSpecification {
+	s.Codec = &v
+	return s
+}
+
+// SetMaximumBitrate sets the MaximumBitrate field's value.
+func (s *InputSpecification) SetMaximumBitrate(v string) *InputSpecification {
+	s.MaximumBitrate = &v
+	return s
+}
+
+// SetResolution sets the Resolution field's value.
+func (s *InputSpecification) SetResolution(v string) *InputSpecification {
+	s.Resolution = &v
+	return s
+}
+
 // Whitelist rule
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputWhitelistRule
 type InputWhitelistRule struct {
 	_ struct{} `type:"structure"`
 
@@ -6584,7 +6679,6 @@ func (s *InputWhitelistRule) SetCidr(v string) *InputWhitelistRule {
 }
 
 // An IPv4 CIDR to whitelist.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputWhitelistRuleCidr
 type InputWhitelistRuleCidr struct {
 	_ struct{} `type:"structure"`
 
@@ -6608,7 +6702,6 @@ func (s *InputWhitelistRuleCidr) SetCidr(v string) *InputWhitelistRuleCidr {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/KeyProviderSettings
 type KeyProviderSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -6631,7 +6724,6 @@ func (s *KeyProviderSettings) SetStaticKeySettings(v *StaticKeySettings) *KeyPro
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListChannelsRequest
 type ListChannelsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6675,7 +6767,6 @@ func (s *ListChannelsInput) SetNextToken(v string) *ListChannelsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListChannelsResponse
 type ListChannelsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6706,7 +6797,6 @@ func (s *ListChannelsOutput) SetNextToken(v string) *ListChannelsOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListInputSecurityGroupsRequest
 type ListInputSecurityGroupsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6750,7 +6840,6 @@ func (s *ListInputSecurityGroupsInput) SetNextToken(v string) *ListInputSecurity
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListInputSecurityGroupsResponse
 type ListInputSecurityGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6781,7 +6870,6 @@ func (s *ListInputSecurityGroupsOutput) SetNextToken(v string) *ListInputSecurit
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListInputsRequest
 type ListInputsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6825,7 +6913,6 @@ func (s *ListInputsInput) SetNextToken(v string) *ListInputsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListInputsResponse
 type ListInputsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6856,7 +6943,6 @@ func (s *ListInputsOutput) SetNextToken(v string) *ListInputsOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/M2tsSettings
 type M2tsSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -6955,9 +7041,7 @@ type M2tsSettings struct {
 	// EBP markers will be placed on only the video PID.
 	EbpPlacement *string `locationName:"ebpPlacement" type:"string" enum:"M2tsEbpPlacement"`
 
-	// Packet Identifier (PID) for ECM in the transport stream. Only enabled when
-	// Simulcrypt is enabled. Can be entered as a decimal or hexadecimal value.
-	// Valid values are 32 (or 0x20)..8182 (or 0x1ff6).
+	// This field is unused and deprecated.
 	EcmPid *string `locationName:"ecmPid" type:"string"`
 
 	// Include or exclude the ES Rate field in the PES header.
@@ -7371,7 +7455,6 @@ func (s *M2tsSettings) SetVideoPid(v string) *M2tsSettings {
 }
 
 // Settings information for the .m3u8 container
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/M3u8Settings
 type M3u8Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -7383,10 +7466,7 @@ type M3u8Settings struct {
 	// by comma separation. Can be entered as decimal or hexadecimal values.
 	AudioPids *string `locationName:"audioPids" type:"string"`
 
-	// ThePlatform-protected transport streams using 'microsoft' as Target Client
-	// include an ECM stream. This ECM stream contains the size, IV, and PTS of
-	// every sample in the transport stream. This stream PID is specified here.
-	// This PID has no effect on non ThePlatform-protected streams.
+	// This parameter is unused and deprecated.
 	EcmPid *string `locationName:"ecmPid" type:"string"`
 
 	// The number of milliseconds between instances of this table in the output
@@ -7537,7 +7617,6 @@ func (s *M3u8Settings) SetVideoPid(v string) *M3u8Settings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Mp2Settings
 type Mp2Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -7580,7 +7659,6 @@ func (s *Mp2Settings) SetSampleRate(v float64) *Mp2Settings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/MsSmoothGroupSettings
 type MsSmoothGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -7797,7 +7875,6 @@ func (s *MsSmoothGroupSettings) SetTimestampOffsetMode(v string) *MsSmoothGroupS
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/MsSmoothOutputSettings
 type MsSmoothOutputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -7824,7 +7901,6 @@ func (s *MsSmoothOutputSettings) SetNameModifier(v string) *MsSmoothOutputSettin
 
 // Network source to transcode. Must be accessible to the Elemental Live node
 // that is running the live event through a network connection.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/NetworkInputSettings
 type NetworkInputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -7863,7 +7939,6 @@ func (s *NetworkInputSettings) SetServerValidation(v string) *NetworkInputSettin
 }
 
 // Output settings. There can be multiple outputs within a group.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Output
 type Output struct {
 	_ struct{} `type:"structure"`
 
@@ -7923,7 +7998,6 @@ func (s *Output) SetVideoDescriptionName(v string) *Output {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/OutputDestination
 type OutputDestination struct {
 	_ struct{} `type:"structure"`
 
@@ -7956,7 +8030,6 @@ func (s *OutputDestination) SetSettings(v []*OutputDestinationSettings) *OutputD
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/OutputDestinationSettings
 type OutputDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8000,7 +8073,6 @@ func (s *OutputDestinationSettings) SetUsername(v string) *OutputDestinationSett
 
 // Output groups for this Live Event. Output groups contain information about
 // where streams should be distributed.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/OutputGroup
 type OutputGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -8042,7 +8114,6 @@ func (s *OutputGroup) SetOutputs(v []*Output) *OutputGroup {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/OutputGroupSettings
 type OutputGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8090,7 +8161,6 @@ func (s *OutputGroupSettings) SetUdpGroupSettings(v *UdpGroupSettings) *OutputGr
 }
 
 // Reference to an OutputDestination ID defined in the channel
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/OutputLocationRef
 type OutputLocationRef struct {
 	_ struct{} `type:"structure"`
 
@@ -8113,7 +8183,6 @@ func (s *OutputLocationRef) SetDestinationRefId(v string) *OutputLocationRef {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/OutputSettings
 type OutputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8160,7 +8229,6 @@ func (s *OutputSettings) SetUdpOutputSettings(v *UdpOutputSettings) *OutputSetti
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/PassThroughSettings
 type PassThroughSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -8175,7 +8243,6 @@ func (s PassThroughSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/RemixSettings
 type RemixSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8217,7 +8284,6 @@ func (s *RemixSettings) SetChannelsOut(v int64) *RemixSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Scte20PlusEmbeddedDestinationSettings
 type Scte20PlusEmbeddedDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -8232,7 +8298,6 @@ func (s Scte20PlusEmbeddedDestinationSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Scte20SourceSettings
 type Scte20SourceSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8268,7 +8333,6 @@ func (s *Scte20SourceSettings) SetSource608ChannelNumber(v int64) *Scte20SourceS
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Scte27DestinationSettings
 type Scte27DestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -8283,7 +8347,6 @@ func (s Scte27DestinationSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Scte27SourceSettings
 type Scte27SourceSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8313,7 +8376,6 @@ func (s *Scte27SourceSettings) SetPid(v int64) *Scte27SourceSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Scte35SpliceInsert
 type Scte35SpliceInsert struct {
 	_ struct{} `type:"structure"`
 
@@ -8359,7 +8421,6 @@ func (s *Scte35SpliceInsert) SetWebDeliveryAllowedFlag(v string) *Scte35SpliceIn
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Scte35TimeSignalApos
 type Scte35TimeSignalApos struct {
 	_ struct{} `type:"structure"`
 
@@ -8405,7 +8466,6 @@ func (s *Scte35TimeSignalApos) SetWebDeliveryAllowedFlag(v string) *Scte35TimeSi
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/SmpteTtDestinationSettings
 type SmpteTtDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -8420,7 +8480,6 @@ func (s SmpteTtDestinationSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StandardHlsSettings
 type StandardHlsSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8454,7 +8513,6 @@ func (s *StandardHlsSettings) SetM3u8Settings(v *M3u8Settings) *StandardHlsSetti
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StartChannelRequest
 type StartChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8491,7 +8549,6 @@ func (s *StartChannelInput) SetChannelId(v string) *StartChannelInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StartChannelResponse
 type StartChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8506,6 +8563,8 @@ type StartChannelOutput struct {
 	Id *string `locationName:"id" type:"string"`
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
 
 	Name *string `locationName:"name" type:"string"`
 
@@ -8562,6 +8621,12 @@ func (s *StartChannelOutput) SetInputAttachments(v []*InputAttachment) *StartCha
 	return s
 }
 
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *StartChannelOutput) SetInputSpecification(v *InputSpecification) *StartChannelOutput {
+	s.InputSpecification = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *StartChannelOutput) SetName(v string) *StartChannelOutput {
 	s.Name = &v
@@ -8586,7 +8651,6 @@ func (s *StartChannelOutput) SetState(v string) *StartChannelOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StaticKeySettings
 type StaticKeySettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8619,7 +8683,6 @@ func (s *StaticKeySettings) SetStaticKeyValue(v string) *StaticKeySettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StopChannelRequest
 type StopChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8656,7 +8719,6 @@ func (s *StopChannelInput) SetChannelId(v string) *StopChannelInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StopChannelResponse
 type StopChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8671,6 +8733,8 @@ type StopChannelOutput struct {
 	Id *string `locationName:"id" type:"string"`
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
 
 	Name *string `locationName:"name" type:"string"`
 
@@ -8727,6 +8791,12 @@ func (s *StopChannelOutput) SetInputAttachments(v []*InputAttachment) *StopChann
 	return s
 }
 
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *StopChannelOutput) SetInputSpecification(v *InputSpecification) *StopChannelOutput {
+	s.InputSpecification = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *StopChannelOutput) SetName(v string) *StopChannelOutput {
 	s.Name = &v
@@ -8751,7 +8821,6 @@ func (s *StopChannelOutput) SetState(v string) *StopChannelOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/TeletextDestinationSettings
 type TeletextDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -8766,7 +8835,6 @@ func (s TeletextDestinationSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/TeletextSourceSettings
 type TeletextSourceSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8792,7 +8860,6 @@ func (s *TeletextSourceSettings) SetPageNumber(v string) *TeletextSourceSettings
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/TimecodeConfig
 type TimecodeConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -8833,7 +8900,6 @@ func (s *TimecodeConfig) SetSyncThreshold(v int64) *TimecodeConfig {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/TtmlDestinationSettings
 type TtmlDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8859,7 +8925,6 @@ func (s *TtmlDestinationSettings) SetStyleControl(v string) *TtmlDestinationSett
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UdpContainerSettings
 type UdpContainerSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8882,7 +8947,6 @@ func (s *UdpContainerSettings) SetM2tsSettings(v *M2tsSettings) *UdpContainerSet
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UdpGroupSettings
 type UdpGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8930,7 +8994,6 @@ func (s *UdpGroupSettings) SetTimedMetadataId3Period(v int64) *UdpGroupSettings 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UdpOutputSettings
 type UdpOutputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8984,7 +9047,104 @@ func (s *UdpOutputSettings) SetFecOutputSettings(v *FecOutputSettings) *UdpOutpu
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ValidationError
+type UpdateChannelInput struct {
+	_ struct{} `type:"structure"`
+
+	// ChannelId is a required field
+	ChannelId *string `location:"uri" locationName:"channelId" type:"string" required:"true"`
+
+	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
+
+	EncoderSettings *EncoderSettings `locationName:"encoderSettings" type:"structure"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	RoleArn *string `locationName:"roleArn" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateChannelInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateChannelInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateChannelInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateChannelInput"}
+	if s.ChannelId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelId sets the ChannelId field's value.
+func (s *UpdateChannelInput) SetChannelId(v string) *UpdateChannelInput {
+	s.ChannelId = &v
+	return s
+}
+
+// SetDestinations sets the Destinations field's value.
+func (s *UpdateChannelInput) SetDestinations(v []*OutputDestination) *UpdateChannelInput {
+	s.Destinations = v
+	return s
+}
+
+// SetEncoderSettings sets the EncoderSettings field's value.
+func (s *UpdateChannelInput) SetEncoderSettings(v *EncoderSettings) *UpdateChannelInput {
+	s.EncoderSettings = v
+	return s
+}
+
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *UpdateChannelInput) SetInputSpecification(v *InputSpecification) *UpdateChannelInput {
+	s.InputSpecification = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateChannelInput) SetName(v string) *UpdateChannelInput {
+	s.Name = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *UpdateChannelInput) SetRoleArn(v string) *UpdateChannelInput {
+	s.RoleArn = &v
+	return s
+}
+
+type UpdateChannelOutput struct {
+	_ struct{} `type:"structure"`
+
+	Channel *Channel `locationName:"channel" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateChannelOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateChannelOutput) GoString() string {
+	return s.String()
+}
+
+// SetChannel sets the Channel field's value.
+func (s *UpdateChannelOutput) SetChannel(v *Channel) *UpdateChannelOutput {
+	s.Channel = v
+	return s
+}
+
 type ValidationError struct {
 	_ struct{} `type:"structure"`
 
@@ -9015,7 +9175,6 @@ func (s *ValidationError) SetErrorMessage(v string) *ValidationError {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/VideoCodecSettings
 type VideoCodecSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -9039,7 +9198,6 @@ func (s *VideoCodecSettings) SetH264Settings(v *H264Settings) *VideoCodecSetting
 }
 
 // Video settings for this stream.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/VideoDescription
 type VideoDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -9130,7 +9288,6 @@ func (s *VideoDescription) SetWidth(v int64) *VideoDescription {
 
 // Specifies a particular video stream within an input source. An input may
 // have only a single video selector.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/VideoSelector
 type VideoSelector struct {
 	_ struct{} `type:"structure"`
 
@@ -9180,7 +9337,6 @@ func (s *VideoSelector) SetSelectorSettings(v *VideoSelectorSettings) *VideoSele
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/VideoSelectorPid
 type VideoSelectorPid struct {
 	_ struct{} `type:"structure"`
 
@@ -9204,7 +9360,6 @@ func (s *VideoSelectorPid) SetPid(v int64) *VideoSelectorPid {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/VideoSelectorProgramId
 type VideoSelectorProgramId struct {
 	_ struct{} `type:"structure"`
 
@@ -9230,7 +9385,6 @@ func (s *VideoSelectorProgramId) SetProgramId(v int64) *VideoSelectorProgramId {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/VideoSelectorSettings
 type VideoSelectorSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -9261,7 +9415,6 @@ func (s *VideoSelectorSettings) SetVideoSelectorProgramId(v *VideoSelectorProgra
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/WebvttDestinationSettings
 type WebvttDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -10344,6 +10497,18 @@ const (
 	HlsWebdavHttpTransferModeNonChunked = "NON_CHUNKED"
 )
 
+// codec in increasing order of complexity
+const (
+	// InputCodecMpeg2 is a InputCodec enum value
+	InputCodecMpeg2 = "MPEG2"
+
+	// InputCodecAvc is a InputCodec enum value
+	InputCodecAvc = "AVC"
+
+	// InputCodecHevc is a InputCodec enum value
+	InputCodecHevc = "HEVC"
+)
+
 const (
 	// InputDeblockFilterDisabled is a InputDeblockFilter enum value
 	InputDeblockFilterDisabled = "DISABLED"
@@ -10404,6 +10569,32 @@ const (
 
 	// InputLossImageTypeSlate is a InputLossImageType enum value
 	InputLossImageTypeSlate = "SLATE"
+)
+
+// Maximum input bitrate in megabits per second. Bitrates up to 50 Mbps are
+// supported currently.
+const (
+	// InputMaximumBitrateMax10Mbps is a InputMaximumBitrate enum value
+	InputMaximumBitrateMax10Mbps = "MAX_10_MBPS"
+
+	// InputMaximumBitrateMax20Mbps is a InputMaximumBitrate enum value
+	InputMaximumBitrateMax20Mbps = "MAX_20_MBPS"
+
+	// InputMaximumBitrateMax50Mbps is a InputMaximumBitrate enum value
+	InputMaximumBitrateMax50Mbps = "MAX_50_MBPS"
+)
+
+// Input resolution based on lines of vertical resolution in the input; SD is
+// less than 720 lines, HD is 720 to 1080 lines, UHD is greater than 1080 lines
+const (
+	// InputResolutionSd is a InputResolution enum value
+	InputResolutionSd = "SD"
+
+	// InputResolutionHd is a InputResolution enum value
+	InputResolutionHd = "HD"
+
+	// InputResolutionUhd is a InputResolution enum value
+	InputResolutionUhd = "UHD"
 )
 
 const (
