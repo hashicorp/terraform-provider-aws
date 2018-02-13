@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
 )
 
 func resourceAwsEMRCluster() *schema.Resource {
@@ -176,8 +177,12 @@ func resourceAwsEMRCluster() *schema.Resource {
 						"autoscaling_policy": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+							DiffSuppressFunc: suppressEquivalentJsonDiffs,
 							ValidateFunc:     validateJsonString,
+							StateFunc: func(v interface{}) string {
+								jsonString, _ := normalizeJsonString(v)
+								return jsonString
+							},
 						},
 						"instance_role": {
 							Type:         schema.TypeString,
