@@ -9,6 +9,8 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_autoscaling_policy: Add support for `target_tracking_configuration` [GH-2611]
+* resource/aws_dx_connection: Add support for tagging [GH-2990]
+* resource/aws_dx_lag: Add support for tagging [GH-2990]
 * resource/aws_rds_cluster: Add `hosted_zone_id` attribute [GH-3267]
 * resource/aws_ssm_association: Allow updating `targets` [GH-2807]
 * resource/aws_service_discovery_service: Support routing policy and update the type of DNS record [GH-3273]
