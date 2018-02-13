@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -92,13 +91,13 @@ func resourceAwsAcmCertificateCheckValidationRecords(validation_record_fqdns []i
 			CertificateArn: cert.CertificateArn,
 		}
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			log.Printf("[DEBUG] Certificate domain validation options empty, retrying")
+			log.Printf("[DEBUG] Certificate domain validation options empty for %q, retrying", cert.CertificateArn)
 			output, err := conn.DescribeCertificate(input)
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}
 			if len(output.Certificate.DomainValidationOptions) == 0 {
-				return resource.RetryableError(errors.New("Certificate domain validation options empty"))
+				return resource.RetryableError(fmt.Errorf("Certificate domain validation options empty for %s", *cert.CertificateArn))
 			}
 			cert = output.Certificate
 			return nil
