@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -849,6 +850,16 @@ func flattenElastiCacheSecurityGroupIds(securityGroups []*elasticache.SecurityGr
 	for _, sg := range securityGroups {
 		if sg.SecurityGroupId != nil {
 			result = append(result, *sg.SecurityGroupId)
+		}
+	}
+	return result
+}
+
+func flattenDaxSecurityGroupIds(securityGroups []*dax.SecurityGroupMembership) []string {
+	result := make([]string, 0, len(securityGroups))
+	for _, sg := range securityGroups {
+		if sg.SecurityGroupIdentifier != nil {
+			result = append(result, *sg.SecurityGroupIdentifier)
 		}
 	}
 	return result
