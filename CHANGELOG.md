@@ -1,5 +1,9 @@
 ## 1.10.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_dx_lag: `number_of_connections` was deprecated and will be removed in future major version. Use `aws_dx_connection` and `aws_dx_connection_association` resources instead. Default connections will be removed as part of LAG creation automatically in future major version. [GH-3367]
+
 FEATURES:
 
 * **New Data Source:** `aws_inspector_rules_packages` [GH-3175]
@@ -24,6 +28,7 @@ BUG FIXES:
 * data-source/aws_elb_service_account: Correct GovCloud region [GH-3315]
 * resource/aws_acm_certificate_validation: Prevent crash on validation_record_fqdns [GH-3336]
 * resource/aws_dynamodb_table: Retry deletion on ResourceInUseException [GH-3355]
+* resource/aws_dx_lag: `number_of_connections` deprecated (made Optional). Omitting field may now prevent spurious diffs. [GH-3367]
 * resource/aws_elasticsearch_domain: Retry creation on `ValidationException` [GH-3375]
 * resource/aws_cloudtrail: Now respects initial `include_global_service_events = false` [GH-2817]
 * resource/aws_s3_bucket: Prevent crashes on location and replication read retry timeouts [GH-3338]
