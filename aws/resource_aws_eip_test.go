@@ -497,7 +497,7 @@ resource "aws_vpc" "default" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "default"
+    Name = "terraform-testacc-eip-instance-associated"
   }
 }
 
@@ -562,7 +562,7 @@ resource "aws_vpc" "default" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "default"
+    Name = "terraform-testacc-eip-instance-associated"
   }
 }
 
@@ -638,7 +638,7 @@ const testAccAWSEIPNetworkInterfaceConfig = `
 resource "aws_vpc" "bar" {
 	cidr_block = "10.0.0.0/24"
 	tags {
-		Name = "testAccAWSEIPNetworkInterfaceConfig"
+		Name = "terraform-testacc-eip-network-interface"
 	}
 }
 resource "aws_internet_gateway" "bar" {
@@ -665,7 +665,7 @@ const testAccAWSEIPMultiNetworkInterfaceConfig = `
 resource "aws_vpc" "bar" {
   cidr_block = "10.0.0.0/24"
 	tags {
-		Name = "testAccAWSEIPMultiNetworkInterfaceConfig"
+		Name = "terraform-testacc-eip-multi-network-interface"
 	}
 }
 
@@ -737,7 +737,7 @@ resource "aws_instance" "example" {
 resource "aws_vpc" "example" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "TestAccAWSEIP_classic_disassociate"
+		Name = "terraform-testacc-eip-classic-disassociate"
 	}
 }
 

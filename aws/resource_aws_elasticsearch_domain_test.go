@@ -660,6 +660,9 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
+  tags {
+    Name = "terraform-testacc-elasticsearch-domain-in-vpc"
+  }
 }
 
 resource "aws_subnet" "first" {
@@ -720,6 +723,9 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
+  tags {
+    Name = "terraform-testacc-elasticsearch-domain-in-vpc-update"
+  }
 }
 
 resource "aws_subnet" "az1_first" {
@@ -783,6 +789,9 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
+  tags {
+    Name = "terraform-testacc-elasticsearch-domain-internet-to-vpc-endpoint"
+  }
 }
 
 resource "aws_subnet" "first" {

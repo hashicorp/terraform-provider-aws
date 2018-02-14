@@ -615,7 +615,7 @@ resource "aws_vpc" "alb_test" {
   assign_generated_ipv6_cidr_block = true
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-with-ip-address-type-updated"
   }
 }
 
@@ -726,7 +726,7 @@ resource "aws_vpc" "alb_test" {
   assign_generated_ipv6_cidr_block = true
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-with-ip-address-type"
   }
 }
 
@@ -802,7 +802,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-basic"
   }
 }
 
@@ -848,7 +848,7 @@ func testAccAWSLBConfig_networkLoadbalancer_subnets(lbName string) string {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
+    Name = "terraform-testacc-lb-network-load-balancer-subnets"
   }
 }
 
@@ -923,7 +923,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.10.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-network-load-balancer"
   }
 }
 
@@ -947,6 +947,9 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
+  tags {
+  	Name = "terraform-testacc-lb-network-load-balancer-eip"
+  }
 }
 
 resource "aws_subnet" "public" {
@@ -1019,7 +1022,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-bc"
   }
 }
 
@@ -1086,7 +1089,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-update-subnets"
   }
 }
 
@@ -1153,7 +1156,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-generated-name"
   }
 }
 
@@ -1234,7 +1237,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-zero-value-name"
   }
 }
 
@@ -1310,7 +1313,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-name-prefix"
   }
 }
 
@@ -1377,7 +1380,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-updated-tags"
   }
 }
 
@@ -1488,7 +1491,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-access-logs"
   }
 }
 
@@ -1554,7 +1557,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-no-sg"
   }
 }
 
@@ -1597,7 +1600,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-update-security-groups"
   }
 }
 

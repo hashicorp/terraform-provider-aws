@@ -1507,7 +1507,7 @@ resource "aws_vpc" "azelb" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "subnet-vpc"
+    Name = "terraform-testacc-elb-subnets"
   }
 }
 
@@ -1569,7 +1569,7 @@ resource "aws_vpc" "azelb" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "subnet-vpc"
+    Name = "terraform-testacc-elb-subnet-swap"
   }
 }
 
