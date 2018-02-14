@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	//"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -25,53 +24,87 @@ func resourceAwsInstanceState() *schema.Resource {
 		SchemaVersion: 1,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"InstanceId": {
-				Type:     schema.TypeList,
+			"instance_id": {
+				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
-			"State": {
+			"state": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"Force": {
+			"force": {
 				Type:     schema.TypeBool,
 				Required: false,
-				ForceNew: true,
+				Optional: true,
+				Default:  false,
 			},
 		},
 	}
 }
 
 func resourceAwsInstanceStateCreate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAwsInstanceStateUpdate(d, meta)
+	if err := resourceAwsInstanceStateUpdate(d, meta); err != nil {
+		return err
+	}
+
+	d.SetId(d.Get("instance_id").(string))
+	return nil
 }
 
 func resourceAwsInstanceStateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	id := d.Get("InstanceId").(string)
+	id := d.Get("instance_id").(string)
 	state, err := awsInStateReadInstance(conn, id)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("State", state)
-
+	d.Set("state", state)
 	return nil
 }
 
 func resourceAwsInstanceStateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	state := d.Get("State").(string)
-	id := d.Get("InstanceId").(string)
+	state := d.Get("state").(string)
+	id := d.Get("instance_id").(string)
+	var err error
+
+	switch state {
+	case "stopped":
+		timeout := d.Timeout(schema.TimeoutDelete)
+		err = awsInstanceStateChange(
+			id, "stopped", conn, timeout, func() error {
+				_, err := conn.StopInstances(&ec2.StopInstancesInput{
+					InstanceIds: aws.StringSlice([]string{id}),
+				})
+				return err
+			})
+	case "running":
+	case "started":
+		timeout := d.Timeout(schema.TimeoutCreate)
+		err = awsInstanceStateChange(
+			id, "running", conn, timeout, func() error {
+				_, err := conn.StartInstances(&ec2.StartInstancesInput{
+					InstanceIds: aws.StringSlice([]string{id}),
+				})
+				return err
+			})
+	default:
+		return fmt.Errorf("State name %s is invalid.", state)
+	}
+
+	if err != nil {
+		return err
+	}
 
 	currentState, err := awsInStateReadInstance(conn, id)
 
@@ -79,20 +112,8 @@ func resourceAwsInstanceStateUpdate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	if currentState == state {
-		return nil
-	}
-
-	switch state {
-	case "stopped":
-		return awsStateStopInstance(conn, id, d)
-	case "running":
-	case "started":
-		return awsStateStartInstance(conn, id, d)
-	default:
-		return fmt.Errorf("State name %s is invalid.", state)
-	}
-	return nil
+	d.Set("state", currentState)
+	return err
 }
 
 func resourceAwsInstanceStateDelete(d *schema.ResourceData, meta interface{}) error {
@@ -100,83 +121,34 @@ func resourceAwsInstanceStateDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func awsStateStartInstance(conn *ec2.EC2, id string, d *schema.ResourceData) error {
-	log.Printf("[INFO] changing instance state from %s to running", d.Get("State").(string))
-
-	startOutput, err := conn.StartInstances(&ec2.StartInstancesInput{
-		InstanceIds: aws.StringSlice([]string{id}),
-	},
-	)
-
-	if err != nil {
+func awsInstanceStateChange(id, state string, conn *ec2.EC2, timeout time.Duration, changeFunc func() error) error {
+	if err := changeFunc(); err != nil {
 		return err
 	}
 
-	log.Printf("[DEBUG] Waiting for instance (%s) to become running", id)
+	log.Printf("[DEBUG] Waiting for instance (%s) to become %s", id, state)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
-		Target:     []string{"running"},
+		Target:     []string{state},
 		Refresh:    InstanceStateRefreshFunc(conn, id, ""),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err = stateConf.WaitForState()
+	_, err := stateConf.WaitForState()
 	if err != nil {
 		return fmt.Errorf(
 			"Error waiting for instance (%s) to stopped: %s", id, err)
 	}
-
-	if len(startOutput.StartingInstances) > 0 {
-		d.Set("State", startOutput.StartingInstances[0].CurrentState.Name)
-	}
-
-	return nil
-}
-
-func awsStateStopInstance(conn *ec2.EC2, id string, d *schema.ResourceData) error {
-	log.Printf("[INFO] changing instance state from %s to stopped", d.Get("State").(string))
-
-	stopOutput, err := conn.StopInstances(&ec2.StopInstancesInput{
-		InstanceIds: aws.StringSlice([]string{id}),
-	},
-	)
-
-	if err != nil {
-		return err
-	}
-
-	log.Printf("[DEBUG] Waiting for instance (%s) to become stopped", id)
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
-		Target:     []string{"stopped"},
-		Refresh:    InstanceStateRefreshFunc(conn, id, ""),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for instance (%s) to stopped: %s", id, err)
-	}
-
-	if len(stopOutput.StoppingInstances) > 0 {
-		d.Set("State", stopOutput.StoppingInstances[0].CurrentState.Name)
-	}
-
 	return nil
 }
 
 func awsInStateReadInstance(conn *ec2.EC2, id string) (string, error) {
 	descOutput, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
 		InstanceIds: aws.StringSlice([]string{id}),
-	},
-	)
+	})
 
 	if err != nil {
 		return "", err
