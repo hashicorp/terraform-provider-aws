@@ -311,13 +311,17 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("fifo_queue", d.Get("fifo_queue").(bool))
 	d.Set("content_based_deduplication", d.Get("content_based_deduplication").(bool))
 
-	listTagsOutput, err := sqsconn.ListQueueTags(&sqs.ListQueueTagsInput{
-		QueueUrl: aws.String(d.Id()),
-	})
-	if err != nil {
-		return err
+	tags := make(map[string]string)
+	if !meta.(*AWSClient).IsGovCloud() {
+		listTagsOutput, err := sqsconn.ListQueueTags(&sqs.ListQueueTagsInput{
+			QueueUrl: aws.String(d.Id()),
+		})
+		if err != nil {
+			return err
+		}
+		tags = tagsToMapGeneric(listTagsOutput.Tags)
 	}
-	d.Set("tags", tagsToMapGeneric(listTagsOutput.Tags))
+	d.Set("tags", tags)
 
 	return nil
 }
