@@ -154,7 +154,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 
 	// Rules are evaluated in priority order, from the lowest value to the highest value. The default rule has the lowest priority.
 	if *rule.Priority == "default" {
-		d.Set("priority", 99999)
+		d.Set("priority", 50000)
 	} else {
 		if priority, err := strconv.Atoi(*rule.Priority); err != nil {
 			return errwrap.Wrapf("Cannot convert rule priority %q to int: {{err}}", err)
@@ -278,8 +278,8 @@ func resourceAwsLbListenerRuleDelete(d *schema.ResourceData, meta interface{}) e
 
 func validateAwsLbListenerRulePriority(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(int)
-	if value < 1 || value > 99999 {
-		errors = append(errors, fmt.Errorf("%q must be in the range 1-99999", k))
+	if value < 1 || value > 50000 {
+		errors = append(errors, fmt.Errorf("%q must be in the range 1-50000", k))
 	}
 	return
 }
