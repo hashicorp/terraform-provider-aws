@@ -76,7 +76,6 @@ func TestAccAwsVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "private_dns_enabled", "false"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
