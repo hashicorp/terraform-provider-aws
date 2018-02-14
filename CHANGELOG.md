@@ -17,6 +17,7 @@ ENHANCEMENTS:
 * resource/aws_autoscaling_policy: Add support for `target_tracking_configuration` [GH-2611]
 * resource/aws_dx_connection: Add support for tagging [GH-2990]
 * resource/aws_dx_lag: Add support for tagging [GH-2990]
+* resource/aws_instance: Include size of user_data in validation error message [GH-2971]
 * resource/aws_rds_cluster: Add `hosted_zone_id` attribute [GH-3267]
 * resource/aws_sqs_queue: Validate `name` during plan [GH-2837]
 * resource/aws_ssm_association: Allow updating `targets` [GH-2807]
