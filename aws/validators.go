@@ -790,7 +790,19 @@ func validateApiGatewayIntegrationContentHandling(v interface{}, k string) (ws [
 	return
 }
 
-func validateSQSQueueName(v interface{}, k string) (errors []error) {
+func validateSQSQueueName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 80 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 80 characters", k))
+	}
+
+	if !regexp.MustCompile(`^[0-9A-Za-z-_]+(\.fifo)?$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("only alphanumeric characters and hyphens allowed in %q", k))
+	}
+	return
+}
+
+func validateSQSNonFifoQueueName(v interface{}, k string) (errors []error) {
 	value := v.(string)
 	if len(value) > 80 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 80 characters", k))

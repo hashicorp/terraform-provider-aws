@@ -53,6 +53,7 @@ func resourceAwsSqsQueue() *schema.Resource {
 				ForceNew:      true,
 				Computed:      true,
 				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validateSQSQueueName,
 			},
 			"name_prefix": {
 				Type:     schema.TypeString,
@@ -149,7 +150,7 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error validating the FIFO queue name: %v", errors)
 		}
 	} else {
-		if errors := validateSQSQueueName(name, "name"); len(errors) > 0 {
+		if errors := validateSQSNonFifoQueueName(name, "name"); len(errors) > 0 {
 			return fmt.Errorf("Error validating SQS queue name: %v", errors)
 		}
 	}
