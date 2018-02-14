@@ -24,9 +24,10 @@ import (
 
 func validateInstanceUserDataSize(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
+	length := len(value)
 
-	if len(value) > 16384 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 16384 bytes", k))
+	if length > 16384 {
+		errors = append(errors, fmt.Errorf("%q is %d bytes, cannot be longer than 16384 bytes", k, length))
 	}
 	return
 }
