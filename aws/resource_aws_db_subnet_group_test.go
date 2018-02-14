@@ -210,7 +210,7 @@ func testAccDBSubnetGroupConfig(rName string) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccDBSubnetGroupConfig"
+		Name = "terraform-testacc-db-subnet-group"
 	}
 }
 
@@ -246,7 +246,7 @@ func testAccDBSubnetGroupConfig_updatedDescription(rName string) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccDBSubnetGroupConfig_updatedDescription"
+		Name = "terraform-testacc-db-subnet-group-updated-description"
 	}
 }
 
@@ -282,7 +282,7 @@ const testAccDBSubnetGroupConfig_namePrefix = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccDBSubnetGroupConfig_namePrefix"
+		Name = "terraform-testacc-db-subnet-group-name-prefix"
 	}
 }
 
@@ -307,7 +307,7 @@ const testAccDBSubnetGroupConfig_generatedName = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccDBSubnetGroupConfig_generatedName"
+		Name = "terraform-testacc-db-subnet-group-generated-name"
 	}
 }
 
@@ -331,7 +331,7 @@ const testAccDBSubnetGroupConfig_withUnderscoresAndPeriodsAndSpaces = `
 resource "aws_vpc" "main" {
     cidr_block = "192.168.0.0/16"
 		tags {
-			Name = "testAccDBSubnetGroupConfig_withUnderscoresAndPeriodsAndSpaces"
+			Name = "terraform-testacc-db-subnet-group-w-underscores-etc"
 		}
 }
 
