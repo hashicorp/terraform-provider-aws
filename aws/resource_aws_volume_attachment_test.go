@@ -78,7 +78,7 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"pending", "running", "stopping"},
 			Target:     []string{"stopped"},
-			Refresh:    InstanceStateRefreshFunc(conn, *i.InstanceId, ""),
+			Refresh:    InstanceStateRefreshFunc(conn, *i.InstanceId, []string{}),
 			Timeout:    10 * time.Minute,
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
