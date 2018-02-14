@@ -44,6 +44,31 @@ func TestAccAWSCloudFrontDistribution_S3Origin(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudFrontDistribution_S3OriginNoRestrictions(t *testing.T) {
+	ri := acctest.RandInt()
+	testConfig := fmt.Sprintf(testAccAWSCloudFrontDistributionS3ConfigWithNoRestrictions, ri, originBucket, logBucket, testAccAWSCloudFrontDistributionRetainConfig())
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExistence(
+						"aws_cloudfront_distribution.s3_distribution",
+					),
+					resource.TestCheckResourceAttr(
+						"aws_cloudfront_distribution.s3_distribution",
+						"hosted_zone_id",
+						"Z2FDTNDATAQYW2",
+					),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudFrontDistribution_S3OriginWithTags(t *testing.T) {
 	ri := acctest.RandInt()
 	preConfig := fmt.Sprintf(testAccAWSCloudFrontDistributionS3ConfigWithTags, ri, originBucket, logBucket, testAccAWSCloudFrontDistributionRetainConfig())
@@ -350,6 +375,53 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 			locations = [ "US", "CA", "GB", "DE" ]
 		}
 	}
+	viewer_certificate {
+		cloudfront_default_certificate = true
+	}
+	%s
+}
+`
+
+var testAccAWSCloudFrontDistributionS3ConfigWithNoRestrictions = `
+variable rand_id {
+	default = %d
+}
+
+# origin bucket
+%s
+
+# log bucket
+%s
+
+resource "aws_cloudfront_distribution" "s3_distribution" {
+	origin {
+		domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
+		origin_id = "myS3Origin"
+	}
+	enabled = true
+	default_root_object = "index.html"
+	logging_config {
+		include_cookies = false
+		bucket = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+		prefix = "myprefix"
+	}
+	aliases = [ "mysite.${var.rand_id}.example.com", "yoursite.${var.rand_id}.example.com" ]
+	default_cache_behavior {
+		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
+		cached_methods = [ "GET", "HEAD" ]
+		target_origin_id = "myS3Origin"
+		forwarded_values {
+			query_string = false
+			cookies {
+				forward = "none"
+			}
+		}
+		viewer_protocol_policy = "allow-all"
+		min_ttl = 0
+		default_ttl = 3600
+		max_ttl = 86400
+	}
+	price_class = "PriceClass_200"
 	viewer_certificate {
 		cloudfront_default_certificate = true
 	}
