@@ -17,16 +17,19 @@ import (
 
 var certificateArnRegex = regexp.MustCompile(`^arn:aws:acm:[^:]+:[^:]+:certificate/.+$`)
 
-func TestAccAwsAcmCertificate_emailValidation(t *testing.T) {
+func testAccAwsAcmCertificateDomainFromEnv(t *testing.T) string {
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
+	return os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
+}
 
-	root_zone_domain := os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
+func TestAccAwsAcmCertificate_emailValidation(t *testing.T) {
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()
 
-	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, root_zone_domain)
+	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, rootDomain)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -38,6 +41,7 @@ func TestAccAwsAcmCertificate_emailValidation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", certificateArnRegex),
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", domain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.#", "0"),
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "0"),
 					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "validation_emails.0", regexp.MustCompile(`^[^@]+@.+$`)),
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_method", acm.ValidationMethodEmail),
@@ -54,15 +58,11 @@ func TestAccAwsAcmCertificate_emailValidation(t *testing.T) {
 }
 
 func TestAccAwsAcmCertificate_dnsValidation(t *testing.T) {
-	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
-		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
-	}
-
-	root_zone_domain := os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()
 
-	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, root_zone_domain)
+	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, rootDomain)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -74,7 +74,125 @@ func TestAccAwsAcmCertificate_dnsValidation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", certificateArnRegex),
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", domain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.#", "1"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.domain_name", domain),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_name"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_type", "CNAME"),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_value"),
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_method", acm.ValidationMethodDns),
+				),
+			},
+			resource.TestStep{
+				ResourceName:      "aws_acm_certificate.cert",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsAcmCertificate_root(t *testing.T) {
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAcmCertificateConfig(rootDomain, acm.ValidationMethodDns),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", certificateArnRegex),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", rootDomain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.#", "1"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.domain_name", rootDomain),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_name"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_type", "CNAME"),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_value"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_method", acm.ValidationMethodDns),
+				),
+			},
+			resource.TestStep{
+				ResourceName:      "aws_acm_certificate.cert",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsAcmCertificate_rootAndWildcardSubjectAlternativeName(t *testing.T) {
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
+	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAcmCertificateConfig_subjectAlternativeNames(rootDomain, strconv.Quote(wildcardDomain), acm.ValidationMethodDns),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", certificateArnRegex),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", rootDomain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.#", "2"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.domain_name", rootDomain),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_name"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_type", "CNAME"),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_value"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.1.domain_name", wildcardDomain),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.1.resource_record_name"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.1.resource_record_type", "CNAME"),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.1.resource_record_value"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.0", wildcardDomain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_method", acm.ValidationMethodDns),
+				),
+			},
+			resource.TestStep{
+				ResourceName:      "aws_acm_certificate.cert",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsAcmCertificate_subjectAlternativeName(t *testing.T) {
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
+
+	rInt1 := acctest.RandInt()
+
+	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, rootDomain)
+	sanDomain := fmt.Sprintf("tf-acc-%d-san.%s", rInt1, rootDomain)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAcmCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", certificateArnRegex),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", domain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.#", "2"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.domain_name", domain),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_name"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_type", "CNAME"),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_value"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.1.domain_name", sanDomain),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.1.resource_record_name"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.1.resource_record_type", "CNAME"),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.1.resource_record_value"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.0", sanDomain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_method", acm.ValidationMethodDns),
 				),
 			},
@@ -88,16 +206,13 @@ func TestAccAwsAcmCertificate_dnsValidation(t *testing.T) {
 }
 
 func TestAccAwsAcmCertificate_subjectAlternativeNames(t *testing.T) {
-	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
-		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
-	}
-
-	root_zone_domain := os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()
 
-	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, root_zone_domain)
-	sanDomain := fmt.Sprintf("tf-acc-%d-san.%s", rInt1, root_zone_domain)
+	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, rootDomain)
+	sanDomain1 := fmt.Sprintf("tf-acc-%d-san1.%s", rInt1, rootDomain)
+	sanDomain2 := fmt.Sprintf("tf-acc-%d-san2.%s", rInt1, rootDomain)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -105,12 +220,98 @@ func TestAccAwsAcmCertificate_subjectAlternativeNames(t *testing.T) {
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAcmCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
+				Config: testAccAcmCertificateConfig_subjectAlternativeNames(domain, fmt.Sprintf("%q, %q", sanDomain1, sanDomain2), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", certificateArnRegex),
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", domain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.#", "3"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.domain_name", domain),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_name"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_type", "CNAME"),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_value"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.1.domain_name", sanDomain1),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.1.resource_record_name"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.1.resource_record_type", "CNAME"),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.1.resource_record_value"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.2.domain_name", sanDomain2),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.2.resource_record_name"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.2.resource_record_type", "CNAME"),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.2.resource_record_value"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "2"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.0", sanDomain1),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.1", sanDomain2),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_method", acm.ValidationMethodDns),
+				),
+			},
+			resource.TestStep{
+				ResourceName:      "aws_acm_certificate.cert",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsAcmCertificate_wildcard(t *testing.T) {
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
+	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAcmCertificateConfig(wildcardDomain, acm.ValidationMethodDns),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", certificateArnRegex),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", wildcardDomain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.#", "1"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.domain_name", wildcardDomain),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_name"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_type", "CNAME"),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_value"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_method", acm.ValidationMethodDns),
+				),
+			},
+			resource.TestStep{
+				ResourceName:      "aws_acm_certificate.cert",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsAcmCertificate_wildcardAndRootSubjectAlternativeName(t *testing.T) {
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
+	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAcmCertificateConfig_subjectAlternativeNames(wildcardDomain, strconv.Quote(rootDomain), acm.ValidationMethodDns),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", certificateArnRegex),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", wildcardDomain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.#", "2"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.domain_name", wildcardDomain),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_name"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_type", "CNAME"),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_value"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.1.domain_name", rootDomain),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.1.resource_record_name"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.1.resource_record_type", "CNAME"),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.1.resource_record_value"),
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "1"),
-					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.0", sanDomain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.0", rootDomain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_method", acm.ValidationMethodDns),
 				),
 			},
@@ -124,15 +325,11 @@ func TestAccAwsAcmCertificate_subjectAlternativeNames(t *testing.T) {
 }
 
 func TestAccAwsAcmCertificate_tags(t *testing.T) {
-	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
-		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
-	}
-
-	root_zone_domain := os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()
 
-	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, root_zone_domain)
+	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, rootDomain)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
