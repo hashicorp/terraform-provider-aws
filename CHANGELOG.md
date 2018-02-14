@@ -23,6 +23,7 @@ BUG FIXES:
 * resource/aws_dynamodb_table: Retry deletion on ResourceInUseException [GH-3355]
 * resource/aws_cloudtrail: Now respects initial `include_global_service_events = false` [GH-2817]
 * resource/aws_s3_bucket: Prevent crashes on location and replication read retry timeouts [GH-3338]
+* resource/aws_vpc_endpoint: Treat pending as expected state during deletion [GH-3370]
 
 ## 1.9.0 (February 09, 2018)
 
