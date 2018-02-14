@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_inspector_rules_packages` [GH-3175]
 * **New Resource:** `aws_appsync_graphql_api` [GH-2494]
+* **New Resource:** `aws_gamelift_alias` [GH-3353]
 * **New Resource:** `aws_gamelift_fleet` [GH-3327]
 
 ENHANCEMENTS:
