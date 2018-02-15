@@ -1611,6 +1611,9 @@ func TestAccAWSSecurityGroup_failWithDiffMismatch(t *testing.T) {
 const testAccAWSSecurityGroupConfigForTagsOrdering = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-security-group-tags-ordering"
+  }
 }
 
 resource "aws_security_group" "web" {
@@ -1640,6 +1643,9 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigIpv6 = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-security-group-ipv6"
+  }
 }
 
 resource "aws_security_group" "web" {
@@ -1671,7 +1677,7 @@ const testAccAWSSecurityGroupConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-test"
+		Name = "terraform-testacc-security-group"
 	}
 }
 
@@ -1697,7 +1703,7 @@ const testAccAWSSecurityGroupConfig_revoke_base_removed = `
 resource "aws_vpc" "sg-race-revoke" {
   cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-test"
+		Name = "terraform-testacc-security-group-revoke"
 	}
 }
 `
@@ -1705,7 +1711,7 @@ const testAccAWSSecurityGroupConfig_revoke_base = `
 resource "aws_vpc" "sg-race-revoke" {
   cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-test"
+		Name = "terraform-testacc-security-group-revoke"
 	}
 }
 
@@ -1734,7 +1740,7 @@ const testAccAWSSecurityGroupConfig_revoke_false = `
 resource "aws_vpc" "sg-race-revoke" {
   cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-test"
+		Name = "terraform-testacc-security-group-revoke"
 	}
 }
 
@@ -1767,7 +1773,7 @@ const testAccAWSSecurityGroupConfig_revoke_true = `
 resource "aws_vpc" "sg-race-revoke" {
   cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-test"
+		Name = "terraform-testacc-security-group-revoke"
 	}
 }
 
@@ -1799,6 +1805,9 @@ resource "aws_security_group" "secondary" {
 const testAccAWSSecurityGroupConfigChange = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-security-group-change"
+  }
 }
 
 resource "aws_security_group" "web" {
@@ -1832,6 +1841,9 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigRuleDescription = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-security-group-description"
+  }
 }
 
 resource "aws_security_group" "web" {
@@ -1843,16 +1855,16 @@ resource "aws_security_group" "web" {
     protocol = "6"
     from_port = 80
     to_port = 8000
-		cidr_blocks = ["10.0.0.0/8"]
-		description = "Ingress description"
+    cidr_blocks = ["10.0.0.0/8"]
+    description = "Ingress description"
   }
 
   egress {
     protocol = "tcp"
     from_port = 80
     to_port = 8000
-		cidr_blocks = ["10.0.0.0/8"]
-		description = "Egress description"
+    cidr_blocks = ["10.0.0.0/8"]
+    description = "Egress description"
   }
 
 	tags {
@@ -1864,6 +1876,9 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigChangeRuleDescription = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-security-group-change-rule-desc"
+  }
 }
 
 resource "aws_security_group" "web" {
@@ -1887,15 +1902,18 @@ resource "aws_security_group" "web" {
 		description = "New egress description"
   }
 
-	tags {
-		Name = "tf-acc-test"
-	}
+  tags {
+    Name = "tf-acc-test"
+  }
 }
 `
 
 const testAccAWSSecurityGroupConfigSelf = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-security-group-self"
+  }
 }
 
 resource "aws_security_group" "web" {
@@ -1922,6 +1940,9 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigVpc = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-security-group-vpc"
+  }
 }
 
 resource "aws_security_group" "web" {
@@ -1948,6 +1969,9 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigVpcNegOneIngress = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-security-group-vpc-neg-one-ingress"
+	}
 }
 
 resource "aws_security_group" "web" {
@@ -1967,6 +1991,9 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigVpcProtoNumIngress = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-security-group-vpc-proto-num-ingress"
+	}
 }
 
 resource "aws_security_group" "web" {
@@ -1986,6 +2013,9 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigMultiIngress = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-security-group-multi-ingress"
+	}
 }
 
 resource "aws_security_group" "worker" {
@@ -2046,6 +2076,9 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigTags = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-security-group-tags"
+	}
 }
 
 resource "aws_security_group" "foo" {
@@ -2076,6 +2109,9 @@ resource "aws_security_group" "foo" {
 const testAccAWSSecurityGroupConfigTagsUpdate = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-security-group-tags"
+	}
 }
 
 resource "aws_security_group" "foo" {
@@ -2107,6 +2143,9 @@ resource "aws_security_group" "foo" {
 const testAccAWSSecurityGroupConfig_generatedName = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-security-group-generated-name"
+	}
 }
 
 resource "aws_security_group" "web" {
@@ -2134,10 +2173,10 @@ resource "aws_security_group" "web" {
 
 const testAccAWSSecurityGroupConfigDefaultEgress = `
 resource "aws_vpc" "tf_sg_egress_test" {
-        cidr_block = "10.0.0.0/16"
-        tags {
-                Name = "tf_sg_egress_test"
-        }
+    cidr_block = "10.0.0.0/16"
+    tags {
+        Name = "terraform-testacc-security-group-default-egress"
+    }
 }
 
 resource "aws_security_group" "worker" {
@@ -2207,6 +2246,9 @@ func testAccAWSSecurityGroupConfig_drift_complex() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-security-group-drift-complex"
+	}
 }
 
 resource "aws_security_group" "otherweb" {
@@ -2319,6 +2361,9 @@ resource "aws_security_group" "foo" {
 const testAccAWSSecurityGroupCombindCIDRandGroups = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-security-group-combine-rand-groups"
+	}
 }
 
 resource "aws_security_group" "two" {
@@ -2371,6 +2416,9 @@ resource "aws_security_group" "mixed" {
 const testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-security-group-ingress-w-cidr-and-sg"
+	}
 }
 
 resource "aws_security_group" "other_web" {
@@ -2468,7 +2516,7 @@ resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "tf-test"
+    Name = "terraform-testacc-security-group-fail-w-diff-mismatch"
   }
 }
 
@@ -2512,7 +2560,7 @@ resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
   tags {
-    Name = "tf_sg_import_test"
+    Name = "terraform-testacc-security-group-import-self"
   }
 }
 
@@ -2548,7 +2596,7 @@ resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
   tags {
-    Name = "tf_sg_import_test"
+    Name = "terraform-testacc-security-group-import-source-sg"
   }
 }
 
@@ -2593,7 +2641,7 @@ resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
   tags {
-    Name = "tf_sg_import_test"
+    Name = "terraform-testacc-security-group-import-ip-range-and-sg"
   }
 }
 
@@ -2643,7 +2691,7 @@ resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
   tags {
-    Name = "tf_sg_import_test"
+    Name = "terraform-testacc-security-group-import-ip-ranges"
   }
 }
 
@@ -2678,7 +2726,7 @@ resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
   tags {
-      Name = "tf_sg_ipv4_and_ipv6_acc_test"
+      Name = "terraform-testacc-security-group-ipv4-and-ipv6-egress"
   }
 }
 
@@ -2711,7 +2759,7 @@ const testAccAWSSecurityGroupConfigPrefixListEgress = `
 resource "aws_vpc" "tf_sg_prefix_list_egress_test" {
     cidr_block = "10.0.0.0/16"
     tags {
-            Name = "tf_sg_prefix_list_egress_test"
+        Name = "terraform-testacc-security-group-prefix-list-egress"
     }
 }
 

@@ -129,7 +129,7 @@ const testAccNatGatewayConfig = `
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
   tags {
-    Name = "testAccNatGatewayConfig"
+    Name = "terraform-testacc-nat-gw-basic"
   }
 }
 
@@ -194,7 +194,7 @@ const testAccNatGatewayConfigTags = `
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
   tags {
-    Name = "testAccNatGatewayConfig"
+    Name = "terraform-testacc-nat-gw-tags"
   }
 }
 
@@ -263,7 +263,7 @@ const testAccNatGatewayConfigTagsUpdate = `
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
   tags {
-    Name = "testAccNatGatewayConfig"
+    Name = "terraform-testacc-nat-gw-tags"
   }
 }
 

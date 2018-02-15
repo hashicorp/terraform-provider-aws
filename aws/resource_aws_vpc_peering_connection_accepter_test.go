@@ -73,14 +73,14 @@ const testAccAwsVPCPeeringConnectionAccepterSameRegion = `
 resource "aws_vpc" "main" {
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-accepter-same-region"
+		Name = "terraform-testacc-vpc-peering-conn-accepter-same-region-main"
 	}
 }
 
 resource "aws_vpc" "peer" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-accepter-same-region"
+		Name = "terraform-testacc-vpc-peering-conn-accepter-same-region-peer"
 	}
 }
 
@@ -113,7 +113,7 @@ resource "aws_vpc" "main" {
 	provider = "aws.main"
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-accepter-different-region"
+		Name = "terraform-testacc-vpc-peering-conn-accepter-diff-region-main"
 	}
 }
 
@@ -121,7 +121,7 @@ resource "aws_vpc" "peer" {
 	provider = "aws.peer"
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-accepter-different-region"
+		Name = "terraform-testacc-vpc-peering-conn-accepter-diff-region-peer"
 	}
 }
 

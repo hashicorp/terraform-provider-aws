@@ -351,6 +351,9 @@ func testAccCheckAWSRouteDestroy(s *terraform.State) error {
 var testAccAWSRouteBasicConfig = fmt.Sprint(`
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-basic"
+	}
 }
 
 resource "aws_internet_gateway" "foo" {
@@ -372,6 +375,9 @@ var testAccAWSRouteConfigIpv6InternetGateway = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
+  tags {
+    Name = "terraform-testacc-route-ipv6-igw"
+  }
 }
 
 resource "aws_egress_only_internet_gateway" "foo" {
@@ -399,6 +405,9 @@ resource "aws_vpc" "examplevpc" {
   cidr_block = "10.100.0.0/16"
   enable_dns_hostnames = true
   assign_generated_ipv6_cidr_block = true
+  tags {
+    Name = "terraform-testacc-route-ipv6-network-interface"
+  }
 }
 
 data "aws_availability_zones" "available" {}
@@ -495,6 +504,9 @@ resource "aws_vpc" "examplevpc" {
   cidr_block = "10.100.0.0/16"
   enable_dns_hostnames = true
   assign_generated_ipv6_cidr_block = true
+  tags {
+    Name = "terraform-testacc-route-ipv6-instance"
+  }
 }
 
 data "aws_availability_zones" "available" {}
@@ -579,6 +591,9 @@ var testAccAWSRouteConfigIpv6PeeringConnection = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	assign_generated_ipv6_cidr_block = true
+	tags {
+		Name = "terraform-testacc-route-ipv6-peering-connection"
+	}
 }
 
 resource "aws_vpc" "bar" {
@@ -608,6 +623,9 @@ var testAccAWSRouteConfigIpv6 = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
+  tags {
+    Name = "terraform-testacc-route-ipv6"
+  }
 }
 
 resource "aws_egress_only_internet_gateway" "foo" {
@@ -630,6 +648,9 @@ resource "aws_route" "bar" {
 var testAccAWSRouteBasicConfigChangeCidr = fmt.Sprint(`
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-change-cidr"
+	}
 }
 
 resource "aws_internet_gateway" "foo" {
@@ -651,6 +672,9 @@ resource "aws_route" "bar" {
 var testAccAWSRouteMixConfig = fmt.Sprint(`
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-route-mix"
+	}
 }
 
 resource "aws_internet_gateway" "foo" {
@@ -676,6 +700,9 @@ resource "aws_route" "bar" {
 var testAccAWSRouteNoopChange = fmt.Sprint(`
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
+  tags {
+    Name = "terraform-testacc-route-route-noop-change"
+  }
 }
 
 resource "aws_route_table" "test" {
@@ -703,6 +730,9 @@ resource "aws_instance" "nat" {
 var testAccAWSRouteWithVPCEndpoint = fmt.Sprint(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-route-with-vpc-endpoint"
+  }
 }
 
 resource "aws_internet_gateway" "foo" {
