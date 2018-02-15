@@ -9,12 +9,11 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 
+	"regexp"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"regexp"
-	"strconv"
-	"time"
 )
 
 func TestCleanRecordName(t *testing.T) {
@@ -493,84 +492,20 @@ func TestAccAWSRoute53Record_multivalue_answer_basic(t *testing.T) {
 
 func TestAccAWSRoute53Record_allowOverwrite(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                  func() { testAccPreCheck(t) },
-		IDRefreshName:             "aws_route53_record.default",
-		Providers:                 testAccProviders,
-		CheckDestroy:              testAccAWSRoute53RecordDestroy_allowOverwrite,
-		PreventPostDestroyRefresh: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:   func() { testAccRoute53RecordCreate_allowOverwrite(t) },
 				Config:      testAccRoute53RecordConfig_allowOverwrite(false),
 				ExpectError: regexp.MustCompile("Tried to create resource record set \\[name='www.notexample.com.', type='A'] but it already exists"),
 			},
 			{
 				Config: testAccRoute53RecordConfig_allowOverwrite(true),
-				Check:  resource.ComposeTestCheckFunc(testAccCheckRoute53RecordExists("aws_route53_record.default")),
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRoute53RecordExists("aws_route53_record.overwriting")),
 			},
 		},
 	})
-}
-
-func testAccRoute53RecordCreate_allowOverwrite(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).r53conn
-	zone, err := conn.CreateHostedZone(&route53.CreateHostedZoneInput{
-		Name:            aws.String("notexample.com"),
-		CallerReference: aws.String(strconv.FormatInt(time.Now().Unix(), 10)),
-	})
-	if err == nil {
-		_, err = conn.ChangeResourceRecordSets(&route53.ChangeResourceRecordSetsInput{
-			ChangeBatch: &route53.ChangeBatch{
-				Changes: []*route53.Change{
-					{
-						Action: aws.String("CREATE"),
-						ResourceRecordSet: &route53.ResourceRecordSet{
-							Name: aws.String("www.notexample.com"),
-							Type: aws.String("A"),
-							TTL:  aws.Int64(30),
-							ResourceRecords: []*route53.ResourceRecord{
-								{
-									Value: aws.String("127.0.0.1"),
-								},
-							},
-						},
-					},
-				},
-			},
-			HostedZoneId: zone.HostedZone.Id,
-		})
-		if err != nil {
-			t.Error(err)
-		}
-	} else {
-		t.Error(err)
-	}
-}
-
-// Delete the hosted zone created manually
-func testAccAWSRoute53RecordDestroy_allowOverwrite(s *terraform.State) error {
-	err := testAccCheckRoute53RecordDestroy(s)
-	if err == nil {
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
-		hostedZone, ok := s.RootModule().Resources["data.aws_route53_zone.main"]
-		if !ok {
-			return fmt.Errorf("unable to find the hosted zone from the state")
-		}
-		zoneId := hostedZone.Primary.Attributes["id"]
-		_, err = conn.DeleteHostedZone(&route53.DeleteHostedZoneInput{
-			Id: aws.String(zoneId),
-		})
-		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				// if the zone is not found then everything is destroyed
-				if awsErr.Code() == "NoSuchHostedZone" {
-					return nil
-				}
-			}
-			return err
-		}
-	}
-	return nil
 }
 
 func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
@@ -660,13 +595,23 @@ func testAccCheckRoute53RecordExists(n string) resource.TestCheckFunc {
 
 func testAccRoute53RecordConfig_allowOverwrite(allowOverwrite bool) string {
 	return fmt.Sprintf(`
-data "aws_route53_zone" "main" {
+resource "aws_route53_zone" "main" {
   name = "notexample.com."
 }
 
 resource "aws_route53_record" "default" {
+  zone_id = "${aws_route53_zone.main.zone_id}"
+  name = "www.notexample.com"
+  type = "A"
+  ttl = "30"
+  records = ["127.0.0.1"]
+}
+
+resource "aws_route53_record" "overwriting" {
+  depends_on = ["aws_route53_record.default"]
+
   allow_overwrite = %v
-  zone_id = "${data.aws_route53_zone.main.zone_id}"
+  zone_id = "${aws_route53_zone.main.zone_id}"
   name = "www.notexample.com"
   type = "A"
   ttl = "30"
