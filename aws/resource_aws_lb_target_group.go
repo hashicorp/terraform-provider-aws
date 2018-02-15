@@ -553,8 +553,13 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	//
 	// This is a workaround to support module design where the module needs to
 	// support HTTP and TCP target groups.
-	if *targetGroup.Protocol != "TCP" {
+	switch {
+	case *targetGroup.Protocol != "TCP":
 		if err = flattenAwsLbTargetGroupStickiness(d, attrResp.Attributes); err != nil {
+			return err
+		}
+	case *targetGroup.Protocol == "TCP" && len(d.Get("stickiness").([]interface{})) < 1:
+		if err = d.Set("stickiness", []interface{}{}); err != nil {
 			return err
 		}
 	}
