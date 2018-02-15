@@ -291,7 +291,7 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 	}
 
 	if d.HasChange("callback_urls") {
-		params.ReadAttributes = expandStringList(d.Get("callback_urls").([]interface{}))
+		params.CallbackURLs = expandStringList(d.Get("callback_urls").([]interface{}))
 	}
 
 	if d.HasChange("default_redirect_uri") {
