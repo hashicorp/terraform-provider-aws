@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 
+	"regexp"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -527,6 +529,24 @@ func TestAccAWSRoute53Record_multivalue_answer_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute53Record_allowOverwrite(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRoute53RecordConfig_allowOverwrite(false),
+				ExpectError: regexp.MustCompile("Tried to create resource record set \\[name='www.notexample.com.', type='A'] but it already exists"),
+			},
+			{
+				Config: testAccRoute53RecordConfig_allowOverwrite(true),
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRoute53RecordExists("aws_route53_record.overwriting")),
+			},
+		},
+	})
+}
+
 func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).r53conn
 	for _, rs := range s.RootModule().Resources {
@@ -610,6 +630,33 @@ func testAccCheckRoute53RecordExists(n string) resource.TestCheckFunc {
 		}
 		return fmt.Errorf("Record does not exist: %#v", rs.Primary.ID)
 	}
+}
+
+func testAccRoute53RecordConfig_allowOverwrite(allowOverwrite bool) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "main" {
+  name = "notexample.com."
+}
+
+resource "aws_route53_record" "default" {
+  zone_id = "${aws_route53_zone.main.zone_id}"
+  name = "www.notexample.com"
+  type = "A"
+  ttl = "30"
+  records = ["127.0.0.1"]
+}
+
+resource "aws_route53_record" "overwriting" {
+  depends_on = ["aws_route53_record.default"]
+
+  allow_overwrite = %v
+  zone_id = "${aws_route53_zone.main.zone_id}"
+  name = "www.notexample.com"
+  type = "A"
+  ttl = "30"
+  records = ["127.0.0.1"]
+}
+`, allowOverwrite)
 }
 
 const testAccRoute53RecordConfig = `
