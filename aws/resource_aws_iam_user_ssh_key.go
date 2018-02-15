@@ -94,7 +94,7 @@ func resourceAwsIamUserSshKeyRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("fingerprint", getResp.SSHPublicKey.Fingerprint)
 	d.Set("status", getResp.SSHPublicKey.Status)
-	d.Set("ssh_public_key_id", createResp.SSHPublicKey.SSHPublicKeyId)
+	d.Set("ssh_public_key_id", getResp.SSHPublicKey.SSHPublicKeyId)
 	return nil
 }
 
