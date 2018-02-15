@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -27,7 +26,7 @@ func TestAccAWSUserSSHKey_basic(t *testing.T) {
 			resource.TestStep{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSUserSSHKeyExists("aws_iam_user_ssh_key.user", &conf),
+					testAccCheckAWSUserSSHKeyExists("aws_iam_user_ssh_key.user", "Inactive", &conf),
 				),
 			},
 		},
@@ -48,7 +47,7 @@ func TestAccAWSUserSSHKey_pemEncoding(t *testing.T) {
 			resource.TestStep{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSUserSSHKeyExists("aws_iam_user_ssh_key.user", &conf),
+					testAccCheckAWSUserSSHKeyExists("aws_iam_user_ssh_key.user", "Active", &conf),
 				),
 			},
 		},
@@ -87,7 +86,7 @@ func testAccCheckAWSUserSSHKeyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSUserSSHKeyExists(n string, res *iam.GetSSHPublicKeyOutput) resource.TestCheckFunc {
+func testAccCheckAWSUserSSHKeyExists(n, status string, res *iam.GetSSHPublicKeyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -114,16 +113,11 @@ func testAccCheckAWSUserSSHKeyExists(n string, res *iam.GetSSHPublicKeyOutput) r
 		*res = *resp
 
 		keyStruct := resp.SSHPublicKey
-		keyFields := strings.Fields(rs.Primary.Attributes["public_key"])
-		sshkey := fmt.Sprintf("%s %s", keyFields[0], keyFields[1])
 
-		if *keyStruct.Status != "Inactive" {
-			return fmt.Errorf("Key status has wrong status should be Inactive is %s", *keyStruct.Status)
+		if *keyStruct.Status != status {
+			return fmt.Errorf("Key status has wrong status should be %s is %s", status, *keyStruct.Status)
 		}
 
-		if *keyStruct.SSHPublicKeyBody != sshkey {
-			return fmt.Errorf("Public key mismatch. \nIAM: %s\nResource: %s\n", *keyStruct.SSHPublicKeyBody, sshkey)
-		}
 		return nil
 	}
 }
