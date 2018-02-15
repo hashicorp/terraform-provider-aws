@@ -73,6 +73,9 @@ func resourceAwsInstanceStateRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsInstanceStateUpdate(d *schema.ResourceData, meta interface{}) error {
+	if !d.HasChange("state") {
+		return nil
+	}
 	conn := meta.(*AWSClient).ec2conn
 	state := d.Get("state").(string)
 	id := d.Get("instance_id").(string)
@@ -106,14 +109,7 @@ func resourceAwsInstanceStateUpdate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	currentState, err := awsInStateReadInstance(conn, id)
-
-	if err != nil {
-		return err
-	}
-
-	d.Set("state", currentState)
-	return err
+	return resourceAwsInstanceStateRead(d, meta)
 }
 
 func resourceAwsInstanceStateDelete(d *schema.ResourceData, meta interface{}) error {

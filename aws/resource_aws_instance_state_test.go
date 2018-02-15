@@ -64,7 +64,6 @@ func testAWSInstanceStateCheckStopped(name string) resource.TestCheckFunc {
 		}
 
 		state := rs.Primary.Attributes["state"]
-
 		if state != "stopped" {
 			return fmt.Errorf("Bad: instance in invalid state. Should be stopped is %s", state)
 		}
@@ -82,24 +81,23 @@ resource "aws_vpc" "my_vpc" {
 }
 
 resource "aws_subnet" "public_subnet" {
-  vpc_id = "${aws_vpc.my_vpc.id}"
-  cidr_block = "172.66.0.0/24"
-  availability_zone = "us-west-2a"
+  vpc_id                  = "${aws_vpc.my_vpc.id}"
+  cidr_block              = "172.66.0.0/24"
+  availability_zone       = "us-west-2a"
   map_public_ip_on_launch = true
 }
 
 resource "aws_instance" "state_test" {
-  ami 						  = "ami-22b9a343"
-  instance_type 			  = "t2.micro"
-  subnet_id	 				  = "${aws_subnet.public_subnet.id}"
+  ami                         = "ami-22b9a343"
+  instance_type               = "t2.micro"
+  subnet_id                   = "${aws_subnet.public_subnet.id}"
   associate_public_ip_address = false
 }
 
 resource "aws_instance_state" "stopped" {
-  instance_id 	= "${aws_instance.state_test.id}"
-  state			= "stopped"
+  instance_id   = "${aws_instance.state_test.id}"
+  state	        = "stopped"
   depends_on    = ["aws_instance.state_test"]
 }
-
 `)
 }
