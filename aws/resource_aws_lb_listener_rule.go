@@ -38,7 +38,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsLbListenerRulePriority,
+				ValidateFunc: validateIntegerInRange(1, 50000),
 			},
 			"action": {
 				Type:     schema.TypeList,
@@ -274,14 +274,6 @@ func resourceAwsLbListenerRuleDelete(d *schema.ResourceData, meta interface{}) e
 		return errwrap.Wrapf("Error deleting LB Listener Rule: {{err}}", err)
 	}
 	return nil
-}
-
-func validateAwsLbListenerRulePriority(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(int)
-	if value < 1 || value > 50000 {
-		errors = append(errors, fmt.Errorf("%q must be in the range 1-50000", k))
-	}
-	return
 }
 
 func validateAwsListenerRuleField(v interface{}, k string) (ws []string, errors []error) {
