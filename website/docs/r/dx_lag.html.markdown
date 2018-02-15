@@ -39,3 +39,11 @@ The following attributes are exported:
 
 * `id` - The ID of the LAG.
 * `arn` - The ARN of the LAG.
+
+## Import
+
+Direct Connect LAGs can be imported using the `lag id`, e.g.
+
+```
+$ terraform import aws_dx_lag.test_lag dxlag-fgnsp5rq
+```
