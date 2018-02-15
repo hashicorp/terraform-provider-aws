@@ -127,7 +127,7 @@ func awsInstanceStateChange(id, state string, conn *ec2.EC2, timeout time.Durati
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
 		Target:     []string{state},
-		Refresh:    InstanceStateRefreshFunc(conn, id, ""),
+		Refresh:    InstanceStateRefreshFunc(conn, id, []string{}),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
