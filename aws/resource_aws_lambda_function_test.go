@@ -1167,9 +1167,9 @@ EOF
 
 resource "aws_vpc" "vpc_for_lambda" {
     cidr_block = "10.0.0.0/16"
-		tags {
-			Name = "baseAccAWSLambdaConfig"
-		}
+	tags {
+		Name = "terraform-testacc-lambda-function"
+	}
 }
 
 resource "aws_subnet" "subnet_for_lambda" {

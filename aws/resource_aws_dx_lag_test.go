@@ -27,7 +27,6 @@ func TestAccAwsDxLag_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "name", lagName1),
 					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "connections_bandwidth", "1Gbps"),
 					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "location", "EqSe2"),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "number_of_connections", "2"),
 					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.%", "0"),
 				),
 			},
@@ -38,7 +37,6 @@ func TestAccAwsDxLag_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "name", lagName2),
 					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "connections_bandwidth", "1Gbps"),
 					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "location", "EqSe2"),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "number_of_connections", "2"),
 					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.%", "0"),
 				),
 			},
@@ -127,7 +125,6 @@ resource "aws_dx_lag" "hoge" {
   name = "%s"
   connections_bandwidth = "1Gbps"
   location = "EqSe2"
-  number_of_connections = 2
   force_destroy = true
 }
 `, n)
@@ -139,7 +136,6 @@ resource "aws_dx_lag" "hoge" {
   name = "%s"
   connections_bandwidth = "1Gbps"
   location = "EqSe2"
-  number_of_connections = 2
   force_destroy = true
 
   tags {
@@ -156,7 +152,6 @@ resource "aws_dx_lag" "hoge" {
   name = "%s"
   connections_bandwidth = "1Gbps"
   location = "EqSe2"
-  number_of_connections = 2
   force_destroy = true
 
   tags {

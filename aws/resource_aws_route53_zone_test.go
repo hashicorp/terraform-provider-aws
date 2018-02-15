@@ -469,6 +469,9 @@ resource "aws_vpc" "main" {
 	instance_tenancy = "default"
 	enable_dns_support = true
 	enable_dns_hostnames = true
+	tags {
+		Name = "terraform-testacc-route53-zone-private"
+	}
 }
 
 resource "aws_route53_zone" "main" {
@@ -496,6 +499,9 @@ resource "aws_vpc" "main" {
 	instance_tenancy = "default"
 	enable_dns_support = true
 	enable_dns_hostnames = true
+	tags {
+		Name = "terraform-testacc-route53-zone-private-region"
+	}
 }
 
 resource "aws_route53_zone" "main" {

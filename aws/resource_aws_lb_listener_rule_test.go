@@ -332,7 +332,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-listener-rule-multiple-conditions"
   }
 }
 
@@ -443,7 +443,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-listener-rule-basic"
   }
 }
 
@@ -554,7 +554,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-listener-rule-bc"
   }
 }
 
@@ -666,7 +666,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-listener-rule-update-rule-priority"
   }
 }
 
@@ -789,7 +789,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-listener-rule-change-rule-arn"
   }
 }
 

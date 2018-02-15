@@ -371,7 +371,7 @@ resource "aws_security_group" "allow_all" {
   }
 
   tags {
-    name = "emr_test"
+    Name = "emr_test"
   }
 }
 
@@ -380,7 +380,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    name = "emr_test_%d"
+    Name = "terraform-testacc-appautoscaling-target-emr-cluster"
   }
 }
 
@@ -389,7 +389,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    name = "emr_test_%d"
+    Name = "emr_test_%d"
   }
 }
 
@@ -606,7 +606,7 @@ resource "aws_appautoscaling_target" "bar" {
 	max_capacity = 8
 }
 
-`, rInt, rInt, rInt, rInt, rInt, rInt, rInt, rInt, rInt, rInt)
+`, rInt, rInt, rInt, rInt, rInt, rInt, rInt, rInt, rInt)
 }
 
 var testAccAWSAppautoscalingTargetSpotFleetRequestConfig = fmt.Sprintf(`

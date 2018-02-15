@@ -1,17 +1,28 @@
 ## 1.10.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_dx_lag: `number_of_connections` was deprecated and will be removed in future major version. Use `aws_dx_connection` and `aws_dx_connection_association` resources instead. Default connections will be removed as part of LAG creation automatically in future major version. [GH-3367]
+
 FEATURES:
 
 * **New Data Source:** `aws_inspector_rules_packages` [GH-3175]
 * **New Resource:** `aws_appsync_graphql_api` [GH-2494]
+* **New Resource:** `aws_dax_cluster` [GH-2884]
+* **New Resource:** `aws_gamelift_alias` [GH-3353]
 * **New Resource:** `aws_gamelift_fleet` [GH-3327]
 
 ENHANCEMENTS:
 
 * resource/aws_autoscaling_policy: Add support for `target_tracking_configuration` [GH-2611]
 * resource/aws_dx_connection: Add support for tagging [GH-2990]
+* resource/aws_dx_connection: Add support for import [GH-2992]
 * resource/aws_dx_lag: Add support for tagging [GH-2990]
+* resource/aws_dx_lag: Add support for import [GH-2992]
+* resource/aws_instance: Expose reason of `shutting-down` state during creation [GH-3371]
+* resource/aws_instance: Include size of user_data in validation error message [GH-2971]
 * resource/aws_rds_cluster: Add `hosted_zone_id` attribute [GH-3267]
+* resource/aws_sqs_queue: Validate `name` during plan [GH-2837]
 * resource/aws_ssm_association: Allow updating `targets` [GH-2807]
 * resource/aws_service_discovery_service: Support routing policy and update the type of DNS record [GH-3273]
 
@@ -19,15 +30,24 @@ BUG FIXES:
 
 * data-source/aws_elb_service_account: Correct GovCloud region [GH-3315]
 * resource/aws_acm_certificate_validation: Prevent crash on validation_record_fqdns [GH-3336]
-* resource/aws_dynamodb_table: Retry deletion on ResourceInUseException [GH-3355]
 * resource/aws_cloudtrail: Now respects initial `include_global_service_events = false` [GH-2817]
+* resource/aws_dynamodb_table: Retry deletion on ResourceInUseException [GH-3355]
+* resource/aws_dx_lag: `number_of_connections` deprecated (made Optional). Omitting field may now prevent spurious diffs. [GH-3367]
+* resource/aws_ecs_service: Retry DescribeServices after creation [GH-3387]
+* resource/aws_elasticsearch_domain: Retry creation on `ValidationException` [GH-3375]
+* resource/aws_iam_user_ssh_key: Correctly set status after creation [GH-3390]
+* resource/aws_kinesis_firehose_delivery_stream: Retry on additional IAM eventual consistency errors [GH-3381]
 * resource/aws_s3_bucket: Prevent crashes on location and replication read retry timeouts [GH-3338]
+* resource/aws_sqs_queue: Skip SQS ListQueueTags in aws-us-gov partition [GH-3376]
+* resource/aws_vpc_endpoint: Treat pending as expected state during deletion [GH-3370]
+* resource/aws_vpc_peering_connection: Treat `pending-acceptance` as expected during deletion [GH-3393]
 
 ## 1.9.0 (February 09, 2018)
 
 NOTES:
 
 * data-source/aws_region: `current` field is deprecated and the data source defaults to the provider region if no endpoint or name is specified ([#3157](https://github.com/terraform-providers/terraform-provider-aws/issues/3157))
+* data-source/aws_iam_policy_document: Statements are now de-duplicated per `Sid`s ([#2890](https://github.com/terraform-providers/terraform-provider-aws/issues/2890))
 
 FEATURES:
 

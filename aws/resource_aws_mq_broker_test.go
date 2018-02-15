@@ -655,7 +655,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "main" {
   cidr_block = "10.11.0.0/16"
   tags {
-    Name = "TfAccTest-MqBroker"
+    Name = "terraform-testacc-mq-broker-all-fields-custom-vpc"
   }
 }
 

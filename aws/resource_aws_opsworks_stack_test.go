@@ -1005,7 +1005,7 @@ func testAccAwsOpsworksStackConfigVpcCreate(name string) string {
 resource "aws_vpc" "tf-acc" {
   cidr_block = "10.3.5.0/24"
   tags {
-    Name = "testAccAwsOpsworksStackConfigVpcCreate"
+    Name = "terraform-testacc-opsworks-stack-vpc-create"
   }
 }
 resource "aws_subnet" "tf-acc" {
@@ -1099,7 +1099,7 @@ func testAccAWSOpsworksStackConfigVpcUpdate(name string) string {
 resource "aws_vpc" "tf-acc" {
   cidr_block = "10.3.5.0/24"
   tags {
-    Name = "testAccAWSOpsworksStackConfigVpcUpdate"
+    Name = "terraform-testacc-opsworks-stack-vpc-update"
   }
 }
 resource "aws_subnet" "tf-acc" {

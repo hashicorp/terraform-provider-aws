@@ -96,7 +96,7 @@ func dmsReplicationInstanceConfig(randId string) string {
 resource "aws_vpc" "dms_vpc" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-test-dms-vpc-%[1]s"
+		Name = "terraform-testacc-dms-replication-instance"
 	}
 }
 
@@ -152,7 +152,7 @@ func dmsReplicationInstanceConfigUpdate(randId string) string {
 resource "aws_vpc" "dms_vpc" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-test-dms-vpc-%[1]s"
+		Name = "terraform-testacc-dms-replication-instance"
 	}
 }
 

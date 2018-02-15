@@ -852,7 +852,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSLBTargetGroup_application_LB_defaults"
+    Name = "terraform-testacc-lb-target-group-alb-defaults"
   }
 }`, name)
 }
@@ -880,7 +880,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSLBTargetGroup_application_LB_defaults"
+    Name = "terraform-testacc-lb-target-group-nlb-defaults"
   }
 }`, name, healthCheckBlock)
 }
@@ -919,7 +919,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -958,7 +958,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-bc"
   }
 }`, targetGroupName)
 }
@@ -997,7 +997,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -1036,7 +1036,7 @@ resource "aws_vpc" "test2" {
   cidr_block = "10.10.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-basic-2"
   }
 }
 
@@ -1044,7 +1044,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -1083,7 +1083,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-updated-vpc"
   }
 }`, targetGroupName)
 }
@@ -1123,7 +1123,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-update-tags"
   }
 }`, targetGroupName)
 }
@@ -1158,7 +1158,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-update-health-check"
   }
 }`, targetGroupName)
 }
@@ -1189,7 +1189,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAcc_networkLB_TargetGroup"
+    Name = "terraform-testacc-lb-target-group-type-tcp"
   }
 }`, targetGroupName)
 }
@@ -1220,7 +1220,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAcc_networkLB_TargetGroup"
+    Name = "terraform-testacc-lb-target-group-type-tcp-threshold-updated"
   }
 }`, targetGroupName)
 }
@@ -1251,7 +1251,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAcc_networkLB_TargetGroup"
+    Name = "terraform-testacc-lb-target-group-type-tcp-interval-updated"
   }
 }`, targetGroupName)
 }
@@ -1282,7 +1282,7 @@ func testAccAWSLBTargetGroupConfig_typeTCP_HTTPHealthCheck(targetGroupName, path
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
   tags {
-    Name = "TestAcc_networkLB_HTTPHealthCheck"
+    Name = "terraform-testacc-lb-target-group-type-tcp-http-health-check"
   }
 }`, targetGroupName, threshold, path)
 }
@@ -1324,7 +1324,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_stickiness"
+    TestName = "terraform-testacc-lb-target-group-stickiness"
   }
 }`, targetGroupName, stickinessBlock)
 }
@@ -1340,7 +1340,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSLBTargetGroupConfig_namePrefix"
+		Name = "terraform-testacc-lb-target-group-name-prefix"
 	}
 }
 `
@@ -1355,7 +1355,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSLBTargetGroupConfig_generatedName"
+		Name = "terraform-testacc-lb-target-group-generated-name"
 	}
 }
 `

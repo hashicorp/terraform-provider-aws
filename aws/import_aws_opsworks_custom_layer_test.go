@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAWSOpsworksCustomLayerImportBasic(t *testing.T) {
+func TestAccAWSOpsworksCustomLayer_importBasic(t *testing.T) {
 	name := acctest.RandString(10)
 
 	resourceName := "aws_opsworks_custom_layer.tf-acc"

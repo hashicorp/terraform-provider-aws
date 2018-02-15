@@ -18,6 +18,9 @@ func resourceAwsDxLag() *schema.Resource {
 		Read:   resourceAwsDxLagRead,
 		Update: resourceAwsDxLagUpdate,
 		Delete: resourceAwsDxLagDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -41,8 +44,11 @@ func resourceAwsDxLag() *schema.Resource {
 			},
 			"number_of_connections": {
 				Type:     schema.TypeInt,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				ForceNew: true,
+				Deprecated: "Use aws_dx_connection and aws_dx_connection_association resources instead. " +
+					"Default connections will be removed as part of LAG creation automatically in future versions.",
 			},
 			"force_destroy": {
 				Type:     schema.TypeBool,
@@ -57,11 +63,18 @@ func resourceAwsDxLag() *schema.Resource {
 func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
+	var noOfConnections int
+	if v, ok := d.GetOk("number_of_connections"); ok {
+		noOfConnections = v.(int)
+	} else {
+		noOfConnections = 1
+	}
+
 	req := &directconnect.CreateLagInput{
 		ConnectionsBandwidth: aws.String(d.Get("connections_bandwidth").(string)),
 		LagName:              aws.String(d.Get("name").(string)),
 		Location:             aws.String(d.Get("location").(string)),
-		NumberOfConnections:  aws.Int64(int64(d.Get("number_of_connections").(int))),
+		NumberOfConnections:  aws.Int64(int64(noOfConnections)),
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect LAG: %#v", req)
@@ -69,6 +82,9 @@ func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+
+	// TODO: Remove default connection(s) automatically provisioned by AWS
+	// per NumberOfConnections
 
 	d.SetId(aws.StringValue(resp.LagId))
 	return resourceAwsDxLagUpdate(d, meta)
@@ -119,7 +135,6 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", lag.LagName)
 	d.Set("connections_bandwidth", lag.ConnectionsBandwidth)
 	d.Set("location", lag.Location)
-	d.Set("number_of_connections", lag.NumberOfConnections)
 
 	if err := getTagsDX(conn, d, arn); err != nil {
 		return err

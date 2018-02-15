@@ -438,7 +438,7 @@ resource "aws_rds_cluster" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSClusterConfig_namePrefix"
+		Name = "terraform-testacc-rds-cluster-name-prefix"
 	}
 }
 
@@ -479,7 +479,7 @@ resource "aws_rds_cluster" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSClusterConfig_generatedName"
+		Name = "terraform-testacc-rds-cluster-generated-name"
 	}
 }
 

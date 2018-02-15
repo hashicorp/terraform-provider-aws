@@ -76,7 +76,6 @@ func TestAccAwsVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "private_dns_enabled", "false"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -295,12 +294,11 @@ func testAccCheckVpcEndpointPrefixListAvailable(n string) resource.TestCheckFunc
 }
 
 const testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicy = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpc-endpoint-gw-w-route-table-and-policy"
+  }
 }
 
 resource "aws_subnet" "foo" {
@@ -337,12 +335,11 @@ resource "aws_route_table_association" "main" {
 `
 
 const testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicyModified = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpc-endpoint-gw-w-route-table-and-policy"
+  }
 }
 
 resource "aws_subnet" "foo" {
@@ -377,12 +374,11 @@ resource "aws_route_table_association" "main" {
 `
 
 const testAccVpcEndpointConfig_gatewayWithoutRouteTableOrPolicy = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpc-endpoint-gw-wout-route-table-or-policy"
+  }
 }
 
 resource "aws_vpc_endpoint" "s3" {
@@ -392,12 +388,11 @@ resource "aws_vpc_endpoint" "s3" {
 `
 
 const testAccVpcEndpointConfig_interfaceWithoutSubnet = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpc-endpoint-iface-wout-subnet"
+  }
 }
 
 data "aws_security_group" "default" {
@@ -414,14 +409,13 @@ resource "aws_vpc_endpoint" "ec2" {
 `
 
 const testAccVpcEndpointConfig_interfaceWithSubnet = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	enable_dns_support = true
 	enable_dns_hostnames = true
+	tags {
+		Name = "terraform-testacc-vpc-endpoint-iface-w-subnet"
+	}
 }
 
 resource "aws_subnet" "sn1" {
@@ -455,14 +449,13 @@ resource "aws_vpc_endpoint" "ec2" {
 `
 
 const testAccVpcEndpointConfig_interfaceWithSubnetModified = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	enable_dns_support = true
 	enable_dns_hostnames = true
+	tags {
+		Name = "terraform-testacc-vpc-endpoint-iface-w-subnet"
+	}
 }
 
 resource "aws_subnet" "sn1" {
@@ -496,13 +489,12 @@ resource "aws_vpc_endpoint" "ec2" {
 `
 
 func testAccVpcEndpointConfig_interfaceNonAWSService(lbName string) string {
-	return fmt.Sprintf(
-		`
+	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_vpc"
+    Name = "terraform-testacc-vpc-endpoint-iface-non-aws-svc"
   }
 }
 
