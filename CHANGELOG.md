@@ -40,6 +40,7 @@ BUG FIXES:
 * resource/aws_s3_bucket: Prevent crashes on location and replication read retry timeouts [GH-3338]
 * resource/aws_sqs_queue: Skip SQS ListQueueTags in aws-us-gov partition [GH-3376]
 * resource/aws_vpc_endpoint: Treat pending as expected state during deletion [GH-3370]
+* resource/aws_vpc_peering_connection: Treat `pending-acceptance` as expected during deletion [GH-3393]
 
 ## 1.9.0 (February 09, 2018)
 
