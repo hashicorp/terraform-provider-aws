@@ -22,6 +22,54 @@ func init() {
 	})
 }
 
+func TestResourceAWSMqBrokerPasswordValidation(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "123456789012",
+			ErrCount: 0,
+		},
+		{
+			Value:    "12345678901",
+			ErrCount: 1,
+		},
+		{
+			Value:    "1234567890" + strings.Repeat("#", 240),
+			ErrCount: 0,
+		},
+		{
+			Value:    "1234567890" + strings.Repeat("#", 241),
+			ErrCount: 1,
+		},
+		{
+			Value:    "123" + strings.Repeat("#", 9),
+			ErrCount: 0,
+		},
+		{
+			Value:    "12" + strings.Repeat("#", 10),
+			ErrCount: 1,
+		},
+		{
+			Value:    "12345678901,",
+			ErrCount: 1,
+		},
+		{
+			Value:    "1," + strings.Repeat("#", 9),
+			ErrCount: 3,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateMqBrokerPassword(tc.Value, "aws_mq_broker_user_password")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected errors %d for %s while returned errors %d", tc.ErrCount, tc.Value, len(errors))
+		}
+	}
+}
+
 func testSweepMqBrokers(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
@@ -607,7 +655,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "main" {
   cidr_block = "10.11.0.0/16"
   tags {
-    Name = "TfAccTest-MqBroker"
+    Name = "terraform-testacc-mq-broker-all-fields-custom-vpc"
   }
 }
 

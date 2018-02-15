@@ -9123,7 +9123,6 @@ func (c *Organizations) UpdatePolicyWithContext(ctx aws.Context, input *UpdatePo
 	return out, req.Send()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/AcceptHandshakeRequest
 type AcceptHandshakeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9165,7 +9164,6 @@ func (s *AcceptHandshakeInput) SetHandshakeId(v string) *AcceptHandshakeInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/AcceptHandshakeResponse
 type AcceptHandshakeOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9190,7 +9188,6 @@ func (s *AcceptHandshakeOutput) SetHandshake(v *Handshake) *AcceptHandshakeOutpu
 }
 
 // Contains information about an AWS account that is a member of an organization.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/Account
 type Account struct {
 	_ struct{} `type:"structure"`
 
@@ -9282,7 +9279,6 @@ func (s *Account) SetStatus(v string) *Account {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/AttachPolicyRequest
 type AttachPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9354,7 +9350,6 @@ func (s *AttachPolicyInput) SetTargetId(v string) *AttachPolicyInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/AttachPolicyOutput
 type AttachPolicyOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -9369,7 +9364,6 @@ func (s AttachPolicyOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CancelHandshakeRequest
 type CancelHandshakeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9412,7 +9406,6 @@ func (s *CancelHandshakeInput) SetHandshakeId(v string) *CancelHandshakeInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CancelHandshakeResponse
 type CancelHandshakeOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9437,7 +9430,6 @@ func (s *CancelHandshakeOutput) SetHandshake(v *Handshake) *CancelHandshakeOutpu
 }
 
 // Contains a list of child entities, either OUs or accounts.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/Child
 type Child struct {
 	_ struct{} `type:"structure"`
 
@@ -9480,7 +9472,6 @@ func (s *Child) SetType(v string) *Child {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateAccountRequest
 type CreateAccountInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9589,7 +9580,6 @@ func (s *CreateAccountInput) SetRoleName(v string) *CreateAccountInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateAccountResponse
 type CreateAccountOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9619,7 +9609,6 @@ func (s *CreateAccountOutput) SetCreateAccountStatus(v *CreateAccountStatus) *Cr
 
 // Contains the status about a CreateAccount request to create an AWS account
 // in an organization.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateAccountStatus
 type CreateAccountStatus struct {
 	_ struct{} `type:"structure"`
 
@@ -9721,7 +9710,6 @@ func (s *CreateAccountStatus) SetState(v string) *CreateAccountStatus {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateOrganizationRequest
 type CreateOrganizationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9757,7 +9745,6 @@ func (s *CreateOrganizationInput) SetFeatureSet(v string) *CreateOrganizationInp
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateOrganizationResponse
 type CreateOrganizationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9781,7 +9768,6 @@ func (s *CreateOrganizationOutput) SetOrganization(v *Organization) *CreateOrgan
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateOrganizationalUnitRequest
 type CreateOrganizationalUnitInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9849,7 +9835,6 @@ func (s *CreateOrganizationalUnitInput) SetParentId(v string) *CreateOrganizatio
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateOrganizationalUnitResponse
 type CreateOrganizationalUnitOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9873,7 +9858,6 @@ func (s *CreateOrganizationalUnitOutput) SetOrganizationalUnit(v *Organizational
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreatePolicyRequest
 type CreatePolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9973,7 +9957,6 @@ func (s *CreatePolicyInput) SetType(v string) *CreatePolicyInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreatePolicyResponse
 type CreatePolicyOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9997,7 +9980,6 @@ func (s *CreatePolicyOutput) SetPolicy(v *Policy) *CreatePolicyOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DeclineHandshakeRequest
 type DeclineHandshakeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10040,7 +10022,6 @@ func (s *DeclineHandshakeInput) SetHandshakeId(v string) *DeclineHandshakeInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DeclineHandshakeResponse
 type DeclineHandshakeOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10065,7 +10046,6 @@ func (s *DeclineHandshakeOutput) SetHandshake(v *Handshake) *DeclineHandshakeOut
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DeleteOrganizationInput
 type DeleteOrganizationInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10080,7 +10060,6 @@ func (s DeleteOrganizationInput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DeleteOrganizationOutput
 type DeleteOrganizationOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10095,7 +10074,6 @@ func (s DeleteOrganizationOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DeleteOrganizationalUnitRequest
 type DeleteOrganizationalUnitInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10140,7 +10118,6 @@ func (s *DeleteOrganizationalUnitInput) SetOrganizationalUnitId(v string) *Delet
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DeleteOrganizationalUnitOutput
 type DeleteOrganizationalUnitOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10155,7 +10132,6 @@ func (s DeleteOrganizationalUnitOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DeletePolicyRequest
 type DeletePolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10198,7 +10174,6 @@ func (s *DeletePolicyInput) SetPolicyId(v string) *DeletePolicyInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DeletePolicyOutput
 type DeletePolicyOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10213,7 +10188,6 @@ func (s DeletePolicyOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DescribeAccountRequest
 type DescribeAccountInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10256,7 +10230,6 @@ func (s *DescribeAccountInput) SetAccountId(v string) *DescribeAccountInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DescribeAccountResponse
 type DescribeAccountOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10280,7 +10253,6 @@ func (s *DescribeAccountOutput) SetAccount(v *Account) *DescribeAccountOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DescribeCreateAccountStatusRequest
 type DescribeCreateAccountStatusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10325,7 +10297,6 @@ func (s *DescribeCreateAccountStatusInput) SetCreateAccountRequestId(v string) *
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DescribeCreateAccountStatusResponse
 type DescribeCreateAccountStatusOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10349,7 +10320,6 @@ func (s *DescribeCreateAccountStatusOutput) SetCreateAccountStatus(v *CreateAcco
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DescribeHandshakeRequest
 type DescribeHandshakeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10393,7 +10363,6 @@ func (s *DescribeHandshakeInput) SetHandshakeId(v string) *DescribeHandshakeInpu
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DescribeHandshakeResponse
 type DescribeHandshakeOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10417,7 +10386,6 @@ func (s *DescribeHandshakeOutput) SetHandshake(v *Handshake) *DescribeHandshakeO
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DescribeOrganizationInput
 type DescribeOrganizationInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10432,7 +10400,6 @@ func (s DescribeOrganizationInput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DescribeOrganizationResponse
 type DescribeOrganizationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10456,7 +10423,6 @@ func (s *DescribeOrganizationOutput) SetOrganization(v *Organization) *DescribeO
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DescribeOrganizationalUnitRequest
 type DescribeOrganizationalUnitInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10501,7 +10467,6 @@ func (s *DescribeOrganizationalUnitInput) SetOrganizationalUnitId(v string) *Des
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DescribeOrganizationalUnitResponse
 type DescribeOrganizationalUnitOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10525,7 +10490,6 @@ func (s *DescribeOrganizationalUnitOutput) SetOrganizationalUnit(v *Organization
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DescribePolicyRequest
 type DescribePolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10568,7 +10532,6 @@ func (s *DescribePolicyInput) SetPolicyId(v string) *DescribePolicyInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DescribePolicyResponse
 type DescribePolicyOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10592,7 +10555,6 @@ func (s *DescribePolicyOutput) SetPolicy(v *Policy) *DescribePolicyOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DetachPolicyRequest
 type DetachPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10664,7 +10626,6 @@ func (s *DetachPolicyInput) SetTargetId(v string) *DetachPolicyInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DetachPolicyOutput
 type DetachPolicyOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10679,7 +10640,6 @@ func (s DetachPolicyOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DisableAWSServiceAccessRequest
 type DisableAWSServiceAccessInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10723,7 +10683,6 @@ func (s *DisableAWSServiceAccessInput) SetServicePrincipal(v string) *DisableAWS
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DisableAWSServiceAccessOutput
 type DisableAWSServiceAccessOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10738,7 +10697,6 @@ func (s DisableAWSServiceAccessOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DisablePolicyTypeRequest
 type DisablePolicyTypeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10795,7 +10753,6 @@ func (s *DisablePolicyTypeInput) SetRootId(v string) *DisablePolicyTypeInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DisablePolicyTypeResponse
 type DisablePolicyTypeOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10819,7 +10776,6 @@ func (s *DisablePolicyTypeOutput) SetRoot(v *Root) *DisablePolicyTypeOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/EnableAWSServiceAccessRequest
 type EnableAWSServiceAccessInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10863,7 +10819,6 @@ func (s *EnableAWSServiceAccessInput) SetServicePrincipal(v string) *EnableAWSSe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/EnableAWSServiceAccessOutput
 type EnableAWSServiceAccessOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10878,7 +10833,6 @@ func (s EnableAWSServiceAccessOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/EnableAllFeaturesRequest
 type EnableAllFeaturesInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10893,7 +10847,6 @@ func (s EnableAllFeaturesInput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/EnableAllFeaturesResponse
 type EnableAllFeaturesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10918,7 +10871,6 @@ func (s *EnableAllFeaturesOutput) SetHandshake(v *Handshake) *EnableAllFeaturesO
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/EnablePolicyTypeRequest
 type EnablePolicyTypeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10975,7 +10927,6 @@ func (s *EnablePolicyTypeInput) SetRootId(v string) *EnablePolicyTypeInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/EnablePolicyTypeResponse
 type EnablePolicyTypeOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11001,7 +10952,6 @@ func (s *EnablePolicyTypeOutput) SetRoot(v *Root) *EnablePolicyTypeOutput {
 
 // A structure that contains details of a service principal that is enabled
 // to integrate with AWS Organizations.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/EnabledServicePrincipal
 type EnabledServicePrincipal struct {
 	_ struct{} `type:"structure"`
 
@@ -11044,7 +10994,6 @@ func (s *EnabledServicePrincipal) SetServicePrincipal(v string) *EnabledServiceP
 //
 // Note: Handshakes that are CANCELED, ACCEPTED, or DECLINED show up in lists
 // for only 30 days after entering that state After that they are deleted.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/Handshake
 type Handshake struct {
 	_ struct{} `type:"structure"`
 
@@ -11180,7 +11129,6 @@ func (s *Handshake) SetState(v string) *Handshake {
 }
 
 // Specifies the criteria that are used to select the handshakes for the operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/HandshakeFilter
 type HandshakeFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -11222,7 +11170,6 @@ func (s *HandshakeFilter) SetParentHandshakeId(v string) *HandshakeFilter {
 }
 
 // Identifies a participant in a handshake.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/HandshakeParty
 type HandshakeParty struct {
 	_ struct{} `type:"structure"`
 
@@ -11282,7 +11229,6 @@ func (s *HandshakeParty) SetType(v string) *HandshakeParty {
 }
 
 // Contains additional data that is needed to process a handshake.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/HandshakeResource
 type HandshakeResource struct {
 	_ struct{} `type:"structure"`
 
@@ -11342,7 +11288,6 @@ func (s *HandshakeResource) SetValue(v string) *HandshakeResource {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/InviteAccountToOrganizationRequest
 type InviteAccountToOrganizationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11410,7 +11355,6 @@ func (s *InviteAccountToOrganizationInput) SetTarget(v *HandshakeParty) *InviteA
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/InviteAccountToOrganizationResponse
 type InviteAccountToOrganizationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11435,7 +11379,6 @@ func (s *InviteAccountToOrganizationOutput) SetHandshake(v *Handshake) *InviteAc
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/LeaveOrganizationInput
 type LeaveOrganizationInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -11450,7 +11393,6 @@ func (s LeaveOrganizationInput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/LeaveOrganizationOutput
 type LeaveOrganizationOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -11465,7 +11407,6 @@ func (s LeaveOrganizationOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListAWSServiceAccessForOrganizationRequest
 type ListAWSServiceAccessForOrganizationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11522,7 +11463,6 @@ func (s *ListAWSServiceAccessForOrganizationInput) SetNextToken(v string) *ListA
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListAWSServiceAccessForOrganizationResponse
 type ListAWSServiceAccessForOrganizationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11561,7 +11501,6 @@ func (s *ListAWSServiceAccessForOrganizationOutput) SetNextToken(v string) *List
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListAccountsForParentRequest
 type ListAccountsForParentInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11633,7 +11572,6 @@ func (s *ListAccountsForParentInput) SetParentId(v string) *ListAccountsForParen
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListAccountsForParentResponse
 type ListAccountsForParentOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11670,7 +11608,6 @@ func (s *ListAccountsForParentOutput) SetNextToken(v string) *ListAccountsForPar
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListAccountsRequest
 type ListAccountsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11727,7 +11664,6 @@ func (s *ListAccountsInput) SetNextToken(v string) *ListAccountsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListAccountsResponse
 type ListAccountsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11764,7 +11700,6 @@ func (s *ListAccountsOutput) SetNextToken(v string) *ListAccountsOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListChildrenRequest
 type ListChildrenInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11861,7 +11796,6 @@ func (s *ListChildrenInput) SetParentId(v string) *ListChildrenInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListChildrenResponse
 type ListChildrenOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11898,7 +11832,6 @@ func (s *ListChildrenOutput) SetNextToken(v string) *ListChildrenOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListCreateAccountStatusRequest
 type ListCreateAccountStatusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11965,7 +11898,6 @@ func (s *ListCreateAccountStatusInput) SetStates(v []*string) *ListCreateAccount
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListCreateAccountStatusResponse
 type ListCreateAccountStatusOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12004,7 +11936,6 @@ func (s *ListCreateAccountStatusOutput) SetNextToken(v string) *ListCreateAccoun
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListHandshakesForAccountRequest
 type ListHandshakesForAccountInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12075,7 +12006,6 @@ func (s *ListHandshakesForAccountInput) SetNextToken(v string) *ListHandshakesFo
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListHandshakesForAccountResponse
 type ListHandshakesForAccountOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12113,7 +12043,6 @@ func (s *ListHandshakesForAccountOutput) SetNextToken(v string) *ListHandshakesF
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListHandshakesForOrganizationRequest
 type ListHandshakesForOrganizationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12184,7 +12113,6 @@ func (s *ListHandshakesForOrganizationInput) SetNextToken(v string) *ListHandsha
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListHandshakesForOrganizationResponse
 type ListHandshakesForOrganizationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12222,7 +12150,6 @@ func (s *ListHandshakesForOrganizationOutput) SetNextToken(v string) *ListHandsh
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListOrganizationalUnitsForParentRequest
 type ListOrganizationalUnitsForParentInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12305,7 +12232,6 @@ func (s *ListOrganizationalUnitsForParentInput) SetParentId(v string) *ListOrgan
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListOrganizationalUnitsForParentResponse
 type ListOrganizationalUnitsForParentOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12342,7 +12268,6 @@ func (s *ListOrganizationalUnitsForParentOutput) SetOrganizationalUnits(v []*Org
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListParentsRequest
 type ListParentsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12424,7 +12349,6 @@ func (s *ListParentsInput) SetNextToken(v string) *ListParentsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListParentsResponse
 type ListParentsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12461,7 +12385,6 @@ func (s *ListParentsOutput) SetParents(v []*Parent) *ListParentsOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListPoliciesForTargetRequest
 type ListPoliciesForTargetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12560,7 +12483,6 @@ func (s *ListPoliciesForTargetInput) SetTargetId(v string) *ListPoliciesForTarge
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListPoliciesForTargetResponse
 type ListPoliciesForTargetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12597,7 +12519,6 @@ func (s *ListPoliciesForTargetOutput) SetPolicies(v []*PolicySummary) *ListPolic
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListPoliciesRequest
 type ListPoliciesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12668,7 +12589,6 @@ func (s *ListPoliciesInput) SetNextToken(v string) *ListPoliciesInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListPoliciesResponse
 type ListPoliciesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12707,7 +12627,6 @@ func (s *ListPoliciesOutput) SetPolicies(v []*PolicySummary) *ListPoliciesOutput
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListRootsRequest
 type ListRootsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12764,7 +12683,6 @@ func (s *ListRootsInput) SetNextToken(v string) *ListRootsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListRootsResponse
 type ListRootsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12801,7 +12719,6 @@ func (s *ListRootsOutput) SetRoots(v []*Root) *ListRootsOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListTargetsForPolicyRequest
 type ListTargetsForPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12875,7 +12792,6 @@ func (s *ListTargetsForPolicyInput) SetPolicyId(v string) *ListTargetsForPolicyI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListTargetsForPolicyResponse
 type ListTargetsForPolicyOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12913,7 +12829,6 @@ func (s *ListTargetsForPolicyOutput) SetTargets(v []*PolicyTargetSummary) *ListT
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/MoveAccountRequest
 type MoveAccountInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13007,7 +12922,6 @@ func (s *MoveAccountInput) SetSourceParentId(v string) *MoveAccountInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/MoveAccountOutput
 type MoveAccountOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -13026,7 +12940,6 @@ func (s MoveAccountOutput) GoString() string {
 // accounts that are centrally managed together using consolidated billing,
 // organized hierarchically with organizational units (OUs), and controlled
 // with policies .
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/Organization
 type Organization struct {
 	_ struct{} `type:"structure"`
 
@@ -13130,7 +13043,6 @@ func (s *Organization) SetMasterAccountId(v string) *Organization {
 // Contains details about an organizational unit (OU). An OU is a container
 // of AWS accounts within a root of an organization. Policies that are attached
 // to an OU apply to all accounts contained in that OU and in any child OUs.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/OrganizationalUnit
 type OrganizationalUnit struct {
 	_ struct{} `type:"structure"`
 
@@ -13187,7 +13099,6 @@ func (s *OrganizationalUnit) SetName(v string) *OrganizationalUnit {
 
 // Contains information about either a root or an organizational unit (OU) that
 // can contain OUs or accounts in an organization.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/Parent
 type Parent struct {
 	_ struct{} `type:"structure"`
 
@@ -13234,7 +13145,6 @@ func (s *Parent) SetType(v string) *Parent {
 // Contains rules to be applied to the affected accounts. Policies can be attached
 // directly to accounts, or to roots and OUs to affect all accounts in those
 // hierarchies.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/Policy
 type Policy struct {
 	_ struct{} `type:"structure"`
 
@@ -13269,7 +13179,6 @@ func (s *Policy) SetPolicySummary(v *PolicySummary) *Policy {
 
 // Contains information about a policy, but does not include the content. To
 // see the content of a policy, see DescribePolicy.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/PolicySummary
 type PolicySummary struct {
 	_ struct{} `type:"structure"`
 
@@ -13353,7 +13262,6 @@ func (s *PolicySummary) SetType(v string) *PolicySummary {
 
 // Contains information about a root, OU, or account that a policy is attached
 // to.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/PolicyTargetSummary
 type PolicyTargetSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -13427,7 +13335,6 @@ func (s *PolicyTargetSummary) SetType(v string) *PolicyTargetSummary {
 
 // Contains information about a policy type and its status in the associated
 // root.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/PolicyTypeSummary
 type PolicyTypeSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -13462,7 +13369,6 @@ func (s *PolicyTypeSummary) SetType(v string) *PolicyTypeSummary {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/RemoveAccountFromOrganizationRequest
 type RemoveAccountFromOrganizationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13505,7 +13411,6 @@ func (s *RemoveAccountFromOrganizationInput) SetAccountId(v string) *RemoveAccou
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/RemoveAccountFromOrganizationOutput
 type RemoveAccountFromOrganizationOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -13525,7 +13430,6 @@ func (s RemoveAccountFromOrganizationOutput) GoString() string {
 // Every root contains every AWS account in the organization. Each root enables
 // the accounts to be organized in a different way and to have different policy
 // types enabled for use in that root.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/Root
 type Root struct {
 	_ struct{} `type:"structure"`
 
@@ -13588,7 +13492,6 @@ func (s *Root) SetPolicyTypes(v []*PolicyTypeSummary) *Root {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/UpdateOrganizationalUnitRequest
 type UpdateOrganizationalUnitInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13649,7 +13552,6 @@ func (s *UpdateOrganizationalUnitInput) SetOrganizationalUnitId(v string) *Updat
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/UpdateOrganizationalUnitResponse
 type UpdateOrganizationalUnitOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13674,7 +13576,6 @@ func (s *UpdateOrganizationalUnitOutput) SetOrganizationalUnit(v *Organizational
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/UpdatePolicyRequest
 type UpdatePolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13756,7 +13657,6 @@ func (s *UpdatePolicyInput) SetPolicyId(v string) *UpdatePolicyInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/UpdatePolicyResponse
 type UpdatePolicyOutput struct {
 	_ struct{} `type:"structure"`
 

@@ -129,7 +129,7 @@ resource "aws_vpc" "foo" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "tf-default-route-table-test"
+    Name = "terraform-testacc-default-route-table"
   }
 }
 
@@ -164,7 +164,7 @@ resource "aws_vpc" "foo" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "tf-default-route-table"
+    Name = "terraform-testacc-default-route-table-change"
   }
 }
 
@@ -214,7 +214,7 @@ resource "aws_vpc" "foo" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "tf-default-route-table"
+    Name = "terraform-testacc-default-route-table-change"
   }
 }
 
@@ -268,7 +268,7 @@ resource "aws_vpc" "test" {
     cidr_block = "10.0.0.0/16"
 
     tags {
-        Name = "test"
+        Name = "terraform-testacc-default-route-table-vpc-endpoint"
     }
 }
 

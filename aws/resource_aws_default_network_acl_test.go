@@ -233,7 +233,7 @@ resource "aws_vpc" "tftestvpc" {
   cidr_block = "10.1.0.0/16"
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basic"
+    Name = "terraform-testacc-default-network-acl-basic"
   }
 }
 
@@ -251,7 +251,7 @@ resource "aws_vpc" "tftestvpc" {
   cidr_block = "10.1.0.0/16"
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basic"
+    Name = "terraform-testacc-default-network-acl-including-ipv6-rule"
   }
 }
 
@@ -278,7 +278,7 @@ resource "aws_vpc" "tftestvpc" {
   cidr_block = "10.1.0.0/16"
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basic"
+    Name = "terraform-testacc-default-network-acl-deny-ingress"
   }
 }
 
@@ -305,7 +305,7 @@ resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+    Name = "terraform-testacc-default-network-acl-subnets"
   }
 }
 
@@ -351,7 +351,7 @@ resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+    Name = "terraform-testacc-default-network-acl-subnets-remove"
   }
 }
 
@@ -395,7 +395,7 @@ resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+    Name = "terraform-testacc-default-network-acl-subnets-move"
   }
 }
 
@@ -448,7 +448,7 @@ resource "aws_vpc" "tftestvpc" {
 	assign_generated_ipv6_cidr_block = true
 
 	tags {
-		Name = "TestAccAWSDefaultNetworkAcl_basicIpv6Vpc"
+		Name = "terraform-testacc-default-network-acl-basic-ipv6-vpc"
 	}
 }
 

@@ -738,7 +738,7 @@ var testAccAWSElasticacheReplicationGroupInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-            Name = "tf-test"
+        Name = "terraform-testacc-elasticache-replication-group-in-vpc"
     }
 }
 
@@ -788,7 +788,7 @@ var testAccAWSElasticacheReplicationGroupMultiAZInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-            Name = "tf-test"
+        Name = "terraform-testacc-elasticache-replication-group-multi-az-in-vpc"
     }
 }
 
@@ -851,7 +851,7 @@ var testAccAWSElasticacheReplicationGroupRedisClusterInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-            Name = "tf-test"
+        Name = "terraform-testacc-elasticache-replication-group-redis-cluster-in-vpc"
     }
 }
 
@@ -917,7 +917,7 @@ func testAccAWSElasticacheReplicationGroupNativeRedisClusterErrorConfig(rInt int
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-        Name = "tf-test"
+        Name = "terraform-testacc-elasticache-replication-group-native-redis-cluster-err"
     }
 }
 
@@ -982,7 +982,7 @@ func testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rInt int, rNa
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-        Name = "tf-test"
+        Name = "terraform-testacc-elasticache-replication-group-native-redis-cluster"
     }
 }
 
@@ -1046,7 +1046,7 @@ func testAccAWSElasticacheReplicationGroup_EnableAtRestEncryptionConfig(rInt int
 resource "aws_vpc" "foo" {
   cidr_block = "192.168.0.0/16"
   tags {
-    Name = "tf-test"
+    Name = "terraform-testacc-elasticache-replication-group-at-rest-encryption"
   }
 }
 
@@ -1100,7 +1100,7 @@ func testAccAWSElasticacheReplicationGroup_EnableAuthTokenTransitEncryptionConfi
 resource "aws_vpc" "foo" {
   cidr_block = "192.168.0.0/16"
   tags {
-    Name = "tf-test"
+    Name = "terraform-testacc-elasticache-replication-group-auth-token-transit-encryption"
   }
 }
 

@@ -1132,7 +1132,7 @@ func testAccAWSDBInstanceConfigWithSubnetGroup(rName string) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name="testAccAWSDBInstanceConfigWithSubnetGroup"
+		Name = "terraform-testacc-db-instance-with-subnet-group"
 	}
 }
 
@@ -1186,14 +1186,14 @@ func testAccAWSDBInstanceConfigWithSubnetGroupUpdated(rName string) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name="testAccAWSDBInstanceConfigWithSubnetGroupUpdated"
+		Name = "terraform-testacc-db-instance-with-subnet-group-updated-foo"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.10.0.0/16"
 	tags {
-		Name="testAccAWSDBInstanceConfigWithSubnetGroupUpdated_other"
+		Name = "terraform-testacc-db-instance-with-subnet-group-updated-bar"
 	}
 }
 
@@ -1274,9 +1274,9 @@ func testAccAWSDBMSSQL_timezone(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-	tags {
-		Name = "tf-rds-mssql-timezone-test"
-	}
+  tags {
+    Name = "terraform-testacc-db-instance-mssql-timezone"
+  }
 }
 
 resource "aws_db_subnet_group" "rds_one" {
@@ -1340,9 +1340,9 @@ func testAccAWSDBMSSQL_timezone_AKST(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-	tags {
-		Name = "tf-rds-mssql-timezone-test"
-	}
+  tags {
+    Name = "terraform-testacc-db-instance-mssql-timezone-akst"
+  }
 }
 
 resource "aws_db_subnet_group" "rds_one" {

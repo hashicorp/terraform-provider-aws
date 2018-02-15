@@ -1211,7 +1211,9 @@ resource "aws_autoscaling_group" "bar" {
 const testAccAWSAutoScalingGroupConfigWithLoadBalancer = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-	tags { Name = "tf-asg-test" }
+  tags {
+    Name = "terraform-testacc-autoscaling-group-with-lb"
+  }
 }
 
 resource "aws_internet_gateway" "gw" {
@@ -1290,7 +1292,7 @@ const testAccAWSAutoScalingGroupConfigWithAZ = `
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
   tags {
-     Name = "terraform-test"
+    Name = "terraform-testacc-autoscaling-group-with-az"
   }
 }
 
@@ -1337,7 +1339,7 @@ const testAccAWSAutoScalingGroupConfigWithVPCIdent = `
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
   tags {
-     Name = "terraform-test"
+    Name = "terraform-testacc-autoscaling-group-with-vpc-id"
   }
 }
 
@@ -1516,7 +1518,7 @@ resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "terraform-testacc-autoscaling-group-alb-target-group"
   }
 }
 
@@ -1607,7 +1609,7 @@ resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "terraform-testacc-autoscaling-group-alb-target-group"
   }
 }
 
@@ -1704,7 +1706,7 @@ resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "terraform-testacc-autoscaling-group-alb-target-group"
   }
 }
 
@@ -1857,7 +1859,7 @@ resource "aws_vpc" "default" {
   enable_dns_support   = "true"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_ELBCapacity"
+    Name = "terraform-testacc-autoscaling-group-alb-target-group-elb-capacity"
   }
 }
 
@@ -2121,6 +2123,9 @@ resource "aws_launch_configuration" "test" {
 const testAccAWSAutoScalingGroupConfig_emptyAvailabilityZones = `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-autoscaling-group-empty-azs"
+  }
 }
 
 resource "aws_subnet" "test" {

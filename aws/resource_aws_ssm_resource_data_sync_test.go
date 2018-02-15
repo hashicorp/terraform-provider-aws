@@ -26,6 +26,27 @@ func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSsmResourceDataSync_import(t *testing.T) {
+	resourceName := "aws_ssm_resource_data_sync.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSsmResourceDataSyncDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccSsmResourceDataSyncConfig(acctest.RandInt(), acctest.RandString(5)),
+			},
+
+			resource.TestStep{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSsmResourceDataSyncDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ssmconn
 

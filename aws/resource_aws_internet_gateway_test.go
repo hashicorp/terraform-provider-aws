@@ -183,7 +183,7 @@ const testAccNoInternetGatewayConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccNoInternetGatewayConfig"
+		Name = "terraform-testacc-no-internet-gateway"
 	}
 }
 `
@@ -192,7 +192,7 @@ const testAccInternetGatewayConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccInternetGatewayConfig"
+		Name = "terraform-testacc-internet-gateway"
 	}
 }
 
@@ -205,14 +205,14 @@ const testAccInternetGatewayConfigChangeVPC = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccInternetGatewayConfigChangeVPC"
+		Name = "terraform-testacc-internet-gateway-change-vpc"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.2.0.0/16"
 	tags {
-		Name = "testAccInternetGatewayConfigChangeVPC_other"
+		Name = "terraform-testacc-internet-gateway-change-vpc-other"
 	}
 }
 
@@ -225,7 +225,7 @@ const testAccCheckInternetGatewayConfigTags = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccCheckInternetGatewayConfigTags"
+		Name = "terraform-testacc-internet-gateway-tags"
 	}
 }
 
@@ -241,7 +241,7 @@ const testAccCheckInternetGatewayConfigTagsUpdate = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccCheckInternetGatewayConfigTagsUpdate"
+		Name = "terraform-testacc-internet-gateway-tags"
 	}
 }
 

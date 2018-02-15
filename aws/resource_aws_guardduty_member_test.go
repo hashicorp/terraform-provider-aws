@@ -39,7 +39,7 @@ func testAccAwsGuardDutyMember_import(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSesTemplateDestroy,
+		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccGuardDutyMemberConfig_basic("111111111111", "required@example.com"),

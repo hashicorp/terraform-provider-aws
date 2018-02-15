@@ -200,7 +200,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
 	tags {
-		Name = "tf_acc_emr_tests"
+		Name = "terraform-testacc-emr-instance-group"
 	}
 }
 

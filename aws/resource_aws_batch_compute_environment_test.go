@@ -365,6 +365,9 @@ resource "aws_security_group" "test_acc" {
 
 resource "aws_vpc" "test_acc" {
   cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-batch-compute-environment"
+  }
 }
 
 resource "aws_subnet" "test_acc" {
