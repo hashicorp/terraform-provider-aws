@@ -33,6 +33,7 @@ BUG FIXES:
 * resource/aws_cloudtrail: Now respects initial `include_global_service_events = false` [GH-2817]
 * resource/aws_dynamodb_table: Retry deletion on ResourceInUseException [GH-3355]
 * resource/aws_dx_lag: `number_of_connections` deprecated (made Optional). Omitting field may now prevent spurious diffs. [GH-3367]
+* resource/aws_ecs_service: Retry DescribeServices after creation [GH-3387]
 * resource/aws_elasticsearch_domain: Retry creation on `ValidationException` [GH-3375]
 * resource/aws_iam_user_ssh_key: Correctly set status after creation [GH-3390]
 * resource/aws_kinesis_firehose_delivery_stream: Retry on additional IAM eventual consistency errors [GH-3381]
