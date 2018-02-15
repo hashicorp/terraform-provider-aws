@@ -38,6 +38,7 @@ BUG FIXES:
 * resource/aws_iam_user_ssh_key: Correctly set status after creation [GH-3390]
 * resource/aws_kinesis_firehose_delivery_stream: Retry on additional IAM eventual consistency errors [GH-3381]
 * resource/aws_s3_bucket: Prevent crashes on location and replication read retry timeouts [GH-3338]
+* resource/aws_s3_bucket: Always set replication_configuration in state [GH-3349]
 * resource/aws_sqs_queue: Skip SQS ListQueueTags in aws-us-gov partition [GH-3376]
 * resource/aws_vpc_endpoint: Treat pending as expected state during deletion [GH-3370]
 * resource/aws_vpc_peering_connection: Treat `pending-acceptance` as expected during deletion [GH-3393]
