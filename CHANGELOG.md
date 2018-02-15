@@ -14,6 +14,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_kms_alias: Always return `target_key_arn` [GH-3304]
 * resource/aws_autoscaling_policy: Add support for `target_tracking_configuration` [GH-2611]
 * resource/aws_dx_connection: Add support for tagging [GH-2990]
 * resource/aws_dx_connection: Add support for import [GH-2992]
