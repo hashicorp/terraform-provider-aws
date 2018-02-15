@@ -6,7 +6,7 @@ description: |-
   Get information on a Amazon Machine Image (AMI).
 ---
 
-# aws_ami
+# Data Source: aws_ami
 
 Use this data source to get the ID of a registered AMI for use in other
 resources.

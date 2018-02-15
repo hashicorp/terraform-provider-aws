@@ -162,7 +162,7 @@ resource "aws_vpc" "tf_b_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "beanstalk_crash"
+    Name = "terraform-testacc-elastic-beanstalk-cfg-tpl-vpc"
   }
 }
 

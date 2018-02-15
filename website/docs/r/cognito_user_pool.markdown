@@ -63,7 +63,7 @@ The following arguments are supported:
 #### Email Configuration
 
   * `reply_to_email_address` (Optional) - The REPLY-TO email address.
-  * `sns_caller_arn` (Optional) - The ARN of the email source.
+  * `source_arn` (Optional) - The ARN of the email source.
 
 #### Lambda Configuration
 
@@ -74,6 +74,7 @@ The following arguments are supported:
   * `post_confirmation` (Optional) - A post-confirmation AWS Lambda trigger.
   * `pre_authentication` (Optional) - A pre-authentication AWS Lambda trigger.
   * `pre_sign_up` (Optional) - A pre-registration AWS Lambda trigger.
+  * `pre_token_generation` (Optional) - Allow to customize identity token claims before token generation.
   * `verify_auth_challenge_response` (Optional) - Verifies the authentication challenge response.
 
 #### Password Policy
@@ -120,9 +121,10 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following attributes are exported:
+The following additional attributes are exported:
 
 * `id` - The id of the user pool.
+* `arn` - The ARN of the user pool.
 * `creation_date` - The date the user pool was created.
 * `last_modified_date` - The date the user pool was last modified.
 

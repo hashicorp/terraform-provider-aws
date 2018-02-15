@@ -1231,6 +1231,11 @@ resource "aws_elb" "foo" {
     lb_protocol = "http"
   }
 }
+
+# See https://github.com/terraform-providers/terraform-provider-aws/issues/2498
+output "lb_name" {
+  value = "${aws_elb.foo.name}"
+}
 `
 
 const testAccAWSELBConfig_AvailabilityZonesUpdate = `
@@ -1502,7 +1507,7 @@ resource "aws_vpc" "azelb" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "subnet-vpc"
+    Name = "terraform-testacc-elb-subnets"
   }
 }
 
@@ -1564,7 +1569,7 @@ resource "aws_vpc" "azelb" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "subnet-vpc"
+    Name = "terraform-testacc-elb-subnet-swap"
   }
 }
 

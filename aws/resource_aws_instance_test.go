@@ -39,16 +39,10 @@ func TestAccAWSInstance_basic(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t) },
-
-		// We ignore security groups because even with EC2 classic
-		// we'll import as VPC security groups, which is fine. We verify
-		// VPC security group import in other tests
-		IDRefreshName:   "aws_instance.foo",
-		IDRefreshIgnore: []string{"security_groups", "vpc_security_group_ids"},
-
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_instance.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			// Create a volume to cover #1249
 			{
@@ -117,16 +111,10 @@ func TestAccAWSInstance_userDataBase64(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t) },
-
-		// We ignore security groups because even with EC2 classic
-		// we'll import as VPC security groups, which is fine. We verify
-		// VPC security group import in other tests
-		IDRefreshName:   "aws_instance.foo",
-		IDRefreshIgnore: []string{"security_groups", "vpc_security_group_ids"},
-
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_instance.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigWithUserDataBase64(rInt),
@@ -165,12 +153,11 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
-		IDRefreshIgnore: []string{
-			"ephemeral_block_device", "user_data", "security_groups", "vpc_security_groups"},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   "aws_instance.foo",
+		IDRefreshIgnore: []string{"ephemeral_block_device", "user_data"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGP2IopsDevice,
@@ -196,12 +183,11 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 func TestAccAWSInstance_GP2WithIopsValue(t *testing.T) {
 	var v ec2.Instance
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
-		IDRefreshIgnore: []string{
-			"ephemeral_block_device", "user_data", "security_groups", "vpc_security_groups"},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   "aws_instance.foo",
+		IDRefreshIgnore: []string{"ephemeral_block_device", "user_data"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGP2WithIopsValue,
@@ -253,12 +239,11 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
-		IDRefreshIgnore: []string{
-			"ephemeral_block_device", "security_groups", "vpc_security_groups"},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   "aws_instance.foo",
+		IDRefreshIgnore: []string{"ephemeral_block_device"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigBlockDevices,
@@ -267,6 +252,8 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 						"aws_instance.foo", &v),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "root_block_device.#", "1"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo", "root_block_device.0.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "root_block_device.0.volume_size", "11"),
 					resource.TestCheckResourceAttr(
@@ -275,12 +262,16 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 						"aws_instance.foo", "ebs_block_device.#", "3"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2576023345.device_name", "/dev/sdb"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo", "ebs_block_device.2576023345.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2576023345.volume_size", "9"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2576023345.volume_type", "standard"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2554893574.device_name", "/dev/sdc"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo", "ebs_block_device.2554893574.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2554893574.volume_size", "10"),
 					resource.TestCheckResourceAttr(
@@ -377,12 +368,11 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
-		IDRefreshIgnore: []string{
-			"ephemeral_block_device", "security_groups", "vpc_security_groups"},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   "aws_instance.foo",
+		IDRefreshIgnore: []string{"ephemeral_block_device"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: `
@@ -1624,7 +1614,7 @@ const testAccInstanceConfigSourceDestEnable = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccInstanceConfigSourceDestEnable"
+		Name = "terraform-testacc-instance-source-dest-enable"
 	}
 }
 
@@ -1645,7 +1635,7 @@ const testAccInstanceConfigSourceDestDisable = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccInstanceConfigSourceDestDisable"
+		Name = "terraform-testacc-instance-source-dest-disable"
 	}
 }
 
@@ -1668,7 +1658,7 @@ func testAccInstanceConfigDisableAPITermination(val bool) string {
 	resource "aws_vpc" "foo" {
 		cidr_block = "10.1.0.0/16"
 		tags {
-			Name = "testAccInstanceConfigDisableAPITermination"
+			Name = "terraform-testacc-instance-disable-api-termination"
 		}
 	}
 
@@ -1691,7 +1681,7 @@ const testAccInstanceConfigVPC = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccInstanceConfigVPC"
+		Name = "terraform-testacc-instance-vpc"
 	}
 }
 
@@ -1717,7 +1707,7 @@ func testAccInstanceConfigPlacementGroup(rStr string) string {
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "testAccInstanceConfigPlacementGroup_%s"
+    Name = "terraform-testacc-instance-placement-group"
   }
 }
 
@@ -1742,7 +1732,7 @@ resource "aws_instance" "foo" {
   # pre-encoded base64 data
   user_data = "3dc39dda39be1205215e776bad998da361a5955d"
 }
-`, rStr, rStr)
+`, rStr)
 }
 
 const testAccInstanceConfigIpv6ErrorConfig = `
@@ -1750,7 +1740,7 @@ resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags {
-		Name = "tf-ipv6-instance-acc-test"
+		Name = "terraform-testacc-instance-ipv6-err"
 	}
 }
 
@@ -1781,7 +1771,7 @@ resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags {
-		Name = "tf-ipv6-instance-acc-test"
+		Name = "terraform-testacc-instance-ipv6-support"
 	}
 }
 
@@ -1812,7 +1802,7 @@ resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags {
-		Name = "tf-ipv6-instance-acc-test"
+		Name = "terraform-testacc-instance-ipv6-support-with-ipv4"
 	}
 }
 
@@ -2066,18 +2056,13 @@ resource "aws_iam_role" "test" {
 	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 
-resource "aws_iam_instance_profile" "test" {
-	name = "test-%s"
-	roles = ["${aws_iam_role.test.name}"]
-}
-
 resource "aws_instance" "foo" {
 	ami = "ami-4fccb37f"
 	instance_type = "m1.small"
 	tags {
 		bar = "baz"
 	}
-}`, rName, rName)
+}`, rName)
 }
 
 func testAccInstanceConfigWithInstanceProfile(rName string) string {
@@ -2106,7 +2091,7 @@ const testAccInstanceConfigPrivateIP = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccInstanceConfigPrivateIP"
+		Name = "terraform-testacc-instance-private-ip"
 	}
 }
 
@@ -2127,7 +2112,7 @@ const testAccInstanceConfigAssociatePublicIPAndPrivateIP = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccInstanceConfigAssociatePublicIPAndPrivateIP"
+		Name = "terraform-testacc-instance-public-ip-and-private-ip"
 	}
 }
 
@@ -2154,7 +2139,7 @@ resource "aws_internet_gateway" "gw" {
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-network-test"
+		Name = "terraform-testacc-instance-network-security-groups"
 	}
 }
 
@@ -2202,7 +2187,7 @@ resource "aws_internet_gateway" "gw" {
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-network-test"
+		Name = "terraform-testacc-instance-network-vpc-sg-ids"
 	}
 }
 
@@ -2266,7 +2251,7 @@ const testAccInstanceConfigRootBlockDeviceMismatch = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccInstanceConfigRootBlockDeviceMismatch"
+		Name = "terraform-testacc-instance-root-block-device-mismatch"
 	}
 }
 
@@ -2290,7 +2275,7 @@ const testAccInstanceConfigForceNewAndTagsDrift = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccInstanceConfigForceNewAndTagsDrift"
+		Name = "terraform-testacc-instance-force-new-and-tags-drift"
 	}
 }
 
@@ -2310,7 +2295,7 @@ const testAccInstanceConfigForceNewAndTagsDrift_Update = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccInstanceConfigForceNewAndTagsDrift_Update"
+		Name = "terraform-testacc-instance-force-new-and-tags-drift"
 	}
 }
 
@@ -2330,7 +2315,7 @@ const testAccInstanceConfigPrimaryNetworkInterface = `
 resource "aws_vpc" "foo" {
   cidr_block = "172.16.0.0/16"
   tags {
-    Name = "tf-instance-test"
+    Name = "terraform-testacc-instance-primary-network-iface"
   }
 }
 
@@ -2365,7 +2350,7 @@ const testAccInstanceConfigPrimaryNetworkInterfaceSourceDestCheck = `
 resource "aws_vpc" "foo" {
   cidr_block = "172.16.0.0/16"
   tags {
-    Name = "tf-instance-test"
+    Name = "terraform-testacc-instance-primary-network-iface-source-dest-check"
   }
 }
 
@@ -2401,7 +2386,7 @@ const testAccInstanceConfigAddSecondaryNetworkInterfaceBefore = `
 resource "aws_vpc" "foo" {
   cidr_block = "172.16.0.0/16"
   tags {
-    Name = "tf-instance-test"
+    Name = "terraform-testacc-instance-add-secondary-network-iface"
   }
 }
 
@@ -2444,7 +2429,7 @@ const testAccInstanceConfigAddSecondaryNetworkInterfaceAfter = `
 resource "aws_vpc" "foo" {
   cidr_block = "172.16.0.0/16"
   tags {
-    Name = "tf-instance-test"
+    Name = "terraform-testacc-instance-add-secondary-network-iface"
   }
 }
 
@@ -2491,9 +2476,9 @@ resource "aws_instance" "foo" {
 const testAccInstanceConfigAddSecurityGroupBefore = `
 resource "aws_vpc" "foo" {
     cidr_block = "172.16.0.0/16"
-        tags {
-            Name = "tf-eni-test"
-        }
+    tags {
+        Name = "terraform-testacc-instance-add-security-group"
+    }
 }
 
 resource "aws_subnet" "foo" {
@@ -2556,9 +2541,9 @@ resource "aws_network_interface" "bar" {
 const testAccInstanceConfigAddSecurityGroupAfter = `
 resource "aws_vpc" "foo" {
     cidr_block = "172.16.0.0/16"
-        tags {
-            Name = "tf-eni-test"
-        }
+    tags {
+        Name = "terraform-testacc-instance-add-security-group"
+    }
 }
 
 resource "aws_subnet" "foo" {
@@ -2624,7 +2609,7 @@ func testAccInstanceConfig_associatePublic_defaultPrivate(rInt int) string {
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
   tags {
-    Name = "tf-acctest-%d"
+    Name = "terraform-testacc-instance-associate-public-default-private"
   }
 }
 
@@ -2642,7 +2627,7 @@ resource "aws_instance" "foo" {
   tags {
     Name = "tf-acctest-%d"
   }
-}`, rInt, rInt)
+}`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_defaultPublic(rInt int) string {
@@ -2650,7 +2635,7 @@ func testAccInstanceConfig_associatePublic_defaultPublic(rInt int) string {
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
   tags {
-    Name = "tf-acctest-%d"
+    Name = "terraform-testacc-instance-associate-public-default-public"
   }
 }
 
@@ -2668,7 +2653,7 @@ resource "aws_instance" "foo" {
   tags {
     Name = "tf-acctest-%d"
   }
-}`, rInt, rInt)
+}`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_explicitPublic(rInt int) string {
@@ -2676,7 +2661,7 @@ func testAccInstanceConfig_associatePublic_explicitPublic(rInt int) string {
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
   tags {
-    Name = "tf-acctest-%d"
+    Name = "terraform-testacc-instance-associate-public-explicit-public"
   }
 }
 
@@ -2695,7 +2680,7 @@ resource "aws_instance" "foo" {
   tags {
     Name = "tf-acctest-%d"
   }
-}`, rInt, rInt)
+}`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_explicitPrivate(rInt int) string {
@@ -2703,7 +2688,7 @@ func testAccInstanceConfig_associatePublic_explicitPrivate(rInt int) string {
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
   tags {
-    Name = "tf-acctest-%d"
+    Name = "terraform-testacc-instance-associate-public-explicit-private"
   }
 }
 
@@ -2722,7 +2707,7 @@ resource "aws_instance" "foo" {
   tags {
     Name = "tf-acctest-%d"
   }
-}`, rInt, rInt)
+}`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_overridePublic(rInt int) string {
@@ -2730,7 +2715,7 @@ func testAccInstanceConfig_associatePublic_overridePublic(rInt int) string {
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
   tags {
-    Name = "tf-acctest-%d"
+    Name = "terraform-testacc-instance-associate-public-override-public"
   }
 }
 
@@ -2749,7 +2734,7 @@ resource "aws_instance" "foo" {
   tags {
     Name = "tf-acctest-%d"
   }
-}`, rInt, rInt)
+}`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_overridePrivate(rInt int) string {
@@ -2757,7 +2742,7 @@ func testAccInstanceConfig_associatePublic_overridePrivate(rInt int) string {
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
   tags {
-    Name = "tf-acctest-%d"
+    Name = "terraform-testacc-instance-associate-public-override-private"
   }
 }
 
@@ -2776,5 +2761,5 @@ resource "aws_instance" "foo" {
   tags {
     Name = "tf-acctest-%d"
   }
-}`, rInt, rInt)
+}`, rInt)
 }

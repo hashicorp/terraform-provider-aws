@@ -7223,6 +7223,96 @@ func (c *APIGateway) GetStagesWithContext(ctx aws.Context, input *GetStagesInput
 	return out, req.Send()
 }
 
+const opGetTags = "GetTags"
+
+// GetTagsRequest generates a "aws/request.Request" representing the
+// client's request for the GetTags operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetTags for more information on using the GetTags
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetTagsRequest method.
+//    req, resp := client.GetTagsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) GetTagsRequest(input *GetTagsInput) (req *request.Request, output *GetTagsOutput) {
+	op := &request.Operation{
+		Name:       opGetTags,
+		HTTPMethod: "GET",
+		HTTPPath:   "/tags/{resource_arn}",
+	}
+
+	if input == nil {
+		input = &GetTagsInput{}
+	}
+
+	output = &GetTagsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetTags API operation for Amazon API Gateway.
+//
+// Gets the Tags collection for a given resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation GetTags for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   The submitted request is not valid, for example, the input is incomplete
+//   or incorrect. See the accompanying error message for details.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   The request is denied because the caller has insufficient permissions.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request has reached its throttling limit. Retry after the specified time
+//   period.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The requested resource is not found. Make sure that the request URI is correct.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   The request exceeded the rate limit. Retry after the specified time period.
+//
+func (c *APIGateway) GetTags(input *GetTagsInput) (*GetTagsOutput, error) {
+	req, out := c.GetTagsRequest(input)
+	return out, req.Send()
+}
+
+// GetTagsWithContext is the same as GetTags with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetTags for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetTagsWithContext(ctx aws.Context, input *GetTagsInput, opts ...request.Option) (*GetTagsOutput, error) {
+	req, out := c.GetTagsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetUsage = "GetUsage"
 
 // GetUsageRequest generates a "aws/request.Request" representing the
@@ -8889,6 +8979,102 @@ func (c *APIGateway) PutRestApiWithContext(ctx aws.Context, input *PutRestApiInp
 	return out, req.Send()
 }
 
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/tags/{resource_arn}",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for Amazon API Gateway.
+//
+// Adds or updates Tags on a gievn resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation TagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   The submitted request is not valid, for example, the input is incomplete
+//   or incorrect. See the accompanying error message for details.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   The request is denied because the caller has insufficient permissions.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request has reached its throttling limit. Retry after the specified time
+//   period.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The requested resource is not found. Make sure that the request URI is correct.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   The request exceeded the rate limit. Retry after the specified time period.
+//
+//   * ErrCodeConflictException "ConflictException"
+//   The request configuration has conflicts. For details, see the accompanying
+//   error message.
+//
+func (c *APIGateway) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opTestInvokeAuthorizer = "TestInvokeAuthorizer"
 
 // TestInvokeAuthorizerRequest generates a "aws/request.Request" representing the
@@ -9062,6 +9248,99 @@ func (c *APIGateway) TestInvokeMethod(input *TestInvokeMethodInput) (*TestInvoke
 // for more information on using Contexts.
 func (c *APIGateway) TestInvokeMethodWithContext(ctx aws.Context, input *TestInvokeMethodInput, opts ...request.Option) (*TestInvokeMethodOutput, error) {
 	req, out := c.TestInvokeMethodRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/tags/{resource_arn}",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for Amazon API Gateway.
+//
+// Removes Tags from a given resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation UntagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   The submitted request is not valid, for example, the input is incomplete
+//   or incorrect. See the accompanying error message for details.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   The request is denied because the caller has insufficient permissions.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request has reached its throttling limit. Retry after the specified time
+//   period.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The requested resource is not found. Make sure that the request URI is correct.
+//
+//   * ErrCodeConflictException "ConflictException"
+//   The request configuration has conflicts. For details, see the accompanying
+//   error message.
+//
+func (c *APIGateway) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -12558,6 +12837,13 @@ func (s *CreateResourceInput) SetRestApiId(v string) *CreateResourceInput {
 type CreateRestApiInput struct {
 	_ struct{} `type:"structure"`
 
+	// The source of the API key for metring requests according to a usage plan.
+	// Valid values are HEADER to read the API key from the X-API-Key header of
+	// a request.
+	// AUTHORIZER to read the API key from the UsageIdentifierKey from a custom
+	// authorizer.
+	ApiKeySource *string `locationName:"apiKeySource" type:"string" enum:"ApiKeySourceType"`
+
 	// The list of binary media types supported by the RestApi. By default, the
 	// RestApi supports only UTF-8-encoded text payloads.
 	BinaryMediaTypes []*string `locationName:"binaryMediaTypes" type:"list"`
@@ -12571,6 +12857,13 @@ type CreateRestApiInput struct {
 	// The endpoint configuration of this RestApi showing the endpoint types of
 	// the API.
 	EndpointConfiguration *EndpointConfiguration `locationName:"endpointConfiguration" type:"structure"`
+
+	// A nullable integer used to enable (non-negative between 0 and 10485760 (10M)
+	// bytes, inclusive) or disable (null) compression on an API. When compression
+	// is enabled, compression or decompression are not applied on the payload if
+	// the payload size is smaller than this value. Setting it to zero allows compression
+	// for any payload size.
+	MinimumCompressionSize *int64 `locationName:"minimumCompressionSize" type:"integer"`
 
 	// The name of the RestApi.
 	//
@@ -12604,6 +12897,12 @@ func (s *CreateRestApiInput) Validate() error {
 	return nil
 }
 
+// SetApiKeySource sets the ApiKeySource field's value.
+func (s *CreateRestApiInput) SetApiKeySource(v string) *CreateRestApiInput {
+	s.ApiKeySource = &v
+	return s
+}
+
 // SetBinaryMediaTypes sets the BinaryMediaTypes field's value.
 func (s *CreateRestApiInput) SetBinaryMediaTypes(v []*string) *CreateRestApiInput {
 	s.BinaryMediaTypes = v
@@ -12625,6 +12924,12 @@ func (s *CreateRestApiInput) SetDescription(v string) *CreateRestApiInput {
 // SetEndpointConfiguration sets the EndpointConfiguration field's value.
 func (s *CreateRestApiInput) SetEndpointConfiguration(v *EndpointConfiguration) *CreateRestApiInput {
 	s.EndpointConfiguration = v
+	return s
+}
+
+// SetMinimumCompressionSize sets the MinimumCompressionSize field's value.
+func (s *CreateRestApiInput) SetMinimumCompressionSize(v int64) *CreateRestApiInput {
+	s.MinimumCompressionSize = &v
 	return s
 }
 
@@ -12673,6 +12978,11 @@ type CreateStageInput struct {
 	//
 	// StageName is a required field
 	StageName *string `locationName:"stageName" type:"string" required:"true"`
+
+	// Key/Value map of strings. Valid character set is [a-zA-Z+-=._:/]. Tag key
+	// can be up to 128 characters and must not start with "aws:". Tag value can
+	// be up to 256 characters.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 
 	// A map that defines the stage variables for the new Stage resource. Variable
 	// names can have alphanumeric and underscore characters, and the values must
@@ -12754,6 +13064,12 @@ func (s *CreateStageInput) SetRestApiId(v string) *CreateStageInput {
 // SetStageName sets the StageName field's value.
 func (s *CreateStageInput) SetStageName(v string) *CreateStageInput {
 	s.StageName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateStageInput) SetTags(v map[string]*string) *CreateStageInput {
+	s.Tags = v
 	return s
 }
 
@@ -18013,6 +18329,89 @@ func (s *GetStagesOutput) SetItem(v []*Stage) *GetStagesOutput {
 	return s
 }
 
+// Gets the Tags collection for a given resource.
+type GetTagsInput struct {
+	_ struct{} `type:"structure"`
+
+	// (Not currently supported) The maximum number of returned results per page.
+	Limit *int64 `location:"querystring" locationName:"limit" type:"integer"`
+
+	// (Not currently supported) The current pagination position in the paged result
+	// set.
+	Position *string `location:"querystring" locationName:"position" type:"string"`
+
+	// [Required] The ARN of a resource that can be tagged. At present, Stage is
+	// the only taggable resource.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resource_arn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetTagsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetTagsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetTagsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetTagsInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLimit sets the Limit field's value.
+func (s *GetTagsInput) SetLimit(v int64) *GetTagsInput {
+	s.Limit = &v
+	return s
+}
+
+// SetPosition sets the Position field's value.
+func (s *GetTagsInput) SetPosition(v string) *GetTagsInput {
+	s.Position = &v
+	return s
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *GetTagsInput) SetResourceArn(v string) *GetTagsInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// A collection of Tags associated with a given resource.
+type GetTagsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A collection of Tags associated with a given resource.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s GetTagsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetTagsOutput) GoString() string {
+	return s.String()
+}
+
+// SetTags sets the Tags field's value.
+func (s *GetTagsOutput) SetTags(v map[string]*string) *GetTagsOutput {
+	s.Tags = v
+	return s
+}
+
 // The GET request to get the usage data of a usage plan in a specified time
 // interval.
 type GetUsageInput struct {
@@ -19211,13 +19610,14 @@ type Method struct {
 	// method.
 	ApiKeyRequired *bool `locationName:"apiKeyRequired" type:"boolean"`
 
-	// A list authorization scopes configured on the method used with a COGNITO_USER_POOL
-	// authorizer to authorize the method invocation by matching them against the
-	// scopes parsed from the access token in the incoming request. The method invocation
-	// is authorized if any method scopes matches a claimed scope in the access
-	// token. Otherwise, the invocation is not authorized. When the method scope
-	// is configured, the client must provide an access token instead of an identity
-	// token for authorizatinon purposes.
+	// A list of authorization scopes configured on the method. The scopes are used
+	// with a COGNITO_USER_POOL authorizer to authorize the method invocation. The
+	// authorization works by matching the method scopes against the scopes parsed
+	// from the access token in the incoming request. The method invocation is authorized
+	// if any method scopes matches a claimed scope in the access token. Otherwise,
+	// the invocation is not authorized. When the method scope is configured, the
+	// client must provide an access token instead of an identity token for authorization
+	// purposes.
 	AuthorizationScopes []*string `locationName:"authorizationScopes" type:"list"`
 
 	// The method's authorization type. Valid values are NONE for open access, AWS_IAM
@@ -20286,13 +20686,14 @@ type PutMethodInput struct {
 	// Specifies whether the method required a valid ApiKey.
 	ApiKeyRequired *bool `locationName:"apiKeyRequired" type:"boolean"`
 
-	// A list authorization scopes configured on the method used with a COGNITO_USER_POOL
-	// authorizer to authorize the method invocation by matching them against the
-	// scopes parsed from the access token in the incoming request. The method invocation
-	// is authorized if any method scopes matches a claimed scope in the access
-	// token. Otherwise, the invocation is not authorized. When the method scope
-	// is configured, the client must provide an access token instead of an identity
-	// token for authorizatinon purposes.
+	// A list of authorization scopes configured on the method. The scopes are used
+	// with a COGNITO_USER_POOL authorizer to authorize the method invocation. The
+	// authorization works by matching the method scopes against the scopes parsed
+	// from the access token in the incoming request. The method invocation is authorized
+	// if any method scopes matches a claimed scope in the access token. Otherwise,
+	// the invocation is not authorized. When the method scope is configured, the
+	// client must provide an access token instead of an identity token for authorization
+	// purposes.
 	AuthorizationScopes []*string `locationName:"authorizationScopes" type:"list"`
 
 	// The method's authorization type. Valid values are NONE for open access, AWS_IAM
@@ -20810,6 +21211,13 @@ func (s *Resource) SetResourceMethods(v map[string]*Method) *Resource {
 type RestApi struct {
 	_ struct{} `type:"structure"`
 
+	// The source of the API key for metring requests according to a usage plan.
+	// Valid values are HEADER to read the API key from the X-API-Key header of
+	// a request.
+	// AUTHORIZER to read the API key from the UsageIdentifierKey from a custom
+	// authorizer.
+	ApiKeySource *string `locationName:"apiKeySource" type:"string" enum:"ApiKeySourceType"`
+
 	// The list of binary media types supported by the RestApi. By default, the
 	// RestApi supports only UTF-8-encoded text payloads.
 	BinaryMediaTypes []*string `locationName:"binaryMediaTypes" type:"list"`
@@ -20827,6 +21235,13 @@ type RestApi struct {
 	// The API's identifier. This identifier is unique across all of your APIs in
 	// API Gateway.
 	Id *string `locationName:"id" type:"string"`
+
+	// A nullable integer used to enable (non-negative between 0 and 10485760 (10M)
+	// bytes, inclusive) or disable (null) compression on an API. When compression
+	// is enabled, compression or decompression are not applied on the payload if
+	// the payload size is smaller than this value. Setting it to zero allows compression
+	// for any payload size.
+	MinimumCompressionSize *int64 `locationName:"minimumCompressionSize" type:"integer"`
 
 	// The API's name.
 	Name *string `locationName:"name" type:"string"`
@@ -20847,6 +21262,12 @@ func (s RestApi) String() string {
 // GoString returns the string representation
 func (s RestApi) GoString() string {
 	return s.String()
+}
+
+// SetApiKeySource sets the ApiKeySource field's value.
+func (s *RestApi) SetApiKeySource(v string) *RestApi {
+	s.ApiKeySource = &v
+	return s
 }
 
 // SetBinaryMediaTypes sets the BinaryMediaTypes field's value.
@@ -20876,6 +21297,12 @@ func (s *RestApi) SetEndpointConfiguration(v *EndpointConfiguration) *RestApi {
 // SetId sets the Id field's value.
 func (s *RestApi) SetId(v string) *RestApi {
 	s.Id = &v
+	return s
+}
+
+// SetMinimumCompressionSize sets the MinimumCompressionSize field's value.
+func (s *RestApi) SetMinimumCompressionSize(v int64) *RestApi {
+	s.MinimumCompressionSize = &v
 	return s
 }
 
@@ -21059,6 +21486,9 @@ type Stage struct {
 	// (URI) of a call to API Gateway.
 	StageName *string `locationName:"stageName" type:"string"`
 
+	// A collection of Tags associated with a given resource.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// A map that defines the stage variables for a Stage resource. Variable names
 	// can have alphanumeric and underscore characters, and the values must match
 	// [A-Za-z0-9-._~:/?#&=,]+.
@@ -21153,6 +21583,12 @@ func (s *Stage) SetStageName(v string) *Stage {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *Stage) SetTags(v map[string]*string) *Stage {
+	s.Tags = v
+	return s
+}
+
 // SetVariables sets the Variables field's value.
 func (s *Stage) SetVariables(v map[string]*string) *Stage {
 	s.Variables = v
@@ -21190,6 +21626,76 @@ func (s *StageKey) SetRestApiId(v string) *StageKey {
 func (s *StageKey) SetStageName(v string) *StageKey {
 	s.StageName = &v
 	return s
+}
+
+// Adds or updates Tags on a gievn resource.
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// [Required] The ARN of a resource that can be tagged. At present, Stage is
+	// the only taggable resource.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resource_arn" type:"string" required:"true"`
+
+	// [Required] Key/Value map of strings. Valid character set is [a-zA-Z+-=._:/].
+	// Tag key can be up to 128 characters and must not start with "aws:". Tag value
+	// can be up to 256 characters.
+	//
+	// Tags is a required field
+	Tags map[string]*string `locationName:"tags" type:"map" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *TagResourceInput) SetResourceArn(v string) *TagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TagResourceInput) SetTags(v map[string]*string) *TagResourceInput {
+	s.Tags = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
 }
 
 // Make a request to simulate the execution of an Authorizer.
@@ -21585,6 +22091,74 @@ func (s *ThrottleSettings) SetBurstLimit(v int64) *ThrottleSettings {
 func (s *ThrottleSettings) SetRateLimit(v float64) *ThrottleSettings {
 	s.RateLimit = &v
 	return s
+}
+
+// Removes Tags from a given resource.
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// [Required] The ARN of a resource that can be tagged. At present, Stage is
+	// the only taggable resource.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resource_arn" type:"string" required:"true"`
+
+	// The Tag keys to delete.
+	//
+	// TagKeys is a required field
+	TagKeys []*string `location:"querystring" locationName:"tagKeys" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *UntagResourceInput) SetResourceArn(v string) *UntagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
+	s.TagKeys = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
 }
 
 // Requests API Gateway to change information about the current Account resource.
@@ -23432,6 +24006,14 @@ func (s *UsagePlanKey) SetValue(v string) *UsagePlanKey {
 	s.Value = &v
 	return s
 }
+
+const (
+	// ApiKeySourceTypeHeader is a ApiKeySourceType enum value
+	ApiKeySourceTypeHeader = "HEADER"
+
+	// ApiKeySourceTypeAuthorizer is a ApiKeySourceType enum value
+	ApiKeySourceTypeAuthorizer = "AUTHORIZER"
+)
 
 const (
 	// ApiKeysFormatCsv is a ApiKeysFormat enum value

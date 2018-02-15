@@ -166,8 +166,7 @@ associate.
 Replicate database managed by Terraform will promote the database to a fully
 standalone database.
 
-
-#### S3 Import Options
+### S3 Import Options
 Full details on the core parameters and impacts are in the API Docs: [RestoreDBInstanceFromS3](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromS3.html).  Sample 
 ```hcl
 resource "aws_db_instance" "db" {
@@ -184,8 +183,23 @@ resource "aws_db_instance" "db" {
 * `source_engine` - (Defaults to 'mysql') Source engine for the backup
 * `source_engine_version` - (Defaults to '5.6') Version of the source engine used to make the backup
 
-This will NOT recreate the resource if the S3 object changes in someway.  It's only used to initial the database
+This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database
 
+### Timeouts
+
+`aws_db_instance` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `40 minutes`) Used for Creating Instances, Replicas, and
+restoring from Snapshots.
+- `update` - (Default `80 minutes`) Used for Database modifications.
+- `delete` - (Default `40 minutes`) Used for destroying databases. This includes
+the time required to take snapshots.
+
+[1]:
+https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
+[2]:
+https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
 
 ## Attributes Reference
 
@@ -219,25 +233,10 @@ On Oracle instances the following is exported additionally:
 
 * `character_set_name` - The character set used on Oracle instances.
 
-
-<a id="timeouts"></a> ## Timeouts
-
-`aws_db_instance` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
-
-- `create` - (Default `40 minutes`) Used for Creating Instances, Replicas, and
-restoring from Snapshots.
-- `update` - (Default `80 minutes`) Used for Database modifications.
-- `delete` - (Default `40 minutes`) Used for destroying databases. This includes
-the time required to take snapshots.
-
-[1]:
-https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
-[2]:
-https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
-
 ## Import
 
 DB Instances can be imported using the `identifier`, e.g.
 
-``` $ terraform import aws_db_instance.default mydb-rds-instance ```
+```
+$ terraform import aws_db_instance.default mydb-rds-instance
+```

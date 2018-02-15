@@ -331,7 +331,7 @@ Can be either `BucketOwner` or `Requester`. By default, the owner of the S3 buck
 the costs of any data transfer. See [Requester Pays Buckets](http://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
 developer guide for more information.
 * `replication_configuration` - (Optional) A configuration of [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html) (documented below).
-* `server_side_encryption_configuration` - (Optional) A confguration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html) (documented blow)
+* `server_side_encryption_configuration` - (Optional) A configuration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html) (documented below)
 
 ~> **NOTE:** You cannot use `acceleration_status` in `cn-north-1` or `us-gov-west-1`
 
@@ -417,7 +417,7 @@ The `server_side_encryption_configuration` object supports the following:
 
 * `rule` - (required) A single object for server-side encryption by default configuration. (documented below)
 
-The 'rule' object supports the following:
+The `rule` object supports the following:
 
 * `apply_server_side_encryption_by_default` - (required) A single object for setting server-side encryption by default. (documented below)
 

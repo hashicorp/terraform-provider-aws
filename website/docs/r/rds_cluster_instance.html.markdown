@@ -79,6 +79,8 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `preferred_maintenance_window` - (Optional) The window to perform maintenance in.
   Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00".
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
+* `performance_insights_enabled` - (Optional) Specifies whether Performance Insights is enabled or not.
+* `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true.
 * `tags` - (Optional) A mapping of tags to assign to the instance.
 
 ## Attributes Reference
@@ -101,6 +103,8 @@ this instance is a read replica
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted.
 * `kms_key_id` - The ARN for the KMS encryption key if one is set to the cluster.
 * `dbi_resource_id` - The region-unique, immutable identifier for the DB instance.
+* `performance_insights_enabled` - Specifies whether Performance Insights is enabled or not.
+* `performance_insights_kms_key_id` - The ARN for the KMS encryption key used by Performance Insights.
 
 [2]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Aurora.html
 [3]: /docs/providers/aws/r/rds_cluster.html

@@ -98,6 +98,7 @@ func TestAccAWSDirectoryServiceDirectory_basic(t *testing.T) {
 				Config: testAccDirectoryServiceDirectoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
+					resource.TestCheckResourceAttrSet("aws_directory_service_directory.bar", "security_group_id"),
 				),
 			},
 		},
@@ -326,7 +327,7 @@ resource "aws_directory_service_directory" "bar" {
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccDirectoryServiceDirectoryConfig"
+		Name = "terraform-testacc-directory-service-directory"
 	}
 }
 
@@ -362,7 +363,7 @@ resource "aws_directory_service_directory" "bar" {
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccDirectoryServiceDirectoryConfig"
+		Name = "terraform-testacc-directory-service-directory-tags"
 	}
 }
 
@@ -407,7 +408,7 @@ resource "aws_directory_service_directory" "connector" {
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccDirectoryServiceDirectoryConfig_connector"
+		Name = "terraform-testacc-directory-service-directory-connector"
 	}
 }
 
@@ -438,7 +439,7 @@ resource "aws_directory_service_directory" "bar" {
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccDirectoryServiceDirectoryConfig_microsoft"
+		Name = "terraform-testacc-directory-service-directory-microsoft"
 	}
 }
 
@@ -471,7 +472,7 @@ resource "aws_directory_service_directory" "bar_a" {
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccDirectoryServiceDirectoryConfig_withAlias"
+		Name = "terraform-testacc-directory-service-directory-with-alias"
 	}
 }
 
@@ -504,7 +505,7 @@ resource "aws_directory_service_directory" "bar_a" {
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccDirectoryServiceDirectoryConfig_withSso"
+		Name = "terraform-testacc-directory-service-directory-with-sso"
 	}
 }
 
@@ -537,7 +538,7 @@ resource "aws_directory_service_directory" "bar_a" {
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccDirectoryServiceDirectoryConfig_withSso_modified"
+		Name = "terraform-testacc-directory-service-directory-with-sso-modified"
 	}
 }
 

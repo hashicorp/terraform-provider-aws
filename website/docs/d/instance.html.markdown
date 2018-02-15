@@ -6,7 +6,7 @@ description: |-
   Get information on an Amazon EC2 Instance.
 ---
 
-# aws_instance
+# Data Source: aws_instance
 
 Use this data source to get the ID of an Amazon EC2 Instance for use in other
 resources.

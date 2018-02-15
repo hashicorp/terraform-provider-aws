@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific Elastic IP
 ---
 
-# aws_eip
+# Data Source: aws_eip
 
 `aws_eip` provides details about a specific Elastic IP.
 

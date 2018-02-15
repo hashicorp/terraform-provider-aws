@@ -92,7 +92,6 @@ resource "aws_dx_lag" "test" {
   name = "tf-dx-%s"
   connections_bandwidth = "1Gbps"
   location = "EqSe2"
-  number_of_connections = 1
   force_destroy = true
 }
 
@@ -121,7 +120,6 @@ resource "aws_dx_lag" "test" {
   name = "tf-dx-%s"
   connections_bandwidth = "1Gbps"
   location = "EqSe2"
-  number_of_connections = 1
   force_destroy = true
 }
 

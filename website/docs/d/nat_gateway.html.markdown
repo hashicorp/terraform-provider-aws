@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific Nat Gateway
 ---
 
-# aws_nat_gateway
+# Data Source: aws_nat_gateway
 
 Provides details about a specific Nat Gateway.
 

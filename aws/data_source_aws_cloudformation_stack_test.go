@@ -1,19 +1,24 @@
 package aws
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccAWSCloudFormationStack_dataSource_basic(t *testing.T) {
+	rString := acctest.RandString(8)
+	stackName := fmt.Sprintf("tf-acc-ds-basic-%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCheckAwsCloudFormationStackDataSourceConfig_basic,
+				Config: testAccCheckAwsCloudFormationStackDataSourceConfig_basic(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.network", "outputs.%", "1"),
 					resource.TestMatchResourceAttr("data.aws_cloudformation_stack.network", "outputs.VPCId",
@@ -33,9 +38,10 @@ func TestAccAWSCloudFormationStack_dataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccCheckAwsCloudFormationStackDataSourceConfig_basic = `
+func testAccCheckAwsCloudFormationStackDataSourceConfig_basic(stackName string) string {
+	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "cfs" {
-  name = "tf-acc-ds-networking-stack"
+  name = "%s"
   parameters {
     CIDR = "10.10.10.0/24"
   }
@@ -75,15 +81,19 @@ STACK
 data "aws_cloudformation_stack" "network" {
   name = "${aws_cloudformation_stack.cfs.name}"
 }
-`
+`, stackName)
+}
 
 func TestAccAWSCloudFormationStack_dataSource_yaml(t *testing.T) {
+	rString := acctest.RandString(8)
+	stackName := fmt.Sprintf("tf-acc-ds-yaml-%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCheckAwsCloudFormationStackDataSourceConfig_yaml,
+				Config: testAccCheckAwsCloudFormationStackDataSourceConfig_yaml(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.yaml", "outputs.%", "1"),
 					resource.TestMatchResourceAttr("data.aws_cloudformation_stack.yaml", "outputs.VPCId",
@@ -103,9 +113,10 @@ func TestAccAWSCloudFormationStack_dataSource_yaml(t *testing.T) {
 	})
 }
 
-const testAccCheckAwsCloudFormationStackDataSourceConfig_yaml = `
+func testAccCheckAwsCloudFormationStackDataSourceConfig_yaml(stackName string) string {
+	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "yaml" {
-  name = "tf-acc-ds-yaml-stack"
+  name = "%s"
   parameters {
     CIDR = "10.10.10.0/24"
   }
@@ -139,4 +150,5 @@ STACK
 data "aws_cloudformation_stack" "yaml" {
   name = "${aws_cloudformation_stack.yaml.name}"
 }
-`
+`, stackName)
+}

@@ -70,7 +70,7 @@ resource "aws_vpc" "default" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "tf-rt-import-test"
+    Name = "terraform-testacc-route-table-import-complex-default"
   }
 }
 
@@ -142,7 +142,7 @@ resource "aws_vpc" "bar" {
   cidr_block = "10.1.0.0/16"
 
   tags {
-    Name = "tf-rt-import-test"
+    Name = "terraform-testacc-route-table-import-complex-bar"
   }
 }
 

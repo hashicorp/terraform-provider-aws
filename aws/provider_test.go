@@ -51,14 +51,23 @@ func testAccPreCheck(t *testing.T) {
 			t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
 		}
 	}
-	if v := os.Getenv("AWS_DEFAULT_REGION"); v == "" {
-		log.Println("[INFO] Test: Using us-west-2 as test region")
-		os.Setenv("AWS_DEFAULT_REGION", "us-west-2")
-	}
+
+	region := testAccGetRegion()
+	log.Printf("[INFO] Test: Using %s as test region", region)
+	os.Setenv("AWS_DEFAULT_REGION", region)
+
 	err := testAccProvider.Configure(terraform.NewResourceConfig(nil))
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func testAccGetRegion() string {
+	v := os.Getenv("AWS_DEFAULT_REGION")
+	if v == "" {
+		return "us-west-2"
+	}
+	return v
 }
 
 func testAccEC2ClassicPreCheck(t *testing.T) {
@@ -69,4 +78,33 @@ func testAccEC2ClassicPreCheck(t *testing.T) {
 		t.Skipf("This test can only run in EC2 Classic, platforms available in %s: %q",
 			region, platforms)
 	}
+}
+
+func testAccAwsRegionProvider(region string, providers *[]*schema.Provider) *schema.Provider {
+	if region == "" || providers == nil {
+		return nil
+	}
+	log.Printf("[DEBUG] Checking providers for AWS region: %s", region)
+	for _, provider := range *providers {
+		// Ignore if Meta is empty, this can happen for validation providers
+		if provider == nil || provider.Meta() == nil {
+			log.Printf("[DEBUG] Skipping empty provider")
+			continue
+		}
+
+		// Ignore if Meta is not AWSClient, this will happen for other providers
+		client, ok := provider.Meta().(*AWSClient)
+		if !ok {
+			log.Printf("[DEBUG] Skipping non-AWS provider")
+			continue
+		}
+
+		clientRegion := client.region
+		log.Printf("[DEBUG] Checking AWS provider region %q against %q", clientRegion, region)
+		if clientRegion == region {
+			log.Printf("[DEBUG] Found AWS provider with region: %s", region)
+			return provider
+		}
+	}
+	return nil
 }

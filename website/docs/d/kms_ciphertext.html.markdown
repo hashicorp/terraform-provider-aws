@@ -6,7 +6,7 @@ description: |-
     Provides ciphertext encrypted using a KMS key
 ---
 
-# aws_kms_ciphertext
+# Data Source: aws_kms_ciphertext
 
 The KMS ciphertext data source allows you to encrypt plaintext into ciphertext
 by using an AWS KMS customer master key.

@@ -47,7 +47,7 @@ func testAccDataSourceAwsRdsClusterConfigBasic(clusterName string) string {
 resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/16"
 	tags {
-	  Name = "testAccDataSourceAwsRdsClusterConfigBasic"
+	  Name = "terraform-testacc-rds-cluster-data-source-basic"
 	}
 }
   

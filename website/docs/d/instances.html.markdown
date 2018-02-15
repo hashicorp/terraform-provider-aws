@@ -6,7 +6,7 @@ description: |-
   Get information on an Amazon EC2 instances.
 ---
 
-# aws_instances
+# Data Source: aws_instances
 
 Use this data source to get IDs or IPs of Amazon EC2 instances to be referenced elsewhere,
 e.g. to allow easier migration from another management solution
@@ -27,6 +27,10 @@ and you'd need to re-run `apply` every time an instance comes up or dies.
 data "aws_instances" "test" {
   instance_tags {
     Role = "HardWorker"
+  }
+  filter {
+    name   = "instance.group-id"
+    values = ["sg-12345678"]
   }
 }
 
