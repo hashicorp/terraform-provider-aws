@@ -68,8 +68,6 @@ func resourceAwsIamUserSshKeyCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error creating IAM User SSH Key %s: %s", username, err)
 	}
 
-	d.Set("ssh_public_key_id", createResp.SSHPublicKey.SSHPublicKeyId)
-	d.Set("fingerprint", createResp.SSHPublicKey.Fingerprint)
 	d.SetId(*createResp.SSHPublicKey.SSHPublicKeyId)
 
 	return resourceAwsIamUserSshKeyUpdate(d, meta)
@@ -96,7 +94,7 @@ func resourceAwsIamUserSshKeyRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("fingerprint", getResp.SSHPublicKey.Fingerprint)
 	d.Set("status", getResp.SSHPublicKey.Status)
-
+	d.Set("ssh_public_key_id", createResp.SSHPublicKey.SSHPublicKeyId)
 	return nil
 }
 
@@ -120,9 +118,8 @@ func resourceAwsIamUserSshKeyUpdate(d *schema.ResourceData, meta interface{}) er
 			}
 			return fmt.Errorf("Error updating IAM User SSH Key %s: %s", d.Id(), err)
 		}
-		return resourceAwsIamUserSshKeyRead(d, meta)
 	}
-	return nil
+	return resourceAwsIamUserSshKeyRead(d, meta)
 }
 
 func resourceAwsIamUserSshKeyDelete(d *schema.ResourceData, meta interface{}) error {
