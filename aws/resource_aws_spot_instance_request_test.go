@@ -454,6 +454,9 @@ func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "foo_VPC" {
 		cidr_block = "10.1.0.0/16"
+		tags {
+			Name = "terraform-testacc-spot-instance-request-vpc"
+		}
 	}
 
 	resource "aws_subnet" "foo_VPC" {
@@ -505,7 +508,7 @@ func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int)
 		enable_dns_hostnames = true
 
 		tags {
-			Name = "tf_test_vpc"
+			Name = "terraform-testacc-spot-instance-request-subnet-and-sg-public-ip"
 		}
 	}
 

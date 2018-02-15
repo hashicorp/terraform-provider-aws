@@ -1008,7 +1008,7 @@ resource "aws_vpc" "tftest" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "tf-testing"
+    Name = "terraform-testacc-security-group-rule-ingress-ipv6"
   }
 }
 
@@ -1036,7 +1036,7 @@ resource "aws_vpc" "tftest" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "tf-testing"
+    Name = "terraform-testacc-security-group-rule-ingress-protocol"
   }
 }
 
@@ -1166,7 +1166,9 @@ func testAccAWSSecurityGroupRuleMultiDescription(rInt int, rType string) string 
 	b.WriteString(fmt.Sprintf(`
 	resource "aws_vpc" "tf_sgrule_description_test" {
 		cidr_block = "10.0.0.0/16"
-		tags { Name = "tf-sg-rule-description" }
+		tags {
+			Name = "terraform-testacc-security-group-rule-multi-desc"
+		}
 	}
 
 	resource "aws_vpc_endpoint" "s3-us-west-2" {
@@ -1245,7 +1247,7 @@ provider "aws" {
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
   tags {
-    Name = "sg-self-test"
+    Name = "terraform-testacc-security-group-rule-self-ref"
   }
 }
 
@@ -1272,7 +1274,7 @@ func testAccAWSSecurityGroupRulePartialMatchingConfig(rInt int) string {
 	resource "aws_vpc" "default" {
 		cidr_block = "10.0.0.0/16"
 		tags {
-			Name = "tf-sg-rule-bug"
+			Name = "terraform-testacc-security-group-rule-partial-match"
 		}
 	}
 
@@ -1329,7 +1331,7 @@ func testAccAWSSecurityGroupRulePartialMatching_SourceConfig(rInt int) string {
 	resource "aws_vpc" "default" {
 		cidr_block = "10.0.0.0/16"
 		tags {
-			Name = "tf-sg-rule-bug"
+			Name = "terraform-testacc-security-group-rule-partial-match"
 		}
 	}
 
@@ -1375,7 +1377,7 @@ const testAccAWSSecurityGroupRulePrefixListEgressConfig = `
 resource "aws_vpc" "tf_sg_prefix_list_egress_test" {
     cidr_block = "10.0.0.0/16"
     tags {
-            Name = "tf_sg_prefix_list_egress_test"
+        Name = "terraform-testacc-security-group-rule-prefix-list-egress"
     }
 }
 
@@ -1517,7 +1519,9 @@ var testAccAWSSecurityGroupRuleRace = func() string {
 	b.WriteString(fmt.Sprintf(`
 		resource "aws_vpc" "default" {
 			cidr_block = "10.0.0.0/16"
-			tags { Name = "tf-sg-rule-race" }
+			tags {
+				Name = "terraform-testacc-security-group-rule-race"
+			}
 		}
 
 		resource "aws_security_group" "race" {
@@ -1555,7 +1559,7 @@ func testAccAWSSecurityGroupRuleSelfInSource(rInt int) string {
 		cidr_block = "10.1.0.0/16"
 
 		tags {
-			Name = "tf_sg_rule_self_group"
+			Name = "terraform-testacc-security-group-rule-self-ingress"
 		}
 	}
 
@@ -1581,7 +1585,7 @@ func testAccAWSSecurityGroupRuleExpectInvalidType(rInt int) string {
 		cidr_block = "10.1.0.0/16"
 
 		tags {
-			Name = "tf_sg_rule_self_group"
+			Name = "terraform-testacc-security-group-rule-invalid-type"
 		}
 	}
 

@@ -144,6 +144,9 @@ func testAccCheckVpnGatewayAttachmentDestroy(s *terraform.State) error {
 const testAccNoVpnGatewayAttachmentConfig = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/16"
+	tags {
+		Name = "terraform-testacc-vpn-gateway-attachment-basic"
+	}
 }
 
 resource "aws_vpn_gateway" "test" { }
@@ -152,6 +155,9 @@ resource "aws_vpn_gateway" "test" { }
 const testAccVpnGatewayAttachmentConfig = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/16"
+	tags {
+		Name = "terraform-testacc-vpn-gateway-attachment-deleted"
+	}
 }
 
 resource "aws_vpn_gateway" "test" { }

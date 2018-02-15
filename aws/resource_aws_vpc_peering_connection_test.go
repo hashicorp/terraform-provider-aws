@@ -367,14 +367,14 @@ const testAccVpcPeeringConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-basic"
+		Name = "terraform-testacc-vpc-peering-conn-foo"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-basic"
+		Name = "terraform-testacc-vpc-peering-conn-bar"
 	}
 }
 
@@ -389,14 +389,14 @@ const testAccVpcPeeringConfigTags = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-tags"
+		Name = "terraform-testacc-vpc-peering-conn-tags-foo"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-tags"
+		Name = "terraform-testacc-vpc-peering-conn-tags-bar"
 	}
 }
 
@@ -414,7 +414,7 @@ const testAccVpcPeeringConfigOptions = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-options"
+		Name = "terraform-testacc-vpc-peering-conn-options-foo"
 	}
 }
 
@@ -422,7 +422,7 @@ resource "aws_vpc" "bar" {
 	cidr_block = "10.1.0.0/16"
 	enable_dns_hostnames = true
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-options"
+		Name = "terraform-testacc-vpc-peering-conn-options-bar"
 	}
 }
 
@@ -446,14 +446,14 @@ const testAccVpcPeeringConfigFailedState = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-failedState"
+		Name = "terraform-testacc-vpc-peering-conn-failed-state-foo"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-failedState"
+		Name = "terraform-testacc-vpc-peering-conn-failed-state-bar"
 	}
 }
 
@@ -478,7 +478,7 @@ resource "aws_vpc" "foo" {
 	provider = "aws.main"
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-region"
+		Name = "terraform-testacc-vpc-peering-conn-region-auto-accept-foo"
 	}
 }
 
@@ -486,7 +486,7 @@ resource "aws_vpc" "bar" {
 	provider = "aws.peer"
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-region"
+		Name = "terraform-testacc-vpc-peering-conn-region-auto-accept-bar"
 	}
 }
 
@@ -514,7 +514,7 @@ resource "aws_vpc" "foo" {
 	provider = "aws.main"
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-region"
+		Name = "terraform-testacc-vpc-peering-conn-region-foo"
 	}
 }
 
@@ -522,7 +522,7 @@ resource "aws_vpc" "bar" {
 	provider = "aws.peer"
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-region"
+		Name = "terraform-testacc-vpc-peering-conn-region-bar"
 	}
 }
 

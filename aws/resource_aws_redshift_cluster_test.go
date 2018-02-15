@@ -1054,7 +1054,7 @@ func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 	resource "aws_vpc" "foo" {
 		cidr_block = "10.1.0.0/16"
 		tags {
-			Name = "testAccAWSRedshiftClusterConfig_notPubliclyAccessible"
+			Name = "terraform-testacc-redshift-cluster-no-publicly-accessible"
 		}
 	}
 	resource "aws_internet_gateway" "foo" {
@@ -1114,7 +1114,7 @@ func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 	resource "aws_vpc" "foo" {
 		cidr_block = "10.1.0.0/16"
 		tags {
-			Name = "testAccAWSRedshiftClusterConfig_updatePubliclyAccessible"
+			Name = "terraform-testacc-redshift-cluster-upd-publicly-accessible"
 		}
 	}
 	resource "aws_internet_gateway" "foo" {

@@ -147,6 +147,9 @@ func testAccServiceDiscoveryServiceConfig_private(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-service-discovery-service-private"
+  }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
@@ -172,6 +175,9 @@ func testAccServiceDiscoveryServiceConfig_private_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-service-discovery-service-private"
+  }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
