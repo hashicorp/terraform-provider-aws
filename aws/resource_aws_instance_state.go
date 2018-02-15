@@ -26,7 +26,7 @@ func resourceAwsInstanceState() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
