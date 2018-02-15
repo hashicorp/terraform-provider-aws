@@ -51,6 +51,10 @@ block with a /56 prefix length for the VPC. You cannot specify the range of IP a
 the size of the CIDR block. Default is `false`.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
+~> **Note:** If you create a VPC with `assign_generated_ipv6_cidr_block` set to `false` and want to
+update that to `true`, Terraform will no longer support this operation and we suggest to use `aws_vpc_associate_cidr_block` resource instead.
+The VPC won't reflect the new IPv6 values from the new resource until `terraform refresh` happens.
+
 ## Attributes Reference
 
 The following attributes are exported:

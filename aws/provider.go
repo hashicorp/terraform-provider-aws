@@ -526,6 +526,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_vpc_peering_connection_accepter":          resourceAwsVpcPeeringConnectionAccepter(),
 			"aws_default_vpc":                              resourceAwsDefaultVpc(),
 			"aws_vpc":                                      resourceAwsVpc(),
+			"aws_vpc_associate_cidr_block":                 resourceAwsVpcAssociateCidrBlock(),
 			"aws_vpc_endpoint":                             resourceAwsVpcEndpoint(),
 			"aws_vpc_endpoint_connection_notification":     resourceAwsVpcEndpointConnectionNotification(),
 			"aws_vpc_endpoint_route_table_association":     resourceAwsVpcEndpointRouteTableAssociation(),
