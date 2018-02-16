@@ -27,6 +27,7 @@ ENHANCEMENTS:
 * resource/aws_emr_cluster: Add `autoscaling_policy` argument [GH-2877]
 * resource/aws_instance: Expose reason of `shutting-down` state during creation [GH-3371]
 * resource/aws_instance: Include size of user_data in validation error message [GH-2971]
+* resource/aws_lb_listener_rule: Validate `priority` over 50000 [GH-3379]
 * resource/aws_rds_cluster: Add `hosted_zone_id` attribute [GH-3267]
 * resource/aws_rds_cluster_instance: Support `availability_zone` [GH-2812]
 * resource/aws_rds_cluster_parameter_group: Validate underscore `name` during plan [GH-3396]
