@@ -132,6 +132,7 @@ func TestAccAWSDirectoryServiceDirectory_microsoft(t *testing.T) {
 				Config: testAccDirectoryServiceDirectoryConfig_microsoft,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
+                                        resource.TestCheckResourceAttr("aws_directory_service_discovery.bar", "edition", "Standard")
 				),
 			},
 		},
@@ -429,6 +430,7 @@ resource "aws_directory_service_directory" "bar" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   type = "MicrosoftAD"
+  edition = "Standard"
 
   vpc_settings {
     vpc_id = "${aws_vpc.main.id}"
