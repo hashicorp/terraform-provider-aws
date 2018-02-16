@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 var directoryCreationFuncs = map[string]func(*directoryservice.DirectoryService, *schema.ResourceData) (string, error){
@@ -160,17 +161,10 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 				Optional: true,
 				Default:  "Enterprise",
 				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					validTypes := []string{"Enterprise", "Standard"}
-					value := v.(string)
-					for _, validType := range validTypes {
-						if validType == value {
-							return
-						}
-					}
-					es = append(es, fmt.Errorf("%q must be one of %q", k, validTypes))
-					return
-				},
+				ValidateFunc: validation.StringInSlice([]string{
+					directoryservice.DirectoryEditionEnterprise,
+					directoryservice.DirectoryEditionStandard,
+				}, false),
 			},
 		},
 	}
