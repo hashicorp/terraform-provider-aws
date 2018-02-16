@@ -284,9 +284,14 @@ func createSimpleDirectoryService(dsconn *directoryservice.DirectoryService, d *
 }
 
 func createActiveDirectoryService(dsconn *directoryservice.DirectoryService, d *schema.ResourceData) (directoryId string, err error) {
+	if _, ok := d.GetOk("size"); !ok {
+		return "", fmt.Errorf("size is required for type = MicrosoftAD")
+	}
+
 	input := directoryservice.CreateMicrosoftADInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
+		Size:     aws.String(d.Get("size").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
