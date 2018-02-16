@@ -6,57 +6,60 @@ description: |-
   Provides an SES domain MAIL FROM resource
 ---
 
-# aws\_ses\_domain\_dkim
+# aws_ses_domain_mail_from
 
 Provides an SES domain MAIL FROM resource.
 
-Domain ownership needs to be confirmed first using [ses_domain_identity Resource](/docs/providers/aws/r/ses_domain_identity.html)
-
-## Argument Reference
-
-The following arguments are supported:
-
-* `domain` - (Required) Verified domain name to generate DKIM tokens for.
-* `mail_from_domain` - (Required) Subdomain (of above domain) which is to be used as MAIL FROM address (Required for DMARC validation)
-
-## Followup Steps
-
-Find out more about setting MAIL FROM domain with Amazon SES in [docs](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/mail-from-set.html).
-
-* Create an MX record used to verify SES MAIL FROM setup
-
-* (Optionally) If you want your emails to pass SPF checks, you must publish an SPF record to the DNS server of the custom MAIL FROM domain.
+~> **NOTE:** For the MAIL FROM domain to be fully usable, this resource should be paired with the [aws_ses_domain_identity resource](/docs/providers/aws/r/ses_domain_identity.html). To validate the MAIL FROM domain, a DNS MX record is required. To pass SPF checks, a DNS TXT record may also be required. See the [Amazon SES MAIL FROM documentation](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/mail-from-set.html) for more information.
 
 ## Example Usage
 
 ```hcl
+resource "aws_ses_domain_mail_from" "example" {
+  domain           = "${aws_ses_domain_identity.example.domain}"
+  mail_from_domain = "bounce.${aws_ses_domain_identity.example.domain}"
+}
+
+# Example SES Domain Identity
 resource "aws_ses_domain_identity" "example" {
   domain = "example.com"
 }
 
-resource "aws_ses_domain_mail_from" "example" {
-  domain           = "example.com"
-  mail_from_domain = "bounce.example.com"
-}
-
-resource "aws_route53_record" "example_amazonses_mail_from_mx_record" {
-  zone_id = "ABCDEFGHIJ123" # Change to appropriate Route53 Zone ID
-  name    = "bounce.example.com"
+# Example Route53 MX record
+resource "aws_route53_record" "example_ses_domain_mail_from_mx" {
+  zone_id = "${aws_route53_zone.example.id}"
+  name    = "${aws_ses_domain_mail_from.example.mail_from_domain}"
   type    = "MX"
   ttl     = "600"
   records = ["10 feedback-smtp.us-east-1.amazonses.com"] # Change to the region in which `aws_ses_domain_identity.example` is created
 }
 
-# For SPF Check
-resource "aws_route53_record" "example_amazonses_mail_from_mx_record" {
-  zone_id = "ABCDEFGHIJ123" # Change to appropriate Route53 Zone ID
-  name    = "bounce.example.com"
+# Example Route53 TXT record for SPF
+resource "aws_route53_record" "example_ses_domain_mail_from_txt" {
+  zone_id = "${aws_route53_zone.example.id}"
+  name    = "${aws_ses_domain_mail_from.example.mail_from_domain}"
   type    = "TXT"
   ttl     = "600"
   records = ["v=spf1 include:amazonses.com -all"]
 }
-
 ```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `domain` - (Required) Verified domain name to generate DKIM tokens for.
+* `mail_from_domain` - (Required) Subdomain (of above domain) which is to be used as MAIL FROM address (Required for DMARC validation)
+
+The following arguments are optional:
+
+* `behavior_on_mx_failure` - (Optional) The action that you want Amazon SES to take if it cannot successfully read the required MX record when you send an email. Defaults to `UseDefaultValue`. See the [SES API documentation](https://docs.aws.amazon.com/ses/latest/APIReference/API_SetIdentityMailFromDomain.html) for more information.
+
+## Attributes Reference
+
+In addition to the arguments, which are exported, the following attributes are exported:
+
+* `id` - The domain name.
 
 ## Import
 
