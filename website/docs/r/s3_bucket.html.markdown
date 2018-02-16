@@ -403,7 +403,7 @@ The `replication_configuration` object supports the following:
 
 The `rules` object supports the following:
 
-* `id` - (Optional) Unique identifier for the rule.
+* `id` - (Required) Unique identifier for the rule.
 * `destination` - (Required) Specifies the destination for the rule (documented below).
 * `prefix` - (Required) Object keyname prefix identifying one or more objects to which the rule applies. Set as an empty string to replicate the whole bucket.
 * `status` - (Required) The status of the rule. Either `Enabled` or `Disabled`. The rule is ignored if status is not Enabled.
