@@ -60,9 +60,9 @@ The following arguments are supported:
 * `alias` - (Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for `enable_sso`.
 * `description` - (Optional) A textual description for the directory.
 * `short_name` - (Optional) The short name of the directory, such as `CORP`.
-* `edition` - (Optional) The AWS Directory Service for Microsoft Active Directory edition type (`Standard` or `Enterprise`). Defaults to `Enterprise`.
 * `enable_sso` - (Optional) Whether to enable single-sign on for the directory. Requires `alias`. Defaults to `false`.
 * `type` (Optional) - The directory type (`SimpleAD` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
+* `edition` - (Optional) The MicrosoftAD edition (`Standard` or `Enterprise`). Defaults to `Enterprise` (applies to MicrosoftAD type only).
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 **vpc_settings** supports the following:
