@@ -79,6 +79,7 @@ func TestParseRecordId(t *testing.T) {
 		Input, Zone, Name, Type, Set string
 	}{
 		{"ABCDEF_test.notexample.com_A", "ABCDEF", "test.notexample.com", "A", ""},
+		{"ABCDEF_test.notexample.com._A", "ABCDEF", "test.notexample.com", "A", ""},
 		{"ABCDEF_test.notexample.com_A_set1", "ABCDEF", "test.notexample.com", "A", "set1"},
 		{"ABCDEF__underscore.notexample.com_A", "ABCDEF", "_underscore.notexample.com", "A", ""},
 		{"ABCDEF__underscore.notexample.com_A_set1", "ABCDEF", "_underscore.notexample.com", "A", "set1"},
