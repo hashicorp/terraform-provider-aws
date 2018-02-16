@@ -748,37 +748,30 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 
 	// record the initialized providers so that we can use them to check for the instances in each region
 	var providers []*schema.Provider
-	providerFactories := map[string]terraform.ResourceProviderFactory{
-		"aws": func() (terraform.ResourceProvider, error) {
-			p := Provider()
-			providers = append(providers, p.(*schema.Provider))
-			return p, nil
-		},
-	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckAWSS3BucketDestroyWithProviders(&providers),
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3BucketConfigReplication(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.bucket", "us-west-2", &providers),
-					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.destination", "eu-west-1", &providers),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc("us-west-2", &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers)),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "0"),
 				),
 			},
 			{
 				Config: testAccAWSS3BucketConfigReplicationWithConfiguration(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.bucket", "us-west-2", &providers),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc("us-west-2", &providers)),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "1"),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.#", "1"),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.2229345141.id", "foobar"),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.2229345141.prefix", "foo"),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.2229345141.status", s3.ReplicationRuleStatusEnabled),
-					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.destination", "eu-west-1", &providers),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers)),
 				),
 			},
 		},
@@ -791,24 +784,17 @@ func TestAccAWSS3Bucket_ReplicationWithoutStorageClass(t *testing.T) {
 
 	// record the initialized providers so that we can use them to check for the instances in each region
 	var providers []*schema.Provider
-	providerFactories := map[string]terraform.ResourceProviderFactory{
-		"aws": func() (terraform.ResourceProvider, error) {
-			p := Provider()
-			providers = append(providers, p.(*schema.Provider))
-			return p, nil
-		},
-	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckAWSS3BucketDestroyWithProviders(&providers),
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3BucketConfigReplicationWithoutStorageClass(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.bucket", "us-west-2", &providers),
-					testAccCheckAWSS3BucketExistsWithProviders("aws_s3_bucket.destination", "eu-west-1", &providers),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc("us-west-2", &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers)),
 				),
 			},
 		},
@@ -820,18 +806,11 @@ func TestAccAWSS3Bucket_ReplicationExpectVersioningValidationError(t *testing.T)
 
 	// record the initialized providers so that we can use them to check for the instances in each region
 	var providers []*schema.Provider
-	providerFactories := map[string]terraform.ResourceProviderFactory{
-		"aws": func() (terraform.ResourceProvider, error) {
-			p := Provider()
-			providers = append(providers, p.(*schema.Provider))
-			return p, nil
-		},
-	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckAWSS3BucketDestroyWithProviders(&providers),
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSS3BucketConfigReplicationNoVersioning(rInt),
@@ -907,25 +886,7 @@ func testAccCheckAWSS3BucketDestroy(s *terraform.State) error {
 	return testAccCheckAWSS3BucketDestroyWithProvider(s, testAccProvider)
 }
 
-func testAccCheckAWSS3BucketDestroyWithProviders(providers *[]*schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		for _, provider := range *providers {
-			if provider.Meta() == nil {
-				continue
-			}
-			if err := testAccCheckAWSS3BucketDestroyWithProvider(s, provider); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-}
-
 func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	if provider == nil || provider.Meta() == nil {
-		return fmt.Errorf("Provider is missing")
-	}
-
 	conn := provider.Meta().(*AWSClient).s3conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -946,10 +907,10 @@ func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *sc
 }
 
 func testAccCheckAWSS3BucketExists(n string) resource.TestCheckFunc {
-	return testAccCheckAWSS3BucketExistsWithProviders(n, "", nil)
+	return testAccCheckAWSS3BucketExistsWithProvider(n, func() *schema.Provider { return testAccProvider })
 }
 
-func testAccCheckAWSS3BucketExistsWithProviders(n, region string, providers *[]*schema.Provider) resource.TestCheckFunc {
+func testAccCheckAWSS3BucketExistsWithProvider(n string, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -960,16 +921,7 @@ func testAccCheckAWSS3BucketExistsWithProviders(n, region string, providers *[]*
 			return fmt.Errorf("No ID is set")
 		}
 
-		var provider *schema.Provider
-		if providers == nil || region == "" {
-			provider = testAccProvider
-		} else {
-			provider = testAccAwsRegionProvider(region, providers)
-		}
-
-		if provider == nil || provider.Meta() == nil {
-			return fmt.Errorf("Provider is missing")
-		}
+		provider := providerF()
 
 		conn := provider.Meta().(*AWSClient).s3conn
 		_, err := conn.HeadBucket(&s3.HeadBucketInput{

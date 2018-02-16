@@ -36,17 +36,10 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegion(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 
 	var providers []*schema.Provider
-	providerFactories := map[string]terraform.ResourceProviderFactory{
-		"aws": func() (terraform.ResourceProvider, error) {
-			p := Provider()
-			providers = append(providers, p.(*schema.Provider))
-			return p, nil
-		},
-	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccAwsVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
