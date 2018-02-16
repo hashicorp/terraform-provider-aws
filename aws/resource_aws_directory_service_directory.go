@@ -155,6 +155,23 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 					return
 				},
 			},
+			"edition": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "Enterprise",
+				ForceNew: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
+					validTypes := []string{"Enterprise", "Standard"}
+					value := v.(string)
+					for _, validType := range validTypes {
+						if validType == value {
+							return
+						}
+					}
+					es = append(es, fmt.Errorf("%q must be one of %q", k, validTypes))
+					return
+				},
+			},
 		},
 	}
 }
@@ -294,6 +311,9 @@ func createActiveDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	}
 	if v, ok := d.GetOk("short_name"); ok {
 		input.ShortName = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("edition"); ok {
+		input.Edition = aws.String(v.(string))
 	}
 
 	input.VpcSettings, err = buildVpcSettings(d)
@@ -444,6 +464,9 @@ func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta inter
 	}
 	if dir.Size != nil {
 		d.Set("size", *dir.Size)
+	}
+	if dir.Edition != nil {
+		d.Set("edition", *dir.Edition)
 	}
 	d.Set("type", *dir.Type)
 	d.Set("vpc_settings", flattenDSVpcSettings(dir.VpcSettings))
