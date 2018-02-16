@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_inspector_rules_packages` [GH-3175]
+* **New Resource:** `aws_api_gateway_vpc_link` [GH-2512]
 * **New Resource:** `aws_appsync_graphql_api` [GH-2494]
 * **New Resource:** `aws_dax_cluster` [GH-2884]
 * **New Resource:** `aws_gamelift_alias` [GH-3353]
