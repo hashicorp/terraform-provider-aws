@@ -14,6 +14,8 @@ import (
 )
 
 func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
+	attributes := make(map[string]string)
+
 	ri := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -24,7 +26,7 @@ func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
 			{
 				Config: testAccAWSSNSTopicSubscriptionConfig(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
 					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription"),
 				),
 			},
@@ -54,6 +56,8 @@ func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
 	})
 }
 func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
+	attributes := make(map[string]string)
+
 	ri := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -64,7 +68,7 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 			{
 				Config: testAccAWSSNSTopicSubscriptionConfig_autoConfirmingEndpoint(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
 					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription"),
 				),
 			},
@@ -73,6 +77,8 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 }
 
 func TestAccAWSSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) {
+	attributes := make(map[string]string)
+
 	ri := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -83,7 +89,7 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) 
 			{
 				Config: testAccAWSSNSTopicSubscriptionConfig_autoConfirmingSecuredEndpoint(ri, "john", "doe"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic"),
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
 					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription"),
 				),
 			},
