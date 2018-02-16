@@ -24,7 +24,7 @@ func TestAccAwsAPIGatewayVpcLink_basic(t *testing.T) {
 					testAccCheckAwsAPIGatewayVpcLinkExists("aws_api_gateway_vpc_link.test"),
 					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "name", fmt.Sprintf("tf-apigateway-%s", rName)),
 					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "description", "test"),
-					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "target_arns.#", "2"),
+					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "target_arns.#", "1"),
 				),
 			},
 			{
@@ -33,7 +33,7 @@ func TestAccAwsAPIGatewayVpcLink_basic(t *testing.T) {
 					testAccCheckAwsAPIGatewayVpcLinkExists("aws_api_gateway_vpc_link.test"),
 					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "name", fmt.Sprintf("tf-apigateway-update-%s", rName)),
 					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "description", "test update"),
-					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "target_arns.#", "2"),
+					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "target_arns.#", "1"),
 				),
 			},
 		},
@@ -97,13 +97,6 @@ resource "aws_lb" "test_a" {
   subnets = ["${aws_subnet.test.id}"]
 }
 
-resource "aws_lb" "test_b" {
-  name = "tf-lb-%s"
-  internal = true
-  load_balancer_type = "network"
-  subnets = ["${aws_subnet.test.id}"]
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
 }
@@ -115,7 +108,7 @@ resource "aws_subnet" "test" {
   cidr_block = "10.10.0.0/21"
   availability_zone = "${data.aws_availability_zones.test.names[0]}"
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAPIGatewayVpcLinkConfig(rName string) string {
@@ -123,7 +116,7 @@ func testAccAPIGatewayVpcLinkConfig(rName string) string {
 resource "aws_api_gateway_vpc_link" "test" {
   name = "tf-apigateway-%s"
   description = "test"
-  target_arns = ["${aws_lb.test_a.arn}","${aws_lb.test_b.arn}"]
+  target_arns = ["${aws_lb.test_a.arn}"]
 }
 `, rName)
 }
@@ -133,7 +126,7 @@ func testAccAPIGatewayVpcLinkConfig_Update(rName string) string {
 resource "aws_api_gateway_vpc_link" "test" {
   name = "tf-apigateway-update-%s"
   description = "test update"
-  target_arns = ["${aws_lb.test_a.arn}","${aws_lb.test_b.arn}"]
+  target_arns = ["${aws_lb.test_a.arn}"]
 }
 `, rName)
 }

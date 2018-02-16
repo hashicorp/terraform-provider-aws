@@ -29,6 +29,7 @@ func resourceAwsApiGatewayVpcLink() *schema.Resource {
 			},
 			"target_arns": {
 				Type:     schema.TypeSet,
+				MaxItems: 1,
 				Required: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
