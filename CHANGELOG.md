@@ -12,6 +12,7 @@ FEATURES:
 * **New Resource:** `aws_dax_cluster` [GH-2884]
 * **New Resource:** `aws_gamelift_alias` [GH-3353]
 * **New Resource:** `aws_gamelift_fleet` [GH-3327]
+* **New Resource:** `aws_s3_bucket_metric` [GH-916]
 * **New Resource:** `aws_ses_domain_mail_from` [GH-2029]
 
 ENHANCEMENTS:
