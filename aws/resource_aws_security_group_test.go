@@ -1633,6 +1633,9 @@ func TestAccAWSSecurityGroup_failWithDiffMismatch(t *testing.T) {
 const testAccAWSSecurityGroupConfigEmptyRuleDescription = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-security-group-empty-rule-description"
+  }
 }
 
 resource "aws_security_group" "web" {
