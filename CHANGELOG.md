@@ -33,6 +33,7 @@ BUG FIXES:
 
 * data-source/aws_elb_service_account: Correct GovCloud region [GH-3315]
 * resource/aws_acm_certificate_validation: Prevent crash on `validation_record_fqdns` [GH-3336]
+* resource/aws_acm_certificate_validation: Fix `validation_record_fqdns` handling with combined root and wildcard requests [GH-3366]
 * resource/aws_autoscaling_policy: `cooldown` with zero value not set correctly [GH-2809]
 * resource/aws_cloudtrail: Now respects initial `include_global_service_events = false` [GH-2817]
 * resource/aws_dynamodb_table: Retry deletion on ResourceInUseException [GH-3355]
