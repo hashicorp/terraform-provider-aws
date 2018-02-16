@@ -36,23 +36,17 @@ func TestAccAWSRoute53ZoneAssociation_region(t *testing.T) {
 	// record the initialized providers so that we can use them to
 	// check for the instances in each region
 	var providers []*schema.Provider
-	providerFactories := map[string]terraform.ResourceProviderFactory{
-		"aws": func() (terraform.ResourceProvider, error) {
-			p := Provider()
-			providers = append(providers, p.(*schema.Provider))
-			return p, nil
-		},
-	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckRoute53ZoneAssociationDestroyWithProviders(&providers),
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckRoute53ZoneAssociationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccRoute53ZoneAssociationRegionConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ZoneAssociationExistsWithProviders("aws_route53_zone_association.foobar", &zone, &providers),
+					testAccCheckRoute53ZoneAssociationExistsWithProvider("aws_route53_zone_association.foobar", &zone,
+						testAccAwsRegionProviderFunc("us-west-2", &providers)),
 				),
 			},
 		},
@@ -61,20 +55,6 @@ func TestAccAWSRoute53ZoneAssociation_region(t *testing.T) {
 
 func testAccCheckRoute53ZoneAssociationDestroy(s *terraform.State) error {
 	return testAccCheckRoute53ZoneAssociationDestroyWithProvider(s, testAccProvider)
-}
-
-func testAccCheckRoute53ZoneAssociationDestroyWithProviders(providers *[]*schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		for _, provider := range *providers {
-			if provider.Meta() == nil {
-				continue
-			}
-			if err := testAccCheckRoute53ZoneAssociationDestroyWithProvider(s, provider); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
 }
 
 func testAccCheckRoute53ZoneAssociationDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
@@ -103,55 +83,42 @@ func testAccCheckRoute53ZoneAssociationDestroyWithProvider(s *terraform.State, p
 }
 
 func testAccCheckRoute53ZoneAssociationExists(n string, zone *route53.HostedZone) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		return testAccCheckRoute53ZoneAssociationExistsWithProvider(s, n, zone, testAccProvider)
-	}
+	return testAccCheckRoute53ZoneAssociationExistsWithProvider(n, zone, func() *schema.Provider { return testAccProvider })
 }
 
-func testAccCheckRoute53ZoneAssociationExistsWithProviders(n string, zone *route53.HostedZone, providers *[]*schema.Provider) resource.TestCheckFunc {
+func testAccCheckRoute53ZoneAssociationExistsWithProvider(n string, zone *route53.HostedZone, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		for _, provider := range *providers {
-			if provider.Meta() == nil {
-				continue
-			}
-			if err := testAccCheckRoute53ZoneAssociationExistsWithProvider(s, n, zone, provider); err != nil {
-				return err
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No zone association ID is set")
+		}
+
+		zone_id, vpc_id := resourceAwsRoute53ZoneAssociationParseId(rs.Primary.ID)
+
+		provider := providerF()
+		conn := provider.Meta().(*AWSClient).r53conn
+		resp, err := conn.GetHostedZone(&route53.GetHostedZoneInput{Id: aws.String(zone_id)})
+		if err != nil {
+			return fmt.Errorf("Hosted zone err: %v", err)
+		}
+
+		exists := false
+		for _, vpc := range resp.VPCs {
+			if vpc_id == *vpc.VPCId {
+				exists = true
 			}
 		}
+		if !exists {
+			return fmt.Errorf("Hosted zone association not found")
+		}
+
+		*zone = *resp.HostedZone
 		return nil
 	}
-}
-
-func testAccCheckRoute53ZoneAssociationExistsWithProvider(s *terraform.State, n string, zone *route53.HostedZone, provider *schema.Provider) error {
-	rs, ok := s.RootModule().Resources[n]
-	if !ok {
-		return fmt.Errorf("Not found: %s", n)
-	}
-
-	if rs.Primary.ID == "" {
-		return fmt.Errorf("No zone association ID is set")
-	}
-
-	zone_id, vpc_id := resourceAwsRoute53ZoneAssociationParseId(rs.Primary.ID)
-
-	conn := provider.Meta().(*AWSClient).r53conn
-	resp, err := conn.GetHostedZone(&route53.GetHostedZoneInput{Id: aws.String(zone_id)})
-	if err != nil {
-		return fmt.Errorf("Hosted zone err: %v", err)
-	}
-
-	exists := false
-	for _, vpc := range resp.VPCs {
-		if vpc_id == *vpc.VPCId {
-			exists = true
-		}
-	}
-	if !exists {
-		return fmt.Errorf("Hosted zone association not found")
-	}
-
-	*zone = *resp.HostedZone
-	return nil
 }
 
 const testAccRoute53ZoneAssociationConfig = `
