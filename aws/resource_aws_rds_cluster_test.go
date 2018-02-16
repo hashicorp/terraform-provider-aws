@@ -48,6 +48,40 @@ func TestAccAWSRDSCluster_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSCluster_crossRegion(t *testing.T) {
+	var v rds.DBCluster
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfig(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists("aws_rds_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster.default", "storage_encrypted", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster.default", "db_cluster_parameter_group_name", "default.aurora5.6"),
+					resource.TestCheckResourceAttrSet(
+						"aws_rds_cluster.default", "reader_endpoint"),
+					resource.TestCheckResourceAttrSet(
+						"aws_rds_cluster.default", "cluster_resource_id"),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster.default", "engine", "aurora"),
+					resource.TestCheckResourceAttrSet(
+						"aws_rds_cluster.default", "engine_version"),
+					resource.TestCheckResourceAttrSet(
+						"aws_rds_cluster.default", "source_region"),
+					resource.TestCheckResourceAttrSet(
+						"aws_rds_cluster.default", "kms_key_id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRDSCluster_namePrefix(t *testing.T) {
 	var v rds.DBCluster
 
