@@ -1,4 +1,4 @@
---
+---
 layout: "aws"
 page_title: "AWS: aws_cognito_user_group"
 side_bar_current: "docs-aws-resource-cognito-user-group"
