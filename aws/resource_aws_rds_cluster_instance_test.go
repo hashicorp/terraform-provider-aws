@@ -59,11 +59,11 @@ func TestAccAWSRDSClusterInstance_az(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterInstanceConfig(acctest.RandInt()),
+				Config: testAccAWSClusterInstanceConfig_az(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &v),
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
-					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "availability_zone", "us-west-2a"),
+					//resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "availability_zone", "us-west-2a"),
 				),
 			},
 		},
@@ -351,9 +351,11 @@ resource "aws_db_parameter_group" "bar" {
 
 func testAccAWSClusterInstanceConfig_az(n int) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
 resource "aws_rds_cluster" "default" {
   cluster_identifier = "tf-aurora-cluster-test-%d"
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names}"]
   database_name      = "mydb"
   master_username    = "foo"
   master_password    = "mustbeeightcharaters"
@@ -366,7 +368,7 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
   instance_class          = "db.t2.small"
   db_parameter_group_name = "${aws_db_parameter_group.bar.name}"
   promotion_tier          = "3"
-  availability_zone       = "us-west-2a"
+  availability_zone       = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_db_parameter_group" "bar" {
