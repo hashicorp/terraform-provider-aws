@@ -19,7 +19,14 @@ var certificateArnRegex = regexp.MustCompile(`^arn:aws:acm:[^:]+:[^:]+:certifica
 
 func testAccAwsAcmCertificateDomainFromEnv(t *testing.T) string {
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
-		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
+		t.Skip(
+			"Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set. " +
+				"For DNS validation requests, this domain must be publicly " +
+				"accessible and configurable via Route53 during the testing. " +
+				"For email validation requests, you must have access to one of " +
+				"the five standard email addresses used (admin|administrator|" +
+				"hostmaster|postmaster|webmaster)@domain or one of the WHOIS " +
+				"contact addresses.")
 	}
 	return os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
 }
@@ -125,7 +132,7 @@ func TestAccAwsAcmCertificate_root(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificate_rootAndWildcardSubjectAlternativeName(t *testing.T) {
+func TestAccAwsAcmCertificate_rootAndWildcardSan(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 
@@ -163,7 +170,7 @@ func TestAccAwsAcmCertificate_rootAndWildcardSubjectAlternativeName(t *testing.T
 	})
 }
 
-func TestAccAwsAcmCertificate_subjectAlternativeName(t *testing.T) {
+func TestAccAwsAcmCertificate_san_single(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()
@@ -205,7 +212,7 @@ func TestAccAwsAcmCertificate_subjectAlternativeName(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificate_subjectAlternativeNames(t *testing.T) {
+func TestAccAwsAcmCertificate_san_multiple(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()
@@ -286,7 +293,7 @@ func TestAccAwsAcmCertificate_wildcard(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificate_wildcardAndRootSubjectAlternativeName(t *testing.T) {
+func TestAccAwsAcmCertificate_wildcardAndRootSan(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 

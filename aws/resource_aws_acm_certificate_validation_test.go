@@ -23,17 +23,32 @@ func TestAccAwsAcmCertificateValidation_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
-			// Test that validation times out if certificate can't be validated
-			resource.TestStep{
-				Config:      testAccAcmCertificateValidation_timeout(domain),
-				ExpectError: regexp.MustCompile("Expected certificate to be issued but was in state PENDING_VALIDATION"),
-			},
 			// Test that validation succeeds
 			resource.TestStep{
 				Config: testAccAcmCertificateValidation_basic(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr("aws_acm_certificate_validation.cert", "certificate_arn", certificateArnRegex),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAwsAcmCertificateValidation_timeout(t *testing.T) {
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
+
+	rInt1 := acctest.RandInt()
+
+	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, rootDomain)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config:      testAccAcmCertificateValidation_timeout(domain),
+				ExpectError: regexp.MustCompile("Expected certificate to be issued but was in state PENDING_VALIDATION"),
 			},
 		},
 	})
