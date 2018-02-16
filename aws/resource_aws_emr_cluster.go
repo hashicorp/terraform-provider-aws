@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsEMRCluster() *schema.Resource {
@@ -240,6 +241,11 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					emr.ScaleDownBehaviorTerminateAtInstanceHour,
+					emr.ScaleDownBehaviorTerminateAtTaskCompletion,
+				}, false),
 			},
 			"security_configuration": {
 				Type:     schema.TypeString,
@@ -496,10 +502,6 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", cluster.Name)
-
-	if d.Get("scale_down_behavior").(string) != "" {
-		d.Set("scale_down_behavior", cluster.ScaleDownBehavior)
-	}
 
 	d.Set("service_role", cluster.ServiceRole)
 	d.Set("security_configuration", cluster.SecurityConfiguration)
