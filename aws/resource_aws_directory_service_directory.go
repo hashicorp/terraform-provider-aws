@@ -159,7 +159,7 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 			"edition": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "Enterprise",
+				Default:  directoryservice.DirectoryEditionEnterprise,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					directoryservice.DirectoryEditionEnterprise,
