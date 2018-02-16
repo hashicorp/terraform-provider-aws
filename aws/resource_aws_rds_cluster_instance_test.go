@@ -63,7 +63,7 @@ func TestAccAWSRDSClusterInstance_az(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &v),
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
-					//resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "availability_zone", "us-west-2a"),
+					resource.TestMatchResourceAttr("aws_rds_cluster_instance.cluster_instances", "availability_zone", regexp.MustCompile("^us-west-2[a-z]{1}$")),
 				),
 			},
 		},
