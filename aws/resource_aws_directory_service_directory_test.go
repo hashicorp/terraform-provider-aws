@@ -132,7 +132,7 @@ func TestAccAWSDirectoryServiceDirectory_microsoft(t *testing.T) {
 				Config: testAccDirectoryServiceDirectoryConfig_microsoft,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
-                                        resource.TestCheckResourceAttr("aws_directory_service_discovery.bar", "edition", "Enterprise")
+					resource.TestCheckResourceAttr("aws_directory_service_discovery.bar", "edition", "Enterprise"),
 				),
 			},
 		},
@@ -149,7 +149,7 @@ func TestAccAWSDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
 				Config: testAccDirectoryServiceDirectoryConfig_microsoftStandard,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
-                                        resource.TestCheckResourceAttr("aws_directory_service_discovery.bar", "edition", "Standard")
+					resource.TestCheckResourceAttr("aws_directory_service_discovery.bar", "edition", "Standard"),
 				),
 			},
 		},
