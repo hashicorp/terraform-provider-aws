@@ -16,6 +16,7 @@ ENHANCEMENTS:
 
 * data-source/aws_kms_alias: Always return `target_key_arn` [GH-3304]
 * resource/aws_autoscaling_policy: Add support for `target_tracking_configuration` [GH-2611]
+* resource/aws_db_parameter_group: Validate underscore `name` during plan [GH-3396]
 * resource/aws_dx_connection: Add support for tagging [GH-2990]
 * resource/aws_dx_connection: Add support for import [GH-2992]
 * resource/aws_dx_lag: Add support for tagging [GH-2990]
@@ -24,6 +25,7 @@ ENHANCEMENTS:
 * resource/aws_instance: Expose reason of `shutting-down` state during creation [GH-3371]
 * resource/aws_instance: Include size of user_data in validation error message [GH-2971]
 * resource/aws_rds_cluster: Add `hosted_zone_id` attribute [GH-3267]
+* resource/aws_rds_cluster_parameter_group: Validate underscore `name` during plan [GH-3396]
 * resource/aws_route53_record Add `allow_overwrite` argument [GH-2926]
 * resource/aws_sqs_queue: Validate `name` during plan [GH-2837]
 * resource/aws_ssm_association: Allow updating `targets` [GH-2807]
