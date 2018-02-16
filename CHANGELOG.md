@@ -25,6 +25,7 @@ ENHANCEMENTS:
 * resource/aws_instance: Expose reason of `shutting-down` state during creation [GH-3371]
 * resource/aws_instance: Include size of user_data in validation error message [GH-2971]
 * resource/aws_rds_cluster: Add `hosted_zone_id` attribute [GH-3267]
+* resource/aws_rds_cluster_instance: Support `availability_zone` [GH-2812]
 * resource/aws_rds_cluster_parameter_group: Validate underscore `name` during plan [GH-3396]
 * resource/aws_route53_record Add `allow_overwrite` argument [GH-2926]
 * resource/aws_sqs_queue: Validate `name` during plan [GH-2837]
