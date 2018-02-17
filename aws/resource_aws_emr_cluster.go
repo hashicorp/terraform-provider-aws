@@ -512,6 +512,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("visible_to_all_users", cluster.VisibleToAllUsers)
 	d.Set("tags", tagsToMapEMR(cluster.Tags))
 	d.Set("ebs_root_volume_size", cluster.EbsRootVolumeSize)
+	d.Set("scale_down_behavior", cluster.ScaleDownBehavior)
 
 	if cluster.CustomAmiId != nil {
 		d.Set("custom_ami_id", cluster.CustomAmiId)
