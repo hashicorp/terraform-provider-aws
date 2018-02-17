@@ -97,7 +97,7 @@ func resourceAwsCloudTrail() *schema.Resource {
 						},
 
 						"data_resource": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -455,7 +455,7 @@ func expandAwsCloudTrailEventSelector(configured []interface{}) []*cloudtrail.Ev
 
 	for _, raw := range configured {
 		data := raw.(map[string]interface{})
-		dataResources := expandAwsCloudTrailEventSelectorDataResource(data["data_resource"].(*schema.Set).List())
+		dataResources := expandAwsCloudTrailEventSelectorDataResource(data["data_resource"].([]interface{}))
 
 		es := &cloudtrail.EventSelector{
 			IncludeManagementEvents: aws.Bool(data["include_management_events"].(bool)),
