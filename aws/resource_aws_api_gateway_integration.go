@@ -57,6 +57,21 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 				}, false),
 			},
 
+			"connection_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  apigateway.ConnectionTypeInternet,
+				ValidateFunc: validation.StringInSlice([]string{
+					apigateway.ConnectionTypeInternet,
+					apigateway.ConnectionTypeVpcLink,
+				}, false),
+			},
+
+			"connection_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"uri": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -133,14 +148,26 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 	conn := meta.(*AWSClient).apigateway
 
 	log.Print("[DEBUG] Creating API Gateway Integration")
+
+	connectionType := aws.String(d.Get("connection_type").(string))
+	var connectionId *string
+	if *connectionType == apigateway.ConnectionTypeVpcLink {
+		if _, ok := d.GetOk("connection_id"); !ok {
+			return fmt.Errorf("connection_id required when connection_type set to VPC_LINK")
+		}
+		connectionId = aws.String(d.Get("connection_id").(string))
+	}
+
 	var integrationHttpMethod *string
 	if v, ok := d.GetOk("integration_http_method"); ok {
 		integrationHttpMethod = aws.String(v.(string))
 	}
+
 	var uri *string
 	if v, ok := d.GetOk("uri"); ok {
 		uri = aws.String(v.(string))
 	}
+
 	templates := make(map[string]string)
 	for k, v := range d.Get("request_templates").(map[string]interface{}) {
 		templates[k] = v.(string)
@@ -202,6 +229,8 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 		CacheKeyParameters:  cacheKeyParameters,
 		PassthroughBehavior: passthroughBehavior,
 		ContentHandling:     contentHandling,
+		ConnectionType:      connectionType,
+		ConnectionId:        connectionId,
 	})
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Integration: %s", err)
