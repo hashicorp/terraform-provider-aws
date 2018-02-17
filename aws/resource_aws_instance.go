@@ -914,7 +914,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("vpc_security_group_ids") {
+	if d.HasChange("vpc_security_group_ids") && !d.IsNewResource() {
 		var groups []*string
 		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
 			for _, v := range v.List() {
