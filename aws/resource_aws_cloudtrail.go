@@ -494,6 +494,11 @@ func expandAwsCloudTrailEventSelectorDataResource(configured []interface{}) []*c
 func flattenAwsCloudTrailEventSelector(configured []*cloudtrail.EventSelector) []map[string]interface{} {
 	eventSelectors := make([]map[string]interface{}, 0, len(configured))
 
+	// Prevent default configurations shows differences
+	if len(configured) == 1 && len(configured[0].DataResources) == 0 {
+		return eventSelectors
+	}
+
 	for _, raw := range configured {
 		item := make(map[string]interface{})
 		item["read_write_type"] = *raw.ReadWriteType
