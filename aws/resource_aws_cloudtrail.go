@@ -288,7 +288,9 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.Set("event_selector", flattenAwsCloudTrailEventSelector(eventSelectorsOut.EventSelectors))
+	if err := d.Set("event_selector", flattenAwsCloudTrailEventSelector(eventSelectorsOut.EventSelectors)); err != nil {
+		return err
+	}
 
 	return nil
 }
