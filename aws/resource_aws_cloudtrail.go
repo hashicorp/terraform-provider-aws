@@ -436,7 +436,7 @@ func cloudTrailSetEventSelectors(conn *cloudtrail.CloudTrail, d *schema.Resource
 	}
 
 	eventSelectors := expandAwsCloudTrailEventSelector(d.Get("event_selector").([]interface{}))
-	input.SetEventSelectors(eventSelectors)
+	input.EventSelectors = eventSelectors
 
 	if err := input.Validate(); err != nil {
 		return fmt.Errorf("Error validate CloudTrail (%s): %s", d.Id(), err)
