@@ -343,11 +343,12 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.0.read_write_type", "ReadOnly"),
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.1.data_resource.#", "2"),
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.1.data_resource.0.type", "AWS::S3::Object"),
-					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.1.data_resource.0.values.#", "1"),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.1.data_resource.0.values.#", "2"),
 					resource.TestMatchResourceAttr("aws_cloudtrail.foobar", "event_selector.1.data_resource.0.values.0", regexp.MustCompile(`^arn:[^:]+:s3:::.+/tf1$`)),
-					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.1.data_resource.1.type", "AWS::S3::Object"),
+					resource.TestMatchResourceAttr("aws_cloudtrail.foobar", "event_selector.1.data_resource.0.values.1", regexp.MustCompile(`^arn:[^:]+:s3:::.+/tf2$`)),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.1.data_resource.1.type", "AWS::Lambda::Function"),
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.1.data_resource.1.values.#", "1"),
-					resource.TestMatchResourceAttr("aws_cloudtrail.foobar", "event_selector.1.data_resource.1.values.0", regexp.MustCompile(`^arn:[^:]+:s3:::.+/tf2$`)),
+					resource.TestMatchResourceAttr("aws_cloudtrail.foobar", "event_selector.1.data_resource.1.values.0", regexp.MustCompile(`^arn:[^:]+:lambda:.+:tf-test-trail-event-select-\d+$`)),
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.1.include_management_events", "false"),
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.1.read_write_type", "All"),
 				),
@@ -1163,13 +1164,14 @@ resource "aws_cloudtrail" "foobar" {
 			type = "AWS::S3::Object"
 			values = [
 				"${aws_s3_bucket.bar.arn}/tf1",
+				"${aws_s3_bucket.bar.arn}/tf2",
 			]
 		}
 
 		data_resource {
-			type = "AWS::S3::Object"
+			type = "AWS::Lambda::Function"
 			values = [
-				"${aws_s3_bucket.bar.arn}/tf2",
+				"${aws_lambda_function.lambda_function_test.arn}",
 			]
 		}
 	}
@@ -1210,5 +1212,32 @@ resource "aws_s3_bucket" "bar" {
 	bucket = "tf-test-trail-event-select-%d"
 	force_destroy = true
 }
-`, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
+
+resource "aws_iam_role" "iam_for_lambda" {
+    name = "tf-test-trail-event-select-%d"
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lambda_function" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "tf-test-trail-event-select-%d"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs4.3"
+}
+`, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
