@@ -73,9 +73,8 @@ func resourceAwsSsmAssociation() *schema.Resource {
 			"targets": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
-				MaxItems: 1,
+				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"key": {
@@ -211,6 +210,10 @@ func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("output_location") {
 		associationInput.OutputLocation = expandSSMAssociationOutputLocation(d.Get("output_location").([]interface{}))
+	}
+
+	if d.HasChange("targets") {
+		associationInput.Targets = expandAwsSsmTargets(d)
 	}
 
 	_, err := ssmconn.UpdateAssociation(associationInput)

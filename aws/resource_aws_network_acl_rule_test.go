@@ -267,15 +267,18 @@ const testAccAWSNetworkAclRuleBasicConfig = `
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_vpc" "foo" {
 	cidr_block = "10.3.0.0/16"
 	tags {
-		Name = "testAccAWSNetworkAclRuleBasicConfig"
+		Name = "terraform-testacc-network-acl-rule-basic"
 	}
 }
+
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
 }
+
 resource "aws_network_acl_rule" "baz" {
 	network_acl_id = "${aws_network_acl.bar.id}"
 	rule_number = 200
@@ -286,6 +289,7 @@ resource "aws_network_acl_rule" "baz" {
 	from_port = 22
 	to_port = 22
 }
+
 resource "aws_network_acl_rule" "qux" {
 	network_acl_id = "${aws_network_acl.bar.id}"
 	rule_number = 300
@@ -295,6 +299,7 @@ resource "aws_network_acl_rule" "qux" {
 	icmp_type = 0
 	icmp_code = -1
 }
+
 resource "aws_network_acl_rule" "wibble" {
 	network_acl_id = "${aws_network_acl.bar.id}"
 	rule_number = 400
@@ -310,15 +315,18 @@ const testAccAWSNetworkAclRuleMissingParam = `
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_vpc" "foo" {
 	cidr_block = "10.3.0.0/16"
 	tags {
-		Name = "testAccAWSNetworkAclRuleMissingParam"
+		Name = "terraform-testacc-network-acl-rule-missing-param"
 	}
 }
+
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
 }
+
 resource "aws_network_acl_rule" "baz" {
 	network_acl_id = "${aws_network_acl.bar.id}"
 	rule_number = 200
@@ -334,12 +342,14 @@ const testAccAWSNetworkAclRuleAllProtocolConfigNoRealUpdate = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.3.0.0/16"
 	tags {
-		Name = "testAccAWSNetworkAclRuleAllProtocolConfigNoRealUpdate"
+		Name = "terraform-testacc-network-acl-rule-all-proto-no-real-upd"
 	}
 }
+
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
 }
+
 resource "aws_network_acl_rule" "baz" {
 	network_acl_id = "${aws_network_acl.bar.id}"
 	rule_number = 150
@@ -356,12 +366,14 @@ const testAccAWSNetworkAclRuleAllProtocolConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.3.0.0/16"
 	tags {
-		Name = "testAccAWSNetworkAclRuleAllProtocolConfig"
+		Name = "terraform-testacc-network-acl-rule-proto"
 	}
 }
+
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
 }
+
 resource "aws_network_acl_rule" "baz" {
 	network_acl_id = "${aws_network_acl.bar.id}"
 	rule_number = 150
@@ -378,12 +390,14 @@ const testAccAWSNetworkAclRuleIpv6Config = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.3.0.0/16"
 	tags {
-		Name = "testAccAWSNetworkAclRuleIpv6Config"
+		Name = "terraform-testacc-network-acl-rule-ipv6"
 	}
 }
+
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
 }
+
 resource "aws_network_acl_rule" "baz" {
 	network_acl_id = "${aws_network_acl.bar.id}"
 	rule_number = 150
@@ -394,5 +408,4 @@ resource "aws_network_acl_rule" "baz" {
 	from_port = 22
 	to_port = 22
 }
-
 `

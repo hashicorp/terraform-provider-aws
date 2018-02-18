@@ -32,7 +32,7 @@ const testMatchedDiffs = `resource "aws_vpc" "test" {
     cidr_block = "10.0.0.0/16"
 
     tags {
-        Name = "Repro GH-4965"
+        Name = "terraform-testacc-repro-GH-4965"
     }
 
     lifecycle {

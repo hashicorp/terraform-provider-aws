@@ -6,7 +6,7 @@ description: |-
   Get information on a AWS Key Management Service (KMS) Alias
 ---
 
-# aws_kms_alias
+# Data Source: aws_kms_alias
 
 Use this data source to get the ARN of a KMS key alias.
 By using this data source, you can reference key alias
@@ -28,3 +28,4 @@ data "aws_kms_alias" "s3" {
 
 * `arn` - The Amazon Resource Name(ARN) of the key alias.
 * `target_key_id` - Key identifier pointed to by the alias.
+* `target_key_arn` - ARN pointed to by the alias.

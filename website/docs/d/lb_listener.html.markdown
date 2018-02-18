@@ -6,7 +6,7 @@ description: |-
   Provides a Load Balancer Listener data source.
 ---
 
-# aws_lb_listener
+# Data Source: aws_lb_listener
 
 ~> **Note:** `aws_alb_listener` is known as `aws_lb_listener`. The functionality is identical.
 
@@ -19,6 +19,8 @@ information specific to the listener in question.
 ## Example Usage
 
 ```hcl
+# get listener from listener arn
+
 variable "listener_arn" {
   type = "string"
 }
@@ -26,13 +28,26 @@ variable "listener_arn" {
 data "aws_lb_listener" "listener" {
   arn = "${var.listener_arn}"
 }
+
+# get listener from load_balancer_arn and port
+
+data "aws_lb" "selected" {
+  name = "default-public"
+}
+
+data "aws_lb_listener" "selected443" {
+  load_balancer_arn = "${data.aws_lb.selected.arn}"
+  port = 443
+}
 ```
 
 ## Argument Reference
 
 The following arguments are supported:
 
-* `arn` - (Required) The ARN of the listener.
+* `arn` - (Optional) The arn of the listener. Required if `load_balancer_arn` and `port` is not set.
+* `load_balancer_arn` - (Optional) The arn of the load balander. Required if `arn` is not set.
+* `port` - (Optional) The port of the listener. Required if `arn` is not set.
 
 ## Attributes Reference
 

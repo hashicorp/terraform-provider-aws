@@ -173,6 +173,11 @@ func dataSourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+
+						"volume_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -197,6 +202,11 @@ func dataSourceAwsInstance() *schema.Resource {
 						},
 
 						"volume_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"volume_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -233,7 +243,7 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		)...)
 	}
 
-	// Perform the lookup
+	log.Printf("[DEBUG] Reading IAM Instance: %s", params)
 	resp, err := conn.DescribeInstances(params)
 	if err != nil {
 		return err

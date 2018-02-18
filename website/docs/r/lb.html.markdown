@@ -25,8 +25,9 @@ resource "aws_lb" "test" {
   enable_deletion_protection = true
 
   access_logs {
-    bucket = "${aws_s3_bucket.lb_logs.bucket}"
-    prefix = "test-lb"
+    bucket  = "${aws_s3_bucket.lb_logs.bucket}"
+    prefix  = "test-lb"
+    enabled = true
   }
 
   tags {
@@ -68,7 +69,7 @@ Access Logs (`access_logs`) support the following:
 
 * `bucket` - (Required) The S3 bucket name to store the logs in.
 * `prefix` - (Optional) The S3 bucket prefix. Logs are stored in the root if not configured.
-* `enabled` - (Optional) Boolean to enable / disable `access_logs`.
+* `enabled` - (Optional) Boolean to enable / disable `access_logs`. Defaults to `false`, even when `bucket` is specified.
 
 Subnet Mapping (`subnet_mapping`) blocks support the following:
 

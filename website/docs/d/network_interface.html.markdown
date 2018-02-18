@@ -22,7 +22,8 @@ data "aws_network_interface" "bar" {
 
 The following arguments are supported:
 
-* `id` – (Required) The identifier for the network interface.
+* `id` – (Optional) The identifier for the network interface.
+* `filter` – (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-network-interfaces](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html) in the AWS CLI reference.
 
 ## Attributes Reference
 
@@ -45,3 +46,11 @@ Additionally, the following attributes are exported:
 * `ip_owner_id` - The ID of the Elastic IP address owner.
 * `public_dns_name` - The public DNS name.
 * `public_ip` - The address of the Elastic IP address bound to the network interface.
+
+## Import
+
+Elastic Network Interfaces can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_network_interface.test eni-12345
+```

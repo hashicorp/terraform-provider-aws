@@ -6,7 +6,7 @@ description: |-
   Get an elastic beanstalk solution stack.
 ---
 
-# aws_elastic_beanstalk_solution_stack
+# Data Source: aws_elastic_beanstalk_solution_stack
 
 Use this data source to get the name of a elastic beanstalk solution stack.
 

@@ -19,7 +19,7 @@ into management.
 
 Basic usage with tags:
 
-```
+```hcl
 resource "aws_default_subnet" "default_az1" {
   availability_zone = "us-west-2a"
 

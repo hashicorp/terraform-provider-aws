@@ -43,9 +43,9 @@ func testAccAWSNetworkInterfaceAttachmentConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "172.16.0.0/16"
-		tags {
-			Name = "testAccAWSNetworkInterfaceAttachmentConfig_basic"
-		}
+	tags {
+		Name = "terraform-testacc-network-iface-attachment-basic"
+	}
 }
 
 resource "aws_subnet" "foo" {

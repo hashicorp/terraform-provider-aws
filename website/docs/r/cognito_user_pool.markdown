@@ -30,8 +30,8 @@ The following arguments are supported:
 * `device_configuration` (Optional) - The configuration for the [user pool's device tracking](#device-configuration).
 * `email_configuration` (Optional) - The [Email Configuration](#email-configuration).
 * `name` - (Required) The name of the user pool.
-* `email_verification_subject` - (Optional) A string representing the email verification subject.
-* `email_verification_message` - (Optional) A string representing the email verification message. Must contain the `{####}` placeholder.
+* `email_verification_subject` - (Optional) A string representing the email verification subject. **NOTE:** - If `email_verification_subject` and `verification_message_template.email_subject` are specified and the values are different, either one is prioritized and updated.
+* `email_verification_message` - (Optional) A string representing the email verification message. Must contain the `{####}` placeholder. **NOTE:** - If `email_verification_message` and `verification_message_template.email_message` are specified and the values are different, either one is prioritized and updated.
 * `lambda_config` (Optional) - A container for the AWS [Lambda triggers](#lambda-configuration) associated with the user pool.
 * `mfa_configuration` - (Optional, Default: OFF) Set to enable multi-factor authentication. Must be one of the following values (ON, OFF, OPTIONAL)
 * `password_policy` (Optional) - A container for information about the [user pool password policy](#password-policy).
@@ -63,7 +63,7 @@ The following arguments are supported:
 #### Email Configuration
 
   * `reply_to_email_address` (Optional) - The REPLY-TO email address.
-  * `sns_caller_arn` (Optional) - The ARN of the email source.
+  * `source_arn` (Optional) - The ARN of the email source.
 
 #### Lambda Configuration
 
@@ -74,6 +74,7 @@ The following arguments are supported:
   * `post_confirmation` (Optional) - A post-confirmation AWS Lambda trigger.
   * `pre_authentication` (Optional) - A pre-authentication AWS Lambda trigger.
   * `pre_sign_up` (Optional) - A pre-registration AWS Lambda trigger.
+  * `pre_token_generation` (Optional) - Allow to customize identity token claims before token generation.
   * `verify_auth_challenge_response` (Optional) - Verifies the authentication challenge response.
 
 #### Password Policy
@@ -112,17 +113,18 @@ The following arguments are supported:
 #### Verification Message Template
 
   * `default_email_option` (Optional) - The default email option. Must be either `CONFIRM_WITH_CODE` or `CONFIRM_WITH_LINK`. Defaults to `CONFIRM_WITH_CODE`.
-  * `email_message` (Optional) - The email message template. Must contain the `{####}` placeholder.
+  * `email_message` (Optional) - The email message template. Must contain the `{####}` placeholder. **NOTE:** - If `email_verification_message` and `verification_message_template.email_message` are specified and the values are different, either one is prioritized and updated.
   * `email_message_by_link` (Optional) - The email message template for sending a confirmation link to the user.
-  * `email_subject` (Optional) - The subject line for the email message template.
+  * `email_subject` (Optional) - The subject line for the email message template. **NOTE:** - If `email_verification_subject` and `verification_message_template.email_subject` are specified and the values are different, either one is prioritized and updated.
   * `email_subject_by_link` (Optional) - The subject line for the email message template for sending a confirmation link to the user.
   * `sms_message` (Optional) - The SMS message template. Must contain the `{####}` placeholder.
 
 ## Attribute Reference
 
-The following attributes are exported:
+The following additional attributes are exported:
 
 * `id` - The id of the user pool.
+* `arn` - The ARN of the user pool.
 * `creation_date` - The date the user pool was created.
 * `last_modified_date` - The date the user pool was last modified.
 

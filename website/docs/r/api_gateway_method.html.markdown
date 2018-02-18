@@ -48,7 +48,7 @@ The following arguments are supported:
 * `request_validator_id` - (Optional) The ID of a `aws_api_gateway_request_validator`
 * `request_parameters` - (Optional) A map of request query string parameters and headers that should be passed to the integration.
   For example: 
-```
+```hcl
 request_parameters = { 
   "method.request.header.X-Some-Header" = true,
   "method.request.querystring.some-query-param"  = true,

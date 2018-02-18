@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -63,6 +65,10 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"kibana_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ebs_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -85,6 +91,28 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+						},
+					},
+				},
+			},
+			"encrypt_at_rest": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+							ForceNew: true,
+						},
+						"kms_key_id": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							DiffSuppressFunc: suppressEquivalentKmsKeyIds,
 						},
 					},
 				},
@@ -291,6 +319,16 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if v, ok := d.GetOk("encrypt_at_rest"); ok {
+		options := v.([]interface{})
+		if options[0] == nil {
+			return fmt.Errorf("At least one field is expected inside encrypt_at_rest")
+		}
+
+		s := options[0].(map[string]interface{})
+		input.EncryptionAtRestOptions = expandESEncryptAtRestOptions(s)
+	}
+
 	if v, ok := d.GetOk("cluster_config"); ok {
 		config := v.([]interface{})
 
@@ -365,6 +403,9 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 				return resource.RetryableError(err)
 			}
 			if isAWSErr(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "ValidationException", "Domain is still being deleted") {
 				return resource.RetryableError(err)
 			}
 
@@ -442,7 +483,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	ds := out.DomainStatus
 
 	if ds.AccessPolicies != nil && *ds.AccessPolicies != "" {
-		policies, err := normalizeJsonString(*ds.AccessPolicies)
+		policies, err := structure.NormalizeJsonString(*ds.AccessPolicies)
 		if err != nil {
 			return errwrap.Wrapf("access policies contain an invalid JSON: {{err}}", err)
 		}
@@ -458,6 +499,10 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
 
 	err = d.Set("ebs_options", flattenESEBSOptions(ds.EBSOptions))
+	if err != nil {
+		return err
+	}
+	err = d.Set("encrypt_at_rest", flattenESEncryptAtRestOptions(ds.EncryptionAtRestOptions))
 	if err != nil {
 		return err
 	}
@@ -480,12 +525,14 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		if err != nil {
 			return err
 		}
+		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
 			return fmt.Errorf("%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
 			d.Set("endpoint", *ds.Endpoint)
+			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {
 			return fmt.Errorf("%q: Elasticsearch domain not in VPC expected to have null Endpoints value", d.Id())
@@ -497,7 +544,9 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		for k, val := range ds.LogPublishingOptions {
 			mm := map[string]interface{}{}
 			mm["log_type"] = k
-			mm["cloudwatch_log_group_arn"] = *val.CloudWatchLogsLogGroupArn
+			if val.CloudWatchLogsLogGroupArn != nil {
+				mm["cloudwatch_log_group_arn"] = *val.CloudWatchLogsLogGroupArn
+			}
 			mm["enabled"] = *val.Enabled
 			m = append(m, mm)
 		}
@@ -673,4 +722,15 @@ func resourceAwsElasticSearchDomainDelete(d *schema.ResourceData, meta interface
 	d.SetId("")
 
 	return err
+}
+
+func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {
+	// The Elasticsearch API accepts a short KMS key id but always returns the ARN of the key.
+	// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'.
+	// These should be treated as equivalent.
+	return strings.Contains(old, new)
+}
+
+func getKibanaEndpoint(d *schema.ResourceData) string {
+	return d.Get("endpoint").(string) + "/_plugin/kibana/"
 }

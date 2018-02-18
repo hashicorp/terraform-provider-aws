@@ -40,6 +40,8 @@ func TestAccAWSRDSCluster_basic(t *testing.T) {
 						"aws_rds_cluster.default", "engine", "aurora"),
 					resource.TestCheckResourceAttrSet(
 						"aws_rds_cluster.default", "engine_version"),
+					resource.TestCheckResourceAttrSet(
+						"aws_rds_cluster.default", "hosted_zone_id"),
 				),
 			},
 		},
@@ -436,7 +438,7 @@ resource "aws_rds_cluster" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSClusterConfig_namePrefix"
+		Name = "terraform-testacc-rds-cluster-name-prefix"
 	}
 }
 
@@ -477,7 +479,7 @@ resource "aws_rds_cluster" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSClusterConfig_generatedName"
+		Name = "terraform-testacc-rds-cluster-generated-name"
 	}
 }
 

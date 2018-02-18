@@ -29,6 +29,27 @@ func TestAccAwsServiceDiscoveryPublicDnsNamespace_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsServiceDiscoveryPublicDnsNamespace_import(t *testing.T) {
+	resourceName := "aws_service_discovery_public_dns_namespace.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsServiceDiscoveryPublicDnsNamespaceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccServiceDiscoveryPublicDnsNamespaceConfig(acctest.RandString(5)),
+			},
+
+			resource.TestStep{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsServiceDiscoveryPublicDnsNamespaceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).sdconn
 
@@ -54,9 +75,20 @@ func testAccCheckAwsServiceDiscoveryPublicDnsNamespaceDestroy(s *terraform.State
 
 func testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).sdconn
+
+		input := &servicediscovery.GetNamespaceInput{
+			Id: aws.String(rs.Primary.ID),
+		}
+
+		_, err := conn.GetNamespace(input)
+		if err != nil {
+			return err
 		}
 
 		return nil

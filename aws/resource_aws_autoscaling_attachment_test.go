@@ -234,7 +234,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    Name = "terraform-testacc-autoscaling-attachment-alb"
   }
 }
 `, rInt, rInt, rInt, rInt)

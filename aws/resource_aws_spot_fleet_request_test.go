@@ -886,6 +886,9 @@ EOF
 
 resource "aws_vpc" "foo" {
     cidr_block = "10.1.0.0/16"
+    tags {
+        Name = "terraform-testacc-spot-fleet-request-w-subnet"
+    }
 }
 
 resource "aws_subnet" "foo" {
@@ -902,7 +905,7 @@ resource "aws_subnet" "bar" {
 
 resource "aws_spot_fleet_request" "foo" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.0265"
+    spot_price = "0.03"
     target_capacity = 4
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
@@ -1066,6 +1069,9 @@ EOF
 
 resource "aws_vpc" "foo" {
     cidr_block = "10.1.0.0/16"
+    tags {
+        Name = "terraform-testacc-spot-fleet-request-multi-instance-types"
+    }
 }
 
 resource "aws_subnet" "foo" {
@@ -1080,7 +1086,7 @@ resource "aws_spot_fleet_request" "foo" {
     target_capacity = 4
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
-	wait_for_fulfillment = true
+    wait_for_fulfillment = true
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d0f506b0"

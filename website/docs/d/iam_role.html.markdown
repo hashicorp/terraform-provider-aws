@@ -6,7 +6,7 @@ description: |-
   Get information on a Amazon IAM role
 ---
 
-# aws_iam_role
+# Data Source: aws_iam_role
 
 This data source can be used to fetch information about a specific
 IAM role. By using this data source, you can reference IAM role

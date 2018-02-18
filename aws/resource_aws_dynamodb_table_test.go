@@ -3,6 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,6 +14,318 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_dynamodb_table", &resource.Sweeper{
+		Name: "aws_dynamodb_table",
+		F:    testSweepDynamoDbTables,
+	})
+}
+
+func testSweepDynamoDbTables(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).dynamodbconn
+
+	prefixes := []string{
+		"TerraformTest",
+		"tf-acc-test-",
+		"tf-autoscaled-table-",
+	}
+
+	err = conn.ListTablesPages(&dynamodb.ListTablesInput{}, func(out *dynamodb.ListTablesOutput, lastPage bool) bool {
+		for _, tableName := range out.TableNames {
+			for _, prefix := range prefixes {
+				if !strings.HasPrefix(*tableName, prefix) {
+					log.Printf("[INFO] Skipping DynamoDB Table: %s", *tableName)
+					continue
+				}
+			}
+			log.Printf("[INFO] Deleting DynamoDB Table: %s", *tableName)
+
+			err := deleteAwsDynamoDbTable(*tableName, conn)
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete DynamoDB Table %s: %s", *tableName, err)
+				continue
+			}
+		}
+		return !lastPage
+	})
+	if err != nil {
+		return fmt.Errorf("Error retrieving DynamoDB Tables: %s", err)
+	}
+
+	return nil
+}
+
+func TestDiffDynamoDbGSI(t *testing.T) {
+	testCases := []struct {
+		Old             []interface{}
+		New             []interface{}
+		ExpectedUpdates []*dynamodb.GlobalSecondaryIndexUpdate
+	}{
+		{ // No-op
+			Old: []interface{}{
+				map[string]interface{}{
+					"name":            "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			New: []interface{}{
+				map[string]interface{}{
+					"name":            "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{},
+		},
+
+		{ // Creation
+			Old: []interface{}{
+				map[string]interface{}{
+					"name":            "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			New: []interface{}{
+				map[string]interface{}{
+					"name":            "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+				map[string]interface{}{
+					"name":            "att2-index",
+					"hash_key":        "att2",
+					"write_capacity":  12,
+					"read_capacity":   11,
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{
+				{
+					Create: &dynamodb.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+						KeySchema: []*dynamodb.KeySchemaElement{
+							{
+								AttributeName: aws.String("att2"),
+								KeyType:       aws.String("HASH"),
+							},
+						},
+						ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
+							WriteCapacityUnits: aws.Int64(12),
+							ReadCapacityUnits:  aws.Int64(11),
+						},
+						Projection: &dynamodb.Projection{
+							ProjectionType: aws.String("ALL"),
+						},
+					},
+				},
+			},
+		},
+
+		{ // Deletion
+			Old: []interface{}{
+				map[string]interface{}{
+					"name":            "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+				map[string]interface{}{
+					"name":            "att2-index",
+					"hash_key":        "att2",
+					"write_capacity":  12,
+					"read_capacity":   11,
+					"projection_type": "ALL",
+				},
+			},
+			New: []interface{}{
+				map[string]interface{}{
+					"name":            "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &dynamodb.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+					},
+				},
+			},
+		},
+
+		{ // Update
+			Old: []interface{}{
+				map[string]interface{}{
+					"name":            "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			New: []interface{}{
+				map[string]interface{}{
+					"name":            "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  20,
+					"read_capacity":   30,
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{
+				{
+					Update: &dynamodb.UpdateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
+							WriteCapacityUnits: aws.Int64(20),
+							ReadCapacityUnits:  aws.Int64(30),
+						},
+					},
+				},
+			},
+		},
+
+		{ // Update of non-capacity attributes
+			Old: []interface{}{
+				map[string]interface{}{
+					"name":            "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			New: []interface{}{
+				map[string]interface{}{
+					"name":               "att1-index",
+					"hash_key":           "att-new",
+					"range_key":          "new-range-key",
+					"write_capacity":     10,
+					"read_capacity":      10,
+					"projection_type":    "KEYS_ONLY",
+					"non_key_attributes": []interface{}{"RandomAttribute"},
+				},
+			},
+			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &dynamodb.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &dynamodb.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []*dynamodb.KeySchemaElement{
+							{
+								AttributeName: aws.String("att-new"),
+								KeyType:       aws.String("HASH"),
+							},
+							{
+								AttributeName: aws.String("new-range-key"),
+								KeyType:       aws.String("RANGE"),
+							},
+						},
+						ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
+							WriteCapacityUnits: aws.Int64(10),
+							ReadCapacityUnits:  aws.Int64(10),
+						},
+						Projection: &dynamodb.Projection{
+							ProjectionType:   aws.String("KEYS_ONLY"),
+							NonKeyAttributes: aws.StringSlice([]string{"RandomAttribute"}),
+						},
+					},
+				},
+			},
+		},
+
+		{ // Update of all attributes
+			Old: []interface{}{
+				map[string]interface{}{
+					"name":            "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			New: []interface{}{
+				map[string]interface{}{
+					"name":               "att1-index",
+					"hash_key":           "att-new",
+					"range_key":          "new-range-key",
+					"write_capacity":     12,
+					"read_capacity":      12,
+					"projection_type":    "INCLUDE",
+					"non_key_attributes": []interface{}{"RandomAttribute"},
+				},
+			},
+			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &dynamodb.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &dynamodb.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []*dynamodb.KeySchemaElement{
+							{
+								AttributeName: aws.String("att-new"),
+								KeyType:       aws.String("HASH"),
+							},
+							{
+								AttributeName: aws.String("new-range-key"),
+								KeyType:       aws.String("RANGE"),
+							},
+						},
+						ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
+							WriteCapacityUnits: aws.Int64(12),
+							ReadCapacityUnits:  aws.Int64(12),
+						},
+						Projection: &dynamodb.Projection{
+							ProjectionType:   aws.String("INCLUDE"),
+							NonKeyAttributes: aws.StringSlice([]string{"RandomAttribute"}),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for i, tc := range testCases {
+		ops, err := diffDynamoDbGSI(tc.Old, tc.New)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Convert to strings to avoid dealing with pointers
+		opsS := fmt.Sprintf("%v", ops)
+		opsExpectedS := fmt.Sprintf("%v", tc.ExpectedUpdates)
+
+		if opsS != opsExpectedS {
+			t.Fatalf("Case #%d: Given:\n%s\n\nExpected:\n%s",
+				i, opsS, opsExpectedS)
+		}
+	}
+}
 
 func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
@@ -43,23 +357,46 @@ func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 
+	tableName := fmt.Sprintf("TerraformTestStreamTable-%s", acctest.RandString(8))
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbConfigStreamSpecification(),
+				Config: testAccAWSDynamoDbConfigStreamSpecification(tableName, true, "KEYS_ONLY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
-					testAccCheckInitialAWSDynamoDbTableConf("aws_dynamodb_table.basic-dynamodb-table"),
-					resource.TestCheckResourceAttr(
-						"aws_dynamodb_table.basic-dynamodb-table", "stream_enabled", "true"),
-					resource.TestCheckResourceAttr(
-						"aws_dynamodb_table.basic-dynamodb-table", "stream_view_type", "KEYS_ONLY"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "stream_enabled", "true"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "stream_view_type", "KEYS_ONLY"),
 					resource.TestCheckResourceAttrSet("aws_dynamodb_table.basic-dynamodb-table", "stream_arn"),
 					resource.TestCheckResourceAttrSet("aws_dynamodb_table.basic-dynamodb-table", "stream_label"),
 				),
+			},
+			{
+				Config: testAccAWSDynamoDbConfigStreamSpecification(tableName, false, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "stream_enabled", "false"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "stream_view_type", ""),
+					resource.TestCheckResourceAttrSet("aws_dynamodb_table.basic-dynamodb-table", "stream_arn"),
+					resource.TestCheckResourceAttrSet("aws_dynamodb_table.basic-dynamodb-table", "stream_label"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_streamSpecificationValidation(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSDynamoDbConfigStreamSpecification("anything", true, ""),
+				ExpectError: regexp.MustCompile(`stream_view_type is required when stream_enabled = true$`),
 			},
 		},
 	})
@@ -87,7 +424,7 @@ func TestAccAWSDynamoDbTable_tags(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform/issues/13243
-func TestAccAWSDynamoDbTable_gsiUpdate(t *testing.T) {
+func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	name := acctest.RandString(10)
 
@@ -100,12 +437,169 @@ func TestAccAWSDynamoDbTable_gsiUpdate(t *testing.T) {
 				Config: testAccAWSDynamoDbConfigGsiUpdate(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.test", &conf),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.#", "3"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.write_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2726077800.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2726077800.write_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.3405251423.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.3405251423.write_capacity", "1"),
 				),
 			},
 			{
-				Config: testAccAWSDynamoDbConfigGsiUpdated(name),
+				Config: testAccAWSDynamoDbConfigGsiUpdatedCapacity(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.test", &conf),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.#", "3"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.705130498.read_capacity", "2"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.705130498.write_capacity", "2"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1115936309.read_capacity", "2"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1115936309.write_capacity", "2"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.4212014188.read_capacity", "2"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.4212014188.write_capacity", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+	name := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigGsiUpdate(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.test", &conf),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.#", "3"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2726077800.hash_key", "att3"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2726077800.name", "att3-index"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2726077800.non_key_attributes.#", "0"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2726077800.projection_type", "ALL"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2726077800.range_key", ""),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2726077800.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2726077800.write_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.hash_key", "att1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.name", "att1-index"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.non_key_attributes.#", "0"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.projection_type", "ALL"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.range_key", ""),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.write_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.3405251423.hash_key", "att2"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.3405251423.name", "att2-index"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.3405251423.non_key_attributes.#", "0"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.3405251423.projection_type", "ALL"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.3405251423.range_key", ""),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.3405251423.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.3405251423.write_capacity", "1"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbConfigGsiUpdatedOtherAttributes(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.test", &conf),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.#", "3"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.hash_key", "att4"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.name", "att2-index"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.non_key_attributes.#", "0"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.projection_type", "ALL"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.range_key", "att2"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.write_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.hash_key", "att3"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.name", "att3-index"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.non_key_attributes.#", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.non_key_attributes.0", "RandomAttribute"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.projection_type", "INCLUDE"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.range_key", "att4"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.write_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.hash_key", "att1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.name", "att1-index"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.non_key_attributes.#", "0"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.projection_type", "ALL"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.range_key", ""),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.write_capacity", "1"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/terraform-providers/terraform-provider-aws/issues/566
+func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+	name := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigGsiUpdatedOtherAttributes(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.test", &conf),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.#", "3"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.hash_key", "att4"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.name", "att2-index"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.non_key_attributes.#", "0"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.projection_type", "ALL"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.range_key", "att2"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.write_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.hash_key", "att3"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.name", "att3-index"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.non_key_attributes.#", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.non_key_attributes.0", "RandomAttribute"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.projection_type", "INCLUDE"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.range_key", "att4"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.2311632778.write_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.hash_key", "att1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.name", "att1-index"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.non_key_attributes.#", "0"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.projection_type", "ALL"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.range_key", ""),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.write_capacity", "1"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbConfigGsiUpdatedNonKeyAttributes(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.test", &conf),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.#", "3"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.hash_key", "att4"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.name", "att2-index"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.non_key_attributes.#", "0"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.projection_type", "ALL"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.range_key", "att2"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1182392663.write_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.102175821.hash_key", "att3"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.102175821.name", "att3-index"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.102175821.non_key_attributes.#", "2"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.102175821.non_key_attributes.0", "RandomAttribute"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.102175821.non_key_attributes.1", "AnotherAttribute"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.102175821.projection_type", "INCLUDE"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.102175821.range_key", "att4"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.102175821.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.102175821.write_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.hash_key", "att1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.name", "att1-index"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.non_key_attributes.#", "0"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.projection_type", "ALL"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.range_key", ""),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.test", "global_secondary_index.1937107206.write_capacity", "1"),
 				),
 			},
 		},
@@ -305,12 +799,12 @@ func testAccCheckInitialAWSDynamoDbTableConf(n string) resource.TestCheckFunc {
 
 		log.Printf("[DEBUG] Checking on table %s", rs.Primary.ID)
 
-		if *table.ProvisionedThroughput.WriteCapacityUnits != 20 {
-			return fmt.Errorf("Provisioned write capacity was %d, not 20!", table.ProvisionedThroughput.WriteCapacityUnits)
+		if *table.ProvisionedThroughput.WriteCapacityUnits != 2 {
+			return fmt.Errorf("Provisioned write capacity was %d, not 2!", table.ProvisionedThroughput.WriteCapacityUnits)
 		}
 
-		if *table.ProvisionedThroughput.ReadCapacityUnits != 10 {
-			return fmt.Errorf("Provisioned read capacity was %d, not 10!", table.ProvisionedThroughput.ReadCapacityUnits)
+		if *table.ProvisionedThroughput.ReadCapacityUnits != 1 {
+			return fmt.Errorf("Provisioned read capacity was %d, not 1!", table.ProvisionedThroughput.ReadCapacityUnits)
 		}
 
 		attrCount := len(table.AttributeDefinitions)
@@ -436,8 +930,8 @@ func testAccAWSDynamoDbConfigInitialState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
   name = "%s"
-  read_capacity = 10
-  write_capacity = 20
+  read_capacity = 1
+  write_capacity = 2
   hash_key = "TestTableHashKey"
   range_key = "TestTableRangeKey"
 
@@ -471,8 +965,8 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     name = "InitialTestTableGSI"
     hash_key = "TestTableHashKey"
     range_key = "TestGSIRangeKey"
-    write_capacity = 10
-    read_capacity = 10
+    write_capacity = 1
+    read_capacity = 1
     projection_type = "KEYS_ONLY"
   }
 }
@@ -483,8 +977,8 @@ func testAccAWSDynamoDbConfigAddSecondaryGSI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
   name = "%s"
-  read_capacity = 20
-  write_capacity = 20
+  read_capacity = 2
+  write_capacity = 2
   hash_key = "TestTableHashKey"
   range_key = "TestTableRangeKey"
 
@@ -526,61 +1020,31 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 }`, rName)
 }
 
-func testAccAWSDynamoDbConfigStreamSpecification() string {
+func testAccAWSDynamoDbConfigStreamSpecification(tableName string, enabled bool, viewType string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "TerraformTestStreamTable-%d"
-  read_capacity = 10
-  write_capacity = 20
+  name = "%s"
+  read_capacity = 1
+  write_capacity = 2
   hash_key = "TestTableHashKey"
-  range_key = "TestTableRangeKey"
 
   attribute {
     name = "TestTableHashKey"
     type = "S"
   }
 
-  attribute {
-    name = "TestTableRangeKey"
-    type = "S"
-  }
-
-  attribute {
-    name = "TestLSIRangeKey"
-    type = "N"
-  }
-
-  attribute {
-    name = "TestGSIRangeKey"
-    type = "S"
-  }
-
-  local_secondary_index {
-    name = "TestTableLSI"
-    range_key = "TestLSIRangeKey"
-    projection_type = "ALL"
-  }
-
-  global_secondary_index {
-    name = "InitialTestTableGSI"
-    hash_key = "TestTableHashKey"
-    range_key = "TestGSIRangeKey"
-    write_capacity = 10
-    read_capacity = 10
-    projection_type = "KEYS_ONLY"
-  }
-  stream_enabled = true
-  stream_view_type = "KEYS_ONLY"
+  stream_enabled = %t
+  stream_view_type = "%s"
 }
-`, acctest.RandInt())
+`, tableName, enabled, viewType)
 }
 
 func testAccAWSDynamoDbConfigTags() string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
   name = "TerraformTestTable-%d"
-  read_capacity = 10
-  write_capacity = 20
+  read_capacity = 1
+  write_capacity = 2
   hash_key = "TestTableHashKey"
   range_key = "TestTableRangeKey"
 
@@ -614,8 +1078,8 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     name = "InitialTestTableGSI"
     hash_key = "TestTableHashKey"
     range_key = "TestGSIRangeKey"
-    write_capacity = 10
-    read_capacity = 10
+    write_capacity = 1
+    read_capacity = 1
     projection_type = "KEYS_ONLY"
   }
 
@@ -631,7 +1095,7 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfigGsiUpdate(name string) string {
 	return fmt.Sprintf(`
 variable "capacity" {
-  default = 10
+  default = 1
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -687,10 +1151,10 @@ resource "aws_dynamodb_table" "test" {
 `, name)
 }
 
-func testAccAWSDynamoDbConfigGsiUpdated(name string) string {
+func testAccAWSDynamoDbConfigGsiUpdatedCapacity(name string) string {
 	return fmt.Sprintf(`
 variable "capacity" {
-  default = 20
+  default = 2
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -741,6 +1205,140 @@ resource "aws_dynamodb_table" "test" {
     write_capacity  = "${var.capacity}"
     read_capacity   = "${var.capacity}"
     projection_type = "ALL"
+  }
+}
+`, name)
+}
+
+func testAccAWSDynamoDbConfigGsiUpdatedOtherAttributes(name string) string {
+	return fmt.Sprintf(`
+variable "capacity" {
+  default = 1
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = "tf-acc-test-%s"
+  read_capacity  = "${var.capacity}"
+  write_capacity = "${var.capacity}"
+  hash_key       = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  attribute {
+    name = "att1"
+    type = "S"
+  }
+
+  attribute {
+    name = "att2"
+    type = "S"
+  }
+
+  attribute {
+    name = "att3"
+    type = "S"
+  }
+
+  attribute {
+    name = "att4"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "att1-index"
+    hash_key        = "att1"
+    write_capacity  = "${var.capacity}"
+    read_capacity   = "${var.capacity}"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "att2-index"
+    hash_key        = "att4"
+    range_key       = "att2"
+    write_capacity  = "${var.capacity}"
+    read_capacity   = "${var.capacity}"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "att3-index"
+    hash_key        = "att3"
+    range_key       = "att4"
+    write_capacity  = "${var.capacity}"
+    read_capacity   = "${var.capacity}"
+    projection_type = "INCLUDE"
+    non_key_attributes = ["RandomAttribute"]
+  }
+}
+`, name)
+}
+
+func testAccAWSDynamoDbConfigGsiUpdatedNonKeyAttributes(name string) string {
+	return fmt.Sprintf(`
+variable "capacity" {
+  default = 1
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = "tf-acc-test-%s"
+  read_capacity  = "${var.capacity}"
+  write_capacity = "${var.capacity}"
+  hash_key       = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  attribute {
+    name = "att1"
+    type = "S"
+  }
+
+  attribute {
+    name = "att2"
+    type = "S"
+  }
+
+  attribute {
+    name = "att3"
+    type = "S"
+  }
+
+  attribute {
+    name = "att4"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "att1-index"
+    hash_key        = "att1"
+    write_capacity  = "${var.capacity}"
+    read_capacity   = "${var.capacity}"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "att2-index"
+    hash_key        = "att4"
+    range_key       = "att2"
+    write_capacity  = "${var.capacity}"
+    read_capacity   = "${var.capacity}"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "att3-index"
+    hash_key        = "att3"
+    range_key       = "att4"
+    write_capacity  = "${var.capacity}"
+    read_capacity   = "${var.capacity}"
+    projection_type = "INCLUDE"
+    non_key_attributes = ["RandomAttribute", "AnotherAttribute"]
   }
 }
 `, name)
@@ -750,8 +1348,8 @@ func testAccAWSDynamoDbConfigAddTimeToLive(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
   name = "%s"
-  read_capacity = 10
-  write_capacity = 20
+  read_capacity = 1
+  write_capacity = 2
   hash_key = "TestTableHashKey"
   range_key = "TestTableRangeKey"
 
@@ -790,8 +1388,8 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     name = "InitialTestTableGSI"
     hash_key = "TestTableHashKey"
     range_key = "TestGSIRangeKey"
-    write_capacity = 10
-    read_capacity = 10
+    write_capacity = 1
+    read_capacity = 1
     projection_type = "KEYS_ONLY"
   }
 }

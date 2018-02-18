@@ -144,7 +144,7 @@ var testAccAWSElasticacheSubnetGroupConfig = `
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-            Name = "tf-test"
+        Name = "terraform-testacc-elasticache-subnet-group"
     }
 }
 
@@ -153,7 +153,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
     tags {
-            Name = "tf-test"
+        Name = "tf-test"
     }
 }
 
@@ -169,7 +169,7 @@ var testAccAWSElasticacheSubnetGroupUpdateConfigPre = `
 resource "aws_vpc" "foo" {
     cidr_block = "10.0.0.0/16"
     tags {
-            Name = "tf-elc-sub-test"
+        Name = "terraform-testacc-elasticache-subnet-group-update"
     }
 }
 
@@ -178,7 +178,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "10.0.1.0/24"
     availability_zone = "us-west-2a"
     tags {
-            Name = "tf-test"
+        Name = "tf-test"
     }
 }
 
@@ -193,7 +193,7 @@ var testAccAWSElasticacheSubnetGroupUpdateConfigPost = `
 resource "aws_vpc" "foo" {
     cidr_block = "10.0.0.0/16"
     tags {
-            Name = "tf-elc-sub-test"
+        Name = "terraform-testacc-elasticache-subnet-group-update"
     }
 }
 
@@ -202,7 +202,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "10.0.1.0/24"
     availability_zone = "us-west-2a"
     tags {
-            Name = "tf-test"
+        Name = "tf-test"
     }
 }
 
@@ -211,7 +211,7 @@ resource "aws_subnet" "bar" {
     cidr_block = "10.0.2.0/24"
     availability_zone = "us-west-2a"
     tags {
-            Name = "tf-test-foo-update"
+        Name = "tf-test-foo-update"
     }
 }
 

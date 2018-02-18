@@ -81,7 +81,7 @@ The following arguments are supported:
 
 * `console_access` - (Optional) Whether to enable access to the the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) for the user.
 * `groups` - (Optional) The list of groups (20 maximum) to which the ActiveMQ user belongs.
-* `password` - (Required) The password of the user.
+* `password` - (Required) The password of the user. It must be 12 to 250 characters long, at least 4 unique characters, and must not contain commas.
 * `username` - (Required) The username of the user.
 
 ## Attributes Reference
