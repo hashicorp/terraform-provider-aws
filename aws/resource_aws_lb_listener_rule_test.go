@@ -210,13 +210,6 @@ func TestAccAWSLBListenerRule_autoPriority(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSLBListenerRuleConfig_autoPriorityGap(lbName, targetGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.gap", &rule),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.gap", "priority", "2"),
-				),
-			},
-			{
 				Config: testAccAWSLBListenerRuleConfig_autoPriorityLast(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.last", &rule),
@@ -235,6 +228,13 @@ func TestAccAWSLBListenerRule_autoPriority(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.last", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", "priority", "7"),
+				),
+			},
+			{
+				Config: testAccAWSLBListenerRuleConfig_autoPriority100Rules(lbName, targetGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.last", &rule),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.limit.96", "priority"),
 				),
 			},
 		},
@@ -880,94 +880,6 @@ resource "aws_security_group" "alb_test" {
 }`, lbName, targetGroupName)
 }
 
-func testAccAWSLBListenerRuleConfig_autoPriorityFirst(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_autoPriorityBase(lbName, targetGroupName) + fmt.Sprintf(`
-resource "aws_lb_listener_rule" "first" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-
-  action {
-    type = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
-  }
-
-  condition {
-    field = "path-pattern"
-    values = ["/first/*"]
-  }
-}
-
-resource "aws_lb_listener_rule" "third" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 3
-
-  action {
-    type = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
-  }
-
-  condition {
-    field = "path-pattern"
-    values = ["/third/*"]
-  }
-}
-`)
-}
-
-func testAccAWSLBListenerRuleConfig_autoPriorityGap(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_autoPriorityFirst(lbName, targetGroupName) + fmt.Sprintf(`
-resource "aws_lb_listener_rule" "gap" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-
-  action {
-    type = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
-  }
-
-  condition {
-    field = "path-pattern"
-    values = ["/gap/*"]
-  }
-}
-`)
-}
-
-func testAccAWSLBListenerRuleConfig_autoPriorityLast(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_autoPriorityGap(lbName, targetGroupName) + fmt.Sprintf(`
-resource "aws_lb_listener_rule" "last" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-
-  action {
-    type = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
-  }
-
-  condition {
-    field = "path-pattern"
-    values = ["/last/*"]
-  }
-}
-`)
-}
-
-func testAccAWSLBListenerRuleConfig_autoPriorityStatic(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_autoPriorityGap(lbName, targetGroupName) + fmt.Sprintf(`
-resource "aws_lb_listener_rule" "last" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 7
-
-  action {
-    type = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
-  }
-
-  condition {
-    field = "path-pattern"
-    values = ["/last/*"]
-  }
-}
-`)
-}
-
 func testAccAWSLBListenerRuleConfig_autoPriorityBase(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
@@ -1063,4 +975,94 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName, targetGroupName)
+}
+
+func testAccAWSLBListenerRuleConfig_autoPriorityFirst(lbName, targetGroupName string) string {
+	return testAccAWSLBListenerRuleConfig_autoPriorityBase(lbName, targetGroupName) + fmt.Sprintf(`
+resource "aws_lb_listener_rule" "first" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+
+  action {
+    type = "forward"
+    target_group_arn = "${aws_lb_target_group.test.arn}"
+  }
+
+  condition {
+    field = "path-pattern"
+    values = ["/first/*"]
+  }
+}
+
+resource "aws_lb_listener_rule" "third" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+  priority = 3
+
+  action {
+    type = "forward"
+    target_group_arn = "${aws_lb_target_group.test.arn}"
+  }
+
+  condition {
+    field = "path-pattern"
+    values = ["/third/*"]
+  }
+}
+`)
+}
+
+func testAccAWSLBListenerRuleConfig_autoPriorityLast(lbName, targetGroupName string) string {
+	return testAccAWSLBListenerRuleConfig_autoPriorityFirst(lbName, targetGroupName) + fmt.Sprintf(`
+resource "aws_lb_listener_rule" "last" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+
+  action {
+    type = "forward"
+    target_group_arn = "${aws_lb_target_group.test.arn}"
+  }
+
+  condition {
+    field = "path-pattern"
+    values = ["/last/*"]
+  }
+}
+`)
+}
+
+func testAccAWSLBListenerRuleConfig_autoPriorityStatic(lbName, targetGroupName string) string {
+	return testAccAWSLBListenerRuleConfig_autoPriorityFirst(lbName, targetGroupName) + fmt.Sprintf(`
+resource "aws_lb_listener_rule" "last" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+  priority = 7
+
+  action {
+    type = "forward"
+    target_group_arn = "${aws_lb_target_group.test.arn}"
+  }
+
+  condition {
+    field = "path-pattern"
+    values = ["/last/*"]
+  }
+}
+`)
+}
+
+func testAccAWSLBListenerRuleConfig_autoPriority100Rules(lbName, targetGroupName string) string {
+	return testAccAWSLBListenerRuleConfig_autoPriorityStatic(lbName, targetGroupName) + fmt.Sprintf(`
+resource "aws_lb_listener_rule" "limit" {
+  count = 97
+
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+
+  action {
+    type = "forward"
+    target_group_arn = "${aws_lb_target_group.test.arn}"
+  }
+
+  condition {
+    field = "path-pattern"
+    values = ["/${count.index}/*"]
+  }
+}
+`)
 }

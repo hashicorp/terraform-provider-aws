@@ -7,11 +7,13 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/errwrap"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -90,16 +92,6 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 		ListenerArn: aws.String(listenerArn),
 	}
 
-	if v, ok := d.GetOk("priority"); ok {
-		params.Priority = aws.Int64(int64(v.(int)))
-	} else {
-		_, nextPriority, err := getListenerRulePriority(elbconn, listenerArn)
-		if err != nil {
-			return err
-		}
-		params.Priority = aws.Int64(nextPriority)
-	}
-
 	actions := d.Get("action").([]interface{})
 	params.Actions = make([]*elbv2.Action, len(actions))
 	for i, action := range actions {
@@ -124,9 +116,35 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	resp, err := elbconn.CreateRule(params)
-	if err != nil {
-		return errwrap.Wrapf("Error creating LB Listener Rule: {{err}}", err)
+	var resp *elbv2.CreateRuleOutput
+	if v, ok := d.GetOk("priority"); ok {
+		var err error
+		params.Priority = aws.Int64(int64(v.(int)))
+		resp, err = elbconn.CreateRule(params)
+		if err != nil {
+			return fmt.Errorf("Error creating LB Listener Rule: %v", err)
+		}
+	} else {
+		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			var err error
+			lastPriority, _, err := getListenerRulePriority(elbconn, listenerArn)
+			log.Println(lastPriority)
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			params.Priority = aws.Int64(lastPriority + 1)
+			resp, err = elbconn.CreateRule(params)
+			if err != nil {
+				if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "PriorityInUse" {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("Error creating LB Listener Rule: %v", err)
+		}
 	}
 
 	if len(resp.Rules) == 0 {
