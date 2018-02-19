@@ -45,7 +45,7 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 			"size": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "Large",
+				Computed: true,
 				ForceNew: true,
 			},
 			"alias": {
@@ -159,7 +159,7 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 			"edition": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  directoryservice.DirectoryEditionEnterprise,
+				Computed: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					directoryservice.DirectoryEditionEnterprise,
@@ -229,18 +229,19 @@ func buildConnectSettings(d *schema.ResourceData) (connectSettings *directoryser
 }
 
 func createDirectoryConnector(dsconn *directoryservice.DirectoryService, d *schema.ResourceData) (directoryId string, err error) {
-	if _, ok := d.GetOk("size"); !ok {
-		return "", fmt.Errorf("size is required for type = ADConnector")
-	}
-
 	input := directoryservice.ConnectDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
-		Size:     aws.String(d.Get("size").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("size"); ok {
+		input.Size = aws.String(v.(string))
+	} else {
+		// Matching previous behavior of Default: "Large" for Size attribute
+		input.Size = aws.String(directoryservice.DirectorySizeLarge)
 	}
 	if v, ok := d.GetOk("short_name"); ok {
 		input.ShortName = aws.String(v.(string))
@@ -262,18 +263,19 @@ func createDirectoryConnector(dsconn *directoryservice.DirectoryService, d *sche
 }
 
 func createSimpleDirectoryService(dsconn *directoryservice.DirectoryService, d *schema.ResourceData) (directoryId string, err error) {
-	if _, ok := d.GetOk("size"); !ok {
-		return "", fmt.Errorf("size is required for type = SimpleAD")
-	}
-
 	input := directoryservice.CreateDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
-		Size:     aws.String(d.Get("size").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("size"); ok {
+		input.Size = aws.String(v.(string))
+	} else {
+		// Matching previous behavior of Default: "Large" for Size attribute
+		input.Size = aws.String(directoryservice.DirectorySizeLarge)
 	}
 	if v, ok := d.GetOk("short_name"); ok {
 		input.ShortName = aws.String(v.(string))
@@ -456,12 +458,8 @@ func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta inter
 	if dir.ShortName != nil {
 		d.Set("short_name", *dir.ShortName)
 	}
-	if dir.Size != nil {
-		d.Set("size", *dir.Size)
-	}
-	if dir.Edition != nil {
-		d.Set("edition", *dir.Edition)
-	}
+	d.Set("size", dir.Size)
+	d.Set("edition", dir.Edition)
 	d.Set("type", *dir.Type)
 	d.Set("vpc_settings", flattenDSVpcSettings(dir.VpcSettings))
 	d.Set("connect_settings", flattenDSConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings))
