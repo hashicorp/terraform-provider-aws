@@ -24,7 +24,10 @@ func TestAccAWSEMRCluster_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEmrClusterConfig(r),
-				Check:  testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
+				),
 			},
 		},
 	})
@@ -706,6 +709,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   keep_job_flow_alive_when_no_steps = true
   termination_protection = false
+
+  scale_down_behavior = "TERMINATE_AT_TASK_COMPLETION"
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"

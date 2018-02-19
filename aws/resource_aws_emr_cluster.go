@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsEMRCluster() *schema.Resource {
@@ -236,6 +237,16 @@ func resourceAwsEMRCluster() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
+			"scale_down_behavior": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					emr.ScaleDownBehaviorTerminateAtInstanceHour,
+					emr.ScaleDownBehaviorTerminateAtTaskCompletion,
+				}, false),
+			},
 			"security_configuration": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -363,8 +374,13 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	if v, ok := d.GetOk("log_uri"); ok {
 		params.LogUri = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("autoscaling_role"); ok {
 		params.AutoScalingRole = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("scale_down_behavior"); ok {
+		params.ScaleDownBehavior = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("security_configuration"); ok {
@@ -486,6 +502,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", cluster.Name)
+
 	d.Set("service_role", cluster.ServiceRole)
 	d.Set("security_configuration", cluster.SecurityConfiguration)
 	d.Set("autoscaling_role", cluster.AutoScalingRole)
@@ -495,6 +512,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("visible_to_all_users", cluster.VisibleToAllUsers)
 	d.Set("tags", tagsToMapEMR(cluster.Tags))
 	d.Set("ebs_root_volume_size", cluster.EbsRootVolumeSize)
+	d.Set("scale_down_behavior", cluster.ScaleDownBehavior)
 
 	if cluster.CustomAmiId != nil {
 		d.Set("custom_ami_id", cluster.CustomAmiId)
