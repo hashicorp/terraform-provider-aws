@@ -277,6 +277,9 @@ resource "aws_vpc" "foo" {
 
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-acl-rule-basic"
+	}
 }
 
 resource "aws_network_acl_rule" "baz" {
@@ -325,6 +328,9 @@ resource "aws_vpc" "foo" {
 
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-acl-rule-missing-param"
+	}
 }
 
 resource "aws_network_acl_rule" "baz" {
@@ -348,6 +354,9 @@ resource "aws_vpc" "foo" {
 
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-acl-rule-no-real-update"
+	}
 }
 
 resource "aws_network_acl_rule" "baz" {
@@ -372,6 +381,9 @@ resource "aws_vpc" "foo" {
 
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-acl-rule-all-protocol"
+	}
 }
 
 resource "aws_network_acl_rule" "baz" {
@@ -396,6 +408,9 @@ resource "aws_vpc" "foo" {
 
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-acl-rule-ipv6"
+	}
 }
 
 resource "aws_network_acl_rule" "baz" {
