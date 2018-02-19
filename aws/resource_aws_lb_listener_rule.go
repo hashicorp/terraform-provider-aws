@@ -127,15 +127,14 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 	} else {
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			var err error
-			lastPriority, _, err := getListenerRulePriority(elbconn, listenerArn)
-			log.Println(lastPriority)
+			priority, err := highestListenerRulePriority(elbconn, listenerArn)
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}
-			params.Priority = aws.Int64(lastPriority + 1)
+			params.Priority = aws.Int64(priority + 1)
 			resp, err = elbconn.CreateRule(params)
 			if err != nil {
-				if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "PriorityInUse" {
+				if isAWSErr(err, elbv2.ErrCodePriorityInUseException, "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -343,7 +342,7 @@ func isRuleNotFound(err error) bool {
 	return ok && elberr.Code() == "RuleNotFound"
 }
 
-func getListenerRulePriority(conn *elbv2.ELBV2, arn string) (last, next int64, err error) {
+func highestListenerRulePriority(conn *elbv2.ELBV2, arn string) (priority int64, err error) {
 	var priorities []int
 	var nextMarker *string
 
@@ -368,19 +367,13 @@ func getListenerRulePriority(conn *elbv2.ELBV2, arn string) (last, next int64, e
 		nextMarker = out.NextMarker
 	}
 
-	l := len(priorities)
-	if l == 0 || l == priorities[l-1] {
-		last = int64(l)
-		next = int64(l + 1)
-	} else {
-		last = int64(priorities[l-1])
-		sort.IntSlice(priorities).Sort()
-		for i, p := range priorities {
-			if i+1 != p {
-				next = int64(i + 1)
-			}
-		}
+	if len(priorities) == 0 {
+		priority = 0
+		return
 	}
+
+	sort.IntSlice(priorities).Sort()
+	priority = int64(priorities[len(priorities)-1])
 
 	return
 }

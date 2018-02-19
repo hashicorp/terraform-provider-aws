@@ -191,7 +191,7 @@ func TestAccAWSLBListenerRule_multipleConditionThrowsError(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_autoPriority(t *testing.T) {
+func TestAccAWSLBListenerRule_priority(t *testing.T) {
 	var rule elbv2.Rule
 	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -203,39 +203,67 @@ func TestAccAWSLBListenerRule_autoPriority(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerRuleConfig_autoPriorityFirst(lbName, targetGroupName),
+				Config: testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.first", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.first", "priority", "1"),
 				),
 			},
 			{
-				Config: testAccAWSLBListenerRuleConfig_autoPriorityLast(lbName, targetGroupName),
+				Config: testAccAWSLBListenerRuleConfig_priorityLast(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.last", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", "priority", "4"),
 				),
 			},
 			{
-				Config: testAccAWSLBListenerRuleConfig_autoPriorityStatic(lbName, targetGroupName),
+				Config: testAccAWSLBListenerRuleConfig_priorityStatic(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.last", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", "priority", "7"),
 				),
 			},
 			{
-				Config: testAccAWSLBListenerRuleConfig_autoPriorityLast(lbName, targetGroupName),
+				Config: testAccAWSLBListenerRuleConfig_priorityLast(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.last", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", "priority", "7"),
 				),
 			},
 			{
-				Config: testAccAWSLBListenerRuleConfig_autoPriority100Rules(lbName, targetGroupName),
+				Config: testAccAWSLBListenerRuleConfig_priorityParallelism(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.last", &rule),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.limit.96", "priority"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.0", "priority"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.1", "priority"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.2", "priority"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.3", "priority"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.4", "priority"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.5", "priority"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.6", "priority"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.7", "priority"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.8", "priority"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.9", "priority"),
 				),
+			},
+			{
+				Config:      testAccAWSLBListenerRuleConfig_priorityRuleNumberLimit(lbName, targetGroupName),
+				ExpectError: regexp.MustCompile(`Error creating LB Listener Rule: TooManyRules`),
+			},
+			{
+				Config: testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.50000", &rule),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.50000", "priority", "50000"),
+				),
+			},
+			{
+				Config:      testAccAWSLBListenerRuleConfig_priority50001(lbName, targetGroupName),
+				ExpectError: regexp.MustCompile(`Error creating LB Listener Rule: ValidationError`),
+			},
+			{
+				Config:      testAccAWSLBListenerRuleConfig_priorityInUse(lbName, targetGroupName),
+				ExpectError: regexp.MustCompile(`Error creating LB Listener Rule: PriorityInUse`),
 			},
 		},
 	})
@@ -880,7 +908,7 @@ resource "aws_security_group" "alb_test" {
 }`, lbName, targetGroupName)
 }
 
-func testAccAWSLBListenerRuleConfig_autoPriorityBase(lbName, targetGroupName string) string {
+func testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
    load_balancer_arn = "${aws_lb.alb_test.id}"
@@ -977,8 +1005,8 @@ resource "aws_security_group" "alb_test" {
 }`, lbName, targetGroupName)
 }
 
-func testAccAWSLBListenerRuleConfig_autoPriorityFirst(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_autoPriorityBase(lbName, targetGroupName) + fmt.Sprintf(`
+func testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName string) string {
+	return testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName) + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "first" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
 
@@ -1006,12 +1034,14 @@ resource "aws_lb_listener_rule" "third" {
     field = "path-pattern"
     values = ["/third/*"]
   }
+
+  depends_on = ["aws_lb_listener_rule.first"]
 }
 `)
 }
 
-func testAccAWSLBListenerRuleConfig_autoPriorityLast(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_autoPriorityFirst(lbName, targetGroupName) + fmt.Sprintf(`
+func testAccAWSLBListenerRuleConfig_priorityLast(lbName, targetGroupName string) string {
+	return testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName) + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "last" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
 
@@ -1028,8 +1058,8 @@ resource "aws_lb_listener_rule" "last" {
 `)
 }
 
-func testAccAWSLBListenerRuleConfig_autoPriorityStatic(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_autoPriorityFirst(lbName, targetGroupName) + fmt.Sprintf(`
+func testAccAWSLBListenerRuleConfig_priorityStatic(lbName, targetGroupName string) string {
+	return testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName) + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "last" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority = 7
@@ -1047,10 +1077,10 @@ resource "aws_lb_listener_rule" "last" {
 `)
 }
 
-func testAccAWSLBListenerRuleConfig_autoPriority100Rules(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_autoPriorityStatic(lbName, targetGroupName) + fmt.Sprintf(`
-resource "aws_lb_listener_rule" "limit" {
-  count = 97
+func testAccAWSLBListenerRuleConfig_priorityParallelism(lbName, targetGroupName string) string {
+	return testAccAWSLBListenerRuleConfig_priorityStatic(lbName, targetGroupName) + fmt.Sprintf(`
+resource "aws_lb_listener_rule" "parallelism" {
+  count = 10
 
   listener_arn = "${aws_lb_listener.front_end.arn}"
 
@@ -1062,6 +1092,85 @@ resource "aws_lb_listener_rule" "limit" {
   condition {
     field = "path-pattern"
     values = ["/${count.index}/*"]
+  }
+}
+`)
+}
+
+// Rules per load balancer (not counting default rules): 100
+// https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html
+func testAccAWSLBListenerRuleConfig_priorityRuleNumberLimit(lbName, targetGroupName string) string {
+	return testAccAWSLBListenerRuleConfig_priorityParallelism(lbName, targetGroupName) + fmt.Sprintf(`
+resource "aws_lb_listener_rule" "limit" {
+  count = 88
+
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+
+  action {
+    type = "forward"
+    target_group_arn = "${aws_lb_target_group.test.arn}"
+  }
+
+  condition {
+    field = "path-pattern"
+    values = ["/${count.index}/*"]
+  }
+}
+`)
+}
+
+func testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName string) string {
+	return testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName) + fmt.Sprintf(`
+resource "aws_lb_listener_rule" "50000" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+  priority     = 50000
+
+  action {
+    type = "forward"
+    target_group_arn = "${aws_lb_target_group.test.arn}"
+  }
+
+  condition {
+    field = "path-pattern"
+    values = ["/50000/*"]
+  }
+}
+`)
+}
+
+// priority out of range (1, 50000)
+func testAccAWSLBListenerRuleConfig_priority50001(lbName, targetGroupName string) string {
+	return testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName) + fmt.Sprintf(`
+resource "aws_lb_listener_rule" "50001" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+
+  action {
+    type = "forward"
+    target_group_arn = "${aws_lb_target_group.test.arn}"
+  }
+
+  condition {
+    field = "path-pattern"
+    values = ["/50001/*"]
+  }
+}
+`)
+}
+
+func testAccAWSLBListenerRuleConfig_priorityInUse(lbName, targetGroupName string) string {
+	return testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName) + fmt.Sprintf(`
+resource "aws_lb_listener_rule" "50000_in_use" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+  priority     = 50000
+
+  action {
+    type = "forward"
+    target_group_arn = "${aws_lb_target_group.test.arn}"
+  }
+
+  condition {
+    field = "path-pattern"
+    values = ["/50000_in_use/*"]
   }
 }
 `)
