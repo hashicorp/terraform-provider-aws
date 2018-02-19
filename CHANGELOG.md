@@ -19,6 +19,7 @@ ENHANCEMENTS:
 
 * data-source/aws_kms_alias: Always return `target_key_arn` [GH-3304]
 * resource/aws_autoscaling_policy: Add support for `target_tracking_configuration` [GH-2611]
+* resource/aws_cloudtrail: Add `event_selector` argument [GH-2258]
 * resource/aws_codedeploy_deployment_group: Validate DeploymentReady and InstanceReady `trigger_events` [GH-3412]
 * resource/aws_db_parameter_group: Validate underscore `name` during plan [GH-3396]
 * resource/aws_dx_connection: Add support for tagging [GH-2990]
