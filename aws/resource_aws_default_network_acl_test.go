@@ -241,7 +241,7 @@ resource "aws_default_network_acl" "default" {
   default_network_acl_id = "${aws_vpc.tftestvpc.default_network_acl_id}"
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basic"
+    Name = "tf-acc-default-acl-basic"
   }
 }
 `
@@ -268,7 +268,7 @@ resource "aws_default_network_acl" "default" {
   }
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basic"
+    Name = "tf-acc-default-acl-basic-including-ipv6-rule"
   }
 }
 `
@@ -295,7 +295,7 @@ resource "aws_default_network_acl" "default" {
   }
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basic"
+    Name = "tf-acc-default-acl-deny-ingress"
   }
 }
 `
@@ -331,7 +331,7 @@ resource "aws_network_acl" "bar" {
   vpc_id = "${aws_vpc.foo.id}"
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+    Name = "tf-acc-default-acl-subnets"
   }
 }
 
@@ -341,7 +341,7 @@ resource "aws_default_network_acl" "default" {
   subnet_ids = ["${aws_subnet.one.id}", "${aws_subnet.two.id}"]
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+    Name = "tf-acc-default-acl-subnets"
   }
 }
 `
@@ -377,7 +377,7 @@ resource "aws_network_acl" "bar" {
   vpc_id = "${aws_vpc.foo.id}"
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+    Name = "tf-acc-default-acl-subnets-remove"
   }
 }
 
@@ -385,7 +385,7 @@ resource "aws_default_network_acl" "default" {
   default_network_acl_id = "${aws_vpc.foo.default_network_acl_id}"
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+    Name = "tf-acc-default-acl-subnets-remove"
   }
 }
 `
@@ -423,7 +423,7 @@ resource "aws_network_acl" "bar" {
   subnet_ids = ["${aws_subnet.one.id}", "${aws_subnet.two.id}"]
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+    Name = "tf-acc-default-acl-subnets-move"
   }
 }
 
@@ -433,7 +433,7 @@ resource "aws_default_network_acl" "default" {
   depends_on = ["aws_network_acl.bar"]
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+    Name = "tf-acc-default-acl-subnets-move"
   }
 }
 `
@@ -456,7 +456,7 @@ resource "aws_default_network_acl" "default" {
   default_network_acl_id = "${aws_vpc.tftestvpc.default_network_acl_id}"
 
   tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basicIpv6Vpc"
+    Name = "tf-acc-default-acl-subnets-basic-ipv6-vpc"
   }
 }
 `
