@@ -26,6 +26,7 @@ ENHANCEMENTS:
 * resource/aws_dx_lag: Add support for tagging [GH-2990]
 * resource/aws_dx_lag: Add support for import [GH-2992]
 * resource/aws_emr_cluster: Add `autoscaling_policy` argument [GH-2877]
+* resource/aws_emr_cluster: Add `scale_down_behavior` argument [GH-3063]
 * resource/aws_instance: Expose reason of `shutting-down` state during creation [GH-3371]
 * resource/aws_instance: Include size of user_data in validation error message [GH-2971]
 * resource/aws_lb_listener_rule: Validate `priority` over 50000 [GH-3379]
