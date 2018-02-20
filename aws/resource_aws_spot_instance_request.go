@@ -315,6 +315,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSpotInstanceRequestUpdate(d *schema.ResourceData, meta interface{}) error {
+	resourceAwsSpotInstanceRequestRead(d, meta)
 	conn := meta.(*AWSClient).ec2conn
 
 	d.Partial(true)

@@ -126,9 +126,48 @@ func setVolumeTags(conn *ec2.EC2, d *schema.ResourceData) error {
 	return nil
 }
 
+func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
+	id := d.Id()
+
+	// to allow for tagging of an instnace or other object that is
+	// created indirectly (for example an instance created as a side
+	// effect of requesting a spot instance) we need to have the ability
+	// to override the id of the object being tagged, this is why we now
+	// pass in the id as an additional paramater
+
+	// tag as normal
+	err := setTagsActual(conn, d, id)
+
+	if err != nil {
+		return err
+	}
+
+	// SPECIAL TAGGING
+
+	// Check for a Spot Instance Requests as it requires special
+	// handling, the tagging process will tag the spot request it self
+	// as its id is stored in d.Id(), to tag the instance the spot
+	// request creates we need to use the the instance id which is stored
+	// under key 'spot_instance_id'
+	if strings.Contains(id, "sir-") {
+		// the only way to tag an instnace that is created via a spot
+		// request is to wait for it to exist before attempting to apply tags,
+		// thus we only run this code path if wait_for_fulfillment is set
+		if d.Get("wait_for_fulfillment").(bool) {
+			spotInstID := d.Get("spot_instance_id").(string)
+			log.Printf("[DEBUG] wait_for_fulfillment = true, spot instance request (%s) tags will also apply to the instance (%s)", id, spotInstID)
+			err = setTagsActual(conn, d, spotInstID)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // setTags is a helper to set the tags for a resource. It expects the
 // tags field to be named "tags"
-func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
+func setTagsActual(conn *ec2.EC2, d *schema.ResourceData, id string) error {
 	if d.HasChange("tags") {
 		oraw, nraw := d.GetChange("tags")
 		o := oraw.(map[string]interface{})
@@ -138,9 +177,9 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 		// Set tags
 		if len(remove) > 0 {
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-				log.Printf("[DEBUG] Removing tags: %#v from %s", remove, d.Id())
+				log.Printf("[DEBUG] Removing tags: %#v from %s", remove, id)
 				_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
-					Resources: []*string{aws.String(d.Id())},
+					Resources: []*string{aws.String(id)},
 					Tags:      remove,
 				})
 				if err != nil {
@@ -158,9 +197,9 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 		}
 		if len(create) > 0 {
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-				log.Printf("[DEBUG] Creating tags: %s for %s", create, d.Id())
+				log.Printf("[DEBUG] Creating tags: %s for %s", create, id)
 				_, err := conn.CreateTags(&ec2.CreateTagsInput{
-					Resources: []*string{aws.String(d.Id())},
+					Resources: []*string{aws.String(id)},
 					Tags:      create,
 				})
 				if err != nil {
