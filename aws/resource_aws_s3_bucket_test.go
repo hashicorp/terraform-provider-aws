@@ -772,7 +772,7 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers)),
 					testAccCheckAWSS3BucketReplicationRules(
 						"aws_s3_bucket.bucket",
-						&providers,
+						testAccAwsRegionProviderFunc("us-west-2", &providers),
 						[]*s3.ReplicationRule{
 							{
 								ID: aws.String("foobar"),
@@ -796,7 +796,7 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.#", "1"),
 					testAccCheckAWSS3BucketReplicationRules(
 						"aws_s3_bucket.bucket",
-						&providers,
+						testAccAwsRegionProviderFunc("us-west-2", &providers),
 						[]*s3.ReplicationRule{
 							{
 								ID: aws.String("foobar"),
@@ -1243,7 +1243,7 @@ func testAccCheckAWSS3BucketLogging(n, b, p string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAWSS3BucketReplicationRules(n string, providers *[]*schema.Provider, rules []*s3.ReplicationRule) resource.TestCheckFunc {
+func testAccCheckAWSS3BucketReplicationRules(n string, providerF func() *schema.Provider, rules []*s3.ReplicationRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, _ := s.RootModule().Resources[n]
 		for _, rule := range rules {
@@ -1256,29 +1256,27 @@ func testAccCheckAWSS3BucketReplicationRules(n string, providers *[]*schema.Prov
 				}
 			}
 		}
-		for _, provider := range *providers {
-			// Ignore if Meta is empty, this can happen for validation providers
-			if provider.Meta() == nil {
-				continue
-			}
 
-			conn := provider.Meta().(*AWSClient).s3conn
-			out, err := conn.GetBucketReplication(&s3.GetBucketReplicationInput{
-				Bucket: aws.String(rs.Primary.ID),
-			})
-			if err != nil {
-				if rules == nil {
-					return nil
-				}
-				return fmt.Errorf("GetReplicationConfiguration error: %v", err)
-			}
-			if !reflect.DeepEqual(out.ReplicationConfiguration.Rules, rules) {
-				return fmt.Errorf("bad replication rules, expected: %v, got %v", rules, out.ReplicationConfiguration.Rules)
-			}
+		provider := providerF()
 
-			return nil
+		conn := provider.Meta().(*AWSClient).s3conn
+		out, err := conn.GetBucketReplication(&s3.GetBucketReplicationInput{
+			Bucket: aws.String(rs.Primary.ID),
+		})
+		if err != nil {
+			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+				return fmt.Errorf("S3 bucket not found")
+			}
+			if rules == nil {
+				return nil
+			}
+			return fmt.Errorf("GetReplicationConfiguration error: %v", err)
 		}
-		return fmt.Errorf("Bucket not found")
+		if !reflect.DeepEqual(out.ReplicationConfiguration.Rules, rules) {
+			return fmt.Errorf("bad replication rules, expected: %v, got %v", rules, out.ReplicationConfiguration.Rules)
+		}
+
+		return nil
 	}
 }
 
