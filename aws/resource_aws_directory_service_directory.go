@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 var directoryCreationFuncs = map[string]func(*directoryservice.DirectoryService, *schema.ResourceData) (string, error){
@@ -155,6 +156,16 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 					return
 				},
 			},
+			"edition": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  directoryservice.DirectoryEditionEnterprise,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					directoryservice.DirectoryEditionEnterprise,
+					directoryservice.DirectoryEditionStandard,
+				}, false),
+			},
 		},
 	}
 }
@@ -294,6 +305,9 @@ func createActiveDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	}
 	if v, ok := d.GetOk("short_name"); ok {
 		input.ShortName = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("edition"); ok {
+		input.Edition = aws.String(v.(string))
 	}
 
 	input.VpcSettings, err = buildVpcSettings(d)
@@ -444,6 +458,9 @@ func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta inter
 	}
 	if dir.Size != nil {
 		d.Set("size", *dir.Size)
+	}
+	if dir.Edition != nil {
+		d.Set("edition", *dir.Edition)
 	}
 	d.Set("type", *dir.Type)
 	d.Set("vpc_settings", flattenDSVpcSettings(dir.VpcSettings))
