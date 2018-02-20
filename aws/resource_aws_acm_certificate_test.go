@@ -31,7 +31,7 @@ func testAccAwsAcmCertificateDomainFromEnv(t *testing.T) string {
 	return os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
 }
 
-func TestAccAwsAcmCertificate_emailValidation(t *testing.T) {
+func TestAccAWSAcmCertificate_emailValidation(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()
@@ -64,7 +64,7 @@ func TestAccAwsAcmCertificate_emailValidation(t *testing.T) {
 
 }
 
-func TestAccAwsAcmCertificate_dnsValidation(t *testing.T) {
+func TestAccAWSAcmCertificate_dnsValidation(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()
@@ -100,7 +100,7 @@ func TestAccAwsAcmCertificate_dnsValidation(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificate_root(t *testing.T) {
+func TestAccAWSAcmCertificate_root(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
@@ -132,7 +132,7 @@ func TestAccAwsAcmCertificate_root(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificate_rootAndWildcardSan(t *testing.T) {
+func TestAccAWSAcmCertificate_rootAndWildcardSan(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 
@@ -170,7 +170,7 @@ func TestAccAwsAcmCertificate_rootAndWildcardSan(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificate_san_single(t *testing.T) {
+func TestAccAWSAcmCertificate_san_single(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()
@@ -212,7 +212,7 @@ func TestAccAwsAcmCertificate_san_single(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificate_san_multiple(t *testing.T) {
+func TestAccAWSAcmCertificate_san_multiple(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()
@@ -260,7 +260,7 @@ func TestAccAwsAcmCertificate_san_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificate_wildcard(t *testing.T) {
+func TestAccAWSAcmCertificate_wildcard(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 
@@ -293,7 +293,7 @@ func TestAccAwsAcmCertificate_wildcard(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificate_wildcardAndRootSan(t *testing.T) {
+func TestAccAWSAcmCertificate_wildcardAndRootSan(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 
@@ -331,7 +331,7 @@ func TestAccAwsAcmCertificate_wildcardAndRootSan(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificate_tags(t *testing.T) {
+func TestAccAWSAcmCertificate_tags(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()

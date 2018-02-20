@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsServiceDiscoveryPublicDnsNamespace_basic(t *testing.T) {
+func TestAccAWSServiceDiscoveryPublicDnsNamespace_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -29,7 +29,7 @@ func TestAccAwsServiceDiscoveryPublicDnsNamespace_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsServiceDiscoveryPublicDnsNamespace_import(t *testing.T) {
+func TestAccAWSServiceDiscoveryPublicDnsNamespace_import(t *testing.T) {
 	resourceName := "aws_service_discovery_public_dns_namespace.test"
 
 	resource.Test(t, resource.TestCase{

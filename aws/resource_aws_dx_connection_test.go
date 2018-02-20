@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDxConnection_basic(t *testing.T) {
+func TestAccAWSDxConnection_basic(t *testing.T) {
 	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
@@ -33,7 +33,7 @@ func TestAccAwsDxConnection_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxConnection_tags(t *testing.T) {
+func TestAccAWSDxConnection_tags(t *testing.T) {
 	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDmsReplicationInstanceBasic(t *testing.T) {
+func TestAccAWSDmsReplicationInstanceBasic(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.dms_replication_instance"
 	randId := acctest.RandString(8)
 

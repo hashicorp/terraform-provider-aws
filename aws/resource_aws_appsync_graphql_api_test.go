@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsAppsyncGraphqlApi_basic(t *testing.T) {
+func TestAccAWSAppsyncGraphqlApi_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -28,7 +28,7 @@ func TestAccAwsAppsyncGraphqlApi_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncGraphqlApi_iam(t *testing.T) {
+func TestAccAWSAppsyncGraphqlApi_iam(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -45,7 +45,7 @@ func TestAccAwsAppsyncGraphqlApi_iam(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncGraphqlApi_cognito(t *testing.T) {
+func TestAccAWSAppsyncGraphqlApi_cognito(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

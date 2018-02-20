@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsVpcEndpoint_gatewayBasic(t *testing.T) {
+func TestAccAWSVpcEndpoint_gatewayBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 
 	resource.Test(t, resource.TestCase{
@@ -41,7 +41,7 @@ func TestAccAwsVpcEndpoint_gatewayBasic(t *testing.T) {
 	})
 }
 
-func TestAccAwsVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
+func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	var routeTable ec2.RouteTable
 
@@ -81,7 +81,7 @@ func TestAccAwsVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAwsVpcEndpoint_interfaceBasic(t *testing.T) {
+func TestAccAWSVpcEndpoint_interfaceBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 
 	resource.Test(t, resource.TestCase{
@@ -107,7 +107,7 @@ func TestAccAwsVpcEndpoint_interfaceBasic(t *testing.T) {
 	})
 }
 
-func TestAccAwsVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
+func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 
 	resource.Test(t, resource.TestCase{
@@ -144,7 +144,7 @@ func TestAccAwsVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	})
 }
 
-func TestAccAwsVpcEndpoint_interfaceNonAWSService(t *testing.T) {
+func TestAccAWSVpcEndpoint_interfaceNonAWSService(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	var endpoint ec2.VpcEndpoint
 
@@ -169,7 +169,7 @@ func TestAccAwsVpcEndpoint_interfaceNonAWSService(t *testing.T) {
 		},
 	})
 }
-func TestAccAwsVpcEndpoint_removed(t *testing.T) {
+func TestAccAWSVpcEndpoint_removed(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 
 	// reach out and DELETE the VPC Endpoint outside of Terraform
