@@ -25,6 +25,7 @@ ENHANCEMENTS:
 * resource/aws_codedeploy_deployment_group: Validate DeploymentReady and InstanceReady `trigger_events` [GH-3412]
 * resource/aws_db_parameter_group: Validate underscore `name` during plan [GH-3396]
 * resource/aws_directory_service_directory Add `edition` argument [GH-3421]
+* resource/aws_directory_service_directory Validate `size` argument [GH-3453]
 * resource/aws_dx_connection: Add support for tagging [GH-2990]
 * resource/aws_dx_connection: Add support for import [GH-2992]
 * resource/aws_dx_lag: Add support for tagging [GH-2990]
