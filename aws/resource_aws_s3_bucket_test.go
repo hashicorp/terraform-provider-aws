@@ -737,6 +737,8 @@ func TestAccAWSS3Bucket_Lifecycle(t *testing.T) {
 				Config: testAccAWSS3BucketConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.#", "0"),
 				),
 			},
 		},
