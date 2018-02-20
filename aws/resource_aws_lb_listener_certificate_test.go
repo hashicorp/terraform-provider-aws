@@ -20,7 +20,7 @@ func TestAccAwsLbListenerCertificate_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsLbListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLbListenerCertificateConfig(acctest.RandString(5)),
+				Config: testAccLbListenerCertificateConfig(acctest.RandString(5), acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLbListenerCertificateExists("aws_lb_listener_certificate.default"),
 					testAccCheckAwsLbListenerCertificateExists("aws_lb_listener_certificate.additional_1"),
@@ -39,6 +39,7 @@ func TestAccAwsLbListenerCertificate_basic(t *testing.T) {
 
 func TestAccAwsLbListenerCertificate_cycle(t *testing.T) {
 	rName := acctest.RandString(5)
+	suffix := acctest.RandString(5)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -46,7 +47,7 @@ func TestAccAwsLbListenerCertificate_cycle(t *testing.T) {
 		CheckDestroy: testAccCheckAwsLbListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLbListenerCertificateConfig(rName),
+				Config: testAccLbListenerCertificateConfig(rName, suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLbListenerCertificateExists("aws_lb_listener_certificate.default"),
 					testAccCheckAwsLbListenerCertificateExists("aws_lb_listener_certificate.additional_1"),
@@ -60,7 +61,7 @@ func TestAccAwsLbListenerCertificate_cycle(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLbListenerCertificateAddNew(rName),
+				Config: testAccLbListenerCertificateAddNew(rName, suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLbListenerCertificateExists("aws_lb_listener_certificate.default"),
 					testAccCheckAwsLbListenerCertificateExists("aws_lb_listener_certificate.additional_1"),
@@ -77,7 +78,7 @@ func TestAccAwsLbListenerCertificate_cycle(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLbListenerCertificateConfig(rName),
+				Config: testAccLbListenerCertificateConfig(rName, suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLbListenerCertificateExists("aws_lb_listener_certificate.default"),
 					testAccCheckAwsLbListenerCertificateExists("aws_lb_listener_certificate.additional_1"),
@@ -153,7 +154,7 @@ func testAccCheckAwsLbListenerCertificateNotExists(name string) resource.TestChe
 	}
 }
 
-func testAccLbListenerCertificateConfig(rName string) string {
+func testAccLbListenerCertificateConfig(rName, suffix string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_certificate" "default" {
   listener_arn    = "${aws_lb_listener.test.arn}"
@@ -196,7 +197,7 @@ resource "aws_lb_listener" "test" {
 }
 
 resource "aws_iam_server_certificate" "default" {
-  name             = "terraform-default-cert"
+  name             = "terraform-default-cert-%s"
   certificate_body = <<EOF
 -----BEGIN CERTIFICATE-----
 MIICpDCCAYwCCQC8EdACDsZ33jANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAls
@@ -252,7 +253,7 @@ EOF
 }
 
 resource "aws_iam_server_certificate" "additional_1" {
-  name             = "terraform-additional-cert-1"
+  name             = "terraform-additional-cert-1-%s"
   certificate_body = <<EOF
 -----BEGIN CERTIFICATE-----
 MIICpDCCAYwCCQD3BjmOb0++dDANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAls
@@ -308,7 +309,7 @@ EOF
 }
 
 resource "aws_iam_server_certificate" "additional_2" {
-  name             = "terraform-additional-cert-2"
+  name             = "terraform-additional-cert-2-%s"
   certificate_body = <<EOF
 -----BEGIN CERTIFICATE-----
 MIICpDCCAYwCCQDZ2oRa1sGckDANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAls
@@ -364,7 +365,7 @@ EOF
 }
 
 resource "aws_iam_server_certificate" "additional_3" {
-  name             = "terraform-additional-cert-3"
+  name             = "terraform-additional-cert-3-%s"
   certificate_body = <<EOF
 -----BEGIN CERTIFICATE-----
 MIICpDCCAYwCCQC5bnxXukDHoTANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAls
@@ -434,11 +435,11 @@ resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "${element(var.subnets, count.index)}"
   availability_zone = "${element(data.aws_availability_zones.available.names, count.index)}"
-}`, rName)
+}`, rName, suffix, suffix, suffix, suffix)
 }
 
-func testAccLbListenerCertificateAddNew(rName string) string {
-	return fmt.Sprintf(testAccLbListenerCertificateConfig(rName) + `
+func testAccLbListenerCertificateAddNew(rName, prefix string) string {
+	return fmt.Sprintf(testAccLbListenerCertificateConfig(rName, prefix) + `
 resource "aws_lb_listener_certificate" "additional_3" {
   listener_arn    = "${aws_lb_listener.test.arn}"
   certificate_arn = "${aws_iam_server_certificate.additional_3.arn}"
