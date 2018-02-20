@@ -98,7 +98,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the record.
 * `type` - (Required) The record type. Valid values are `A`, `AAAA`, `CAA`, `CNAME`, `MX`, `NAPTR`, `NS`, `PTR`, `SOA`, `SPF`, `SRV` and `TXT`.
 * `ttl` - (Required for non-alias records) The TTL of the record.
-* `records` - (Required for non-alias records) A string list of records.
+* `records` - (Required for non-alias records) A string list of records. To specify a single record value longer than 255 characters such as a TXT record for DKIM, add `\"\"` inside the Terraform configuration string (e.g. `"first255characters\"\"morecharacters"`).
 * `set_identifier` - (Optional) Unique identifier to differentiate records with routing policies from one another. Required if using `failover`, `geolocation`, `latency`, or `weighted` routing policies documented below.
 * `health_check_id` - (Optional) The health check the record should be associated with.
 * `alias` - (Optional) An alias block. Conflicts with `ttl` & `records`.
@@ -108,6 +108,7 @@ The following arguments are supported:
 * `latency_routing_policy` - (Optional) A block indicating a routing policy based on the latency between the requestor and an AWS region. Conflicts with any other routing policy. Documented below.
 * `weighted_routing_policy` - (Optional) A block indicating a weighted routing policy. Conflicts with any other routing policy. Documented below.
 * `multivalue_answer_routing_policy` - (Optional) A block indicating a multivalue answer routing policy. Conflicts with any other routing policy.
+* `allow_overwrite` - (Optional) Allow creation of this record in Terraform to overwrite an existing record, if any. This does not prevent other resources within Terraform or manual Route53 changes from overwriting this record. `true` by default.
 
 Exactly one of `records` or `alias` must be specified: this determines whether it's an alias record.
 

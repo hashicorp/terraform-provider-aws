@@ -62,6 +62,7 @@ The following arguments are supported:
 * `short_name` - (Optional) The short name of the directory, such as `CORP`.
 * `enable_sso` - (Optional) Whether to enable single-sign on for the directory. Requires `alias`. Defaults to `false`.
 * `type` (Optional) - The directory type (`SimpleAD` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
+* `edition` - (Optional) The MicrosoftAD edition (`Standard` or `Enterprise`). Defaults to `Enterprise` (applies to MicrosoftAD type only).
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 **vpc_settings** supports the following:
@@ -83,6 +84,7 @@ The following attributes are exported:
 * `id` - The directory identifier.
 * `access_url` - The access URL for the directory, such as `http://alias.awsapps.com`.
 * `dns_ip_addresses` - A list of IP addresses of the DNS servers for the directory or connector.
+* `security_group_id` - The ID of the security group created by the directory (`SimpleAD` or `MicrosoftAD` only).
 
 
 ## Import

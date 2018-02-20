@@ -38,7 +38,7 @@ func testSweepLambdaFunctions(region string) error {
 
 	for _, f := range resp.Functions {
 		var testOptGroup bool
-		for _, testName := range []string{"tf_test"} {
+		for _, testName := range []string{"tf_test", "tf_acc_"} {
 			if strings.HasPrefix(*f.FunctionName, testName) {
 				testOptGroup = true
 			}
@@ -63,8 +63,11 @@ func testSweepLambdaFunctions(region string) error {
 func TestAccAWSLambdaFunction_importLocalFile(t *testing.T) {
 	resourceName := "aws_lambda_function.lambda_function_test"
 
-	rSt := acctest.RandString(5)
-	rName := fmt.Sprintf("tf_test_%s", rSt)
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_import_local_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_import_local_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_import_local_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_import_local_%s", rString)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -72,7 +75,7 @@ func TestAccAWSLambdaFunction_importLocalFile(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSLambdaConfigBasic(rName, rSt),
+				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
 			},
 
 			resource.TestStep{
@@ -88,8 +91,11 @@ func TestAccAWSLambdaFunction_importLocalFile(t *testing.T) {
 func TestAccAWSLambdaFunction_importLocalFile_VPC(t *testing.T) {
 	resourceName := "aws_lambda_function.lambda_function_test"
 
-	rSt := acctest.RandString(5)
-	rName := fmt.Sprintf("tf_test_%s", rSt)
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_import_vpc_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_import_vpc_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_import_vpc_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_import_vpc_%s", rString)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -97,7 +103,7 @@ func TestAccAWSLambdaFunction_importLocalFile_VPC(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSLambdaConfigWithVPC(rName, rSt),
+				Config: testAccAWSLambdaConfigWithVPC(funcName, policyName, roleName, sgName),
 			},
 
 			resource.TestStep{
@@ -113,8 +119,10 @@ func TestAccAWSLambdaFunction_importLocalFile_VPC(t *testing.T) {
 func TestAccAWSLambdaFunction_importS3(t *testing.T) {
 	resourceName := "aws_lambda_function.lambda_function_s3test"
 
-	rSt := acctest.RandString(5)
-	rName := fmt.Sprintf("tf_test_%s", rSt)
+	rString := acctest.RandString(8)
+	bucketName := fmt.Sprintf("tf-acc-bucket-lambda-func-import-s3-%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_import_s3_%s", rString)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_import_s3_%s", rString)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -122,7 +130,7 @@ func TestAccAWSLambdaFunction_importS3(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSLambdaConfigS3(rName, rSt),
+				Config: testAccAWSLambdaConfigS3(bucketName, roleName, funcName),
 			},
 
 			resource.TestStep{

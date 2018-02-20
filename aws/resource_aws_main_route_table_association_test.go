@@ -105,7 +105,7 @@ const testAccMainRouteTableAssociationConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccMainRouteTableAssociationConfig"
+		Name = "terraform-testacc-main-route-table-association"
 	}
 }
 
@@ -136,7 +136,7 @@ const testAccMainRouteTableAssociationConfigUpdate = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccMainRouteTableAssociationConfigUpdate"
+		Name = "terraform-testacc-main-route-table-association-update"
 	}
 }
 

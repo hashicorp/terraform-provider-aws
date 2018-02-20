@@ -177,11 +177,13 @@ resource "aws_lb_target_group_attachment" "test" {
   target_group_arn = "${aws_lb_target_group.test.arn}"
   target_id = "${aws_instance.test.id}"
 }
+
 resource "aws_instance" "test" {
   ami = "ami-f701cb97"
   instance_type = "t2.micro"
   subnet_id = "${aws_subnet.subnet.id}"
 }
+
 resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 443
@@ -203,14 +205,16 @@ resource "aws_lb_target_group" "test" {
     matcher = "200-299"
   }
 }
+
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
 }
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSLBTargetGroupAttachmentConfigWithoutPort"
+		Name = "terraform-testacc-lb-target-group-attachment-without-port"
 	}
 }`, targetGroupName)
 }
@@ -222,11 +226,13 @@ resource "aws_lb_target_group_attachment" "test" {
   target_id = "${aws_instance.test.id}"
   port = 80
 }
+
 resource "aws_instance" "test" {
   ami = "ami-f701cb97"
   instance_type = "t2.micro"
   subnet_id = "${aws_subnet.subnet.id}"
 }
+
 resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 443
@@ -248,14 +254,16 @@ resource "aws_lb_target_group" "test" {
     matcher = "200-299"
   }
 }
+
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
 }
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSLBTargetGroupAttachmentConfig_basic"
+		Name = "terraform-testacc-lb-target-group-attachment-basic"
 	}
 }`, targetGroupName)
 }
@@ -267,11 +275,13 @@ resource "aws_alb_target_group_attachment" "test" {
   target_id = "${aws_instance.test.id}"
   port = 80
 }
+
 resource "aws_instance" "test" {
   ami = "ami-f701cb97"
   instance_type = "t2.micro"
   subnet_id = "${aws_subnet.subnet.id}"
 }
+
 resource "aws_alb_target_group" "test" {
   name = "%s"
   port = 443
@@ -293,14 +303,16 @@ resource "aws_alb_target_group" "test" {
     matcher = "200-299"
   }
 }
+
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
 }
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSLBTargetGroupAttachmentConfig_basic"
+		Name = "terraform-testacc-lb-target-group-attachment-bc"
 	}
 }`, targetGroupName)
 }
@@ -346,7 +358,7 @@ resource "aws_subnet" "subnet" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSALBTargetGroupAttachmentConfigWithoutPort"
+		Name = "terraform-testacc-lb-target-group-attachment-with-ip-address"
 	}
 }`, targetGroupName)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -265,6 +266,42 @@ func TestAccAWSEIPAssociate_not_associated(t *testing.T) {
 	})
 }
 
+func TestAccAWSEIP_tags(t *testing.T) {
+	var conf ec2.Address
+	resourceName := "aws_eip.bar"
+	rName1 := fmt.Sprintf("%s-%d", t.Name(), acctest.RandInt())
+	rName2 := fmt.Sprintf("%s-%d", t.Name(), acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_eip.bar",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSEIPConfig_tags(rName1, t.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.RandomName", rName1),
+					resource.TestCheckResourceAttr(resourceName, "tags.TestName", t.Name()),
+				),
+			},
+			resource.TestStep{
+				Config: testAccAWSEIPConfig_tags(rName2, t.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.RandomName", rName2),
+					resource.TestCheckResourceAttr(resourceName, "tags.TestName", t.Name()),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEIPDisappears(v *ec2.Address) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -402,6 +439,17 @@ resource "aws_eip" "bar" {
 }
 `
 
+func testAccAWSEIPConfig_tags(rName, testName string) string {
+	return fmt.Sprintf(`
+resource "aws_eip" "bar" {
+  tags {
+    RandomName = "%[1]s"
+    TestName   = "%[2]s"
+  }
+}
+`, rName, testName)
+}
+
 const testAccAWSEIPInstanceEc2Classic = `
 provider "aws" {
 	region = "us-east-1"
@@ -449,7 +497,7 @@ resource "aws_vpc" "default" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "default"
+    Name = "terraform-testacc-eip-instance-associated"
   }
 }
 
@@ -514,7 +562,7 @@ resource "aws_vpc" "default" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "default"
+    Name = "terraform-testacc-eip-instance-associated"
   }
 }
 
@@ -590,7 +638,7 @@ const testAccAWSEIPNetworkInterfaceConfig = `
 resource "aws_vpc" "bar" {
 	cidr_block = "10.0.0.0/24"
 	tags {
-		Name = "testAccAWSEIPNetworkInterfaceConfig"
+		Name = "terraform-testacc-eip-network-interface"
 	}
 }
 resource "aws_internet_gateway" "bar" {
@@ -609,6 +657,7 @@ resource "aws_network_interface" "bar" {
 resource "aws_eip" "bar" {
 	vpc = "true"
 	network_interface = "${aws_network_interface.bar.id}"
+	depends_on = ["aws_internet_gateway.bar"]
 }
 `
 
@@ -616,7 +665,7 @@ const testAccAWSEIPMultiNetworkInterfaceConfig = `
 resource "aws_vpc" "bar" {
   cidr_block = "10.0.0.0/24"
 	tags {
-		Name = "testAccAWSEIPMultiNetworkInterfaceConfig"
+		Name = "terraform-testacc-eip-multi-network-interface"
 	}
 }
 
@@ -688,7 +737,7 @@ resource "aws_instance" "example" {
 resource "aws_vpc" "example" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "TestAccAWSEIP_classic_disassociate"
+		Name = "terraform-testacc-eip-classic-disassociate"
 	}
 }
 

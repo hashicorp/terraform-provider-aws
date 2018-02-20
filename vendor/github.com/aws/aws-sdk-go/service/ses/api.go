@@ -4155,13 +4155,16 @@ func (c *SES) SendCustomVerificationEmailRequest(input *SendCustomVerificationEm
 
 // SendCustomVerificationEmail API operation for Amazon Simple Email Service.
 //
-// Sends a custom verification email to a specified recipient. Verification
-// emails sent using this operation are counted against your 24-hour sending
-// quota and per-second sending rate.
+// Adds an email address to the list of identities for your Amazon SES account
+// and attempts to verify it. As a result of executing this operation, a customized
+// verification email is sent to the specified address.
 //
-// For more information about custom verification email templates, see Using
-// Custom Verification Email Templates (https://docs.aws.amazon.com/ses/latest/DeveloperGuide/custom-verification-emails.html)
+// To use this operation, you must first create a custom verification email
+// template. For more information about creating and using custom verification
+// email templates, see Using Custom Verification Email Templates (https://docs.aws.amazon.com/ses/latest/DeveloperGuide/custom-verification-emails.html)
 // in the Amazon SES Developer Guide.
+//
+// You can execute this operation no more than once per second.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6377,8 +6380,8 @@ func (c *SES) VerifyEmailIdentityRequest(input *VerifyEmailIdentityInput) (req *
 // VerifyEmailIdentity API operation for Amazon Simple Email Service.
 //
 // Adds an email address to the list of identities for your Amazon SES account
-// and attempts to verify it. This operation causes a confirmation email message
-// to be sent to the specified address.
+// and attempts to verify it. As a result of executing this operation, a verification
+// email is sent to the specified address.
 //
 // You can execute this operation no more than once per second.
 //
@@ -6415,7 +6418,6 @@ func (c *SES) VerifyEmailIdentityWithContext(ctx aws.Context, input *VerifyEmail
 //
 // For information about adding a header using a receipt rule, see the Amazon
 // SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-action-add-header.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/AddHeaderAction
 type AddHeaderAction struct {
 	_ struct{} `type:"structure"`
 
@@ -6473,7 +6475,6 @@ func (s *AddHeaderAction) SetHeaderValue(v string) *AddHeaderAction {
 // Represents the body of the message. You can specify text, HTML, or both.
 // If you use both, then the message should display correctly in the widest
 // variety of email clients.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/Body
 type Body struct {
 	_ struct{} `type:"structure"`
 
@@ -6535,7 +6536,6 @@ func (s *Body) SetText(v *Content) *Body {
 //
 // For information about sending a bounce message in response to a received
 // email, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-action-bounce.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/BounceAction
 type BounceAction struct {
 	_ struct{} `type:"structure"`
 
@@ -6629,7 +6629,6 @@ func (s *BounceAction) SetTopicArn(v string) *BounceAction {
 //
 // For information about receiving email through Amazon SES, see the Amazon
 // SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/BouncedRecipientInfo
 type BouncedRecipientInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -6707,7 +6706,6 @@ func (s *BouncedRecipientInfo) SetRecipientDsnFields(v *RecipientDsnFields) *Bou
 
 // An array that contains one or more Destinations, as well as the tags and
 // replacement data associated with each of those Destinations.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/BulkEmailDestination
 type BulkEmailDestination struct {
 	_ struct{} `type:"structure"`
 
@@ -6788,7 +6786,6 @@ func (s *BulkEmailDestination) SetReplacementTemplateData(v string) *BulkEmailDe
 }
 
 // An object that contains the response from the SendBulkTemplatedEmail operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/BulkEmailDestinationStatus
 type BulkEmailDestinationStatus struct {
 	_ struct{} `type:"structure"`
 
@@ -6877,7 +6874,6 @@ func (s *BulkEmailDestinationStatus) SetStatus(v string) *BulkEmailDestinationSt
 // Represents a request to create a receipt rule set by cloning an existing
 // one. You use receipt rule sets to receive email with Amazon SES. For more
 // information, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CloneReceiptRuleSetRequest
 type CloneReceiptRuleSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6888,8 +6884,8 @@ type CloneReceiptRuleSetInput struct {
 
 	// The name of the rule set to create. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), periods (.), underscores
-	//    (_), or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Start and end with a letter or number.
 	//
@@ -6938,7 +6934,6 @@ func (s *CloneReceiptRuleSetInput) SetRuleSetName(v string) *CloneReceiptRuleSet
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CloneReceiptRuleSetResponse
 type CloneReceiptRuleSetOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -6959,7 +6954,6 @@ func (s CloneReceiptRuleSetOutput) GoString() string {
 // Event destinations, such as Amazon CloudWatch, are associated with configuration
 // sets, which enable you to publish email sending events. For information about
 // using configuration sets, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CloudWatchDestination
 type CloudWatchDestination struct {
 	_ struct{} `type:"structure"`
 
@@ -7014,7 +7008,6 @@ func (s *CloudWatchDestination) SetDimensionConfigurations(v []*CloudWatchDimens
 //
 // For information about publishing email sending events to Amazon CloudWatch,
 // see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CloudWatchDimensionConfiguration
 type CloudWatchDimensionConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -7022,8 +7015,8 @@ type CloudWatchDimensionConfiguration struct {
 	// if you do not provide the value of the dimension when you send an email.
 	// The default value must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), underscores (_),
-	//    or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Contain less than 256 characters.
 	//
@@ -7033,8 +7026,8 @@ type CloudWatchDimensionConfiguration struct {
 	// The name of an Amazon CloudWatch dimension associated with an email sending
 	// metric. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), underscores (_),
-	//    or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Contain less than 256 characters.
 	//
@@ -7104,7 +7097,6 @@ func (s *CloudWatchDimensionConfiguration) SetDimensionValueSource(v string) *Cl
 // emails you send using Amazon SES. For more information about using configuration
 // sets, see Using Amazon SES Configuration Sets (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/using-configuration-sets.html)
 // in the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ConfigurationSet
 type ConfigurationSet struct {
 	_ struct{} `type:"structure"`
 
@@ -7153,7 +7145,6 @@ func (s *ConfigurationSet) SetName(v string) *ConfigurationSet {
 // By default, the text must be 7-bit ASCII, due to the constraints of the SMTP
 // protocol. If the text must contain any other characters, then you must also
 // specify a character set. Examples include UTF-8, ISO-8859-1, and Shift_JIS.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/Content
 type Content struct {
 	_ struct{} `type:"structure"`
 
@@ -7206,7 +7197,6 @@ func (s *Content) SetData(v string) *Content {
 // Firehose, describes an AWS service in which Amazon SES publishes the email
 // sending events associated with a configuration set. For information about
 // using configuration sets, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateConfigurationSetEventDestinationRequest
 type CreateConfigurationSetEventDestinationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7267,7 +7257,6 @@ func (s *CreateConfigurationSetEventDestinationInput) SetEventDestination(v *Eve
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateConfigurationSetEventDestinationResponse
 type CreateConfigurationSetEventDestinationOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7285,7 +7274,6 @@ func (s CreateConfigurationSetEventDestinationOutput) GoString() string {
 // Represents a request to create a configuration set. Configuration sets enable
 // you to publish email sending events. For information about using configuration
 // sets, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateConfigurationSetRequest
 type CreateConfigurationSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7330,7 +7318,6 @@ func (s *CreateConfigurationSetInput) SetConfigurationSet(v *ConfigurationSet) *
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateConfigurationSetResponse
 type CreateConfigurationSetOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7347,7 +7334,6 @@ func (s CreateConfigurationSetOutput) GoString() string {
 
 // Represents a request to create an open and click tracking option object in
 // a configuration set.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateConfigurationSetTrackingOptionsRequest
 type CreateConfigurationSetTrackingOptionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7408,7 +7394,6 @@ func (s *CreateConfigurationSetTrackingOptionsInput) SetTrackingOptions(v *Track
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateConfigurationSetTrackingOptionsResponse
 type CreateConfigurationSetTrackingOptionsOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7424,7 +7409,6 @@ func (s CreateConfigurationSetTrackingOptionsOutput) GoString() string {
 }
 
 // Represents a request to create a custom verification email template.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateCustomVerificationEmailTemplateRequest
 type CreateCustomVerificationEmailTemplateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7539,7 +7523,6 @@ func (s *CreateCustomVerificationEmailTemplateInput) SetTemplateSubject(v string
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateCustomVerificationEmailTemplateOutput
 type CreateCustomVerificationEmailTemplateOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7557,7 +7540,6 @@ func (s CreateCustomVerificationEmailTemplateOutput) GoString() string {
 // Represents a request to create a new IP address filter. You use IP address
 // filters when you receive email with Amazon SES. For more information, see
 // the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateReceiptFilterRequest
 type CreateReceiptFilterInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7603,7 +7585,6 @@ func (s *CreateReceiptFilterInput) SetFilter(v *ReceiptFilter) *CreateReceiptFil
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateReceiptFilterResponse
 type CreateReceiptFilterOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7621,7 +7602,6 @@ func (s CreateReceiptFilterOutput) GoString() string {
 // Represents a request to create a receipt rule. You use receipt rules to receive
 // email with Amazon SES. For more information, see the Amazon SES Developer
 // Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateReceiptRuleRequest
 type CreateReceiptRuleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7692,7 +7672,6 @@ func (s *CreateReceiptRuleInput) SetRuleSetName(v string) *CreateReceiptRuleInpu
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateReceiptRuleResponse
 type CreateReceiptRuleOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7710,14 +7689,13 @@ func (s CreateReceiptRuleOutput) GoString() string {
 // Represents a request to create an empty receipt rule set. You use receipt
 // rule sets to receive email with Amazon SES. For more information, see the
 // Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateReceiptRuleSetRequest
 type CreateReceiptRuleSetInput struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the rule set to create. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), periods (.), underscores
-	//    (_), or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Start and end with a letter or number.
 	//
@@ -7757,7 +7735,6 @@ func (s *CreateReceiptRuleSetInput) SetRuleSetName(v string) *CreateReceiptRuleS
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateReceiptRuleSetResponse
 type CreateReceiptRuleSetOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7774,7 +7751,6 @@ func (s CreateReceiptRuleSetOutput) GoString() string {
 
 // Represents a request to create an email template. For more information, see
 // the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-personalized-email-api.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateTemplateRequest
 type CreateTemplateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7819,7 +7795,6 @@ func (s *CreateTemplateInput) SetTemplate(v *Template) *CreateTemplateInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateTemplateResponse
 type CreateTemplateOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7835,7 +7810,6 @@ func (s CreateTemplateOutput) GoString() string {
 }
 
 // Contains information about a custom verification email template.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CustomVerificationEmailTemplate
 type CustomVerificationEmailTemplate struct {
 	_ struct{} `type:"structure"`
 
@@ -7901,7 +7875,6 @@ func (s *CustomVerificationEmailTemplate) SetTemplateSubject(v string) *CustomVe
 // set event destinations are associated with configuration sets, which enable
 // you to publish email sending events. For information about using configuration
 // sets, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteConfigurationSetEventDestinationRequest
 type DeleteConfigurationSetEventDestinationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7955,7 +7928,6 @@ func (s *DeleteConfigurationSetEventDestinationInput) SetEventDestinationName(v 
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteConfigurationSetEventDestinationResponse
 type DeleteConfigurationSetEventDestinationOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7973,7 +7945,6 @@ func (s DeleteConfigurationSetEventDestinationOutput) GoString() string {
 // Represents a request to delete a configuration set. Configuration sets enable
 // you to publish email sending events. For information about using configuration
 // sets, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteConfigurationSetRequest
 type DeleteConfigurationSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8013,7 +7984,6 @@ func (s *DeleteConfigurationSetInput) SetConfigurationSetName(v string) *DeleteC
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteConfigurationSetResponse
 type DeleteConfigurationSetOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8030,7 +8000,6 @@ func (s DeleteConfigurationSetOutput) GoString() string {
 
 // Represents a request to delete open and click tracking options in a configuration
 // set.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteConfigurationSetTrackingOptionsRequest
 type DeleteConfigurationSetTrackingOptionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8071,7 +8040,6 @@ func (s *DeleteConfigurationSetTrackingOptionsInput) SetConfigurationSetName(v s
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteConfigurationSetTrackingOptionsResponse
 type DeleteConfigurationSetTrackingOptionsOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8087,7 +8055,6 @@ func (s DeleteConfigurationSetTrackingOptionsOutput) GoString() string {
 }
 
 // Represents a request to delete an existing custom verification email template.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteCustomVerificationEmailTemplateRequest
 type DeleteCustomVerificationEmailTemplateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8126,7 +8093,6 @@ func (s *DeleteCustomVerificationEmailTemplateInput) SetTemplateName(v string) *
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteCustomVerificationEmailTemplateOutput
 type DeleteCustomVerificationEmailTemplateOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8143,7 +8109,6 @@ func (s DeleteCustomVerificationEmailTemplateOutput) GoString() string {
 
 // Represents a request to delete one of your Amazon SES identities (an email
 // address or domain).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteIdentityRequest
 type DeleteIdentityInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8183,7 +8148,6 @@ func (s *DeleteIdentityInput) SetIdentity(v string) *DeleteIdentityInput {
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteIdentityResponse
 type DeleteIdentityOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8202,7 +8166,6 @@ func (s DeleteIdentityOutput) GoString() string {
 // Sending authorization is an Amazon SES feature that enables you to authorize
 // other senders to use your identities. For information, see the Amazon SES
 // Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/sending-authorization.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteIdentityPolicyRequest
 type DeleteIdentityPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8263,7 +8226,6 @@ func (s *DeleteIdentityPolicyInput) SetPolicyName(v string) *DeleteIdentityPolic
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteIdentityPolicyResponse
 type DeleteIdentityPolicyOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8281,7 +8243,6 @@ func (s DeleteIdentityPolicyOutput) GoString() string {
 // Represents a request to delete an IP address filter. You use IP address filters
 // when you receive email with Amazon SES. For more information, see the Amazon
 // SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteReceiptFilterRequest
 type DeleteReceiptFilterInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8321,7 +8282,6 @@ func (s *DeleteReceiptFilterInput) SetFilterName(v string) *DeleteReceiptFilterI
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteReceiptFilterResponse
 type DeleteReceiptFilterOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8339,7 +8299,6 @@ func (s DeleteReceiptFilterOutput) GoString() string {
 // Represents a request to delete a receipt rule. You use receipt rules to receive
 // email with Amazon SES. For more information, see the Amazon SES Developer
 // Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteReceiptRuleRequest
 type DeleteReceiptRuleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8393,7 +8352,6 @@ func (s *DeleteReceiptRuleInput) SetRuleSetName(v string) *DeleteReceiptRuleInpu
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteReceiptRuleResponse
 type DeleteReceiptRuleOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8411,7 +8369,6 @@ func (s DeleteReceiptRuleOutput) GoString() string {
 // Represents a request to delete a receipt rule set and all of the receipt
 // rules it contains. You use receipt rule sets to receive email with Amazon
 // SES. For more information, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteReceiptRuleSetRequest
 type DeleteReceiptRuleSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8451,7 +8408,6 @@ func (s *DeleteReceiptRuleSetInput) SetRuleSetName(v string) *DeleteReceiptRuleS
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteReceiptRuleSetResponse
 type DeleteReceiptRuleSetOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8468,7 +8424,6 @@ func (s DeleteReceiptRuleSetOutput) GoString() string {
 
 // Represents a request to delete an email template. For more information, see
 // the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-personalized-email-api.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteTemplateRequest
 type DeleteTemplateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8507,7 +8462,6 @@ func (s *DeleteTemplateInput) SetTemplateName(v string) *DeleteTemplateInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteTemplateResponse
 type DeleteTemplateOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8524,7 +8478,6 @@ func (s DeleteTemplateOutput) GoString() string {
 
 // Represents a request to delete an email address from the list of email addresses
 // you have attempted to verify under your AWS account.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteVerifiedEmailAddressRequest
 type DeleteVerifiedEmailAddressInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8563,7 +8516,6 @@ func (s *DeleteVerifiedEmailAddressInput) SetEmailAddress(v string) *DeleteVerif
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteVerifiedEmailAddressOutput
 type DeleteVerifiedEmailAddressOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8582,7 +8534,6 @@ func (s DeleteVerifiedEmailAddressOutput) GoString() string {
 // rule set that is currently active. You use receipt rule sets to receive email
 // with Amazon SES. For more information, see the Amazon SES Developer Guide
 // (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DescribeActiveReceiptRuleSetRequest
 type DescribeActiveReceiptRuleSetInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8599,7 +8550,6 @@ func (s DescribeActiveReceiptRuleSetInput) GoString() string {
 
 // Represents the metadata and receipt rules for the receipt rule set that is
 // currently active.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DescribeActiveReceiptRuleSetResponse
 type DescribeActiveReceiptRuleSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8636,7 +8586,6 @@ func (s *DescribeActiveReceiptRuleSetOutput) SetRules(v []*ReceiptRule) *Describ
 // Represents a request to return the details of a configuration set. Configuration
 // sets enable you to publish email sending events. For information about using
 // configuration sets, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DescribeConfigurationSetRequest
 type DescribeConfigurationSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8687,7 +8636,6 @@ func (s *DescribeConfigurationSetInput) SetConfigurationSetName(v string) *Descr
 // Represents the details of a configuration set. Configuration sets enable
 // you to publish email sending events. For information about using configuration
 // sets, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DescribeConfigurationSetResponse
 type DescribeConfigurationSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8743,7 +8691,6 @@ func (s *DescribeConfigurationSetOutput) SetTrackingOptions(v *TrackingOptions) 
 // Represents a request to return the details of a receipt rule. You use receipt
 // rules to receive email with Amazon SES. For more information, see the Amazon
 // SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DescribeReceiptRuleRequest
 type DescribeReceiptRuleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8797,7 +8744,6 @@ func (s *DescribeReceiptRuleInput) SetRuleSetName(v string) *DescribeReceiptRule
 }
 
 // Represents the details of a receipt rule.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DescribeReceiptRuleResponse
 type DescribeReceiptRuleOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8826,7 +8772,6 @@ func (s *DescribeReceiptRuleOutput) SetRule(v *ReceiptRule) *DescribeReceiptRule
 // Represents a request to return the details of a receipt rule set. You use
 // receipt rule sets to receive email with Amazon SES. For more information,
 // see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DescribeReceiptRuleSetRequest
 type DescribeReceiptRuleSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8866,7 +8811,6 @@ func (s *DescribeReceiptRuleSetInput) SetRuleSetName(v string) *DescribeReceiptR
 }
 
 // Represents the details of the specified receipt rule set.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DescribeReceiptRuleSetResponse
 type DescribeReceiptRuleSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8910,7 +8854,6 @@ func (s *DescribeReceiptRuleSetOutput) SetRules(v []*ReceiptRule) *DescribeRecei
 // If the domain part of an address (the part after the @ sign) contains non-ASCII
 // characters, they must be encoded using Punycode, as described in RFC3492
 // (https://tools.ietf.org/html/rfc3492.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/Destination
 type Destination struct {
 	_ struct{} `type:"structure"`
 
@@ -8963,7 +8906,6 @@ func (s *Destination) SetToAddresses(v []*string) *Destination {
 // to publish email sending events to Amazon CloudWatch, Amazon Kinesis Firehose,
 // or Amazon Simple Notification Service (Amazon SNS). For information about
 // using configuration sets, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/EventDestination
 type EventDestination struct {
 	_ struct{} `type:"structure"`
 
@@ -8988,8 +8930,8 @@ type EventDestination struct {
 
 	// The name of the event destination. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), underscores (_),
-	//    or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Contain less than 64 characters.
 	//
@@ -9083,7 +9025,6 @@ func (s *EventDestination) SetSNSDestination(v *SNSDestination) *EventDestinatio
 //
 // For information about receiving email through Amazon SES, see the Amazon
 // SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ExtensionField
 type ExtensionField struct {
 	_ struct{} `type:"structure"`
 
@@ -9138,7 +9079,6 @@ func (s *ExtensionField) SetValue(v string) *ExtensionField {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetAccountSendingEnabledInput
 type GetAccountSendingEnabledInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -9155,7 +9095,6 @@ func (s GetAccountSendingEnabledInput) GoString() string {
 
 // Represents a request to return the email sending status for your Amazon SES
 // account.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetAccountSendingEnabledResponse
 type GetAccountSendingEnabledOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9181,7 +9120,6 @@ func (s *GetAccountSendingEnabledOutput) SetEnabled(v bool) *GetAccountSendingEn
 }
 
 // Represents a request to retrieve an existing custom verification email template.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetCustomVerificationEmailTemplateRequest
 type GetCustomVerificationEmailTemplateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9221,7 +9159,6 @@ func (s *GetCustomVerificationEmailTemplateInput) SetTemplateName(v string) *Get
 }
 
 // The content of the custom verification email template.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetCustomVerificationEmailTemplateResponse
 type GetCustomVerificationEmailTemplateOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9297,7 +9234,6 @@ func (s *GetCustomVerificationEmailTemplateOutput) SetTemplateSubject(v string) 
 // that are required for Easy DKIM signing, and whether Amazon SES successfully
 // verified that these tokens were published. For more information about Easy
 // DKIM, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/easy-dkim.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetIdentityDkimAttributesRequest
 type GetIdentityDkimAttributesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9341,7 +9277,6 @@ func (s *GetIdentityDkimAttributesInput) SetIdentities(v []*string) *GetIdentity
 // domain identities, this response also contains the DKIM tokens that are required
 // for Easy DKIM signing, and whether Amazon SES successfully verified that
 // these tokens were published.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetIdentityDkimAttributesResponse
 type GetIdentityDkimAttributesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9370,7 +9305,6 @@ func (s *GetIdentityDkimAttributesOutput) SetDkimAttributes(v map[string]*Identi
 // Represents a request to return the Amazon SES custom MAIL FROM attributes
 // for a list of identities. For information about using a custom MAIL FROM
 // domain, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/mail-from.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetIdentityMailFromDomainAttributesRequest
 type GetIdentityMailFromDomainAttributesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9410,7 +9344,6 @@ func (s *GetIdentityMailFromDomainAttributesInput) SetIdentities(v []*string) *G
 }
 
 // Represents the custom MAIL FROM attributes for a list of identities.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetIdentityMailFromDomainAttributesResponse
 type GetIdentityMailFromDomainAttributesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9439,7 +9372,6 @@ func (s *GetIdentityMailFromDomainAttributesOutput) SetMailFromDomainAttributes(
 // Represents a request to return the notification attributes for a list of
 // identities you verified with Amazon SES. For information about Amazon SES
 // notifications, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/notifications.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetIdentityNotificationAttributesRequest
 type GetIdentityNotificationAttributesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9481,7 +9413,6 @@ func (s *GetIdentityNotificationAttributesInput) SetIdentities(v []*string) *Get
 }
 
 // Represents the notification attributes for a list of identities.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetIdentityNotificationAttributesResponse
 type GetIdentityNotificationAttributesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9511,7 +9442,6 @@ func (s *GetIdentityNotificationAttributesOutput) SetNotificationAttributes(v ma
 // for an identity. Sending authorization is an Amazon SES feature that enables
 // you to authorize other senders to use your identities. For information, see
 // the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/sending-authorization.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetIdentityPoliciesRequest
 type GetIdentityPoliciesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9571,7 +9501,6 @@ func (s *GetIdentityPoliciesInput) SetPolicyNames(v []*string) *GetIdentityPolic
 }
 
 // Represents the requested sending authorization policies.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetIdentityPoliciesResponse
 type GetIdentityPoliciesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9601,7 +9530,6 @@ func (s *GetIdentityPoliciesOutput) SetPolicies(v map[string]*string) *GetIdenti
 // of identities. For domain identities, this request also returns the verification
 // token. For information about verifying identities with Amazon SES, see the
 // Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetIdentityVerificationAttributesRequest
 type GetIdentityVerificationAttributesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9642,7 +9570,6 @@ func (s *GetIdentityVerificationAttributesInput) SetIdentities(v []*string) *Get
 
 // The Amazon SES verification status of a list of identities. For domain identities,
 // this response also contains the verification token.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetIdentityVerificationAttributesResponse
 type GetIdentityVerificationAttributesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9668,7 +9595,6 @@ func (s *GetIdentityVerificationAttributesOutput) SetVerificationAttributes(v ma
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetSendQuotaInput
 type GetSendQuotaInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -9685,7 +9611,6 @@ func (s GetSendQuotaInput) GoString() string {
 
 // Represents your Amazon SES daily sending quota, maximum send rate, and the
 // number of emails you have sent in the last 24 hours.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetSendQuotaResponse
 type GetSendQuotaOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9732,7 +9657,6 @@ func (s *GetSendQuotaOutput) SetSentLast24Hours(v float64) *GetSendQuotaOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetSendStatisticsInput
 type GetSendStatisticsInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -9749,7 +9673,6 @@ func (s GetSendStatisticsInput) GoString() string {
 
 // Represents a list of data points. This list contains aggregated data from
 // the previous two weeks of your sending activity with Amazon SES.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetSendStatisticsResponse
 type GetSendStatisticsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9773,7 +9696,6 @@ func (s *GetSendStatisticsOutput) SetSendDataPoints(v []*SendDataPoint) *GetSend
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetTemplateRequest
 type GetTemplateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9812,7 +9734,6 @@ func (s *GetTemplateInput) SetTemplateName(v string) *GetTemplateInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetTemplateResponse
 type GetTemplateOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9838,7 +9759,6 @@ func (s *GetTemplateOutput) SetTemplate(v *Template) *GetTemplateOutput {
 }
 
 // Represents the DKIM attributes of a verified email address or a domain.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/IdentityDkimAttributes
 type IdentityDkimAttributes struct {
 	_ struct{} `type:"structure"`
 
@@ -9898,7 +9818,6 @@ func (s *IdentityDkimAttributes) SetDkimVerificationStatus(v string) *IdentityDk
 
 // Represents the custom MAIL FROM domain attributes of a verified identity
 // (email address or domain).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/IdentityMailFromDomainAttributes
 type IdentityMailFromDomainAttributes struct {
 	_ struct{} `type:"structure"`
 
@@ -9962,7 +9881,6 @@ func (s *IdentityMailFromDomainAttributes) SetMailFromDomainStatus(v string) *Id
 // an identity has Amazon Simple Notification Service (Amazon SNS) topics set
 // for bounce, complaint, and/or delivery notifications, and whether feedback
 // forwarding is enabled for bounce and complaint notifications.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/IdentityNotificationAttributes
 type IdentityNotificationAttributes struct {
 	_ struct{} `type:"structure"`
 
@@ -10064,7 +9982,6 @@ func (s *IdentityNotificationAttributes) SetHeadersInDeliveryNotificationsEnable
 }
 
 // Represents the verification attributes of a single identity.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/IdentityVerificationAttributes
 type IdentityVerificationAttributes struct {
 	_ struct{} `type:"structure"`
 
@@ -10107,7 +10024,6 @@ func (s *IdentityVerificationAttributes) SetVerificationToken(v string) *Identit
 // configuration sets, which enable you to publish email sending events. For
 // information about using configuration sets, see the Amazon SES Developer
 // Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/KinesisFirehoseDestination
 type KinesisFirehoseDestination struct {
 	_ struct{} `type:"structure"`
 
@@ -10173,7 +10089,6 @@ func (s *KinesisFirehoseDestination) SetIAMRoleARN(v string) *KinesisFirehoseDes
 //
 // For information about using AWS Lambda actions in receipt rules, see the
 // Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-action-lambda.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/LambdaAction
 type LambdaAction struct {
 	_ struct{} `type:"structure"`
 
@@ -10249,7 +10164,6 @@ func (s *LambdaAction) SetTopicArn(v string) *LambdaAction {
 // AWS account. Configuration sets enable you to publish email sending events.
 // For information about using configuration sets, see the Amazon SES Developer
 // Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListConfigurationSetsRequest
 type ListConfigurationSetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10286,7 +10200,6 @@ func (s *ListConfigurationSetsInput) SetNextToken(v string) *ListConfigurationSe
 // A list of configuration sets associated with your AWS account. Configuration
 // sets enable you to publish email sending events. For information about using
 // configuration sets, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListConfigurationSetsResponse
 type ListConfigurationSetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10326,7 +10239,6 @@ func (s *ListConfigurationSetsOutput) SetNextToken(v string) *ListConfigurationS
 // For more information about custom verification email templates, see Using
 // Custom Verification Email Templates (https://docs.aws.amazon.com/ses/latest/DeveloperGuide/custom-verification-emails.html)
 // in the Amazon SES Developer Guide.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListCustomVerificationEmailTemplatesRequest
 type ListCustomVerificationEmailTemplatesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10336,8 +10248,8 @@ type ListCustomVerificationEmailTemplatesInput struct {
 	// will return up to 50 results.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// A token returned from a previous call to ListCustomVerificationEmailTemplates
-	// to indicate the position in the list of email templates.
+	// An array the contains the name and creation time stamp for each template
+	// in your Amazon SES account.
 	NextToken *string `type:"string"`
 }
 
@@ -10377,7 +10289,6 @@ func (s *ListCustomVerificationEmailTemplatesInput) SetNextToken(v string) *List
 }
 
 // A paginated list of custom verification email templates.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListCustomVerificationEmailTemplatesResponse
 type ListCustomVerificationEmailTemplatesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10385,7 +10296,7 @@ type ListCustomVerificationEmailTemplatesOutput struct {
 	CustomVerificationEmailTemplates []*CustomVerificationEmailTemplate `type:"list"`
 
 	// A token indicating that there are additional custom verification email templates
-	// available to be listed. Pass this token to a subsequent call to ListCustomVerificationEmailTemplates
+	// available to be listed. Pass this token to a subsequent call to ListTemplates
 	// to retrieve the next 50 custom verification email templates.
 	NextToken *string `type:"string"`
 }
@@ -10415,7 +10326,6 @@ func (s *ListCustomVerificationEmailTemplatesOutput) SetNextToken(v string) *Lis
 // Represents a request to return a list of all identities (email addresses
 // and domains) that you have attempted to verify under your AWS account, regardless
 // of verification status.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListIdentitiesRequest
 type ListIdentitiesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10460,7 +10370,6 @@ func (s *ListIdentitiesInput) SetNextToken(v string) *ListIdentitiesInput {
 
 // A list of all identities that you have attempted to verify under your AWS
 // account, regardless of verification status.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListIdentitiesResponse
 type ListIdentitiesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10499,7 +10408,6 @@ func (s *ListIdentitiesOutput) SetNextToken(v string) *ListIdentitiesOutput {
 // are attached to an identity. Sending authorization is an Amazon SES feature
 // that enables you to authorize other senders to use your identities. For information,
 // see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/sending-authorization.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListIdentityPoliciesRequest
 type ListIdentityPoliciesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10543,7 +10451,6 @@ func (s *ListIdentityPoliciesInput) SetIdentity(v string) *ListIdentityPoliciesI
 }
 
 // A list of names of sending authorization policies that apply to an identity.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListIdentityPoliciesResponse
 type ListIdentityPoliciesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10572,7 +10479,6 @@ func (s *ListIdentityPoliciesOutput) SetPolicyNames(v []*string) *ListIdentityPo
 // Represents a request to list the IP address filters that exist under your
 // AWS account. You use IP address filters when you receive email with Amazon
 // SES. For more information, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListReceiptFiltersRequest
 type ListReceiptFiltersInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10588,7 +10494,6 @@ func (s ListReceiptFiltersInput) GoString() string {
 }
 
 // A list of IP address filters that exist under your AWS account.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListReceiptFiltersResponse
 type ListReceiptFiltersOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10616,7 +10521,6 @@ func (s *ListReceiptFiltersOutput) SetFilters(v []*ReceiptFilter) *ListReceiptFi
 // Represents a request to list the receipt rule sets that exist under your
 // AWS account. You use receipt rule sets to receive email with Amazon SES.
 // For more information, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListReceiptRuleSetsRequest
 type ListReceiptRuleSetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10642,7 +10546,6 @@ func (s *ListReceiptRuleSetsInput) SetNextToken(v string) *ListReceiptRuleSetsIn
 }
 
 // A list of receipt rule sets that exist under your AWS account.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListReceiptRuleSetsResponse
 type ListReceiptRuleSetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10678,7 +10581,6 @@ func (s *ListReceiptRuleSetsOutput) SetRuleSets(v []*ReceiptRuleSetMetadata) *Li
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListTemplatesRequest
 type ListTemplatesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10688,7 +10590,8 @@ type ListTemplatesInput struct {
 	// results.
 	MaxItems *int64 `type:"integer"`
 
-	// The token to use for pagination.
+	// A token returned from a previous call to ListTemplates to indicate the position
+	// in the list of email templates.
 	NextToken *string `type:"string"`
 }
 
@@ -10714,15 +10617,16 @@ func (s *ListTemplatesInput) SetNextToken(v string) *ListTemplatesInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListTemplatesResponse
 type ListTemplatesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The token to use for pagination.
+	// A token indicating that there are additional email templates available to
+	// be listed. Pass this token to a subsequent call to ListTemplates to retrieve
+	// the next 50 email templates.
 	NextToken *string `type:"string"`
 
-	// An array the contains the name of creation time stamp for each template in
-	// your Amazon SES account.
+	// An array the contains the name and creation time stamp for each template
+	// in your Amazon SES account.
 	TemplatesMetadata []*TemplateMetadata `type:"list"`
 }
 
@@ -10748,7 +10652,6 @@ func (s *ListTemplatesOutput) SetTemplatesMetadata(v []*TemplateMetadata) *ListT
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListVerifiedEmailAddressesInput
 type ListVerifiedEmailAddressesInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10765,7 +10668,6 @@ func (s ListVerifiedEmailAddressesInput) GoString() string {
 
 // A list of email addresses that you have verified with Amazon SES under your
 // AWS account.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListVerifiedEmailAddressesResponse
 type ListVerifiedEmailAddressesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10790,7 +10692,6 @@ func (s *ListVerifiedEmailAddressesOutput) SetVerifiedEmailAddresses(v []*string
 }
 
 // Represents the message to be sent, composed of a subject and a body.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/Message
 type Message struct {
 	_ struct{} `type:"structure"`
 
@@ -10859,7 +10760,6 @@ func (s *Message) SetSubject(v *Content) *Message {
 //
 // For information about receiving email through Amazon SES, see the Amazon
 // SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/MessageDsn
 type MessageDsn struct {
 	_ struct{} `type:"structure"`
 
@@ -10935,14 +10835,13 @@ func (s *MessageDsn) SetReportingMta(v string) *MessageDsn {
 // Message tags, which you use with configuration sets, enable you to publish
 // email sending events. For information about using configuration sets, see
 // the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/MessageTag
 type MessageTag struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the tag. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), underscores (_),
-	//    or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Contain less than 256 characters.
 	//
@@ -10951,8 +10850,8 @@ type MessageTag struct {
 
 	// The value of the tag. The value must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), underscores (_),
-	//    or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Contain less than 256 characters.
 	//
@@ -11002,7 +10901,6 @@ func (s *MessageTag) SetValue(v string) *MessageTag {
 // an identity. Sending authorization is an Amazon SES feature that enables
 // you to authorize other senders to use your identities. For information, see
 // the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/sending-authorization.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/PutIdentityPolicyRequest
 type PutIdentityPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11086,7 +10984,6 @@ func (s *PutIdentityPolicyInput) SetPolicyName(v string) *PutIdentityPolicyInput
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/PutIdentityPolicyResponse
 type PutIdentityPolicyOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -11102,7 +10999,6 @@ func (s PutIdentityPolicyOutput) GoString() string {
 }
 
 // Represents the raw data of the message.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/RawMessage
 type RawMessage struct {
 	_ struct{} `type:"structure"`
 
@@ -11165,7 +11061,6 @@ func (s *RawMessage) SetData(v []byte) *RawMessage {
 //
 // For information about setting up receipt rules, see the Amazon SES Developer
 // Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-receipt-rules.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ReceiptAction
 type ReceiptAction struct {
 	_ struct{} `type:"structure"`
 
@@ -11299,7 +11194,6 @@ func (s *ReceiptAction) SetWorkmailAction(v *WorkmailAction) *ReceiptAction {
 //
 // For information about setting up IP address filters, see the Amazon SES Developer
 // Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-ip-filters.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ReceiptFilter
 type ReceiptFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -11311,8 +11205,8 @@ type ReceiptFilter struct {
 
 	// The name of the IP address filter. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), periods (.), underscores
-	//    (_), or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Start and end with a letter or number.
 	//
@@ -11370,7 +11264,6 @@ func (s *ReceiptFilter) SetName(v string) *ReceiptFilter {
 //
 // For information about setting up IP address filters, see the Amazon SES Developer
 // Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-ip-filters.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ReceiptIpFilter
 type ReceiptIpFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -11437,7 +11330,6 @@ func (s *ReceiptIpFilter) SetPolicy(v string) *ReceiptIpFilter {
 //
 // For information about setting up receipt rules, see the Amazon SES Developer
 // Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-receipt-rules.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ReceiptRule
 type ReceiptRule struct {
 	_ struct{} `type:"structure"`
 
@@ -11450,8 +11342,8 @@ type ReceiptRule struct {
 
 	// The name of the receipt rule. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), periods (.), underscores
-	//    (_), or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Start and end with a letter or number.
 	//
@@ -11552,7 +11444,6 @@ func (s *ReceiptRule) SetTlsPolicy(v string) *ReceiptRule {
 //
 // For information about setting up receipt rule sets, see the Amazon SES Developer
 // Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-receipt-rule-set.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ReceiptRuleSetMetadata
 type ReceiptRuleSetMetadata struct {
 	_ struct{} `type:"structure"`
 
@@ -11561,8 +11452,8 @@ type ReceiptRuleSetMetadata struct {
 
 	// The name of the receipt rule set. The name must:
 	//
-	//    * Contain only ASCII letters (a-z, A-Z), numbers (0-9), periods (.), underscores
-	//    (_), or dashes (-).
+	//    * This value can only contain ASCII letters (a-z, A-Z), numbers (0-9),
+	//    underscores (_), or dashes (-).
 	//
 	//    * Start and end with a letter or number.
 	//
@@ -11597,7 +11488,6 @@ func (s *ReceiptRuleSetMetadata) SetName(v string) *ReceiptRuleSetMetadata {
 //
 // For information about receiving email through Amazon SES, see the Amazon
 // SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/RecipientDsnFields
 type RecipientDsnFields struct {
 	_ struct{} `type:"structure"`
 
@@ -11724,7 +11614,6 @@ func (s *RecipientDsnFields) SetStatus(v string) *RecipientDsnFields {
 // Represents a request to reorder the receipt rules within a receipt rule set.
 // You use receipt rule sets to receive email with Amazon SES. For more information,
 // see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ReorderReceiptRuleSetRequest
 type ReorderReceiptRuleSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11779,7 +11668,6 @@ func (s *ReorderReceiptRuleSetInput) SetRuleSetName(v string) *ReorderReceiptRul
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ReorderReceiptRuleSetResponse
 type ReorderReceiptRuleSetOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -11795,7 +11683,6 @@ func (s ReorderReceiptRuleSetOutput) GoString() string {
 }
 
 // Contains information about the reputation settings for a configuration set.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ReputationOptions
 type ReputationOptions struct {
 	_ struct{} `type:"structure"`
 
@@ -11867,7 +11754,6 @@ func (s *ReputationOptions) SetSendingEnabled(v bool) *ReputationOptions {
 //
 // For information about specifying Amazon S3 actions in receipt rules, see
 // the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-action-s3.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/S3Action
 type S3Action struct {
 	_ struct{} `type:"structure"`
 
@@ -11904,7 +11790,7 @@ type S3Action struct {
 	// This encryption client is currently available with the AWS Java SDK (http://aws.amazon.com/sdk-for-java/)
 	// and AWS Ruby SDK (http://aws.amazon.com/sdk-for-ruby/) only. For more information
 	// about client-side encryption using AWS KMS master keys, see the Amazon S3
-	// Developer Guide (http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingClientSideEncryption.html).
+	// Developer Guide (AmazonS3/latest/dev/UsingClientSideEncryption.html).
 	KmsKeyArn *string `type:"string"`
 
 	// The key prefix of the Amazon S3 bucket. The key prefix is similar to a directory
@@ -11984,7 +11870,6 @@ func (s *S3Action) SetTopicArn(v string) *S3Action {
 //
 // For information about using a receipt rule to publish an Amazon SNS notification,
 // see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-action-sns.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SNSAction
 type SNSAction struct {
 	_ struct{} `type:"structure"`
 
@@ -12044,7 +11929,6 @@ func (s *SNSAction) SetTopicArn(v string) *SNSAction {
 // Event destinations, such as Amazon SNS, are associated with configuration
 // sets, which enable you to publish email sending events. For information about
 // using configuration sets, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SNSDestination
 type SNSDestination struct {
 	_ struct{} `type:"structure"`
 
@@ -12088,7 +11972,6 @@ func (s *SNSDestination) SetTopicARN(v string) *SNSDestination {
 
 // Represents a request to send a bounce message to the sender of an email you
 // received through Amazon SES.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendBounceRequest
 type SendBounceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12207,7 +12090,6 @@ func (s *SendBounceInput) SetOriginalMessageId(v string) *SendBounceInput {
 }
 
 // Represents a unique message ID.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendBounceResponse
 type SendBounceOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12233,7 +12115,6 @@ func (s *SendBounceOutput) SetMessageId(v string) *SendBounceOutput {
 
 // Represents a request to send a templated email to multiple destinations using
 // Amazon SES. For more information, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-personalized-email-api.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendBulkTemplatedEmailRequest
 type SendBulkTemplatedEmailInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12446,7 +12327,6 @@ func (s *SendBulkTemplatedEmailInput) SetTemplateArn(v string) *SendBulkTemplate
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendBulkTemplatedEmailResponse
 type SendBulkTemplatedEmailOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12473,7 +12353,6 @@ func (s *SendBulkTemplatedEmailOutput) SetStatus(v []*BulkEmailDestinationStatus
 }
 
 // Represents a request to send a custom verification email to a specified recipient.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendCustomVerificationEmailRequest
 type SendCustomVerificationEmailInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12537,7 +12416,6 @@ func (s *SendCustomVerificationEmailInput) SetTemplateName(v string) *SendCustom
 }
 
 // The response received when attempting to send the custom verification email.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendCustomVerificationEmailResponse
 type SendCustomVerificationEmailOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12564,7 +12442,6 @@ func (s *SendCustomVerificationEmailOutput) SetMessageId(v string) *SendCustomVe
 
 // Represents sending statistics data. Each SendDataPoint contains statistics
 // for a 15-minute period of sending activity.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendDataPoint
 type SendDataPoint struct {
 	_ struct{} `type:"structure"`
 
@@ -12626,7 +12503,6 @@ func (s *SendDataPoint) SetTimestamp(v time.Time) *SendDataPoint {
 
 // Represents a request to send a single formatted email using Amazon SES. For
 // more information, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-email-formatted.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendEmailRequest
 type SendEmailInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12811,7 +12687,6 @@ func (s *SendEmailInput) SetTags(v []*MessageTag) *SendEmailInput {
 }
 
 // Represents a unique message ID.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendEmailResponse
 type SendEmailOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12839,7 +12714,6 @@ func (s *SendEmailOutput) SetMessageId(v string) *SendEmailOutput {
 
 // Represents a request to send a single raw email using Amazon SES. For more
 // information, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-email-raw.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendRawEmailRequest
 type SendRawEmailInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13032,7 +12906,6 @@ func (s *SendRawEmailInput) SetTags(v []*MessageTag) *SendRawEmailInput {
 }
 
 // Represents a unique message ID.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendRawEmailResponse
 type SendRawEmailOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13060,7 +12933,6 @@ func (s *SendRawEmailOutput) SetMessageId(v string) *SendRawEmailOutput {
 
 // Represents a request to send a templated email using Amazon SES. For more
 // information, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-personalized-email-api.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendTemplatedEmailRequest
 type SendTemplatedEmailInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13265,7 +13137,6 @@ func (s *SendTemplatedEmailInput) SetTemplateData(v string) *SendTemplatedEmailI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendTemplatedEmailResponse
 type SendTemplatedEmailOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13294,7 +13165,6 @@ func (s *SendTemplatedEmailOutput) SetMessageId(v string) *SendTemplatedEmailOut
 // Represents a request to set a receipt rule set as the active receipt rule
 // set. You use receipt rule sets to receive email with Amazon SES. For more
 // information, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SetActiveReceiptRuleSetRequest
 type SetActiveReceiptRuleSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13320,7 +13190,6 @@ func (s *SetActiveReceiptRuleSetInput) SetRuleSetName(v string) *SetActiveReceip
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SetActiveReceiptRuleSetResponse
 type SetActiveReceiptRuleSetOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -13338,7 +13207,6 @@ func (s SetActiveReceiptRuleSetOutput) GoString() string {
 // Represents a request to enable or disable Amazon SES Easy DKIM signing for
 // an identity. For more information about setting up Easy DKIM, see the Amazon
 // SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/easy-dkim.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SetIdentityDkimEnabledRequest
 type SetIdentityDkimEnabledInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13393,7 +13261,6 @@ func (s *SetIdentityDkimEnabledInput) SetIdentity(v string) *SetIdentityDkimEnab
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SetIdentityDkimEnabledResponse
 type SetIdentityDkimEnabledOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -13411,7 +13278,6 @@ func (s SetIdentityDkimEnabledOutput) GoString() string {
 // Represents a request to enable or disable whether Amazon SES forwards you
 // bounce and complaint notifications through email. For information about email
 // feedback forwarding, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/notifications-via-email.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SetIdentityFeedbackForwardingEnabledRequest
 type SetIdentityFeedbackForwardingEnabledInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13471,7 +13337,6 @@ func (s *SetIdentityFeedbackForwardingEnabledInput) SetIdentity(v string) *SetId
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SetIdentityFeedbackForwardingEnabledResponse
 type SetIdentityFeedbackForwardingEnabledOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -13489,7 +13354,6 @@ func (s SetIdentityFeedbackForwardingEnabledOutput) GoString() string {
 // Represents a request to set whether Amazon SES includes the original email
 // headers in the Amazon SNS notifications of a specified type. For information
 // about notifications, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/notifications-via-sns.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SetIdentityHeadersInNotificationsEnabledRequest
 type SetIdentityHeadersInNotificationsEnabledInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13564,7 +13428,6 @@ func (s *SetIdentityHeadersInNotificationsEnabledInput) SetNotificationType(v st
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SetIdentityHeadersInNotificationsEnabledResponse
 type SetIdentityHeadersInNotificationsEnabledOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -13582,7 +13445,6 @@ func (s SetIdentityHeadersInNotificationsEnabledOutput) GoString() string {
 // Represents a request to enable or disable the Amazon SES custom MAIL FROM
 // domain setup for a verified identity. For information about using a custom
 // MAIL FROM domain, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/mail-from.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SetIdentityMailFromDomainRequest
 type SetIdentityMailFromDomainInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13654,7 +13516,6 @@ func (s *SetIdentityMailFromDomainInput) SetMailFromDomain(v string) *SetIdentit
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SetIdentityMailFromDomainResponse
 type SetIdentityMailFromDomainOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -13673,7 +13534,6 @@ func (s SetIdentityMailFromDomainOutput) GoString() string {
 // will publish bounce, complaint, or delivery notifications for emails sent
 // with that identity as the Source. For information about Amazon SES notifications,
 // see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/notifications-via-sns.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SetIdentityNotificationTopicRequest
 type SetIdentityNotificationTopicInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13741,7 +13601,6 @@ func (s *SetIdentityNotificationTopicInput) SetSnsTopic(v string) *SetIdentityNo
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SetIdentityNotificationTopicResponse
 type SetIdentityNotificationTopicOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -13759,7 +13618,6 @@ func (s SetIdentityNotificationTopicOutput) GoString() string {
 // Represents a request to set the position of a receipt rule in a receipt rule
 // set. You use receipt rule sets to receive email with Amazon SES. For more
 // information, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SetReceiptRulePositionRequest
 type SetReceiptRulePositionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13822,7 +13680,6 @@ func (s *SetReceiptRulePositionInput) SetRuleSetName(v string) *SetReceiptRulePo
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SetReceiptRulePositionResponse
 type SetReceiptRulePositionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -13843,7 +13700,6 @@ func (s SetReceiptRulePositionOutput) GoString() string {
 //
 // For information about setting a stop action in a receipt rule, see the Amazon
 // SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-action-stop.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/StopAction
 type StopAction struct {
 	_ struct{} `type:"structure"`
 
@@ -13896,7 +13752,6 @@ func (s *StopAction) SetTopicArn(v string) *StopAction {
 
 // The content of the email, composed of a subject line, an HTML part, and a
 // text-only part.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/Template
 type Template struct {
 	_ struct{} `type:"structure"`
 
@@ -13964,8 +13819,7 @@ func (s *Template) SetTextPart(v string) *Template {
 	return s
 }
 
-// Information about an email template.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/TemplateMetadata
+// Contains information about an email template.
 type TemplateMetadata struct {
 	_ struct{} `type:"structure"`
 
@@ -13998,7 +13852,6 @@ func (s *TemplateMetadata) SetName(v string) *TemplateMetadata {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/TestRenderTemplateRequest
 type TestRenderTemplateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14053,7 +13906,6 @@ func (s *TestRenderTemplateInput) SetTemplateName(v string) *TestRenderTemplateI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/TestRenderTemplateResponse
 type TestRenderTemplateOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14085,7 +13937,6 @@ func (s *TestRenderTemplateOutput) SetRenderedTemplate(v string) *TestRenderTemp
 // For more information, see Configuring Custom Domains to Handle Open and Click
 // Tracking (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/configure-custom-open-click-domains.html)
 // in the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/Welcome.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/TrackingOptions
 type TrackingOptions struct {
 	_ struct{} `type:"structure"`
 
@@ -14112,7 +13963,6 @@ func (s *TrackingOptions) SetCustomRedirectDomain(v string) *TrackingOptions {
 
 // Represents a request to enable or disable the email sending capabilities
 // for your entire Amazon SES account.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateAccountSendingEnabledRequest
 type UpdateAccountSendingEnabledInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14137,7 +13987,6 @@ func (s *UpdateAccountSendingEnabledInput) SetEnabled(v bool) *UpdateAccountSend
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateAccountSendingEnabledOutput
 type UpdateAccountSendingEnabledOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -14155,7 +14004,6 @@ func (s UpdateAccountSendingEnabledOutput) GoString() string {
 // Represents a request to update the event destination of a configuration set.
 // Configuration sets enable you to publish email sending events. For information
 // about using configuration sets, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/monitor-sending-activity.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetEventDestinationRequest
 type UpdateConfigurationSetEventDestinationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14216,7 +14064,6 @@ func (s *UpdateConfigurationSetEventDestinationInput) SetEventDestination(v *Eve
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetEventDestinationResponse
 type UpdateConfigurationSetEventDestinationOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -14233,7 +14080,6 @@ func (s UpdateConfigurationSetEventDestinationOutput) GoString() string {
 
 // Represents a request to modify the reputation metric publishing settings
 // for a configuration set.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetReputationMetricsEnabledRequest
 type UpdateConfigurationSetReputationMetricsEnabledInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14287,7 +14133,6 @@ func (s *UpdateConfigurationSetReputationMetricsEnabledInput) SetEnabled(v bool)
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetReputationMetricsEnabledOutput
 type UpdateConfigurationSetReputationMetricsEnabledOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -14304,7 +14149,6 @@ func (s UpdateConfigurationSetReputationMetricsEnabledOutput) GoString() string 
 
 // Represents a request to enable or disable the email sending capabilities
 // for a specific configuration set.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetSendingEnabledRequest
 type UpdateConfigurationSetSendingEnabledInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14358,7 +14202,6 @@ func (s *UpdateConfigurationSetSendingEnabledInput) SetEnabled(v bool) *UpdateCo
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetSendingEnabledOutput
 type UpdateConfigurationSetSendingEnabledOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -14374,7 +14217,6 @@ func (s UpdateConfigurationSetSendingEnabledOutput) GoString() string {
 }
 
 // Represents a request to update the tracking options for a configuration set.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetTrackingOptionsRequest
 type UpdateConfigurationSetTrackingOptionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14435,7 +14277,6 @@ func (s *UpdateConfigurationSetTrackingOptionsInput) SetTrackingOptions(v *Track
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetTrackingOptionsResponse
 type UpdateConfigurationSetTrackingOptionsOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -14451,7 +14292,6 @@ func (s UpdateConfigurationSetTrackingOptionsOutput) GoString() string {
 }
 
 // Represents a request to update an existing custom verification email template.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateCustomVerificationEmailTemplateRequest
 type UpdateCustomVerificationEmailTemplateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14541,7 +14381,6 @@ func (s *UpdateCustomVerificationEmailTemplateInput) SetTemplateSubject(v string
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateCustomVerificationEmailTemplateOutput
 type UpdateCustomVerificationEmailTemplateOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -14559,7 +14398,6 @@ func (s UpdateCustomVerificationEmailTemplateOutput) GoString() string {
 // Represents a request to update a receipt rule. You use receipt rules to receive
 // email with Amazon SES. For more information, see the Amazon SES Developer
 // Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-concepts.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateReceiptRuleRequest
 type UpdateReceiptRuleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14618,7 +14456,6 @@ func (s *UpdateReceiptRuleInput) SetRuleSetName(v string) *UpdateReceiptRuleInpu
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateReceiptRuleResponse
 type UpdateReceiptRuleOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -14633,7 +14470,6 @@ func (s UpdateReceiptRuleOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateTemplateRequest
 type UpdateTemplateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14678,7 +14514,6 @@ func (s *UpdateTemplateInput) SetTemplate(v *Template) *UpdateTemplateInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateTemplateResponse
 type UpdateTemplateOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -14696,7 +14531,6 @@ func (s UpdateTemplateOutput) GoString() string {
 // Represents a request to generate the CNAME records needed to set up Easy
 // DKIM with Amazon SES. For more information about setting up Easy DKIM, see
 // the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/easy-dkim.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/VerifyDomainDkimRequest
 type VerifyDomainDkimInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14737,7 +14571,6 @@ func (s *VerifyDomainDkimInput) SetDomain(v string) *VerifyDomainDkimInput {
 
 // Returns CNAME records that you must publish to the DNS server of your domain
 // to set up Easy DKIM with Amazon SES.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/VerifyDomainDkimResponse
 type VerifyDomainDkimOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14777,7 +14610,6 @@ func (s *VerifyDomainDkimOutput) SetDkimTokens(v []*string) *VerifyDomainDkimOut
 // the TXT records that you must publish to the DNS server of your domain to
 // complete the verification. For information about domain verification, see
 // the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-domains.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/VerifyDomainIdentityRequest
 type VerifyDomainIdentityInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14818,7 +14650,6 @@ func (s *VerifyDomainIdentityInput) SetDomain(v string) *VerifyDomainIdentityInp
 
 // Returns a TXT record that you must publish to the DNS server of your domain
 // to complete domain verification with Amazon SES.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/VerifyDomainIdentityResponse
 type VerifyDomainIdentityOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14855,7 +14686,6 @@ func (s *VerifyDomainIdentityOutput) SetVerificationToken(v string) *VerifyDomai
 // Represents a request to begin email address verification with Amazon SES.
 // For information about email address verification, see the Amazon SES Developer
 // Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-email-addresses.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/VerifyEmailAddressRequest
 type VerifyEmailAddressInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14894,7 +14724,6 @@ func (s *VerifyEmailAddressInput) SetEmailAddress(v string) *VerifyEmailAddressI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/VerifyEmailAddressOutput
 type VerifyEmailAddressOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -14912,7 +14741,6 @@ func (s VerifyEmailAddressOutput) GoString() string {
 // Represents a request to begin email address verification with Amazon SES.
 // For information about email address verification, see the Amazon SES Developer
 // Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-email-addresses.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/VerifyEmailIdentityRequest
 type VerifyEmailIdentityInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14952,7 +14780,6 @@ func (s *VerifyEmailIdentityInput) SetEmailAddress(v string) *VerifyEmailIdentit
 }
 
 // An empty element returned on a successful request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/VerifyEmailIdentityResponse
 type VerifyEmailIdentityOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -14974,7 +14801,6 @@ func (s VerifyEmailIdentityOutput) GoString() string {
 //
 // For information using a receipt rule to call Amazon WorkMail, see the Amazon
 // SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-action-workmail.html).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/WorkmailAction
 type WorkmailAction struct {
 	_ struct{} `type:"structure"`
 

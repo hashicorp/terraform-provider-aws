@@ -76,13 +76,16 @@ single valid JSON document. Please note that you should only provide values that
 definition document. For a detailed description of what parameters are available, see the [Task Definition Parameters]
 (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html) section from the
 official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide).
+
+~> **NOTE**: Proper escaping is required for JSON field values containing quotes (`"`) such as `environment` values. If directly setting the JSON, they should be escaped as `\"` in the JSON,  e.g. `"value": "I \"love\" escaped quotes"`. If using a Terraform variable value, they should be escaped as `\\\"` in the variable, e.g. `value = "I \\\"love\\\" escaped quotes"` in the variable and `"value": "${var.myvariable}"` in the JSON.
+
 * `task_role_arn` - (Optional) The ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
 * `execution_role_arn` - (Optional) The Amazon Resource Name (ARN) of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
 * `network_mode` - (Optional) The Docker networking mode to use for the containers in the task. The valid values are `none`, `bridge`, `awsvpc`, and `host`.
 * `volume` - (Optional) A set of [volume blocks](#volume-block-arguments) that containers in your task may use.
 * `placement_constraints` - (Optional) A set of [placement constraints](#placement-constraints-arguments) rules that are taken into consideration during task placement. Maximum number of `placement_constraints` is `10`.
-* `cpu` - (Optional) The number of cpu units used by the task. If the `launch_type` is `FARGATE` this field is required.
-* `memory` - (Optional) The amount (in MiB) of memory used by the task. If the `launch_type` is `FARGATE` this field is required.
+* `cpu` - (Optional) The number of cpu units used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
+* `memory` - (Optional) The amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `requires_compatibilities` - (Optional) A set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
 
 #### Volume Block Arguments

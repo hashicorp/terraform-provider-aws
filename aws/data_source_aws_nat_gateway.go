@@ -102,7 +102,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 	if resp == nil || len(resp.NatGateways) == 0 {
-		return fmt.Errorf("no matching NAT gateway found: %#v", req)
+		return fmt.Errorf("no matching NAT gateway found: %s", req)
 	}
 	if len(resp.NatGateways) > 1 {
 		return fmt.Errorf("multiple NAT gateways matched; use additional constraints to reduce matches to a single NAT gateway")

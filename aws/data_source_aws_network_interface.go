@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -14,54 +15,56 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
-			"association": &schema.Schema{
+			"filter": dataSourceFiltersSchema(),
+			"association": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"allocation_id": &schema.Schema{
+						"allocation_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"association_id": &schema.Schema{
+						"association_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"ip_owner_id": &schema.Schema{
+						"ip_owner_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"public_dns_name": &schema.Schema{
+						"public_dns_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"public_ip": &schema.Schema{
+						"public_ip": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"attachment": &schema.Schema{
+			"attachment": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"attachment_id": &schema.Schema{
+						"attachment_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"device_index": &schema.Schema{
+						"device_index": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"instance_id": &schema.Schema{
+						"instance_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"instance_owner_id": &schema.Schema{
+						"instance_owner_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -90,23 +93,23 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"mac_address": &schema.Schema{
+			"mac_address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": &schema.Schema{
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"private_dns_name": &schema.Schema{
+			"private_dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"private_ip": &schema.Schema{
+			"private_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"private_ips": &schema.Schema{
+			"private_ips": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -131,19 +134,27 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 func dataSourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	input := &ec2.DescribeNetworkInterfacesInput{
-		NetworkInterfaceIds: []*string{aws.String(d.Get("id").(string))},
+	input := &ec2.DescribeNetworkInterfacesInput{}
+	if v, ok := d.GetOk("id"); ok {
+		input.NetworkInterfaceIds = []*string{aws.String(v.(string))}
 	}
 
+	if v, ok := d.GetOk("filter"); ok {
+		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+	}
+
+	log.Printf("[DEBUG] Reading Network Interface: %s", input)
 	resp, err := conn.DescribeNetworkInterfaces(input)
 	if err != nil {
 		return err
 	}
+
 	if resp == nil || len(resp.NetworkInterfaces) == 0 {
 		return fmt.Errorf("no matching network interface found")
 	}
+
 	if len(resp.NetworkInterfaces) > 1 {
-		return fmt.Errorf("multiple network interfaces matched %s", d.Id())
+		return fmt.Errorf("Your query returned more than one result. Please try a more specific search criteria")
 	}
 
 	eni := resp.NetworkInterfaces[0]

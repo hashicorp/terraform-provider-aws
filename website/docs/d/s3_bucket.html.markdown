@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific S3 bucket
 ---
 
-# aws_s3_bucket
+# Data Source: aws_s3_bucket
 
 Provides details about a specific S3 bucket.
 

@@ -102,8 +102,8 @@ The following arguments are supported:
 * `name` - (Required) The name of the authorizer
 * `rest_api_id` - (Required) The ID of the associated REST API
 * `identity_source` - (Optional) The source of the identity in an incoming request.
-	Defaults to `method.request.header.Authorization`.
-* `type` - (Optional) The type of the authorizer. `TOKEN` is currently the only allowed value.
+	Defaults to `method.request.header.Authorization`. For `REQUEST` type, this may be a comma-separated list of values, including headers, query string parameters and stage variables - e.g. `"method.request.header.SomeHeaderName,method.request.querystring.SomeQueryStringName,stageVariables.SomeStageVariableName"`
+* `type` - (Optional) The type of the authorizer. Possible values are `TOKEN` and `REQUEST`.
 	Defaults to `TOKEN`.
 * `authorizer_credentials` - (Optional) The credentials required for the authorizer.
 	To specify an IAM Role for API Gateway to assume, use the IAM Role ARN.

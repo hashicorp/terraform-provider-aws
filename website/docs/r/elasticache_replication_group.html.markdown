@@ -104,8 +104,8 @@ Cluster Mode (`cluster_mode`) supports the following:
 The following attributes are exported:
 
 * `id` - The ID of the ElastiCache Replication Group.
-* `configuration_endpoint_address` - The address of the endpoint for the primary node in the replication group. If Redis, only present when cluster mode is disabled.
-* `primary_endpoint_address` - (Redis only) The address of the replication group configuration endpoint when cluster mode is enabled.
+* `configuration_endpoint_address` - The address of the replication group configuration endpoint when cluster mode is enabled.
+* `primary_endpoint_address` - (Redis only) The address of the endpoint for the primary node in the replication group, if the cluster mode is disabled.
 
 ## Import
 

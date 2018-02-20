@@ -108,6 +108,9 @@ func testAccCheckRouteTableAssociationExists(n string, v *ec2.RouteTable) resour
 const testAccRouteTableAssociationConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-table-association"
+	}
 }
 
 resource "aws_subnet" "foo" {
@@ -136,6 +139,9 @@ resource "aws_route_table_association" "foo" {
 const testAccRouteTableAssociationConfigChange = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-table-association"
+	}
 }
 
 resource "aws_subnet" "foo" {

@@ -231,7 +231,7 @@ func testAccRedshiftSubnetGroupConfig(rInt int) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccRedshiftSubnetGroupConfig"
+		Name = "terraform-testacc-redshift-subnet-group"
 	}
 }
 
@@ -266,7 +266,7 @@ func testAccRedshiftSubnetGroup_updateDescription(rInt int) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccRedshiftSubnetGroup_updateDescription"
+		Name = "terraform-testacc-redshift-subnet-group-upd-description"
 	}
 }
 
@@ -301,7 +301,7 @@ func testAccRedshiftSubnetGroupConfigWithTags(rInt int) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccRedshiftSubnetGroupConfigWithTags"
+		Name = "terraform-testacc-redshift-subnet-group-with-tags"
 	}
 }
 
@@ -338,7 +338,7 @@ func testAccRedshiftSubnetGroupConfigWithTagsUpdated(rInt int) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccRedshiftSubnetGroupConfigWithTags"
+		Name = "terraform-testacc-redshift-subnet-group-with-tags"
 	}
 }
 
@@ -377,7 +377,7 @@ func testAccRedshiftSubnetGroupConfig_updateSubnetIds(rInt int) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccRedshiftSubnetGroupConfig_updateSubnetIds"
+		Name = "terraform-testacc-redshift-subnet-group-upd-subnet-ids"
 	}
 }
 
