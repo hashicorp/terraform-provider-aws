@@ -59,6 +59,7 @@ BUG FIXES:
 * resource/aws_s3_bucket: Always set replication_configuration in state [GH-3349]
 * resource/aws_security_group: Allow empty rule description [GH-2846]
 * resource/aws_sns_topic: Fix exit after updating first attribute [GH-3360]
+* resource/aws_spot_instance_request: Bump delete timeout to 20mins [GH-3435]
 * resource/aws_sqs_queue: Skip SQS ListQueueTags in aws-us-gov partition [GH-3376]
 * resource/aws_vpc_endpoint: Treat pending as expected state during deletion [GH-3370]
 * resource/aws_vpc_peering_connection: Treat `pending-acceptance` as expected during deletion [GH-3393]
