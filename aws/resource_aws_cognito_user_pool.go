@@ -688,8 +688,9 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		UserPoolId: aws.String(d.Id()),
 	}
 
-	if d.HasChange("admin_create_user_config") {
-		configs := d.Get("admin_create_user_config").([]interface{})
+	//if d.HasChange
+	if v, ok := d.GetOk("admin_create_user_config"); ok {
+		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
@@ -697,18 +698,22 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if d.HasChange("auto_verified_attributes") {
-		params.AutoVerifiedAttributes = expandStringList(d.Get("auto_verified_attributes").(*schema.Set).List())
+	//if d.HasChange("auto_verified_attributes") {
+	if v, ok := d.GetOk("auto_verified_attributes"); ok {
+		params.AutoVerifiedAttributes = expandStringList(v.(*schema.Set).List())
 	}
+	//}
 
-	if d.HasChange("device_configuration") {
-		configs := d.Get("device_configuration").([]interface{})
+	//if d.HasChange("device_configuration") {
+	if v, ok := d.GetOk("device_configuration"); ok {
+		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
 			params.DeviceConfiguration = expandCognitoUserPoolDeviceConfiguration(config)
 		}
 	}
+	//}
 
 	if v, ok := d.GetOk("email_configuration"); ok {
 		configs := v.([]interface{})
@@ -729,25 +734,26 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if d.HasChange("email_verification_subject") {
-		v := d.Get("email_verification_subject").(string)
+	//if d.HasChange("email_verification_subject") {
+	if v, ok := d.GetOk("email_verification_subject"); ok {
 
 		// This is to prevent removing default message since the API disallows it
-		if v == "" {
+		if v.(string) == "" {
 			return errors.New("email_verification_subject cannot be set to nil")
 		}
-		params.EmailVerificationSubject = aws.String(v)
+		params.EmailVerificationSubject = aws.String(v.(string))
 	}
+	//}
 
-	if d.HasChange("email_verification_message") {
-		v := d.Get("email_verification_message").(string)
-
+	//if d.HasChange("email_verification_message") {
+	if v, ok := d.GetOk("email_verification_message"); ok {
 		// This is to prevent removing default message since the API disallows it
-		if v == "" {
+		if v.(string) == "" {
 			return errors.New("email_verification_message cannot be set to nil")
 		}
-		params.EmailVerificationMessage = aws.String(v)
+		params.EmailVerificationMessage = aws.String(v.(string))
 	}
+	//}
 
 	if v, ok := d.GetOk("lambda_config"); ok {
 		configs := v.([]interface{})
@@ -758,9 +764,11 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if d.HasChange("mfa_configuration") {
-		params.MfaConfiguration = aws.String(d.Get("mfa_configuration").(string))
+	//if d.HasChange("mfa_configuration") {
+	if v, ok := d.GetOk("mfa_configuration"); ok {
+		params.MfaConfiguration = aws.String(v.(string))
 	}
+	//}
 
 	if v, ok := d.GetOk("password_policy"); ok {
 		configs := v.([]interface{})
@@ -773,37 +781,43 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if d.HasChange("sms_authentication_message") {
-		params.SmsAuthenticationMessage = aws.String(d.Get("sms_authentication_message").(string))
+	//if d.HasChange("sms_authentication_message") {
+	if v, ok := d.GetOk("sms_authentication_message"); ok {
+		params.SmsAuthenticationMessage = aws.String(v.(string))
 	}
+	//}
 
-	if d.HasChange("sms_configuration") {
-		configs := d.Get("sms_configuration").([]interface{})
+	//if d.HasChange("sms_configuration") {
+	if v, ok := d.GetOk("sms_configuration"); ok {
+		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
 			params.SmsConfiguration = expandCognitoUserPoolSmsConfiguration(config)
 		}
 	}
+	//}
 
-	if d.HasChange("verification_message_template") {
-		configs := d.Get("verification_message_template").([]interface{})
+	//if d.HasChange("verification_message_template") {
+	if v, ok := d.GetOk("verification_message_template"); ok {
+		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
 			params.VerificationMessageTemplate = expandCognitoUserPoolVerificationMessageTemplate(config)
 		}
 	}
+	//}
 
-	if d.HasChange("sms_verification_message") {
-		v := d.Get("sms_verification_message").(string)
-
+	//if d.HasChange("sms_verification_message") {
+	if v, ok := d.GetOk("sms_verification_message"); ok {
 		// This is to prevent removing default message since the API disallows it
-		if v == "" {
+		if v.(string) == "" {
 			return errors.New("sms_verification_message cannot be set to nil")
 		}
-		params.SmsVerificationMessage = aws.String(v)
+		params.SmsVerificationMessage = aws.String(v.(string))
 	}
+	//}
 
 	if v, ok := d.GetOk("tags"); ok {
 		params.UserPoolTags = tagsFromMapGeneric(v.(map[string]interface{}))
