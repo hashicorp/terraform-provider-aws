@@ -14,6 +14,7 @@ FEATURES:
 * **New Resource:** `aws_gamelift_fleet` [GH-3327]
 * **New Resource:** `aws_s3_bucket_metric` [GH-916]
 * **New Resource:** `aws_ses_domain_mail_from` [GH-2029]
+* **New Resource:** `aws_iot_thing_type` [GH-3302]
 
 ENHANCEMENTS:
 
