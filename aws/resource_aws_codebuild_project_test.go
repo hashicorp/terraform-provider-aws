@@ -26,8 +26,8 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_basic(name, "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
-					resource.TestCheckResourceAttr(
-						"aws_codebuild_project.foo", "build_timeout", "5"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "build_timeout", "5"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "source.361463812.git_clone_depth", "0"),
 				),
 			},
 		},
@@ -69,9 +69,10 @@ func TestAccAWSCodeBuildProject_vpc(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_basicUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
-					resource.TestCheckResourceAttr(
-						"aws_codebuild_project.foo", "build_timeout", "50"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "build_timeout", "50"),
 					resource.TestCheckNoResourceAttr("aws_codebuild_project.foo", "vpc_config"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "build_timeout", "50"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "source.3031565546.git_clone_depth", "1"),
 				),
 			},
 		},
@@ -97,8 +98,8 @@ func TestAccAWSCodeBuildProject_sourceAuth(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_sourceAuth(name, authResource, authType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "source.1060593600.auth.2706882902.resource", authResource),
-					resource.TestCheckResourceAttr(resourceName, "source.1060593600.auth.2706882902.type", authType),
+					resource.TestCheckResourceAttr(resourceName, "source.361463812.auth.2706882902.resource", authResource),
+					resource.TestCheckResourceAttr(resourceName, "source.361463812.auth.2706882902.type", authType),
 				),
 			},
 		},
@@ -484,8 +485,9 @@ resource "aws_codebuild_project" "foo" {
   }
 
   source {
-    type     = "GITHUB"
-    location = "https://github.com/hashicorp/packer.git"
+    type            = "GITHUB"
+    location        = "https://github.com/hashicorp/packer.git"
+		git_clone_depth = 1
   }
 
   tags {
