@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsAPIGatewayVpcLink_basic(t *testing.T) {
+func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

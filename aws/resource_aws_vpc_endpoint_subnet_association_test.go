@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsVpcEndpointSubnetAssociation_basic(t *testing.T) {
+func TestAccAWSVpcEndpointSubnetAssociation_basic(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 
 	resource.Test(t, resource.TestCase{

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDxLag_basic(t *testing.T) {
+func TestAccAWSDxLag_basic(t *testing.T) {
 	lagName1 := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
 	lagName2 := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
 
@@ -44,7 +44,7 @@ func TestAccAwsDxLag_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxLag_tags(t *testing.T) {
+func TestAccAWSDxLag_tags(t *testing.T) {
 	lagName := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{

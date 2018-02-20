@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAwsAcmCertificateValidation_basic(t *testing.T) {
+func TestAccAWSAcmCertificateValidation_basic(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()
@@ -34,7 +34,7 @@ func TestAccAwsAcmCertificateValidation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificateValidation_timeout(t *testing.T) {
+func TestAccAWSAcmCertificateValidation_timeout(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()
@@ -54,7 +54,7 @@ func TestAccAwsAcmCertificateValidation_timeout(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificateValidation_validationRecordFqdns(t *testing.T) {
+func TestAccAWSAcmCertificateValidation_validationRecordFqdns(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()
@@ -87,7 +87,7 @@ func TestAccAwsAcmCertificateValidation_validationRecordFqdns(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificateValidation_validationRecordFqdnsRoot(t *testing.T) {
+func TestAccAWSAcmCertificateValidation_validationRecordFqdnsRoot(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
@@ -105,7 +105,7 @@ func TestAccAwsAcmCertificateValidation_validationRecordFqdnsRoot(t *testing.T) 
 	})
 }
 
-func TestAccAwsAcmCertificateValidation_validationRecordFqdnsRootAndWildcard(t *testing.T) {
+func TestAccAWSAcmCertificateValidation_validationRecordFqdnsRootAndWildcard(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 
@@ -124,7 +124,7 @@ func TestAccAwsAcmCertificateValidation_validationRecordFqdnsRootAndWildcard(t *
 	})
 }
 
-func TestAccAwsAcmCertificateValidation_validationRecordFqdnsSan(t *testing.T) {
+func TestAccAWSAcmCertificateValidation_validationRecordFqdnsSan(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
 	rInt1 := acctest.RandInt()
@@ -147,7 +147,7 @@ func TestAccAwsAcmCertificateValidation_validationRecordFqdnsSan(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificateValidation_validationRecordFqdnsWildcard(t *testing.T) {
+func TestAccAWSAcmCertificateValidation_validationRecordFqdnsWildcard(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 
@@ -166,7 +166,7 @@ func TestAccAwsAcmCertificateValidation_validationRecordFqdnsWildcard(t *testing
 	})
 }
 
-func TestAccAwsAcmCertificateValidation_validationRecordFqdnsWildcardAndRoot(t *testing.T) {
+func TestAccAWSAcmCertificateValidation_validationRecordFqdnsWildcardAndRoot(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 

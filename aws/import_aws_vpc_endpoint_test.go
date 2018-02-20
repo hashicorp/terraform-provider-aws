@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAwsVpcEndpoint_importBasic(t *testing.T) {
+func TestAccAWSVpcEndpoint_importBasic(t *testing.T) {
 	resourceName := "aws_vpc_endpoint.s3"
 
 	resource.Test(t, resource.TestCase{

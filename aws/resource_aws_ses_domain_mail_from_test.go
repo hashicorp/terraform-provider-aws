@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsSESDomainMailFrom_basic(t *testing.T) {
+func TestAccAWSSESDomainMailFrom_basic(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -51,7 +51,7 @@ func TestAccAwsSESDomainMailFrom_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
+func TestAccAWSSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))

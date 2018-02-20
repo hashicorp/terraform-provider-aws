@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsVpcEndpointService_basic(t *testing.T) {
+func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
 	lb1Name := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	lb2Name := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -46,7 +46,7 @@ func TestAccAwsVpcEndpointService_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsVpcEndpointService_removed(t *testing.T) {
+func TestAccAWSVpcEndpointService_removed(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
 	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
