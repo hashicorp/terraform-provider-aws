@@ -54,6 +54,7 @@ BUG FIXES:
 * resource/aws_ecs_service: Retry DescribeServices after creation [GH-3387]
 * resource/aws_elasticsearch_domain: Retry creation on `ValidationException` [GH-3375]
 * resource/aws_iam_user_ssh_key: Correctly set status after creation [GH-3390]
+* resource/aws_instance: Bump deletion timeout to 20mins [GH-3452]
 * resource/aws_kinesis_firehose_delivery_stream: Retry on additional IAM eventual consistency errors [GH-3381]
 * resource/aws_route53_record: Trim trailing dot during import [GH-3321]
 * resource/aws_s3_bucket: Prevent crashes on location and replication read retry timeouts [GH-3338]
