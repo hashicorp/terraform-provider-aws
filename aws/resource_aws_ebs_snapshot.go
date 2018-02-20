@@ -99,10 +99,13 @@ func resourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error 
 		SnapshotIds: []*string{aws.String(d.Id())},
 	}
 	res, err := conn.DescribeSnapshots(req)
-	if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidSnapshotID.NotFound" {
-		log.Printf("Snapshot %q Not found - removing from state", d.Id())
-		d.SetId("")
-		return nil
+	if err != nil {
+		if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
+			log.Printf("Snapshot %q Not found - removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return err
 	}
 
 	snapshot := res.Snapshots[0]
