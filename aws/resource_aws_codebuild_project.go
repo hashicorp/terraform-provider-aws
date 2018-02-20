@@ -168,6 +168,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"git_clone_depth": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
 						"location": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -408,11 +412,13 @@ func expandProjectSource(d *schema.ResourceData) codebuild.ProjectSource {
 		sourceType := data["type"].(string)
 		location := data["location"].(string)
 		buildspec := data["buildspec"].(string)
+		gitCloneDepth := int64(data["git_clone_depth"].(int))
 
 		projectSource = codebuild.ProjectSource{
-			Type:      &sourceType,
-			Location:  &location,
-			Buildspec: &buildspec,
+			Type:          &sourceType,
+			Location:      &location,
+			Buildspec:     &buildspec,
+			GitCloneDepth: &gitCloneDepth,
 		}
 
 		if v, ok := data["auth"]; ok {
@@ -619,6 +625,10 @@ func flattenAwsCodeBuildProjectSource(source *codebuild.ProjectSource) []interfa
 		m["buildspec"] = *source.Buildspec
 	}
 
+	if source.GitCloneDepth != nil {
+		m["git_clone_depth"] = *source.GitCloneDepth
+	}
+
 	if source.Location != nil {
 		m["location"] = *source.Location
 	}
@@ -682,6 +692,9 @@ func resourceAwsCodeBuildProjectSourceHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
 	if v, ok := m["buildspec"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["git_clone_depth"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
 	}
 	if v, ok := m["location"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
