@@ -978,11 +978,9 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	replication := replicationResponse.(*s3.GetBucketReplicationOutput)
 
 	log.Printf("[DEBUG] S3 Bucket: %s, read replication configuration: %v", d.Id(), replication)
-	if r := replication.ReplicationConfiguration; r != nil {
-		if err := d.Set("replication_configuration", flattenAwsS3BucketReplicationConfiguration(replication.ReplicationConfiguration)); err != nil {
-			log.Printf("[DEBUG] Error setting replication configuration: %s", err)
-			return err
-		}
+	if err := d.Set("replication_configuration", flattenAwsS3BucketReplicationConfiguration(replication.ReplicationConfiguration)); err != nil {
+		log.Printf("[DEBUG] Error setting replication configuration: %s", err)
+		return err
 	}
 
 	// Read the bucket server side encryption configuration
@@ -1893,6 +1891,11 @@ func flattenAwsS3ServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionCon
 
 func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) []map[string]interface{} {
 	replication_configuration := make([]map[string]interface{}, 0, 1)
+
+	if r == nil {
+		return replication_configuration
+	}
+
 	m := make(map[string]interface{})
 
 	if r.Role != nil && *r.Role != "" {

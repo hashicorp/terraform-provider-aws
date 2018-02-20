@@ -136,9 +136,9 @@ func validateTagFilters(v interface{}, k string) (ws []string, errors []error) {
 
 func validateDbParamGroupName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9a-z-_]+$`).MatchString(value) {
+	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters, underscores and hyphens allowed in %q", k))
+			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
 	}
 	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -147,10 +147,6 @@ func validateDbParamGroupName(v interface{}, k string) (ws []string, errors []er
 	if regexp.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot contain two consecutive hyphens", k))
-	}
-	if regexp.MustCompile(`__`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot contain two consecutive underscores", k))
 	}
 	if regexp.MustCompile(`-$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -1891,8 +1887,9 @@ func validateSecurityGroupRuleDescription(v interface{}, k string) (ws []string,
 			"%q cannot be longer than 255 characters: %q", k, value))
 	}
 
-	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpRange.html
-	pattern := `^[A-Za-z0-9 \.\_\-\:\/\(\)\#\,\@\[\]\+\=\;\{\}\!\$\*]+$`
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpRange.html. Note that
+	// "" is an allowable description value.
+	pattern := `^[A-Za-z0-9 \.\_\-\:\/\(\)\#\,\@\[\]\+\=\;\{\}\!\$\*]*$`
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't comply with restrictions (%q): %q",
@@ -2257,6 +2254,41 @@ func validateAmazonSideAsn(v interface{}, k string) (ws []string, errors []error
 
 	if (asn < 64512) || (asn > 65534 && asn < 4200000000) || (asn > 4294967294) {
 		errors = append(errors, fmt.Errorf("%q (%q) must be in the range 64512 to 65534 or 4200000000 to 4294967294", k, v))
+	}
+	return
+}
+
+func validateIotThingTypeName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`[a-zA-Z0-9:_-]+`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, colons, underscores and hyphens allowed in %q", k))
+	}
+	return
+}
+
+func validateIotThingTypeDescription(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 2028 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 2028 characters", k))
+	}
+	if !regexp.MustCompile(`[\\p{Graph}\\x20]*`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must match pattern [\\p{Graph}\\x20]*", k))
+	}
+	return
+}
+
+func validateIotThingTypeSearchableAttribute(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 128 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 128 characters", k))
+	}
+	if !regexp.MustCompile(`[a-zA-Z0-9_.,@/:#-]+`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, underscores, dots, commas, arobases, slashes, colons, hashes and hyphens allowed in %q", k))
 	}
 	return
 }

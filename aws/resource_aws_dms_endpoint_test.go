@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDmsEndpointBasic(t *testing.T) {
+func TestAccAWSDmsEndpointBasic(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-basic"
 
@@ -50,7 +50,7 @@ func TestAccAwsDmsEndpointBasic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpointDynamoDb(t *testing.T) {
+func TestAccAWSDmsEndpointDynamoDb(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-dynamodb"
 

@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAwsDxLag_importBasic(t *testing.T) {
+func TestAccAWSDxLag_importBasic(t *testing.T) {
 	resourceName := "aws_dx_lag.hoge"
 
 	resource.Test(t, resource.TestCase{

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDxConnectionAssociation_basic(t *testing.T) {
+func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -27,7 +27,7 @@ func TestAccAwsDxConnectionAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxConnectionAssociation_multiConns(t *testing.T) {
+func TestAccAWSDxConnectionAssociation_multiConns(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

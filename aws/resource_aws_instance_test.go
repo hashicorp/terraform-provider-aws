@@ -642,26 +642,19 @@ func TestAccAWSInstance_multipleRegions(t *testing.T) {
 	// record the initialized providers so that we can use them to
 	// check for the instances in each region
 	var providers []*schema.Provider
-	providerFactories := map[string]terraform.ResourceProviderFactory{
-		"aws": func() (terraform.ResourceProvider, error) {
-			p := Provider()
-			providers = append(providers, p.(*schema.Provider))
-			return p, nil
-		},
-	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckInstanceDestroyWithProviders(&providers),
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckInstanceDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigMultipleRegions,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExistsWithProviders(
-						"aws_instance.foo", &v, &providers),
-					testAccCheckInstanceExistsWithProviders(
-						"aws_instance.bar", &v, &providers),
+					testAccCheckInstanceExistsWithProvider("aws_instance.foo", &v,
+						testAccAwsRegionProviderFunc("us-west-2", &providers)),
+					testAccCheckInstanceExistsWithProvider("aws_instance.bar", &v,
+						testAccAwsRegionProviderFunc("us-east-1", &providers)),
 				),
 			},
 		},
@@ -1318,20 +1311,6 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 	return testAccCheckInstanceDestroyWithProvider(s, testAccProvider)
 }
 
-func testAccCheckInstanceDestroyWithProviders(providers *[]*schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		for _, provider := range *providers {
-			if provider.Meta() == nil {
-				continue
-			}
-			if err := testAccCheckInstanceDestroyWithProvider(s, provider); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-}
-
 func testAccCheckInstanceDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
 	conn := provider.Meta().(*AWSClient).ec2conn
 
@@ -1366,11 +1345,10 @@ func testAccCheckInstanceDestroyWithProvider(s *terraform.State, provider *schem
 }
 
 func testAccCheckInstanceExists(n string, i *ec2.Instance) resource.TestCheckFunc {
-	providers := []*schema.Provider{testAccProvider}
-	return testAccCheckInstanceExistsWithProviders(n, i, &providers)
+	return testAccCheckInstanceExistsWithProvider(n, i, func() *schema.Provider { return testAccProvider })
 }
 
-func testAccCheckInstanceExistsWithProviders(n string, i *ec2.Instance, providers *[]*schema.Provider) resource.TestCheckFunc {
+func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1380,27 +1358,20 @@ func testAccCheckInstanceExistsWithProviders(n string, i *ec2.Instance, provider
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No ID is set")
 		}
-		for _, provider := range *providers {
-			// Ignore if Meta is empty, this can happen for validation providers
-			if provider.Meta() == nil {
-				continue
-			}
 
-			conn := provider.Meta().(*AWSClient).ec2conn
-			resp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
-				InstanceIds: []*string{aws.String(rs.Primary.ID)},
-			})
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidInstanceID.NotFound" {
-				continue
-			}
-			if err != nil {
-				return err
-			}
+		provider := providerF()
 
-			if len(resp.Reservations) > 0 {
-				*i = *resp.Reservations[0].Instances[0]
-				return nil
-			}
+		conn := provider.Meta().(*AWSClient).ec2conn
+		resp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
+			InstanceIds: []*string{aws.String(rs.Primary.ID)},
+		})
+		if err != nil {
+			return err
+		}
+
+		if len(resp.Reservations) > 0 {
+			*i = *resp.Reservations[0].Instances[0]
+			return nil
 		}
 
 		return fmt.Errorf("Instance not found")

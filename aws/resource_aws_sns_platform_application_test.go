@@ -146,7 +146,7 @@ func TestDecodeResourceAwsSnsPlatformApplicationID(t *testing.T) {
 	}
 }
 
-func TestAccAwsSnsPlatformApplication_basic(t *testing.T) {
+func TestAccAWSSnsPlatformApplication_basic(t *testing.T) {
 	platforms := testAccAwsSnsPlatformApplicationPlatformFromEnv(t)
 	resourceName := "aws_sns_platform_application.test"
 
@@ -202,7 +202,7 @@ func TestAccAwsSnsPlatformApplication_basic(t *testing.T) {
 	}
 }
 
-func TestAccAwsSnsPlatformApplication_basicAttributes(t *testing.T) {
+func TestAccAWSSnsPlatformApplication_basicAttributes(t *testing.T) {
 	platforms := testAccAwsSnsPlatformApplicationPlatformFromEnv(t)
 	resourceName := "aws_sns_platform_application.test"
 
@@ -257,7 +257,7 @@ func TestAccAwsSnsPlatformApplication_basicAttributes(t *testing.T) {
 	}
 }
 
-func TestAccAwsSnsPlatformApplication_iamRoleAttributes(t *testing.T) {
+func TestAccAWSSnsPlatformApplication_iamRoleAttributes(t *testing.T) {
 	platforms := testAccAwsSnsPlatformApplicationPlatformFromEnv(t)
 	resourceName := "aws_sns_platform_application.test"
 
@@ -307,7 +307,7 @@ func TestAccAwsSnsPlatformApplication_iamRoleAttributes(t *testing.T) {
 	}
 }
 
-func TestAccAwsSnsPlatformApplication_snsTopicAttributes(t *testing.T) {
+func TestAccAWSSnsPlatformApplication_snsTopicAttributes(t *testing.T) {
 	platforms := testAccAwsSnsPlatformApplicationPlatformFromEnv(t)
 	resourceName := "aws_sns_platform_application.test"
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -230,6 +231,32 @@ func TestAccAWSRDSCluster_encrypted(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSCluster_EncryptedCrossRegionReplication(t *testing.T) {
+	var primaryCluster rds.DBCluster
+	var replicaCluster rds.DBCluster
+
+	// record the initialized providers so that we can use them to
+	// check for the cluster in each region
+	var providers []*schema.Provider
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSClusterDestroyWithProvider, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfigEncryptedCrossRegionReplica(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExistsWithProvider("aws_rds_cluster.test_primary",
+						&primaryCluster, testAccAwsRegionProviderFunc("us-west-2", &providers)),
+					testAccCheckAWSClusterExistsWithProvider("aws_rds_cluster.test_replica",
+						&replicaCluster, testAccAwsRegionProviderFunc("us-east-1", &providers)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRDSCluster_backupsUpdate(t *testing.T) {
 	var v rds.DBCluster
 
@@ -289,13 +316,18 @@ func TestAccAWSRDSCluster_iamAuth(t *testing.T) {
 }
 
 func testAccCheckAWSClusterDestroy(s *terraform.State) error {
+	return testAccCheckAWSClusterDestroyWithProvider(s, testAccProvider)
+}
+
+func testAccCheckAWSClusterDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
+	conn := provider.Meta().(*AWSClient).rdsconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rds_cluster" {
 			continue
 		}
 
 		// Try to find the Group
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
 		var err error
 		resp, err := conn.DescribeDBClusters(
 			&rds.DescribeDBClustersInput{
@@ -379,6 +411,10 @@ func testAccCheckAWSClusterSnapshot(rInt int) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSClusterExists(n string, v *rds.DBCluster) resource.TestCheckFunc {
+	return testAccCheckAWSClusterExistsWithProvider(n, v, func() *schema.Provider { return testAccProvider })
+}
+
+func testAccCheckAWSClusterExistsWithProvider(n string, v *rds.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -389,7 +425,8 @@ func testAccCheckAWSClusterExists(n string, v *rds.DBCluster) resource.TestCheck
 			return fmt.Errorf("No DB Instance ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		provider := providerF()
+		conn := provider.Meta().(*AWSClient).rdsconn
 		resp, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -858,4 +895,121 @@ resource "aws_rds_cluster" "default" {
 
   depends_on = ["aws_iam_role.another_rds_sample_role"]
 }`, n, n, n)
+}
+
+func testAccAWSClusterConfigEncryptedCrossRegionReplica(n int) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "useast1"
+  region = "us-east-1"
+}
+
+provider "aws" {
+  alias  = "uswest2"
+  region = "us-west-2"
+}
+
+data "aws_availability_zones" "us-east-1" {
+  provider = "aws.useast1"
+}
+
+data "aws_availability_zones" "us-west-2" {
+  provider = "aws.uswest2"
+}
+
+resource "aws_rds_cluster_instance" "test_instance" {
+  provider = "aws.uswest2"
+  identifier = "tf-aurora-instance-%[1]d"
+  cluster_identifier = "${aws_rds_cluster.test_primary.id}"
+  instance_class = "db.t2.small"
+}
+
+resource "aws_rds_cluster_parameter_group" "default" {
+  provider = "aws.uswest2"
+  name        = "tf-aurora-prm-grp-%[1]d"
+  family      = "aurora5.6"
+  description = "RDS default cluster parameter group"
+
+  parameter {
+    name  = "binlog_format"
+    value = "STATEMENT"
+    apply_method = "pending-reboot"
+  }
+}
+
+resource "aws_rds_cluster" "test_primary" {
+  provider = "aws.uswest2"
+  cluster_identifier = "tf-test-primary-%[1]d"
+  availability_zones = ["${slice(data.aws_availability_zones.us-west-2.names, 0, 3)}"]
+  db_cluster_parameter_group_name = "${aws_rds_cluster_parameter_group.default.name}"
+  database_name = "mydb"
+  master_username = "foo"
+  master_password = "mustbeeightcharaters"
+  storage_encrypted = true
+  skip_final_snapshot = true
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "kms_key_east" {
+  provider = "aws.useast1"
+  description = "Terraform acc test %[1]d"
+  policy = <<POLICY
+  {
+    "Version": "2012-10-17",
+    "Id": "kms-tf-1",
+    "Statement": [
+      {
+        "Sid": "Enable IAM User Permissions",
+        "Effect": "Allow",
+        "Principal": {
+          "AWS": "*"
+        },
+        "Action": "kms:*",
+        "Resource": "*"
+      }
+    ]
+  }
+  POLICY
+}
+
+resource "aws_vpc" "main" {
+  provider   = "aws.useast1"
+  cidr_block = "10.0.0.0/16"
+  tags {
+  	Name = "terraform-acctest-rds-cluster-encrypted-cross-region-replica"
+  }
+}
+
+resource "aws_subnet" "db" {
+  provider          = "aws.useast1"
+  count             = 3
+  vpc_id            = "${aws_vpc.main.id}"
+  availability_zone = "${data.aws_availability_zones.us-east-1.names[count.index]}"
+  cidr_block        = "10.0.${count.index}.0/24"
+}
+
+resource "aws_db_subnet_group" "replica" {
+  provider   = "aws.useast1"
+  name       = "test_replica-subnet-%[1]d"
+  subnet_ids = ["${aws_subnet.db.*.id}"]
+}
+
+resource "aws_rds_cluster" "test_replica" {
+  provider = "aws.useast1"
+  cluster_identifier = "tf-test-replica-%[1]d"
+  db_subnet_group_name = "${aws_db_subnet_group.replica.name}"
+  database_name = "mydb"
+  master_username = "foo"
+  master_password = "mustbeeightcharaters"
+  kms_key_id = "${aws_kms_key.kms_key_east.arn}"
+  storage_encrypted = true
+  skip_final_snapshot = true
+  replication_source_identifier = "arn:aws:rds:us-west-2:${data.aws_caller_identity.current.account_id}:cluster:${aws_rds_cluster.test_primary.cluster_identifier}"
+  source_region = "us-west-2"
+  depends_on = [
+  	"aws_rds_cluster_instance.test_instance"
+  ]
+}
+`, n)
 }

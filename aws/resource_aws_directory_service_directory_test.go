@@ -132,6 +132,24 @@ func TestAccAWSDirectoryServiceDirectory_microsoft(t *testing.T) {
 				Config: testAccDirectoryServiceDirectoryConfig_microsoft,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "edition", directoryservice.DirectoryEditionEnterprise),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryServiceDirectoryConfig_microsoftStandard,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "edition", directoryservice.DirectoryEditionStandard),
 				),
 			},
 		},
@@ -429,6 +447,38 @@ resource "aws_directory_service_directory" "bar" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   type = "MicrosoftAD"
+
+  vpc_settings {
+    vpc_id = "${aws_vpc.main.id}"
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+  }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+	tags {
+		Name = "terraform-testacc-directory-service-directory-microsoft"
+	}
+}
+
+resource "aws_subnet" "foo" {
+  vpc_id = "${aws_vpc.main.id}"
+  availability_zone = "us-west-2a"
+  cidr_block = "10.0.1.0/24"
+}
+resource "aws_subnet" "bar" {
+  vpc_id = "${aws_vpc.main.id}"
+  availability_zone = "us-west-2b"
+  cidr_block = "10.0.2.0/24"
+}
+`
+
+const testAccDirectoryServiceDirectoryConfig_microsoftStandard = `
+resource "aws_directory_service_directory" "bar" {
+  name = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+  type = "MicrosoftAD"
+  edition = "Standard"
 
   vpc_settings {
     vpc_id = "${aws_vpc.main.id}"

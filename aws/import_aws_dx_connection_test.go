@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAwsDxConnection_importBasic(t *testing.T) {
+func TestAccAWSDxConnection_importBasic(t *testing.T) {
 	resourceName := "aws_dx_connection.hoge"
 
 	resource.Test(t, resource.TestCase{

@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAWSVPC_coreMismatchedDiffs(t *testing.T) {
+func TestAccAWSVpc_coreMismatchedDiffs(t *testing.T) {
 	var vpc ec2.Vpc
 
 	resource.Test(t, resource.TestCase{
