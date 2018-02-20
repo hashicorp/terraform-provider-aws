@@ -563,6 +563,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_lb":                          resourceAwsLb(),
 			"aws_alb_listener":                resourceAwsLbListener(),
 			"aws_lb_listener":                 resourceAwsLbListener(),
+			"aws_alb_listener_certificate":    resourceAwsLbListenerCertificate(),
+			"aws_lb_listener_certificate":     resourceAwsLbListenerCertificate(),
 			"aws_alb_listener_rule":           resourceAwsLbbListenerRule(),
 			"aws_lb_listener_rule":            resourceAwsLbbListenerRule(),
 			"aws_alb_target_group":            resourceAwsLbTargetGroup(),
