@@ -47,7 +47,9 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists("aws_cognito_user_pool_client.client"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "name", name),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "explicit_auth_flows.#", "1"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "explicit_auth_flows.#", "3"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "explicit_auth_flows.1728632605", "CUSTOM_AUTH_FLOW_ONLY"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "explicit_auth_flows.1860959087", "USER_PASSWORD_AUTH"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "explicit_auth_flows.245201344", "ADMIN_NO_SRP_AUTH"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "generate_secret", "true"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "read_attributes.#", "1"),
@@ -149,7 +151,7 @@ resource "aws_cognito_user_pool_client" "client" {
   name = "%s"
 
   user_pool_id = "${aws_cognito_user_pool.pool.id}"
-  explicit_auth_flows = [ "ADMIN_NO_SRP_AUTH" ]
+  explicit_auth_flows = ["ADMIN_NO_SRP_AUTH", "CUSTOM_AUTH_FLOW_ONLY", "USER_PASSWORD_AUTH"]
 
   generate_secret = "true"
 
@@ -161,7 +163,7 @@ resource "aws_cognito_user_pool_client" "client" {
   allowed_oauth_flows = ["code", "implicit"]
   allowed_oauth_flows_user_pool_client = "true"
   allowed_oauth_scopes = ["openid", "email"]
-  
+
   callback_urls = ["https://www.example.com/callback", "https://www.example.com/redirect"]
   default_redirect_uri = "https://www.example.com/redirect"
   logout_urls = ["https://www.example.com/login"]
