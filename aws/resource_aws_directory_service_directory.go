@@ -65,6 +65,7 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 			"tags": tagsSchema(),
 			"vpc_settings": {
 				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
@@ -86,6 +87,7 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 			},
 			"connect_settings": {
 				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
@@ -167,22 +169,15 @@ func buildVpcSettings(d *schema.ResourceData) (vpcSettings *directoryservice.Dir
 		return nil, fmt.Errorf("vpc_settings is required for type = SimpleAD or MicrosoftAD")
 	}
 	settings := v.([]interface{})
-
-	if len(settings) > 1 {
-		return nil, fmt.Errorf("Only a single vpc_settings block is expected")
+	s := settings[0].(map[string]interface{})
+	var subnetIds []*string
+	for _, id := range s["subnet_ids"].(*schema.Set).List() {
+		subnetIds = append(subnetIds, aws.String(id.(string)))
 	}
 
-	if len(settings) == 1 {
-		s := settings[0].(map[string]interface{})
-		var subnetIds []*string
-		for _, id := range s["subnet_ids"].(*schema.Set).List() {
-			subnetIds = append(subnetIds, aws.String(id.(string)))
-		}
-
-		vpcSettings = &directoryservice.DirectoryVpcSettings{
-			SubnetIds: subnetIds,
-			VpcId:     aws.String(s["vpc_id"].(string)),
-		}
+	vpcSettings = &directoryservice.DirectoryVpcSettings{
+		SubnetIds: subnetIds,
+		VpcId:     aws.String(s["vpc_id"].(string)),
 	}
 
 	return vpcSettings, nil
@@ -194,30 +189,23 @@ func buildConnectSettings(d *schema.ResourceData) (connectSettings *directoryser
 		return nil, fmt.Errorf("connect_settings is required for type = ADConnector")
 	}
 	settings := v.([]interface{})
+	s := settings[0].(map[string]interface{})
 
-	if len(settings) > 1 {
-		return nil, fmt.Errorf("Only a single connect_settings block is expected")
+	var subnetIds []*string
+	for _, id := range s["subnet_ids"].(*schema.Set).List() {
+		subnetIds = append(subnetIds, aws.String(id.(string)))
 	}
 
-	if len(settings) == 1 {
-		s := settings[0].(map[string]interface{})
+	var customerDnsIps []*string
+	for _, id := range s["customer_dns_ips"].(*schema.Set).List() {
+		customerDnsIps = append(customerDnsIps, aws.String(id.(string)))
+	}
 
-		var subnetIds []*string
-		for _, id := range s["subnet_ids"].(*schema.Set).List() {
-			subnetIds = append(subnetIds, aws.String(id.(string)))
-		}
-
-		var customerDnsIps []*string
-		for _, id := range s["customer_dns_ips"].(*schema.Set).List() {
-			customerDnsIps = append(customerDnsIps, aws.String(id.(string)))
-		}
-
-		connectSettings = &directoryservice.DirectoryConnectSettings{
-			CustomerDnsIps:   customerDnsIps,
-			CustomerUserName: aws.String(s["customer_username"].(string)),
-			SubnetIds:        subnetIds,
-			VpcId:            aws.String(s["vpc_id"].(string)),
-		}
+	connectSettings = &directoryservice.DirectoryConnectSettings{
+		CustomerDnsIps:   customerDnsIps,
+		CustomerUserName: aws.String(s["customer_username"].(string)),
+		SubnetIds:        subnetIds,
+		VpcId:            aws.String(s["vpc_id"].(string)),
 	}
 
 	return connectSettings, nil
