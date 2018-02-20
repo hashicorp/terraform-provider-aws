@@ -3678,3 +3678,30 @@ func flattenDynamoDbTableItemAttributes(attrs map[string]*dynamodb.AttributeValu
 
 	return rawBuffer.String(), nil
 }
+
+func expandIotThingTypeProperties(config map[string]interface{}) *iot.ThingTypeProperties {
+	properties := &iot.ThingTypeProperties{
+		SearchableAttributes: expandStringList(config["searchable_attributes"].(*schema.Set).List()),
+	}
+
+	if v, ok := config["description"]; ok && v.(string) != "" {
+		properties.ThingTypeDescription = aws.String(v.(string))
+	}
+
+	return properties
+}
+
+func flattenIotThingTypeProperties(s *iot.ThingTypeProperties) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if s == nil {
+		return nil
+	}
+
+	if s.ThingTypeDescription != nil {
+		m["description"] = *s.ThingTypeDescription
+	}
+	m["searchable_attributes"] = flattenStringList(s.SearchableAttributes)
+
+	return []map[string]interface{}{m}
+}
