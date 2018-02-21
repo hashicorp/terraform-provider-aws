@@ -65,11 +65,14 @@ func testAccCheckAWSOrganizationDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeOrganization(params)
 
-		if err != nil || resp == nil {
-			return nil
+		if err != nil {
+			if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+				return nil
+			}
+			return err
 		}
 
-		if resp.Organization != nil {
+		if resp != nil && resp.Organization != nil {
 			return fmt.Errorf("Bad: Organization still exists: %q", rs.Primary.ID)
 		}
 	}
@@ -93,11 +96,11 @@ func testAccCheckAWSOrganizationExists(n string, a *organizations.Organization) 
 
 		resp, err := conn.DescribeOrganization(params)
 
-		if err != nil || resp == nil {
-			return nil
+		if err != nil {
+			return err
 		}
 
-		if resp.Organization == nil {
+		if resp == nil || resp.Organization == nil {
 			return fmt.Errorf("Organization %q does not exist", rs.Primary.ID)
 		}
 
