@@ -589,27 +589,35 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("vpc_config") {
 		vpcConfigRaw := d.Get("vpc_config").([]interface{})
-		vpcConfig, ok := vpcConfigRaw[0].(map[string]interface{})
-		if !ok {
-			return errors.New("vpc_config is <nil>")
-		}
-
-		if vpcConfig != nil {
-			var subnetIds []*string
-			for _, id := range vpcConfig["subnet_ids"].(*schema.Set).List() {
-				subnetIds = append(subnetIds, aws.String(id.(string)))
-			}
-
-			var securityGroupIds []*string
-			for _, id := range vpcConfig["security_group_ids"].(*schema.Set).List() {
-				securityGroupIds = append(securityGroupIds, aws.String(id.(string)))
-			}
-
+		if len(vpcConfigRaw) == 0 {
 			configReq.VpcConfig = &lambda.VpcConfig{
-				SubnetIds:        subnetIds,
-				SecurityGroupIds: securityGroupIds,
+				SubnetIds:        []*string{},
+				SecurityGroupIds: []*string{},
 			}
 			configUpdate = true
+		} else {
+			vpcConfig, ok := vpcConfigRaw[0].(map[string]interface{})
+			if !ok {
+				return errors.New("vpc_config is <nil>")
+			}
+
+			if vpcConfig != nil {
+				var subnetIds []*string
+				for _, id := range vpcConfig["subnet_ids"].(*schema.Set).List() {
+					subnetIds = append(subnetIds, aws.String(id.(string)))
+				}
+
+				var securityGroupIds []*string
+				for _, id := range vpcConfig["security_group_ids"].(*schema.Set).List() {
+					securityGroupIds = append(securityGroupIds, aws.String(id.(string)))
+				}
+
+				configReq.VpcConfig = &lambda.VpcConfig{
+					SubnetIds:        subnetIds,
+					SecurityGroupIds: securityGroupIds,
+				}
+				configUpdate = true
+			}
 		}
 	}
 
@@ -645,7 +653,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
 		err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-			_, err := conn.UpdateFunctionConfiguration(configReq)
+			resp, err := conn.UpdateFunctionConfiguration(configReq)
 			if err != nil {
 				log.Printf("[DEBUG] Received error modifying Lambda Function Configuration %s: %s", d.Id(), err)
 
