@@ -14,7 +14,6 @@ func resourceAwsOrganization() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsOrganizationCreate,
 		Read:   resourceAwsOrganizationRead,
-		Update: resourceAwsOrganizationUpdate,
 		Delete: resourceAwsOrganizationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -40,6 +39,7 @@ func resourceAwsOrganization() *schema.Resource {
 			"feature_set": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				Default:      "ALL",
 				ValidateFunc: validation.StringInSlice([]string{organizations.OrganizationFeatureSetAll, organizations.OrganizationFeatureSetConsolidatedBilling}, true),
 			},
@@ -64,7 +64,7 @@ func resourceAwsOrganizationCreate(d *schema.ResourceData, meta interface{}) err
 	d.SetId(*org.Id)
 	log.Printf("[INFO] Organization ID: %s", d.Id())
 
-	return resourceAwsOrganizationUpdate(d, meta)
+	return resourceAwsOrganizationRead(d, meta)
 }
 
 func resourceAwsOrganizationRead(d *schema.ResourceData, meta interface{}) error {
@@ -87,10 +87,6 @@ func resourceAwsOrganizationRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("master_account_email", org.Organization.MasterAccountEmail)
 	d.Set("master_account_id", org.Organization.MasterAccountId)
 	return nil
-}
-
-func resourceAwsOrganizationUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAwsOrganizationRead(d, meta)
 }
 
 func resourceAwsOrganizationDelete(d *schema.ResourceData, meta interface{}) error {
