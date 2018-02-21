@@ -180,12 +180,12 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.SourceTypeBitbucket,
 								codebuild.SourceTypeCodecommit,
 								codebuild.SourceTypeCodepipeline,
 								codebuild.SourceTypeGithub,
-								codebuild.SourceTypeS3,
-								codebuild.SourceTypeBitbucket,
 								codebuild.SourceTypeGithubEnterprise,
+								codebuild.SourceTypeS3,
 							}, false),
 						},
 					},
@@ -718,7 +718,7 @@ func resourceAwsCodeBuildProjectSourceAuthHash(v interface{}) int {
 
 func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVariable) []interface{} {
 
-	envVariables := []interface{}{}
+	var envVariables []interface{}
 	if len(environmentVariables) > 0 {
 		for _, env := range environmentVariables {
 			item := map[string]interface{}{}

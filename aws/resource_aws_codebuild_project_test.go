@@ -71,7 +71,6 @@ func TestAccAWSCodeBuildProject_vpc(t *testing.T) {
 					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
 					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "build_timeout", "50"),
 					resource.TestCheckNoResourceAttr("aws_codebuild_project.foo", "vpc_config"),
-					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "build_timeout", "50"),
 					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "source.3031565546.git_clone_depth", "1"),
 				),
 			},
@@ -98,8 +97,8 @@ func TestAccAWSCodeBuildProject_sourceAuth(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_sourceAuth(name, authResource, authType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "source.361463812.auth.2706882902.resource", authResource),
-					resource.TestCheckResourceAttr(resourceName, "source.361463812.auth.2706882902.type", authType),
+					resource.TestCheckResourceAttr(resourceName, "source.1060593600.auth.2706882902.resource", authResource),
+					resource.TestCheckResourceAttr(resourceName, "source.1060593600.auth.2706882902.type", authType),
 				),
 			},
 		},
@@ -404,6 +403,7 @@ resource "aws_codebuild_project" "foo" {
   source {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
+    git_clone_depth = 1
   }
 
   tags {
@@ -485,9 +485,8 @@ resource "aws_codebuild_project" "foo" {
   }
 
   source {
-    type            = "GITHUB"
-    location        = "https://github.com/hashicorp/packer.git"
-		git_clone_depth = 1
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
   }
 
   tags {
@@ -587,30 +586,30 @@ resource "aws_codebuild_project" "foo" {
 
 func testAccAWSCodeBuildProjectConfig_vpcResources() string {
 	return fmt.Sprintf(`
-	resource "aws_vpc" "codebuild_vpc" {
-		cidr_block = "10.0.0.0/16"
-	}
+  resource "aws_vpc" "codebuild_vpc" {
+    cidr_block = "10.0.0.0/16"
+  }
 
-	resource "aws_subnet" "codebuild_subnet" {
-		vpc_id     = "${aws_vpc.codebuild_vpc.id}"
-		cidr_block = "10.0.0.0/24"
-		tags {
-			Name = "tf-acc-codebuild-project-1"
-		}
-	}
+  resource "aws_subnet" "codebuild_subnet" {
+    vpc_id     = "${aws_vpc.codebuild_vpc.id}"
+    cidr_block = "10.0.0.0/24"
+    tags {
+      Name = "tf-acc-codebuild-project-1"
+    }
+  }
 
-	resource "aws_subnet" "codebuild_subnet_2" {
-		vpc_id     = "${aws_vpc.codebuild_vpc.id}"
-		cidr_block = "10.0.1.0/24"
-		tags {
-			Name = "tf-acc-codebuild-project-2"
-		}
-	}
+  resource "aws_subnet" "codebuild_subnet_2" {
+    vpc_id     = "${aws_vpc.codebuild_vpc.id}"
+    cidr_block = "10.0.1.0/24"
+    tags {
+      Name = "tf-acc-codebuild-project-2"
+    }
+  }
 
 
-	resource "aws_security_group" "codebuild_security_group" {
-		vpc_id = "${aws_vpc.codebuild_vpc.id}"
-	}
+  resource "aws_security_group" "codebuild_security_group" {
+    vpc_id = "${aws_vpc.codebuild_vpc.id}"
+  }
 `)
 }
 
