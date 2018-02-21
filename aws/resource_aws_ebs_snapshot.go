@@ -101,11 +101,16 @@ func resourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error 
 	res, err := conn.DescribeSnapshots(req)
 	if err != nil {
 		if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
-			log.Printf("Snapshot %q Not found - removing from state", d.Id())
+			log.Printf("[WARN] Snapshot %q Not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 		return err
+	}
+
+	if len(res.Snapshots) == 0 {
+		d.SetId("")
+		return nil
 	}
 
 	snapshot := res.Snapshots[0]
