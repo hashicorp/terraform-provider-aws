@@ -18,7 +18,7 @@ func TestAccAWSOrganization_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSOrganizationConfig(),
+				Config: testAccAWSOrganizationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSOrganizationExists("aws_organization.test", &organization),
 					resource.TestCheckResourceAttr("aws_organization.test", "feature_set", organizations.OrganizationFeatureSetAll),
@@ -107,11 +107,7 @@ func testAccCheckAWSOrganizationExists(n string, a *organizations.Organization) 
 	}
 }
 
-func testAccAWSOrganizationConfig() string {
-	return fmt.Sprintf(`
-resource "aws_organization" "test" {}
-`)
-}
+const testAccAWSOrganizationConfig = "resource \"aws_organization\" \"test\" {}"
 
 func testAccAWSOrganizationConfigConsolidatedBilling(feature_set string) string {
 	return fmt.Sprintf(`

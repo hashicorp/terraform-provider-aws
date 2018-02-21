@@ -15,7 +15,7 @@ func TestAccAWSOrganization_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSOrganizationConfig(),
+				Config: testAccAWSOrganizationConfig,
 			},
 
 			{
