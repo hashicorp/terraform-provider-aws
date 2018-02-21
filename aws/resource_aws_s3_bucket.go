@@ -2086,6 +2086,11 @@ func rulesHash(v interface{}) int {
 	if v, ok := m["status"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
+	if v, ok := m["destination"]; ok {
+		destination := v.(*schema.Set).List()
+		d := destination[0].(map[string]interface{})
+		buf.WriteString(fmt.Sprintf("%d-", destinationHash(d)))
+	}
 	return hashcode.String(buf.String())
 }
 
