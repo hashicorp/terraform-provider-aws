@@ -2,11 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
-	"log"
 )
 
 func resourceAwsOrganization() *schema.Resource {
