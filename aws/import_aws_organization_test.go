@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAWSOrganizationImportBasic(t *testing.T) {
+func TestAccAWSOrganization_importBasic(t *testing.T) {
 	resourceName := "aws_organization.test"
 
 	resource.Test(t, resource.TestCase{
