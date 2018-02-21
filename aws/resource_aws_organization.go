@@ -62,7 +62,6 @@ func resourceAwsOrganizationCreate(d *schema.ResourceData, meta interface{}) err
 
 	org := resp.Organization
 	d.SetId(*org.Id)
-	log.Printf("[INFO] Organization ID: %s", d.Id())
 
 	return resourceAwsOrganizationRead(d, meta)
 }
