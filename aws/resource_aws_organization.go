@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -72,7 +71,7 @@ func resourceAwsOrganizationRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[INFO] Reading Organization: %s", d.Id())
 	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})
 	if err != nil {
-		if orgerr, ok := err.(awserr.Error); ok && orgerr.Code() == "AWSOrganizationsNotInUseException" {
+		if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
 			log.Printf("[WARN] Organization does not exist, removing from state: %s", d.Id())
 			d.SetId("")
 			return nil
@@ -97,8 +96,6 @@ func resourceAwsOrganizationDelete(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return fmt.Errorf("Error deleting Organization: %s", err)
 	}
-
-	d.SetId("")
 
 	return nil
 }
