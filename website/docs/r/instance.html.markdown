@@ -173,7 +173,6 @@ Each `network_interface` block supports the following:
 
 * `device_index` - (Required) The integer index of the network interface attachment. Limited by instance type.
 * `network_interface_id` - (Required) The ID of the network interface to attach.
-* `delete_on_termination` - (Optional) Whether or not to delete the network interface on instance termination. Defaults to `false`.
 
 ### Example
 
