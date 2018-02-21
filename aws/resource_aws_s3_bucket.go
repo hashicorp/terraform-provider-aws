@@ -608,30 +608,27 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("bucket_domain_name", bucketDomainName(d.Get("bucket").(string)))
 
 	// Read the policy
-	if _, ok := d.GetOk("policy"); ok {
-
-		pol, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
-			return s3conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
-				Bucket: aws.String(d.Id()),
-			})
+	pol, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+		return s3conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
+			Bucket: aws.String(d.Id()),
 		})
-		log.Printf("[DEBUG] S3 bucket: %s, read policy: %v", d.Id(), pol)
-		if err != nil {
+	})
+	log.Printf("[DEBUG] S3 bucket: %s, read policy: %v", d.Id(), pol)
+	if err != nil {
+		if err := d.Set("policy", ""); err != nil {
+			return err
+		}
+	} else {
+		if v := pol.(*s3.GetBucketPolicyOutput).Policy; v == nil {
 			if err := d.Set("policy", ""); err != nil {
 				return err
 			}
 		} else {
-			if v := pol.(*s3.GetBucketPolicyOutput).Policy; v == nil {
-				if err := d.Set("policy", ""); err != nil {
-					return err
-				}
-			} else {
-				policy, err := structure.NormalizeJsonString(*v)
-				if err != nil {
-					return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
-				}
-				d.Set("policy", policy)
+			policy, err := structure.NormalizeJsonString(*v)
+			if err != nil {
+				return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
 			}
+			d.Set("policy", policy)
 		}
 	}
 
