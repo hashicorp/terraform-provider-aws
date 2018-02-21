@@ -85,14 +85,12 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"metric_interval_lower_bound": &schema.Schema{
-										Type:     schema.TypeFloat,
+										Type:     schema.TypeString,
 										Optional: true,
-										Default:  -1,
 									},
 									"metric_interval_upper_bound": &schema.Schema{
-										Type:     schema.TypeFloat,
+										Type:     schema.TypeString,
 										Optional: true,
-										Default:  -1,
 									},
 									"scaling_adjustment": &schema.Schema{
 										Type:     schema.TypeInt,
@@ -371,10 +369,6 @@ func expandAppautoscalingStepAdjustments(configured []interface{}) ([]*applicati
 		if data["metric_interval_lower_bound"] != "" {
 			bound := data["metric_interval_lower_bound"]
 			switch bound := bound.(type) {
-			case float64:
-				if bound >= 0 {
-					a.MetricIntervalLowerBound = aws.Float64(bound)
-				}
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
@@ -390,10 +384,6 @@ func expandAppautoscalingStepAdjustments(configured []interface{}) ([]*applicati
 		if data["metric_interval_upper_bound"] != "" {
 			bound := data["metric_interval_upper_bound"]
 			switch bound := bound.(type) {
-			case float64:
-				if bound >= 0 {
-					a.MetricIntervalUpperBound = aws.Float64(bound)
-				}
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
