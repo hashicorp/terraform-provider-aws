@@ -40,7 +40,7 @@ func resourceAwsOrganization() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      "ALL",
+				Default:      organizations.OrganizationFeatureSetAll,
 				ValidateFunc: validation.StringInSlice([]string{organizations.OrganizationFeatureSetAll, organizations.OrganizationFeatureSetConsolidatedBilling}, true),
 			},
 		},
