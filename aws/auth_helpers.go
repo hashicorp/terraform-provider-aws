@@ -223,21 +223,10 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 		assumeRoleProvider.Policy = aws.String(c.AssumeRolePolicy)
 	}
 
-	providers = []awsCredentials.Provider{assumeRoleProvider}
-
-	assumeRoleCreds := awsCredentials.NewChainCredentials(providers)
+	assumeRoleCreds := awsCredentials.NewCredentials(assumeRoleProvider)
 	_, err = assumeRoleCreds.Get()
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
-			return nil, fmt.Errorf("The role %q cannot be assumed.\n\n"+
-				"  There are a number of possible causes of this - the most common are:\n"+
-				"    * The credentials used in order to assume the role are invalid\n"+
-				"    * The credentials do not have appropriate permission to assume the role\n"+
-				"    * The role ARN is not valid",
-				c.AssumeRoleARN)
-		}
-
-		return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)
+		return nil, fmt.Errorf("The role %q cannot be assumed: %s", c.AssumeRoleARN, err)
 	}
 
 	return assumeRoleCreds, nil
