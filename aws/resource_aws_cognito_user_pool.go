@@ -688,7 +688,6 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		UserPoolId: aws.String(d.Id()),
 	}
 
-	//if d.HasChange
 	if v, ok := d.GetOk("admin_create_user_config"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -698,13 +697,10 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	//if d.HasChange("auto_verified_attributes") {
 	if v, ok := d.GetOk("auto_verified_attributes"); ok {
 		params.AutoVerifiedAttributes = expandStringList(v.(*schema.Set).List())
 	}
-	//}
 
-	//if d.HasChange("device_configuration") {
 	if v, ok := d.GetOk("device_configuration"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -713,7 +709,6 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 			params.DeviceConfiguration = expandCognitoUserPoolDeviceConfiguration(config)
 		}
 	}
-	//}
 
 	if v, ok := d.GetOk("email_configuration"); ok {
 		configs := v.([]interface{})
@@ -734,7 +729,6 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	//if d.HasChange("email_verification_subject") {
 	if v, ok := d.GetOk("email_verification_subject"); ok {
 
 		// This is to prevent removing default message since the API disallows it
@@ -743,9 +737,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		params.EmailVerificationSubject = aws.String(v.(string))
 	}
-	//}
 
-	//if d.HasChange("email_verification_message") {
 	if v, ok := d.GetOk("email_verification_message"); ok {
 		// This is to prevent removing default message since the API disallows it
 		if v.(string) == "" {
@@ -753,7 +745,6 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		params.EmailVerificationMessage = aws.String(v.(string))
 	}
-	//}
 
 	if v, ok := d.GetOk("lambda_config"); ok {
 		configs := v.([]interface{})
@@ -764,11 +755,9 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	//if d.HasChange("mfa_configuration") {
 	if v, ok := d.GetOk("mfa_configuration"); ok {
 		params.MfaConfiguration = aws.String(v.(string))
 	}
-	//}
 
 	if v, ok := d.GetOk("password_policy"); ok {
 		configs := v.([]interface{})
@@ -781,13 +770,10 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	//if d.HasChange("sms_authentication_message") {
 	if v, ok := d.GetOk("sms_authentication_message"); ok {
 		params.SmsAuthenticationMessage = aws.String(v.(string))
 	}
-	//}
 
-	//if d.HasChange("sms_configuration") {
 	if v, ok := d.GetOk("sms_configuration"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -796,9 +782,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 			params.SmsConfiguration = expandCognitoUserPoolSmsConfiguration(config)
 		}
 	}
-	//}
 
-	//if d.HasChange("verification_message_template") {
 	if v, ok := d.GetOk("verification_message_template"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -807,9 +791,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 			params.VerificationMessageTemplate = expandCognitoUserPoolVerificationMessageTemplate(config)
 		}
 	}
-	//}
 
-	//if d.HasChange("sms_verification_message") {
 	if v, ok := d.GetOk("sms_verification_message"); ok {
 		// This is to prevent removing default message since the API disallows it
 		if v.(string) == "" {
@@ -817,7 +799,6 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		params.SmsVerificationMessage = aws.String(v.(string))
 	}
-	//}
 
 	if v, ok := d.GetOk("tags"); ok {
 		params.UserPoolTags = tagsFromMapGeneric(v.(map[string]interface{}))
