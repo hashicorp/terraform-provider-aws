@@ -37,7 +37,7 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayStageExists("aws_api_gateway_stage.test", &conf),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "stage_name", "prod"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_enabled", "false"),
-					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.%", "2"),
 				),
 			},
 			resource.TestStep{
@@ -203,6 +203,7 @@ resource "aws_api_gateway_stage" "test" {
   }
   tags {
     Name = "tf-test"
+    ExtraName = "tf-test"
   }
 }
 `

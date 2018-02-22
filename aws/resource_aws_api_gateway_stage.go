@@ -190,7 +190,14 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 
 	d.Partial(true)
 
-	if tagErr := setTagsAPIGatewayStage(conn, d, "hoge"); tagErr != nil {
+	stageArn := arnString(
+		meta.(*AWSClient).partition,
+		meta.(*AWSClient).region,
+		"apigateway",
+		"",
+		fmt.Sprintf("/restapis/%s/stages/%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)),
+	)
+	if tagErr := setTagsAPIGatewayStage(conn, d, stageArn); tagErr != nil {
 		return tagErr
 	}
 	d.SetPartial("tags")
