@@ -181,6 +181,31 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				ValidateFunc: validateAwsCodeBuildTimeout,
 			},
 			"tags": tagsSchema(),
+			"vpc_config": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"vpc_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"subnets": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							MaxItems: 16,
+						},
+						"security_group_ids": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							MaxItems: 5,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -215,6 +240,11 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		params.TimeoutInMinutes = aws.Int64(int64(v.(int)))
 	}
 
+	if _, ok := d.GetOk("vpc_config"); ok {
+		vpcConfig := expandVpcConfig(d)
+		params.VpcConfig = vpcConfig
+	}
+
 	if v, ok := d.GetOk("tags"); ok {
 		params.Tags = tagsFromMapCodeBuild(v.(map[string]interface{}))
 	}
@@ -227,6 +257,10 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			// Work around eventual consistency of IAM
 			if isAWSErr(err, "InvalidInputException", "CodeBuild is not authorized to perform") {
+				return resource.RetryableError(err)
+			}
+
+			if isAWSErr(err, "InvalidInputException", "Not authorized to perform DescribeSecurityGroups") {
 				return resource.RetryableError(err)
 			}
 
@@ -326,6 +360,29 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 	return projectEnv
 }
 
+func expandVpcConfig(d *schema.ResourceData) *codebuild.VpcConfig {
+	configs := d.Get("vpc_config").(*schema.Set).List()
+	data := configs[0].(map[string]interface{})
+
+	vpcConfig := codebuild.VpcConfig{
+		VpcId: aws.String(data["vpc_id"].(string)),
+	}
+
+	var vpcConfigSubnets []*string
+	for _, v := range data["subnets"].([]interface{}) {
+		vpcConfigSubnets = append(vpcConfigSubnets, aws.String(v.(string)))
+	}
+	vpcConfig.Subnets = vpcConfigSubnets
+
+	var vpcSecurityGroupIds []*string
+	for _, s := range data["security_group_ids"].([]interface{}) {
+		vpcSecurityGroupIds = append(vpcSecurityGroupIds, aws.String(s.(string)))
+	}
+	vpcConfig.SecurityGroupIds = vpcSecurityGroupIds
+
+	return &vpcConfig
+}
+
 func expandProjectSource(d *schema.ResourceData) codebuild.ProjectSource {
 	configs := d.Get("source").(*schema.Set).List()
 	projectSource := codebuild.ProjectSource{}
@@ -392,6 +449,10 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	if err := d.Set("vpc_config", schema.NewSet(resourceAwsCodeBuildVpcConfigHash, flattenAwsCodebuildVpcConfig(project.VpcConfig))); err != nil {
+		return err
+	}
+
 	d.Set("description", project.Description)
 	d.Set("encryption_key", project.EncryptionKey)
 	d.Set("name", project.Name)
@@ -425,6 +486,11 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChange("artifacts") {
 		projectArtifacts := expandProjectArtifacts(d)
 		params.Artifacts = &projectArtifacts
+	}
+
+	if d.HasChange("vpc_config") {
+		vpcConfig := expandVpcConfig(d)
+		params.VpcConfig = vpcConfig
 	}
 
 	if d.HasChange("description") {
@@ -548,6 +614,26 @@ func flattenAwsCodebuildProjectSource(source *codebuild.ProjectSource) []interfa
 	return l
 }
 
+func flattenAwsCodebuildVpcConfig(vpcConfig *codebuild.VpcConfig) []interface{} {
+	values := map[string]interface{}{}
+
+	values["vpc_id"] = *vpcConfig.VpcId
+
+	var subnets []string
+	for _, s := range vpcConfig.Subnets {
+		subnets = append(subnets, *s)
+	}
+	values["subnets"] = subnets
+
+	var securityGroupIds []string
+	for _, s := range vpcConfig.SecurityGroupIds {
+		securityGroupIds = append(securityGroupIds, *s)
+	}
+	values["security_group_ids"] = securityGroupIds
+
+	return []interface{}{values}
+}
+
 func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
@@ -555,6 +641,25 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	artifactType := m["type"].(string)
 
 	buf.WriteString(fmt.Sprintf("%s-", artifactType))
+
+	return hashcode.String(buf.String())
+}
+
+func resourceAwsCodeBuildVpcConfigHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	buf.WriteString(fmt.Sprintf("%s-", m["vpc_id"].(string)))
+
+	for _, s := range m["subnets"].([]string) {
+		buf.WriteString(fmt.Sprintf("%s-", s))
+	}
+
+	if m["security_group_ids"] != nil {
+		for _, s := range m["security_group_ids"].([]string) {
+			buf.WriteString(fmt.Sprintf("%s-", s))
+		}
+	}
 
 	return hashcode.String(buf.String())
 }
