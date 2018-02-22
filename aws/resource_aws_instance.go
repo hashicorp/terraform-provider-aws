@@ -1411,6 +1411,8 @@ func readBlockDeviceMappingsFromConfig(
 		}
 	}
 
+	var ebs *ec2.EbsBlockDevice
+
 	if v, ok := d.GetOk("root_block_device"); ok {
 		vL := v.([]interface{})
 		if len(vL) > 1 {
@@ -1418,7 +1420,7 @@ func readBlockDeviceMappingsFromConfig(
 		}
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			ebs := &ec2.EbsBlockDevice{
+			ebs = &ec2.EbsBlockDevice{
 				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
 			}
 
@@ -1442,23 +1444,27 @@ func readBlockDeviceMappingsFromConfig(
 				log.Print("[WARN] IOPs is only valid for storate type io1 for EBS Volumes")
 			}
 
-			if dn, err := fetchRootDeviceName(d.Get("ami").(string), conn); err == nil {
-				if dn == nil {
-					return nil, fmt.Errorf(
-						"Expected 1 AMI for ID: %s, got none",
-						d.Get("ami").(string))
-				}
-
-				blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
-					DeviceName: dn,
-					Ebs:        ebs,
-				})
-			} else {
-				return nil, err
-			}
+		}
+	} else {
+		ebs = &ec2.EbsBlockDevice{
+			DeleteOnTermination: aws.Bool(true),
 		}
 	}
 
+	if dn, err := fetchRootDeviceName(d.Get("ami").(string), conn); err == nil {
+		if dn == nil {
+			return nil, fmt.Errorf(
+				"Expected 1 AMI for ID: %s, got none",
+				d.Get("ami").(string))
+		}
+
+		blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
+			DeviceName: dn,
+			Ebs:        ebs,
+		})
+	} else {
+		return nil, err
+	}
 	return blockDevices, nil
 }
 
