@@ -160,7 +160,7 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 		// Real AWS should reply to a simple metadata request.
 		// We check it actually does to ensure something else didn't just
 		// happen to be listening on the same IP:Port
-		metadataClient := ec2metadata.New(session.New(cfg))
+		metadataClient := ec2metadata.New(session.Must(session.NewSession(cfg)))
 		if metadataClient.Available() {
 			providers = append(providers, &ec2rolecreds.EC2RoleProvider{
 				Client: metadataClient,
@@ -208,7 +208,7 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 		S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle),
 	}
 
-	stsclient := sts.New(session.New(awsConfig))
+	stsclient := sts.New(session.Must(session.NewSession(awsConfig)))
 	assumeRoleProvider := &stscreds.AssumeRoleProvider{
 		Client:  stsclient,
 		RoleARN: c.AssumeRoleARN,

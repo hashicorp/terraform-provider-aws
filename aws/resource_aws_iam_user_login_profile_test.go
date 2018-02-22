@@ -153,10 +153,10 @@ func testDecryptPasswordAndTest(nProfile, nAccessKey, key string) resource.TestC
 			return fmt.Errorf("Error decrypting password: %s", err)
 		}
 
-		iamAsCreatedUserSession := session.New(&aws.Config{
+		iamAsCreatedUserSession := session.Must(session.NewSession(&aws.Config{
 			Region:      aws.String("us-west-2"),
 			Credentials: credentials.NewStaticCredentials(accessKeyId, secretAccessKey, ""),
-		})
+		}))
 		_, err = iamAsCreatedUserSession.Config.Credentials.Get()
 		if err != nil {
 			return fmt.Errorf("Error getting session credentials: %s", err)
