@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-func resourceAwsOrganization() *schema.Resource {
+func resourceAwsOrganizationsOrganization() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOrganizationCreate,
-		Read:   resourceAwsOrganizationRead,
-		Delete: resourceAwsOrganizationDelete,
+		Create: resourceAwsOrganizationsOrganizationCreate,
+		Read:   resourceAwsOrganizationsOrganizationRead,
+		Delete: resourceAwsOrganizationsOrganizationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -47,7 +47,7 @@ func resourceAwsOrganization() *schema.Resource {
 	}
 }
 
-func resourceAwsOrganizationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsOrganizationsOrganizationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).organizationsconn
 
 	createOpts := &organizations.CreateOrganizationInput{
@@ -63,10 +63,10 @@ func resourceAwsOrganizationCreate(d *schema.ResourceData, meta interface{}) err
 	org := resp.Organization
 	d.SetId(*org.Id)
 
-	return resourceAwsOrganizationRead(d, meta)
+	return resourceAwsOrganizationsOrganizationRead(d, meta)
 }
 
-func resourceAwsOrganizationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).organizationsconn
 
 	log.Printf("[INFO] Reading Organization: %s", d.Id())
@@ -88,7 +88,7 @@ func resourceAwsOrganizationRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsOrganizationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsOrganizationsOrganizationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).organizationsconn
 
 	log.Printf("[INFO] Deleting Organization: %s", d.Id())

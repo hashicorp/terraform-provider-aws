@@ -9,30 +9,30 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSOrganization_basic(t *testing.T) {
+func TestAccAWSOrganizationsOrganization_basic(t *testing.T) {
 	var organization organizations.Organization
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSOrganizationDestroy,
+		CheckDestroy: testAccCheckAWSOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSOrganizationConfig,
+				Config: testAccAWSOrganizationsOrganizationConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOrganizationExists("aws_organization.test", &organization),
-					resource.TestCheckResourceAttr("aws_organization.test", "feature_set", organizations.OrganizationFeatureSetAll),
-					resource.TestCheckResourceAttrSet("aws_organization.test", "arn"),
-					resource.TestCheckResourceAttrSet("aws_organization.test", "master_account_arn"),
-					resource.TestCheckResourceAttrSet("aws_organization.test", "master_account_email"),
-					resource.TestCheckResourceAttrSet("aws_organization.test", "feature_set"),
+					testAccCheckAWSOrganizationsOrganizationExists("aws_organizations_organization.test", &organization),
+					resource.TestCheckResourceAttr("aws_organizations_organization.test", "feature_set", organizations.OrganizationFeatureSetAll),
+					resource.TestCheckResourceAttrSet("aws_organizations_organization.test", "arn"),
+					resource.TestCheckResourceAttrSet("aws_organizations_organization.test", "master_account_arn"),
+					resource.TestCheckResourceAttrSet("aws_organizations_organization.test", "master_account_email"),
+					resource.TestCheckResourceAttrSet("aws_organizations_organization.test", "feature_set"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSOrganization_consolidatedBilling(t *testing.T) {
+func TestAccAWSOrganizationsOrganization_consolidatedBilling(t *testing.T) {
 	var organization organizations.Organization
 
 	feature_set := organizations.OrganizationFeatureSetConsolidatedBilling
@@ -40,24 +40,24 @@ func TestAccAWSOrganization_consolidatedBilling(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSOrganizationDestroy,
+		CheckDestroy: testAccCheckAWSOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSOrganizationConfigConsolidatedBilling(feature_set),
+				Config: testAccAWSOrganizationsOrganizationConfigConsolidatedBilling(feature_set),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOrganizationExists("aws_organization.test", &organization),
-					resource.TestCheckResourceAttr("aws_organization.test", "feature_set", feature_set),
+					testAccCheckAWSOrganizationsOrganizationExists("aws_organizations_organization.test", &organization),
+					resource.TestCheckResourceAttr("aws_organizations_organization.test", "feature_set", feature_set),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSOrganizationDestroy(s *terraform.State) error {
+func testAccCheckAWSOrganizationsOrganizationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_organization" {
+		if rs.Type != "aws_organizations_organization" {
 			continue
 		}
 
@@ -80,7 +80,7 @@ func testAccCheckAWSOrganizationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSOrganizationExists(n string, a *organizations.Organization) resource.TestCheckFunc {
+func testAccCheckAWSOrganizationsOrganizationExists(n string, a *organizations.Organization) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -110,11 +110,11 @@ func testAccCheckAWSOrganizationExists(n string, a *organizations.Organization) 
 	}
 }
 
-const testAccAWSOrganizationConfig = "resource \"aws_organization\" \"test\" {}"
+const testAccAWSOrganizationsOrganizationConfig = "resource \"aws_organizations_organization\" \"test\" {}"
 
-func testAccAWSOrganizationConfigConsolidatedBilling(feature_set string) string {
+func testAccAWSOrganizationsOrganizationConfigConsolidatedBilling(feature_set string) string {
 	return fmt.Sprintf(`
-resource "aws_organization" "test" {
+resource "aws_organizations_organization" "test" {
   feature_set = "%s"
 }
 `, feature_set)

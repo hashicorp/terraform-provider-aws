@@ -1,19 +1,19 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_organization
-sidebar_current: "docs-aws-resource-organization|"
+page_title: "AWS: aws_organizations_organization
+sidebar_current: "docs-aws-resource-organizations-organization|"
 description: |-
   Provides a resource to create an organization.
 ---
 
-# aws_organization
+# aws_organizations_organization
 
 Provides a resource to create an organization.
 
 ## Example Usage:
 
 ```hcl
-resource "aws_organization" "org" {
+resource "aws_organizations_organization" "org" {
   feature_set = "ALL"
 }
 ```
@@ -36,8 +36,8 @@ The following additional attributes are exported:
 
 ## Import
 
-The AWS organization can be imported by using the `account_id`, e.g.
+The AWS organization can be imported by using the `id`, e.g.
 
 ```
-$ terraform import aws_organization.my_org o-1234567
+$ terraform import aws_organizations_organization.my_org o-1234567
 ```
