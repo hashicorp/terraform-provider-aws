@@ -141,7 +141,6 @@ func findAwsLbListenerCertificate(certificateArn, listenerArn string, skipDefaul
 	}
 
 	for _, cert := range resp.Certificates {
-		// We don't care about the default certificate.
 		if skipDefault && *cert.IsDefault {
 			continue
 		}
