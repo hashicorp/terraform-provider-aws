@@ -386,6 +386,25 @@ func testAccCheckAWSCodeBuildProjectDestroy(s *terraform.State) error {
 	return fmt.Errorf("Default error in CodeBuild Test")
 }
 
+func TestAccAWSCodeBuildProject_buildBadgeUrlValidation(t *testing.T) {
+	name := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSCodebuildProjectConfig_buildBadgeUrlValidation(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.vanilla_codebuild_project"),
+					resource.TestMatchResourceAttr("aws_codebuild_project.vanilla_codebuild_project", "badge_url", regexp.MustCompile(`\b(https?).*\b`)),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSCodeBuildProjectConfig_basic(rName, vpcConfig, vpcResources string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "codebuild_role" {
@@ -738,6 +757,88 @@ resource "aws_codebuild_project" "foo" {
 `, rName, authResource, authType)
 }
 
+func testAccAWSCodebuildProjectConfig_buildBadgeUrlValidation(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "codebuild_role" {
+  name = "codebuild-role-%s"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "codebuild.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "codebuild_policy" {
+    name        = "codebuild-policy-%s"
+    path        = "/service-role/"
+    description = "Policy used in trust relationship with CodeBuild"
+    policy      = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Resource": [
+        "*"
+      ],
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_policy_attachment" "codebuild_policy_attachment" {
+  name       = "codebuild-policy-attachment-%s"
+  policy_arn = "${aws_iam_policy.codebuild_policy.arn}"
+  roles      = ["${aws_iam_role.codebuild_role.id}"]
+}
+
+resource "aws_codebuild_project" "vanilla_codebuild_project" {
+	name         = "test-project-%s"
+	badge_enabled = true
+  description  = "test_codebuild_project"
+
+  service_role = "${aws_iam_role.codebuild_role.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+
+    environment_variable = {
+      "name"  = "SOME_OTHERKEY"
+      "value" = "SOME_OTHERVALUE"
+    }
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+
+  tags {
+    "Environment" = "Test"
+  }
+}
+`, rName, rName, rName, rName)
 func hclVpcResources() string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "codebuild_vpc" {
