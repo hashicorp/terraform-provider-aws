@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -58,6 +59,22 @@ func testAccDataSourceAwsEipCheck(name string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccDataSourceAwsEip_tags(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccDataSourceAwsEip_tags_config(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_eip.test", "tags.%", "2"),
+				),
+			},
+		},
+	})
+}
+
 const testAccDataSourceAwsEipConfig = `
 provider "aws" {
   region = "us-west-2"
@@ -75,3 +92,26 @@ data "aws_eip" "by_public_ip" {
   public_ip = "${aws_eip.test.public_ip}"
 }
 `
+
+func testAccDataSourceAwsEip_tags_config(rInt int) string {
+	return fmt.Sprintf(
+		`
+provider "aws" {
+	region = "us-west-2"
+}
+
+resource "aws_eip" "test" {
+	tags {
+		test_tag = "hello tag"
+		random_tag = "%d"
+	}
+}
+	
+data "aws_eip" "by_tag" {
+	tags {
+		test_tag = "${aws_eip.test.tags["test_tag"]}"
+		random_tag = "%d"
+	}
+}
+`, rInt)
+}
