@@ -70,35 +70,39 @@ func resourceAwsSecurityGroupImportStatePerm(sg *ec2.SecurityGroup, ruleType str
 	var result []*schema.ResourceData
 
 	if perm.IpRanges != nil {
-		p := &ec2.IpPermission{
-			FromPort:      perm.FromPort,
-			IpProtocol:    perm.IpProtocol,
-			PrefixListIds: perm.PrefixListIds,
-			ToPort:        perm.ToPort,
-			IpRanges:      perm.IpRanges,
-		}
+		for _, pair := range perm.IpRanges {
+			p := &ec2.IpPermission{
+				FromPort:      perm.FromPort,
+				IpProtocol:    perm.IpProtocol,
+				PrefixListIds: perm.PrefixListIds,
+				ToPort:        perm.ToPort,
+				IpRanges:      []*ec2.IpRange{pair},
+			}
 
-		r, err := resourceAwsSecurityGroupImportStatePermPair(sg, ruleType, p)
-		if err != nil {
-			return nil, err
+			r, err := resourceAwsSecurityGroupImportStatePermPair(sg, ruleType, p)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, r)
 		}
-		result = append(result, r)
 	}
 
 	if perm.Ipv6Ranges != nil {
-		p := &ec2.IpPermission{
-			FromPort:      perm.FromPort,
-			IpProtocol:    perm.IpProtocol,
-			PrefixListIds: perm.PrefixListIds,
-			ToPort:        perm.ToPort,
-			Ipv6Ranges:    perm.Ipv6Ranges,
-		}
+		for _, pair := range perm.Ipv6Ranges {
+			p := &ec2.IpPermission{
+				FromPort:      perm.FromPort,
+				IpProtocol:    perm.IpProtocol,
+				PrefixListIds: perm.PrefixListIds,
+				ToPort:        perm.ToPort,
+				Ipv6Ranges:    []*ec2.Ipv6Range{pair},
+			}
 
-		r, err := resourceAwsSecurityGroupImportStatePermPair(sg, ruleType, p)
-		if err != nil {
-			return nil, err
+			r, err := resourceAwsSecurityGroupImportStatePermPair(sg, ruleType, p)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, r)
 		}
-		result = append(result, r)
 	}
 
 	if len(perm.UserIdGroupPairs) > 0 {
