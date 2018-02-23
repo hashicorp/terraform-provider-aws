@@ -21,6 +21,7 @@ ENHANCEMENTS:
 
 * data-source/aws_kms_alias: Always return `target_key_arn` [GH-3304]
 * resource/aws_autoscaling_policy: Add support for `target_tracking_configuration` [GH-2611]
+* resource/aws_codebuild_project: Support VPC configuration [GH-2547] [GH-3324]
 * resource/aws_cloudtrail: Add `event_selector` argument [GH-2258]
 * resource/aws_codedeploy_deployment_group: Validate DeploymentReady and InstanceReady `trigger_events` [GH-3412]
 * resource/aws_db_parameter_group: Validate underscore `name` during plan [GH-3396]
@@ -41,6 +42,7 @@ ENHANCEMENTS:
 * resource/aws_rds_cluster_instance: Support `availability_zone` [GH-2812]
 * resource/aws_rds_cluster_parameter_group: Validate underscore `name` during plan [GH-3396]
 * resource/aws_route53_record Add `allow_overwrite` argument [GH-2926]
+* resource/aws_s3_bucket Ssupport for SSE-KMS replication configuration [GH-2625]
 * resource/aws_spot_fleet_request: Validate `iam_fleet_role` as ARN during plan [GH-3431]
 * resource/aws_sqs_queue: Validate `name` during plan [GH-2837]
 * resource/aws_ssm_association: Allow updating `targets` [GH-2807]

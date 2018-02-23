@@ -23,11 +23,46 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildProjectConfig_basic(name),
+				Config: testAccAWSCodeBuildProjectConfig_basic(name, "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
 					resource.TestCheckResourceAttr(
 						"aws_codebuild_project.foo", "build_timeout", "5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_vpc(t *testing.T) {
+	name := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_basic(name,
+					hclVpcConfig("\"${aws_subnet.codebuild_subnet.id}\",\"${aws_subnet.codebuild_subnet_2.id}\""), hclVpcResources()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_codebuild_project.foo", "build_timeout", "5"),
+					resource.TestCheckResourceAttrSet("aws_codebuild_project.foo", "vpc_config.0.vpc_id"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "vpc_config.0.subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "vpc_config.0.security_group_ids.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_basic(name, hclVpcConfig("\"${aws_subnet.codebuild_subnet.id}\""), hclVpcResources()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_codebuild_project.foo", "build_timeout", "5"),
+					resource.TestCheckResourceAttrSet("aws_codebuild_project.foo", "vpc_config.0.vpc_id"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "vpc_config.0.subnets.#", "1"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "vpc_config.0.security_group_ids.#", "1"),
 				),
 			},
 			{
@@ -36,6 +71,7 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
 					resource.TestCheckResourceAttr(
 						"aws_codebuild_project.foo", "build_timeout", "50"),
+					resource.TestCheckNoResourceAttr("aws_codebuild_project.foo", "vpc_config"),
 				),
 			},
 		},
@@ -369,7 +405,7 @@ func TestAccAWSCodeBuildProject_buildBadgeUrlValidation(t *testing.T) {
 	})
 }
 
-func testAccAWSCodeBuildProjectConfig_basic(rName string) string {
+func testAccAWSCodeBuildProjectConfig_basic(rName, vpcConfig, vpcResources string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "codebuild_role" {
   name = "codebuild-role-%s"
@@ -390,10 +426,10 @@ EOF
 }
 
 resource "aws_iam_policy" "codebuild_policy" {
-    name        = "codebuild-policy-%s"
-    path        = "/service-role/"
-    description = "Policy used in trust relationship with CodeBuild"
-    policy      = <<POLICY
+  name        = "codebuild-policy-%s"
+  path        = "/service-role/"
+  description = "Policy used in trust relationship with CodeBuild"
+  policy      = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -407,6 +443,19 @@ resource "aws_iam_policy" "codebuild_policy" {
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInterface",
+        "ec2:DescribeDhcpOptions",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DeleteNetworkInterface",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeVpcs"
+      ],
+      "Resource": "*"
     }
   ]
 }
@@ -420,10 +469,10 @@ resource "aws_iam_policy_attachment" "codebuild_policy_attachment" {
 }
 
 resource "aws_codebuild_project" "foo" {
-  name         = "test-project-%s"
-  description  = "test_codebuild_project"
-  build_timeout      = "5"
-  service_role = "${aws_iam_role.codebuild_role.arn}"
+  name          = "test-project-%s"
+  description   = "test_codebuild_project"
+  build_timeout = "5"
+  service_role  = "${aws_iam_role.codebuild_role.arn}"
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -448,8 +497,10 @@ resource "aws_codebuild_project" "foo" {
   tags {
     "Environment" = "Test"
   }
+	%s
 }
-`, rName, rName, rName, rName)
+%s
+`, rName, rName, rName, rName, vpcConfig, vpcResources)
 }
 
 func testAccAWSCodeBuildProjectConfig_basicUpdated(rName string) string {
@@ -788,4 +839,39 @@ resource "aws_codebuild_project" "vanilla_codebuild_project" {
   }
 }
 `, rName, rName, rName, rName)
+func hclVpcResources() string {
+	return fmt.Sprintf(`
+	resource "aws_vpc" "codebuild_vpc" {
+		cidr_block = "10.0.0.0/16"
+	}
+
+	resource "aws_subnet" "codebuild_subnet" {
+		vpc_id     = "${aws_vpc.codebuild_vpc.id}"
+		cidr_block = "10.0.0.0/24"
+	}
+
+	resource "aws_subnet" "codebuild_subnet_2" {
+		vpc_id     = "${aws_vpc.codebuild_vpc.id}"
+		cidr_block = "10.0.1.0/24"
+	}
+
+
+	resource "aws_security_group" "codebuild_security_group" {
+		vpc_id = "${aws_vpc.codebuild_vpc.id}"
+	}
+`)
+}
+
+func hclVpcConfig(subnets string) string {
+	return fmt.Sprintf(`
+  vpc_config {
+    vpc_id = "${aws_vpc.codebuild_vpc.id}"
+
+    subnets = [ %s ]
+
+    security_group_ids = [
+      "${aws_security_group.codebuild_security_group.id}"
+    ]
+  }
+`, subnets)
 }
