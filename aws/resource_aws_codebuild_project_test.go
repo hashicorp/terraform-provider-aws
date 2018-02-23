@@ -388,8 +388,9 @@ resource "aws_codebuild_project" "foo" {
     type         = "LINUX_CONTAINER"
 
     environment_variable = {
-      "name"  = "SOME_KEY"
-      "value" = "SOME_VALUE"
+      name  = "SOME_KEY"
+      value = "SOME_VALUE"
+      type = "PLAINTEXT"
     }
   }
 
@@ -471,8 +472,9 @@ resource "aws_codebuild_project" "foo" {
     type         = "LINUX_CONTAINER"
 
     environment_variable = {
-      "name"  = "SOME_OTHERKEY"
-      "value" = "SOME_OTHERVALUE"
+      name  = "SOME_OTHERKEY"
+      value = "SOME_OTHERVALUE"
+      type = "PARAMETER_STORE"
     }
   }
 

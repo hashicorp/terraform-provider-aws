@@ -639,6 +639,9 @@ func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVari
 			item := map[string]interface{}{}
 			item["name"] = *env.Name
 			item["value"] = *env.Value
+			if env.Type != nil {
+				item["type"] = *env.Type
+			}
 			envVariables = append(envVariables, item)
 		}
 	}
