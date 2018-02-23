@@ -6,16 +6,16 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAWSOrganizationsOrganization_importBasic(t *testing.T) {
+func testAccAwsOrganizationsOrganization_importBasic(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSOrganizationsOrganizationDestroy,
+		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSOrganizationsOrganizationConfig,
+				Config: testAccAwsOrganizationsOrganizationConfig,
 			},
 
 			{
