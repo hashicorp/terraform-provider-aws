@@ -580,13 +580,13 @@ itself can be deleted.
 
 The following Terraform resource types are used in this tutorial:
 
-* [`aws_lambda_function`](/docs/providers/aws/r/aws_lambda_function.html)
-* [`aws_lambda_permission`](/docs/providers/aws/r/aws_lambda_permission.html)
-* [`aws_api_gateway_rest_api`](/docs/providers/aws/r/aws_api_gateway_rest_api.html)
-* [`aws_api_gateway_resource`](/docs/providers/aws/r/aws_api_gateway_resource.html)
-* [`aws_api_gateway_method`](/docs/providers/aws/r/aws_api_gateway_method.html)
-* [`aws_api_gateway_integration`](/docs/providers/aws/r/aws_api_gateway_integration.html)
-* [`aws_iam_role`](/docs/providers/aws/r/aws_iam_role.html)
+* [`aws_lambda_function`](/docs/providers/aws/r/lambda_function.html)
+* [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
+* [`aws_api_gateway_rest_api`](/docs/providers/aws/r/api_gateway_rest_api.html)
+* [`aws_api_gateway_resource`](/docs/providers/aws/r/api_gateway_resource.html)
+* [`aws_api_gateway_method`](/docs/providers/aws/r/api_gateway_method.html)
+* [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)
+* [`aws_iam_role`](/docs/providers/aws/r/iam_role.html)
 
 The reference page for each resource type provides full details on all of its
 supported arguments and exported attributes.
