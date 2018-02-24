@@ -39,6 +39,65 @@ data "aws_lb_listener" "selected443" {
   load_balancer_arn = "${data.aws_lb.selected.arn}"
   port = 443
 }
+
+# register target group to listener
+
+data "aws_vpc" "default" {
+  default = true
+}
+
+resource "aws_lb_target_group" "core" {
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "${data.aws_vpc.default.id}"
+}
+
+resource "aws_lb_listener_rule" "core" {
+  listener_arn = "${data.aws_lb_listener.selected443.arn}"
+  priority     = "${data.aws_lb_listener.selected443.next_rule_priority}"
+
+  action {
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.core.arn}"
+  }
+
+  condition {
+    field  = "path-pattern"
+    values = ["/core/*"]
+  }
+
+  # ignore priority change since it's dynamic
+  lifecycle {
+    ignore_changes = ["priority"]
+  }
+}
+
+resource "aws_lb_target_group" "side" {
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "${data.aws_vpc.default.id}"
+}
+
+resource "aws_lb_listener_rule" "side" {
+  listener_arn = "${data.aws_lb_listener.selected443.arn}"
+  priority     = "${data.aws_lb_listener.selected443.last_rule_priority + 11}"
+
+  action {
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.side.arn}"
+  }
+
+  condition {
+    field  = "path-pattern"
+    values = ["/side/*"]
+  }
+
+  # ignore priority change since it's dynamic
+  lifecycle {
+    ignore_changes = ["priority"]
+  }
+}
+
 ```
 
 ## Argument Reference
@@ -51,5 +110,9 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-See the [LB Listener Resource](/docs/providers/aws/r/lb_listener.html) for details
-on the returned attributes - they are identical.
+See the [LB Listener Resource](/docs/providers/aws/r/lb_listener.html) for details on the returned attributes - they are identical.
+
+Additionally, the following attributes are exported:
+
+* `last_rule_priority` - The last used rule priority for the listener.
+* `next_rule_priority` - The next available rule priority for the listener.
