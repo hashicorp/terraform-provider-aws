@@ -39,6 +39,7 @@ ENHANCEMENTS:
 * resource/aws_lambda_function: Recompute `version` and `qualified_arn` attributes on publish [GH-3032]
 * resource/aws_lb_target_group: Allow stickiness block set to false with TCP [GH-2954]
 * resource/aws_lb_listener_rule: Validate `priority` over 50000 [GH-3379]
+* resource/aws_lb_listener_rule: Make `priority` argument optional [GH-3219]
 * resource/aws_rds_cluster: Add `hosted_zone_id` attribute [GH-3267]
 * resource/aws_rds_cluster: Add support for `source_region` (encrypted cross-region replicas) [GH-3415]
 * resource/aws_rds_cluster_instance: Support `availability_zone` [GH-2812]
