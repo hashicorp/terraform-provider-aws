@@ -407,6 +407,7 @@ func TestAccAWSEcsService_withAlb(t *testing.T) {
 				Config: testAccAWSEcsServiceWithAlb(clusterName, tdName, roleName, policyName, tgName, lbName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.with_alb"),
+					resource.TestCheckResourceAttr("aws_ecs_service.with_alb", "load_balancer.#", "1"),
 				),
 			},
 		},
@@ -631,7 +632,7 @@ func testAccCheckAWSEcsServiceExists(name string) resource.TestCheckFunc {
 func testAccAWSEcsService(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_ecs_task_definition" "mongo" {
@@ -661,7 +662,7 @@ resource "aws_ecs_service" "mongo" {
 func testAccAWSEcsServiceModified(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_ecs_task_definition" "mongo" {
@@ -691,7 +692,7 @@ resource "aws_ecs_service" "mongo" {
 func testAccAWSEcsServiceWithInterchangeablePlacementStrategy(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_ecs_task_definition" "mongo" {
@@ -715,8 +716,8 @@ resource "aws_ecs_service" "mongo" {
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
   placement_strategy {
-  	  field = "host"
-	  type = "spread"
+    field = "host"
+    type = "spread"
   }
 }
 `, clusterName, tdName, svcName)
@@ -725,7 +726,7 @@ resource "aws_ecs_service" "mongo" {
 func testAccAWSEcsServiceWithPlacementStrategy(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_ecs_task_definition" "mongo" {
@@ -749,8 +750,8 @@ resource "aws_ecs_service" "mongo" {
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
   placement_strategy {
-	type = "binpack"
-	field = "memory"
+    type = "binpack"
+    field = "memory"
   }
 }
 `, clusterName, tdName, svcName)
@@ -758,42 +759,42 @@ resource "aws_ecs_service" "mongo" {
 
 func testAccAWSEcsServiceWithPlacementConstraint(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
-	resource "aws_ecs_cluster" "default" {
-		name = "%s"
-	}
+resource "aws_ecs_cluster" "default" {
+  name = "%s"
+}
 
-	resource "aws_ecs_task_definition" "mongo" {
-	  family = "%s"
-	  container_definitions = <<DEFINITION
-	[
-	  {
-	    "cpu": 128,
-	    "essential": true,
-	    "image": "mongo:latest",
-	    "memory": 128,
-	    "name": "mongodb"
-	  }
-	]
-	DEFINITION
-	}
+resource "aws_ecs_task_definition" "mongo" {
+  family = "%s"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
 
-	resource "aws_ecs_service" "mongo" {
-	  name = "%s"
-	  cluster = "${aws_ecs_cluster.default.id}"
-	  task_definition = "${aws_ecs_task_definition.mongo.arn}"
-	  desired_count = 1
-	  placement_constraints {
-		type = "memberOf"
-		expression = "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]"
-	  }
-	}
+resource "aws_ecs_service" "mongo" {
+  name = "%s"
+  cluster = "${aws_ecs_cluster.default.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count = 1
+  placement_constraints {
+    type = "memberOf"
+    expression = "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]"
+  }
+}
 	`, clusterName, tdName, svcName)
 }
 
 func testAccAWSEcsServiceWithPlacementConstraintEmptyExpression(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "%s"
+  name = "%s"
 }
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
@@ -815,7 +816,7 @@ resource "aws_ecs_service" "mongo" {
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
   placement_constraints {
-	  type = "distinctInstance"
+    type = "distinctInstance"
   }
 }
 `, clusterName, tdName, svcName)
@@ -831,7 +832,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
   tags {
-  	Name = "terraform-testacc-ecs-service-with-launch-type-fargate"
+    Name = "terraform-testacc-ecs-service-with-launch-type-fargate"
   }
 }
 
@@ -1003,9 +1004,9 @@ resource "aws_lb_target_group" "test" {
 }
 
 resource "aws_lb" "main" {
-  name            = "%s"
-  internal        = true
-  subnets         = ["${aws_subnet.main.*.id}"]
+  name     = "%s"
+  internal = true
+  subnets  = ["${aws_subnet.main.*.id}"]
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -1015,7 +1016,7 @@ resource "aws_lb_listener" "front_end" {
 
   default_action {
     target_group_arn = "${aws_lb_target_group.test.id}"
-    type = "forward"
+    type             = "forward"
   }
 }
 
@@ -1045,7 +1046,7 @@ resource "aws_ecs_service" "with_alb" {
 func testAccAWSEcsService_withIamRole(clusterName, tdName, roleName, policyName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "main" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_ecs_task_definition" "ghost" {
@@ -1141,7 +1142,7 @@ resource "aws_ecs_service" "ghost" {
 func testAccAWSEcsServiceWithDeploymentValues(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_ecs_task_definition" "mongo" {
@@ -1173,7 +1174,7 @@ func tpl_testAccAWSEcsService_withLbChanges(clusterName, tdName, image,
 	instancePort int, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "main" {
-	name = "%[1]s"
+  name = "%[1]s"
 }
 
 resource "aws_ecs_task_definition" "with_lb_changes" {
@@ -1279,7 +1280,7 @@ func testAccAWSEcsService_withLbChanges_modified(clusterName, tdName, roleName, 
 func testAccAWSEcsServiceWithFamilyAndRevision(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_ecs_task_definition" "jenkins" {
@@ -1308,7 +1309,7 @@ resource "aws_ecs_service" "jenkins" {
 func testAccAWSEcsServiceWithFamilyAndRevisionModified(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_ecs_task_definition" "jenkins" {
@@ -1337,7 +1338,7 @@ resource "aws_ecs_service" "jenkins" {
 func testAccAWSEcsServiceWithRenamedCluster(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "%s"
+  name = "%s"
 }
 resource "aws_ecs_task_definition" "ghost" {
   family = "%s"
@@ -1365,7 +1366,7 @@ resource "aws_ecs_service" "ghost" {
 func testAccAWSEcsServiceWithEcsClusterName(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_ecs_task_definition" "jenkins" {
@@ -1398,9 +1399,9 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
-	tags {
-		Name = "terraform-testacc-ecs-service-with-alb"
-	}
+  tags {
+    Name = "terraform-testacc-ecs-service-with-alb"
+  }
 }
 
 resource "aws_subnet" "main" {
@@ -1543,7 +1544,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
   tags {
-  	Name = "terraform-testacc-ecs-service-with-network-config"
+    Name = "terraform-testacc-ecs-service-with-network-config"
   }
 }
 
@@ -1559,7 +1560,7 @@ resource "aws_security_group" "allow_all_a" {
   description = "Allow all inbound traffic"
   vpc_id      = "${aws_vpc.main.id}"
 
-	ingress {
+  ingress {
     protocol = "6"
     from_port = 80
     to_port = 8000
@@ -1572,7 +1573,7 @@ resource "aws_security_group" "allow_all_b" {
   description = "Allow all inbound traffic"
   vpc_id      = "${aws_vpc.main.id}"
 
-	ingress {
+  ingress {
     protocol = "6"
     from_port = 80
     to_port = 8000
@@ -1581,12 +1582,12 @@ resource "aws_security_group" "allow_all_b" {
 }
 
 resource "aws_ecs_cluster" "main" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
-	network_mode = "awsvpc"
+  network_mode = "awsvpc"
   container_definitions = <<DEFINITION
 [
   {
@@ -1605,10 +1606,10 @@ resource "aws_ecs_service" "main" {
   cluster = "${aws_ecs_cluster.main.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
-	network_configuration {
-		security_groups = [%s]
-		subnets = ["${aws_subnet.main.*.id}"]
-	}
+  network_configuration {
+    security_groups = [%s]
+    subnets = ["${aws_subnet.main.*.id}"]
+  }
 }
 `, sg1Name, sg2Name, clusterName, tdName, svcName, securityGroups)
 }
