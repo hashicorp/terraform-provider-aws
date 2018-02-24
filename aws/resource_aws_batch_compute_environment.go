@@ -366,7 +366,7 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 		input.ServiceRole = aws.String(d.Get("service_role").(string))
 	}
 	if d.HasChange("state") {
-		input.ServiceRole = aws.String(d.Get("state").(string))
+		input.State = aws.String(d.Get("state").(string))
 	}
 
 	if d.HasChange("compute_resources") {
