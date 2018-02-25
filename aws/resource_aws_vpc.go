@@ -43,7 +43,7 @@ func resourceAwsVpc() *schema.Resource {
 			"enable_dns_hostnames": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 
 			"enable_dns_support": {
