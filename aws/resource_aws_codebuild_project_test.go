@@ -44,7 +44,7 @@ func TestAccAWSCodeBuildProject_vpc(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_basic(name,
-					hclVpcConfig("\"${aws_subnet.codebuild_subnet.id}\",\"${aws_subnet.codebuild_subnet_2.id}\""), hclVpcResources()),
+					testAccAWSCodeBuildProjectConfig_vpcConfig("\"${aws_subnet.codebuild_subnet.id}\",\"${aws_subnet.codebuild_subnet_2.id}\""), testAccAWSCodeBuildProjectConfig_vpcResources()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
 					resource.TestCheckResourceAttr(
@@ -55,7 +55,7 @@ func TestAccAWSCodeBuildProject_vpc(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCodeBuildProjectConfig_basic(name, hclVpcConfig("\"${aws_subnet.codebuild_subnet.id}\""), hclVpcResources()),
+				Config: testAccAWSCodeBuildProjectConfig_basic(name, testAccAWSCodeBuildProjectConfig_vpcConfig("\"${aws_subnet.codebuild_subnet.id}\""), testAccAWSCodeBuildProjectConfig_vpcResources()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
 					resource.TestCheckResourceAttr(
@@ -738,7 +738,7 @@ resource "aws_codebuild_project" "foo" {
 `, rName, authResource, authType)
 }
 
-func hclVpcResources() string {
+func testAccAWSCodeBuildProjectConfig_vpcResources() string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "codebuild_vpc" {
 		cidr_block = "10.0.0.0/16"
@@ -761,7 +761,7 @@ func hclVpcResources() string {
 `)
 }
 
-func hclVpcConfig(subnets string) string {
+func testAccAWSCodeBuildProjectConfig_vpcConfig(subnets string) string {
 	return fmt.Sprintf(`
   vpc_config {
     vpc_id = "${aws_vpc.codebuild_vpc.id}"
