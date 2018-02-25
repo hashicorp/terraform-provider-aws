@@ -55,7 +55,13 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 
 	eip := resp.Addresses[0]
 
-	d.SetId(*eip.AllocationId)
+	if *eip.Domain == "vpc" {
+		d.SetId(*eip.AllocationId)
+	} else {
+		log.Printf("[DEBUG] Reading EIP, has no AllocationId, this means we have a Classic EIP, the id will also be the public ip : %s", req)
+		d.SetId(*eip.PublicIp)
+	}
+
 	d.Set("public_ip", eip.PublicIp)
 
 	return nil
