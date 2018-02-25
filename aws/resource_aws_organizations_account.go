@@ -41,21 +41,25 @@ func resourceAwsOrganizationsAccount() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
+				ForceNew:     true,
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
 			"email": {
+				ForceNew:     true,
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateAwsOrganizationsAccountEmail,
 			},
 			"iam_user_access_to_billing": {
+				ForceNew:     true,
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{organizations.IAMUserAccessToBillingAllow, organizations.IAMUserAccessToBillingDeny}, true),
 			},
 			"role_name": {
+				ForceNew:     true,
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateAwsOrganizationsAccountRoleName,
