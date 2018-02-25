@@ -217,6 +217,29 @@ func TestAccAWSBatchComputeEnvironment_createSpotWithoutBidPercentage(t *testing
 	})
 }
 
+func TestAccAWSBatchComputeEnvrironment_stateChangeDoesNotOverwriteBatchServiceRole(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentWithStateChange(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "state", "DISABLED"),
+					resource.TestCheckResourceAttr(
+						"aws_batch_compute_environment.ec2", "service_role",
+						fmt.Sprintf("tf_acc_test_batch_svc_role_%d", rInt)),
+				),
+			},
+		},
+	})
+
+}
+
 func testAccCheckBatchComputeEnvironmentDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).batchconn
 
@@ -613,4 +636,31 @@ resource "aws_batch_compute_environment" "ec2" {
   depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 `, rInt)
+}
+
+func testAccAWSBatchComputeEnvironmentWithStateChange(rInt int) string {
+	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
+		resource "aws_batch_compute_environment" "ec2" {
+			compute_environment_name = "tf_acc_test_updated_%d"
+			compute_resources {
+				instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+				instance_type = [
+					"c4.large",
+				]
+				max_vcpus = 16
+				min_vcpus = 0
+				security_group_ids = [
+					"${aws_security_group.test_acc.id}"
+				]
+				subnets = [
+					"${aws_subnet.test_acc.id}"
+				]
+				type = "EC2"
+			}
+			service_role = "${aws_iam_role.aws_batch_service_role.arn}"
+			type = "MANAGED"
+			state = "DISABLED"
+			depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+		}
+		`, rInt)
 }
