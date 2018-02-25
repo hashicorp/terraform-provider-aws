@@ -14,6 +14,7 @@ func dataSourceAwsEip() *schema.Resource {
 		Read: dataSourceAwsEipRead,
 
 		Schema: map[string]*schema.Schema{
+			"filter": dataSourceFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -31,14 +32,26 @@ func dataSourceAwsEip() *schema.Resource {
 func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
+	filters, filtersOk := d.GetOk("filter")
+	id, idOk := d.GetOk("id")
+	publicIP, publicIPOk := d.GetOk("public_ip")
+
+	if (idOk || publicIPOk) && filtersOk {
+		return fmt.Errorf("filter cannot be used when id or public_ip is set")
+	}
+
 	req := &ec2.DescribeAddressesInput{}
 
-	if id, ok := d.GetOk("id"); ok {
+	if idOk {
 		req.AllocationIds = []*string{aws.String(id.(string))}
 	}
 
-	if public_ip := d.Get("public_ip"); public_ip != "" {
-		req.PublicIps = []*string{aws.String(public_ip.(string))}
+	if publicIPOk {
+		req.PublicIps = []*string{aws.String(publicIP.(string))}
+	}
+
+	if filtersOk {
+		req.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Reading EIP: %s", req)

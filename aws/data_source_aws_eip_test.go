@@ -39,6 +39,21 @@ func TestAccDataSourceAwsEip_vpc(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAwsEip_filter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccDataSourceAwsEipFilterConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAwsEipCheck("data.aws_eip.by_filter", "aws_eip.test"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSourceAwsEipCheck(data_path string, resource_path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[data_path]
@@ -101,5 +116,26 @@ data "aws_eip" "test_vpc_by_id" {
 
 data "aws_eip" "test_vpc_by_public_ip" {
   public_ip = "${aws_eip.test_vpc.public_ip}"
+}
+`
+
+const testAccDataSourceAwsEipFilterConfig = `
+provider "aws" {
+  region = "us-west-2"
+}
+
+resource "aws_eip" "test" {
+	vpc = true
+
+	tags {
+    	Name = "testeip"
+  	}
+}
+
+data "aws_eip" "by_filter" {
+  filter {
+    name   = "tag:Name"
+    values = ["${aws_eip.test.tags.Name}"]
+  }
 }
 `
