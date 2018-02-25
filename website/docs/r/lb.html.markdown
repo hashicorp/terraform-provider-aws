@@ -17,10 +17,11 @@ Provides a Load Balancer resource.
 ```hcl
 # Create a new application load balancer
 resource "aws_lb" "test" {
-  name            = "test-lb-tf"
-  internal        = false
-  security_groups = ["${aws_security_group.lb_sg.id}"]
-  subnets         = ["${aws_subnet.public.*.id}"]
+  name               = "test-lb-tf"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = ["${aws_security_group.lb_sg.id}"]
+  subnets            = ["${aws_subnet.public.*.id}"]
 
   enable_deletion_protection = true
 
@@ -38,7 +39,24 @@ resource "aws_lb" "test" {
 
 ```hcl
 # Create a new network load balancer
+resource "aws_lb" "test" {
+  name               = "test-lb-tf"
+  internal           = false
+  load_balancer_type = "network"
+  subnets            = ["${aws_subnet.public.*.id}"]
 
+  enable_deletion_protection = true
+
+  access_logs {
+    bucket  = "${aws_s3_bucket.lb_logs.bucket}"
+    prefix  = "test-lb"
+    enabled = true
+  }
+
+  tags {
+    Environment = "production"
+  }
+}
 ```
 
 ## Argument Reference
@@ -57,7 +75,7 @@ Terraform will autogenerate a name beginning with `tf-lb`.
 cannot be updated for Load Balancers of type `network`. Changing this value 
 for load balancers of type `network` will force a recreation of the resource. 
 * `subnet_mapping` - (Optional) A subnet mapping block as documented below.
-* `idle_timeout` - (Optional) The time in seconds that the connection is allowed to be idle. Default: 60.
+* `idle_timeout` - (Optional) The time in seconds that the connection is allowed to be idle. Only valid for Load Balancers of type `application`. Default: 60.
 * `enable_deletion_protection` - (Optional) If true, deletion of the load balancer will be disabled via
    the AWS API. This will prevent Terraform from deleting the load balancer. Defaults to `false`.
 * `enable_cross_zone_load_balancing` - (Optional) If true, cross-zone load balancing of the load balancer will be enabled.
