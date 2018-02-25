@@ -51,11 +51,11 @@ func testAccCheckAwsOrganizationsAccountDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeAccount(params)
 
-		if err != nil || resp == nil {
-			return nil
+		if err != nil {
+			return err
 		}
 
-		if resp.Account != nil {
+		if resp == nil && resp.Account != nil {
 			return fmt.Errorf("Bad: Account still exists: %q", rs.Primary.ID)
 		}
 	}
@@ -78,12 +78,12 @@ func testAccCheckAwsOrganizationsAccountExists(n string, a *organizations.Accoun
 
 		resp, err := conn.DescribeAccount(params)
 
-		if err != nil || resp == nil {
-			return nil
+		if err != nil {
+			return err
 		}
 
-		if resp.Account == nil {
-			return fmt.Errorf("Bad: Account %q does not exist", rs.Primary.ID)
+		if resp == nil || resp.Account == nil {
+			return fmt.Errorf("Account %q does not exist", rs.Primary.ID)
 		}
 
 		a = resp.Account
