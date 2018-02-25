@@ -12903,8 +12903,6 @@ type CreateDBInstanceReadReplicaInput struct {
 	// of your replica in another Availability Zone for failover support for the
 	// replica. Creating your Read Replica as a Multi-AZ DB instance is independent
 	// of whether the source database is a Multi-AZ DB instance.
-	//
-	// Currently, you can't create PostgreSQL Read Replicas as Multi-AZ DB instances.
 	MultiAZ *bool `type:"boolean"`
 
 	// The option group the DB instance is associated with. If omitted, the default
@@ -14842,6 +14840,9 @@ type DBEngineVersion struct {
 	// log types specified by ExportableLogTypes to CloudWatch Logs.
 	SupportsLogExportsToCloudwatchLogs *bool `type:"boolean"`
 
+	// Indicates whether the database engine version supports read replicas.
+	SupportsReadReplica *bool `type:"boolean"`
+
 	// A list of engine versions that this database engine version can be upgraded
 	// to.
 	ValidUpgradeTarget []*UpgradeTarget `locationNameList:"UpgradeTarget" type:"list"`
@@ -14914,6 +14915,12 @@ func (s *DBEngineVersion) SetSupportedTimezones(v []*Timezone) *DBEngineVersion 
 // SetSupportsLogExportsToCloudwatchLogs sets the SupportsLogExportsToCloudwatchLogs field's value.
 func (s *DBEngineVersion) SetSupportsLogExportsToCloudwatchLogs(v bool) *DBEngineVersion {
 	s.SupportsLogExportsToCloudwatchLogs = &v
+	return s
+}
+
+// SetSupportsReadReplica sets the SupportsReadReplica field's value.
+func (s *DBEngineVersion) SetSupportsReadReplica(v bool) *DBEngineVersion {
+	s.SupportsReadReplica = &v
 	return s
 }
 
