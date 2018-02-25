@@ -1,4 +1,9 @@
 ## 1.11.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_organizations_organization` [GH-903]
+
 ## 1.10.0 (February 24, 2018)
 
 NOTES:
