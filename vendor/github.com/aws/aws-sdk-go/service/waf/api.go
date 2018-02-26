@@ -2094,6 +2094,95 @@ func (c *WAF) DeleteIPSetWithContext(ctx aws.Context, input *DeleteIPSetInput, o
 	return out, req.Send()
 }
 
+const opDeletePermissionPolicy = "DeletePermissionPolicy"
+
+// DeletePermissionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the DeletePermissionPolicy operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeletePermissionPolicy for more information on using the DeletePermissionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeletePermissionPolicyRequest method.
+//    req, resp := client.DeletePermissionPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeletePermissionPolicy
+func (c *WAF) DeletePermissionPolicyRequest(input *DeletePermissionPolicyInput) (req *request.Request, output *DeletePermissionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opDeletePermissionPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeletePermissionPolicyInput{}
+	}
+
+	output = &DeletePermissionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeletePermissionPolicy API operation for AWS WAF.
+//
+// Permanently deletes an IAM policy from the specified RuleGroup.
+//
+// The user making the request must be the owner of the RuleGroup.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation DeletePermissionPolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalErrorException "InternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeStaleDataException "StaleDataException"
+//   The operation failed because you tried to create, update, or delete an object
+//   by using a change token that has already been used.
+//
+//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeletePermissionPolicy
+func (c *WAF) DeletePermissionPolicy(input *DeletePermissionPolicyInput) (*DeletePermissionPolicyOutput, error) {
+	req, out := c.DeletePermissionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// DeletePermissionPolicyWithContext is the same as DeletePermissionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeletePermissionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) DeletePermissionPolicyWithContext(ctx aws.Context, input *DeletePermissionPolicyInput, opts ...request.Option) (*DeletePermissionPolicyOutput, error) {
+	req, out := c.DeletePermissionPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteRateBasedRule = "DeleteRateBasedRule"
 
 // DeleteRateBasedRuleRequest generates a "aws/request.Request" representing the
@@ -3659,6 +3748,89 @@ func (c *WAF) GetIPSet(input *GetIPSetInput) (*GetIPSetOutput, error) {
 // for more information on using Contexts.
 func (c *WAF) GetIPSetWithContext(ctx aws.Context, input *GetIPSetInput, opts ...request.Option) (*GetIPSetOutput, error) {
 	req, out := c.GetIPSetRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetPermissionPolicy = "GetPermissionPolicy"
+
+// GetPermissionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the GetPermissionPolicy operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetPermissionPolicy for more information on using the GetPermissionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetPermissionPolicyRequest method.
+//    req, resp := client.GetPermissionPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetPermissionPolicy
+func (c *WAF) GetPermissionPolicyRequest(input *GetPermissionPolicyInput) (req *request.Request, output *GetPermissionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opGetPermissionPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetPermissionPolicyInput{}
+	}
+
+	output = &GetPermissionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetPermissionPolicy API operation for AWS WAF.
+//
+// Returns the IAM policy attached to the RuleGroup.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation GetPermissionPolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalErrorException "InternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetPermissionPolicy
+func (c *WAF) GetPermissionPolicy(input *GetPermissionPolicyInput) (*GetPermissionPolicyOutput, error) {
+	req, out := c.GetPermissionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// GetPermissionPolicyWithContext is the same as GetPermissionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetPermissionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) GetPermissionPolicyWithContext(ctx aws.Context, input *GetPermissionPolicyInput, opts ...request.Option) (*GetPermissionPolicyOutput, error) {
+	req, out := c.GetPermissionPolicyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5854,6 +6026,141 @@ func (c *WAF) ListXssMatchSets(input *ListXssMatchSetsInput) (*ListXssMatchSetsO
 // for more information on using Contexts.
 func (c *WAF) ListXssMatchSetsWithContext(ctx aws.Context, input *ListXssMatchSetsInput, opts ...request.Option) (*ListXssMatchSetsOutput, error) {
 	req, out := c.ListXssMatchSetsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutPermissionPolicy = "PutPermissionPolicy"
+
+// PutPermissionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the PutPermissionPolicy operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutPermissionPolicy for more information on using the PutPermissionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutPermissionPolicyRequest method.
+//    req, resp := client.PutPermissionPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/PutPermissionPolicy
+func (c *WAF) PutPermissionPolicyRequest(input *PutPermissionPolicyInput) (req *request.Request, output *PutPermissionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opPutPermissionPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutPermissionPolicyInput{}
+	}
+
+	output = &PutPermissionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutPermissionPolicy API operation for AWS WAF.
+//
+// Attaches a IAM policy to the specified resource. The only supported use for
+// this action is to share a RuleGroup across accounts.
+//
+// The PutPermissionPolicy is subject to the following restrictions:
+//
+//    * You can attach only one policy with each PutPermissionPolicy request.
+//
+//    * The policy must include an Effect, Action and Principal.
+//
+//    * Effect must specify Allow.
+//
+//    * The Action in the policy must be waf:UpdateWebACL and waf-regional:UpdateWebACL.
+//    Any extra or wildcard actions in the policy will be rejected.
+//
+//    * The policy cannot include a Resource parameter.
+//
+//    * The ARN in the request must be a valid WAF RuleGroup ARN and the RuleGroup
+//    must exist in the same region.
+//
+//    * The user making the request must be the owner of the RuleGroup.
+//
+//    * Your policy must be composed using IAM Policy version 2012-10-17.
+//
+// For more information, see IAM Policies (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html).
+//
+// An example of a valid policy parameter is shown in the Examples section below.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation PutPermissionPolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalErrorException "InternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeStaleDataException "StaleDataException"
+//   The operation failed because you tried to create, update, or delete an object
+//   by using a change token that has already been used.
+//
+//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+//   * ErrCodeInvalidPermissionPolicyException "InvalidPermissionPolicyException"
+//   The operation failed because the specified policy is not in the proper format.
+//
+//   The policy is subject to the following restrictions:
+//
+//      * You can attach only one policy with each PutPermissionPolicy request.
+//
+//      * The policy must include an Effect, Action and Principal.
+//
+//      * Effect must specify Allow.
+//
+//      * The Action in the policy must be waf:UpdateWebACL or waf-regional:UpdateWebACL.
+//      Any extra or wildcard actions in the policy will be rejected.
+//
+//      * The policy cannot include a Resource parameter.
+//
+//      * The ARN in the request must be a valid WAF RuleGroup ARN and the RuleGroup
+//      must exist in the same region.
+//
+//      * The user making the request must be the owner of the RuleGroup.
+//
+//      * Your policy must be composed using IAM Policy version 2012-10-17.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/PutPermissionPolicy
+func (c *WAF) PutPermissionPolicy(input *PutPermissionPolicyInput) (*PutPermissionPolicyOutput, error) {
+	req, out := c.PutPermissionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// PutPermissionPolicyWithContext is the same as PutPermissionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutPermissionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) PutPermissionPolicyWithContext(ctx aws.Context, input *PutPermissionPolicyInput, opts ...request.Option) (*PutPermissionPolicyOutput, error) {
+	req, out := c.PutPermissionPolicyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -8243,9 +8550,9 @@ type ActivatedRule struct {
 	//    in the rule and then continues to inspect the web request based on the
 	//    remaining rules in the web ACL.
 	//
-	// The Action data type within ActivatedRule is used only when submitting an
-	// UpdateWebACL request. ActivatedRule|Action is not applicable and therefore
-	// not available for UpdateRuleGroup.
+	// ActivatedRule|OverrideAction applies only when updating or adding a RuleGroup
+	// to a WebACL. In this case you do not use ActivatedRule|Action. For all other
+	// update requests, ActivatedRule|Action is used instead of ActivatedRule|OverrideAction.
 	Action *WafAction `type:"structure"`
 
 	// Use the OverrideAction to test your RuleGroup.
@@ -8259,9 +8566,9 @@ type ActivatedRule struct {
 	// those requests will be counted. You can view a record of counted requests
 	// using GetSampledRequests.
 	//
-	// The OverrideAction data type within ActivatedRule is used only when submitting
-	// an UpdateRuleGroup request. ActivatedRule|OverrideAction is not applicable
-	// and therefore not available for UpdateWebACL.
+	// ActivatedRule|OverrideAction applies only when updating or adding a RuleGroup
+	// to a WebACL. In this case you do not use ActivatedRule|Action. For all other
+	// update requests, ActivatedRule|Action is used instead of ActivatedRule|OverrideAction.
 	OverrideAction *WafOverrideAction `type:"structure"`
 
 	// Specifies the order in which the Rules in a WebACL are evaluated. Rules with
@@ -10276,6 +10583,64 @@ func (s *DeleteIPSetOutput) SetChangeToken(v string) *DeleteIPSetOutput {
 	return s
 }
 
+type DeletePermissionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the RuleGroup from which you want to delete
+	// the policy.
+	//
+	// The user making the request must be the owner of the RuleGroup.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeletePermissionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeletePermissionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeletePermissionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeletePermissionPolicyInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *DeletePermissionPolicyInput) SetResourceArn(v string) *DeletePermissionPolicyInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type DeletePermissionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeletePermissionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeletePermissionPolicyOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteRateBasedRuleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11629,6 +11994,71 @@ func (s GetIPSetOutput) GoString() string {
 // SetIPSet sets the IPSet field's value.
 func (s *GetIPSetOutput) SetIPSet(v *IPSet) *GetIPSetOutput {
 	s.IPSet = v
+	return s
+}
+
+type GetPermissionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the RuleGroup for which you want to get
+	// the policy.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetPermissionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPermissionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetPermissionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetPermissionPolicyInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *GetPermissionPolicyInput) SetResourceArn(v string) *GetPermissionPolicyInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type GetPermissionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The IAM policy attached to the specified RuleGroup.
+	Policy *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s GetPermissionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPermissionPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetPolicy sets the Policy field's value.
+func (s *GetPermissionPolicyOutput) SetPolicy(v string) *GetPermissionPolicyOutput {
+	s.Policy = &v
 	return s
 }
 
@@ -14192,6 +14622,79 @@ func (s *Predicate) SetType(v string) *Predicate {
 	return s
 }
 
+type PutPermissionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The policy to attach to the specified RuleGroup.
+	//
+	// Policy is a required field
+	Policy *string `min:"1" type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the RuleGroup to which you want to attach
+	// the policy.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PutPermissionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutPermissionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutPermissionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutPermissionPolicyInput"}
+	if s.Policy == nil {
+		invalidParams.Add(request.NewErrParamRequired("Policy"))
+	}
+	if s.Policy != nil && len(*s.Policy) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Policy", 1))
+	}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPolicy sets the Policy field's value.
+func (s *PutPermissionPolicyInput) SetPolicy(v string) *PutPermissionPolicyInput {
+	s.Policy = &v
+	return s
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *PutPermissionPolicyInput) SetResourceArn(v string) *PutPermissionPolicyInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type PutPermissionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutPermissionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutPermissionPolicyOutput) GoString() string {
+	return s.String()
+}
+
 // A RateBasedRule is identical to a regular Rule, with one addition: a RateBasedRule
 // counts the number of requests that arrive from a specified IP address every
 // five minutes. For example, based on recent requests that you've seen from
@@ -16697,9 +17200,9 @@ type UpdateRuleGroupInput struct {
 	//
 	// You can only insert REGULAR rules into a rule group.
 	//
-	// The Action data type within ActivatedRule is used only when submitting an
-	// UpdateWebACL request. ActivatedRule|Action is not applicable and therefore
-	// not available for UpdateRuleGroup.
+	// ActivatedRule|OverrideAction applies only when updating or adding a RuleGroup
+	// to a WebACL. In this case you do not use ActivatedRule|Action. For all other
+	// update requests, ActivatedRule|Action is used instead of ActivatedRule|OverrideAction.
 	//
 	// Updates is a required field
 	Updates []*RuleGroupUpdate `min:"1" type:"list" required:"true"`
@@ -17172,10 +17675,11 @@ type UpdateWebACLInput struct {
 	//
 	//    * WebACLUpdate: Contains Action and ActivatedRule
 	//
-	//    * ActivatedRule: Contains Action, Priority, RuleId, and Type. The OverrideAction
-	//    data type within ActivatedRule is used only when submitting an UpdateRuleGroup
-	//    request. ActivatedRule|OverrideAction is not applicable and therefore
-	//    not available for UpdateWebACL.
+	//    * ActivatedRule: Contains Action, OverrideAction, Priority, RuleId, and
+	//    Type. ActivatedRule|OverrideAction applies only when updating or adding
+	//    a RuleGroup to a WebACL. In this case you do not use ActivatedRule|Action.
+	//    For all other update requests, ActivatedRule|Action is used instead of
+	//    ActivatedRule|OverrideAction.
 	//
 	//    * WafAction: Contains Type
 	Updates []*WebACLUpdate `type:"list"`
