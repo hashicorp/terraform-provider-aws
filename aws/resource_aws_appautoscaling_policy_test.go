@@ -74,6 +74,29 @@ func TestAccAWSAppautoScalingPolicy_nestedSchema(t *testing.T) {
 	})
 }
 
+func TestAccAWSAppautoScalingPolicy_targetTrackingEcs(t *testing.T) {
+	var policy applicationautoscaling.ScalingPolicy
+
+	randClusterName := fmt.Sprintf("cluster%s", acctest.RandString(10))
+	randPolicyName := fmt.Sprintf("terraform-test-foobar-%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAppautoscalingPolicyTargetTrackingEcs(randClusterName, randPolicyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppautoscalingPolicyExists("aws_appautoscaling_policy.ecs_target_track", &policy),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.ecs_target_track", "name", randPolicyName),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.ecs_target_track", "service_namespace", "ecs"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSAppautoScalingPolicy_spotFleetRequest(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 
@@ -415,6 +438,67 @@ resource "aws_appautoscaling_policy" "foobar_simple" {
 	}
 	depends_on = ["aws_appautoscaling_target.tgt"]
 }
+`, randClusterName, randPolicyName)
+}
+
+func testAccAWSAppautoscalingPolicyTargetTrackingEcs(
+	randClusterName string,
+	randPolicyName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "foo" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "task" {
+  family = "foobar"
+
+  container_definitions = <<EOF
+[
+	{
+		"name": "busybox",
+		"image": "busybox:latest",
+		"cpu": 10,
+		"memory": 128,
+		"essential": true
+	}
+]
+EOF
+}
+
+resource "aws_ecs_service" "service" {
+  name                               = "foobar"
+  cluster                            = "${aws_ecs_cluster.foo.id}"
+  task_definition                    = "${aws_ecs_task_definition.task.arn}"
+  desired_count                      = 1
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 50
+}
+
+resource "aws_appautoscaling_target" "tgt" {
+  service_namespace  = "ecs"
+  resource_id        = "service/${aws_ecs_cluster.foo.name}/${aws_ecs_service.service.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  min_capacity       = 1
+  max_capacity       = 4
+}
+
+resource "aws_appautoscaling_policy" "ecs_target_track" {
+  name               = "%s"
+  service_namespace  = "${aws_appautoscaling_target.tgt.service_namespace}"
+  resource_id        = "${aws_appautoscaling_target.tgt.resource_id}"
+  scalable_dimension = "${aws_appautoscaling_target.tgt.scalable_dimension}"
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ALBRequestCountPerTarget"
+    }
+
+    target_value       = 42
+    scale_in_cooldown  = 60
+    scale_out_cooldown = 60
+  }
+}
+
 `, randClusterName, randPolicyName)
 }
 
