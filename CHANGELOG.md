@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_kms_key` [GH-2224]
 * **New Resource:** `aws_organizations_organization` [GH-903]
 
 ## 1.10.0 (February 24, 2018)
