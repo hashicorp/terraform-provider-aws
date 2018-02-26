@@ -317,26 +317,9 @@ func resourceAwsElasticBeanstalkEnvironmentUpdate(d *schema.ResourceData, meta i
 	envId := d.Id()
 
 	var hasChange bool
-	var hasTagChange bool
 
 	updateOpts := elasticbeanstalk.UpdateEnvironmentInput{
 		EnvironmentId: aws.String(envId),
-	}
-
-	updateTags := elasticbeanstalk.UpdateTagsForResourceInput{
-		ResourceArn: aws.String(d.Get("arn").(string)),
-	}
-
-	if d.HasChange("tags") {
-		hasTagChange = true
-		o, n := d.GetChange("tags")
-		oldTags := tagsFromMapBeanstalk(o.(map[string]interface{}))
-		newTags := tagsFromMapBeanstalk(n.(map[string]interface{}))
-
-		tagsToAdd, tagNamesToRemove := diffTagsBeanstalk(oldTags, newTags)
-
-		updateTags.TagsToAdd = tagsToAdd
-		updateTags.TagsToRemove = tagNamesToRemove
 	}
 
 	if d.HasChange("description") {
@@ -473,7 +456,19 @@ func resourceAwsElasticBeanstalkEnvironmentUpdate(d *schema.ResourceData, meta i
 		}
 	}
 
-	if hasTagChange {
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		oldTags := tagsFromMapBeanstalk(o.(map[string]interface{}))
+		newTags := tagsFromMapBeanstalk(n.(map[string]interface{}))
+
+		tagsToAdd, tagNamesToRemove := diffTagsBeanstalk(oldTags, newTags)
+
+		updateTags := elasticbeanstalk.UpdateTagsForResourceInput{
+			ResourceArn:  aws.String(d.Get("arn").(string)),
+			TagsToAdd:    tagsToAdd,
+			TagsToRemove: tagNamesToRemove,
+		}
+
 		// Get the current time to filter getBeanstalkEnvironmentErrors messages
 		t := time.Now()
 		log.Printf("[DEBUG] Elastic Beanstalk Environment update tags: %s", updateTags)
@@ -562,9 +557,7 @@ func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta int
 		return err
 	}
 
-	if err := d.Set("arn", env.EnvironmentArn); err != nil {
-		return err
-	}
+	d.Set("arn", env.EnvironmentArn)
 
 	if err := d.Set("name", env.EnvironmentName); err != nil {
 		return err
