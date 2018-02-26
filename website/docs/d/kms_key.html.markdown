@@ -6,7 +6,7 @@ description: |-
   Get information on a AWS Key Management Service (KMS) Key
 ---
 
-# aws\_kms\_key
+# aws_kms_key
 
 Use this data source to get detailed information about 
 the specified KMS Key with flexible key id input. 

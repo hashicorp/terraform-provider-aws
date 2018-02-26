@@ -6,17 +6,30 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"regexp"
 )
 
-func TestAccDataSourceAwsKmsKey(t *testing.T) {
+func TestAccDataSourceAwsKmsKey_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsKmsKeyConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsKmsKeyCheck("data.aws_kms_key.arbitrary"),
+					resource.TestMatchResourceAttr("data.aws_kms_key.arbitrary", "arn", regexp.MustCompile("^arn:[^:]+:kms:[^:]+:[^:]+:key/.+")),
+					resource.TestCheckResourceAttrSet("data.aws_kms_key.arbitrary", "aws_account_id"),
+					resource.TestCheckResourceAttrSet("data.aws_kms_key.arbitrary", "creation_date"),
+					resource.TestCheckResourceAttrSet("data.aws_kms_key.arbitrary", "deletion_date"),
+					resource.TestCheckResourceAttr("data.aws_kms_key.arbitrary", "description", "Terraform acc test"),
+					resource.TestCheckResourceAttr("data.aws_kms_key.arbitrary", "enabled", "true"),
+					resource.TestCheckResourceAttrSet("data.aws_kms_key.arbitrary", "expiration_model"),
+					resource.TestCheckResourceAttrSet("data.aws_kms_key.arbitrary", "key_manager"),
+					resource.TestCheckResourceAttrSet("data.aws_kms_key.arbitrary", "key_state"),
+					resource.TestCheckResourceAttrSet("data.aws_kms_key.arbitrary", "key_usage"),
+					resource.TestCheckResourceAttrSet("data.aws_kms_key.arbitrary", "origin"),
+					resource.TestCheckResourceAttrSet("data.aws_kms_key.arbitrary", "valid_to"),
 				),
 			},
 		},

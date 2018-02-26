@@ -2146,7 +2146,7 @@ func validateDxConnectionBandWidth(v interface{}, k string) (ws []string, errors
 
 func validateKmsKey(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	arnPrefixPattern := `arn:[\w-]+:([a-zA-Z0-9\-])+:([a-z]{2}-(gov-)?[a-z]+-\d{1})?:(\d{12})?:`
+	arnPrefixPattern := `arn:[^:]+:kms:[^:]+:[^:]+:`
 	keyIdPattern := "[A-Za-z0-9-]+"
 	keyArnPattern := arnPrefixPattern + "key/" + keyIdPattern
 	aliasNamePattern := "alias/[a-zA-Z0-9:/_-]+"

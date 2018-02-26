@@ -75,15 +75,10 @@ func dataSourceAwsKmsKey() *schema.Resource {
 
 func dataSourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
-	keyId, keyIdOk := d.GetOk("key_id")
-	if !keyIdOk {
-		return fmt.Errorf("key_id value is missing")
-	}
+	keyId := d.Get("key_id")
 	var grantTokens []*string
 	if v, ok := d.GetOk("grant_tokens"); ok {
-		for _, token := range v.([]interface{}) {
-			grantTokens = append(grantTokens, aws.String(token.(string)))
-		}
+		grantTokens = aws.StringSlice(v.([]string))
 	}
 	input := &kms.DescribeKeyInput{
 		KeyId:       aws.String(keyId.(string)),
