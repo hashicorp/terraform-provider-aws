@@ -313,7 +313,7 @@ func resourceAwsServiceDiscoveryServiceDelete(d *schema.ResourceData, meta inter
 		sderr, ok := err.(awserr.Error)
 		if ok && sderr.Code() == "ResourceInUse" {
 			// this line recurses until all instances are deregistered or an error is returned
-			resourceAwsServiceDiscoveryServiceDelete(d, meta)
+			return resourceAwsServiceDiscoveryServiceDelete(d, meta)
 		} else {
 			return fmt.Errorf("error deleting Service Discovery Service (%s): %w", d.Id(), err)
 		}
