@@ -460,6 +460,7 @@ func TestAccAWSEcsService_withPlacementConstraints(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo"),
 					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_constraints.#", "1"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_constraints.#", "2"),
 				),
 			},
 		},
@@ -785,7 +786,11 @@ func testAccAWSEcsServiceWithPlacementConstraint(clusterName, tdName, svcName st
 	  placement_constraints {
 		type = "memberOf"
 		expression = "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]"
-	  }
+		}
+		placement_constraints {
+		type = "memberOf"
+		expression = "attribute:does-not-exist not_exists"	
+		}
 	}
 	`, clusterName, tdName, svcName)
 }
