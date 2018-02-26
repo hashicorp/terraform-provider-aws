@@ -60,37 +60,31 @@ func setAutoscalingTags(conn *autoscaling.AutoScaling, d *schema.ResourceData) e
 		oraw, nraw := d.GetChange("tag")
 		o := setToMapByKey(oraw.(*schema.Set), "key")
 		n := setToMapByKey(nraw.(*schema.Set), "key")
-
-		old, err := autoscalingTagsFromMap(o, resourceID)
+		oldForTag, err := autoscalingTagsFromMap(o, resourceID)
 		if err != nil {
 			return err
 		}
 
-		new, err := autoscalingTagsFromMap(n, resourceID)
+		newForTag, err := autoscalingTagsFromMap(n, resourceID)
 		if err != nil {
 			return err
 		}
-
-		c, r, err := diffAutoscalingTags(old, new, resourceID)
-		if err != nil {
-			return err
-		}
-
-		createTags = append(createTags, c...)
-		removeTags = append(removeTags, r...)
 
 		oraw, nraw = d.GetChange("tags")
-		old, err = autoscalingTagsFromList(oraw.([]interface{}), resourceID)
+		oldForTags, err := autoscalingTagsFromList(oraw.([]interface{}), resourceID)
 		if err != nil {
 			return err
 		}
 
-		new, err = autoscalingTagsFromList(nraw.([]interface{}), resourceID)
+		newForTags, err := autoscalingTagsFromList(nraw.([]interface{}), resourceID)
 		if err != nil {
 			return err
 		}
 
-		c, r, err = diffAutoscalingTags(old, new, resourceID)
+		// Create lists with all the tags set in 'tag' and 'tags'
+		oldForTag = append(oldForTag, oldForTags...)
+		newForTag = append(newForTag, newForTags...)
+		c, r, err := diffAutoscalingTags(oldForTag, newForTag, resourceID)
 		if err != nil {
 			return err
 		}
@@ -147,6 +141,11 @@ func diffAutoscalingTags(oldTags, newTags []*autoscaling.Tag, resourceID string)
 	for _, t := range oldTags {
 		old, ok := create[*t.Key].(map[string]interface{})
 
+		if ok && old["value"] == *t.Value && old["propagate_at_launch"] == *t.PropagateAtLaunch {
+			// Already exists!
+			delete(create, *t.Key)
+			continue
+		}
 		if !ok || old["value"] != *t.Value || old["propagate_at_launch"] != *t.PropagateAtLaunch {
 			// Delete it!
 			remove = append(remove, t)
