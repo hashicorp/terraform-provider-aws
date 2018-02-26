@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform/helper/schema"
+	"time"
 )
 
 func dataSourceAwsKmsKey() *schema.Resource {
@@ -30,11 +31,11 @@ func dataSourceAwsKmsKey() *schema.Resource {
 				Computed: true,
 			},
 			"creation_date": {
-				Type:     schema.TypeFloat,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"deletion_date": {
-				Type:     schema.TypeFloat,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"description": {
@@ -66,7 +67,7 @@ func dataSourceAwsKmsKey() *schema.Resource {
 				Computed: true,
 			},
 			"valid_to": {
-				Type:     schema.TypeFloat,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
@@ -91,8 +92,10 @@ func dataSourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
 	d.Set("arn", output.KeyMetadata.Arn)
 	d.Set("aws_account_id", output.KeyMetadata.AWSAccountId)
-	d.Set("creation_date", output.KeyMetadata.CreationDate)
-	d.Set("deletion_date", output.KeyMetadata.DeletionDate)
+	d.Set("creation_date", aws.TimeValue(output.KeyMetadata.CreationDate).Format(time.RFC3339))
+	if output.KeyMetadata.DeletionDate != nil {
+		d.Set("deletion_date", aws.TimeValue(output.KeyMetadata.DeletionDate).Format(time.RFC3339))
+	}
 	d.Set("description", output.KeyMetadata.Description)
 	d.Set("enabled", output.KeyMetadata.Enabled)
 	d.Set("expiration_model", output.KeyMetadata.ExpirationModel)
@@ -100,6 +103,8 @@ func dataSourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_state", output.KeyMetadata.KeyState)
 	d.Set("key_usage", output.KeyMetadata.KeyUsage)
 	d.Set("origin", output.KeyMetadata.Origin)
-	d.Set("valid_to", output.KeyMetadata.ValidTo)
+	if output.KeyMetadata.ValidTo != nil {
+		d.Set("valid_to", aws.TimeValue(output.KeyMetadata.ValidTo).Format(time.RFC3339))
+	}
 	return nil
 }
