@@ -6,7 +6,7 @@ description: |-
   Provides a directory in AWS Directory Service.
 ---
 
-# aws\_directory\_service\_directory
+# aws_directory_service_directory
 
 Provides a Simple or Managed Microsoft directory in AWS Directory Service.
 
@@ -62,14 +62,15 @@ The following arguments are supported:
 * `short_name` - (Optional) The short name of the directory, such as `CORP`.
 * `enable_sso` - (Optional) Whether to enable single-sign on for the directory. Requires `alias`. Defaults to `false`.
 * `type` (Optional) - The directory type (`SimpleAD` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
+* `edition` - (Optional) The MicrosoftAD edition (`Standard` or `Enterprise`). Defaults to `Enterprise` (applies to MicrosoftAD type only).
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
-**vpc\_settings** supports the following:
+**vpc_settings** supports the following:
 
 * `subnet_ids` - (Required) The identifiers of the subnets for the directory servers (2 subnets in 2 different AZs).
 * `vpc_id` - (Required) The identifier of the VPC that the directory is in.
 
-**connect\_settings** supports the following:
+**connect_settings** supports the following:
 
 * `customer_username` - (Required) The username corresponding to the password provided.
 * `customer_dns_ips` - (Required) The DNS IP addresses of the domain to connect to.
@@ -83,6 +84,7 @@ The following attributes are exported:
 * `id` - The directory identifier.
 * `access_url` - The access URL for the directory, such as `http://alias.awsapps.com`.
 * `dns_ip_addresses` - A list of IP addresses of the DNS servers for the directory or connector.
+* `security_group_id` - The ID of the security group created by the directory (`SimpleAD` or `MicrosoftAD` only).
 
 
 ## Import

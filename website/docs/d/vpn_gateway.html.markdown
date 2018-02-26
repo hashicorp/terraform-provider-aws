@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific VPN gateway.
 ---
 
-# aws\_vpn\_gateway
+# Data Source: aws_vpn_gateway
 
 The VPN Gateway data source provides details about
 a specific VPN gateway.
@@ -43,6 +43,8 @@ The given filters must match exactly one VPN gateway whose data will be exported
 
 * `tags` - (Optional) A mapping of tags, each pair of which must exactly match
   a pair on the desired VPN Gateway.
+
+* `amazon_side_asn` - (Optional) The Autonomous System Number (ASN) for the Amazon side of the specific VPN Gateway to retrieve.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:

@@ -152,6 +152,7 @@ func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) e
 	})
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NotFoundException" {
+			log.Printf("[WARN] API Gateway Method (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}

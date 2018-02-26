@@ -410,7 +410,7 @@ var testAccAWSElasticacheClusterInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-            Name = "tf-test"
+        Name = "terraform-testacc-elasticache-cluster-in-vpc"
     }
 }
 
@@ -467,7 +467,7 @@ var testAccAWSElasticacheClusterMultiAZInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-            Name = "tf-test"
+        Name = "terraform-testacc-elasticache-cluster-multi-az-in-vpc"
     }
 }
 

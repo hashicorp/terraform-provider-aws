@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDmsReplicationSubnetGroupBasic(t *testing.T) {
+func TestAccAWSDmsReplicationSubnetGroupBasic(t *testing.T) {
 	resourceName := "aws_dms_replication_subnet_group.dms_replication_subnet_group"
 	randId := acctest.RandString(8)
 
@@ -104,7 +104,7 @@ func dmsReplicationSubnetGroupConfig(randId string) string {
 resource "aws_vpc" "dms_vpc" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-test-dms-vpc-%[1]s"
+		Name = "terraform-testacc-dms-replication-subnet-group"
 	}
 }
 
@@ -156,7 +156,7 @@ func dmsReplicationSubnetGroupConfigUpdate(randId string) string {
 resource "aws_vpc" "dms_vpc" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-test-dms-vpc-%[1]s"
+		Name = "terraform-testacc-dms-replication-subnet-group"
 	}
 }
 

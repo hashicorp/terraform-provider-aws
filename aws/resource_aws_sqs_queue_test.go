@@ -3,12 +3,12 @@ package aws
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -114,6 +114,33 @@ func TestAccAWSSQSQueue_policy(t *testing.T) {
 				Config: testAccAWSSQSConfig_PolicyFormat(topicName, queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSQSHasPolicy("aws_sqs_queue.test-email-events", expectedPolicyText),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_queueDeletedRecently(t *testing.T) {
+	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigWithDefaults(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+				),
+			},
+			{
+				Config: "# delete queue to quickly recreate",
+				Check:  testAccCheckAWSSQSQueueDestroy,
+			},
+			{
+				Config: testAccAWSSQSConfigWithDefaults(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
 				),
 			},
 		},
@@ -231,14 +258,17 @@ func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
 		params := &sqs.GetQueueAttributesInput{
 			QueueUrl: aws.String(rs.Primary.ID),
 		}
-		_, err := conn.GetQueueAttributes(params)
-		if err == nil {
-			return fmt.Errorf("Queue %s still exists. Failing!", rs.Primary.ID)
-		}
-
-		// Verify the error is what we want
-		_, ok := err.(awserr.Error)
-		if !ok {
+		err := resource.Retry(15*time.Second, func() *resource.RetryError {
+			_, err := conn.GetQueueAttributes(params)
+			if err != nil {
+				if isAWSErr(err, sqs.ErrCodeQueueDoesNotExist, "") {
+					return nil
+				}
+				return resource.NonRetryableError(err)
+			}
+			return resource.RetryableError(fmt.Errorf("Queue %s still exists. Failing!", rs.Primary.ID))
+		})
+		if err != nil {
 			return err
 		}
 	}

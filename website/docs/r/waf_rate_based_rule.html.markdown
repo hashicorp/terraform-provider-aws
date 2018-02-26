@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF rule resource.
 ---
 
-# aws\_waf\_rate\_based\_rule
+# aws_waf_rate_based_rule
 
 Provides a WAF Rate Based Rule Resource
 

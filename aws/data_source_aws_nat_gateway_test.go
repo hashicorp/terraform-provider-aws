@@ -46,7 +46,7 @@ provider "aws" {
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
   tags {
-    Name = "terraform-testacc-nat-gateway-data-source-%d"
+    Name = "terraform-testacc-nat-gw-data-source"
   }
 }
 
@@ -89,5 +89,5 @@ data "aws_nat_gateway" "test_by_subnet_id" {
   subnet_id = "${aws_nat_gateway.test.subnet_id}"
 }
 
-`, rInt, rInt, rInt, rInt, rInt)
+`, rInt, rInt, rInt, rInt)
 }

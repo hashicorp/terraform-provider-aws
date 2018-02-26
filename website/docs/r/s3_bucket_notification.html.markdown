@@ -6,7 +6,7 @@ description: |-
   Provides a S3 bucket notification resource.
 ---
 
-# aws\_s3\_bucket\_notification
+# aws_s3_bucket_notification
 
 Provides a S3 bucket notification resource.
 

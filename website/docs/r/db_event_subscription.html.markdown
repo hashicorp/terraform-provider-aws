@@ -4,7 +4,7 @@ page_title: "AWS: aws_db_event_subscription"
 sidebar_current: "docs-aws-resource-db-event-subscription"
 ---
 
-# aws\_db\_event\_subscription
+# aws_db_event_subscription
 
 Provides a DB event subscription resource.
 

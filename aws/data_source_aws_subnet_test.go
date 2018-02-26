@@ -204,7 +204,7 @@ resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
 
   tags {
-    Name = "terraform-testacc-subnet-data-source-ipv6"
+    Name = "terraform-testacc-subnet-data-source-ipv6-with-ds-filter"
   }
 }
 
@@ -235,7 +235,7 @@ resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
 
   tags {
-    Name = "terraform-testacc-subnet-data-source-ipv6"
+    Name = "terraform-testacc-subnet-data-source-ipv6-cidr-block"
   }
 }
 

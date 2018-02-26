@@ -36,7 +36,7 @@ const opBatchDeleteBuilds = "BatchDeleteBuilds"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchDeleteBuilds
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchDeleteBuilds
 func (c *CodeBuild) BatchDeleteBuildsRequest(input *BatchDeleteBuildsInput) (req *request.Request, output *BatchDeleteBuildsOutput) {
 	op := &request.Operation{
 		Name:       opBatchDeleteBuilds,
@@ -68,7 +68,7 @@ func (c *CodeBuild) BatchDeleteBuildsRequest(input *BatchDeleteBuildsInput) (req
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The input value that was provided is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchDeleteBuilds
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchDeleteBuilds
 func (c *CodeBuild) BatchDeleteBuilds(input *BatchDeleteBuildsInput) (*BatchDeleteBuildsOutput, error) {
 	req, out := c.BatchDeleteBuildsRequest(input)
 	return out, req.Send()
@@ -115,7 +115,7 @@ const opBatchGetBuilds = "BatchGetBuilds"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetBuilds
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetBuilds
 func (c *CodeBuild) BatchGetBuildsRequest(input *BatchGetBuildsInput) (req *request.Request, output *BatchGetBuildsOutput) {
 	op := &request.Operation{
 		Name:       opBatchGetBuilds,
@@ -147,7 +147,7 @@ func (c *CodeBuild) BatchGetBuildsRequest(input *BatchGetBuildsInput) (req *requ
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The input value that was provided is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetBuilds
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetBuilds
 func (c *CodeBuild) BatchGetBuilds(input *BatchGetBuildsInput) (*BatchGetBuildsOutput, error) {
 	req, out := c.BatchGetBuildsRequest(input)
 	return out, req.Send()
@@ -194,7 +194,7 @@ const opBatchGetProjects = "BatchGetProjects"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetProjects
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetProjects
 func (c *CodeBuild) BatchGetProjectsRequest(input *BatchGetProjectsInput) (req *request.Request, output *BatchGetProjectsOutput) {
 	op := &request.Operation{
 		Name:       opBatchGetProjects,
@@ -226,7 +226,7 @@ func (c *CodeBuild) BatchGetProjectsRequest(input *BatchGetProjectsInput) (req *
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The input value that was provided is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetProjects
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetProjects
 func (c *CodeBuild) BatchGetProjects(input *BatchGetProjectsInput) (*BatchGetProjectsOutput, error) {
 	req, out := c.BatchGetProjectsRequest(input)
 	return out, req.Send()
@@ -273,7 +273,7 @@ const opCreateProject = "CreateProject"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateProject
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateProject
 func (c *CodeBuild) CreateProjectRequest(input *CreateProjectInput) (req *request.Request, output *CreateProjectOutput) {
 	op := &request.Operation{
 		Name:       opCreateProject,
@@ -312,7 +312,7 @@ func (c *CodeBuild) CreateProjectRequest(input *CreateProjectInput) (req *reques
 //   * ErrCodeAccountLimitExceededException "AccountLimitExceededException"
 //   An AWS service limit was exceeded for the calling AWS account.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateProject
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateProject
 func (c *CodeBuild) CreateProject(input *CreateProjectInput) (*CreateProjectOutput, error) {
 	req, out := c.CreateProjectRequest(input)
 	return out, req.Send()
@@ -359,7 +359,7 @@ const opCreateWebhook = "CreateWebhook"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateWebhook
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateWebhook
 func (c *CodeBuild) CreateWebhookRequest(input *CreateWebhookInput) (req *request.Request, output *CreateWebhookOutput) {
 	op := &request.Operation{
 		Name:       opCreateWebhook,
@@ -388,7 +388,7 @@ func (c *CodeBuild) CreateWebhookRequest(input *CreateWebhookInput) (req *reques
 // AWS CodePipeline. Because billing is on a per-build basis, you will be billed
 // for both builds. Therefore, if you are using AWS CodePipeline, we recommend
 // that you disable webhooks in CodeBuild. In the AWS CodeBuild console, clear
-// the Webhook box. For more information, see step 9 in Change a Build Project’s
+// the Webhook box. For more information, see step 9 in Change a Build Project's
 // Settings (http://docs.aws.amazon.com/codebuild/latest/userguide/change-project.html#change-project-console).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -412,7 +412,7 @@ func (c *CodeBuild) CreateWebhookRequest(input *CreateWebhookInput) (req *reques
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   The specified AWS resource cannot be found.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateWebhook
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateWebhook
 func (c *CodeBuild) CreateWebhook(input *CreateWebhookInput) (*CreateWebhookOutput, error) {
 	req, out := c.CreateWebhookRequest(input)
 	return out, req.Send()
@@ -459,7 +459,7 @@ const opDeleteProject = "DeleteProject"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteProject
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteProject
 func (c *CodeBuild) DeleteProjectRequest(input *DeleteProjectInput) (req *request.Request, output *DeleteProjectOutput) {
 	op := &request.Operation{
 		Name:       opDeleteProject,
@@ -491,7 +491,7 @@ func (c *CodeBuild) DeleteProjectRequest(input *DeleteProjectInput) (req *reques
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The input value that was provided is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteProject
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteProject
 func (c *CodeBuild) DeleteProject(input *DeleteProjectInput) (*DeleteProjectOutput, error) {
 	req, out := c.DeleteProjectRequest(input)
 	return out, req.Send()
@@ -538,7 +538,7 @@ const opDeleteWebhook = "DeleteWebhook"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteWebhook
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteWebhook
 func (c *CodeBuild) DeleteWebhookRequest(input *DeleteWebhookInput) (req *request.Request, output *DeleteWebhookOutput) {
 	op := &request.Operation{
 		Name:       opDeleteWebhook,
@@ -578,7 +578,7 @@ func (c *CodeBuild) DeleteWebhookRequest(input *DeleteWebhookInput) (req *reques
 //   * ErrCodeOAuthProviderException "OAuthProviderException"
 //   There was a problem with the underlying OAuth provider.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteWebhook
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteWebhook
 func (c *CodeBuild) DeleteWebhook(input *DeleteWebhookInput) (*DeleteWebhookOutput, error) {
 	req, out := c.DeleteWebhookRequest(input)
 	return out, req.Send()
@@ -625,7 +625,7 @@ const opInvalidateProjectCache = "InvalidateProjectCache"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/InvalidateProjectCache
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/InvalidateProjectCache
 func (c *CodeBuild) InvalidateProjectCacheRequest(input *InvalidateProjectCacheInput) (req *request.Request, output *InvalidateProjectCacheOutput) {
 	op := &request.Operation{
 		Name:       opInvalidateProjectCache,
@@ -660,7 +660,7 @@ func (c *CodeBuild) InvalidateProjectCacheRequest(input *InvalidateProjectCacheI
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   The specified AWS resource cannot be found.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/InvalidateProjectCache
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/InvalidateProjectCache
 func (c *CodeBuild) InvalidateProjectCache(input *InvalidateProjectCacheInput) (*InvalidateProjectCacheOutput, error) {
 	req, out := c.InvalidateProjectCacheRequest(input)
 	return out, req.Send()
@@ -707,7 +707,7 @@ const opListBuilds = "ListBuilds"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuilds
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuilds
 func (c *CodeBuild) ListBuildsRequest(input *ListBuildsInput) (req *request.Request, output *ListBuildsOutput) {
 	op := &request.Operation{
 		Name:       opListBuilds,
@@ -739,7 +739,7 @@ func (c *CodeBuild) ListBuildsRequest(input *ListBuildsInput) (req *request.Requ
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The input value that was provided is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuilds
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuilds
 func (c *CodeBuild) ListBuilds(input *ListBuildsInput) (*ListBuildsOutput, error) {
 	req, out := c.ListBuildsRequest(input)
 	return out, req.Send()
@@ -786,7 +786,7 @@ const opListBuildsForProject = "ListBuildsForProject"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuildsForProject
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuildsForProject
 func (c *CodeBuild) ListBuildsForProjectRequest(input *ListBuildsForProjectInput) (req *request.Request, output *ListBuildsForProjectOutput) {
 	op := &request.Operation{
 		Name:       opListBuildsForProject,
@@ -822,7 +822,7 @@ func (c *CodeBuild) ListBuildsForProjectRequest(input *ListBuildsForProjectInput
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   The specified AWS resource cannot be found.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuildsForProject
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuildsForProject
 func (c *CodeBuild) ListBuildsForProject(input *ListBuildsForProjectInput) (*ListBuildsForProjectOutput, error) {
 	req, out := c.ListBuildsForProjectRequest(input)
 	return out, req.Send()
@@ -869,7 +869,7 @@ const opListCuratedEnvironmentImages = "ListCuratedEnvironmentImages"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListCuratedEnvironmentImages
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListCuratedEnvironmentImages
 func (c *CodeBuild) ListCuratedEnvironmentImagesRequest(input *ListCuratedEnvironmentImagesInput) (req *request.Request, output *ListCuratedEnvironmentImagesOutput) {
 	op := &request.Operation{
 		Name:       opListCuratedEnvironmentImages,
@@ -896,7 +896,7 @@ func (c *CodeBuild) ListCuratedEnvironmentImagesRequest(input *ListCuratedEnviro
 //
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation ListCuratedEnvironmentImages for usage and error information.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListCuratedEnvironmentImages
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListCuratedEnvironmentImages
 func (c *CodeBuild) ListCuratedEnvironmentImages(input *ListCuratedEnvironmentImagesInput) (*ListCuratedEnvironmentImagesOutput, error) {
 	req, out := c.ListCuratedEnvironmentImagesRequest(input)
 	return out, req.Send()
@@ -943,7 +943,7 @@ const opListProjects = "ListProjects"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListProjects
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListProjects
 func (c *CodeBuild) ListProjectsRequest(input *ListProjectsInput) (req *request.Request, output *ListProjectsOutput) {
 	op := &request.Operation{
 		Name:       opListProjects,
@@ -976,7 +976,7 @@ func (c *CodeBuild) ListProjectsRequest(input *ListProjectsInput) (req *request.
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The input value that was provided is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListProjects
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListProjects
 func (c *CodeBuild) ListProjects(input *ListProjectsInput) (*ListProjectsOutput, error) {
 	req, out := c.ListProjectsRequest(input)
 	return out, req.Send()
@@ -1023,7 +1023,7 @@ const opStartBuild = "StartBuild"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/StartBuild
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/StartBuild
 func (c *CodeBuild) StartBuildRequest(input *StartBuildInput) (req *request.Request, output *StartBuildOutput) {
 	op := &request.Operation{
 		Name:       opStartBuild,
@@ -1061,7 +1061,7 @@ func (c *CodeBuild) StartBuildRequest(input *StartBuildInput) (req *request.Requ
 //   * ErrCodeAccountLimitExceededException "AccountLimitExceededException"
 //   An AWS service limit was exceeded for the calling AWS account.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/StartBuild
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/StartBuild
 func (c *CodeBuild) StartBuild(input *StartBuildInput) (*StartBuildOutput, error) {
 	req, out := c.StartBuildRequest(input)
 	return out, req.Send()
@@ -1108,7 +1108,7 @@ const opStopBuild = "StopBuild"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/StopBuild
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/StopBuild
 func (c *CodeBuild) StopBuildRequest(input *StopBuildInput) (req *request.Request, output *StopBuildOutput) {
 	op := &request.Operation{
 		Name:       opStopBuild,
@@ -1143,7 +1143,7 @@ func (c *CodeBuild) StopBuildRequest(input *StopBuildInput) (req *request.Reques
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   The specified AWS resource cannot be found.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/StopBuild
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/StopBuild
 func (c *CodeBuild) StopBuild(input *StopBuildInput) (*StopBuildOutput, error) {
 	req, out := c.StopBuildRequest(input)
 	return out, req.Send()
@@ -1190,7 +1190,7 @@ const opUpdateProject = "UpdateProject"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/UpdateProject
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/UpdateProject
 func (c *CodeBuild) UpdateProjectRequest(input *UpdateProjectInput) (req *request.Request, output *UpdateProjectOutput) {
 	op := &request.Operation{
 		Name:       opUpdateProject,
@@ -1225,7 +1225,7 @@ func (c *CodeBuild) UpdateProjectRequest(input *UpdateProjectInput) (req *reques
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   The specified AWS resource cannot be found.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/UpdateProject
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/UpdateProject
 func (c *CodeBuild) UpdateProject(input *UpdateProjectInput) (*UpdateProjectOutput, error) {
 	req, out := c.UpdateProjectRequest(input)
 	return out, req.Send()
@@ -1247,7 +1247,6 @@ func (c *CodeBuild) UpdateProjectWithContext(ctx aws.Context, input *UpdateProje
 	return out, req.Send()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchDeleteBuildsInput
 type BatchDeleteBuildsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1289,7 +1288,6 @@ func (s *BatchDeleteBuildsInput) SetIds(v []*string) *BatchDeleteBuildsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchDeleteBuildsOutput
 type BatchDeleteBuildsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1322,7 +1320,6 @@ func (s *BatchDeleteBuildsOutput) SetBuildsNotDeleted(v []*BuildNotDeleted) *Bat
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetBuildsInput
 type BatchGetBuildsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1364,7 +1361,6 @@ func (s *BatchGetBuildsInput) SetIds(v []*string) *BatchGetBuildsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetBuildsOutput
 type BatchGetBuildsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1397,7 +1393,6 @@ func (s *BatchGetBuildsOutput) SetBuildsNotFound(v []*string) *BatchGetBuildsOut
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetProjectsInput
 type BatchGetProjectsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1439,7 +1434,6 @@ func (s *BatchGetProjectsInput) SetNames(v []*string) *BatchGetProjectsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetProjectsOutput
 type BatchGetProjectsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1473,7 +1467,6 @@ func (s *BatchGetProjectsOutput) SetProjectsNotFound(v []*string) *BatchGetProje
 }
 
 // Information about a build.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/Build
 type Build struct {
 	_ struct{} `type:"structure"`
 
@@ -1686,7 +1679,6 @@ func (s *Build) SetVpcConfig(v *VpcConfig) *Build {
 }
 
 // Information about build output artifacts.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BuildArtifacts
 type BuildArtifacts struct {
 	_ struct{} `type:"structure"`
 
@@ -1741,7 +1733,6 @@ func (s *BuildArtifacts) SetSha256sum(v string) *BuildArtifacts {
 }
 
 // Information about a build that could not be successfully deleted.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BuildNotDeleted
 type BuildNotDeleted struct {
 	_ struct{} `type:"structure"`
 
@@ -1775,7 +1766,6 @@ func (s *BuildNotDeleted) SetStatusCode(v string) *BuildNotDeleted {
 }
 
 // Information about a stage for a build.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BuildPhase
 type BuildPhase struct {
 	_ struct{} `type:"structure"`
 
@@ -1879,7 +1869,6 @@ func (s *BuildPhase) SetStartTime(v time.Time) *BuildPhase {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateProjectInput
 type CreateProjectInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2092,7 +2081,6 @@ func (s *CreateProjectInput) SetVpcConfig(v *VpcConfig) *CreateProjectInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateProjectOutput
 type CreateProjectOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2116,7 +2104,6 @@ func (s *CreateProjectOutput) SetProject(v *Project) *CreateProjectOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateWebhookInput
 type CreateWebhookInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2158,7 +2145,6 @@ func (s *CreateWebhookInput) SetProjectName(v string) *CreateWebhookInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateWebhookOutput
 type CreateWebhookOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2183,7 +2169,6 @@ func (s *CreateWebhookOutput) SetWebhook(v *Webhook) *CreateWebhookOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteProjectInput
 type DeleteProjectInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2225,7 +2210,6 @@ func (s *DeleteProjectInput) SetName(v string) *DeleteProjectInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteProjectOutput
 type DeleteProjectOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2240,7 +2224,6 @@ func (s DeleteProjectOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteWebhookInput
 type DeleteWebhookInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2282,7 +2265,6 @@ func (s *DeleteWebhookInput) SetProjectName(v string) *DeleteWebhookInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteWebhookOutput
 type DeleteWebhookOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2298,7 +2280,6 @@ func (s DeleteWebhookOutput) GoString() string {
 }
 
 // Information about a Docker image that is managed by AWS CodeBuild.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/EnvironmentImage
 type EnvironmentImage struct {
 	_ struct{} `type:"structure"`
 
@@ -2307,6 +2288,9 @@ type EnvironmentImage struct {
 
 	// The name of the Docker image.
 	Name *string `locationName:"name" type:"string"`
+
+	// A list of environment image versions.
+	Versions []*string `locationName:"versions" type:"list"`
 }
 
 // String returns the string representation
@@ -2331,9 +2315,14 @@ func (s *EnvironmentImage) SetName(v string) *EnvironmentImage {
 	return s
 }
 
+// SetVersions sets the Versions field's value.
+func (s *EnvironmentImage) SetVersions(v []*string) *EnvironmentImage {
+	s.Versions = v
+	return s
+}
+
 // A set of Docker images that are related by programming language and are managed
 // by AWS CodeBuild.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/EnvironmentLanguage
 type EnvironmentLanguage struct {
 	_ struct{} `type:"structure"`
 
@@ -2368,7 +2357,6 @@ func (s *EnvironmentLanguage) SetLanguage(v string) *EnvironmentLanguage {
 
 // A set of Docker images that are related by platform and are managed by AWS
 // CodeBuild.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/EnvironmentPlatform
 type EnvironmentPlatform struct {
 	_ struct{} `type:"structure"`
 
@@ -2402,7 +2390,6 @@ func (s *EnvironmentPlatform) SetPlatform(v string) *EnvironmentPlatform {
 }
 
 // Information about an environment variable for a build project or a build.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/EnvironmentVariable
 type EnvironmentVariable struct {
 	_ struct{} `type:"structure"`
 
@@ -2477,7 +2464,6 @@ func (s *EnvironmentVariable) SetValue(v string) *EnvironmentVariable {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/InvalidateProjectCacheInput
 type InvalidateProjectCacheInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2519,7 +2505,6 @@ func (s *InvalidateProjectCacheInput) SetProjectName(v string) *InvalidateProjec
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/InvalidateProjectCacheOutput
 type InvalidateProjectCacheOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2534,7 +2519,6 @@ func (s InvalidateProjectCacheOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuildsForProjectInput
 type ListBuildsForProjectInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2603,7 +2587,6 @@ func (s *ListBuildsForProjectInput) SetSortOrder(v string) *ListBuildsForProject
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuildsForProjectOutput
 type ListBuildsForProjectOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2640,7 +2623,6 @@ func (s *ListBuildsForProjectOutput) SetNextToken(v string) *ListBuildsForProjec
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuildsInput
 type ListBuildsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2682,7 +2664,6 @@ func (s *ListBuildsInput) SetSortOrder(v string) *ListBuildsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuildsOutput
 type ListBuildsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2718,7 +2699,6 @@ func (s *ListBuildsOutput) SetNextToken(v string) *ListBuildsOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListCuratedEnvironmentImagesInput
 type ListCuratedEnvironmentImagesInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2733,7 +2713,6 @@ func (s ListCuratedEnvironmentImagesInput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListCuratedEnvironmentImagesOutput
 type ListCuratedEnvironmentImagesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2758,7 +2737,6 @@ func (s *ListCuratedEnvironmentImagesOutput) SetPlatforms(v []*EnvironmentPlatfo
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListProjectsInput
 type ListProjectsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2835,7 +2813,6 @@ func (s *ListProjectsInput) SetSortOrder(v string) *ListProjectsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListProjectsOutput
 type ListProjectsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2873,7 +2850,6 @@ func (s *ListProjectsOutput) SetProjects(v []*string) *ListProjectsOutput {
 }
 
 // Information about build logs in Amazon CloudWatch Logs.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/LogsLocation
 type LogsLocation struct {
 	_ struct{} `type:"structure"`
 
@@ -2916,7 +2892,6 @@ func (s *LogsLocation) SetStreamName(v string) *LogsLocation {
 }
 
 // Describes a network interface.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/NetworkInterface
 type NetworkInterface struct {
 	_ struct{} `type:"structure"`
 
@@ -2951,7 +2926,6 @@ func (s *NetworkInterface) SetSubnetId(v string) *NetworkInterface {
 
 // Additional information about a build phase that has an error. You can use
 // this information to help troubleshoot a failed build.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/PhaseContext
 type PhaseContext struct {
 	_ struct{} `type:"structure"`
 
@@ -2986,7 +2960,6 @@ func (s *PhaseContext) SetStatusCode(v string) *PhaseContext {
 }
 
 // Information about a build project.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/Project
 type Project struct {
 	_ struct{} `type:"structure"`
 
@@ -3044,10 +3017,7 @@ type Project struct {
 	// The default is 60 minutes.
 	TimeoutInMinutes *int64 `locationName:"timeoutInMinutes" min:"5" type:"integer"`
 
-	// If your AWS CodeBuild project accesses resources in an Amazon VPC, you provide
-	// this parameter that identifies the VPC ID and the list of security group
-	// IDs and subnet IDs. The security groups and subnets must belong to the same
-	// VPC. You must provide at least one security group and one subnet ID.
+	// Information about the VPC configuration that AWS CodeBuild will access.
 	VpcConfig *VpcConfig `locationName:"vpcConfig" type:"structure"`
 
 	// Information about a webhook in GitHub that connects repository events to
@@ -3162,7 +3132,6 @@ func (s *Project) SetWebhook(v *Webhook) *Project {
 }
 
 // Information about the build output artifacts for the build project.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ProjectArtifacts
 type ProjectArtifacts struct {
 	_ struct{} `type:"structure"`
 
@@ -3327,7 +3296,6 @@ func (s *ProjectArtifacts) SetType(v string) *ProjectArtifacts {
 }
 
 // Information about the build badge for the build project.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ProjectBadge
 type ProjectBadge struct {
 	_ struct{} `type:"structure"`
 
@@ -3363,7 +3331,6 @@ func (s *ProjectBadge) SetBadgeRequestUrl(v string) *ProjectBadge {
 }
 
 // Information about the cache for the build project.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ProjectCache
 type ProjectCache struct {
 	_ struct{} `type:"structure"`
 
@@ -3420,9 +3387,11 @@ func (s *ProjectCache) SetType(v string) *ProjectCache {
 }
 
 // Information about the build environment of the build project.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ProjectEnvironment
 type ProjectEnvironment struct {
 	_ struct{} `type:"structure"`
+
+	// The certificate to use with this build project.
+	Certificate *string `locationName:"certificate" type:"string"`
 
 	// Information about the compute resources the build project will use. Available
 	// values include:
@@ -3510,6 +3479,12 @@ func (s *ProjectEnvironment) Validate() error {
 	return nil
 }
 
+// SetCertificate sets the Certificate field's value.
+func (s *ProjectEnvironment) SetCertificate(v string) *ProjectEnvironment {
+	s.Certificate = &v
+	return s
+}
+
 // SetComputeType sets the ComputeType field's value.
 func (s *ProjectEnvironment) SetComputeType(v string) *ProjectEnvironment {
 	s.ComputeType = &v
@@ -3541,7 +3516,6 @@ func (s *ProjectEnvironment) SetType(v string) *ProjectEnvironment {
 }
 
 // Information about the build input source code for the build project.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ProjectSource
 type ProjectSource struct {
 	_ struct{} `type:"structure"`
 
@@ -3558,6 +3532,13 @@ type ProjectSource struct {
 	// If this value is not specified, a build spec must be included along with
 	// the source code to be built.
 	Buildspec *string `locationName:"buildspec" type:"string"`
+
+	// Information about the git clone depth for the build project.
+	GitCloneDepth *int64 `locationName:"gitCloneDepth" type:"integer"`
+
+	// Enable this flag to ignore SSL warnings while connecting to the project source
+	// code.
+	InsecureSsl *bool `locationName:"insecureSsl" type:"boolean"`
 
 	// Information about the location of the source code to be built. Valid values
 	// include:
@@ -3659,6 +3640,18 @@ func (s *ProjectSource) SetBuildspec(v string) *ProjectSource {
 	return s
 }
 
+// SetGitCloneDepth sets the GitCloneDepth field's value.
+func (s *ProjectSource) SetGitCloneDepth(v int64) *ProjectSource {
+	s.GitCloneDepth = &v
+	return s
+}
+
+// SetInsecureSsl sets the InsecureSsl field's value.
+func (s *ProjectSource) SetInsecureSsl(v bool) *ProjectSource {
+	s.InsecureSsl = &v
+	return s
+}
+
 // SetLocation sets the Location field's value.
 func (s *ProjectSource) SetLocation(v string) *ProjectSource {
 	s.Location = &v
@@ -3677,7 +3670,6 @@ func (s *ProjectSource) SetType(v string) *ProjectSource {
 // This information is for the AWS CodeBuild console's use only. Your code should
 // not get or set this information directly (unless the build project's source
 // type value is BITBUCKET or GITHUB).
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/SourceAuth
 type SourceAuth struct {
 	_ struct{} `type:"structure"`
 
@@ -3726,7 +3718,6 @@ func (s *SourceAuth) SetType(v string) *SourceAuth {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/StartBuildInput
 type StartBuildInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3741,6 +3732,10 @@ type StartBuildInput struct {
 	// A set of environment variables that overrides, for this build only, the latest
 	// ones already defined in the build project.
 	EnvironmentVariablesOverride []*EnvironmentVariable `locationName:"environmentVariablesOverride" type:"list"`
+
+	// The user-defined depth of history, with a minimum value of 0, that overrides,
+	// for this build only, any previous depth of history defined in the build project.
+	GitCloneDepthOverride *int64 `locationName:"gitCloneDepthOverride" type:"integer"`
 
 	// The name of the build project to start running a build.
 	//
@@ -3835,6 +3830,12 @@ func (s *StartBuildInput) SetEnvironmentVariablesOverride(v []*EnvironmentVariab
 	return s
 }
 
+// SetGitCloneDepthOverride sets the GitCloneDepthOverride field's value.
+func (s *StartBuildInput) SetGitCloneDepthOverride(v int64) *StartBuildInput {
+	s.GitCloneDepthOverride = &v
+	return s
+}
+
 // SetProjectName sets the ProjectName field's value.
 func (s *StartBuildInput) SetProjectName(v string) *StartBuildInput {
 	s.ProjectName = &v
@@ -3853,7 +3854,6 @@ func (s *StartBuildInput) SetTimeoutInMinutesOverride(v int64) *StartBuildInput 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/StartBuildOutput
 type StartBuildOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3877,7 +3877,6 @@ func (s *StartBuildOutput) SetBuild(v *Build) *StartBuildOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/StopBuildInput
 type StopBuildInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3919,7 +3918,6 @@ func (s *StopBuildInput) SetId(v string) *StopBuildInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/StopBuildOutput
 type StopBuildOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3946,7 +3944,6 @@ func (s *StopBuildOutput) SetBuild(v *Build) *StopBuildOutput {
 // A tag, consisting of a key and a value.
 //
 // This tag is available for use by AWS services that support tags in AWS CodeBuild.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/Tag
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -3995,7 +3992,6 @@ func (s *Tag) SetValue(v string) *Tag {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/UpdateProjectInput
 type UpdateProjectInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4196,7 +4192,6 @@ func (s *UpdateProjectInput) SetVpcConfig(v *VpcConfig) *UpdateProjectInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/UpdateProjectOutput
 type UpdateProjectOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4220,11 +4215,7 @@ func (s *UpdateProjectOutput) SetProject(v *Project) *UpdateProjectOutput {
 	return s
 }
 
-// If your AWS CodeBuild project accesses resources in an Amazon VPC, you provide
-// this parameter that identifies the VPC ID and the list of security group
-// IDs and subnet IDs. The security groups and subnets must belong to the same
-// VPC. You must provide at least one security group and one subnet ID.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/VpcConfig
+// Information about the VPC configuration that AWS CodeBuild will access.
 type VpcConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -4281,9 +4272,16 @@ func (s *VpcConfig) SetVpcId(v string) *VpcConfig {
 
 // Information about a webhook in GitHub that connects repository events to
 // a build project in AWS CodeBuild.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/Webhook
 type Webhook struct {
 	_ struct{} `type:"structure"`
+
+	// This is the server endpoint that will receive the webhook payload.
+	PayloadUrl *string `locationName:"payloadUrl" min:"1" type:"string"`
+
+	// Use this secret while creating a webhook in GitHub for Enterprise. The secret
+	// allows webhook requests sent by GitHub for Enterprise to be authenticated
+	// by AWS CodeBuild.
+	Secret *string `locationName:"secret" min:"1" type:"string"`
 
 	// The URL to the webhook.
 	Url *string `locationName:"url" min:"1" type:"string"`
@@ -4297,6 +4295,18 @@ func (s Webhook) String() string {
 // GoString returns the string representation
 func (s Webhook) GoString() string {
 	return s.String()
+}
+
+// SetPayloadUrl sets the PayloadUrl field's value.
+func (s *Webhook) SetPayloadUrl(v string) *Webhook {
+	s.PayloadUrl = &v
+	return s
+}
+
+// SetSecret sets the Secret field's value.
+func (s *Webhook) SetSecret(v string) *Webhook {
+	s.Secret = &v
+	return s
 }
 
 // SetUrl sets the Url field's value.
@@ -4475,6 +4485,9 @@ const (
 
 	// SourceTypeBitbucket is a SourceType enum value
 	SourceTypeBitbucket = "BITBUCKET"
+
+	// SourceTypeGithubEnterprise is a SourceType enum value
+	SourceTypeGithubEnterprise = "GITHUB_ENTERPRISE"
 )
 
 const (

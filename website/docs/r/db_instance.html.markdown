@@ -6,7 +6,7 @@ description: |-
   Provides an RDS instance resource.
 ---
 
-# aws\_db\_instance
+# aws_db_instance
 
 Provides an RDS instance resource.  A DB instance is an isolated database
 environment in the cloud.  A DB instance can contain multiple user-created
@@ -165,6 +165,22 @@ associate.
 Replicate database managed by Terraform will promote the database to a fully
 standalone database.
 
+### Timeouts
+
+`aws_db_instance` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `40 minutes`) Used for Creating Instances, Replicas, and
+restoring from Snapshots.
+- `update` - (Default `80 minutes`) Used for Database modifications.
+- `delete` - (Default `40 minutes`) Used for destroying databases. This includes
+the time required to take snapshots.
+
+[1]:
+https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
+[2]:
+https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
+
 ## Attributes Reference
 
 The following attributes are exported:
@@ -197,25 +213,10 @@ On Oracle instances the following is exported additionally:
 
 * `character_set_name` - The character set used on Oracle instances.
 
-
-<a id="timeouts"></a> ## Timeouts
-
-`aws_db_instance` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
-
-- `create` - (Default `40 minutes`) Used for Creating Instances, Replicas, and
-restoring from Snapshots.
-- `update` - (Default `80 minutes`) Used for Database modifications.
-- `delete` - (Default `40 minutes`) Used for destroying databases. This includes
-the time required to take snapshots.
-
-[1]:
-https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
-[2]:
-https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
-
 ## Import
 
 DB Instances can be imported using the `identifier`, e.g.
 
-``` $ terraform import aws_db_instance.default mydb-rds-instance ```
+```
+$ terraform import aws_db_instance.default mydb-rds-instance
+```

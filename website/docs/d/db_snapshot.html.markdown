@@ -6,7 +6,7 @@ description: |-
   Get information on a DB Snapshot.
 ---
 
-# aws\_db\_snapshot
+# Data Source: aws_db_snapshot
 
 Use this data source to get information about a DB Snapshot for use when provisioning DB instances
 
@@ -14,7 +14,7 @@ Use this data source to get information about a DB Snapshot for use when provisi
 
 ## Example Usage
 
-```
+```hcl
 resource "aws_db_instance" "default" {
   allocated_storage    = 10
   engine               = "mysql"

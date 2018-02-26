@@ -3,10 +3,9 @@ package aws
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"regexp"
 	"strings"
-
-	"math/rand"
 	"testing"
 	"time"
 
@@ -18,6 +17,66 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_db_instance", &resource.Sweeper{
+		Name: "aws_db_instance",
+		F:    testSweepDbInstances,
+	})
+}
+
+func testSweepDbInstances(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).rdsconn
+
+	prefixes := []string{
+		"foobarbaz-test-terraform-",
+		"foobarbaz-enhanced-monitoring-",
+		"mydb-rds-",
+		"terraform-",
+		"tf-",
+	}
+
+	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
+		for _, dbi := range out.DBInstances {
+			hasPrefix := false
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(*dbi.DBInstanceIdentifier, prefix) {
+					hasPrefix = true
+				}
+			}
+			if !hasPrefix {
+				continue
+			}
+			log.Printf("[INFO] Deleting DB instance: %s", *dbi.DBInstanceIdentifier)
+
+			_, err := conn.DeleteDBInstance(&rds.DeleteDBInstanceInput{
+				DBInstanceIdentifier: dbi.DBInstanceIdentifier,
+				SkipFinalSnapshot:    aws.Bool(true),
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete DB instance %s: %s",
+					*dbi.DBInstanceIdentifier, err)
+				continue
+			}
+
+			err = waitUntilAwsDbInstanceIsDeleted(*dbi.DBInstanceIdentifier, conn, 40*time.Minute)
+			if err != nil {
+				log.Printf("[ERROR] Failure while waiting for DB instance %s to be deleted: %s",
+					*dbi.DBInstanceIdentifier, err)
+			}
+		}
+		return !lastPage
+	})
+	if err != nil {
+		return fmt.Errorf("Error retrieving DB instances: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSDBInstance_basic(t *testing.T) {
 	var v rds.DBInstance
@@ -194,7 +253,7 @@ func TestAccAWSDBInstance_iamAuth(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBInstanceReplica(t *testing.T) {
+func TestAccAWSDBInstance_replica(t *testing.T) {
 	var s, r rds.DBInstance
 
 	resource.Test(t, resource.TestCase{
@@ -214,7 +273,7 @@ func TestAccAWSDBInstanceReplica(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBInstanceNoSnapshot(t *testing.T) {
+func TestAccAWSDBInstance_noSnapshot(t *testing.T) {
 	var snap rds.DBInstance
 
 	resource.Test(t, resource.TestCase{
@@ -232,7 +291,7 @@ func TestAccAWSDBInstanceNoSnapshot(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBInstanceSnapshot(t *testing.T) {
+func TestAccAWSDBInstance_snapshot(t *testing.T) {
 	var snap rds.DBInstance
 	rInt := acctest.RandInt()
 
@@ -277,7 +336,7 @@ func TestAccAWSDBInstance_enhancedMonitoring(t *testing.T) {
 // Regression test for https://github.com/hashicorp/terraform/issues/3760 .
 // We apply a plan, then change just the iops. If the apply succeeds, we
 // consider this a pass, as before in 3760 the request would fail
-func TestAccAWS_separate_DBInstance_iops_update(t *testing.T) {
+func TestAccAWSDBInstance_separate_iops_update(t *testing.T) {
 	var v rds.DBInstance
 
 	rName := acctest.RandString(5)
@@ -403,6 +462,25 @@ func TestAccAWSDBInstance_diffSuppressInitialState(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBInstanceConfigSuppressInitialState(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_ec2Classic(t *testing.T) {
+	var v rds.DBInstance
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfigEc2Classic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
 				),
@@ -750,7 +828,7 @@ resource "aws_db_instance" "bar" {
 	allocated_storage = 10
 	engine = "MySQL"
 	engine_version = "5.6.35"
-	instance_class = "db.m3.medium"
+	instance_class = "db.t2.small"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
@@ -785,7 +863,7 @@ resource "aws_db_instance" "bar" {
 
 	allocated_storage = 10
 	engine = "MySQL"
-	instance_class = "db.m1.small"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
@@ -855,20 +933,16 @@ func testAccReplicaInstanceConfig(val int) string {
 
 func testAccSnapshotInstanceConfig() string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 resource "aws_db_instance" "snapshot" {
 	identifier = "tf-test-%d"
 
 	allocated_storage = 5
 	engine = "mysql"
 	engine_version = "5.6.35"
-	instance_class = "db.r3.large"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
-	security_group_names = ["default"]
 	backup_retention_period = 1
 
 	publicly_accessible = true
@@ -882,21 +956,17 @@ resource "aws_db_instance" "snapshot" {
 
 func testAccSnapshotInstanceConfigWithSnapshot(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 resource "aws_db_instance" "snapshot" {
 	identifier = "tf-snapshot-%d"
 
 	allocated_storage = 5
 	engine = "mysql"
 	engine_version = "5.6.35"
-	instance_class = "db.r3.large"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	publicly_accessible = true
 	username = "foo"
-    	security_group_names = ["default"]
 	backup_retention_period = 1
 
 	parameter_group_name = "default.mysql5.6"
@@ -933,12 +1003,47 @@ EOF
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
-    name = "enhanced-monitoring-attachment"
+    name = "enhanced-monitoring-attachment-%s"
     roles = [
         "${aws_iam_role.enhanced_policy_role.name}",
     ]
 
-    policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+    policy_arn = "${aws_iam_policy.test.arn}"
+}
+
+resource "aws_iam_policy" "test" {
+  name   = "tf-enhanced-monitoring-policy-%s"
+  policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogGroups",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:PutRetentionPolicy"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:RDS*"
+            ]
+        },
+        {
+            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogStreams",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams",
+                "logs:GetLogEvents"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:RDS*:log-stream:*"
+            ]
+        }
+    ]
+}
+POLICY
 }
 
 resource "aws_db_instance" "enhanced_monitoring" {
@@ -948,7 +1053,7 @@ resource "aws_db_instance" "enhanced_monitoring" {
 	allocated_storage = 5
 	engine = "mysql"
 	engine_version = "5.6.35"
-	instance_class = "db.m3.medium"
+	instance_class = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
@@ -960,7 +1065,7 @@ resource "aws_db_instance" "enhanced_monitoring" {
 	monitoring_interval = "5"
 
 	skip_final_snapshot = true
-}`, rName, rName)
+}`, rName, rName, rName, rName)
 }
 
 func testAccSnapshotInstanceConfig_iopsUpdate(rName string, iops int) string {
@@ -1027,7 +1132,7 @@ func testAccAWSDBInstanceConfigWithSubnetGroup(rName string) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name="testAccAWSDBInstanceConfigWithSubnetGroup"
+		Name = "terraform-testacc-db-instance-with-subnet-group"
 	}
 }
 
@@ -1081,14 +1186,14 @@ func testAccAWSDBInstanceConfigWithSubnetGroupUpdated(rName string) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name="testAccAWSDBInstanceConfigWithSubnetGroupUpdated"
+		Name = "terraform-testacc-db-instance-with-subnet-group-updated-foo"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.10.0.0/16"
 	tags {
-		Name="testAccAWSDBInstanceConfigWithSubnetGroupUpdated_other"
+		Name = "terraform-testacc-db-instance-with-subnet-group-updated-bar"
 	}
 }
 
@@ -1169,9 +1274,9 @@ func testAccAWSDBMSSQL_timezone(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-	tags {
-		Name = "tf-rds-mssql-timezone-test"
-	}
+  tags {
+    Name = "terraform-testacc-db-instance-mssql-timezone"
+  }
 }
 
 resource "aws_db_subnet_group" "rds_one" {
@@ -1235,9 +1340,9 @@ func testAccAWSDBMSSQL_timezone_AKST(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-	tags {
-		Name = "tf-rds-mssql-timezone-test"
-	}
+  tags {
+    Name = "terraform-testacc-db-instance-mssql-timezone-akst"
+  }
 }
 
 resource "aws_db_subnet_group" "rds_one" {
@@ -1310,6 +1415,29 @@ resource "aws_db_instance" "bar" {
 	skip_final_snapshot = true
 }
 `, acctest.RandInt())
+
+func testAccAWSDBInstanceConfigEc2Classic(rInt int) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_db_instance" "bar" {
+  identifier = "foobarbaz-test-terraform-%d"
+  allocated_storage = 10
+  engine = "mysql"
+  engine_version = "5.6"
+  instance_class = "db.m3.medium"
+  name = "baz"
+  password = "barbarbarbar"
+  username = "foo"
+  publicly_accessible = true
+  security_group_names = ["default"]
+  parameter_group_name = "default.mysql5.6"
+  skip_final_snapshot = true
+}
+`, rInt)
+}
 
 func testAccAWSDBInstanceConfigSuppressInitialState(rInt int) string {
 	return fmt.Sprintf(`

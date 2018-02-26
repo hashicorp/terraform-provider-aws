@@ -6,7 +6,7 @@ description: |-
   Provides a CloudWatch Event Target resource.
 ---
 
-# aws\_cloudwatch\_event\_target
+# aws_cloudwatch_event_target
 
 Provides a CloudWatch Event Target resource.
 

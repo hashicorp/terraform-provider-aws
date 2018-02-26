@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway API Key.
 ---
 
-# aws\_api\_gateway\_api\_key
+# aws_api_gateway_api_key
 
 Provides an API Gateway API Key.
 

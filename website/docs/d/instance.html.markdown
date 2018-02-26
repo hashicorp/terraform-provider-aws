@@ -6,7 +6,7 @@ description: |-
   Get information on an Amazon EC2 Instance.
 ---
 
-# aws\_instance
+# Data Source: aws_instance
 
 Use this data source to get the ID of an Amazon EC2 Instance for use in other
 resources.
@@ -54,6 +54,7 @@ are exported:
 ~> **NOTE:** Some values are not always set and may not be available for
 interpolation.
 
+* `ami` - The ID of the AMI used to launch the instance.
 * `associate_public_ip_address` - Whether or not the Instance is associated with a public IP address or not (Boolean).
 * `availability_zone` - The availability zone of the Instance.
 * `ebs_block_device` - The EBS block device mappings of the Instance.
