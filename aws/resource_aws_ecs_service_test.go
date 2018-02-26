@@ -461,7 +461,6 @@ func TestAccAWSEcsService_withPlacementConstraints(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo"),
 					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_constraints.#", "1"),
-					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_constraints.#", "2"),
 				),
 			},
 		},
