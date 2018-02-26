@@ -157,6 +157,12 @@ func resourceAwsLb() *schema.Resource {
 				Default:  60,
 			},
 
+			"enable_cross_zone_load_balancing": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"ip_address_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -359,6 +365,14 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 			Key:   aws.String("idle_timeout.timeout_seconds"),
 			Value: aws.String(fmt.Sprintf("%d", d.Get("idle_timeout").(int))),
+		})
+	}
+
+	// It's important to know that Idle timeout is only supported for Network Loadbalancers
+	if d.Get("load_balancer_type").(string) == "network" && d.HasChange("enable_cross_zone_load_balancing") {
+		attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+			Key:   aws.String("load_balancing.cross_zone.enabled"),
+			Value: aws.String(fmt.Sprintf("%d", d.Get("enable_cross_zone_load_balancing").(int))),
 		})
 	}
 
@@ -679,8 +693,12 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 			d.Set("idle_timeout", timeout)
 		case "deletion_protection.enabled":
 			protectionEnabled := (*attr.Value) == "true"
-			log.Printf("[DEBUG] Setting ALB Deletion Protection Enabled: %t", protectionEnabled)
+			log.Printf("[DEBUG] Setting LB Deletion Protection Enabled: %t", protectionEnabled)
 			d.Set("enable_deletion_protection", protectionEnabled)
+		case "load_balancing.cross_zone.enabled":
+			crossZoneLbEnabled := (*attr.Value) == "true"
+			log.Printf("[DEBUG] Setting NLB Cross Zone Load Balancing Enabled: %t", crossZoneLbEnabled)
+			d.Set("enable_cross_zone_load_balancing", crossZoneLbEnabled)
 		}
 	}
 
