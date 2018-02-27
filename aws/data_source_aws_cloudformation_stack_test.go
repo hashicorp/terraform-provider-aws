@@ -122,7 +122,8 @@ resource "aws_cloudformation_stack" "yaml" {
   parameters {
     CIDR = "10.10.10.0/24"
   }
-  timeout_in_minutes = 6
+	timeout_in_minutes = 6
+	enable_termination_protection = false
   template_body = <<STACK
 Parameters:
   CIDR:
