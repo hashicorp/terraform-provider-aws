@@ -41,6 +41,10 @@ func dataSourceAwsCloudFormationStack() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"enable_termination_protection": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"notification_arns": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -91,6 +95,7 @@ func dataSourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface
 
 	d.Set("description", stack.Description)
 	d.Set("disable_rollback", stack.DisableRollback)
+	d.Set("enable_termination_protection", stack.EnableTerminationProtection)
 	d.Set("timeout_in_minutes", stack.TimeoutInMinutes)
 	d.Set("iam_role_arn", stack.RoleARN)
 

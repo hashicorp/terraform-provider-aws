@@ -63,6 +63,11 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"enable_termination_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			"notification_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -135,6 +140,9 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 	}
 	if v, ok := d.GetOk("disable_rollback"); ok {
 		input.DisableRollback = aws.Bool(v.(bool))
+	}
+	if v, ok := d.GetOk("enable_termination_protection"); ok {
+		input.EnableTerminationProtection = aws.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("notification_arns"); ok {
 		input.NotificationARNs = expandStringList(v.(*schema.Set).List())
@@ -319,6 +327,9 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 	}
 	if stack.DisableRollback != nil {
 		d.Set("disable_rollback", stack.DisableRollback)
+	}
+	if stack.EnableTerminationProtection != nil {
+		d.Set("enable_termination_protection", stack.EnableTerminationProtection)
 	}
 	if len(stack.NotificationARNs) > 0 {
 		err = d.Set("notification_arns", schema.NewSet(schema.HashString, flattenStringList(stack.NotificationARNs)))

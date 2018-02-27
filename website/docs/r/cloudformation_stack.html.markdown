@@ -56,6 +56,7 @@ The following arguments are supported:
   Valid values: `CAPABILITY_IAM` or `CAPABILITY_NAMED_IAM`
 * `disable_rollback` - (Optional) Set to true to disable rollback of the stack if stack creation failed.
   Conflicts with `on_failure`.
+* `enable_termination_protection` - (Optional) Set to true to prevent the contents of the stack from being terminated by API calls.
 * `notification_arns` - (Optional) A list of SNS topic ARNs to publish stack related events.
 * `on_failure` - (Optional) Action to be taken if stack creation fails. This must be
   one of: `DO_NOTHING`, `ROLLBACK`, or `DELETE`. Conflicts with `disable_rollback`.
