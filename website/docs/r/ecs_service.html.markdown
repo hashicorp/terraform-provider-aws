@@ -70,7 +70,7 @@ into consideration during task placement. The maximum number of
 Load balancers support the following:
 
 * `elb_name` - (Required for ELB Classic) The name of the ELB (Classic) to associate with the service.
-* `target_group_arn` - (Required for modern Load Balancers) The ARN of the Load Balancer target group to associate with the service.
+* `target_group_arn` - (Required for ALB/NLB) The ARN of the Load Balancer target group to associate with the service.
 * `container_name` - (Required) The name of the container to associate with the load balancer (as it appears in a container definition).
 * `container_port` - (Required) The port on the container to associate with the load balancer.
 
