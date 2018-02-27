@@ -42,7 +42,9 @@ func TestAccAWSCloudFormationStack_dataSource_basic(t *testing.T) {
 func testAccCheckAwsCloudFormationStackDataSourceConfig_basic(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "cfs" {
-  name = "%s"
+	name = "%s"
+	enable_termination_protection = false
+	disable_rollback = false
   parameters {
     CIDR = "10.10.10.0/24"
   }
