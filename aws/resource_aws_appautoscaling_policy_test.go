@@ -77,8 +77,9 @@ func TestAccAWSAppautoScalingPolicy_nestedSchema(t *testing.T) {
 func TestAccAWSAppautoScalingPolicy_targetTrackingEcs(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 
-	randClusterName := fmt.Sprintf("cluster%s", acctest.RandString(10))
-	randPolicyName := fmt.Sprintf("terraform-test-foobar-%s", acctest.RandString(5))
+	randVpcThirdOctet := acctest.RandIntRange(0, 255)
+	randName := fmt.Sprintf("tf-acc-appautoscaling-tt-ecs-%s", acctest.RandString(10))
+	randLoadBalancerName := fmt.Sprintf("tf-acc-appautoscaling-tt-ecs-%s", acctest.RandString(3))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -86,10 +87,10 @@ func TestAccAWSAppautoScalingPolicy_targetTrackingEcs(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppautoscalingPolicyTargetTrackingEcs(randClusterName, randPolicyName),
+				Config: testAccAWSAppautoscalingPolicyTargetTrackingEcs(randVpcThirdOctet, randName, randName, randName, randName, randName, randLoadBalancerName, randName, randName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingPolicyExists("aws_appautoscaling_policy.ecs_target_track", &policy),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.ecs_target_track", "name", randPolicyName),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.ecs_target_track", "name", randName),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.ecs_target_track", "service_namespace", "ecs"),
 				),
 			},
@@ -442,41 +443,150 @@ resource "aws_appautoscaling_policy" "foobar_simple" {
 }
 
 func testAccAWSAppautoscalingPolicyTargetTrackingEcs(
+	randVpcThirdOctet int,
+	randVpcName string,
 	randClusterName string,
-	randPolicyName string) string {
+	randEcsTaskDefinitionFamily string,
+	randIamRoleName string,
+	randIamPolicyName string,
+	randLoadBalancerName string,
+	randServiceName string,
+	randAutoscalingPolicyName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "foo" {
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.42.%d.0/24"
+
+  tags {
+    Name = "%s"
+  }
+}
+
+resource "aws_subnet" "main" {
+  count             = 2
+  cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, 2, count.index)}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  vpc_id            = "${aws_vpc.main.id}"
+}
+
+resource "aws_ecs_cluster" "main" {
   name = "%s"
 }
 
 resource "aws_ecs_task_definition" "task" {
-  family = "foobar"
+  family = "%s"
 
   container_definitions = <<EOF
 [
-	{
-		"name": "busybox",
-		"image": "busybox:latest",
-		"cpu": 10,
-		"memory": 128,
-		"essential": true
-	}
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "ghost:latest",
+    "memory": 512,
+    "name": "ghost",
+    "portMappings": [
+      {
+        "containerPort": 2368,
+        "hostPort": 8080
+      }
+    ]
+  }
 ]
 EOF
 }
 
-resource "aws_ecs_service" "service" {
-  name                               = "foobar"
-  cluster                            = "${aws_ecs_cluster.foo.id}"
-  task_definition                    = "${aws_ecs_task_definition.task.arn}"
-  desired_count                      = 1
-  deployment_maximum_percent         = 200
-  deployment_minimum_healthy_percent = 50
+resource "aws_iam_role" "ecs_service" {
+  name = "%s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ecs.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
 }
 
-resource "aws_appautoscaling_target" "tgt" {
+resource "aws_iam_role_policy" "ecs_service" {
+  name = "%s"
+  role = "${aws_iam_role.ecs_service.name}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:Describe*",
+        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+        "elasticloadbalancing:DeregisterTargets",
+        "elasticloadbalancing:Describe*",
+        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+        "elasticloadbalancing:RegisterTargets"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lb" "main" {
+  name     = "%s"
+  internal = true
+  subnets  = ["${aws_subnet.main.*.id}"]
+}
+
+resource "aws_lb_target_group" "default" {
+  name     = "${aws_lb.main.name}"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.main.id}"
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = "${aws_lb.main.id}"
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.default.id}"
+    type             = "forward"
+  }
+}
+
+resource "aws_ecs_service" "service" {
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.main.id}"
+  task_definition = "${aws_ecs_task_definition.task.arn}"
+  desired_count   = 1
+  iam_role        = "${aws_iam_role.ecs_service.name}"
+
+  load_balancer {
+    target_group_arn = "${aws_lb_target_group.default.id}"
+    container_name   = "ghost"
+    container_port   = "2368"
+  }
+
+  depends_on = [
+    "aws_iam_role_policy.ecs_service",
+    "aws_lb_listener.http",
+  ]
+}
+
+resource "aws_appautoscaling_target" "target" {
   service_namespace  = "ecs"
-  resource_id        = "service/${aws_ecs_cluster.foo.name}/${aws_ecs_service.service.name}"
+  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.service.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   min_capacity       = 1
   max_capacity       = 4
@@ -484,12 +594,14 @@ resource "aws_appautoscaling_target" "tgt" {
 
 resource "aws_appautoscaling_policy" "ecs_target_track" {
   name               = "%s"
-  service_namespace  = "${aws_appautoscaling_target.tgt.service_namespace}"
-  resource_id        = "${aws_appautoscaling_target.tgt.resource_id}"
-  scalable_dimension = "${aws_appautoscaling_target.tgt.scalable_dimension}"
+  policy_type        = "TargetTrackingScaling"
+  service_namespace  = "${aws_appautoscaling_target.target.service_namespace}"
+  resource_id        = "${aws_appautoscaling_target.target.resource_id}"
+  scalable_dimension = "${aws_appautoscaling_target.target.scalable_dimension}"
 
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
+      resource_label         = "${aws_lb.main.arn_suffix}/${aws_lb_target_group.default.arn_suffix}"
       predefined_metric_type = "ALBRequestCountPerTarget"
     }
 
@@ -498,8 +610,7 @@ resource "aws_appautoscaling_policy" "ecs_target_track" {
     scale_out_cooldown = 60
   }
 }
-
-`, randClusterName, randPolicyName)
+`, randVpcThirdOctet, randVpcName, randClusterName, randEcsTaskDefinitionFamily, randIamRoleName, randIamPolicyName, randLoadBalancerName, randServiceName, randAutoscalingPolicyName)
 }
 
 func testAccAWSAppautoscalingPolicyDynamoDB(
