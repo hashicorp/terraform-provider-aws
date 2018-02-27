@@ -5,6 +5,10 @@ FEATURES:
 * **New Data Source:** `aws_kms_key` [GH-2224]
 * **New Resource:** `aws_organizations_organization` [GH-903]
 
+ENHANCEMENTS:
+
+* resource/aws_iam_user_policy: Add support for import [GH-3198]
+
 ## 1.10.0 (February 24, 2018)
 
 NOTES:
