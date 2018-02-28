@@ -2888,6 +2888,53 @@ func TestValidateDxConnectionBandWidth(t *testing.T) {
 	}
 }
 
+func TestValidateKmsKey(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "arbitrary-uuid-1234",
+			ErrCount: 0,
+		},
+		{
+			Value:    "arn:aws:kms:us-west-2:111122223333:key/arbitrary-uuid-1234",
+			ErrCount: 0,
+		},
+		{
+			Value:    "alias/arbitrary-key",
+			ErrCount: 0,
+		},
+		{
+			Value:    "alias/arbitrary/key",
+			ErrCount: 0,
+		},
+		{
+			Value:    "arn:aws:kms:us-west-2:111122223333:alias/arbitrary-key",
+			ErrCount: 0,
+		},
+		{
+			Value:    "arn:aws:kms:us-west-2:111122223333:alias/arbitrary/key",
+			ErrCount: 0,
+		},
+		{
+			Value:    "$%wrongkey",
+			ErrCount: 1,
+		},
+		{
+			Value:    "arn:aws:lamda:foo:bar:key/xyz",
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateKmsKey(tc.Value, "key_id")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("%q validation failed: %v", tc.Value, errors)
+		}
+	}
+}
+
 func TestValidateCognitoUserPoolReplyEmailAddress(t *testing.T) {
 	validTypes := []string{
 		"foo@gmail.com",

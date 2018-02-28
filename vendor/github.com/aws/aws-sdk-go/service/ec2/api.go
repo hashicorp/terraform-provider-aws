@@ -4650,6 +4650,9 @@ func (c *EC2) CreateSnapshotRequest(input *CreateSnapshotInput) (req *request.Re
 // encrypted. Your encrypted volumes and any associated snapshots always remain
 // protected.
 //
+// You can tag your snapshots during creation. For more information, see Tagging
+// Your Amazon EC2 Resources (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html).
+//
 // For more information, see Amazon Elastic Block Store (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AmazonEBS.html)
 // and Amazon EBS Encryption (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
 // in the Amazon Elastic Compute Cloud User Guide.
@@ -29174,6 +29177,9 @@ type CreateSnapshotInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
+	// The tags to apply to the snapshot during creation.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
+
 	// The ID of the EBS volume.
 	//
 	// VolumeId is a required field
@@ -29212,6 +29218,12 @@ func (s *CreateSnapshotInput) SetDescription(v string) *CreateSnapshotInput {
 // SetDryRun sets the DryRun field's value.
 func (s *CreateSnapshotInput) SetDryRun(v bool) *CreateSnapshotInput {
 	s.DryRun = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateSnapshotInput) SetTagSpecifications(v []*TagSpecification) *CreateSnapshotInput {
+	s.TagSpecifications = v
 	return s
 }
 
