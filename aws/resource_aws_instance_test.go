@@ -701,6 +701,43 @@ func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_NetworkInstanceRemovingAllSecurityGroups(t *testing.T) {
+	var v ec2.Instance
+
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_instance.foo_instance",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceNetworkInstanceVPCSecurityGroupIDs(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"aws_instance.foo_instance", &v),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo_instance", "security_groups.#", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo_instance", "vpc_security_group_ids.#", "1"),
+				),
+			},
+			{
+				Config: testAccInstanceNetworkInstanceVPCRemoveSecurityGroupIDs(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"aws_instance.foo_instance", &v),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo_instance", "security_groups.#", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo_instance", "vpc_security_group_ids.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
 	var v ec2.Instance
 
@@ -2236,6 +2273,53 @@ resource "aws_eip" "foo_eip" {
   instance = "${aws_instance.foo_instance.id}"
   vpc = true
 	depends_on = ["aws_internet_gateway.gw"]
+}
+`, rInt)
+}
+
+func testAccInstanceNetworkInstanceVPCRemoveSecurityGroupIDs(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_internet_gateway" "gw" {
+  vpc_id = "${aws_vpc.foo.id}"
+}
+
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+    tags {
+        Name = "tf-network-test"
+    }
+}
+
+resource "aws_security_group" "tf_test_foo" {
+  name = "tf_test_%d"
+  description = "foo"
+  vpc_id="${aws_vpc.foo.id}"
+
+  ingress {
+    protocol = "icmp"
+    from_port = -1
+    to_port = -1
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_subnet" "foo" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id = "${aws_vpc.foo.id}"
+}
+
+resource "aws_instance" "foo_instance" {
+  ami = "ami-21f78e11"
+  instance_type = "t1.micro"
+  vpc_security_group_ids = []
+  subnet_id = "${aws_subnet.foo.id}"
+    depends_on = ["aws_internet_gateway.gw"]
+}
+
+resource "aws_eip" "foo_eip" {
+  instance = "${aws_instance.foo_instance.id}"
+  vpc = true
+    depends_on = ["aws_internet_gateway.gw"]
 }
 `, rInt)
 }
