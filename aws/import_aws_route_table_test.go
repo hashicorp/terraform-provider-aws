@@ -105,6 +105,10 @@ resource "aws_nat_gateway" "nat" {
   count         = "${length(split(",", var.private_subnet_cidrs))}"
   allocation_id = "${element(aws_eip.nat.*.id, count.index)}"
   subnet_id     = "${aws_subnet.tf_test_subnet.id}"
+
+  tags {
+    Name = "terraform-testacc-route-table-import-complex-default"
+  }
 }
 
 resource "aws_route_table" "mod" {

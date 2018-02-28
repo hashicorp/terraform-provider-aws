@@ -428,7 +428,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if service.LoadBalancers != nil {
-		d.Set("load_balancers", flattenEcsLoadBalancers(service.LoadBalancers))
+		d.Set("load_balancer", flattenEcsLoadBalancers(service.LoadBalancers))
 	}
 
 	if err := d.Set("placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {

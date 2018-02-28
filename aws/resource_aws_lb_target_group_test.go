@@ -703,6 +703,43 @@ func TestAccAWSLBTargetGroup_defaults_network(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBTargetGroup_stickinessWithTCPDisabled(t *testing.T) {
+	var conf elbv2.TargetGroup
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_stickinessWithTCP(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &conf),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.type", "lb_cookie"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.cookie_duration", "86400"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_stickinessWithTCPEnabledShouldError(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSLBTargetGroupConfig_stickinessWithTCP(true),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Network Load Balancers do not support Stickiness"),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLBTargetGroupExists(n string, res *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1359,3 +1396,27 @@ resource "aws_vpc" "test" {
 	}
 }
 `
+
+func testAccAWSLBTargetGroupConfig_stickinessWithTCP(enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name_prefix = "tf-"
+  port        = 25
+  protocol    = "TCP"
+  vpc_id      = "${aws_vpc.test.id}"
+
+  stickiness {
+    type    = "lb_cookie"
+    enabled = %t
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    Name = "testAccAWSLBTargetGroupConfig_namePrefix"
+  }
+}
+`, enabled)
+}
