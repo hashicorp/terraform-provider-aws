@@ -355,6 +355,10 @@ resource "aws_vpc" "foo" {
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
+
+	tags {
+		Name = "terraform-testacc-route-table"
+	}
 }
 
 resource "aws_route_table" "foo" {
@@ -377,6 +381,10 @@ resource "aws_vpc" "foo" {
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
+
+	tags {
+		Name = "terraform-testacc-route-table"
+	}
 }
 
 resource "aws_route_table" "foo" {
@@ -492,6 +500,10 @@ resource "aws_vpc" "foo" {
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
+
+	tags {
+		Name = "terraform-testacc-route-table-vpc-peering-foo"
+	}
 }
 
 resource "aws_vpc" "bar" {
@@ -503,6 +515,10 @@ resource "aws_vpc" "bar" {
 
 resource "aws_internet_gateway" "bar" {
 	vpc_id = "${aws_vpc.bar.id}"
+
+	tags {
+		Name = "terraform-testacc-route-table-vpc-peering-bar"
+	}
 }
 
 resource "aws_vpc_peering_connection" "foo" {

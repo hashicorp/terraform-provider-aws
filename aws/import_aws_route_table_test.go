@@ -93,7 +93,7 @@ resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.default.id}"
 
   tags {
-    Name = "tf-rt-import-test"
+    Name = "terraform-testacc-route-table-import-complex-default"
   }
 }
 
@@ -154,7 +154,7 @@ resource "aws_internet_gateway" "ogw" {
   vpc_id = "${aws_vpc.bar.id}"
 
   tags {
-    Name = "tf-rt-import-test"
+    Name = "terraform-testacc-route-table-import-complex-bar"
   }
 }
 
