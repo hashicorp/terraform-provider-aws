@@ -53,6 +53,29 @@ func TestAccAWSEMRCluster_instance_group(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRCluster_Kerberos_ClusterDedicatedKdc(t *testing.T) {
+	var cluster emr.Cluster
+	r := acctest.RandInt()
+	password := fmt.Sprintf("NeverKeepPasswordsInPlainText%d!", r)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfig_Kerberos_ClusterDedicatedKdc(r, password),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "kerberos_attributes.#", "1"),
+					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "kerberos_attributes.0.kdc_admin_password", password),
+					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "kerberos_attributes.0.realm", "EC2.INTERNAL"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEMRCluster_security_config(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
@@ -985,6 +1008,130 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
 `, r)
+}
+
+func testAccAWSEmrClusterConfig_Kerberos_ClusterDedicatedKdc(r int, password string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-west-2"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_emr_security_configuration" "foo" {
+  configuration = <<EOF
+{
+  "AuthenticationConfiguration": {
+    "KerberosConfiguration": {
+      "Provider": "ClusterDedicatedKdc",
+      "ClusterDedicatedKdcConfiguration": {
+        "TicketLifetimeInHours": 24
+      }
+    }
+  }
+}
+EOF
+}
+
+resource "aws_emr_cluster" "tf-test-cluster" {
+  applications                      = ["Spark"]
+  core_instance_count               = 1
+  core_instance_type                = "c4.large"
+  keep_job_flow_alive_when_no_steps = true
+  master_instance_type              = "c4.large"
+  name                              = "emr-test-%[1]d"
+  release_label                     = "emr-5.12.0"
+  security_configuration            = "${aws_emr_security_configuration.foo.name}"
+  service_role                      = "EMR_DefaultRole"
+  termination_protection            = false
+
+  ec2_attributes {
+    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = "${aws_subnet.main.0.id}"
+  }
+
+  kerberos_attributes {
+    kdc_admin_password = "%[2]s"
+    realm              = "EC2.INTERNAL"
+  }
+
+  depends_on = ["aws_main_route_table_association.a"]
+}
+
+resource "aws_security_group" "allow_all" {
+  name        = "allow_all_%[1]d"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  depends_on = ["aws_subnet.main"]
+
+  lifecycle {
+    ignore_changes = ["ingress", "egress"]
+  }
+
+  tags {
+    Name = "emr_test"
+  }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+
+  tags {
+    Name = "terraform-testacc-emr-cluster-kerberos-cluster-dedicated-kdc"
+  }
+}
+
+resource "aws_subnet" "main" {
+  availability_zone = "${element(data.aws_availability_zones.available.names, count.index)}"
+  count             = 2
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = "${aws_vpc.main.id}"
+
+  tags {
+    Name = "terraform-testacc-emr-cluster-kerberos-cluster-dedicated-kdc"
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = "${aws_vpc.main.id}"
+
+  tags {
+    Name = "terraform-testacc-emr-cluster-kerberos-cluster-dedicated-kdc"
+  }
+}
+
+resource "aws_route_table" "r" {
+  vpc_id = "${aws_vpc.main.id}"
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.gw.id}"
+  }
+}
+
+resource "aws_main_route_table_association" "a" {
+  route_table_id = "${aws_route_table.r.id}"
+  vpc_id         = "${aws_vpc.main.id}"
+}
+`, r, password)
 }
 
 func testAccAWSEmrClusterConfig_SecurityConfiguration(r int) string {

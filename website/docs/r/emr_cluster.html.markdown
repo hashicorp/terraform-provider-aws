@@ -125,6 +125,7 @@ The following arguments are supported:
 * `keep_job_flow_alive_when_no_steps` - (Optional) Switch on/off run cluster with no steps or when all steps are complete (default is on)
 * `ec2_attributes` - (Optional) Attributes for the EC2 instances running the job
 flow. Defined below
+* `kerberos_attributes` - (Optional) Kerberos configuration for the cluster. Defined below
 * `ebs_root_volume_size` - (Optional) Size in GiB of the EBS root device volume of the Linux AMI that is used for each EC2 instance. Available in Amazon EMR version 4.x and later.
 * `custom_ami_id` - (Optional) A custom Amazon Linux AMI for the cluster (instead of an EMR-owned AMI). Available in Amazon EMR version 5.7.0 and later.
 * `bootstrap_action` - (Optional) List of bootstrap actions that will be run before Hadoop is started on
@@ -165,6 +166,15 @@ any Security Group used in `emr_managed_master_security_group` and
 Groups](http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-man-sec-groups.html)
 for more information about the EMR-managed security group rules.
 
+## kerberos_attributes
+
+Attributes for Kerberos configuration
+
+* `ad_domain_join_password` - (Optional) The Active Directory password for `ad_domain_join_user`
+* `ad_domain_join_user` - (Optional) Required only when establishing a cross-realm trust with an Active Directory domain. A user with sufficient privileges to join resources to the domain.
+* `cross_realm_trust_principal_password` - (Optional) Required only when establishing a cross-realm trust with a KDC in a different realm. The cross-realm principal password, which must be identical across realms.
+* `kdc_admin_password` - (Required) The password used within the cluster for the kadmin service on the cluster-dedicated KDC, which maintains Kerberos principals, password policies, and keytabs for the cluster.
+* `realm` - (Required) The name of the Kerberos realm to which all nodes in a cluster belong. For example, `EC2.INTERNAL`
 
 ## instance_group
 
