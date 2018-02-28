@@ -78,6 +78,10 @@ resource "aws_nat_gateway" "test" {
   subnet_id     = "${aws_subnet.test.id}"
   allocation_id = "${aws_eip.test.id}"
 
+  tags {
+    Name = "terraform-testacc-nat-gw-data-source"
+  }
+
   depends_on = ["aws_internet_gateway.test"]
 }
 
