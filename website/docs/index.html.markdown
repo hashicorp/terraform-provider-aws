@@ -163,6 +163,8 @@ The following arguments are supported in the `provider` block:
   it can also be sourced from the `AWS_DEFAULT_REGION` environment variables, or
   via a shared credentials file if `profile` is specified.
 
+* `proxyurl` - (Optional) Proxy configuration for http transport.
+
 * `profile` - (Optional) This is the AWS profile name as set in the shared credentials
   file.
 
