@@ -112,6 +112,7 @@ data "aws_eip" "by_tag" {
 		test_tag = "${aws_eip.test.tags["test_tag"]}"
 		random_tag = "%d"
 	}
+	depends_on = ["aws_eip.test"]
 }
 `, rInt)
 }
