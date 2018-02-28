@@ -57,7 +57,8 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						},
 						"default_ttl": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  86400,
 						},
 						"forwarded_values": {
 							Type:     schema.TypeSet,
@@ -122,11 +123,13 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						},
 						"max_ttl": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  31536000,
 						},
 						"min_ttl": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  0,
 						},
 						"path_pattern": {
 							Type:     schema.TypeString,
@@ -205,7 +208,8 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						},
 						"default_ttl": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  86400,
 						},
 						"forwarded_values": {
 							Type:     schema.TypeSet,
@@ -270,11 +274,13 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						},
 						"max_ttl": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  31536000,
 						},
 						"min_ttl": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  0,
 						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,
