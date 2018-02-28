@@ -26,7 +26,7 @@ resource "aws_lb" "example" {
 resource "aws_api_gateway_vpc_link" "example" {
   name = "example"
   description = "example description"
-  target_arn = "${aws_lb.example.arn}"
+  target_arns = ["${aws_lb.example.arn}"]
 }
 ```
 
@@ -36,7 +36,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name used to label and identify the VPC link.
 * `description` - (Optional) The description of the VPC link.
-* `target_arn` - (Required, ForceNew) The ARN of a network load balancer in the VPC targeted by the VPC link.
+* `target_arns` - (Required, ForceNew) The list of network load balancer arns in the VPC targeted by the VPC link. Currently AWS only supports 1 target.
 
 ## Attributes Reference
 
