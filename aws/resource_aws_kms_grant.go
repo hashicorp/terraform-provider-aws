@@ -41,7 +41,8 @@ func resourceAwsKmsGrant() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 			"operations": {
-				Type: schema.TypeList,
+				Type: schema.TypeSet,
+				Set:  schema.HashString,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validateAwsKmsGrantOperation,
@@ -77,7 +78,7 @@ func resourceAwsKmsGrant() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 			"grant_creation_tokens": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				ForceNew: true,
@@ -100,7 +101,7 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 	input := kms.CreateGrantInput{
 		GranteePrincipal: aws.String(d.Get("grantee_principal").(string)),
 		KeyId:            aws.String(d.Get("key_id").(string)),
-		Operations:       expandStringList(d.Get("operations").([]interface{})),
+		Operations:       expandStringSet(d.Get("operations").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -113,14 +114,14 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 		input.RetiringPrincipal = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("grant_creation_tokens"); ok {
-		input.GrantTokens = expandStringList(v.([]interface{}))
+		input.GrantTokens = expandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG]: Adding new KMS Grant: %s", input)
 
 	var out *kms.CreateGrantOutput
 
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		var err error
 
 		out, err = conn.CreateGrant(&input)
@@ -129,7 +130,7 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 			if awsErr, ok := err.(awserr.Error); ok {
 				// Error Codes: https://docs.aws.amazon.com/sdk-for-go/api/service/kms/#KMS.CreateGrant
 				// Under some circumstances a newly created IAM Role doesn't show up and causes
-				// an InvalidArnException to be thrown. TODO: Possibly change the aws_iam_role code?
+				// an InvalidArnException to be thrown.
 				if awsErr.Code() == "DependencyTimeoutException" ||
 					awsErr.Code() == "InternalException" ||
 					awsErr.Code() == "InvalidArnException" {
@@ -168,6 +169,12 @@ func resourceAwsKmsGrantRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+
+	if grant == nil {
+		log.Printf("[WARN] %s KMS grant id not found for key id %s, removing from state file", grantId, keyId)
+		d.SetId("")
+	}
+
 	if grant != nil {
 		// The grant sometimes contains principals that identified by their unique id: "AROAJYCVIVUZIMTXXXXX"
 		// instead of "arn:aws:...", in this case don't update the state file
@@ -189,16 +196,17 @@ func resourceAwsKmsGrantRead(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		d.Set("operations", grant.Operations)
+		if err := d.Set("operations", aws.StringValueSlice(grant.Operations)); err != nil {
+			log.Print("[DEBUG] Error setting operations for grant %s with error %s", grantId, err)
+		}
 		if *grant.Name != "" {
 			d.Set("name", grant.Name)
 		}
 		if grant.Constraints != nil {
-			d.Set("constraints", flattenKmsGrantConstraints(grant.Constraints))
+			if err := d.Set("constraints", flattenKmsGrantConstraints(grant.Constraints)); err != nil {
+				log.Print("[DEBUG] Error setting constraints for grant %s with error %s", grantId, err)
+			}
 		}
-	} else {
-		log.Printf("[WARN] %s KMS grant id not found for key id %s, removing from state file", grantId, keyId)
-		d.SetId("")
 	}
 
 	return nil
@@ -245,22 +253,19 @@ func resourceAwsKmsGrantExists(d *schema.ResourceData, meta interface{}) (bool, 
 	grant, err := findKmsGrantByIdWithRetry(conn, keyId, grantId)
 
 	if err != nil {
-		if grant != nil {
-			return true, err
-		}
-		return false, err
+		return true, err
 	}
 	if grant != nil {
 		return true, err
 	}
 
-	return false, err
+	return false, nil
 }
 
 func getKmsGrantById(grants []*kms.GrantListEntry, grantIdentifier string) *kms.GrantListEntry {
-	for idx := range grants {
-		if *grants[idx].GrantId == grantIdentifier {
-			return grants[idx]
+	for _, grant := range grants {
+		if *grant.GrantId == grantIdentifier {
+			return grant
 		}
 	}
 
@@ -277,7 +282,7 @@ by the list grants call when expected.
 // are handled by the findKmsGrantById function
 func findKmsGrantByIdWithRetry(conn *kms.KMS, keyId string, grantId string) (*kms.GrantListEntry, error) {
 	var grant *kms.GrantListEntry
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		var err error
 		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
 
@@ -298,13 +303,11 @@ func findKmsGrantByIdWithRetry(conn *kms.KMS, keyId string, grantId string) (*km
 
 // Used by the tests as well
 func waitForKmsGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) error {
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		grant, err := findKmsGrantById(conn, keyId, grantId, nil)
 		if err != nil {
 			if _, ok := err.(KmsGrantMissingError); ok {
-				if grant == nil {
-					return nil
-				}
+				return nil
 			}
 		}
 
@@ -335,7 +338,7 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 	var err error
 	var grant *kms.GrantListEntry
 
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
 		out, err = conn.ListGrants(&input)
 
 		if err != nil {
@@ -374,7 +377,7 @@ func expandKmsGrantConstraints(configured []interface{}) *kms.GrantConstraints {
 	for _, raw := range configured {
 		data := raw.(map[string]interface{})
 		if contextEq, ok := data["encryption_context_equals"]; ok {
-			constraint.EncryptionContextEquals = stringMapToPointers(contextEq.(map[string]interface{}))
+			constraint.SetEncryptionContextEquals(stringMapToPointers(contextEq.(map[string]interface{})))
 		}
 		if contextSub, ok := data["encryption_context_subset"]; ok {
 			constraint.SetEncryptionContextSubset(stringMapToPointers(contextSub.(map[string]interface{})))
@@ -403,16 +406,12 @@ func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) []interface{} 
 
 // Custom error, so we don't have to rely on
 // the content of an error message
-type KmsGrantMissingError struct {
-	msg string
-}
+type KmsGrantMissingError string
 
 func (e KmsGrantMissingError) Error() string {
-	return e.msg
+	return e.Error()
 }
 
 func NewKmsGrantMissingError(msg string) KmsGrantMissingError {
-	return KmsGrantMissingError{
-		msg: msg,
-	}
+	return KmsGrantMissingError(msg)
 }

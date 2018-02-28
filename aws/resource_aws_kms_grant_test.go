@@ -23,8 +23,6 @@ func TestAWSKmsGrant_Basic(t *testing.T) {
 					testAccCheckAWSKmsGrantExists("aws_kms_grant.basic"),
 					resource.TestCheckResourceAttr("aws_kms_grant.basic", "name", "basic"),
 					resource.TestCheckResourceAttr("aws_kms_grant.basic", "operations.#", "2"),
-					resource.TestCheckResourceAttr("aws_kms_grant.basic", "operations.0", "Encrypt"),
-					resource.TestCheckResourceAttr("aws_kms_grant.basic", "operations.1", "Decrypt"),
 					resource.TestCheckResourceAttrSet("aws_kms_grant.basic", "grantee_principal"),
 					resource.TestCheckResourceAttrSet("aws_kms_grant.basic", "key_id"),
 				),
