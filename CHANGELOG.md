@@ -7,6 +7,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_dms_endpoint: Add aurora-postgresql as a target [GH-2615]
 * resource/aws_iam_user_policy: Add support for import [GH-3198]
 
 ## 1.10.0 (February 24, 2018)
