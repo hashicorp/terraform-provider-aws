@@ -79,7 +79,7 @@ func resourceAwsAutoscalingAttachmentRead(d *schema.ResourceData, meta interface
 	asgName := d.Get("autoscaling_group_name").(string)
 
 	// Retrieve the ASG properites to get list of associated ELBs
-	asg, err := getAwsAutoscalingGroup(asgName, asgconn)
+	asg, err := getAwsAutoscalingGroup(asgName, asgconn, d.Get("ephemeral").(bool))
 
 	if err != nil {
 		return err
