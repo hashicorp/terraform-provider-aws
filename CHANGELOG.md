@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_kms_key` [GH-2224]
 * **New Resource:** `aws_organizations_organization` [GH-903]
+* **New Resource:** `aws_iot_thing` [GH-3521]
 
 ENHANCEMENTS:
 
