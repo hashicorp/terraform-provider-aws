@@ -802,7 +802,7 @@ func flattenEc2Attributes(ia *emr.Ec2InstanceAttributes) []map[string]interface{
 func flattenEmrKerberosAttributes(d *schema.ResourceData, kerberosAttributes *emr.KerberosAttributes) []map[string]interface{} {
 	l := make([]map[string]interface{}, 0)
 
-	if kerberosAttributes == nil {
+	if kerberosAttributes == nil || kerberosAttributes.Realm == nil {
 		return l
 	}
 
@@ -813,7 +813,7 @@ func flattenEmrKerberosAttributes(d *schema.ResourceData, kerberosAttributes *em
 
 	m := map[string]interface{}{
 		"kdc_admin_password": d.Get("kerberos_attributes.0.kdc_admin_password").(string),
-		"realm":              aws.StringValue(kerberosAttributes.Realm),
+		"realm":              *kerberosAttributes.Realm,
 	}
 
 	if v, ok := d.GetOk("kerberos_attributes.0.ad_domain_join_password"); ok {
