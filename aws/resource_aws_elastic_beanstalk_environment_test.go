@@ -302,6 +302,7 @@ func TestAccAWSBeanstalkEnv_tags(t *testing.T) {
 			{
 				Config: testAccBeanstalkEnvConfig_empty_settings(appName, envName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.tfenvtest", &app),
 					testAccCheckBeanstalkEnvTagsMatch(&app, map[string]string{}),
 				),
 			},
@@ -309,6 +310,7 @@ func TestAccAWSBeanstalkEnv_tags(t *testing.T) {
 			{
 				Config: testAccBeanstalkTagsTemplate(appName, envName, "test1", "test2"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.tfenvtest", &app),
 					testAccCheckBeanstalkEnvTagsMatch(&app, map[string]string{"firstTag": "test1", "secondTag": "test2"}),
 				),
 			},
@@ -316,6 +318,7 @@ func TestAccAWSBeanstalkEnv_tags(t *testing.T) {
 			{
 				Config: testAccBeanstalkTagsTemplate(appName, envName, "test2", "test1"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.tfenvtest", &app),
 					testAccCheckBeanstalkEnvTagsMatch(&app, map[string]string{"firstTag": "test2", "secondTag": "test1"}),
 				),
 			},
@@ -323,6 +326,7 @@ func TestAccAWSBeanstalkEnv_tags(t *testing.T) {
 			{
 				Config: testAccBeanstalkEnvConfig_empty_settings(appName, envName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.tfenvtest", &app),
 					testAccCheckBeanstalkEnvTagsMatch(&app, map[string]string{}),
 				),
 			},
