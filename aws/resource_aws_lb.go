@@ -21,7 +21,7 @@ import (
 func resourceAwsLb() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLbCreate,
-		Read:   resoureAwsLbRead,
+		Read:   resourceAwsLbRead,
 		Update: resourceAwsLbUpdate,
 		Delete: resourceAwsLbDelete,
 		// Subnets are ForceNew for Network Load Balancers
@@ -293,7 +293,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceAwsLbUpdate(d, meta)
 }
 
-func resoureAwsLbRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 	lbArn := d.Id()
 
@@ -478,7 +478,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return resoureAwsLbRead(d, meta)
+	return resourceAwsLbRead(d, meta)
 }
 
 func resourceAwsLbDelete(d *schema.ResourceData, meta interface{}) error {
