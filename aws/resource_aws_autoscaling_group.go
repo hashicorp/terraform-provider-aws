@@ -861,7 +861,7 @@ func getAwsAutoscalingGroup(
 				for _, tag := range asc.Tags {
 					if *tag.Key == "TF_ID" && *tag.Value == ephemeralId {
 
-						// If autoscaling group name does match current ID
+						// If autoscaling group name does not match current ID
 						// then update the ID value.
 						// This keeps things sane for other operations such as "destroy"
 						if *asc.AutoScalingGroupName != asgName {
