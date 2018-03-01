@@ -383,7 +383,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 
 	if v, ok := d.GetOk("ephemeral"); ok && v.(bool) == true {
 		idMap := map[string]interface{}{
-			"key":                 "TERRAFORM_ID",
+			"key":                 "TF_ID",
 			"value":               resourceID,
 			"propagate_at_launch": false,
 		}
@@ -819,9 +819,11 @@ func getAwsAutoscalingGroup(
 	conn *autoscaling.AutoScaling,
 	ephemeral bool) (*autoscaling.Group, error) {
 
-	describeOpts := autoscaling.DescribeAutoScalingGroupsInput{
-		AutoScalingGroupNames: []*string{aws.String(asgName)},
-	}
+	// describeOpts := autoscaling.DescribeAutoScalingGroupsInput{
+	//	AutoScalingGroupNames: []*string{aws.String(asgName)},
+	// }
+
+	describeOpts := autoscaling.DescribeAutoScalingGroupsInput{}
 
 	log.Printf("[DEBUG] AutoScaling Group describe configuration: %#v", describeOpts)
 	describeGroups, err := conn.DescribeAutoScalingGroups(&describeOpts)
@@ -839,17 +841,17 @@ func getAwsAutoscalingGroup(
 		for idx, asc := range describeGroups.AutoScalingGroups {
 			if asc.Status == nil {
 				for _, tag := range asc.Tags {
-					if *tag.Key == "Terraform_ID" && *tag.Value == asgName {
+					if *tag.Key == "TF_ID" && *tag.Value == asgName {
 						return describeGroups.AutoScalingGroups[idx], nil
 					}
 				}
 			}
 		}
-	} else {
-		for idx, asc := range describeGroups.AutoScalingGroups {
-			if *asc.AutoScalingGroupName == asgName {
-				return describeGroups.AutoScalingGroups[idx], nil
-			}
+	}
+
+	for idx, asc := range describeGroups.AutoScalingGroups {
+		if *asc.AutoScalingGroupName == asgName {
+			return describeGroups.AutoScalingGroups[idx], nil
 		}
 	}
 
