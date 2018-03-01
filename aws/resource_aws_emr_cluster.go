@@ -813,7 +813,7 @@ func flattenEmrKerberosAttributes(d *schema.ResourceData, kerberosAttributes *em
 
 	m := map[string]interface{}{
 		"kdc_admin_password": d.Get("kerberos_attributes.0.kdc_admin_password").(string),
-		"realm":              *kerberosAttributes.Realm,
+		"realm":              aws.StringValue(kerberosAttributes.Realm),
 	}
 
 	if v, ok := d.GetOk("kerberos_attributes.0.ad_domain_join_password"); ok {
