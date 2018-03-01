@@ -372,7 +372,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.Get("load_balancer_type").(string) == "network" && d.HasChange("enable_cross_zone_load_balancing") {
 		attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 			Key:   aws.String("load_balancing.cross_zone.enabled"),
-			Value: aws.String(fmt.Sprintf("%d", d.Get("enable_cross_zone_load_balancing").(int))),
+			Value: aws.String(fmt.Sprintf("%t", d.Get("enable_cross_zone_load_balancing").(bool))),
 		})
 	}
 

@@ -128,7 +128,7 @@ func TestAccAWSLB_networkLoadbalancerEIP(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb.test", "zone_id"),
 					resource.TestCheckResourceAttrSet("aws_lb.test", "dns_name"),
 					resource.TestCheckResourceAttrSet("aws_lb.test", "arn"),
-					resource.TestCheckResourceAttr("aws_alb.test", "enable_cross_zone_load_balancing", "true"),
+					resource.TestCheckResourceAttr("aws_lb.test", "enable_cross_zone_load_balancing", "true"),
 					resource.TestCheckResourceAttr("aws_lb.test", "load_balancer_type", "network"),
 					resource.TestCheckResourceAttr("aws_lb.test", "subnet_mapping.#", "2"),
 				),
