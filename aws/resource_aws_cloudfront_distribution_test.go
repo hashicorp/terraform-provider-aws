@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"testing"
@@ -13,6 +14,65 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_cloudfront_distribution", &resource.Sweeper{
+		Name: "aws_cloudfront_distribution",
+		F:    testSweepCloudFrontDistributions,
+	})
+}
+
+func testSweepCloudFrontDistributions(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).cloudfrontconn
+
+	distributionSummaries := make([]*cloudfront.DistributionSummary, 0)
+
+	input := &cloudfront.ListDistributionsInput{}
+	err = conn.ListDistributionsPages(input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
+		for _, distributionSummary := range page.DistributionList.Items {
+			distributionSummaries = append(distributionSummaries, distributionSummary)
+		}
+		return !lastPage
+	})
+	if err != nil {
+		return fmt.Errorf("Error listing CloudFront Distributions: %s", err)
+	}
+
+	if len(distributionSummaries) == 0 {
+		log.Print("[DEBUG] No CloudFront Distributions to sweep")
+		return nil
+	}
+
+	for _, distributionSummary := range distributionSummaries {
+		distributionID := *distributionSummary.Id
+
+		if *distributionSummary.Enabled {
+			log.Printf("[WARN] Skipping deletion of enabled CloudFront Distribution: %s", distributionID)
+			continue
+		}
+
+		output, err := conn.GetDistribution(&cloudfront.GetDistributionInput{
+			Id: aws.String(distributionID),
+		})
+		if err != nil {
+			return fmt.Errorf("Error reading CloudFront Distribution %s: %s", distributionID, err)
+		}
+
+		_, err = conn.DeleteDistribution(&cloudfront.DeleteDistributionInput{
+			Id:      aws.String(distributionID),
+			IfMatch: output.ETag,
+		})
+		if err != nil {
+			return fmt.Errorf("Error deleting CloudFront Distribution %s: %s", distributionID, err)
+		}
+	}
+
+	return nil
+}
 
 // TestAccAWSCloudFrontDistribution_S3Origin runs an
 // aws_cloudfront_distribution acceptance test with a single S3 origin.
