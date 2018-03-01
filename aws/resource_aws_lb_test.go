@@ -128,6 +128,7 @@ func TestAccAWSLB_networkLoadbalancerEIP(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb.test", "zone_id"),
 					resource.TestCheckResourceAttrSet("aws_lb.test", "dns_name"),
 					resource.TestCheckResourceAttrSet("aws_lb.test", "arn"),
+					resource.TestCheckResourceAttr("aws_alb.test", "enable_cross_zone_load_balancing", "true"),
 					resource.TestCheckResourceAttr("aws_lb.test", "load_balancer_type", "network"),
 					resource.TestCheckResourceAttr("aws_lb.test", "subnet_mapping.#", "2"),
 				),
@@ -983,6 +984,7 @@ resource "aws_route_table_association" "a" {
 resource "aws_lb" "test" {
   name            = "%s"
   load_balancer_type = "network"
+  enable_cross_zone_load_balancing = true
   subnet_mapping {
     subnet_id = "${aws_subnet.public.0.id}"
     allocation_id = "${aws_eip.lb.0.id}"
