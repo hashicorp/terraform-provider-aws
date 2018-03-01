@@ -21,7 +21,7 @@ import (
 func resourceAwsLb() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLbCreate,
-		Read:   resoureAwsLbRead,
+		Read:   resourceAwsLbRead,
 		Update: resourceAwsLbUpdate,
 		Delete: resourceAwsLbDelete,
 		// Subnets are ForceNew for Network Load Balancers
@@ -253,7 +253,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 
 	lb := resp.LoadBalancers[0]
 	d.SetId(*lb.LoadBalancerArn)
-	log.Printf("[INFO] ALB ID: %s", d.Id())
+	log.Printf("[INFO] LB ID: %s", d.Id())
 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"provisioning", "failed"},
@@ -271,7 +271,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 			dLb := describeResp.LoadBalancers[0]
 
-			log.Printf("[INFO] ALB state: %s", *dLb.State.Code)
+			log.Printf("[INFO] LB state: %s", *dLb.State.Code)
 
 			return describeResp, *dLb.State.Code, nil
 		},
@@ -287,7 +287,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceAwsLbUpdate(d, meta)
 }
 
-func resoureAwsLbRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 	lbArn := d.Id()
 
@@ -464,7 +464,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return resoureAwsLbRead(d, meta)
+	return resourceAwsLbRead(d, meta)
 }
 
 func resourceAwsLbDelete(d *schema.ResourceData, meta interface{}) error {
