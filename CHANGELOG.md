@@ -12,6 +12,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_api_gateway_vpc_link: Ensure `target_arns` is properly read [GH-3569]
 * resource/aws_spot_instance_request: Retry for 1 minute instead of 15 seconds for IAM eventual consistency [GH-3561]
 
 ## 1.10.0 (February 24, 2018)
