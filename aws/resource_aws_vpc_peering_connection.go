@@ -50,11 +50,10 @@ func resourceAwsVpcPeeringConnection() *schema.Resource {
 				Computed: true,
 			},
 			"peer_region": {
-				ConflictsWith: []string{"accepter", "requester"},
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      true,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
 			},
 			"accepter":  vpcPeeringConnectionOptionsSchema(),
 			"requester": vpcPeeringConnectionOptionsSchema(),
@@ -348,10 +347,11 @@ func resourceAwsVPCPeeringConnectionStateRefreshFunc(conn *ec2.EC2, id string) r
 
 func vpcPeeringConnectionOptionsSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeSet,
-		Optional: true,
-		Computed: true,
-		MaxItems: 1,
+		ConflictsWith: []string{"peer_region"},
+		Type:          schema.TypeSet,
+		Optional:      true,
+		Computed:      true,
+		MaxItems:      1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"allow_remote_vpc_dns_resolution": {
