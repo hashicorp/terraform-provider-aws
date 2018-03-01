@@ -84,7 +84,7 @@ func setVolumeTags(conn *ec2.EC2, d *schema.ResourceData) error {
 		}
 
 		if len(remove) > 0 {
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 				log.Printf("[DEBUG] Removing volume tags: %#v from %s", remove, d.Id())
 				_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
 					Resources: volumeIds,
@@ -104,7 +104,7 @@ func setVolumeTags(conn *ec2.EC2, d *schema.ResourceData) error {
 			}
 		}
 		if len(create) > 0 {
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 				log.Printf("[DEBUG] Creating vol tags: %s for %s", create, d.Id())
 				_, err := conn.CreateTags(&ec2.CreateTagsInput{
 					Resources: volumeIds,
@@ -139,7 +139,7 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 
 		// Set tags
 		if len(remove) > 0 {
-			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 				log.Printf("[DEBUG] Removing tags: %#v from %s", remove, d.Id())
 				_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
 					Resources: []*string{aws.String(d.Id())},
@@ -159,7 +159,7 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 			}
 		}
 		if len(create) > 0 {
-			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 				log.Printf("[DEBUG] Creating tags: %s for %s", create, d.Id())
 				_, err := conn.CreateTags(&ec2.CreateTagsInput{
 					Resources: []*string{aws.String(d.Id())},
