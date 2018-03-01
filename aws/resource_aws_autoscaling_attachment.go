@@ -76,10 +76,10 @@ func resourceAwsAutoscalingAttachmentCreate(d *schema.ResourceData, meta interfa
 
 func resourceAwsAutoscalingAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	asgconn := meta.(*AWSClient).autoscalingconn
-	asgName := d.Get("autoscaling_group_name").(string)
+	// asgName := d.Get("autoscaling_group_name").(string)
 
 	// Retrieve the ASG properites to get list of associated ELBs
-	asg, err := getAwsAutoscalingGroup(asgName, asgconn, d.Get("ephemeral").(bool))
+	asg, err := getAwsAutoscalingGroup(d, asgconn)
 
 	if err != nil {
 		return err

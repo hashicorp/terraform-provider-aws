@@ -68,6 +68,12 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Default:  false,
 			},
 
+			"ephemeral_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"launch_configuration": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -382,18 +388,19 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("ephemeral"); ok && v.(bool) == true {
-		idMap := map[string]interface{}{
+		d.Set("ephemeral_id", d.Get("name").(string))
+		tagMap := map[string]interface{}{
 			"key":                 "TF_ID",
-			"value":               resourceID,
+			"value":               d.Get("ephemeral_id").(string),
 			"propagate_at_launch": false,
 		}
 
-		idTag, err := autoscalingTagFromMap(idMap, resourceID)
+		tag, err := autoscalingTagFromMap(tagMap, resourceID)
 		if err != nil {
 			return err
 		}
 
-		createOpts.Tags = append(createOpts.Tags, idTag)
+		createOpts.Tags = append(createOpts.Tags, tag)
 	}
 
 	if v, ok := d.GetOk("default_cooldown"); ok {
@@ -475,7 +482,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).autoscalingconn
 
-	g, err := getAwsAutoscalingGroup(d.Id(), conn, d.Get("ephemeral").(bool))
+	g, err := getAwsAutoscalingGroup(d, conn)
 	if err != nil {
 		return err
 	}
@@ -759,7 +766,7 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 	// Read the autoscaling group first. If it doesn't exist, we're done.
 	// We need the group in order to check if there are instances attached.
 	// If so, we need to remove those first.
-	g, err := getAwsAutoscalingGroup(d.Id(), conn, d.Get("ephemeral").(bool))
+	g, err := getAwsAutoscalingGroup(d, conn)
 	if err != nil {
 		return err
 	}
@@ -806,7 +813,7 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		if g, _ = getAwsAutoscalingGroup(d.Id(), conn, d.Get("ephemeral").(bool)); g != nil {
+		if g, _ = getAwsAutoscalingGroup(d, conn); g != nil {
 			return resource.RetryableError(
 				fmt.Errorf("Auto Scaling Group still exists"))
 		}
@@ -815,15 +822,21 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 }
 
 func getAwsAutoscalingGroup(
-	asgName string,
-	conn *autoscaling.AutoScaling,
-	ephemeral bool) (*autoscaling.Group, error) {
+	d *schema.ResourceData,
+	conn *autoscaling.AutoScaling) (*autoscaling.Group, error) {
 
-	// describeOpts := autoscaling.DescribeAutoScalingGroupsInput{
-	//	AutoScalingGroupNames: []*string{aws.String(asgName)},
-	// }
+	asgName := d.Id()
+	ephemeral := d.Get("ephemeral").(bool)
+	var describeOpts autoscaling.DescribeAutoScalingGroupsInput
 
-	describeOpts := autoscaling.DescribeAutoScalingGroupsInput{}
+	if ephemeral == true {
+		// TODO: add paging support
+		describeOpts = autoscaling.DescribeAutoScalingGroupsInput{}
+	} else {
+		describeOpts = autoscaling.DescribeAutoScalingGroupsInput{
+			AutoScalingGroupNames: []*string{aws.String(asgName)},
+		}
+	}
 
 	log.Printf("[DEBUG] AutoScaling Group describe configuration: %#v", describeOpts)
 	describeGroups, err := conn.DescribeAutoScalingGroups(&describeOpts)
@@ -838,10 +851,23 @@ func getAwsAutoscalingGroup(
 
 	// Search for the autoscaling group
 	if ephemeral == true {
+		ephemeralId := d.Get("ephemeral_id").(string)
+
 		for idx, asc := range describeGroups.AutoScalingGroups {
+
+			// Ignore autoscaling groups with a Status value
+			// This means it is being destroyed
 			if asc.Status == nil {
 				for _, tag := range asc.Tags {
-					if *tag.Key == "TF_ID" && *tag.Value == asgName {
+					if *tag.Key == "TF_ID" && *tag.Value == ephemeralId {
+
+						// If autoscaling group name does match current ID
+						// then update the ID value.
+						// This keeps things sane for other operations such as "destroy"
+						if *asc.AutoScalingGroupName != asgName {
+							d.SetId(*asc.AutoScalingGroupName)
+						}
+
 						return describeGroups.AutoScalingGroups[idx], nil
 					}
 				}
@@ -850,7 +876,7 @@ func getAwsAutoscalingGroup(
 	}
 
 	for idx, asc := range describeGroups.AutoScalingGroups {
-		if *asc.AutoScalingGroupName == asgName {
+		if *asc.AutoScalingGroupName == asgName && asc.Status == nil {
 			return describeGroups.AutoScalingGroups[idx], nil
 		}
 	}
@@ -881,7 +907,7 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 	// Next, wait for the autoscale group to drain
 	log.Printf("[DEBUG] Waiting for group to have zero instances")
 	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		g, err := getAwsAutoscalingGroup(d.Id(), conn, d.Get("ephemeral").(bool))
+		g, err := getAwsAutoscalingGroup(d, conn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
