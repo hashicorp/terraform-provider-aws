@@ -358,6 +358,10 @@ resource "aws_vpc" "foo" {
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
+
+	tags {
+		Name = "terraform-testacc-route-basic"
+	}
 }
 
 resource "aws_route_table" "foo" {
@@ -385,7 +389,11 @@ resource "aws_egress_only_internet_gateway" "foo" {
 }
 
 resource "aws_internet_gateway" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
+	vpc_id = "${aws_vpc.foo.id}"
+
+	tags {
+		Name = "terraform-testacc-route-ipv6-igw"
+	}
 }
 
 resource "aws_route_table" "external" {
@@ -414,6 +422,10 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_internet_gateway" "internet" {
   vpc_id = "${aws_vpc.examplevpc.id}"
+
+  tags {
+    Name = "terraform-testacc-route-ipv6-network-interface"
+  }
 }
 
 resource "aws_route" "igw" {
@@ -513,6 +525,10 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_internet_gateway" "internet" {
   vpc_id = "${aws_vpc.examplevpc.id}"
+
+  tags {
+    Name = "terraform-testacc-route-ipv6-instance"
+  }
 }
 
 resource "aws_route" "igw" {
@@ -655,6 +671,10 @@ resource "aws_vpc" "foo" {
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
+
+	tags {
+		Name = "terraform-testacc-route-change-cidr"
+	}
 }
 
 resource "aws_route_table" "foo" {
@@ -679,6 +699,10 @@ resource "aws_vpc" "foo" {
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
+
+	tags {
+		Name = "terraform-testacc-route-route-mix"
+	}
 }
 
 resource "aws_route_table" "foo" {
@@ -737,6 +761,10 @@ resource "aws_vpc" "foo" {
 
 resource "aws_internet_gateway" "foo" {
   vpc_id = "${aws_vpc.foo.id}"
+
+  tags {
+    Name = "terraform-testacc-route-with-vpc-endpoint"
+  }
 }
 
 resource "aws_route_table" "foo" {
