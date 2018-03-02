@@ -65,6 +65,9 @@ func testAccCheckAwsOrganizationsAccountDestroy(s *terraform.State) error {
 		resp, err := conn.DescribeAccount(params)
 
 		if err != nil {
+			if isAWSErr(err, organizations.ErrCodeAccountNotFoundException, "") {
+				return nil
+			}
 			return err
 		}
 
