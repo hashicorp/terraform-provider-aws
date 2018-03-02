@@ -81,6 +81,10 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(*gateway.Id)
 
+	d.Partial(true)
+	d.SetPartial("description")
+	d.SetPartial("binary_media_types")
+
 	if body, ok := d.GetOk("body"); ok {
 		log.Printf("[DEBUG] Initializing API Gateway from OpenAPI spec %s", d.Id())
 		_, err := conn.PutRestApi(&apigateway.PutRestApiInput{
@@ -91,11 +95,14 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 		if err != nil {
 			return errwrap.Wrapf("Error creating API Gateway specification: {{err}}", err)
 		}
+		d.SetPartial("body")
 	}
 
 	if err = resourceAwsApiGatewayRestApiRefreshResources(d, meta); err != nil {
 		return err
 	}
+
+	d.Partial(false)
 
 	return resourceAwsApiGatewayRestApiRead(d, meta)
 }
@@ -113,6 +120,7 @@ func resourceAwsApiGatewayRestApiRefreshResources(d *schema.ResourceData, meta i
 	for _, item := range resp.Items {
 		if *item.Path == "/" {
 			d.Set("root_resource_id", item.Id)
+			d.SetPartial("root_resource_id")
 			break
 		}
 	}
