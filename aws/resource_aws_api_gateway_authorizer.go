@@ -21,7 +21,7 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"authorizer_uri": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"identity_source": &schema.Schema{
 				Type:     schema.TypeString,
@@ -55,6 +55,11 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"provider_arns": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -63,13 +68,17 @@ func resourceAwsApiGatewayAuthorizerCreate(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).apigateway
 
 	input := apigateway.CreateAuthorizerInput{
-		AuthorizerUri:  aws.String(d.Get("authorizer_uri").(string)),
-		IdentitySource: aws.String(d.Get("identity_source").(string)),
-		Name:           aws.String(d.Get("name").(string)),
-		RestApiId:      aws.String(d.Get("rest_api_id").(string)),
-		Type:           aws.String(d.Get("type").(string)),
+		Name:      aws.String(d.Get("name").(string)),
+		RestApiId: aws.String(d.Get("rest_api_id").(string)),
+		Type:      aws.String(d.Get("type").(string)),
 	}
 
+	if v, ok := d.GetOk("authorizer_uri"); ok {
+		input.AuthorizerUri = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("identity_source"); ok {
+		input.IdentitySource = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("authorizer_credentials"); ok {
 		input.AuthorizerCredentials = aws.String(v.(string))
 	}
@@ -78,6 +87,9 @@ func resourceAwsApiGatewayAuthorizerCreate(d *schema.ResourceData, meta interfac
 	}
 	if v, ok := d.GetOk("identity_validation_expression"); ok {
 		input.IdentityValidationExpression = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("provider_arns"); ok {
+		input.ProviderARNs = expandStringList(v.([]interface{}))
 	}
 
 	log.Printf("[INFO] Creating API Gateway Authorizer: %s", input)
@@ -118,6 +130,7 @@ func resourceAwsApiGatewayAuthorizerRead(d *schema.ResourceData, meta interface{
 	d.Set("identity_validation_expression", authorizer.IdentityValidationExpression)
 	d.Set("name", authorizer.Name)
 	d.Set("type", authorizer.Type)
+	d.Set("provider_arns", authorizer.ProviderARNs)
 
 	return nil
 }
@@ -180,6 +193,32 @@ func resourceAwsApiGatewayAuthorizerUpdate(d *schema.ResourceData, meta interfac
 			Path:  aws.String("/identityValidationExpression"),
 			Value: aws.String(d.Get("identity_validation_expression").(string)),
 		})
+	}
+	if d.HasChange("provider_arns") {
+		o, n := d.GetChange("provider_arns")
+		prefix := "providerARNs"
+
+		old := o.([]interface{})
+		new := n.([]interface{})
+
+		// Remove every provider arn. Simpler to remove and add new ones,
+		// since there are no replacings.
+		for _, v := range old {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:   aws.String("remove"),
+				Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJsonPointer(v.(string)))),
+			})
+		}
+
+		// Handle additions
+		if len(new) > 0 {
+			for _, v := range new {
+				operations = append(operations, &apigateway.PatchOperation{
+					Op:   aws.String("add"),
+					Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJsonPointer(v.(string)))),
+				})
+			}
+		}
 	}
 	input.PatchOperations = operations
 

@@ -168,6 +168,19 @@ func testAccCheckAWSAPIGatewayAuthorizerIdentityValidationExpression(conf *apiga
 	}
 }
 
+func testAccCheckAWSAPIGatewayAuthorizerProviderARNs(conf *apigateway.Authorizer, expectedProviderARN *regexp.Regexp) resource.TestCheckFunc {
+
+	return func(s *terraform.State) error {
+		for _, provider_arn := range conf.ProviderARNs {
+			if !expectedProviderARN.MatchString(*provider_arn) {
+				return fmt.Errorf("ProviderARNs didn't match. Expected: %q, Given: %q",
+					expectedProviderARN, *provider_arn)
+			}
+		}
+		return nil
+	}
+}
+
 func testAccCheckAWSAPIGatewayAuthorizerExists(n string, res *apigateway.Authorizer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -316,5 +329,48 @@ resource "aws_api_gateway_authorizer" "test" {
   authorizer_credentials = "${aws_iam_role.invocation_role.arn}"
   authorizer_result_ttl_in_seconds = 360
   identity_validation_expression = ".*"
+}
+`
+
+func TestAccAWSAPIGatewayAuthorizer_cognito(t *testing.T) {
+	var conf apigateway.Authorizer
+	expectedProviderARN := regexp.MustCompile("^arn:aws:cognito-idp:[^:]+:[0-9]{12}:userpool/[\\w-]+_[0-9a-zA-Z]+$")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSAPIGatewayCognitoAuthorizerConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayAuthorizerExists("aws_api_gateway_authorizer.cognito_test", &conf),
+					testAccCheckAWSAPIGatewayAuthorizerName(&conf, "tf-acc-test-cognito-authorizer"),
+					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.cognito_test", "name", "tf-acc-test-cognito-authorizer"),
+					testAccCheckAWSAPIGatewayAuthorizerType(&conf, "COGNITO_USER_POOLS"),
+					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.cognito_test", "type", "COGNITO_USER_POOLS"),
+					testAccCheckAWSAPIGatewayAuthorizerProviderARNs(&conf, expectedProviderARN),
+					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.cognito_test", "provider_arns.#", "1"),
+					resource.TestMatchResourceAttr("aws_api_gateway_authorizer.cognito_test", "provider_arns.0", expectedProviderARN),
+				),
+			},
+		},
+	})
+}
+
+const testAccAWSAPIGatewayCognitoAuthorizerConfig = `
+resource "aws_api_gateway_rest_api" "test" {
+  name = "tf-auth-test"
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = "terraform-test-pool"
+}
+
+resource "aws_api_gateway_authorizer" "cognito_test" {
+  name = "tf-acc-test-cognito-authorizer"
+	type = "COGNITO_USER_POOLS"
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+	provider_arns = ["${aws_cognito_user_pool.test.arn}"]
 }
 `
