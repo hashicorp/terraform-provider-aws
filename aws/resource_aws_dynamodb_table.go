@@ -267,7 +267,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("encrypt_at_rest"); ok {
 		options := v.([]interface{})
-		if options[0] == nil {
+		if len(options) == 0 || options[0] == nil {
 			return fmt.Errorf("At least one field is expected inside encrypt_at_rest")
 		}
 
