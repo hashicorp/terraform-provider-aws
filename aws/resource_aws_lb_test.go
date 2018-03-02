@@ -79,7 +79,7 @@ func TestAccAWSLB_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_networkLoadbalancer(t *testing.T) {
+func TestAccAWSLB_networkLoadbalancerBasic(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
@@ -90,7 +90,7 @@ func TestAccAWSLB_networkLoadbalancer(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBConfig_networkLoadbalancer(lbName),
+				Config: testAccAWSLBConfig_networkLoadbalancer(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
@@ -259,6 +259,35 @@ func TestAccAWSLB_tags(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.%", "2"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.Type", "Sample Type Tag"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.Environment", "Production"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLB_networkLoadbalancer_updateCrossZone(t *testing.T) {
+	var pre, post elbv2.LoadBalancer
+	lbName := fmt.Sprintf("testaccawslb-nlbcz-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb.lb_test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_networkLoadbalancer(lbName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists("aws_lb.lb_test", &pre),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_cross_zone_load_balancing", "true"),
+				),
+			},
+			{
+				Config: testAccAWSLBConfig_networkLoadbalancer(lbName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists("aws_lb.lb_test", &post),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_cross_zone_load_balancing", "false"),
+					testAccCheckAWSlbARNs(&pre, &post),
 				),
 			},
 		},
@@ -905,14 +934,15 @@ resource "aws_subnet" "alb_test_3" {
 }
 `, lbName)
 }
-func testAccAWSLBConfig_networkLoadbalancer(lbName string) string {
+
+func testAccAWSLBConfig_networkLoadbalancer(lbName string, cz bool) string {
 	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   load_balancer_type = "network"
 
   enable_deletion_protection      = false
-  enable_cross_zone_load_balancing = false
+  enable_cross_zone_load_balancing = %t
 
   subnet_mapping {
   	subnet_id = "${aws_subnet.alb_test.id}"
@@ -942,7 +972,7 @@ resource "aws_subnet" "alb_test" {
   }
 }
 
-`, lbName)
+`, lbName, cz)
 }
 
 func testAccAWSLBConfig_networkLoadBalancerEIP(lbName string) string {
