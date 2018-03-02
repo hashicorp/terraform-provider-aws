@@ -33,6 +33,12 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 				Config: testAccAwsOrganizationsAccountConfig(name, email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsAccountExists("aws_organizations_account.test", &account),
+					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "arn"),
+					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "joined_method"),
+					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "joined_timestamp"),
+					resource.TestCheckResourceAttr("aws_organizations_account.test", "name", name),
+					resource.TestCheckResourceAttr("aws_organizations_account.test", "email", email),
+					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "status"),
 				),
 			},
 			{
