@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -13,14 +14,15 @@ import (
 func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 	var account organizations.Account
 
-	test_email, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL")
+	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 
 	if !ok {
-		t.Skip("'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL' not set, skipping test.")
+		t.Skip("'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
 	}
 
-	name := "my_new_account"
-	email := test_email
+	rInt := acctest.RandInt()
+	name := fmt.Sprintf("tf_acctest_%s", rInt)
+	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
