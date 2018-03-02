@@ -1465,6 +1465,7 @@ var awsPartition = partition{
 				"ap-south-1":     endpoint{},
 				"ap-southeast-1": endpoint{},
 				"ap-southeast-2": endpoint{},
+				"ca-central-1":   endpoint{},
 				"eu-central-1":   endpoint{},
 				"eu-west-1":      endpoint{},
 				"eu-west-2":      endpoint{},
@@ -2666,6 +2667,10 @@ var awsusgovPartition = partition{
 				"us-gov-west-1": endpoint{
 					Hostname:  "s3.us-gov-west-1.amazonaws.com",
 					Protocols: []string{"http", "https"},
+				},
+				"us-gov-west-1-dualstack": endpoint{
+					Hostname:          "s3.dualstack.us-gov-west-1.amazonaws.com",
+					SignatureVersions: []string{"s3", "s3v4"},
 				},
 			},
 		},

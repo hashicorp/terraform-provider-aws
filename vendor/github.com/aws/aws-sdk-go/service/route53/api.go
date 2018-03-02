@@ -14869,6 +14869,9 @@ const (
 	// ResourceRecordSetRegionApNortheast2 is a ResourceRecordSetRegion enum value
 	ResourceRecordSetRegionApNortheast2 = "ap-northeast-2"
 
+	// ResourceRecordSetRegionApNortheast3 is a ResourceRecordSetRegion enum value
+	ResourceRecordSetRegionApNortheast3 = "ap-northeast-3"
+
 	// ResourceRecordSetRegionSaEast1 is a ResourceRecordSetRegion enum value
 	ResourceRecordSetRegionSaEast1 = "sa-east-1"
 
