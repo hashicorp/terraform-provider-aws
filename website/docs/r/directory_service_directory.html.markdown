@@ -133,7 +133,7 @@ The following arguments are supported:
 * `description` - (Optional) A textual description for the directory.
 * `short_name` - (Optional) The short name of the directory, such as `CORP`.
 * `enable_sso` - (Optional) Whether to enable single-sign on for the directory. Requires `alias`. Defaults to `false`.
-* `type` (Optional) - The directory type (`SimpleAD`, `MicrosoftAD`, and `ADConnector` are accepted values). Defaults to `SimpleAD`.
+* `type` (Optional) - The directory type (`SimpleAD`, `ADConnector` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
 * `edition` - (Optional) The MicrosoftAD edition (`Standard` or `Enterprise`). Defaults to `Enterprise` (applies to MicrosoftAD type only).
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
