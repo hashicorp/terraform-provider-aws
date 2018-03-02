@@ -34,17 +34,10 @@ func resourceAwsSsmActivation() *schema.Resource {
 				Computed: true,
 			},
 			"expiration_date": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				// When released, replace with upstream validation function:
-				// https://github.com/hashicorp/terraform/pull/17484
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					if _, err := time.Parse(time.RFC3339, v.(string)); err != nil {
-						errors = append(errors, fmt.Errorf("%q: %s", k, err))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateRFC3339TimeString,
 			},
 			"iam_role": {
 				Type:     schema.TypeString,
