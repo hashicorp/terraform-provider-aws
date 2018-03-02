@@ -88,7 +88,7 @@ definition after you have created the resource.
 attributes, etc.
 * `stream_enabled` - (Optional) Indicates whether Streams are to be enabled (true) or disabled (false).
 * `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
-* `encrypt_at_rest` - (Optional) Encrypt at rest options.
+* `server_side_encryption` - (Optional) Encrypt at rest options.
 * `tags` - (Optional) A map of tags to populate on the created table.
 
 ### Timeouts
@@ -131,9 +131,9 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
   projection type; a list of attributes to project into the index. These
   do not need to be defined as attributes on the table.
 
-#### `encrypt_at_rest`
+#### `server_side_encryption`
 
-* `enabled` - (Required) Whether to enable encryption at rest. If the `encrypt_at_rest` block is not provided then this defaults to `false`.
+* `enabled` - (Required) Whether to enable encryption at rest. If the `server_side_encryption` block is not provided then this defaults to `false`.
 
 ### A note about attributes
 
