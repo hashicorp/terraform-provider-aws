@@ -236,12 +236,13 @@ func resourceAwsInternetGatewayDetach(d *schema.ResourceData, meta interface{}) 
 	// Wait for it to be fully detached before continuing
 	log.Printf("[DEBUG] Waiting for internet gateway (%s) to detach", d.Id())
 	stateConf := &resource.StateChangeConf{
-		Pending:        []string{"detaching"},
-		Target:         []string{"detached"},
-		Refresh:        detachIGStateRefreshFunc(conn, d.Id(), vpcID.(string)),
-		Timeout:        15 * time.Minute,
-		Delay:          10 * time.Second,
-		NotFoundChecks: 30,
+		Pending:                   []string{"detaching"},
+		Target:                    []string{"detached"},
+		Refresh:                   detachIGStateRefreshFunc(conn, d.Id(), vpcID.(string)),
+		Timeout:                   15 * time.Minute,
+		Delay:                     20 * time.Second,
+		NotFoundChecks:            30,
+		ContinuousTargetOccurence: 2,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
