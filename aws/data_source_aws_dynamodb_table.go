@@ -167,7 +167,7 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"encrypt_at_rest": {
+			"server_side_encryption": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,

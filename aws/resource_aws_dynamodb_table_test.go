@@ -639,8 +639,8 @@ func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
 				Config: testAccAWSDynamoDbConfigInitialStateWithEncryption(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
-					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "encrypt_at_rest.#", "1"),
-					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "encrypt_at_rest.0.enabled", "true"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.0.enabled", "true"),
 				),
 			},
 		},
@@ -966,7 +966,7 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     type = "S"
   }
 
-  encrypt_at_rest {
+  server_side_encryption {
     enabled = true
   }
 }

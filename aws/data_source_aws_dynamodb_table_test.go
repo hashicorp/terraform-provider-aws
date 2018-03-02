@@ -28,7 +28,7 @@ func TestAccDataSourceAwsDynamoDbTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "tags.%", "2"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "tags.Name", "dynamodb-table-1"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "tags.Environment", "test"),
-					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "encrypt_at_rest.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "server_side_encryption.#", "0"),
 				),
 			},
 		},

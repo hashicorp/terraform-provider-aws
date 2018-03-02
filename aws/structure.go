@@ -3528,7 +3528,7 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 		m["enabled"] = aws.StringValue(table.SSEDescription.Status) == dynamodb.SSEStatusEnabled
 		sseOptions = []map[string]interface{}{m}
 	}
-	err = d.Set("encrypt_at_rest", sseOptions)
+	err = d.Set("server_side_encryption", sseOptions)
 	if err != nil {
 		return err
 	}
