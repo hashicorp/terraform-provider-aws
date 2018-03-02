@@ -454,6 +454,49 @@ func resourceAwsInstance() *schema.Resource {
 					},
 				},
 			},
+
+			"instance_market_options": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"market_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"spot_options": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"block_duration_minutes": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"instance_interruption_behavior": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"max_price": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"spot_instance_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"valid_until": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -497,6 +540,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		SubnetId:                          instanceOpts.SubnetID,
 		UserData:                          instanceOpts.UserData64,
 		CreditSpecification:               instanceOpts.CreditSpecification,
+		InstanceMarketOptions:             instanceOpts.InstanceMarketOptions,
 	}
 
 	_, ipv6CountOk := d.GetOk("ipv6_address_count")
@@ -771,6 +815,9 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
 		d.Set("ephemeral_block_device", []interface{}{})
+	}
+	if err := readSpotRequest(d, instance, conn); err != nil {
+		return err
 	}
 
 	// Instance attributes
@@ -1681,6 +1728,7 @@ type awsInstanceOpts struct {
 	SubnetID                          *string
 	UserData64                        *string
 	CreditSpecification               *ec2.CreditSpecificationRequest
+	InstanceMarketOptions             *ec2.InstanceMarketOptionsRequest
 }
 
 func buildAwsInstanceOpts(
@@ -1814,6 +1862,40 @@ func buildAwsInstanceOpts(
 	if len(blockDevices) > 0 {
 		opts.BlockDeviceMappings = blockDevices
 	}
+	if v, ok := d.GetOk("instance_market_options"); ok {
+		imo := v.(*schema.Set).List()
+
+		if len(imo) > 0 {
+			imoData := imo[0].(map[string]interface{})
+			spotOptions := &ec2.SpotMarketOptions{}
+
+			if v, ok := imoData["spot_options"]; ok {
+				vL := v.(*schema.Set).List()
+				for _, v := range vL {
+					so := v.(map[string]interface{})
+					spotOptions.BlockDurationMinutes = aws.Int64(int64(so["block_duration_minutes"].(int)))
+					spotOptions.InstanceInterruptionBehavior = aws.String(so["instance_interruption_behavior"].(string))
+					spotOptions.MaxPrice = aws.String(so["max_price"].(string))
+					spotOptions.SpotInstanceType = aws.String(so["spot_instance_type"].(string))
+
+					if so["valid_until"] != "" {
+						t, err := time.Parse(awsSpotInstanceTimeLayout, so["valid_until"].(string))
+						if err != nil {
+							return nil, fmt.Errorf("Error Parsing Launch Template Spot Options valid until: %s", err.Error())
+						}
+						spotOptions.ValidUntil = aws.Time(t)
+					}
+				}
+			}
+
+			instanceMarketOptions := &ec2.InstanceMarketOptionsRequest{
+				MarketType:  aws.String(imoData["market_type"].(string)),
+				SpotOptions: spotOptions,
+			}
+
+			opts.InstanceMarketOptions = instanceMarketOptions
+		}
+	}
 	return opts, nil
 }
 
@@ -1907,4 +1989,42 @@ func getCreditSpecifications(conn *ec2.EC2, instanceId string) ([]map[string]int
 	}
 
 	return creditSpecifications, nil
+}
+
+func readSpotRequest(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {
+	marketOptions := make([]map[string]interface{}, 0)
+	dsir, err := readSpotRequestFromInstance(instance, conn)
+	if err != nil {
+		return err
+	}
+	if len(dsir) > 0 {
+		marketOption := make(map[string]interface{})
+		marketOption["market_type"] = "spot"
+		marketOption["spot_options"] = dsir
+		marketOptions = append(marketOptions, marketOption)
+	}
+	d.Set("instance_market_options", marketOptions)
+	return nil
+}
+
+func readSpotRequestFromInstance(instance *ec2.Instance, conn *ec2.EC2) ([]interface{}, error) {
+	spotRequests := make([]interface{}, 0)
+	if instance.SpotInstanceRequestId != nil {
+		spotInstanceRequest, err := conn.DescribeSpotInstanceRequests(&ec2.DescribeSpotInstanceRequestsInput{
+			SpotInstanceRequestIds: []*string{instance.SpotInstanceRequestId},
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, sr := range spotInstanceRequest.SpotInstanceRequests {
+			spotRequest := make(map[string]interface{})
+			spotRequest["block_duration_minutes"] = *sr.BlockDurationMinutes
+			spotRequest["instance_interruption_behavior"] = *sr.InstanceInterruptionBehavior
+			spotRequest["max_price"] = *sr.SpotPrice
+			spotRequest["spot_instance_type"] = *sr.Type
+			spotRequest["valid_until"] = aws.TimeValue(sr.ValidUntil).Format(awsSpotInstanceTimeLayout)
+			spotRequests = append(spotRequests, spotRequest)
+		}
+	}
+	return spotRequests, nil
 }
