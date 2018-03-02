@@ -50,7 +50,39 @@ func TestAccAWSDmsEndpointBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsEndpointDynamoDb(t *testing.T) {
+func TestAccAwsDmsEndpointS3(t *testing.T) {
+	resourceName := "aws_dms_endpoint.dms_point"
+	randId := acctest.RandString(8) + "-s3"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointS3Config(randId),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: dmsEndpointS3ConfigUpdate(randId),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsDmsEndpointDynamoDb(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-dynamodb"
 
@@ -174,125 +206,165 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointDynamoDbConfig(randId string) string {
+func dmsEndpointTargetConfig(randId string, engineName string, actionList string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-	endpoint_id = "tf-test-dms-endpoint-%[1]s"
-	endpoint_type = "target"
-	engine_name = "dynamodb"
-	service_access_role = "${aws_iam_role.iam_role.arn}"
-	ssl_mode = "none"
-	tags {
-		Name = "tf-test-dynamodb-endpoint-%[1]s"
-		Update = "to-update"
-		Remove = "to-remove"
-	}
+endpoint_id = "tf-test-dms-endpoint-%[1]s"
+endpoint_type = "target"
+engine_name = "%[2]s"
+service_access_role = "${aws_iam_role.iam_role.arn}"
+ssl_mode = "none"
+tags {
+	Name = "tf-test-%[2]s-endpoint-%[1]s"
+	Update = "to-update"
+	Remove = "to-remove"
+}
 
-	depends_on = ["aws_iam_role_policy.dms_dynamodb_access"]
+depends_on = ["aws_iam_role_policy.dms_%[2]s_access"]
 }
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-dynamodb-role-%[1]s"
+name = "tf-test-iam-%[2]s-role-%[1]s"
 
-  assume_role_policy = <<EOF
+assume_role_policy = <<EOF
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "dms.amazonaws.com"
-      },
-      "Effect": "Allow"
-    }
-  ]
+"Version": "2012-10-17",
+"Statement": [
+	{
+		"Action": "sts:AssumeRole",
+		"Principal": {
+			"Service": "dms.amazonaws.com"
+		},
+		"Effect": "Allow"
+	}
+]
 }
 EOF
 }
 
-resource "aws_iam_role_policy" "dms_dynamodb_access" {
-  name = "tf-test-iam-dynamodb-role-policy-%[1]s"
-  role = "${aws_iam_role.iam_role.name}"
+resource "aws_iam_role_policy" "dms_%[2]s_access" {
+name = "tf-test-iam-%[2]s-role-policy-%[1]s"
+role = "${aws_iam_role.iam_role.name}"
 
-  policy = <<EOF
+policy = <<EOF
 {
 "Version": "2012-10-17",
 "Statement": [
 {
-    "Effect": "Allow",
-    "Action": [
-        "dynamodb:PutItem",
-        "dynamodb:CreateTable",
-        "dynamodb:DescribeTable",
-        "dynamodb:DeleteTable",
-        "dynamodb:DeleteItem",
-        "dynamodb:ListTables"
-    ],
-    "Resource": "*"
+	"Effect": "Allow",
+	"Action": [
+			%[3]s
+	],
+	"Resource": "*"
 }
 ]
 }
 EOF
 }
 
-`, randId)
+`, randId, engineName, actionList)
+}
+
+func dmsEndpointTargetUpdateConfig(randId string, engineName string, actionList string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+endpoint_id = "tf-test-dms-endpoint-%[1]s"
+endpoint_type = "target"
+engine_name = "%[2]s"
+service_access_role = "${aws_iam_role.iam_role.arn}"
+ssl_mode = "none"
+tags {
+	Name = "tf-test-%[2]s-endpoint-%[1]s"
+	Update = "updated"
+	Add = "added"
+}
+}
+resource "aws_iam_role" "iam_role" {
+name = "tf-test-iam-%[2]s-role-%[1]s"
+
+assume_role_policy = <<EOF
+{
+"Version": "2012-10-17",
+"Statement": [
+	{
+		"Action": "sts:AssumeRole",
+		"Principal": {
+			"Service": "dms.amazonaws.com"
+		},
+		"Effect": "Allow"
+	}
+]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "dms_%[2]s_access" {
+name = "tf-test-iam-%[2]s-role-policy-%[1]s"
+role = "${aws_iam_role.iam_role.name}"
+
+policy = <<EOF
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+	"Effect": "Allow",
+	"Action": [
+			%[3]s
+	],
+	"Resource": "*"
+}
+]
+}
+EOF
+}
+`, randId, engineName, actionList)
+}
+
+func dmsEndpointDynamoDbConfig(randId string) string {
+	return dmsEndpointTargetConfig(randId, "dynamodb", `
+		"dynamodb:PutItem",
+		"dynamodb:CreateTable",
+		"dynamodb:DescribeTable",
+		"dynamodb:DeleteTable",
+		"dynamodb:DeleteItem",
+		"dynamodb:ListTables"`)
 }
 
 func dmsEndpointDynamoDbConfigUpdate(randId string) string {
-	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
-	endpoint_id = "tf-test-dms-endpoint-%[1]s"
-	endpoint_type = "target"
-	engine_name = "dynamodb"
-	service_access_role = "${aws_iam_role.iam_role.arn}"
-	ssl_mode = "none"
-	tags {
-		Name = "tf-test-dynamodb-endpoint-%[1]s"
-		Update = "updated"
-		Add = "added"
-	}
-}
-resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-dynamodb-role-%[1]s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "dms.amazonaws.com"
-      },
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
+	return dmsEndpointTargetUpdateConfig(randId, "dynamodb", `
+		"dynamodb:PutItem",
+		"dynamodb:CreateTable",
+		"dynamodb:DescribeTable",
+		"dynamodb:DeleteTable",
+		"dynamodb:DeleteItem",
+		"dynamodb:ListTables"`)
 }
 
-resource "aws_iam_role_policy" "dms_dynamodb_access" {
-  name = "tf-test-iam-dynamodb-role-policy-%[1]s"
-  role = "${aws_iam_role.iam_role.name}"
+func dmsEndpointS3Config(randId string) string {
+	return dmsEndpointTargetConfig(randId, "s3", `
+		"s3:CreateBucket",
+		"s3:ListBucket",
+		"s3:DeleteBucket",
+		"s3:GetBucketLocation",
+		"s3:GetObject",
+		"s3:PutObject",
+		"s3:DeleteObject",
+		"s3:GetObjectVersion",
+		"s3:GetBucketPolicy",
+		"s3:PutBucketPolicy",
+		"s3:DeleteBucketPolicy"`)
+}
 
-  policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-{
-    "Effect": "Allow",
-    "Action": [
-        "dynamodb:PutItem",
-        "dynamodb:CreateTable",
-        "dynamodb:DescribeTable",
-        "dynamodb:DeleteTable",
-        "dynamodb:DeleteItem",
-        "dynamodb:ListTables"
-    ],
-    "Resource": "*"
-}
-]
-}
-EOF
-}
-`, randId)
+func dmsEndpointS3ConfigUpdate(randId string) string {
+	return dmsEndpointTargetUpdateConfig(randId, "s3", `
+		"s3:CreateBucket",
+		"s3:ListBucket",
+		"s3:DeleteBucket",
+		"s3:GetBucketLocation",
+		"s3:GetObject",
+		"s3:PutObject",
+		"s3:DeleteObject",
+		"s3:GetObjectVersion",
+		"s3:GetBucketPolicy",
+		"s3:PutBucketPolicy",
+		"s3:DeleteBucketPolicy"`)
 }
