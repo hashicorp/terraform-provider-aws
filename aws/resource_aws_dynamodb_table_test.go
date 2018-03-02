@@ -295,7 +295,7 @@ func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 				Config: testAccAWSDynamoDbConfigInitialState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
-					testAccCheckInitialAWSDynamoDbTableConf("aws_dynamodb_table.basic-dynamodb-table", false),
+					testAccCheckInitialAWSDynamoDbTableConf("aws_dynamodb_table.basic-dynamodb-table"),
 				),
 			},
 			{
@@ -368,7 +368,7 @@ func TestAccAWSDynamoDbTable_tags(t *testing.T) {
 				Config: testAccAWSDynamoDbConfigTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
-					testAccCheckInitialAWSDynamoDbTableConf("aws_dynamodb_table.basic-dynamodb-table", false),
+					testAccCheckInitialAWSDynamoDbTableConf("aws_dynamodb_table.basic-dynamodb-table"),
 					resource.TestCheckResourceAttr(
 						"aws_dynamodb_table.basic-dynamodb-table", "tags.%", "3"),
 				),
@@ -639,7 +639,8 @@ func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
 				Config: testAccAWSDynamoDbConfigInitialStateWithEncryption(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
-					testAccCheckInitialAWSDynamoDbTableConf("aws_dynamodb_table.basic-dynamodb-table", true),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "encrypt_at_rest.#", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "encrypt_at_rest.0.enabled", "true"),
 				),
 			},
 		},
@@ -746,7 +747,7 @@ func testAccCheckInitialAWSDynamoDbTableExists(n string, table *dynamodb.Describ
 	}
 }
 
-func testAccCheckInitialAWSDynamoDbTableConf(n string, sse bool) resource.TestCheckFunc {
+func testAccCheckInitialAWSDynamoDbTableConf(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		log.Printf("[DEBUG] Trying to create initial table state!")
 		rs, ok := s.RootModule().Resources[n]
@@ -782,14 +783,8 @@ func testAccCheckInitialAWSDynamoDbTableConf(n string, sse bool) resource.TestCh
 			return fmt.Errorf("Provisioned read capacity was %d, not 10!", table.ProvisionedThroughput.ReadCapacityUnits)
 		}
 
-		if sse {
-			if table.SSEDescription == nil || *table.SSEDescription.Status != dynamodb.SSEStatusEnabled {
-				return fmt.Errorf("SSE status was not %s", dynamodb.SSEStatusEnabled)
-			}
-		} else {
-			if table.SSEDescription != nil && *table.SSEDescription.Status != dynamodb.SSEStatusDisabled {
-				return fmt.Errorf("SSE status was %s, not %s", *table.SSEDescription.Status, dynamodb.SSEStatusDisabled)
-			}
+		if table.SSEDescription != nil && *table.SSEDescription.Status != dynamodb.SSEStatusDisabled {
+			return fmt.Errorf("SSE status was %s, not %s", *table.SSEDescription.Status, dynamodb.SSEStatusDisabled)
 		}
 
 		attrCount := len(table.AttributeDefinitions)
@@ -962,49 +957,18 @@ func testAccAWSDynamoDbConfigInitialStateWithEncryption(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
   name = "%s"
-  read_capacity = 10
-  write_capacity = 20
+  read_capacity = 1
+  write_capacity = 1
   hash_key = "TestTableHashKey"
-  range_key = "TestTableRangeKey"
 
   attribute {
     name = "TestTableHashKey"
     type = "S"
   }
 
-  attribute {
-    name = "TestTableRangeKey"
-    type = "S"
+  encrypt_at_rest {
+    enabled = true
   }
-
-  attribute {
-    name = "TestLSIRangeKey"
-    type = "N"
-  }
-
-  attribute {
-    name = "TestGSIRangeKey"
-    type = "S"
-  }
-
-  local_secondary_index {
-    name = "TestTableLSI"
-    range_key = "TestLSIRangeKey"
-    projection_type = "ALL"
-  }
-
-  global_secondary_index {
-    name = "InitialTestTableGSI"
-    hash_key = "TestTableHashKey"
-    range_key = "TestGSIRangeKey"
-    write_capacity = 10
-    read_capacity = 10
-    projection_type = "KEYS_ONLY"
-	}
-
-	encrypt_at_rest {
-		enabled = true
-	}
 }
 `, rName)
 }
