@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -51,22 +53,25 @@ func resourceAwsKmsGrant() *schema.Resource {
 				ForceNew: true,
 			},
 			"constraints": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
+				Set:      resourceKmsGrantConstraintsHash,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"encryption_context_equals": {
-							Type:          schema.TypeMap,
-							Optional:      true,
-							Elem:          schema.TypeString,
-							ConflictsWith: []string{"constraints.0.encryption_context_subset"},
+							Type:     schema.TypeMap,
+							Optional: true,
+							ForceNew: true,
+							Elem:     schema.TypeString,
+							// ConflictsWith encryption_context_subset handled in Create, see kmsGrantConstraintsIsValid
 						},
 						"encryption_context_subset": {
-							Type:          schema.TypeMap,
-							Optional:      true,
-							Elem:          schema.TypeString,
-							ConflictsWith: []string{"constraints.0.encryption_context_equals"},
+							Type:     schema.TypeMap,
+							Optional: true,
+							ForceNew: true,
+							Elem:     schema.TypeString,
+							// ConflictsWith encryption_context_equals handled in Create, see kmsGrantConstraintsIsValid
 						},
 					},
 				},
@@ -108,7 +113,10 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Name = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("constraints"); ok {
-		input.Constraints = expandKmsGrantConstraints(v.([]interface{}))
+		if !kmsGrantConstraintsIsValid(v.(*schema.Set)) {
+			return fmt.Errorf("[ERROR] A grant constraint can't have both encryption_context_equals and encryption_context_subset set")
+		}
+		input.Constraints = expandKmsGrantConstraints(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("retiring_principal"); ok {
 		input.RetiringPrincipal = aws.String(v.(string))
@@ -367,14 +375,40 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 	return nil, NewKmsGrantMissingError(fmt.Sprintf("[DEBUG] Grant %s not found for key id: %s", grantId, keyId))
 }
 
-func expandKmsGrantConstraints(configured []interface{}) *kms.GrantConstraints {
-	if len(configured) < 1 {
+// Can't have both constraint options set:
+// ValidationException: More than one constraint supplied
+// NB: set.List() returns an empty map if the constraint is not set, filter those out
+// using len(v) > 0
+func kmsGrantConstraintsIsValid(constraints *schema.Set) bool {
+	constraintCount := 0
+	for _, raw := range constraints.List() {
+		data := raw.(map[string]interface{})
+		if v, ok := data["encryption_context_equals"].(map[string]interface{}); ok {
+			if len(v) > 0 {
+				constraintCount += 1
+			}
+		}
+		if v, ok := data["encryption_context_subset"].(map[string]interface{}); ok {
+			if len(v) > 0 {
+				constraintCount += 1
+			}
+		}
+	}
+
+	if constraintCount > 1 {
+		return false
+	}
+	return true
+}
+
+func expandKmsGrantConstraints(configured *schema.Set) *kms.GrantConstraints {
+	if len(configured.List()) < 1 {
 		return nil
 	}
 
 	var constraint kms.GrantConstraints
 
-	for _, raw := range configured {
+	for _, raw := range configured.List() {
 		data := raw.(map[string]interface{})
 		if contextEq, ok := data["encryption_context_equals"]; ok {
 			constraint.SetEncryptionContextEquals(stringMapToPointers(contextEq.(map[string]interface{})))
@@ -387,21 +421,49 @@ func expandKmsGrantConstraints(configured []interface{}) *kms.GrantConstraints {
 	return &constraint
 }
 
-func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) []interface{} {
+func concatStringMap(m map[string]*string, sep string) string {
+	var strList []string
+	for k, v := range m {
+		strList = append(strList, k, *v)
+	}
+	return strings.Join(strList, sep)
+}
+
+// The hash needs to encapsulate what type of constraint it is
+// as well as the keys and values of the constraint.
+func resourceKmsGrantConstraintsHash(v interface{}) int {
+	var buf bytes.Buffer
+	m, castOk := v.(map[string]interface{})
+	if !castOk {
+		return 0
+	}
+
+	if v, ok := m["encryption_context_equals"]; ok {
+		buf.WriteString(fmt.Sprintf("encryption_context_equals-%s", concatStringMap(stringMapToPointers(v.(map[string]interface{})), " ")))
+	}
+	if v, ok := m["encryption_context_subset"]; ok {
+		buf.WriteString(fmt.Sprintf("encryption_context_subset-%s", concatStringMap(stringMapToPointers(v.(map[string]interface{})), " ")))
+	}
+
+	return hashcode.String(buf.String())
+}
+
+func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
+	constraints := &schema.Set{F: resourceKmsGrantConstraintsHash}
 	if constraint == nil {
-		return []interface{}{}
+		return constraints
 	}
 
 	m := make(map[string]interface{}, 0)
-
 	if constraint.EncryptionContextEquals != nil {
 		m["encryption_context_equals"] = pointersMapToStringList(constraint.EncryptionContextEquals)
 	}
 	if constraint.EncryptionContextSubset != nil {
 		m["encryption_context_subset"] = pointersMapToStringList(constraint.EncryptionContextSubset)
 	}
+	constraints.Add(m)
 
-	return []interface{}{m}
+	return constraints
 }
 
 // Custom error, so we don't have to rely on

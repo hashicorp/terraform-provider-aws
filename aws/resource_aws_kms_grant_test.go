@@ -44,7 +44,7 @@ func TestAWSKmsGrant_withConstraints(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsGrantExists("aws_kms_grant.withConstraints"),
 					resource.TestCheckResourceAttr("aws_kms_grant.withConstraints", "name", "withConstraints"),
-					resource.TestCheckResourceAttr("aws_kms_grant.withConstraints", "constraints.0.encryption_context_equals.foo", "bar"),
+					resource.TestCheckResourceAttr("aws_kms_grant.withConstraints", "constraints.#", "1"),
 				),
 			},
 		},
