@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -92,12 +91,8 @@ func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interfac
 		resp, err = conn.CreateAccount(createOpts)
 
 		if err != nil {
-			ec2err, ok := err.(awserr.Error)
-			if !ok {
-				return resource.NonRetryableError(err)
-			}
-			if isAWSErr(ec2err, organizations.ErrCodeFinalizingOrganizationException, "") {
-				log.Printf("[DEBUG] Trying to create account again: %q", ec2err.Message())
+			if isAWSErr(err, organizations.ErrCodeFinalizingOrganizationException, "") {
+				log.Printf("[DEBUG] Trying to create account again: %q", err.Error())
 				return resource.RetryableError(err)
 			}
 
