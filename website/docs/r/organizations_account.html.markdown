@@ -6,11 +6,11 @@ description: |-
   Provides a resource to create a member account in the current AWS Organization.
 ---
 
-# aws\_organizations\_account
+# aws_organizations_account
  
--> **Note:** Account creation must be done from the organization's master account.
+~> **Note:** Account management must be done from the organization's master account.
 
--> **Note:** AWS member accounts must be deleted manually by following these steps: 1) Perform a root account password recovery for the email address that was specified for the account in Organizations. 2) Login to the account as that root user. 3) Navigate to "My Organization" in the account menu top-right. 4) Leave the organization. 5) Once the account has successfully left the organization, delete the account as usual.
+~> **Note:** Deleting this Terraform resource will only remove an AWS account from an organization. Terraform will not close the account. The member account must be prepared to be a standalone account beforehand. See the [AWS Organizations documentation](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html) for more information.
 
 
 Provides a resource to create a member account in the current organization.
