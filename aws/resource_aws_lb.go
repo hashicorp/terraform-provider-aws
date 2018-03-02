@@ -379,13 +379,13 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 				Value: aws.String(fmt.Sprintf("%t", d.Get("enable_cross_zone_load_balancing").(bool))),
 			})
 		}
-	default:
-		if d.HasChange("enable_deletion_protection") {
-			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("deletion_protection.enabled"),
-				Value: aws.String(fmt.Sprintf("%t", d.Get("enable_deletion_protection").(bool))),
-			})
-		}
+	}
+
+	if d.HasChange("enable_deletion_protection") {
+		attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+			Key:   aws.String("deletion_protection.enabled"),
+			Value: aws.String(fmt.Sprintf("%t", d.Get("enable_deletion_protection").(bool))),
+		})
 	}
 
 	if len(attributes) != 0 {

@@ -313,14 +313,14 @@ func TestAccAWSLB_applicationLoadBalancer_updateHttp2(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBConfig_basicWithHttp2Toggle(lbName, true),
+				Config: testAccAWSLBConfig_enableHttp2(lbName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &pre),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_http2", "true"),
 				),
 			},
 			{
-				Config: testAccAWSLBConfig_basicWithHttp2Toggle(lbName, false),
+				Config: testAccAWSLBConfig_enableHttp2(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &mid),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_http2", "false"),
@@ -328,10 +328,47 @@ func TestAccAWSLB_applicationLoadBalancer_updateHttp2(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSLBConfig_basicWithHttp2Toggle(lbName, true),
+				Config: testAccAWSLBConfig_enableHttp2(lbName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &post),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_http2", "true"),
+					testAccCheckAWSlbARNs(&mid, &post),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLB_applicationLoadBalancer_updateDeletionProtection(t *testing.T) {
+	var pre, mid, post elbv2.LoadBalancer
+	lbName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb.lb_test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_enableDeletionProtection(lbName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists("aws_lb.lb_test", &pre),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
+				),
+			},
+			{
+				Config: testAccAWSLBConfig_enableDeletionProtection(lbName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists("aws_lb.lb_test", &mid),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "true"),
+					testAccCheckAWSlbARNs(&pre, &mid),
+				),
+			},
+			{
+				Config: testAccAWSLBConfig_enableDeletionProtection(lbName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists("aws_lb.lb_test", &post),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
 					testAccCheckAWSlbARNs(&mid, &post),
 				),
 			},
@@ -919,7 +956,7 @@ resource "aws_security_group" "alb_test" {
 }`, lbName)
 }
 
-func testAccAWSLBConfig_basicWithHttp2Toggle(lbName string, http2 bool) string {
+func testAccAWSLBConfig_enableHttp2(lbName string, http2 bool) string {
 	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
@@ -986,6 +1023,73 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName, http2)
+}
+
+func testAccAWSLBConfig_enableDeletionProtection(lbName string, deletion_protection bool) string {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+  name            = "%s"
+  internal        = true
+  security_groups = ["${aws_security_group.alb_test.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  
+  idle_timeout = 30
+  enable_deletion_protection = %t
+
+  tags {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = "list"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    Name = "terraform-testacc-lb-basic"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = "${aws_vpc.alb_test.id}"
+  cidr_block              = "${element(var.subnets, count.index)}"
+  map_public_ip_on_launch = true
+  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+
+  tags {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test"
+  description = "Used for ALB Testing"
+  vpc_id      = "${aws_vpc.alb_test.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags {
+    Name = "TestAccAWSALB_basic"
+  }
+}`, lbName, deletion_protection)
 }
 
 func testAccAWSLBConfig_networkLoadbalancer_subnets(lbName string) string {
@@ -1139,7 +1243,7 @@ resource "aws_lb" "lb_test" {
 }
 
 resource "aws_eip" "lb" {
-  count = "${length(data.aws_availability_zones.available.names)>2?2:length(data.aws_availability_zones.available.names)}"
+  count = "2"
 }
 `, lbName)
 }
