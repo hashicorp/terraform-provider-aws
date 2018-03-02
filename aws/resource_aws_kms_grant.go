@@ -205,14 +205,14 @@ func resourceAwsKmsGrantRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err := d.Set("operations", aws.StringValueSlice(grant.Operations)); err != nil {
-			log.Print("[DEBUG] Error setting operations for grant %s with error %s", grantId, err)
+			log.Printf("[DEBUG] Error setting operations for grant %s with error %s", grantId, err)
 		}
 		if *grant.Name != "" {
 			d.Set("name", grant.Name)
 		}
 		if grant.Constraints != nil {
 			if err := d.Set("constraints", flattenKmsGrantConstraints(grant.Constraints)); err != nil {
-				log.Print("[DEBUG] Error setting constraints for grant %s with error %s", grantId, err)
+				log.Printf("[DEBUG] Error setting constraints for grant %s with error %s", grantId, err)
 			}
 		}
 	}
