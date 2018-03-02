@@ -12,8 +12,7 @@ func TestAccAWSOrganizations(t *testing.T) {
 			"consolidatedBilling": testAccAwsOrganizationsOrganization_consolidatedBilling,
 		},
 		"Account": {
-			"basic":       testAccAwsOrganizationsAccount_basic,
-			"importBasic": testAccAwsOrganizationsAccount_importBasic,
+			"basic": testAccAwsOrganizationsAccount_basic,
 		},
 	}
 

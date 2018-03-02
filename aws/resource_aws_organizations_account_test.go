@@ -33,6 +33,11 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 					testAccCheckAwsOrganizationsAccountExists("aws_organizations_account.test", &account),
 				),
 			},
+			{
+				ResourceName:      "aws_organizations_account.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
