@@ -62,16 +62,9 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				},
 			},
 
-			"ephemeral": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"ephemeral_id": {
+			"id_tag": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"launch_configuration": {
@@ -385,22 +378,6 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 		}
 
 		createOpts.Tags = append(createOpts.Tags, tags...)
-	}
-
-	if v, ok := d.GetOk("ephemeral"); ok && v.(bool) == true {
-		d.Set("ephemeral_id", d.Get("name").(string))
-		tagMap := map[string]interface{}{
-			"key":                 "TF_ID",
-			"value":               d.Get("ephemeral_id").(string),
-			"propagate_at_launch": false,
-		}
-
-		tag, err := autoscalingTagFromMap(tagMap, resourceID)
-		if err != nil {
-			return err
-		}
-
-		createOpts.Tags = append(createOpts.Tags, tag)
 	}
 
 	if v, ok := d.GetOk("default_cooldown"); ok {
@@ -826,10 +803,17 @@ func getAwsAutoscalingGroup(
 	conn *autoscaling.AutoScaling) (*autoscaling.Group, error) {
 
 	asgName := d.Id()
-	ephemeral := d.Get("ephemeral").(bool)
+
+	var idTagKey, idTagValue interface{}
+	var hasIdTagKey, hasIdTagValue bool
+
+	if idTagKey, hasIdTagKey = d.GetOk("id_tag"); hasIdTagKey {
+		idTagValue, hasIdTagValue = getIdTagValue(d, idTagKey.(string))
+	}
+
 	var describeOpts autoscaling.DescribeAutoScalingGroupsInput
 
-	if ephemeral == true {
+	if hasIdTagValue {
 		// TODO: add paging support
 		describeOpts = autoscaling.DescribeAutoScalingGroupsInput{}
 	} else {
@@ -850,16 +834,14 @@ func getAwsAutoscalingGroup(
 	}
 
 	// Search for the autoscaling group
-	if ephemeral == true {
-		ephemeralId := d.Get("ephemeral_id").(string)
-
+	if hasIdTagValue {
 		for idx, asc := range describeGroups.AutoScalingGroups {
 
 			// Ignore autoscaling groups with a Status value
 			// This means it is being destroyed
 			if asc.Status == nil {
 				for _, tag := range asc.Tags {
-					if *tag.Key == "TF_ID" && *tag.Value == ephemeralId {
+					if *tag.Key == idTagKey.(string) && *tag.Value == idTagValue.(string) {
 
 						// If autoscaling group name does not match current ID
 						// then update the ID value.
@@ -1104,4 +1086,22 @@ func expandVpcZoneIdentifiers(list []interface{}) *string {
 		strs = append(strs, s.(string))
 	}
 	return aws.String(strings.Join(strs, ","))
+}
+
+func getIdTagValue(d *schema.ResourceData, key string) (interface{}, bool) {
+	tagMap := setToMapByKey(d.Get("tag").(*schema.Set), "key")
+	if v, ok := tagMap[key]; ok {
+		return v.(map[string]interface{})["value"], true
+	}
+
+	tagList := d.Get("tags").([]interface{})
+	for _, v := range tagList {
+		attr, _ := v.(map[string]interface{})
+
+		if attr["key"] == key {
+			return attr["value"], true
+		}
+	}
+
+	return nil, false
 }
