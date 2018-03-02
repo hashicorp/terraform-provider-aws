@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -30,9 +31,20 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		CustomizeDiff: func(diff *schema.ResourceDiff, v interface{}) error {
-			return validateDynamoDbStreamSpec(diff)
-		},
+		CustomizeDiff: customdiff.Sequence(
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				return validateDynamoDbStreamSpec(diff)
+			},
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
+					o, n := diff.GetChange("server_side_encryption")
+					if isDynamoDbTableSSEDisabled(o) && isDynamoDbTableSSEDisabled(n) {
+						return diff.Clear("server_side_encryption")
+					}
+				}
+				return nil
+			},
+		),
 
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsDynamoDbTableMigrateState,
@@ -694,4 +706,13 @@ func waitForDynamoDbTtlUpdateToBeCompleted(tableName string, toEnable bool, conn
 
 	_, err := stateConf.WaitForState()
 	return err
+}
+
+func isDynamoDbTableSSEDisabled(v interface{}) bool {
+	options := v.([]interface{})
+	if len(options) == 0 {
+		return true
+	}
+	e := options[0].(map[string]interface{})["enabled"]
+	return !e.(bool)
 }
