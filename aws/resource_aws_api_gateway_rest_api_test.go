@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -76,6 +77,38 @@ func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/update"}),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "test"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayRestApi_openapi_partial(t *testing.T) {
+	var conf apigateway.RestApi
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSAPIGatewayRestAPIConfigOpenAPIPartial,
+				ExpectError: regexp.MustCompile(`Error creating API Gateway specification`),
+			},
+			{
+				Config:      testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPIPartial,
+				ExpectError: regexp.MustCompile(`Error updating API Gateway specification`),
+			},
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigOpenAPI,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
+					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "test"),
+					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/test"}),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "test"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", ""),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
+					resource.TestCheckNoResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types"),
 				),
 			},
 		},
@@ -265,6 +298,84 @@ resource "aws_api_gateway_rest_api" "test" {
         "x-amazon-apigateway-integration": {
           "type": "HTTP",
           "uri": "https://www.google.de",
+          "httpMethod": "GET",
+          "responses": {
+            "default": {
+              "statusCode": 200
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+}
+`
+
+const testAccAWSAPIGatewayRestAPIConfigOpenAPIPartial = `
+resource "aws_api_gateway_rest_api" "test" {
+  name = "test"
+  body = <<EOF
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "test",
+    "version": "2017-04-20T04:08:08Z"
+  },
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/test": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "200 response"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "HTTP",
+          "uri": "INVALID!!!",
+          "httpMethod": "GET",
+          "responses": {
+            "default": {
+              "statusCode": 200
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+}
+`
+
+const testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPIPartial = `
+resource "aws_api_gateway_rest_api" "test" {
+  name = "test"
+  body = <<EOF
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "test",
+    "version": "2017-04-20T04:08:08Z"
+  },
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/test": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "200 response"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "HTTP",
+          "uri": "INVALID!!!",
           "httpMethod": "GET",
           "responses": {
             "default": {
