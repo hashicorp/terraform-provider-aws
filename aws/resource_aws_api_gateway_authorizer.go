@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsApiGatewayAuthorizer() *schema.Resource {
@@ -42,7 +43,11 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 				Optional: true,
 				Default:  "TOKEN",
 				ForceNew: true,
-			},
+				ValidateFunc: validation.StringInSlice([]string{
+					apigateway.AuthorizerTypeCognitoUserPools,
+					apigateway.AuthorizerTypeRequest,
+					apigateway.AuthorizerTypeToken,
+				}, false)},
 			"authorizer_credentials": {
 				Type:     schema.TypeString,
 				Optional: true,
