@@ -14,10 +14,11 @@ import (
 
 func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayAuthorizerCreate,
-		Read:   resourceAwsApiGatewayAuthorizerRead,
-		Update: resourceAwsApiGatewayAuthorizerUpdate,
-		Delete: resourceAwsApiGatewayAuthorizerDelete,
+		Create:        resourceAwsApiGatewayAuthorizerCreate,
+		Read:          resourceAwsApiGatewayAuthorizerRead,
+		Update:        resourceAwsApiGatewayAuthorizerUpdate,
+		Delete:        resourceAwsApiGatewayAuthorizerDelete,
+		CustomizeDiff: resourceAwsApiGatewayAuthorizerCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"authorizer_uri": {
@@ -42,12 +43,12 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "TOKEN",
-				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					apigateway.AuthorizerTypeCognitoUserPools,
 					apigateway.AuthorizerTypeRequest,
 					apigateway.AuthorizerTypeToken,
-				}, false)},
+				}, false),
+			},
 			"authorizer_credentials": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -62,7 +63,7 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 				Optional: true,
 			},
 			"provider_arns": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -93,7 +94,7 @@ func resourceAwsApiGatewayAuthorizerCreate(d *schema.ResourceData, meta interfac
 		input.IdentityValidationExpression = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("provider_arns"); ok {
-		input.ProviderARNs = expandStringList(v.([]interface{}))
+		input.ProviderARNs = expandStringList(v.(*schema.Set).List())
 	}
 
 	log.Printf("[INFO] Creating API Gateway Authorizer: %s", input)
@@ -200,8 +201,8 @@ func resourceAwsApiGatewayAuthorizerUpdate(d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("provider_arns") {
 		old, new := d.GetChange("provider_arns")
-		oldValue := old.([]interface{})
-		newValue := new.([]interface{})
+		oldValue := old.(*schema.Set).List()
+		newValue := new.(*schema.Set).List()
 		operations = append(operations, diffProviderARNsOp("/providerARNs", oldValue, newValue)...)
 	}
 	input.PatchOperations = operations
@@ -267,4 +268,38 @@ func diffProviderARNsOp(prefix string, old, new []interface{}) (ops []*apigatewa
 		}
 	}
 	return
+}
+
+func resourceAwsApiGatewayAuthorizerCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
+	args := []string{"authorizer_uri", "name", "rest_api_id", "identity_source", "type", "identity_validation_expression", "authorizer_credentials"}
+	for _, arg := range args {
+		val, ok := diff.GetOk(arg)
+		log.Printf("[DEBUG] %s: #%s#, #%v#", arg, val.(string), ok)
+	}
+
+	authType := diff.Get("type").(string)
+	// authorizer_uri is required for authorizer TOKEN/REQUEST
+	if authType == apigateway.AuthorizerTypeRequest || authType == apigateway.AuthorizerTypeToken {
+		if val, ok := diff.GetOk("authorizer_uri"); !ok || val.(string) == "" {
+			return fmt.Errorf("authorizer_uri must be set non-empty when authorizer type is %s", authType)
+		}
+	}
+	// provider_arns is required for authorizer COGNITO_USER_POOLS.
+	if authType == apigateway.AuthorizerTypeCognitoUserPools {
+		if val, ok := diff.GetOk("provider_arns"); !ok || len(val.(*schema.Set).List()) == 0 {
+			return fmt.Errorf("provider_arns must be set non-empty when authorizer type is %s", authType)
+		}
+	}
+
+	// switch type between COGNITO_USER_POOLS and TOKEN/REQUEST will create new resource.
+	if diff.HasChange("type") {
+		o, n := diff.GetChange("type")
+		if o.(string) == apigateway.AuthorizerTypeCognitoUserPools || n.(string) == apigateway.AuthorizerTypeCognitoUserPools {
+			if err := diff.ForceNew("type"); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
