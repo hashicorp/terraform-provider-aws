@@ -6,7 +6,7 @@ description: |-
   Manages the account alias for the AWS Account.
 ---
 
-# aws\_iam\_account\_alias
+# aws_iam_account_alias
 
 -> **Note:** There is only a single account alias per AWS account.
 

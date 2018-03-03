@@ -6,7 +6,7 @@ description: |-
   Provides a CloudFormation Stack resource.
 ---
 
-# aws\_cloudformation\_stack
+# aws_cloudformation_stack
 
 Provides a CloudFormation Stack resource.
 

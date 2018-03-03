@@ -21,7 +21,7 @@ import (
 func resourceAwsLb() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLbCreate,
-		Read:   resoureAwsLbRead,
+		Read:   resourceAwsLbRead,
 		Update: resourceAwsLbUpdate,
 		Delete: resourceAwsLbDelete,
 		// Subnets are ForceNew for Network Load Balancers
@@ -54,16 +54,6 @@ func resourceAwsLb() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateElbName,
-				// This is to work around an unexpected schema behaviour returning diff
-				// for an empty field when it has a pre-computed value from previous run
-				// (e.g. from name_prefix)
-				// TODO: Revisit after we find the real root cause
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if new == "" {
-						return true
-					}
-					return false
-				},
 			},
 
 			"name_prefix": {
@@ -167,6 +157,12 @@ func resourceAwsLb() *schema.Resource {
 				Default:  60,
 			},
 
+			"enable_cross_zone_load_balancing": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"ip_address_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -257,7 +253,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 
 	lb := resp.LoadBalancers[0]
 	d.SetId(*lb.LoadBalancerArn)
-	log.Printf("[INFO] ALB ID: %s", d.Id())
+	log.Printf("[INFO] LB ID: %s", d.Id())
 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"provisioning", "failed"},
@@ -275,7 +271,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 			dLb := describeResp.LoadBalancers[0]
 
-			log.Printf("[INFO] ALB state: %s", *dLb.State.Code)
+			log.Printf("[INFO] LB state: %s", *dLb.State.Code)
 
 			return describeResp, *dLb.State.Code, nil
 		},
@@ -291,7 +287,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceAwsLbUpdate(d, meta)
 }
 
-func resoureAwsLbRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 	lbArn := d.Id()
 
@@ -378,6 +374,14 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 	}
 
+	// It's important to know that Idle timeout is only supported for Network Loadbalancers
+	if d.Get("load_balancer_type").(string) == "network" && d.HasChange("enable_cross_zone_load_balancing") {
+		attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+			Key:   aws.String("load_balancing.cross_zone.enabled"),
+			Value: aws.String(fmt.Sprintf("%t", d.Get("enable_cross_zone_load_balancing").(bool))),
+		})
+	}
+
 	if len(attributes) != 0 {
 		input := &elbv2.ModifyLoadBalancerAttributesInput{
 			LoadBalancerArn: aws.String(d.Id()),
@@ -387,7 +391,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] ALB Modify Load Balancer Attributes Request: %#v", input)
 		_, err := elbconn.ModifyLoadBalancerAttributes(input)
 		if err != nil {
-			return fmt.Errorf("Failure configuring ALB attributes: %s", err)
+			return fmt.Errorf("Failure configuring LB attributes: %s", err)
 		}
 	}
 
@@ -400,7 +404,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 		_, err := elbconn.SetSecurityGroups(params)
 		if err != nil {
-			return fmt.Errorf("Failure Setting ALB Security Groups: %s", err)
+			return fmt.Errorf("Failure Setting LB Security Groups: %s", err)
 		}
 
 	}
@@ -419,7 +423,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := elbconn.SetSubnets(params)
 		if err != nil {
-			return fmt.Errorf("Failure Setting ALB Subnets: %s", err)
+			return fmt.Errorf("Failure Setting LB Subnets: %s", err)
 		}
 	}
 
@@ -432,7 +436,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := elbconn.SetIpAddressType(params)
 		if err != nil {
-			return fmt.Errorf("Failure Setting ALB IP Address Type: %s", err)
+			return fmt.Errorf("Failure Setting LB IP Address Type: %s", err)
 		}
 
 	}
@@ -453,7 +457,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			dLb := describeResp.LoadBalancers[0]
 
-			log.Printf("[INFO] ALB state: %s", *dLb.State.Code)
+			log.Printf("[INFO] LB state: %s", *dLb.State.Code)
 
 			return describeResp, *dLb.State.Code, nil
 		},
@@ -466,20 +470,20 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return resoureAwsLbRead(d, meta)
+	return resourceAwsLbRead(d, meta)
 }
 
 func resourceAwsLbDelete(d *schema.ResourceData, meta interface{}) error {
 	lbconn := meta.(*AWSClient).elbv2conn
 
-	log.Printf("[INFO] Deleting ALB: %s", d.Id())
+	log.Printf("[INFO] Deleting LB: %s", d.Id())
 
 	// Destroy the load balancer
 	deleteElbOpts := elbv2.DeleteLoadBalancerInput{
 		LoadBalancerArn: aws.String(d.Id()),
 	}
 	if _, err := lbconn.DeleteLoadBalancer(&deleteElbOpts); err != nil {
-		return fmt.Errorf("Error deleting ALB: %s", err)
+		return fmt.Errorf("Error deleting LB: %s", err)
 	}
 
 	conn := meta.(*AWSClient).ec2conn
@@ -658,7 +662,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		ResourceArns: []*string{lb.LoadBalancerArn},
 	})
 	if err != nil {
-		return errwrap.Wrapf("Error retrieving ALB Tags: {{err}}", err)
+		return errwrap.Wrapf("Error retrieving LB Tags: {{err}}", err)
 	}
 
 	var et []*elbv2.Tag
@@ -674,7 +678,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		LoadBalancerArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return errwrap.Wrapf("Error retrieving ALB Attributes: {{err}}", err)
+		return errwrap.Wrapf("Error retrieving LB Attributes: {{err}}", err)
 	}
 
 	accessLogMap := map[string]interface{}{}
@@ -695,8 +699,12 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 			d.Set("idle_timeout", timeout)
 		case "deletion_protection.enabled":
 			protectionEnabled := (*attr.Value) == "true"
-			log.Printf("[DEBUG] Setting ALB Deletion Protection Enabled: %t", protectionEnabled)
+			log.Printf("[DEBUG] Setting LB Deletion Protection Enabled: %t", protectionEnabled)
 			d.Set("enable_deletion_protection", protectionEnabled)
+		case "load_balancing.cross_zone.enabled":
+			crossZoneLbEnabled := (*attr.Value) == "true"
+			log.Printf("[DEBUG] Setting NLB Cross Zone Load Balancing Enabled: %t", crossZoneLbEnabled)
+			d.Set("enable_cross_zone_load_balancing", crossZoneLbEnabled)
 		}
 	}
 

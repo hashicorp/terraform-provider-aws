@@ -6,7 +6,7 @@ description: |-
   Provides a load balancer policy, which can be attached to an ELB listener or backend server.
 ---
 
-# aws\_elb\_load\_balancer\_policy
+# aws_elb_load_balancer_policy
 
 Provides a load balancer policy, which can be attached to an ELB listener or backend server.
 

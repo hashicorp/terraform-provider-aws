@@ -259,6 +259,9 @@ func testAccCheckSubnetExists(n string, v *ec2.Subnet) resource.TestCheckFunc {
 const testAccSubnetConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-subnet"
+	}
 }
 
 resource "aws_subnet" "foo" {
@@ -275,6 +278,9 @@ const testAccSubnetConfigPreIpv6 = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
+	tags {
+		Name = "terraform-testacc-subnet-ipv6"
+	}
 }
 
 resource "aws_subnet" "foo" {
@@ -291,6 +297,9 @@ const testAccSubnetConfigIpv6 = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
+	tags {
+		Name = "terraform-testacc-subnet-ipv6"
+	}
 }
 
 resource "aws_subnet" "foo" {
@@ -309,6 +318,9 @@ const testAccSubnetConfigIpv6UpdateAssignIpv6OnCreation = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
+	tags {
+		Name = "terraform-testacc-subnet-assign-ipv6-on-creation"
+	}
 }
 
 resource "aws_subnet" "foo" {
@@ -327,6 +339,9 @@ const testAccSubnetConfigIpv6UpdateIpv6Cidr = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
+	tags {
+		Name = "terraform-testacc-ipv6-update-cidr"
+	}
 }
 
 resource "aws_subnet" "foo" {

@@ -6,7 +6,7 @@ description: |-
   Provides an EC2 instance resource. This allows instances to be created, updated, and deleted. Instances also support provisioning.
 ---
 
-# aws\_instance
+# aws_instance
 
 Provides an EC2 instance resource. This allows instances to be created, updated,
 and deleted. Instances also support [provisioning](/docs/provisioners/index.html).
@@ -96,7 +96,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 * `create` - (Defaults to 10 mins) Used when launching the instance (until it reaches the initial `running` state)
 * `update` - (Defaults to 10 mins) Used when stopping and starting the instance when necessary during update - e.g. when changing instance type
-* `delete` - (Defaults to 10 mins) Used when terminating the instance
+* `delete` - (Defaults to 20 mins) Used when terminating the instance
 
 ### Block devices
 
@@ -234,6 +234,8 @@ The following attributes are exported:
 * `vpc_security_group_ids` - The associated security groups in non-default VPC
 * `subnet_id` - The VPC subnet ID.
 
+For any `root_block_device` and `ebs_block_device` the `volume_id` is exported.
+e.g. `aws_instance.web.root_block_device.0.volume_id`
 
 ## Import
 

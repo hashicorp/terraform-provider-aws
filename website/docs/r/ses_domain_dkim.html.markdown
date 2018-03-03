@@ -6,7 +6,7 @@ description: |-
   Provides an SES domain DKIM generation resource
 ---
 
-# aws\_ses\_domain\_dkim
+# aws_ses_domain_dkim
 
 Provides an SES domain DKIM generation resource.
 

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDmsReplicationTaskBasic(t *testing.T) {
+func TestAccAWSDmsReplicationTaskBasic(t *testing.T) {
 	resourceName := "aws_dms_replication_task.dms_replication_task"
 	randId := acctest.RandString(8)
 
@@ -107,7 +107,7 @@ func dmsReplicationTaskConfig(randId string) string {
 resource "aws_vpc" "dms_vpc" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-test-dms-vpc-%[1]s"
+		Name = "terraform-testacc-dms-replication-task"
 	}
 }
 
@@ -191,7 +191,7 @@ func dmsReplicationTaskConfigUpdate(randId string) string {
 resource "aws_vpc" "dms_vpc" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-test-dms-vpc-%[1]s"
+		Name = "terraform-testacc-dms-replication-task"
 	}
 }
 

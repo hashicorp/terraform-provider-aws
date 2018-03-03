@@ -6,7 +6,7 @@ description: |-
   Provides an RDS Cluster Resource
 ---
 
-# aws\_rds\_cluster
+# aws_rds_cluster
 
 Provides an RDS Cluster Resource. A Cluster Resource defines attributes that are
 applied to the entire cluster of [RDS Cluster Instances][3]. Use the RDS Cluster
@@ -31,6 +31,23 @@ for more information.
 
 ## Example Usage
 
+### Aurora MySQL 2.x (MySQL 5.7)
+
+```hcl
+resource "aws_rds_cluster" "default" {
+  cluster_identifier      = "aurora-cluster-demo"
+  engine                  = "aurora-mysql"
+  availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name           = "mydb"
+  master_username         = "foo"
+  master_password         = "bar"
+  backup_retention_period = 5
+  preferred_backup_window = "07:00-09:00"
+}
+```
+
+### Aurora MySQL 1.x (MySQL 5.6)
+
 ```hcl
 resource "aws_rds_cluster" "default" {
   cluster_identifier      = "aurora-cluster-demo"
@@ -43,8 +60,20 @@ resource "aws_rds_cluster" "default" {
 }
 ```
 
-~> **NOTE:** RDS Clusters resources that are created without any matching
-RDS Cluster Instances do not currently display in the AWS Console.
+### Aurora with PostgreSQL engine
+
+```hcl
+resource "aws_rds_cluster" "postgresql" {
+  cluster_identifier      = "aurora-cluster-demo"
+  engine                  = "aurora-postgresql"
+  availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name           = "mydb"
+  master_username         = "foo"
+  master_password         = "bar"
+  backup_retention_period = 5
+  preferred_backup_window = "07:00-09:00"
+}
+```
 
 ## Argument Reference
 
@@ -55,12 +84,10 @@ The following arguments are supported:
 
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifer`.
-* `database_name` - (Optional) The name for your database of up to 8 alpha-numeric
-  characters. If you do not provide a name, Amazon RDS will not create a
-  database in the DB cluster you are creating
+* `database_name` - (Optional) Name for an automatically created database on cluster creation. There are different naming restrictions per database engine: [RDS Naming Constraints][5]
 * `master_password` - (Required unless a `snapshot_identifier` is provided) Password for the master DB user. Note that this may
-    show up in logs, and it will be stored in the state file
-* `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user
+    show up in logs, and it will be stored in the state file. Please refer to the [RDS Naming Constraints][5]
+* `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user. Please refer to the [RDS Naming Constraints][5]
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
     when this DB cluster is deleted. If omitted, no final snapshot will be
     made.
@@ -100,7 +127,7 @@ The following attributes are exported:
 * `allocated_storage` - The amount of allocated storage
 * `availability_zones` - The availability zone of the instance
 * `backup_retention_period` - The backup retention period
-* `preferred_backup_window` - The backup window
+* `preferred_backup_window` - The daily time range during which the backups happen
 * `preferred_maintenance_window` - The maintenance window
 * `endpoint` - The DNS address of the RDS instance
 * `reader_endpoint` - A read-only endpoint for the Aurora cluster, automatically
@@ -113,13 +140,14 @@ load-balanced across replicas
 * `status` - The RDS instance status
 * `master_username` - The master username for the database
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted
-* `preferred_backup_window` - The daily time range during which the backups happen
 * `replication_source_identifier` - ARN  of the source DB cluster if this DB cluster is created as a Read Replica.
+* `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
 [2]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Aurora.html
 [3]: /docs/providers/aws/r/rds_cluster_instance.html
 [4]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
+[5]: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints
 
 ## Timeouts
 

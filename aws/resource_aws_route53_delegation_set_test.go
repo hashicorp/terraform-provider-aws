@@ -15,7 +15,8 @@ import (
 )
 
 func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
-	refName := acctest.RandStringFromCharSet(15, acctest.CharSetAlphaNum)
+	rString := acctest.RandString(8)
+	refName := fmt.Sprintf("tf_acc_%s", rString)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
@@ -36,7 +37,11 @@ func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
 
 func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
-	refName := acctest.RandStringFromCharSet(15, acctest.CharSetAlphaNum)
+
+	rString := acctest.RandString(8)
+	refName := fmt.Sprintf("tf_acc_%s", rString)
+	zoneName1 := fmt.Sprintf("%s-primary.terraformtest.com", rString)
+	zoneName2 := fmt.Sprintf("%s-secondary.terraformtest.com", rString)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
@@ -46,7 +51,7 @@ func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
 		CheckDestroy:    testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRoute53DelegationSetWithZonesConfig(refName),
+				Config: testAccRoute53DelegationSetWithZonesConfig(refName, zoneName1, zoneName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53DelegationSetExists("aws_route53_delegation_set.main"),
 					testAccCheckRoute53ZoneExists("aws_route53_zone.primary", &zone),
@@ -146,20 +151,20 @@ resource "aws_route53_delegation_set" "test" {
 `, refName)
 }
 
-func testAccRoute53DelegationSetWithZonesConfig(refName string) string {
+func testAccRoute53DelegationSetWithZonesConfig(refName, zoneName1, zoneName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_delegation_set" "main" {
     reference_name = "%s"
 }
 
 resource "aws_route53_zone" "primary" {
-    name = "hashicorp.com"
+    name = "%s"
     delegation_set_id = "${aws_route53_delegation_set.main.id}"
 }
 
 resource "aws_route53_zone" "secondary" {
-    name = "terraform.io"
+    name = "%s"
     delegation_set_id = "${aws_route53_delegation_set.main.id}"
 }
-`, refName)
+`, refName, zoneName1, zoneName2)
 }

@@ -6,7 +6,7 @@ description: |-
   Provides an VPC subnet resource.
 ---
 
-# aws\_subnet
+# aws_subnet
 
 Provides an VPC subnet resource.
 
