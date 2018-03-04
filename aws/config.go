@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -86,7 +87,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/go-cleanhttp"
+	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -98,6 +99,7 @@ type Config struct {
 	Profile       string
 	Token         string
 	Region        string
+	ProxyURL      string
 	MaxRetries    int
 
 	AssumeRoleARN         string
@@ -300,10 +302,23 @@ func (c *Config) Client() (interface{}, error) {
 		opt.Config.Logger = awsLogger{}
 	}
 
-	if c.Insecure {
+	if c.Insecure || c.ProxyURL != "" {
+
 		transport := opt.Config.HTTPClient.Transport.(*http.Transport)
-		transport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
+
+		if c.Insecure {
+			transport.TLSClientConfig = &tls.Config{
+				InsecureSkipVerify: true,
+			}
+		}
+
+		if c.ProxyURL != "" {
+			proxy, err := url.Parse(c.ProxyURL)
+			if err != nil {
+				return nil, fmt.Errorf("Error parsing proxy url: %s", err)
+			}
+
+			transport.Proxy = http.ProxyURL(proxy)
 		}
 	}
 

@@ -193,6 +193,8 @@ The following arguments are supported in the `provider` block:
 * `insecure` - (Optional) Explicitly allow the provider to
   perform "insecure" SSL requests. If omitted, default value is `false`.
 
+* `proxy_url` - (Optional) Proxy url string to connect AWS API through the proxy server.
+
 * `skip_credentials_validation` - (Optional) Skip the credentials
   validation via the STS API. Useful for AWS API implementations that do
   not have STS available or implemented.

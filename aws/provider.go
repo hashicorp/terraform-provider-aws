@@ -116,6 +116,13 @@ func Provider() terraform.ResourceProvider {
 				Description: descriptions["insecure"],
 			},
 
+			"proxy_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     false,
+				Description: descriptions["proxy_url"],
+			},
+
 			"skip_credentials_validation": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -644,6 +651,8 @@ func init() {
 		"insecure": "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted," +
 			"default value is `false`",
 
+		"proxy_url": "Use this to connect AWS API through the proxy server.",
+
 		"skip_credentials_validation": "Skip the credentials validation via STS API. " +
 			"Used for AWS API implementations that do not have STS available/implemented.",
 
@@ -687,6 +696,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Region:                  d.Get("region").(string),
 		MaxRetries:              d.Get("max_retries").(int),
 		Insecure:                d.Get("insecure").(bool),
+		ProxyURL:                d.Get("proxy_url").(string),
 		SkipCredsValidation:     d.Get("skip_credentials_validation").(bool),
 		SkipGetEC2Platforms:     d.Get("skip_get_ec2_platforms").(bool),
 		SkipRegionValidation:    d.Get("skip_region_validation").(bool),
