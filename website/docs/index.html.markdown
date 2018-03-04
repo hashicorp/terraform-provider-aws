@@ -163,8 +163,6 @@ The following arguments are supported in the `provider` block:
   it can also be sourced from the `AWS_DEFAULT_REGION` environment variables, or
   via a shared credentials file if `profile` is specified.
 
-* `proxyurl` - (Optional) Proxy configuration for http transport.
-
 * `profile` - (Optional) This is the AWS profile name as set in the shared credentials
   file.
 
@@ -194,6 +192,8 @@ The following arguments are supported in the `provider` block:
 
 * `insecure` - (Optional) Explicitly allow the provider to
   perform "insecure" SSL requests. If omitted, default value is `false`.
+
+* `proxy_url` - (Optional) Proxy url string to connect AWS API through the proxy server.
 
 * `skip_credentials_validation` - (Optional) Skip the credentials
   validation via the STS API. Useful for AWS API implementations that do

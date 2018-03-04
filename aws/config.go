@@ -87,7 +87,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/go-cleanhttp"
+	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/terraform"
 )
