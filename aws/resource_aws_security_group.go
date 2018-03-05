@@ -89,6 +89,12 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"description": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateSecurityGroupRuleDescription,
+						},
+
 						"from_port": {
 							Type:     schema.TypeInt,
 							Required: true,
@@ -135,12 +141,6 @@ func resourceAwsSecurityGroup() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-
-						"description": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateSecurityGroupRuleDescription,
-						},
 					},
 				},
 				Set: resourceAwsSecurityGroupRuleHash,
@@ -152,6 +152,12 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"description": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateSecurityGroupRuleDescription,
+						},
+
 						"from_port": {
 							Type:     schema.TypeInt,
 							Required: true,
@@ -203,12 +209,6 @@ func resourceAwsSecurityGroup() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
-						},
-
-						"description": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateSecurityGroupRuleDescription,
 						},
 					},
 				},
@@ -284,7 +284,7 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 			d.Id(), err)
 	}
 
-	if err := setTags(conn, d); err != nil {
+	if err = setTags(conn, d); err != nil {
 		return err
 	}
 
@@ -700,6 +700,7 @@ func resourceAwsSecurityGroupIPPermGather(groupId string, permissions []*ec2.IpP
 
 		m["description"] = description
 	}
+
 	rules := make([]map[string]interface{}, 0, len(ruleMap))
 	for _, m := range ruleMap {
 		rules = append(rules, m)
@@ -1232,14 +1233,12 @@ func protocolForValue(v string) string {
 // Similar to protocolIntegers() used by Network ACLs, but explicitly only
 // supports "tcp", "udp", "icmp", and "all"
 func sgProtocolIntegers() map[string]int {
-	var protocolIntegers = make(map[string]int)
-	protocolIntegers = map[string]int{
+	return map[string]int{
 		"udp":  17,
 		"tcp":  6,
 		"icmp": 1,
 		"all":  -1,
 	}
-	return protocolIntegers
 }
 
 // The AWS Lambda service creates ENIs behind the scenes and keeps these around for a while
@@ -1305,10 +1304,10 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
 func networkInterfaceAttachedRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 
-		describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
+		describeNetworkInterfacesRequest := &ec2.DescribeNetworkInterfacesInput{
 			NetworkInterfaceIds: []*string{aws.String(id)},
 		}
-		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
+		describeResp, err := conn.DescribeNetworkInterfaces(describeNetworkInterfacesRequest)
 
 		if err != nil {
 			log.Printf("[ERROR] Could not find network interface %s. %s", id, err)
