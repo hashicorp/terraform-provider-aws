@@ -468,6 +468,13 @@ func (c *Config) Client() (interface{}, error) {
 	client.mediastoreconn = mediastore.New(sess)
 	client.appsyncconn = appsync.New(sess)
 
+	// Workaround for https://github.com/aws/aws-sdk-go/issues/1819
+	client.s3conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if isAWSErr(r.Error, "NotImplemented", "") {
+			r.Retryable = aws.Bool(false)
+		}
+	})
+
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
