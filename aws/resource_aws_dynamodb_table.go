@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsDynamoDbTable() *schema.Resource {
@@ -198,7 +199,13 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 					value := v.(string)
 					return strings.ToUpper(value)
 				},
-				ValidateFunc: validateStreamViewType,
+				ValidateFunc: validation.StringInSlice([]string{
+					"",
+					dynamodb.StreamViewTypeNewImage,
+					dynamodb.StreamViewTypeOldImage,
+					dynamodb.StreamViewTypeNewAndOldImages,
+					dynamodb.StreamViewTypeKeysOnly,
+				}, false),
 			},
 			"stream_arn": {
 				Type:     schema.TypeString,

@@ -189,26 +189,6 @@ func validateDbParamGroupNamePrefix(v interface{}, k string) (ws []string, error
 	return
 }
 
-func validateStreamViewType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	if value == "" {
-		return
-	}
-
-	viewTypes := map[string]bool{
-		"KEYS_ONLY":          true,
-		"NEW_IMAGE":          true,
-		"OLD_IMAGE":          true,
-		"NEW_AND_OLD_IMAGES": true,
-	}
-
-	if !viewTypes[value] {
-		errors = append(errors, fmt.Errorf("%q must be a valid DynamoDB StreamViewType", k))
-	}
-	return
-}
-
 func validateDynamoAttributeType(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	validTypes := []string{
