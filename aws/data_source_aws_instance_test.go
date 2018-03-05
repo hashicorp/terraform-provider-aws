@@ -517,6 +517,10 @@ data "aws_instance" "foo" {
 const testAccInstanceDataSourceConfig_VPCSecurityGroups = `
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.foo.id}"
+
+  tags {
+    Name = "terraform-testacc-instance-data-source-vpc-sgs"
+  }
 }
 
 resource "aws_vpc" "foo" {

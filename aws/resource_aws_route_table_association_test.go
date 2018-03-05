@@ -120,6 +120,10 @@ resource "aws_subnet" "foo" {
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
+
+	tags {
+		Name = "terraform-testacc-route-table-association"
+	}
 }
 
 resource "aws_route_table" "foo" {
@@ -151,6 +155,10 @@ resource "aws_subnet" "foo" {
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
+
+	tags {
+		Name = "terraform-testacc-route-table-association"
+	}
 }
 
 resource "aws_route_table" "bar" {

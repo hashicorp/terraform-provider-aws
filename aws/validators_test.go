@@ -2,12 +2,85 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
+
+func TestValidateRFC3339TimeString(t *testing.T) {
+	testCases := []struct {
+		val         interface{}
+		expectedErr *regexp.Regexp
+	}{
+		{
+			val: "2018-03-01T00:00:00Z",
+		},
+		{
+			val: "2018-03-01T00:00:00-05:00",
+		},
+		{
+			val: "2018-03-01T00:00:00+05:00",
+		},
+		{
+			val:         "03/01/2018",
+			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "1/2018" as "2006"`)),
+		},
+		{
+			val:         "03-01-2018",
+			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "1-2018" as "2006"`)),
+		},
+		{
+			val:         "2018-03-01",
+			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "" as "T"`)),
+		},
+		{
+			val:         "2018-03-01T",
+			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "" as "15"`)),
+		},
+		{
+			val:         "2018-03-01T00:00:00",
+			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "" as "Z07:00"`)),
+		},
+		{
+			val:         "2018-03-01T00:00:00Z05:00",
+			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`extra text: 05:00`)),
+		},
+		{
+			val:         "2018-03-01T00:00:00Z-05:00",
+			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`extra text: -05:00`)),
+		},
+	}
+
+	matchErr := func(errs []error, r *regexp.Regexp) bool {
+		// err must match one provided
+		for _, err := range errs {
+			if r.MatchString(err.Error()) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	for i, tc := range testCases {
+		_, errs := validateRFC3339TimeString(tc.val, "test_property")
+
+		if len(errs) == 0 && tc.expectedErr == nil {
+			continue
+		}
+
+		if len(errs) != 0 && tc.expectedErr == nil {
+			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
+		}
+
+		if !matchErr(errs, tc.expectedErr) {
+			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
+		}
+	}
+}
 
 func TestValidateInstanceUserDataSize(t *testing.T) {
 	validValues := []string{
