@@ -337,6 +337,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_dx_connection":                            resourceAwsDxConnection(),
 			"aws_dx_connection_association":                resourceAwsDxConnectionAssociation(),
 			"aws_dx_gateway":                               resourceAwsDxGateway(),
+			"aws_dx_gateway_association":                   resourceAwsDxGatewayAssociation(),
 			"aws_dynamodb_table":                           resourceAwsDynamoDbTable(),
 			"aws_dynamodb_table_item":                      resourceAwsDynamoDbTableItem(),
 			"aws_dynamodb_global_table":                    resourceAwsDynamoDbGlobalTable(),
