@@ -80,6 +80,29 @@ func TestAccAWSSSMParameter_update(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMParameter_updateDescription(t *testing.T) {
+	var param ssm.Parameter
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterBasicConfigOverwrite(name, "String", "bar"),
+			},
+			{
+				Config: testAccAWSSSMParameterBasicConfigOverwriteWithoutDescription(name, "String", "bar"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.foo", &param),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "description", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMParameter_changeNameForcesNew(t *testing.T) {
 	var beforeParam, afterParam ssm.Parameter
 	before := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
@@ -275,6 +298,17 @@ func testAccAWSSSMParameterBasicConfigOverwrite(rName, pType, value string) stri
 resource "aws_ssm_parameter" "foo" {
   name  = "test_parameter-%[1]s"
   description  = "description for parameter %[1]s"
+  type  = "%[2]s"
+  value = "%[3]s"
+  overwrite = true
+}
+`, rName, pType, value)
+}
+
+func testAccAWSSSMParameterBasicConfigOverwriteWithoutDescription(rName, pType, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "foo" {
+  name  = "test_parameter-%[1]s"
   type  = "%[2]s"
   value = "%[3]s"
   overwrite = true

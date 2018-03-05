@@ -32,7 +32,6 @@ func resourceAwsSsmParameter() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 			},
 			"type": {
 				Type:         schema.TypeString,
@@ -52,6 +51,7 @@ func resourceAwsSsmParameter() *schema.Resource {
 			"key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"overwrite": {
 				Type:     schema.TypeBool,
@@ -60,7 +60,6 @@ func resourceAwsSsmParameter() *schema.Resource {
 			"allowed_pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 			},
 			"tags": tagsSchema(),
 		},
@@ -93,33 +92,44 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	if err != nil {
 		return errwrap.Wrapf("[ERROR] Error getting SSM parameter: {{err}}", err)
 	}
+	if len(resp.Parameters) == 0 {
+		log.Printf("[WARN] SSM Param %q not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	param := resp.Parameters[0]
 	d.Set("name", param.Name)
 	d.Set("type", param.Type)
 	d.Set("value", param.Value)
 
-	respDetailed, err := ssmconn.DescribeParameters(&ssm.DescribeParametersInput{
+	describeParamsInput := &ssm.DescribeParametersInput{
 		Filters: []*ssm.ParametersFilter{
 			&ssm.ParametersFilter{
 				Key:    aws.String("Name"),
 				Values: []*string{aws.String(d.Get("name").(string))},
 			},
 		},
-	})
+	}
+	detailedParameters := []*ssm.ParameterMetadata{}
+	err = ssmconn.DescribeParametersPages(describeParamsInput,
+		func(page *ssm.DescribeParametersOutput, lastPage bool) bool {
+			detailedParameters = append(detailedParameters, page.Parameters...)
+			return !lastPage
+		})
 	if err != nil {
 		return errwrap.Wrapf("[ERROR] Error describing SSM parameter: {{err}}", err)
 	}
+	if len(detailedParameters) == 0 {
+		log.Printf("[WARN] SSM Param %q not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
-	detail := respDetailed.Parameters[0]
+	detail := detailedParameters[0]
 	if detail.Description != nil {
 		// Trailing spaces are not considered as a difference
 		*detail.Description = strings.TrimSpace(*detail.Description)
-	}
-	if _, ok := d.GetOk("key_id"); !ok && detail.KeyId != nil && *detail.KeyId == "alias/aws/ssm" {
-		// If the key_id is not specified and the actual key is set to the AWS default key, we set
-		// the key to nil to ensure that terraform does not consider that the actual key has changed.
-		detail.KeyId = nil
 	}
 
 	d.Set("key_id", detail.KeyId)
@@ -179,9 +189,7 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 	if description, ok := d.GetOk("description"); ok {
 		paramInput.SetDescription(description.(string))
 	} else if d.HasChange("description") {
-		// There is a "bug" in the AWS API and is it not possible to unset a description once
-		// it has been initially set
-		paramInput.SetDescription(" ")
+		paramInput.SetDescription("")
 	}
 
 	if keyID, ok := d.GetOk("key_id"); ok {
