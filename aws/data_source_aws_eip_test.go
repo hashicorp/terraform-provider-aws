@@ -68,7 +68,7 @@ func TestAccDataSourceAwsEip_tags(t *testing.T) {
 			resource.TestStep{
 				Config: testAccDataSourceAwsEip_tags_config(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_eip.test", "tags.%", "2"),
+					testAccDataSourceAwsEipCheck("data.aws_eip.by_tag"),
 				),
 			},
 		},
@@ -112,7 +112,7 @@ data "aws_eip" "by_tag" {
 		test_tag = "${aws_eip.test.tags["test_tag"]}"
 		random_tag = "%d"
 	}
-	depends_on = ["aws_eip.test"]
+	public_ip = "${aws_eip.test.public_ip}"
 }
-`, rInt)
+`, rInt, rInt)
 }
