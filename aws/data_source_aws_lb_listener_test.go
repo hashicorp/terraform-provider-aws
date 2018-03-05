@@ -386,6 +386,7 @@ resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.alb_test.id}"
 
   tags {
+    Name     = "terraform-testacc-lb-listener-data-source-https"
     TestName = "TestAccAWSALB_basic"
   }
 }

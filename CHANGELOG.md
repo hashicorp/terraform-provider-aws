@@ -4,11 +4,21 @@ FEATURES:
 
 * **New Data Source:** `aws_kms_key` [GH-2224]
 * **New Resource:** `aws_organizations_organization` [GH-903]
+* **New Resource:** `aws_iot_thing` [GH-3521]
 
 ENHANCEMENTS:
 
 * resource/aws_dms_endpoint: Add aurora-postgresql as a target [GH-2615]
+* resource/aws_elastic_beanstalk_environment: Support modifying `tags` [GH-3513]
 * resource/aws_iam_user_policy: Add support for import [GH-3198]
+* resource/aws_lb: Add `enable_cross_zone_load_balancing` argument for NLBs [GH-3537]
+
+BUG FIXES:
+
+* data-source/aws_vpc_endpoint_service: Fix aws-us-gov partition handling [GH-3514]
+* resource/aws_api_gateway_vpc_link: Ensure `target_arns` is properly read [GH-3569]
+* resource/aws_spot_instance_request: Retry for 1 minute instead of 15 seconds for IAM eventual consistency [GH-3561]
+* resource/aws_ssm_activation: Prevent crash with expiration_date [GH-3597]
 
 ## 1.10.0 (February 24, 2018)
 
