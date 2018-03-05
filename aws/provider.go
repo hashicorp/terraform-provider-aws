@@ -180,6 +180,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ecr_repository":                   dataSourceAwsEcrRepository(),
 			"aws_ecs_cluster":                      dataSourceAwsEcsCluster(),
 			"aws_ecs_container_definition":         dataSourceAwsEcsContainerDefinition(),
+			"aws_ecs_service":                      dataSourceAwsEcsService(),
 			"aws_ecs_task_definition":              dataSourceAwsEcsTaskDefinition(),
 			"aws_efs_file_system":                  dataSourceAwsEfsFileSystem(),
 			"aws_efs_mount_target":                 dataSourceAwsEfsMountTarget(),
