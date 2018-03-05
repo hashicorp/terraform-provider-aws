@@ -240,6 +240,94 @@ func TestRulesMixedMatching(t *testing.T) {
 				},
 			},
 		},
+		// with descriptions
+		{
+			local: []interface{}{
+				map[string]interface{}{
+					"description": "desc",
+					"from_port":   80,
+					"to_port":     8000,
+					"protocol":    "tcp",
+					"cidr_blocks": []interface{}{"10.0.0.0/16"},
+				},
+			},
+			remote: []map[string]interface{}{
+				map[string]interface{}{
+					"description": "desc",
+					"from_port":   int64(80),
+					"to_port":     int64(8000),
+					"protocol":    "tcp",
+					"cidr_blocks": []string{"10.0.0.0/16"},
+				},
+			},
+			saves: []map[string]interface{}{
+				map[string]interface{}{
+					"description": "desc",
+					"from_port":   int64(80),
+					"to_port":     int64(8000),
+					"protocol":    "tcp",
+					"cidr_blocks": []string{"10.0.0.0/16"},
+				},
+			},
+		},
+		// local with description and remote without
+		{
+			local: []interface{}{
+				map[string]interface{}{
+					"description": "desc",
+					"from_port":   80,
+					"to_port":     8000,
+					"protocol":    "tcp",
+					"cidr_blocks": []interface{}{"10.0.0.0/16"},
+				},
+			},
+			remote: []map[string]interface{}{
+				map[string]interface{}{
+					"from_port":   int64(80),
+					"to_port":     int64(8000),
+					"protocol":    "tcp",
+					"cidr_blocks": []string{"10.0.0.0/16"},
+				},
+			},
+			saves: []map[string]interface{}{
+				map[string]interface{}{
+					"from_port":   int64(80),
+					"to_port":     int64(8000),
+					"protocol":    "tcp",
+					"cidr_blocks": []string{"10.0.0.0/16"},
+				},
+			},
+		},
+		// local and remote with different descriptions
+		{
+			local: []interface{}{
+				map[string]interface{}{
+					"description": "some-desc",
+					"from_port":   80,
+					"to_port":     8000,
+					"protocol":    "tcp",
+					"cidr_blocks": []interface{}{"10.0.0.0/16"},
+				},
+			},
+			remote: []map[string]interface{}{
+				map[string]interface{}{
+					"description": "some-other-desc",
+					"from_port":   int64(80),
+					"to_port":     int64(8000),
+					"protocol":    "tcp",
+					"cidr_blocks": []string{"10.0.0.0/16"},
+				},
+			},
+			saves: []map[string]interface{}{
+				map[string]interface{}{
+					"description": "some-other-desc",
+					"from_port":   int64(80),
+					"to_port":     int64(8000),
+					"protocol":    "tcp",
+					"cidr_blocks": []string{"10.0.0.0/16"},
+				},
+			},
+		},
 		// local with more rules and the remote (the remote should then be saved)
 		{
 			local: []interface{}{

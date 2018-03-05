@@ -592,113 +592,100 @@ func resourceAwsSecurityGroupIPPermGather(groupId string, permissions []*ec2.IpP
 			toPort = *v
 		}
 
-		k := fmt.Sprintf("%s-%d-%d", *perm.IpProtocol, fromPort, toPort)
-		m, ok := ruleMap[k]
-		if !ok {
-			m = make(map[string]interface{})
-			ruleMap[k] = m
+		newRule := func(description string) map[string]interface{} {
+			return map[string]interface{}{
+				"description": description,
+				"from_port":   fromPort,
+				"to_port":     toPort,
+				"protocol":    *perm.IpProtocol,
+			}
 		}
 
-		m["from_port"] = fromPort
-		m["to_port"] = toPort
-		m["protocol"] = *perm.IpProtocol
-
-		var description string
-
 		if len(perm.IpRanges) > 0 {
-			raw, ok := m["cidr_blocks"]
-			if !ok {
-				raw = make([]string, 0, len(perm.IpRanges))
-			}
-			list := raw.([]string)
-
 			for _, ip := range perm.IpRanges {
-				list = append(list, *ip.CidrIp)
+				k := fmt.Sprintf("%s-%d-%d-%s", aws.StringValue(ip.Description), fromPort, toPort, *perm.IpProtocol)
+				m, ok := ruleMap[k]
+				if !ok {
+					m = newRule(aws.StringValue(ip.Description))
+					ruleMap[k] = m
+				}
 
-				desc := aws.StringValue(ip.Description)
-				if desc != "" {
-					description = desc
+				if _, ok := m["cidr_blocks"]; !ok {
+					m["cidr_blocks"] = []string{*ip.CidrIp}
+				} else {
+					m["cidr_blocks"] = append(m["cidr_blocks"].([]string), *ip.CidrIp)
 				}
 			}
-
-			m["cidr_blocks"] = list
 		}
 
 		if len(perm.Ipv6Ranges) > 0 {
-			raw, ok := m["ipv6_cidr_blocks"]
-			if !ok {
-				raw = make([]string, 0, len(perm.Ipv6Ranges))
-			}
-			list := raw.([]string)
-
 			for _, ip := range perm.Ipv6Ranges {
-				list = append(list, *ip.CidrIpv6)
+				k := fmt.Sprintf("%s-%d-%d-%s", aws.StringValue(ip.Description), fromPort, toPort, *perm.IpProtocol)
+				m, ok := ruleMap[k]
+				if !ok {
+					m = newRule(aws.StringValue(ip.Description))
+					ruleMap[k] = m
+				}
 
-				desc := aws.StringValue(ip.Description)
-				if desc != "" {
-					description = desc
+				if _, ok := m["ipv6_cidr_blocks"]; !ok {
+					m["ipv6_cidr_blocks"] = []string{*ip.CidrIpv6}
+				} else {
+					m["ipv6_cidr_blocks"] = append(m["ipv6_cidr_blocks"].([]string), *ip.CidrIpv6)
 				}
 			}
-
-			m["ipv6_cidr_blocks"] = list
 		}
 
 		if len(perm.PrefixListIds) > 0 {
-			raw, ok := m["prefix_list_ids"]
-			if !ok {
-				raw = make([]string, 0, len(perm.PrefixListIds))
-			}
-			list := raw.([]string)
-
 			for _, pl := range perm.PrefixListIds {
-				list = append(list, *pl.PrefixListId)
+				k := fmt.Sprintf("%s-%d-%d-%s", aws.StringValue(pl.Description), fromPort, toPort, *perm.IpProtocol)
+				m, ok := ruleMap[k]
+				if !ok {
+					m = newRule(aws.StringValue(pl.Description))
+					ruleMap[k] = m
+				}
 
-				desc := aws.StringValue(pl.Description)
-				if desc != "" {
-					description = desc
+				if _, ok := m["prefix_list_ids"]; !ok {
+					m["prefix_list_ids"] = []string{*pl.PrefixListId}
+				} else {
+					m["prefix_list_ids"] = append(m["prefix_list_ids"].([]string), *pl.PrefixListId)
 				}
 			}
-
-			m["prefix_list_ids"] = list
 		}
 
 		groups := flattenSecurityGroups(perm.UserIdGroupPairs, ownerId)
 		for i, g := range groups {
 			if *g.GroupId == groupId {
+				k := fmt.Sprintf("%s-%d-%d-%s", aws.StringValue(g.Description), fromPort, toPort, *perm.IpProtocol)
+				m, ok := ruleMap[k]
+				if !ok {
+					m = newRule(aws.StringValue(g.Description))
+					ruleMap[k] = m
+				}
 				groups[i], groups = groups[len(groups)-1], groups[:len(groups)-1]
 				m["self"] = true
-
-				desc := aws.StringValue(g.Description)
-				if desc != "" {
-					description = desc
-				}
 			}
 		}
 
 		if len(groups) > 0 {
-			raw, ok := m["security_groups"]
-			if !ok {
-				raw = schema.NewSet(schema.HashString, nil)
-			}
-			list := raw.(*schema.Set)
-
 			for _, g := range groups {
-				if g.GroupName != nil {
-					list.Add(*g.GroupName)
-				} else {
-					list.Add(*g.GroupId)
+				k := fmt.Sprintf("%s-%d-%d-%s", aws.StringValue(g.Description), fromPort, toPort, *perm.IpProtocol)
+				m, ok := ruleMap[k]
+				if !ok {
+					m = newRule(aws.StringValue(g.Description))
+					ruleMap[k] = m
 				}
 
-				desc := aws.StringValue(g.Description)
-				if desc != "" {
-					description = desc
+				if _, ok := m["security_groups"]; !ok {
+					m["security_groups"] = schema.NewSet(schema.HashString, nil)
+				}
+
+				if g.GroupName != nil {
+					m["security_groups"].(*schema.Set).Add(*g.GroupName)
+				} else {
+					m["security_groups"].(*schema.Set).Add(*g.GroupId)
 				}
 			}
-
-			m["security_groups"] = list
 		}
-
-		m["description"] = description
 	}
 
 	rules := make([]map[string]interface{}, 0, len(ruleMap))
@@ -863,26 +850,34 @@ func matchRules(rType string, local []interface{}, remote []map[string]interface
 	for _, raw := range local {
 		l := raw.(map[string]interface{})
 
-		var selfVal bool
-		if v, ok := l["self"]; ok {
-			selfVal = v.(bool)
+		lDescription, ok := l["description"].(string)
+		if !ok {
+			lDescription = ""
+		}
+		lSelf, ok := l["self"].(bool)
+		if !ok {
+			lSelf = false
 		}
 
 		// matching against self is required to detect rules that only include self
 		// as the rule. resourceAwsSecurityGroupIPPermGather parses the group out
 		// and replaces it with self if it's ID is found
-		localHash := idHash(rType, l["protocol"].(string), int64(l["to_port"].(int)), int64(l["from_port"].(int)), selfVal)
+		localHash := idHash(rType, lDescription, int64(l["to_port"].(int)), int64(l["from_port"].(int)), l["protocol"].(string), lSelf)
 
 		// loop remote rules, looking for a matching hash
 		for _, r := range remote {
-			var remoteSelfVal bool
-			if v, ok := r["self"]; ok {
-				remoteSelfVal = v.(bool)
+			rDescription, ok := r["description"].(string)
+			if !ok {
+				rDescription = ""
+			}
+			rSelf, ok := r["self"].(bool)
+			if !ok {
+				rSelf = false
 			}
 
 			// hash this remote rule and compare it for a match consideration with the
 			// local rule we're examining
-			rHash := idHash(rType, r["protocol"].(string), r["to_port"].(int64), r["from_port"].(int64), remoteSelfVal)
+			rHash := idHash(rType, rDescription, r["to_port"].(int64), r["from_port"].(int64), r["protocol"].(string), rSelf)
 			if rHash == localHash {
 				var numExpectedCidrs, numExpectedIpv6Cidrs, numExpectedPrefixLists, numExpectedSGs, numRemoteCidrs, numRemoteIpv6Cidrs, numRemotePrefixLists, numRemoteSGs int
 				var matchingCidrs []string
@@ -1165,11 +1160,11 @@ func matchRules(rType string, local []interface{}, remote []map[string]interface
 	return saves
 }
 
-// Creates a unique hash for the type, ports, and protocol, used as a key in
-// maps
-func idHash(rType, protocol string, toPort, fromPort int64, self bool) string {
+// Creates a unique hash for the type, description, ports, and protocol.
+func idHash(rType, description string, toPort, fromPort int64, protocol string, self bool) string {
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("%s-", rType))
+	buf.WriteString(fmt.Sprintf("%s-", description))
 	buf.WriteString(fmt.Sprintf("%d-", toPort))
 	buf.WriteString(fmt.Sprintf("%d-", fromPort))
 	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(protocol)))
