@@ -26,6 +26,11 @@ func dataSourceAwsSubnetIDs() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+
+			"availability_zone": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -58,7 +63,10 @@ func dataSourceAwsSubnetIDsRead(d *schema.ResourceData, meta interface{}) error 
 	subnets := make([]string, 0)
 
 	for _, subnet := range resp.Subnets {
-		subnets = append(subnets, *subnet.SubnetId)
+		az := d.Get("availability_zone")
+		if az.(string) == "" || az.(string) == *subnet.AvailabilityZone {
+			subnets = append(subnets, *subnet.SubnetId)
+		}
 	}
 
 	d.SetId(d.Get("vpc_id").(string))
