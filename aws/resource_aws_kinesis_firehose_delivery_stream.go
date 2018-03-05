@@ -289,6 +289,7 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 		} else if destination.ElasticsearchDestinationDescription != nil {
 			d.Set("destination", "elasticsearch")
 
+			roleArn := *destination.ElasticsearchDestinationDescription.RoleARN
 			elasticsearchConfiguration := map[string]interface{}{
 				"buffering_interval":    *destination.ElasticsearchDestinationDescription.BufferingHints.IntervalInSeconds,
 				"buffering_size":        *destination.ElasticsearchDestinationDescription.BufferingHints.SizeInMBs,
@@ -303,6 +304,10 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 
 			if v := destination.ElasticsearchDestinationDescription.CloudWatchLoggingOptions; v != nil {
 				elasticsearchConfiguration["cloudwatch_logging_options"] = flattenCloudwatchLoggingOptions(*v)
+			}
+
+			if v := destination.ElasticsearchDestinationDescription.ProcessingConfiguration; v != nil {
+				elasticsearchConfiguration["processing_configuration"] = flattenProcessingConfiguration(*v, roleArn)
 			}
 
 			elasticsearchConfList := make([]map[string]interface{}, 1)
@@ -679,6 +684,8 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						},
 
 						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+
+						"processing_configuration": processingConfigurationSchema(),
 					},
 				},
 			},
@@ -1107,6 +1114,10 @@ func createElasticsearchConfig(d *schema.ResourceData, s3Config *firehose.S3Dest
 		config.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(es)
 	}
 
+	if _, ok := es["processing_configuration"]; ok {
+		config.ProcessingConfiguration = extractProcessingConfiguration(es)
+	}
+
 	if indexRotationPeriod, ok := es["index_rotation_period"]; ok {
 		config.IndexRotationPeriod = aws.String(indexRotationPeriod.(string))
 	}
@@ -1138,6 +1149,10 @@ func updateElasticsearchConfig(d *schema.ResourceData, s3Update *firehose.S3Dest
 
 	if _, ok := es["cloudwatch_logging_options"]; ok {
 		update.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(es)
+	}
+
+	if _, ok := es["processing_configuration"]; ok {
+		update.ProcessingConfiguration = extractProcessingConfiguration(es)
 	}
 
 	if indexRotationPeriod, ok := es["index_rotation_period"]; ok {
