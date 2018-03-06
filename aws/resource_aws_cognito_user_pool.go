@@ -68,7 +68,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      7,
-							ValidateFunc: validateIntegerInRange(0, 90),
+							ValidateFunc: validation.IntBetween(0, 90),
 						},
 					},
 				},
@@ -240,7 +240,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"minimum_length": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validateIntegerInRange(6, 99),
+							ValidateFunc: validation.IntBetween(6, 99),
 						},
 						"require_lowercase": {
 							Type:     schema.TypeBool,

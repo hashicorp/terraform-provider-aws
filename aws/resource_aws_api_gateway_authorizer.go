@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsApiGatewayAuthorizer() *schema.Resource {
@@ -49,7 +50,7 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 			"authorizer_result_ttl_in_seconds": &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateIntegerInRange(0, 3600),
+				ValidateFunc: validation.IntBetween(0, 3600),
 			},
 			"identity_validation_expression": &schema.Schema{
 				Type:     schema.TypeString,
