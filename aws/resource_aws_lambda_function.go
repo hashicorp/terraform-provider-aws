@@ -378,6 +378,8 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error creating Lambda function: %s", err)
 	}
 
+	d.SetId(d.Get("function_name").(string))
+
 	if reservedConcurrentExecutions > 0 {
 
 		log.Printf("[DEBUG] Setting Concurrency to %d for the Lambda Function %s", reservedConcurrentExecutions, functionName)
@@ -387,13 +389,20 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 			ReservedConcurrentExecutions: aws.Int64(int64(reservedConcurrentExecutions)),
 		}
 
-		_, err := conn.PutFunctionConcurrency(concurrencyParams)
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.PutFunctionConcurrency(concurrencyParams)
+			if err != nil {
+				if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
 		if err != nil {
 			return fmt.Errorf("Error setting concurrency for Lambda %s: %s", functionName, err)
 		}
 	}
-
-	d.SetId(d.Get("function_name").(string))
 
 	return resourceAwsLambdaFunctionRead(d, meta)
 }
