@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -472,6 +473,11 @@ func TestAccAWSDBInstance_diffSuppressInitialState(t *testing.T) {
 
 func TestAccAWSDBInstance_ec2Classic(t *testing.T) {
 	var v rds.DBInstance
+
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -1418,10 +1424,6 @@ resource "aws_db_instance" "bar" {
 
 func testAccAWSDBInstanceConfigEc2Classic(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_db_instance" "bar" {
   identifier = "foobarbaz-test-terraform-%d"
   allocated_storage = 10
