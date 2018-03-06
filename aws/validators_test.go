@@ -419,53 +419,6 @@ func TestValidateCIDRNetworkAddress(t *testing.T) {
 	}
 }
 
-func TestValidateHTTPMethod(t *testing.T) {
-	type testCases struct {
-		Value    string
-		ErrCount int
-	}
-
-	invalidCases := []testCases{
-		{
-			Value:    "incorrect",
-			ErrCount: 1,
-		},
-		{
-			Value:    "delete",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range invalidCases {
-		_, errors := validateHTTPMethod(tc.Value, "http_method")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
-		}
-	}
-
-	validCases := []testCases{
-		{
-			Value:    "ANY",
-			ErrCount: 0,
-		},
-		{
-			Value:    "DELETE",
-			ErrCount: 0,
-		},
-		{
-			Value:    "OPTIONS",
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range validCases {
-		_, errors := validateHTTPMethod(tc.Value, "http_method")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
-		}
-	}
-}
-
 func TestValidateLogMetricFilterName(t *testing.T) {
 	validNames := []string{
 		"YadaHereAndThere",
