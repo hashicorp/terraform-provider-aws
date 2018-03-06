@@ -23,6 +23,8 @@ func TestAWSKmsGrant_Basic(t *testing.T) {
 					testAccCheckAWSKmsGrantExists("aws_kms_grant.basic"),
 					resource.TestCheckResourceAttr("aws_kms_grant.basic", "name", "basic"),
 					resource.TestCheckResourceAttr("aws_kms_grant.basic", "operations.#", "2"),
+					resource.TestCheckResourceAttr("aws_kms_grant.basic", "operations.2238845196", "Encrypt"),
+					resource.TestCheckResourceAttr("aws_kms_grant.basic", "operations.1237510779", "Decrypt"),
 					resource.TestCheckResourceAttrSet("aws_kms_grant.basic", "grantee_principal"),
 					resource.TestCheckResourceAttrSet("aws_kms_grant.basic", "key_id"),
 				),
@@ -40,11 +42,27 @@ func TestAWSKmsGrant_withConstraints(t *testing.T) {
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsGrant_withConstraints("withConstraints", timestamp, "foo = \"bar\""),
+				Config: testAccAWSKmsGrant_withConstraints("withConstraintsEq", timestamp, "encryption_context_equals", `foo = "bar"
+                        baz = "kaz"`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsGrantExists("aws_kms_grant.withConstraints"),
-					resource.TestCheckResourceAttr("aws_kms_grant.withConstraints", "name", "withConstraints"),
-					resource.TestCheckResourceAttr("aws_kms_grant.withConstraints", "constraints.#", "1"),
+					testAccCheckAWSKmsGrantExists("aws_kms_grant.withConstraintsEq"),
+					resource.TestCheckResourceAttr("aws_kms_grant.withConstraintsEq", "name", "withConstraintsEq"),
+					resource.TestCheckResourceAttr("aws_kms_grant.withConstraintsEq", "constraints.#", "1"),
+					resource.TestCheckResourceAttr("aws_kms_grant.withConstraintsEq", "constraints.449762259.encryption_context_equals.%", "2"),
+					resource.TestCheckResourceAttr("aws_kms_grant.withConstraintsEq", "constraints.449762259.encryption_context_equals.baz", "kaz"),
+					resource.TestCheckResourceAttr("aws_kms_grant.withConstraintsEq", "constraints.449762259.encryption_context_equals.foo", "bar"),
+				),
+			},
+			{
+				Config: testAccAWSKmsGrant_withConstraints("withConstraintsSub", timestamp, "encryption_context_subset", `foo = "bar"
+			            baz = "kaz"`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsGrantExists("aws_kms_grant.withConstraintsSub"),
+					resource.TestCheckResourceAttr("aws_kms_grant.withConstraintsSub", "name", "withConstraintsSub"),
+					resource.TestCheckResourceAttr("aws_kms_grant.withConstraintsSub", "constraints.#", "1"),
+					resource.TestCheckResourceAttr("aws_kms_grant.withConstraintsSub", "constraints.2645649985.encryption_context_subset.%", "2"),
+					resource.TestCheckResourceAttr("aws_kms_grant.withConstraintsSub", "constraints.2645649985.encryption_context_subset.baz", "kaz"),
+					resource.TestCheckResourceAttr("aws_kms_grant.withConstraintsSub", "constraints.2645649985.encryption_context_subset.foo", "bar"),
 				),
 			},
 		},
@@ -145,7 +163,7 @@ resource "aws_kms_grant" "%s" {
 `, timestamp, staticAssumeRolePolicyString, rName, rName, rName, operations)
 }
 
-func testAccAWSKmsGrant_withConstraints(rName string, timestamp string, encryptionContextEq string) string {
+func testAccAWSKmsGrant_withConstraints(rName string, timestamp string, constraintName string, encryptionContext string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "tf-acc-test-key" {
     description = "Terraform acc test key %s"
@@ -166,12 +184,12 @@ resource "aws_kms_grant" "%s" {
 	grantee_principal = "${aws_iam_role.tf-acc-test-role.arn}"
 	operations = [ "RetireGrant", "DescribeKey" ]
 	constraints {
-		encryption_context_equals {
+		%s {
 			%s
 		}
 	}
 }
-`, timestamp, staticAssumeRolePolicyString, rName, rName, rName, encryptionContextEq)
+`, timestamp, staticAssumeRolePolicyString, rName, rName, rName, constraintName, encryptionContext)
 }
 
 func testAccAWSKmsGrant_withRetiringPrincipal(rName string, timestamp string) string {
@@ -222,7 +240,7 @@ resource "aws_kms_grant" "%s" {
 `, timestamp, staticAssumeRolePolicyString, rName, rName)
 }
 
-var staticAssumeRolePolicyString = `
+const staticAssumeRolePolicyString = `
 data "aws_iam_policy_document" "assumerole-policy-template" {
   statement {
     effect  = "Allow"

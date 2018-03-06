@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -421,10 +422,24 @@ func expandKmsGrantConstraints(configured *schema.Set) *kms.GrantConstraints {
 	return &constraint
 }
 
-func concatStringMap(m map[string]*string, sep string) string {
+func sortStringMapKeys(m map[string]*string) []string {
+	keys := make([]string, 0)
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	return keys
+}
+
+// NB: For the constraint hash to be deterministic the order in which
+// print the keys and values of the encryption context maps needs to be
+// determistic, so sort them.
+func sortedConcatStringMap(m map[string]*string, sep string) string {
 	var strList []string
-	for k, v := range m {
-		strList = append(strList, k, *v)
+	mapKeys := sortStringMapKeys(m)
+	for _, key := range mapKeys {
+		strList = append(strList, key, *m[key])
 	}
 	return strings.Join(strList, sep)
 }
@@ -439,27 +454,35 @@ func resourceKmsGrantConstraintsHash(v interface{}) int {
 	}
 
 	if v, ok := m["encryption_context_equals"]; ok {
-		buf.WriteString(fmt.Sprintf("encryption_context_equals-%s", concatStringMap(stringMapToPointers(v.(map[string]interface{})), " ")))
+		if len(v.(map[string]interface{})) > 0 {
+			buf.WriteString(fmt.Sprintf("encryption_context_equals-%s-", sortedConcatStringMap(stringMapToPointers(v.(map[string]interface{})), "-")))
+		}
 	}
 	if v, ok := m["encryption_context_subset"]; ok {
-		buf.WriteString(fmt.Sprintf("encryption_context_subset-%s", concatStringMap(stringMapToPointers(v.(map[string]interface{})), " ")))
+		if len(v.(map[string]interface{})) > 0 {
+			buf.WriteString(fmt.Sprintf("encryption_context_subset-%s-", sortedConcatStringMap(stringMapToPointers(v.(map[string]interface{})), "-")))
+		}
 	}
 
 	return hashcode.String(buf.String())
 }
 
 func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
-	constraints := &schema.Set{F: resourceKmsGrantConstraintsHash}
+	constraints := schema.NewSet(resourceKmsGrantConstraintsHash, []interface{}{})
 	if constraint == nil {
 		return constraints
 	}
 
 	m := make(map[string]interface{}, 0)
 	if constraint.EncryptionContextEquals != nil {
-		m["encryption_context_equals"] = pointersMapToStringList(constraint.EncryptionContextEquals)
+		if len(constraint.EncryptionContextEquals) > 0 {
+			m["encryption_context_equals"] = pointersMapToStringList(constraint.EncryptionContextEquals)
+		}
 	}
 	if constraint.EncryptionContextSubset != nil {
-		m["encryption_context_subset"] = pointersMapToStringList(constraint.EncryptionContextSubset)
+		if len(constraint.EncryptionContextSubset) > 0 {
+			m["encryption_context_subset"] = pointersMapToStringList(constraint.EncryptionContextSubset)
+		}
 	}
 	constraints.Add(m)
 
