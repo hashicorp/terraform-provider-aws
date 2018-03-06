@@ -1023,6 +1023,8 @@ resource "aws_lb" "test" {
     subnet_id = "${aws_subnet.public.1.id}"
     allocation_id = "${aws_eip.lb.1.id}"
   }
+
+  depends_on = ["aws_internet_gateway.default"]
 }
 
 resource "aws_eip" "lb" {
