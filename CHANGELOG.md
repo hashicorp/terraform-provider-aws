@@ -23,6 +23,7 @@ BUG FIXES:
 * data-source/aws_db_instance: Prevent crash with EC2 Classic [GH-3619]
 * data-source/aws_vpc_endpoint_service: Fix aws-us-gov partition handling [GH-3514]
 * resource/aws_api_gateway_vpc_link: Ensure `target_arns` is properly read [GH-3569]
+* resource/aws_ebs_snapshot: Prevent crash with outside snapshot deletion [GH-3462]
 * resource/aws_lambda_function: Allow PutFunctionConcurrency retries on creation [GH-3570]
 * resource/aws_spot_instance_request: Retry for 1 minute instead of 15 seconds for IAM eventual consistency [GH-3561]
 * resource/aws_ssm_activation: Prevent crash with expiration_date [GH-3597]
