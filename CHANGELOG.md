@@ -8,6 +8,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_cloudfront_distribution: Make default_ttl, max_ttl, and min_ttl attributes as optional [GH-3571]
 * resource/aws_dms_endpoint: Add aurora-postgresql as a target [GH-2615]
 * resource/aws_elastic_beanstalk_environment: Support modifying `tags` [GH-3513]
 * resource/aws_iam_user_policy: Add support for import [GH-3198]
