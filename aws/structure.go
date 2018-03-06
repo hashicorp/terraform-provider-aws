@@ -3035,6 +3035,23 @@ func flattenCognitoIdentityPoolRoles(config map[string]*string) map[string]strin
 	return m
 }
 
+func expandCognitoIdentityProviderMap(config map[string]interface{}) map[string]*string {
+	m := map[string]*string{}
+	for k, v := range config {
+		s := v.(string)
+		m[k] = &s
+	}
+	return m
+}
+
+func flattenCognitoIdentityProviderMap(config map[string]*string) map[string]string {
+	m := map[string]string{}
+	for k, v := range config {
+		m[k] = *v
+	}
+	return m
+}
+
 func expandCognitoIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]*cognitoidentity.RoleMapping {
 	values := make(map[string]*cognitoidentity.RoleMapping, 0)
 
