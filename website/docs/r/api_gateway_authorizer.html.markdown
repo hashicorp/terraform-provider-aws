@@ -96,15 +96,17 @@ resource "aws_lambda_function" "authorizer" {
 
 The following arguments are supported:
 
-* `authorizer_uri` - (Required) The authorizer's Uniform Resource Identifier (URI).
+* `authorizer_uri` - (Optional) The authorizer's Uniform Resource Identifier (URI).
 	For `TOKEN` type, this must be a well-formed Lambda function URI in the form of
 	`arn:aws:apigateway:{region}:lambda:path/{service_api}`. e.g. `arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:012345678912:function:my-function/invocations`
+  Ignored for `COGNITO_USER_POOLS` type.
 * `name` - (Required) The name of the authorizer
 * `rest_api_id` - (Required) The ID of the associated REST API
 * `identity_source` - (Optional) The source of the identity in an incoming request.
 	Defaults to `method.request.header.Authorization`. For `REQUEST` type, this may be a comma-separated list of values, including headers, query string parameters and stage variables - e.g. `"method.request.header.SomeHeaderName,method.request.querystring.SomeQueryStringName,stageVariables.SomeStageVariableName"`
-* `type` - (Optional) The type of the authorizer. Possible values are `TOKEN` and `REQUEST`.
-	Defaults to `TOKEN`.
+  Ignored for `COGNITO_USER_POOLS` type
+* `type` - (Optional) The type of the authorizer. Possible values are `TOKEN`, `REQUEST`
+  and `COGNITO_USER_POOLS`. Defaults to `TOKEN`.
 * `authorizer_credentials` - (Optional) The credentials required for the authorizer.
 	To specify an IAM Role for API Gateway to assume, use the IAM Role ARN.
 * `authorizer_result_ttl_in_seconds` - (Optional) The TTL of cached authorizer results in seconds.
@@ -112,4 +114,7 @@ The following arguments are supported:
 * `identity_validation_expression` - (Optional) A validation expression for the incoming identity.
 	For `TOKEN` type, this value should be a regular expression. The incoming token from the client is matched
 	against this expression, and will proceed if the token matches. If the token doesn't match,
-	the client receives a 401 Unauthorized response.
+	the client receives a 401 Unauthorized response. Ignored for `REQUEST` and `COGNITOR_USER_POOLS` type.
+* `provider_arns` - (Optional) A list of the Amazon Cognito user pool ARNs for the COGNITO_USER_POOLS authorizer.
+  Each element is of this format: arn:aws:cognito-idp:{region}:{account_id}:userpool/{user_pool_id}.
+  Ignored for `TOKEN` and `REQUEST` types
