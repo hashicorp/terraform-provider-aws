@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsApiGatewayIntegrationResponse() *schema.Resource {
@@ -71,9 +72,12 @@ func resourceAwsApiGatewayIntegrationResponse() *schema.Resource {
 			},
 
 			"content_handling": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateApiGatewayIntegrationContentHandling,
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					apigateway.ContentHandlingStrategyConvertToBinary,
+					apigateway.ContentHandlingStrategyConvertToText,
+				}, false),
 			},
 		},
 	}
