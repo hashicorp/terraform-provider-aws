@@ -23,7 +23,7 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"authorizer_uri": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Optional: true, // authorizer_uri is required for authorizer TOKEN/REQUEST
 			},
 			"identity_source": {
 				Type:     schema.TypeString,
@@ -64,7 +64,7 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 			},
 			"provider_arns": {
 				Type:     schema.TypeSet,
-				Optional: true,
+				Optional: true, // provider_arns is required for authorizer COGNITO_USER_POOLS.
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
@@ -201,10 +201,27 @@ func resourceAwsApiGatewayAuthorizerUpdate(d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("provider_arns") {
 		old, new := d.GetChange("provider_arns")
-		oldValue := old.(*schema.Set).List()
-		newValue := new.(*schema.Set).List()
-		operations = append(operations, diffProviderARNsOp("/providerARNs", oldValue, newValue)...)
+		os := old.(*schema.Set)
+		ns := new.(*schema.Set)
+		// providerARNs can't be empty, so add first and then remove
+		additionList := ns.Difference(os)
+		for _, v := range additionList.List() {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String("add"),
+				Path:  aws.String("/providerARNs"),
+				Value: aws.String(v.(string)),
+			})
+		}
+		removalList := os.Difference(ns)
+		for _, v := range removalList.List() {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String("remove"),
+				Path:  aws.String("/providerARNs"),
+				Value: aws.String(v.(string)),
+			})
+		}
 	}
+
 	input.PatchOperations = operations
 
 	log.Printf("[INFO] Updating API Gateway Authorizer: %s", input)
@@ -235,48 +252,7 @@ func resourceAwsApiGatewayAuthorizerDelete(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func diffProviderARNsOp(prefix string, old, new []interface{}) (ops []*apigateway.PatchOperation) {
-	// providerARNs can't be empty, so add first and then remove
-	for _, n := range new {
-		add := true
-		for _, o := range old {
-			if n.(string) == o.(string) {
-				add = false
-			}
-		}
-		if add {
-			ops = append(ops, &apigateway.PatchOperation{
-				Op:    aws.String("add"),
-				Path:  aws.String("/providerARNs"),
-				Value: aws.String(n.(string)),
-			})
-		}
-	}
-	for _, o := range old {
-		remove := true
-		for _, n := range new {
-			if o.(string) == n.(string) {
-				remove = false
-			}
-		}
-		if remove {
-			ops = append(ops, &apigateway.PatchOperation{
-				Op:    aws.String("remove"),
-				Path:  aws.String("/providerARNs"),
-				Value: aws.String(o.(string)),
-			})
-		}
-	}
-	return
-}
-
 func resourceAwsApiGatewayAuthorizerCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
-	args := []string{"authorizer_uri", "name", "rest_api_id", "identity_source", "type", "identity_validation_expression", "authorizer_credentials"}
-	for _, arg := range args {
-		val, ok := diff.GetOk(arg)
-		log.Printf("[DEBUG] %s: #%s#, #%v#", arg, val.(string), ok)
-	}
-
 	authType := diff.Get("type").(string)
 	// authorizer_uri is required for authorizer TOKEN/REQUEST
 	if authType == apigateway.AuthorizerTypeRequest || authType == apigateway.AuthorizerTypeToken {
