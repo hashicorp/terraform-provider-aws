@@ -81,6 +81,9 @@ func resourceAwsApiGatewayAuthorizerCreate(d *schema.ResourceData, meta interfac
 		Type:           aws.String(d.Get("type").(string)),
 	}
 
+	if err := validateAuthorizerType(d); err != nil {
+		return err
+	}
 	if v, ok := d.GetOk("authorizer_uri"); ok {
 		input.AuthorizerUri = aws.String(v.(string))
 	}
@@ -253,20 +256,6 @@ func resourceAwsApiGatewayAuthorizerDelete(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayAuthorizerCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
-	authType := diff.Get("type").(string)
-	// authorizer_uri is required for authorizer TOKEN/REQUEST
-	if authType == apigateway.AuthorizerTypeRequest || authType == apigateway.AuthorizerTypeToken {
-		if val, ok := diff.GetOk("authorizer_uri"); !ok || val.(string) == "" {
-			return fmt.Errorf("authorizer_uri must be set non-empty when authorizer type is %s", authType)
-		}
-	}
-	// provider_arns is required for authorizer COGNITO_USER_POOLS.
-	if authType == apigateway.AuthorizerTypeCognitoUserPools {
-		if val, ok := diff.GetOk("provider_arns"); !ok || len(val.(*schema.Set).List()) == 0 {
-			return fmt.Errorf("provider_arns must be set non-empty when authorizer type is %s", authType)
-		}
-	}
-
 	// switch type between COGNITO_USER_POOLS and TOKEN/REQUEST will create new resource.
 	if diff.HasChange("type") {
 		o, n := diff.GetChange("type")
@@ -274,6 +263,24 @@ func resourceAwsApiGatewayAuthorizerCustomizeDiff(diff *schema.ResourceDiff, v i
 			if err := diff.ForceNew("type"); err != nil {
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+func validateAuthorizerType(d *schema.ResourceData) error {
+	authType := d.Get("type").(string)
+	// authorizer_uri is required for authorizer TOKEN/REQUEST
+	if authType == apigateway.AuthorizerTypeRequest || authType == apigateway.AuthorizerTypeToken {
+		if v, ok := d.GetOk("authorizer_uri"); !ok || v.(string) == "" {
+			return fmt.Errorf("authorizer_uri must be set non-empty when authorizer type is %s", authType)
+		}
+	}
+	// provider_arns is required for authorizer COGNITO_USER_POOLS.
+	if authType == apigateway.AuthorizerTypeCognitoUserPools {
+		if v, ok := d.GetOk("provider_arns"); !ok || len(v.(*schema.Set).List()) == 0 {
+			return fmt.Errorf("provider_arns must be set non-empty when authorizer type is %s", authType)
 		}
 	}
 

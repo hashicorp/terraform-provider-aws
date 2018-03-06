@@ -148,6 +148,34 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
+	rString := acctest.RandString(7)
+	apiGatewayName := "tf-acctest-apigw-" + rString
+	authorizerName := "tf-acctest-igw-authorizer-" + rString
+	cognitoName := "tf-acctest-cognito-user-pool-" + rString
+	lambdaName := "tf-acctest-igw-auth-lambda-" + rString
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config:      testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationDefaultToken(apiGatewayName, authorizerName, lambdaName),
+				ExpectError: regexp.MustCompile(`authorizer_uri must be set non-empty when authorizer type is TOKEN`),
+			},
+			resource.TestStep{
+				Config:      testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationRequest(apiGatewayName, authorizerName, lambdaName),
+				ExpectError: regexp.MustCompile(`authorizer_uri must be set non-empty when authorizer type is REQUEST`),
+			},
+			resource.TestStep{
+				Config:      testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationCognito(apiGatewayName, authorizerName, cognitoName),
+				ExpectError: regexp.MustCompile(`provider_arns must be set non-empty when authorizer type is COGNITO_USER_POOLS`),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayAuthorizerAuthorizerUri(conf *apigateway.Authorizer, expectedUri *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.AuthorizerUri == nil {
@@ -417,8 +445,8 @@ resource "aws_cognito_user_pool" "acctest" {
 
 resource "aws_api_gateway_authorizer" "acctest" {
   name = "%s-cognito"
-  rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
   type = "COGNITO_USER_POOLS"
+  rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
   provider_arns = ["${aws_cognito_user_pool.acctest.*.arn}"]
 }
 `, apiGatewayName, cognitoName, authorizerName)
@@ -437,9 +465,49 @@ resource "aws_cognito_user_pool" "acctest_update" {
 
 resource "aws_api_gateway_authorizer" "acctest" {
   name = "%s-cognito-update"
-  rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
   type = "COGNITO_USER_POOLS"
+  rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
   provider_arns = ["${aws_cognito_user_pool.acctest_update.*.arn}"]
+}
+`, apiGatewayName, cognitoName, authorizerName)
+}
+
+func testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationDefaultToken(apiGatewayName, authorizerName, lambdaName string) string {
+	return testAccAWSAPIGatewayAuthorizerConfig_baseLambda(apiGatewayName, lambdaName) + fmt.Sprintf(`
+resource "aws_api_gateway_authorizer" "acctest" {
+  name = "%s"
+  rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
+  authorizer_credentials = "${aws_iam_role.invocation_role.arn}"
+}
+`, authorizerName)
+}
+
+func testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationRequest(apiGatewayName, authorizerName, lambdaName string) string {
+	return testAccAWSAPIGatewayAuthorizerConfig_baseLambda(apiGatewayName, lambdaName) + fmt.Sprintf(`
+resource "aws_api_gateway_authorizer" "acctest" {
+	name = "%s"
+	type = "REQUEST"
+  rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
+  authorizer_credentials = "${aws_iam_role.invocation_role.arn}"
+}
+`, authorizerName)
+}
+
+func testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationCognito(apiGatewayName, authorizerName, cognitoName string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "acctest" {
+  name = "%s"
+}
+
+resource "aws_cognito_user_pool" "acctest" {
+  count = 2
+  name = "%s-${count.index}"
+}
+
+resource "aws_api_gateway_authorizer" "acctest" {
+  name = "%s-cognito"
+  type = "COGNITO_USER_POOLS"
+  rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
 }
 `, apiGatewayName, cognitoName, authorizerName)
 }
