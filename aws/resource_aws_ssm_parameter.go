@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -90,7 +89,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 		WithDecryption: aws.Bool(true),
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error getting SSM parameter: {{err}}", err)
+		return fmt.Errorf("error getting SSM parameter: %s", err)
 	}
 	if len(resp.Parameters) == 0 {
 		log.Printf("[WARN] SSM Param %q not found, removing from state", d.Id())
@@ -118,7 +117,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 			return !lastPage
 		})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error describing SSM parameter: {{err}}", err)
+		return fmt.Errorf("error describing SSM parameter: %s", err)
 	}
 	if len(detailedParameters) == 0 {
 		log.Printf("[WARN] SSM Param %q not found, removing from state", d.Id())
@@ -127,11 +126,6 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	detail := detailedParameters[0]
-	if detail.Description != nil {
-		// Trailing spaces are not considered as a difference
-		*detail.Description = strings.TrimSpace(*detail.Description)
-	}
-
 	d.Set("key_id", detail.KeyId)
 	d.Set("description", detail.Description)
 	d.Set("allowed_pattern", detail.AllowedPattern)
@@ -186,10 +180,9 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 	}
 
-	if description, ok := d.GetOk("description"); ok {
-		paramInput.SetDescription(description.(string))
-	} else if d.HasChange("description") {
-		paramInput.SetDescription("")
+	if d.HasChange("description") {
+		_, n := d.GetChange("description")
+		paramInput.Description = aws.String(n.(string))
 	}
 
 	if keyID, ok := d.GetOk("key_id"); ok {
@@ -199,11 +192,11 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[DEBUG] Waiting for SSM Parameter %v to be updated", d.Get("name"))
 	if _, err := ssmconn.PutParameter(paramInput); err != nil {
-		return errwrap.Wrapf("[ERROR] Error creating SSM parameter: {{err}}", err)
+		return fmt.Errorf("error creating SSM parameter: %s", err)
 	}
 
 	if err := setTagsSSM(ssmconn, d, d.Get("name").(string), "Parameter"); err != nil {
-		return errwrap.Wrapf("[ERROR] Error creating SSM parameter tags: {{err}}", err)
+		return fmt.Errorf("error creating SSM parameter tags: %s", err)
 	}
 
 	d.SetId(d.Get("name").(string))

@@ -168,6 +168,7 @@ func TestAccAWSSSMParameter_secure(t *testing.T) {
 					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.foo", &param),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "value", "secret"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "type", "SecureString"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "key_id", "alias/aws/ssm"), // Default SSM key id
 				),
 			},
 		},
@@ -176,7 +177,8 @@ func TestAccAWSSSMParameter_secure(t *testing.T) {
 
 func TestAccAWSSSMParameter_secure_with_key(t *testing.T) {
 	var param ssm.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	randString := acctest.RandString(10)
+	name := fmt.Sprintf("%s_%s", t.Name(), randString)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -184,11 +186,44 @@ func TestAccAWSSSMParameter_secure_with_key(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterSecureConfigWithKey(name, "secret"),
+				Config: testAccAWSSSMParameterSecureConfigWithKey(name, "secret", randString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.secret_foo", &param),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.secret_foo", "value", "secret"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.secret_foo", "type", "SecureString"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.secret_foo", "key_id", "alias/"+randString),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMParameter_secure_keyUpdate(t *testing.T) {
+	var param ssm.Parameter
+	randString := acctest.RandString(10)
+	name := fmt.Sprintf("%s_%s", t.Name(), randString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterSecureConfig(name, "secret"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.secret_foo", &param),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.secret_foo", "value", "secret"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.secret_foo", "type", "SecureString"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.secret_foo", "key_id", "alias/aws/ssm"), // Default SSM key id
+				),
+			},
+			{
+				Config: testAccAWSSSMParameterSecureConfigWithKey(name, "secret", randString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.secret_foo", &param),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.secret_foo", "value", "secret"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.secret_foo", "type", "SecureString"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.secret_foo", "key_id", "alias/"+randString),
 				),
 			},
 		},
@@ -327,21 +362,27 @@ resource "aws_ssm_parameter" "secret_foo" {
 `, rName, value)
 }
 
-func testAccAWSSSMParameterSecureConfigWithKey(rName string, value string) string {
+func testAccAWSSSMParameterSecureConfigWithKey(rName string, value string, keyAlias string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "secret_foo" {
   name  = "test_secure_parameter-%[1]s"
   description  = "description for parameter %[1]s"
   type  = "SecureString"
   value = "%[2]s"
-	key_id = "${aws_kms_key.test_key.id}"
+  key_id = "alias/%[3]s"
+  depends_on = ["aws_kms_alias.test_alias"]
 }
 
 resource "aws_kms_key" "test_key" {
   description             = "KMS key 1"
   deletion_window_in_days = 7
 }
-`, rName, value)
+
+resource "aws_kms_alias" "test_alias" {
+  name          = "alias/%[3]s"
+  target_key_id = "${aws_kms_key.test_key.id}"
+}
+`, rName, value, keyAlias)
 }
 
 func TestAWSSSMParameterShouldUpdate(t *testing.T) {
