@@ -97,11 +97,15 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 				}, false)},
 
 			"passthrough_behavior": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateApiGatewayIntegrationPassthroughBehavior,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"WHEN_NO_MATCH",
+					"WHEN_NO_TEMPLATES",
+					"NEVER",
+				}, false),
 			},
 
 			"cache_key_parameters": {
