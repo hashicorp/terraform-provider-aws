@@ -1268,24 +1268,6 @@ func validateIamRolePolicyNamePrefix(v interface{}, k string) (ws []string, erro
 	return
 }
 
-func validateApiGatewayUsagePlanQuotaSettingsPeriod(v interface{}, k string) (ws []string, errors []error) {
-	validPeriods := []string{
-		apigateway.QuotaPeriodTypeDay,
-		apigateway.QuotaPeriodTypeWeek,
-		apigateway.QuotaPeriodTypeMonth,
-	}
-	period := v.(string)
-	for _, f := range validPeriods {
-		if period == f {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf(
-		"%q contains an invalid period %q. Valid period are %q.",
-		k, period, validPeriods))
-	return
-}
-
 func validateApiGatewayUsagePlanQuotaSettings(v map[string]interface{}) (errors []error) {
 	period := v["period"].(string)
 	offset := v["offset"].(int)
