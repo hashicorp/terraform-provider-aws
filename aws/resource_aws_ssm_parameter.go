@@ -52,7 +52,6 @@ func resourceAwsSsmParameter() *schema.Resource {
 			"overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 		},
 	}
@@ -122,12 +121,11 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 	ssmconn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[INFO] Creating SSM Parameter: %s", d.Get("name").(string))
-
 	paramInput := &ssm.PutParameterInput{
 		Name:      aws.String(d.Get("name").(string)),
 		Type:      aws.String(d.Get("type").(string)),
 		Value:     aws.String(d.Get("value").(string)),
-		Overwrite: aws.Bool(d.Get("overwrite").(bool)),
+		Overwrite: aws.Bool(shouldUpdateSsmParameter(d)),
 	}
 	if keyID, ok := d.GetOk("key_id"); ok {
 		log.Printf("[DEBUG] Setting key_id for SSM Parameter %s: %s", d.Get("name").(string), keyID.(string))
@@ -144,4 +142,21 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(d.Get("name").(string))
 
 	return resourceAwsSsmParameterRead(d, meta)
+}
+
+func shouldUpdateSsmParameter(d *schema.ResourceData) bool {
+	// If the user has specifed a preference, return their preference
+	if value, ok := d.GetOkExists("overwrite"); ok == true {
+		return value.(bool)
+	}
+
+	// Since the user has not specified a preference, obey lifecycle rules
+	// 	Only parameters that have been created by terraform should be updated
+	if !d.IsNewResource() {
+		return true
+	}
+
+	// This is a new resource and hence the parameter should not exist and
+	// should not need to be overwritten.
+	return false
 }
