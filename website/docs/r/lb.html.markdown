@@ -62,6 +62,7 @@ will for load balancers of type `network` will force a recreation of the resourc
    the AWS API. This will prevent Terraform from deleting the load balancer. Defaults to `false`.
 * `enable_cross_zone_load_balancing` - (Optional) If true, cross-zone load balancing of the load balancer will be enabled.
    This is a `network` load balancer feature. Defaults to `false`.
+* `enable_http2` - (Optional) Indicates whether HTTP/2 is enabled in `application` load balancers. Defaults to `true`.
 * `ip_address_type` - (Optional) The type of IP addresses used by the subnets for your load balancer. The possible values are `ipv4` and `dualstack`
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
