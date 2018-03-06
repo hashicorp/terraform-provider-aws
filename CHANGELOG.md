@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * resource/aws_iam_user_policy: Add support for import [GH-3198]
 * resource/aws_lb: Add `enable_cross_zone_load_balancing` argument for NLBs [GH-3537]
 * resource/aws_lb: Add `enable_http2` argument for ALBs [GH-3609]
+* resource/aws_route: Add configurable timeouts [GH-3639]
 * resource/aws_security_group: Add configurable timeouts [GH-3599]
 
 BUG FIXES:
