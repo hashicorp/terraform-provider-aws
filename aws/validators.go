@@ -343,14 +343,7 @@ func validateCloudWatchLogResourcePolicyDocument(v interface{}, k string) (ws []
 }
 
 func validateMaxLength(length int) schema.SchemaValidateFunc {
-	return func(v interface{}, k string) (ws []string, errors []error) {
-		value := v.(string)
-		if len(value) > length {
-			errors = append(errors, fmt.Errorf(
-				"%q cannot be longer than %d characters: %q", k, length, value))
-		}
-		return
-	}
+	return validation.StringLenBetween(0, length)
 }
 
 func validateCloudWatchEventTargetId(v interface{}, k string) (ws []string, errors []error) {
@@ -1095,35 +1088,6 @@ func validateDmsReplicationTaskId(v interface{}, k string) (ws []string, es []er
 		es = append(es, fmt.Errorf("%q must not end in a hyphen", k))
 	}
 
-	return
-}
-
-func validateAppautoscalingCustomizedMetricSpecificationStatistic(v interface{}, k string) (ws []string, errors []error) {
-	validStatistic := []string{
-		"Average",
-		"Minimum",
-		"Maximum",
-		"SampleCount",
-		"Sum",
-	}
-	statistic := v.(string)
-	for _, o := range validStatistic {
-		if statistic == o {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf(
-		"%q contains an invalid statistic %q. Valid statistic are %q.",
-		k, statistic, validStatistic))
-	return
-}
-
-func validateAppautoscalingPredefinedResourceLabel(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 1023 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be greater than 1023 characters", k))
-	}
 	return
 }
 
