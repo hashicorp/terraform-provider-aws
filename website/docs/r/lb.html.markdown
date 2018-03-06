@@ -54,8 +54,8 @@ Terraform will autogenerate a name beginning with `tf-lb`.
 * `security_groups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application`.
 * `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
 * `subnets` - (Optional) A list of subnet IDs to attach to the LB. Subnets
-cannot be updated for Load Balancers of type `network`. Changing this value
-will for load balancers of type `network` will force a recreation of the resource. 
+cannot be updated for Load Balancers of type `network`. Changing this value 
+for load balancers of type `network` will force a recreation of the resource. 
 * `subnet_mapping` - (Optional) A subnet mapping block as documented below.
 * `idle_timeout` - (Optional) The time in seconds that the connection is allowed to be idle. Default: 60.
 * `enable_deletion_protection` - (Optional) If true, deletion of the load balancer will be disabled via
