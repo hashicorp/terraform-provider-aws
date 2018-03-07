@@ -504,26 +504,17 @@ func validateCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func validateHTTPMethod(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	validMethods := map[string]bool{
-		"ANY":     true,
-		"DELETE":  true,
-		"GET":     true,
-		"HEAD":    true,
-		"OPTIONS": true,
-		"PATCH":   true,
-		"POST":    true,
-		"PUT":     true,
-	}
-
-	if _, ok := validMethods[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid method %q. Valid methods are either %q, %q, %q, %q, %q, %q, %q, or %q.",
-			k, value, "ANY", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"))
-	}
-	return
+func validateHTTPMethod() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"ANY",
+		"DELETE",
+		"GET",
+		"HEAD",
+		"OPTIONS",
+		"PATCH",
+		"POST",
+		"PUT",
+	}, false)
 }
 
 func validateLogMetricFilterName(v interface{}, k string) (ws []string, errors []error) {
