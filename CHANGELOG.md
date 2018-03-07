@@ -14,6 +14,7 @@ ENHANCEMENTS:
 * resource/aws_dms_endpoint: Add aurora-postgresql as a target [GH-2615]
 * resource/aws_dynamodb_table: Support Server Side Encryption [GH-3303]
 * resource/aws_elastic_beanstalk_environment: Support modifying `tags` [GH-3513]
+* resource/aws_emr_cluster: Add Kerberos support [GH-3553]
 * resource/aws_iam_account_alias: Improve error messages to include API errors [GH-3590]
 * resource/aws_iam_user_policy: Add support for import [GH-3198]
 * resource/aws_lb: Add `enable_cross_zone_load_balancing` argument for NLBs [GH-3537]
