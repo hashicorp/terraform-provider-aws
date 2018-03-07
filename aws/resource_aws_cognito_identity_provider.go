@@ -27,9 +27,6 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 			"attribute_mapping": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
 			},
 
 			"idp_identifiers": {
@@ -43,9 +40,7 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 			"provider_details": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				Computed: true,
 			},
 
 			"provider_name": {

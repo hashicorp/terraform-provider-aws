@@ -48,4 +48,10 @@ The following arguments are supported:
 * `provider_type` (Required) - The provider type.  [See AWS API for valid values](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#CognitoUserPools-CreateIdentityProvider-request-ProviderType)
 * `attribute_mapping` (Optional) - The map of attribute mapping of user pool attributes. [AttributeMapping in AWS API documentation](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#CognitoUserPools-CreateIdentityProvider-request-AttributeMapping)
 * `idp_identifiers` (Optional) - The list of identity providers. 
-* `provider_details` (Optional) - The map of identity details, sucha as access token
+* `provider_details` (Optional) - The map of identity details, such as access token
+
+## Timeouts
+
+`aws_cognito_identity_provider` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+- `delete` - (Default `5 minutes`) Used for provider deletion

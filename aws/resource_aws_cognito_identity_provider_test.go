@@ -19,7 +19,18 @@ func TestAccAWSCognitoIdentityProvider_basic(t *testing.T) {
 			{
 				Config: testAccAWSCognitoIdentityProviderConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_identity_provider.tf_test_provider", "provider_name", "gprovider"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_provider.tf_test_provider", "provider_name", "Google"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_provider.tf_test_provider", "provider_type", "Google"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_provider.tf_test_provider", "provider_details.%", "9"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_provider.tf_test_provider", "provider_details.authorize_scopes", "email"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_provider.tf_test_provider", "provider_details.authorize_url", "https://accounts.google.com/o/oauth2/v2/auth"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_provider.tf_test_provider", "provider_details.client_id", "test-url.apps.googleusercontent.com"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_provider.tf_test_provider", "provider_details.client_secret", "client_secret"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_provider.tf_test_provider", "provider_details.attributes_url", "https://people.googleapis.com/v1/people/me?personFields="),
+					resource.TestCheckResourceAttr("aws_cognito_identity_provider.tf_test_provider", "provider_details.attributes_url_add_attributes", "true"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_provider.tf_test_provider", "provider_details.token_request_method", "POST"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_provider.tf_test_provider", "provider_details.token_url", "https://www.googleapis.com/oauth2/v4/token"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_provider.tf_test_provider", "provider_details.oidc_issuer", "https://accounts.google.com"),
 				),
 			},
 		},
@@ -60,16 +71,19 @@ resource "aws_cognito_user_pool" "tf_test_pool" {
 
 resource "aws_cognito_identity_provider" "tf_test_provider" {
   user_pool_id  	= "${aws_cognito_user_pool.tf_test_pool.id}"
-  provider_name 	= "gprovider"
+  provider_name 	= "Google"
   provider_type 	= "Google"
 
   provider_details {
-  	attributes_url 			= "https://people.googleapis.com/v1/people/me?personFields="
   	authorize_scopes 		= "email"
-	token_request_method	= "POST"
-	token_url				= "https://www.googleapis.com/oauth2/v4/token"
-	client_id				= "239432985801-nq4c0l7cdpa16sa2cnlvr5mcgdt0gkug.apps.googleusercontent.com"
+	client_id				= "test-url.apps.googleusercontent.com"
 	client_secret			= "client_secret"
+	attributes_url			= "https://people.googleapis.com/v1/people/me?personFields="
+	attributes_url_add_attributes = "true"
+	authorize_url           = "https://accounts.google.com/o/oauth2/v2/auth"
+	oidc_issuer             = "https://accounts.google.com"
+	token_request_method 	= "POST"
+	token_url               = "https://www.googleapis.com/oauth2/v4/token"
   }
 
   attribute_mapping {
