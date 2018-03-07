@@ -577,7 +577,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("kerberos_attributes", flattenEmrKerberosAttributes(d, cluster.KerberosAttributes)); err != nil {
-		log.Printf("[ERR] Error setting EMR Kerberos Attributes: %s", err)
+		return fmt.Errorf("error setting kerberos_attributes: %s", err)
 	}
 
 	respBootstraps, err := emrconn.ListBootstrapActions(&emr.ListBootstrapActionsInput{
