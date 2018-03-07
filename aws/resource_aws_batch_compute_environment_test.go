@@ -226,20 +226,17 @@ func TestAccAWSBatchComputeEnvironment_updateState(t *testing.T) {
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSBatchComputeEnvironmentConfigEC2(rInt),
+				Config: testAccAWSBatchComputeEnvironmentConfigEC2UpdateState(rInt, batch.CEStateEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "state", batch.CEStateEnabled),
 				),
 			},
 			{
-				Config: testAccAWSBatchComputeEnvironmentConfigEC2UpdateState(rInt),
+				Config: testAccAWSBatchComputeEnvironmentConfigEC2UpdateState(rInt, batch.CEStateDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "state", "DISABLED"),
-					resource.TestCheckResourceAttr(
-						"aws_batch_compute_environment.ec2", "service_role",
-						fmt.Sprintf("tf_acc_test_batch_svc_role_%d", rInt)),
+					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "state", batch.CEStateDisabled),
 				),
 			},
 		},
@@ -429,8 +426,7 @@ resource "aws_batch_compute_environment" "ec2" {
     type = "EC2"
   }
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-	type = "MANAGED"
-	state = "ENABLED"
+  type = "MANAGED"
   depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 `, rInt)
@@ -557,7 +553,7 @@ resource "aws_batch_compute_environment" "ec2" {
 `, rInt)
 }
 
-func testAccAWSBatchComputeEnvironmentConfigEC2UpdateState(rInt int) string {
+func testAccAWSBatchComputeEnvironmentConfigEC2UpdateState(rInt int, state string) string {
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "tf_acc_test_%d"
@@ -577,11 +573,11 @@ resource "aws_batch_compute_environment" "ec2" {
     type = "EC2"
   }
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-	type = "MANAGED"
-	state = "DISABLED"
+  type = "MANAGED"
+  state = "%s"
   depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
-`, rInt)
+`, rInt, state)
 }
 
 func testAccAWSBatchComputeEnvironmentConfigEC2UpdateComputeEnvironmentName(rInt int) string {
