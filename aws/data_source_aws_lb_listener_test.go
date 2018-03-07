@@ -175,7 +175,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-data-source-basic"
   }
 }
 
@@ -282,7 +282,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-data-source-bc"
   }
 }
 
@@ -399,7 +399,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-data-source-https"
   }
 }
 
