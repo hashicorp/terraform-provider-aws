@@ -20,6 +20,7 @@ ENHANCEMENTS:
 * resource/aws_lb: Add `enable_http2` argument for ALBs [GH-3609]
 * resource/aws_route: Add configurable timeouts [GH-3639]
 * resource/aws_security_group: Add configurable timeouts [GH-3599]
+* resource/aws_spot_fleet_request: Add `load_balancers` and `target_group_arns` arguments [GH-2564]
 * resource/aws_ssm_parameter: Add `allowed_pattern`, `description`, and `tags` arguments [GH-1520]
 * resource/aws_ssm_parameter: Allow `key_id` updates [GH-1520]
 
