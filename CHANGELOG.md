@@ -8,6 +8,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_api_gateway_authorizer: Support COGNITO_USER_POOLS type [GH-3156]
 * resource/aws_cloudfront_distribution: Make `default_ttl`, `max_ttl`, and `min_ttl` arguments optional [GH-3571]
 * resource/aws_dms_endpoint: Add aurora-postgresql as a target [GH-2615]
 * resource/aws_dynamodb_table: Support Server Side Encryption [GH-3303]
