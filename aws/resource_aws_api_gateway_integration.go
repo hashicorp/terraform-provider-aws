@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"time"
-
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -101,11 +100,15 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 			},
 
 			"passthrough_behavior": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateApiGatewayIntegrationPassthroughBehavior,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"WHEN_NO_MATCH",
+					"WHEN_NO_TEMPLATES",
+					"NEVER",
+				}, false),
 			},
 
 			"cache_key_parameters": {
