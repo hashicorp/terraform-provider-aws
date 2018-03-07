@@ -15,7 +15,7 @@ Use this data source to get information about a DB Snapshot for use when provisi
 ## Example Usage
 
 ```hcl
-resource "aws_db_instance" "default" {
+resource "aws_db_instance" "prod" {
   allocated_storage    = 10
   engine               = "mysql"
   engine_version       = "5.6.17"
@@ -27,9 +27,19 @@ resource "aws_db_instance" "default" {
   parameter_group_name = "default.mysql5.6"
 }
 
-data "aws_db_snapshot" "db_snapshot" {
-    most_recent = true
-    db_instance_identifier = "${aws_db_instance.default.identifier}"
+data "aws_db_snapshot" "latest_prod_snapshot" {
+  db_instance_identifier = "${aws_db_instance.prod.identifier}"
+  most_recent = true
+}
+
+# Use the latest production snapshot to create a dev instance.
+resource "aws_db_instance" "dev" {
+  instance_class      = "db.t1.micro"
+  name                = "mydb-dev"
+  snapshot_identifier = "${data.aws_db_snapshot.latest_prod_snapshot.id}"
+  lifecycle {
+    ignore_changes = ["snapshot_identifier"]
+  }
 }
 ```
 
