@@ -132,6 +132,44 @@ func resourceAwsEMRCluster() *schema.Resource {
 					},
 				},
 			},
+			"kerberos_attributes": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ad_domain_join_password": {
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
+							ForceNew:  true,
+						},
+						"ad_domain_join_user": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"cross_realm_trust_principal_password": {
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
+							ForceNew:  true,
+						},
+						"kdc_admin_password": {
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
+							ForceNew:  true,
+						},
+						"realm": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 			"instance_group": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -412,6 +450,12 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		params.Configurations = expandConfigures(confUrl)
 	}
 
+	if v, ok := d.GetOk("kerberos_attributes"); ok {
+		kerberosAttributesList := v.([]interface{})
+		kerberosAttributesMap := kerberosAttributesList[0].(map[string]interface{})
+		params.KerberosAttributes = expandEmrKerberosAttributes(kerberosAttributesMap)
+	}
+
 	log.Printf("[DEBUG] EMR Cluster create options: %s", params)
 
 	var resp *emr.RunJobFlowOutput
@@ -530,6 +574,10 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("ec2_attributes", flattenEc2Attributes(cluster.Ec2InstanceAttributes)); err != nil {
 		log.Printf("[ERR] Error setting EMR Ec2 Attributes: %s", err)
+	}
+
+	if err := d.Set("kerberos_attributes", flattenEmrKerberosAttributes(d, cluster.KerberosAttributes)); err != nil {
+		return fmt.Errorf("error setting kerberos_attributes: %s", err)
 	}
 
 	respBootstraps, err := emrconn.ListBootstrapActions(&emr.ListBootstrapActionsInput{
@@ -751,6 +799,40 @@ func flattenEc2Attributes(ia *emr.Ec2InstanceAttributes) []map[string]interface{
 	return result
 }
 
+func flattenEmrKerberosAttributes(d *schema.ResourceData, kerberosAttributes *emr.KerberosAttributes) []map[string]interface{} {
+	l := make([]map[string]interface{}, 0)
+
+	if kerberosAttributes == nil || kerberosAttributes.Realm == nil {
+		return l
+	}
+
+	// Do not set from API:
+	// * ad_domain_join_password
+	// * cross_realm_trust_principal_password
+	// * kdc_admin_password
+
+	m := map[string]interface{}{
+		"kdc_admin_password": d.Get("kerberos_attributes.0.kdc_admin_password").(string),
+		"realm":              *kerberosAttributes.Realm,
+	}
+
+	if v, ok := d.GetOk("kerberos_attributes.0.ad_domain_join_password"); ok {
+		m["ad_domain_join_password"] = v.(string)
+	}
+
+	if kerberosAttributes.ADDomainJoinUser != nil {
+		m["ad_domain_join_user"] = *kerberosAttributes.ADDomainJoinUser
+	}
+
+	if v, ok := d.GetOk("kerberos_attributes.0.cross_realm_trust_principal_password"); ok {
+		m["cross_realm_trust_principal_password"] = v.(string)
+	}
+
+	l = append(l, m)
+
+	return l
+}
+
 func flattenInstanceGroups(igs []*emr.InstanceGroup) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
@@ -930,6 +1012,23 @@ func expandBootstrapActions(bootstrapActions []interface{}) []*emr.BootstrapActi
 	}
 
 	return actionsOut
+}
+
+func expandEmrKerberosAttributes(m map[string]interface{}) *emr.KerberosAttributes {
+	kerberosAttributes := &emr.KerberosAttributes{
+		KdcAdminPassword: aws.String(m["kdc_admin_password"].(string)),
+		Realm:            aws.String(m["realm"].(string)),
+	}
+	if v, ok := m["ad_domain_join_password"]; ok && v.(string) != "" {
+		kerberosAttributes.ADDomainJoinPassword = aws.String(v.(string))
+	}
+	if v, ok := m["ad_domain_join_user"]; ok && v.(string) != "" {
+		kerberosAttributes.ADDomainJoinUser = aws.String(v.(string))
+	}
+	if v, ok := m["cross_realm_trust_principal_password"]; ok && v.(string) != "" {
+		kerberosAttributes.CrossRealmTrustPrincipalPassword = aws.String(v.(string))
+	}
+	return kerberosAttributes
 }
 
 func expandInstanceGroupConfigs(instanceGroupConfigs []interface{}) []*emr.InstanceGroupConfig {
