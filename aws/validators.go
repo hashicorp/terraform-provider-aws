@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 // When released, replace all usage with upstream validation function:
@@ -761,39 +762,11 @@ func validateCloudFormationTemplate(v interface{}, k string) (ws []string, error
 	return
 }
 
-func validateApiGatewayIntegrationType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	validTypes := map[string]bool{
-		"AWS":        true,
-		"AWS_PROXY":  true,
-		"HTTP":       true,
-		"HTTP_PROXY": true,
-		"MOCK":       true,
-	}
-
-	if _, ok := validTypes[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid integration type %q. Valid types are either %q, %q, %q, %q, or %q.",
-			k, value, "AWS", "AWS_PROXY", "HTTP", "HTTP_PROXY", "MOCK"))
-	}
-	return
-}
-
-func validateApiGatewayIntegrationContentHandling(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	validTypes := map[string]bool{
-		"CONVERT_TO_BINARY": true,
-		"CONVERT_TO_TEXT":   true,
-	}
-
-	if _, ok := validTypes[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid integration type %q. Valid types are either %q or %q.",
-			k, value, "CONVERT_TO_BINARY", "CONVERT_TO_TEXT"))
-	}
-	return
+func validateApiGatewayIntegrationContentHandling() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		apigateway.ContentHandlingStrategyConvertToBinary,
+		apigateway.ContentHandlingStrategyConvertToText,
+	}, false)
 }
 
 func validateSQSQueueName(v interface{}, k string) (ws []string, errors []error) {

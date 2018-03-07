@@ -6,12 +6,14 @@ import (
 	"log"
 	"time"
 
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"strings"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsApiGatewayIntegration() *schema.Resource {
@@ -42,10 +44,16 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 			},
 
 			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateApiGatewayIntegrationType,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					apigateway.IntegrationTypeHttp,
+					apigateway.IntegrationTypeAws,
+					apigateway.IntegrationTypeMock,
+					apigateway.IntegrationTypeHttpProxy,
+					apigateway.IntegrationTypeAwsProxy,
+				}, false),
 			},
 
 			"uri": {
@@ -89,7 +97,7 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 			"content_handling": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateApiGatewayIntegrationContentHandling,
+				ValidateFunc: validateApiGatewayIntegrationContentHandling(),
 			},
 
 			"passthrough_behavior": {
