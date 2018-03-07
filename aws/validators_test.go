@@ -419,53 +419,6 @@ func TestValidateCIDRNetworkAddress(t *testing.T) {
 	}
 }
 
-func TestValidateHTTPMethod(t *testing.T) {
-	type testCases struct {
-		Value    string
-		ErrCount int
-	}
-
-	invalidCases := []testCases{
-		{
-			Value:    "incorrect",
-			ErrCount: 1,
-		},
-		{
-			Value:    "delete",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range invalidCases {
-		_, errors := validateHTTPMethod(tc.Value, "http_method")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
-		}
-	}
-
-	validCases := []testCases{
-		{
-			Value:    "ANY",
-			ErrCount: 0,
-		},
-		{
-			Value:    "DELETE",
-			ErrCount: 0,
-		},
-		{
-			Value:    "OPTIONS",
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range validCases {
-		_, errors := validateHTTPMethod(tc.Value, "http_method")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
-		}
-	}
-}
-
 func TestValidateLogMetricFilterName(t *testing.T) {
 	validNames := []string{
 		"YadaHereAndThere",
@@ -831,26 +784,6 @@ func TestValidateS3BucketLifecycleRuleId(t *testing.T) {
 		_, errors := validateS3BucketLifecycleRuleId(v, "id")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid lifecycle rule id", v)
-		}
-	}
-}
-
-func TestValidateIntegerInRange(t *testing.T) {
-	validIntegers := []int{-259, 0, 1, 5, 999}
-	min := -259
-	max := 999
-	for _, v := range validIntegers {
-		_, errors := validateIntegerInRange(min, max)(v, "name")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be an integer in range (%d, %d): %q", v, min, max, errors)
-		}
-	}
-
-	invalidIntegers := []int{-260, -99999, 1000, 25678}
-	for _, v := range invalidIntegers {
-		_, errors := validateIntegerInRange(min, max)(v, "name")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an integer outside range (%d, %d)", v, min, max)
 		}
 	}
 }
@@ -1871,34 +1804,6 @@ func TestValidateIamRoleProfileNamePrefix(t *testing.T) {
 		_, errors := validateIamRolePolicyNamePrefix(s, "name_prefix")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid IAM role policy name prefix: %v", s, errors)
-		}
-	}
-}
-
-func TestValidateApiGatewayUsagePlanQuotaSettingsPeriod(t *testing.T) {
-	validEntries := []string{
-		"DAY",
-		"WEEK",
-		"MONTH",
-	}
-
-	invalidEntries := []string{
-		"fooBAR",
-		"foobar45Baz",
-		"foobar45Baz@!",
-	}
-
-	for _, v := range validEntries {
-		_, errors := validateApiGatewayUsagePlanQuotaSettingsPeriod(v, "name")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid API Gateway Quota Settings Period: %v", v, errors)
-		}
-	}
-
-	for _, v := range invalidEntries {
-		_, errors := validateApiGatewayUsagePlanQuotaSettingsPeriod(v, "name")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a API Gateway Quota Settings Period", v)
 		}
 	}
 }

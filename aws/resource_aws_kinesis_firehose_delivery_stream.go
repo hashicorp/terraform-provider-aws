@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func cloudWatchLoggingOptionsSchema() *schema.Schema {
@@ -693,7 +694,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      180,
-							ValidateFunc: validateIntegerInRange(180, 600),
+							ValidateFunc: validation.IntBetween(180, 600),
 						},
 
 						"hec_endpoint": {
@@ -738,7 +739,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      3600,
-							ValidateFunc: validateIntegerInRange(0, 7200),
+							ValidateFunc: validation.IntBetween(0, 7200),
 						},
 
 						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),

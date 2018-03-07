@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 // When released, replace all usage with upstream validation function:
@@ -322,29 +323,7 @@ func validateCloudWatchLogResourcePolicyDocument(v interface{}, k string) (ws []
 }
 
 func validateMaxLength(length int) schema.SchemaValidateFunc {
-	return func(v interface{}, k string) (ws []string, errors []error) {
-		value := v.(string)
-		if len(value) > length {
-			errors = append(errors, fmt.Errorf(
-				"%q cannot be longer than %d characters: %q", k, length, value))
-		}
-		return
-	}
-}
-
-func validateIntegerInRange(min, max int) schema.SchemaValidateFunc {
-	return func(v interface{}, k string) (ws []string, errors []error) {
-		value := v.(int)
-		if value < min {
-			errors = append(errors, fmt.Errorf(
-				"%q cannot be lower than %d: %d", k, min, value))
-		}
-		if value > max {
-			errors = append(errors, fmt.Errorf(
-				"%q cannot be higher than %d: %d", k, max, value))
-		}
-		return
-	}
+	return validation.StringLenBetween(0, length)
 }
 
 func validateCloudWatchEventTargetId(v interface{}, k string) (ws []string, errors []error) {
@@ -483,26 +462,17 @@ func validateCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func validateHTTPMethod(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	validMethods := map[string]bool{
-		"ANY":     true,
-		"DELETE":  true,
-		"GET":     true,
-		"HEAD":    true,
-		"OPTIONS": true,
-		"PATCH":   true,
-		"POST":    true,
-		"PUT":     true,
-	}
-
-	if _, ok := validMethods[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid method %q. Valid methods are either %q, %q, %q, %q, %q, %q, %q, or %q.",
-			k, value, "ANY", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"))
-	}
-	return
+func validateHTTPMethod() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"ANY",
+		"DELETE",
+		"GET",
+		"HEAD",
+		"OPTIONS",
+		"PATCH",
+		"POST",
+		"PUT",
+	}, false)
 }
 
 func validateLogMetricFilterName(v interface{}, k string) (ws []string, errors []error) {
@@ -695,15 +665,6 @@ func validateDbEventSubscriptionName(v interface{}, k string) (ws []string, erro
 	return
 }
 
-func validateApiGatewayIntegrationPassthroughBehavior(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value != "WHEN_NO_MATCH" && value != "WHEN_NO_TEMPLATES" && value != "NEVER" {
-		errors = append(errors, fmt.Errorf(
-			"%q must be one of 'WHEN_NO_MATCH', 'WHEN_NO_TEMPLATES', 'NEVER'", k))
-	}
-	return
-}
-
 func validateJsonString(v interface{}, k string) (ws []string, errors []error) {
 	if _, err := structure.NormalizeJsonString(v); err != nil {
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
@@ -756,22 +717,6 @@ func validateApiGatewayIntegrationType(v interface{}, k string) (ws []string, er
 		errors = append(errors, fmt.Errorf(
 			"%q contains an invalid integration type %q. Valid types are either %q, %q, %q, %q, or %q.",
 			k, value, "AWS", "AWS_PROXY", "HTTP", "HTTP_PROXY", "MOCK"))
-	}
-	return
-}
-
-func validateApiGatewayIntegrationContentHandling(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	validTypes := map[string]bool{
-		"CONVERT_TO_BINARY": true,
-		"CONVERT_TO_TEXT":   true,
-	}
-
-	if _, ok := validTypes[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid integration type %q. Valid types are either %q or %q.",
-			k, value, "CONVERT_TO_BINARY", "CONVERT_TO_TEXT"))
 	}
 	return
 }
@@ -1126,35 +1071,6 @@ func validateDmsReplicationTaskId(v interface{}, k string) (ws []string, es []er
 	return
 }
 
-func validateAppautoscalingCustomizedMetricSpecificationStatistic(v interface{}, k string) (ws []string, errors []error) {
-	validStatistic := []string{
-		"Average",
-		"Minimum",
-		"Maximum",
-		"SampleCount",
-		"Sum",
-	}
-	statistic := v.(string)
-	for _, o := range validStatistic {
-		if statistic == o {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf(
-		"%q contains an invalid statistic %q. Valid statistic are %q.",
-		k, statistic, validStatistic))
-	return
-}
-
-func validateAppautoscalingPredefinedResourceLabel(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 1023 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be greater than 1023 characters", k))
-	}
-	return
-}
-
 func validateConfigRuleSourceOwner(v interface{}, k string) (ws []string, errors []error) {
 	validOwners := []string{
 		"CUSTOM_LAMBDA",
@@ -1210,19 +1126,6 @@ func validateAccountAlias(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-func validateApiGatewayApiKeyValue(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) < 30 {
-		errors = append(errors, fmt.Errorf(
-			"%q must be at least 30 characters long", k))
-	}
-	if len(value) > 128 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 128 characters", k))
-	}
-	return
-}
-
 func validateIamRolePolicyName(v interface{}, k string) (ws []string, errors []error) {
 	// https://github.com/boto/botocore/blob/2485f5c/botocore/data/iam/2010-05-08/service-2.json#L8291-L8296
 	value := v.(string)
@@ -1245,24 +1148,6 @@ func validateIamRolePolicyNamePrefix(v interface{}, k string) (ws []string, erro
 	if !regexp.MustCompile("^[\\w+=,.@-]+$").MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q must match [\\w+=,.@-]", k))
 	}
-	return
-}
-
-func validateApiGatewayUsagePlanQuotaSettingsPeriod(v interface{}, k string) (ws []string, errors []error) {
-	validPeriods := []string{
-		apigateway.QuotaPeriodTypeDay,
-		apigateway.QuotaPeriodTypeWeek,
-		apigateway.QuotaPeriodTypeMonth,
-	}
-	period := v.(string)
-	for _, f := range validPeriods {
-		if period == f {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf(
-		"%q contains an invalid period %q. Valid period are %q.",
-		k, period, validPeriods))
 	return
 }
 

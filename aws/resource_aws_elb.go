@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsElb() *schema.Resource {
@@ -110,7 +111,7 @@ func resourceAwsElb() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      60,
-				ValidateFunc: validateIntegerInRange(1, 4000),
+				ValidateFunc: validation.IntBetween(1, 4000),
 			},
 
 			"connection_draining": &schema.Schema{
@@ -162,7 +163,7 @@ func resourceAwsElb() *schema.Resource {
 						"instance_port": &schema.Schema{
 							Type:         schema.TypeInt,
 							Required:     true,
-							ValidateFunc: validateIntegerInRange(1, 65535),
+							ValidateFunc: validation.IntBetween(1, 65535),
 						},
 
 						"instance_protocol": &schema.Schema{
@@ -174,7 +175,7 @@ func resourceAwsElb() *schema.Resource {
 						"lb_port": &schema.Schema{
 							Type:         schema.TypeInt,
 							Required:     true,
-							ValidateFunc: validateIntegerInRange(1, 65535),
+							ValidateFunc: validation.IntBetween(1, 65535),
 						},
 
 						"lb_protocol": &schema.Schema{
@@ -203,13 +204,13 @@ func resourceAwsElb() *schema.Resource {
 						"healthy_threshold": &schema.Schema{
 							Type:         schema.TypeInt,
 							Required:     true,
-							ValidateFunc: validateIntegerInRange(2, 10),
+							ValidateFunc: validation.IntBetween(2, 10),
 						},
 
 						"unhealthy_threshold": &schema.Schema{
 							Type:         schema.TypeInt,
 							Required:     true,
-							ValidateFunc: validateIntegerInRange(2, 10),
+							ValidateFunc: validation.IntBetween(2, 10),
 						},
 
 						"target": &schema.Schema{
@@ -221,13 +222,13 @@ func resourceAwsElb() *schema.Resource {
 						"interval": &schema.Schema{
 							Type:         schema.TypeInt,
 							Required:     true,
-							ValidateFunc: validateIntegerInRange(5, 300),
+							ValidateFunc: validation.IntBetween(5, 300),
 						},
 
 						"timeout": &schema.Schema{
 							Type:         schema.TypeInt,
 							Required:     true,
-							ValidateFunc: validateIntegerInRange(2, 60),
+							ValidateFunc: validation.IntBetween(2, 60),
 						},
 					},
 				},

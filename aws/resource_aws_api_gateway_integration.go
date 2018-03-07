@@ -6,12 +6,14 @@ import (
 	"log"
 	"time"
 
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"strings"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsApiGatewayIntegration() *schema.Resource {
@@ -38,7 +40,7 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateHTTPMethod,
+				ValidateFunc: validateHTTPMethod(),
 			},
 
 			"type": {
@@ -63,7 +65,7 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateHTTPMethod,
+				ValidateFunc: validateHTTPMethod(),
 			},
 
 			"request_templates": {
@@ -87,17 +89,23 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 			},
 
 			"content_handling": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateApiGatewayIntegrationContentHandling,
-			},
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					apigateway.ContentHandlingStrategyConvertToBinary,
+					apigateway.ContentHandlingStrategyConvertToText,
+				}, false)},
 
 			"passthrough_behavior": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateApiGatewayIntegrationPassthroughBehavior,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"WHEN_NO_MATCH",
+					"WHEN_NO_TEMPLATES",
+					"NEVER",
+				}, false),
 			},
 
 			"cache_key_parameters": {
