@@ -733,6 +733,7 @@ func TestAccAWSInstance_NetworkInstanceRemovingAllSecurityGroups(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo_instance", "vpc_security_group_ids.#", "1"),
 				),
+				ExpectError: regexp.MustCompile(`VPC-based instances require at least one security group to be attached`),
 			},
 		},
 	})
