@@ -43,10 +43,11 @@ func testSweepRedshiftClusters(region string) error {
 				continue
 			}
 
-			_, err := deleteAwsRedshiftCluster(&redshift.DeleteClusterInput{
+			input := &redshift.DeleteClusterInput{
 				ClusterIdentifier:        c.ClusterIdentifier,
 				SkipFinalClusterSnapshot: aws.Bool(true),
-			}, conn)
+			}
+			_, err := conn.DeleteCluster(input)
 			if err != nil {
 				log.Printf("[ERROR] Failed deleting Redshift cluster (%s): %s",
 					*c.ClusterIdentifier, err)
