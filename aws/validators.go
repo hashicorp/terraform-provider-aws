@@ -1455,21 +1455,6 @@ func validateCognitoUserPoolId(v interface{}, k string) (ws []string, es []error
 	return
 }
 
-func validateCognitoUserPoolMfaConfiguration(v interface{}, k string) (ws []string, es []error) {
-	value := v.(string)
-
-	valid := map[string]bool{
-		cognitoidentityprovider.UserPoolMfaTypeOff:      true,
-		cognitoidentityprovider.UserPoolMfaTypeOn:       true,
-		cognitoidentityprovider.UserPoolMfaTypeOptional: true,
-	}
-	if !valid[value] {
-		es = append(es, fmt.Errorf(
-			"%q must be equal to OFF, ON, or OPTIONAL", k))
-	}
-	return
-}
-
 func validateCognitoUserPoolSmsAuthenticationMessage(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 	if len(value) < 6 {
@@ -1502,41 +1487,6 @@ func validateCognitoUserPoolSmsVerificationMessage(v interface{}, k string) (ws 
 	return
 }
 
-func validateCognitoUserPoolAliasAttribute(v interface{}, k string) (ws []string, es []error) {
-	validValues := []string{
-		cognitoidentityprovider.AliasAttributeTypeEmail,
-		cognitoidentityprovider.AliasAttributeTypePhoneNumber,
-		cognitoidentityprovider.AliasAttributeTypePreferredUsername,
-	}
-	period := v.(string)
-	for _, f := range validValues {
-		if period == f {
-			return
-		}
-	}
-	es = append(es, fmt.Errorf(
-		"%q contains an invalid alias attribute %q. Valid alias attributes are %q.",
-		k, period, validValues))
-	return
-}
-
-func validateCognitoUserPoolAutoVerifiedAttribute(v interface{}, k string) (ws []string, es []error) {
-	validValues := []string{
-		cognitoidentityprovider.VerifiedAttributeTypePhoneNumber,
-		cognitoidentityprovider.VerifiedAttributeTypeEmail,
-	}
-	period := v.(string)
-	for _, f := range validValues {
-		if period == f {
-			return
-		}
-	}
-	es = append(es, fmt.Errorf(
-		"%q contains an invalid verified attribute %q. Valid verified attributes are %q.",
-		k, period, validValues))
-	return
-}
-
 func validateCognitoUserPoolClientAuthFlows(v interface{}, k string) (ws []string, es []error) {
 	validValues := []string{
 		cognitoidentityprovider.AuthFlowTypeAdminNoSrpAuth,
@@ -1550,23 +1500,6 @@ func validateCognitoUserPoolClientAuthFlows(v interface{}, k string) (ws []strin
 	}
 	es = append(es, fmt.Errorf(
 		"%q contains an invalid auth flow %q. Valid auth flows are %q.",
-		k, period, validValues))
-	return
-}
-
-func validateCognitoUserPoolTemplateDefaultEmailOption(v interface{}, k string) (ws []string, es []error) {
-	validValues := []string{
-		cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithLink,
-		cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithCode,
-	}
-	period := v.(string)
-	for _, f := range validValues {
-		if period == f {
-			return
-		}
-	}
-	es = append(es, fmt.Errorf(
-		"%q contains an invalid template default email option %q. Valid template default email options are %q.",
 		k, period, validValues))
 	return
 }
