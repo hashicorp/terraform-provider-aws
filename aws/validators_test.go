@@ -2795,64 +2795,6 @@ func TestValidateCognitoRoleMappingsRulesConfiguration(t *testing.T) {
 	}
 }
 
-func TestValidateCognitoRoleMappingsAmbiguousRoleResolution(t *testing.T) {
-	validValues := []string{
-		cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
-		cognitoidentity.AmbiguousRoleResolutionTypeDeny,
-	}
-
-	for _, s := range validValues {
-		_, errors := validateCognitoRoleMappingsAmbiguousRoleResolution(s, "ambiguous_role_resolution")
-		if len(errors) > 0 {
-			t.Fatalf("%q should be a valid Cognito Ambiguous Role Resolution type: %v", s, errors)
-		}
-	}
-
-	invalidValues := []string{
-		"foo",
-		"123",
-		"foo-bar",
-		"foo_bar123",
-	}
-
-	for _, s := range invalidValues {
-		_, errors := validateCognitoRoleMappingsAmbiguousRoleResolution(s, "ambiguous_role_resolution")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid Cognito Ambiguous Role Resolution type: %v", s, errors)
-		}
-	}
-}
-
-func TestValidateCognitoRoleMappingsRulesMatchType(t *testing.T) {
-	validValues := []string{
-		cognitoidentity.MappingRuleMatchTypeEquals,
-		cognitoidentity.MappingRuleMatchTypeContains,
-		cognitoidentity.MappingRuleMatchTypeStartsWith,
-		cognitoidentity.MappingRuleMatchTypeNotEqual,
-	}
-
-	for _, s := range validValues {
-		_, errors := validateCognitoRoleMappingsRulesMatchType(s, "match_type")
-		if len(errors) > 0 {
-			t.Fatalf("%q should be a valid Cognito Role Mappings Rules Match Type: %v", s, errors)
-		}
-	}
-
-	invalidValues := []string{
-		"foo",
-		"123",
-		"foo-bar",
-		"foo_bar123",
-	}
-
-	for _, s := range invalidValues {
-		_, errors := validateCognitoRoleMappingsRulesMatchType(s, "match_type")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid Cognito Role Mappings Rules Match Type: %v", s, errors)
-		}
-	}
-}
-
 func TestValidateSecurityGroupRuleDescription(t *testing.T) {
 	validDescriptions := []string{
 		"testrule",
@@ -2875,34 +2817,6 @@ func TestValidateSecurityGroupRuleDescription(t *testing.T) {
 		_, errors := validateSecurityGroupRuleDescription(v, "description")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid security group rule description", v)
-		}
-	}
-}
-
-func TestValidateCognitoRoleMappingsType(t *testing.T) {
-	validValues := []string{
-		cognitoidentity.RoleMappingTypeToken,
-		cognitoidentity.RoleMappingTypeRules,
-	}
-
-	for _, s := range validValues {
-		_, errors := validateCognitoRoleMappingsType(s, "match_type")
-		if len(errors) > 0 {
-			t.Fatalf("%q should be a valid Cognito Role Mappings Type: %v", s, errors)
-		}
-	}
-
-	invalidValues := []string{
-		"foo",
-		"123",
-		"foo-bar",
-		"foo_bar123",
-	}
-
-	for _, s := range invalidValues {
-		_, errors := validateCognitoRoleMappingsType(s, "match_type")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid Cognito Role Mappings Type: %v", s, errors)
 		}
 	}
 }
