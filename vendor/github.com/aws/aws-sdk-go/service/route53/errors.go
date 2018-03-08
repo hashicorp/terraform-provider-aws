@@ -22,7 +22,8 @@ const (
 	//    have any common name servers. You tried to create a hosted zone that has
 	//    the same name as an existing hosted zone or that's the parent or child
 	//    of an existing hosted zone, and you specified a delegation set that shares
-	//    one or more name servers with the existing hosted zone.
+	//    one or more name servers with the existing hosted zone. For more information,
+	//    see CreateReusableDelegationSet.
 	//
 	//    * Private hosted zone: You specified an Amazon VPC that you're already
 	//    using for another hosted zone, and the domain that you specified for one
@@ -377,6 +378,19 @@ const (
 	// To request a higher limit, create a case (http://aws.amazon.com/route53-request)
 	// with the AWS Support Center.
 	ErrCodeTooManyTrafficPolicyInstances = "TooManyTrafficPolicyInstances"
+
+	// ErrCodeTooManyTrafficPolicyVersionsForCurrentPolicy for service response error code
+	// "TooManyTrafficPolicyVersionsForCurrentPolicy".
+	//
+	// This traffic policy version can't be created because you've reached the limit
+	// of 1000 on the number of versions that you can create for the current traffic
+	// policy.
+	//
+	// To create more traffic policy versions, you can use GetTrafficPolicy to get
+	// the traffic policy document for a specified traffic policy version, and then
+	// use CreateTrafficPolicy to create a new traffic policy using the traffic
+	// policy document.
+	ErrCodeTooManyTrafficPolicyVersionsForCurrentPolicy = "TooManyTrafficPolicyVersionsForCurrentPolicy"
 
 	// ErrCodeTooManyVPCAssociationAuthorizations for service response error code
 	// "TooManyVPCAssociationAuthorizations".

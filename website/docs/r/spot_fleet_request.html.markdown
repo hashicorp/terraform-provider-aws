@@ -6,7 +6,7 @@ description: |-
   Provides a Spot Fleet Request resource.
 ---
 
-# aws\_spot\_fleet\_request
+# aws_spot_fleet_request
 
 Provides an EC2 Spot Fleet Request resource. This allows a fleet of Spot
 instances to be requested on the Spot market.
@@ -118,6 +118,9 @@ lowestPrice.
 * `valid_until` - The end date and time of the request, in UTC ISO8601 format
   (for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance
 requests are placed or enabled to fulfill the request. Defaults to 24 hours.
+* `load_balancers` (Optional) A list of elastic load balancer names to add to the Spot fleet.
+* `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with
+Application Load Balancing.
 
 ### Timeouts
 

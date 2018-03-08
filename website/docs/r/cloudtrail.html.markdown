@@ -6,7 +6,7 @@ description: |-
   Provides a CloudTrail resource.
 ---
 
-# aws\_cloudtrail
+# aws_cloudtrail
 
 Provides a CloudTrail resource.
 
@@ -18,6 +18,17 @@ resource "aws_cloudtrail" "foobar" {
   s3_bucket_name                = "${aws_s3_bucket.foo.id}"
   s3_key_prefix                 = "prefix"
   include_global_service_events = false
+
+  event_selector {
+    read_write_type = "All"
+    include_management_events = false
+    data_resource {
+      type = "AWS::S3::Object"
+      values = [
+         "arn:aws:s3:::tf-bucket/foobar",
+       ]
+    }
+  }
 }
 
 resource "aws_s3_bucket" "foo" {
@@ -80,7 +91,21 @@ The following arguments are supported:
 * `enable_log_file_validation` - (Optional) Specifies whether log file integrity validation is enabled.
     Defaults to `false`.
 * `kms_key_id` - (Optional) Specifies the KMS key ARN to use to encrypt the logs delivered by CloudTrail.
+* `event_selector` - (Optional) Specifies the event selector. Fields documented below.
 * `tags` - (Optional) A mapping of tags to assign to the trail
+
+### Event Selector Arguments
+For **event_selector** the following attributes are supported.
+
+* `read_write_type` (Optional) - Specify if you want your trail to log read-only events, write-only events, or all. By default, the value is All. You can specify only the following value: "ReadOnly", "WriteOnly", "All". Defaults to `All`.
+* `include_management_events` (Optional) - Specify if you want your event selector to include management events for your trail.
+* `data_resource` (Optional) - Specifies logging data events. Fields documented below.
+
+#### Data Resource Arguments
+For **data_resource** the following attributes are supported.
+
+* `type` (Required) - The resource type in witch you want to log data events. You can specify only the follwing value: "AWS::S3::Object", "AWS::Lambda::Function"
+* `values` (Required) - A list of ARN for the specified S3 buckets and object prefixes..
 
 ## Attribute Reference
 

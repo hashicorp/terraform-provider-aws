@@ -88,6 +88,10 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Optional: true,
 				Default:  128,
 			},
+			"reserved_concurrent_executions": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"role": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -196,7 +200,21 @@ func resourceAwsLambdaFunction() *schema.Resource {
 
 			"tags": tagsSchema(),
 		},
+
+		CustomizeDiff: updateComputedAttributesOnPublish,
 	}
+}
+
+func updateComputedAttributesOnPublish(d *schema.ResourceDiff, meta interface{}) error {
+	if needsFunctionCodeUpdate(d) {
+		d.SetNewComputed("last_modified")
+		publish := d.Get("publish").(bool)
+		if publish {
+			d.SetNewComputed("version")
+			d.SetNewComputed("qualified_arn")
+		}
+	}
+	return nil
 }
 
 // resourceAwsLambdaFunction maps to:
@@ -205,6 +223,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).lambdaconn
 
 	functionName := d.Get("function_name").(string)
+	reservedConcurrentExecutions := d.Get("reserved_concurrent_executions").(int)
 	iamRole := d.Get("role").(string)
 
 	log.Printf("[DEBUG] Creating Lambda Function %s with role %s", functionName, iamRole)
@@ -346,6 +365,10 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
+				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+				return resource.RetryableError(err)
+			}
 
 			return resource.NonRetryableError(err)
 		}
@@ -356,6 +379,30 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.SetId(d.Get("function_name").(string))
+
+	if reservedConcurrentExecutions > 0 {
+
+		log.Printf("[DEBUG] Setting Concurrency to %d for the Lambda Function %s", reservedConcurrentExecutions, functionName)
+
+		concurrencyParams := &lambda.PutFunctionConcurrencyInput{
+			FunctionName:                 aws.String(functionName),
+			ReservedConcurrentExecutions: aws.Int64(int64(reservedConcurrentExecutions)),
+		}
+
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.PutFunctionConcurrency(concurrencyParams)
+			if err != nil {
+				if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("Error setting concurrency for Lambda %s: %s", functionName, err)
+		}
+	}
 
 	return resourceAwsLambdaFunctionRead(d, meta)
 }
@@ -453,6 +500,12 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("invoke_arn", buildLambdaInvokeArn(*function.FunctionArn, meta.(*AWSClient).region))
 
+	if getFunctionOutput.Concurrency != nil {
+		d.Set("reserved_concurrent_executions", getFunctionOutput.Concurrency.ReservedConcurrentExecutions)
+	} else {
+		d.Set("reserved_concurrent_executions", nil)
+	}
+
 	return nil
 }
 
@@ -493,6 +546,14 @@ func resourceAwsLambdaFunctionDelete(d *schema.ResourceData, meta interface{}) e
 	d.SetId("")
 
 	return nil
+}
+
+type resourceDiffer interface {
+	HasChange(string) bool
+}
+
+func needsFunctionCodeUpdate(d resourceDiffer) bool {
+	return d.HasChange("filename") || d.HasChange("source_code_hash") || d.HasChange("s3_bucket") || d.HasChange("s3_key") || d.HasChange("s3_object_version")
 }
 
 // resourceAwsLambdaFunctionUpdate maps to:
@@ -613,10 +674,28 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 
 	if configUpdate {
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
-		_, err := conn.UpdateFunctionConfiguration(configReq)
+
+		err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+			_, err := conn.UpdateFunctionConfiguration(configReq)
+			if err != nil {
+				log.Printf("[DEBUG] Received error modifying Lambda Function Configuration %s: %s", d.Id(), err)
+
+				if isAWSErr(err, "InvalidParameterValueException", "The provided execution role does not have permissions") {
+					log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2, please make sure you have enough API rate limit.") {
+					log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
 		if err != nil {
 			return fmt.Errorf("Error modifying Lambda Function Configuration %s: %s", d.Id(), err)
 		}
+
 		d.SetPartial("description")
 		d.SetPartial("handler")
 		d.SetPartial("memory_size")
@@ -624,7 +703,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		d.SetPartial("timeout")
 	}
 
-	if d.HasChange("filename") || d.HasChange("source_code_hash") || d.HasChange("s3_bucket") || d.HasChange("s3_key") || d.HasChange("s3_object_version") {
+	if needsFunctionCodeUpdate(d) {
 		codeReq := &lambda.UpdateFunctionCodeInput{
 			FunctionName: aws.String(d.Id()),
 			Publish:      aws.Bool(d.Get("publish").(bool)),
@@ -665,6 +744,34 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		d.SetPartial("s3_bucket")
 		d.SetPartial("s3_key")
 		d.SetPartial("s3_object_version")
+	}
+
+	if d.HasChange("reserved_concurrent_executions") {
+		nc := d.Get("reserved_concurrent_executions")
+
+		if nc.(int) > 0 {
+			log.Printf("[DEBUG] Updating Concurrency to %d for the Lambda Function %s", nc.(int), d.Id())
+
+			concurrencyParams := &lambda.PutFunctionConcurrencyInput{
+				FunctionName:                 aws.String(d.Id()),
+				ReservedConcurrentExecutions: aws.Int64(int64(d.Get("reserved_concurrent_executions").(int))),
+			}
+
+			_, err := conn.PutFunctionConcurrency(concurrencyParams)
+			if err != nil {
+				return fmt.Errorf("Error setting concurrency for Lambda %s: %s", d.Id(), err)
+			}
+		} else {
+			log.Printf("[DEBUG] Removing Concurrency for the Lambda Function %s", d.Id())
+
+			deleteConcurrencyParams := &lambda.DeleteFunctionConcurrencyInput{
+				FunctionName: aws.String(d.Id()),
+			}
+			_, err := conn.DeleteFunctionConcurrency(deleteConcurrencyParams)
+			if err != nil {
+				return fmt.Errorf("Error setting concurrency for Lambda %s: %s", d.Id(), err)
+			}
+		}
 	}
 
 	d.Partial(false)

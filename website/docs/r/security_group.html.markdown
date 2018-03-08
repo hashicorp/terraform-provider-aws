@@ -6,7 +6,7 @@ description: |-
   Provides a security group resource.
 ---
 
-# aws\_security\_group
+# aws_security_group
 
 Provides a security group resource.
 
@@ -167,6 +167,13 @@ The following attributes are exported:
 * `ingress` - The ingress rules. See above for more.
 * `egress` - The egress rules. See above for more.
 
+## Timeouts
+
+`aws_security_group` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+configuration options:
+
+- `create` - (Default `10 minutes`) How long to wait for a security group to be created.
+- `delete` - (Default `10 minutes`) How long to wait for a security group to be deleted.
 
 ## Import
 

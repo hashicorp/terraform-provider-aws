@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a VPC routing table.
 ---
 
-# aws\_route\_table
+# aws_route_table
 
 Provides a resource to create a VPC routing table.
 

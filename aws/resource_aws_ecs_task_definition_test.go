@@ -13,19 +13,23 @@ import (
 
 func TestAccAWSEcsTaskDefinition_basic(t *testing.T) {
 	var def ecs.TaskDefinition
+
+	rString := acctest.RandString(8)
+	tdName := fmt.Sprintf("tf_acc_td_basic_%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinition,
+				Config: testAccAWSEcsTaskDefinition(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.jenkins", &def),
 				),
 			},
 			{
-				Config: testAccAWSEcsTaskDefinitionModified,
+				Config: testAccAWSEcsTaskDefinitionModified(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.jenkins", &def),
 				),
@@ -37,13 +41,17 @@ func TestAccAWSEcsTaskDefinition_basic(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/2370
 func TestAccAWSEcsTaskDefinition_withScratchVolume(t *testing.T) {
 	var def ecs.TaskDefinition
+
+	rString := acctest.RandString(8)
+	tdName := fmt.Sprintf("tf_acc_td_with_scratch_volume_%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinitionWithScratchVolume,
+				Config: testAccAWSEcsTaskDefinitionWithScratchVolume(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.sleep", &def),
 				),
@@ -55,20 +63,26 @@ func TestAccAWSEcsTaskDefinition_withScratchVolume(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/2694
 func TestAccAWSEcsTaskDefinition_withEcsService(t *testing.T) {
 	var def ecs.TaskDefinition
+
+	rString := acctest.RandString(8)
+	clusterName := fmt.Sprintf("tf_acc_cluster_with_ecs_service_%s", rString)
+	svcName := fmt.Sprintf("tf_acc_td_with_ecs_service_%s", rString)
+	tdName := fmt.Sprintf("tf_acc_td_with_ecs_service_%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinitionWithEcsService,
+				Config: testAccAWSEcsTaskDefinitionWithEcsService(clusterName, svcName, tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.sleep", &def),
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.sleep-svc"),
 				),
 			},
 			{
-				Config: testAccAWSEcsTaskDefinitionWithEcsServiceModified,
+				Config: testAccAWSEcsTaskDefinitionWithEcsServiceModified(clusterName, svcName, tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.sleep", &def),
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.sleep-svc"),
@@ -80,14 +94,19 @@ func TestAccAWSEcsTaskDefinition_withEcsService(t *testing.T) {
 
 func TestAccAWSEcsTaskDefinition_withTaskRoleArn(t *testing.T) {
 	var def ecs.TaskDefinition
-	rInt := acctest.RandInt()
+
+	rString := acctest.RandString(8)
+	roleName := fmt.Sprintf("tf_acc_role_ecs_td_with_task_role_arn_%s", rString)
+	policyName := fmt.Sprintf("tf-acc-policy-ecs-td-with-task-role-arn-%s", rString)
+	tdName := fmt.Sprintf("tf_acc_td_with_task_role_arn_%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinitionWithTaskRoleArn(rInt),
+				Config: testAccAWSEcsTaskDefinitionWithTaskRoleArn(roleName, policyName, tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.sleep", &def),
 				),
@@ -98,14 +117,19 @@ func TestAccAWSEcsTaskDefinition_withTaskRoleArn(t *testing.T) {
 
 func TestAccAWSEcsTaskDefinition_withNetworkMode(t *testing.T) {
 	var def ecs.TaskDefinition
-	rInt := acctest.RandInt()
+
+	rString := acctest.RandString(8)
+	roleName := fmt.Sprintf("tf_acc_ecs_td_with_network_mode_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_ecs_td_with_network_mode_%s", rString)
+	tdName := fmt.Sprintf("tf_acc_td_with_network_mode_%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinitionWithNetworkMode(rInt),
+				Config: testAccAWSEcsTaskDefinitionWithNetworkMode(roleName, policyName, tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.sleep", &def),
 					resource.TestCheckResourceAttr(
@@ -118,13 +142,17 @@ func TestAccAWSEcsTaskDefinition_withNetworkMode(t *testing.T) {
 
 func TestAccAWSEcsTaskDefinition_constraint(t *testing.T) {
 	var def ecs.TaskDefinition
+
+	rString := acctest.RandString(8)
+	tdName := fmt.Sprintf("tf_acc_td_constraint_%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinition_constraint,
+				Config: testAccAWSEcsTaskDefinition_constraint(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.jenkins", &def),
 					resource.TestCheckResourceAttr("aws_ecs_task_definition.jenkins", "placement_constraints.#", "1"),
@@ -138,19 +166,23 @@ func TestAccAWSEcsTaskDefinition_constraint(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 	var before ecs.TaskDefinition
 	var after ecs.TaskDefinition
+
+	rString := acctest.RandString(8)
+	tdName := fmt.Sprintf("tf_acc_td_change_vol_forces_new_resource_%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinition,
+				Config: testAccAWSEcsTaskDefinition(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.jenkins", &before),
 				),
 			},
 			{
-				Config: testAccAWSEcsTaskDefinitionUpdatedVolume,
+				Config: testAccAWSEcsTaskDefinitionUpdatedVolume(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.jenkins", &after),
 					testAccCheckEcsTaskDefinitionRecreated(t, &before, &after),
@@ -163,8 +195,9 @@ func TestAccAWSEcsTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 // Regression for https://github.com/terraform-providers/terraform-provider-aws/issues/2336
 func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
 	var conf ecs.TaskDefinition
-	familyName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
-	containerName := fmt.Sprintf("tfacctest%s", acctest.RandString(10))
+
+	rString := acctest.RandString(8)
+	tdName := fmt.Sprintf("tf_acc_td_arrays_%s", rString)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -172,9 +205,56 @@ func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinitionArrays(familyName, containerName),
+				Config: testAccAWSEcsTaskDefinitionArrays(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.test", &conf),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskDefinition_Fargate(t *testing.T) {
+	var conf ecs.TaskDefinition
+
+	rString := acctest.RandString(8)
+	tdName := fmt.Sprintf("tf_acc_td_fargate_%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionFargate(tdName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.fargate", &conf),
+					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "requires_compatibilities.#", "1"),
+					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "cpu", "256"),
+					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "memory", "512"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskDefinition_ExecutionRole(t *testing.T) {
+	var conf ecs.TaskDefinition
+
+	rString := acctest.RandString(8)
+	roleName := fmt.Sprintf("tf_acc_role_ecs_td_execution_role_%s", rString)
+	policyName := fmt.Sprintf("tf-acc-policy-ecs-td-execution-role-%s", rString)
+	tdName := fmt.Sprintf("tf_acc_td_execution_role_%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionExecutionRole(roleName, policyName, tdName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.fargate", &conf),
 				),
 			},
 		},
@@ -294,9 +374,10 @@ func testAccCheckAWSEcsTaskDefinitionExists(name string, def *ecs.TaskDefinition
 	}
 }
 
-var testAccAWSEcsTaskDefinition_constraint = `
+func testAccAWSEcsTaskDefinition_constraint(tdName string) string {
+	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "jenkins" {
-  family = "terraform-acc-test"
+  family = "%s"
   container_definitions = <<TASK_DEFINITION
 [
 	{
@@ -346,11 +427,13 @@ TASK_DEFINITION
 		expression = "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]"
 	}
 }
-`
+`, tdName)
+}
 
-var testAccAWSEcsTaskDefinition = `
+func testAccAWSEcsTaskDefinition(tdName string) string {
+	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "jenkins" {
-  family = "terraform-acc-test"
+  family = "%s"
   container_definitions = <<TASK_DEFINITION
 [
 	{
@@ -395,11 +478,13 @@ TASK_DEFINITION
     host_path = "/ecs/jenkins-home"
   }
 }
-`
+`, tdName)
+}
 
-var testAccAWSEcsTaskDefinitionUpdatedVolume = `
+func testAccAWSEcsTaskDefinitionUpdatedVolume(tdName string) string {
+	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "jenkins" {
-  family = "terraform-acc-test"
+  family = "%s"
   container_definitions = <<TASK_DEFINITION
 [
 	{
@@ -444,9 +529,10 @@ TASK_DEFINITION
     host_path = "/ecs/jenkins"
   }
 }
-`
+`, tdName)
+}
 
-func testAccAWSEcsTaskDefinitionArrays(familyName, containerName string) string {
+func testAccAWSEcsTaskDefinitionArrays(tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = "%s"
@@ -550,12 +636,106 @@ TASK_DEFINITION
     host_path = "/host/vol3"
   }
 }
-`, familyName)
+`, tdName)
 }
 
-var testAccAWSEcsTaskDefinitionWithScratchVolume = `
+func testAccAWSEcsTaskDefinitionFargate(tdName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "fargate" {
+  family                   = "%s"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+}
+`, tdName)
+}
+
+func testAccAWSEcsTaskDefinitionExecutionRole(roleName, policyName, tdName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role" {
+  name = "%s"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "policy" {
+  name        = "%s"
+  description = "A test policy"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  role       = "${aws_iam_role.role.name}"
+  policy_arn = "${aws_iam_policy.policy.arn}"
+}
+
+resource "aws_ecs_task_definition" "fargate" {
+  family                   = "%s"
+  execution_role_arn       = "${aws_iam_role.role.arn}"
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+}
+`, roleName, policyName, tdName)
+}
+
+func testAccAWSEcsTaskDefinitionWithScratchVolume(tdName string) string {
+	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "sleep" {
-  family = "terraform-acc-sc-volume-test"
+  family = "%s"
   container_definitions = <<TASK_DEFINITION
 [
   {
@@ -573,14 +753,15 @@ TASK_DEFINITION
     name = "database_scratch"
   }
 }
-`
+`, tdName)
+}
 
-func testAccAWSEcsTaskDefinitionWithTaskRoleArn(rInt int) string {
+func testAccAWSEcsTaskDefinitionWithTaskRoleArn(roleName, policyName, tdName string) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_role" "role_test" {
-		name = "tf_old_name-%d"
-		path = "/test/"
-		assume_role_policy = <<EOF
+resource "aws_iam_role" "role_test" {
+	name = "%s"
+	path = "/test/"
+	assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -595,12 +776,12 @@ func testAccAWSEcsTaskDefinitionWithTaskRoleArn(rInt int) string {
 	]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_role_policy" "role_test" {
-		name = "role_update_test-%d"
-		role = "${aws_iam_role.role_test.id}"
-		policy = <<EOF
+resource "aws_iam_role_policy" "role_test" {
+	name = "%s"
+	role = "${aws_iam_role.role_test.id}"
+	policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -615,12 +796,12 @@ EOF
 	]
 }
 EOF
-	}
+}
 
-	resource "aws_ecs_task_definition" "sleep" {
-		family = "terraform-acc-sc-volume-test"
-		task_role_arn = "${aws_iam_role.role_test.arn}"
-		container_definitions = <<TASK_DEFINITION
+resource "aws_ecs_task_definition" "sleep" {
+	family = "%s"
+	task_role_arn = "${aws_iam_role.role_test.arn}"
+	container_definitions = <<TASK_DEFINITION
 [
 	{
 		"name": "sleep",
@@ -635,13 +816,13 @@ TASK_DEFINITION
 		volume {
 		name = "database_scratch"
 	}
-}`, rInt, rInt)
+}`, roleName, policyName, tdName)
 }
 
-func testAccAWSEcsTaskDefinitionWithNetworkMode(rInt int) string {
+func testAccAWSEcsTaskDefinitionWithNetworkMode(roleName, policyName, tdName string) string {
 	return fmt.Sprintf(`
  resource "aws_iam_role" "role_test" {
-	 name = "tf_old_name-%d"
+	 name = "%s"
 	 path = "/test/"
 	 assume_role_policy = <<EOF
 {
@@ -661,7 +842,7 @@ EOF
  }
 
  resource "aws_iam_role_policy" "role_test" {
-	 name = "role_update_test-%d"
+	 name = "%s"
 	 role = "${aws_iam_role.role_test.id}"
 	 policy = <<EOF
 {
@@ -681,7 +862,7 @@ EOF
  }
 
  resource "aws_ecs_task_definition" "sleep" {
-	 family = "terraform-acc-sc-volume-test-network-mode"
+	 family = "%s"
 	 task_role_arn = "${aws_iam_role.role_test.arn}"
 	 network_mode = "bridge"
 	 container_definitions = <<TASK_DEFINITION
@@ -700,23 +881,24 @@ TASK_DEFINITION
 	 volume {
 		 name = "database_scratch"
 	 }
- }`, rInt, rInt)
+ }`, roleName, policyName, tdName)
 }
 
-var testAccAWSEcsTaskDefinitionWithEcsService = `
+func testAccAWSEcsTaskDefinitionWithEcsService(clusterName, svcName, tdName string) string {
+	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-  name = "terraform-acc-test"
+  name = "%s"
 }
 
 resource "aws_ecs_service" "sleep-svc" {
-  name = "tf-acc-ecs-svc"
+  name = "%s"
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.sleep.arn}"
   desired_count = 1
 }
 
 resource "aws_ecs_task_definition" "sleep" {
-  family = "terraform-acc-sc-volume-test"
+  family = "%s"
   container_definitions = <<TASK_DEFINITION
 [
   {
@@ -734,21 +916,24 @@ TASK_DEFINITION
     name = "database_scratch"
   }
 }
-`
-var testAccAWSEcsTaskDefinitionWithEcsServiceModified = `
+`, clusterName, svcName, tdName)
+}
+
+func testAccAWSEcsTaskDefinitionWithEcsServiceModified(clusterName, svcName, tdName string) string {
+	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-  name = "terraform-acc-test"
+  name = "%s"
 }
 
 resource "aws_ecs_service" "sleep-svc" {
-  name = "tf-acc-ecs-svc"
+  name = "%s"
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.sleep.arn}"
   desired_count = 1
 }
 
 resource "aws_ecs_task_definition" "sleep" {
-  family = "terraform-acc-sc-volume-test"
+  family = "%s"
   container_definitions = <<TASK_DEFINITION
 [
   {
@@ -766,11 +951,13 @@ TASK_DEFINITION
     name = "database_scratch"
   }
 }
-`
+`, clusterName, svcName, tdName)
+}
 
-var testAccAWSEcsTaskDefinitionModified = `
+func testAccAWSEcsTaskDefinitionModified(tdName string) string {
+	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "jenkins" {
-  family = "terraform-acc-test"
+  family = "%s"
   container_definitions = <<TASK_DEFINITION
 [
 	{
@@ -815,7 +1002,8 @@ TASK_DEFINITION
     host_path = "/ecs/jenkins-home"
   }
 }
-`
+`, tdName)
+}
 
 var testValidateAwsEcsTaskDefinitionValidContainerDefinitions = `
 [

@@ -348,10 +348,17 @@ func TestAccAWSRouteTable_vgwRoutePropagation(t *testing.T) {
 const testAccRouteTableConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-table"
+	}
 }
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
+
+	tags {
+		Name = "terraform-testacc-route-table"
+	}
 }
 
 resource "aws_route_table" "foo" {
@@ -367,10 +374,17 @@ resource "aws_route_table" "foo" {
 const testAccRouteTableConfigChange = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-table"
+	}
 }
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
+
+	tags {
+		Name = "terraform-testacc-route-table"
+	}
 }
 
 resource "aws_route_table" "foo" {
@@ -392,6 +406,9 @@ const testAccRouteTableConfigIpv6 = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
+  tags {
+    Name = "terraform-testacc-route-table-ipv6"
+  }
 }
 
 resource "aws_egress_only_internet_gateway" "foo" {
@@ -411,6 +428,9 @@ resource "aws_route_table" "foo" {
 const testAccRouteTableConfigInstance = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-table-instance"
+	}
 }
 
 resource "aws_subnet" "foo" {
@@ -438,6 +458,9 @@ resource "aws_route_table" "foo" {
 const testAccRouteTableConfigTags = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-table-tags"
+	}
 }
 
 resource "aws_route_table" "foo" {
@@ -452,6 +475,9 @@ resource "aws_route_table" "foo" {
 const testAccRouteTableConfigTagsUpdate = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-table-tags"
+	}
 }
 
 resource "aws_route_table" "foo" {
@@ -467,18 +493,32 @@ resource "aws_route_table" "foo" {
 const testAccRouteTableVpcPeeringConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-table-vpc-peering-foo"
+	}
 }
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
+
+	tags {
+		Name = "terraform-testacc-route-table-vpc-peering-foo"
+	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.3.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-table-vpc-peering-bar"
+	}
 }
 
 resource "aws_internet_gateway" "bar" {
 	vpc_id = "${aws_vpc.bar.id}"
+
+	tags {
+		Name = "terraform-testacc-route-table-vpc-peering-bar"
+	}
 }
 
 resource "aws_vpc_peering_connection" "foo" {
@@ -502,6 +542,9 @@ resource "aws_route_table" "foo" {
 const testAccRouteTableVgwRoutePropagationConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-table-vgw-route-propagation"
+	}
 }
 
 resource "aws_vpn_gateway" "foo" {
@@ -519,6 +562,9 @@ resource "aws_route_table" "foo" {
 const testAccRouteTableConfigPanicEmptyRoute = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.2.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-table-panic-empty-route"
+	}
 }
 
 resource "aws_route_table" "foo" {

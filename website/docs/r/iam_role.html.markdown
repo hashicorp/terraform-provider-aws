@@ -6,7 +6,7 @@ description: |-
   Provides an IAM role.
 ---
 
-# aws\_iam\_role
+# aws_iam_role
 
 Provides an IAM role.
 

@@ -27,6 +27,11 @@ func resourceAwsSecurityGroup() *schema.Resource {
 			State: resourceAwsSecurityGroupImportState,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsSecurityGroupMigrateState,
 
@@ -274,7 +279,7 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 		Pending: []string{""},
 		Target:  []string{"exists"},
 		Refresh: SGStateRefreshFunc(conn, d.Id()),
-		Timeout: 10 * time.Minute,
+		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	resp, err := stateConf.WaitForState()
@@ -443,7 +448,7 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
 			GroupId: aws.String(d.Id()),
 		})
@@ -1281,7 +1286,7 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
 				Pending: []string{"true"},
 				Target:  []string{"false"},
 				Refresh: networkInterfaceAttachedRefreshFunc(conn, *eni.NetworkInterfaceId),
-				Timeout: 10 * time.Minute,
+				Timeout: d.Timeout(schema.TimeoutDelete),
 			}
 			if _, err := stateConf.WaitForState(); err != nil {
 				return fmt.Errorf(
