@@ -1875,34 +1875,6 @@ func TestValidateIamRoleProfileNamePrefix(t *testing.T) {
 	}
 }
 
-func TestValidateApiGatewayUsagePlanQuotaSettingsPeriod(t *testing.T) {
-	validEntries := []string{
-		"DAY",
-		"WEEK",
-		"MONTH",
-	}
-
-	invalidEntries := []string{
-		"fooBAR",
-		"foobar45Baz",
-		"foobar45Baz@!",
-	}
-
-	for _, v := range validEntries {
-		_, errors := validateApiGatewayUsagePlanQuotaSettingsPeriod(v, "name")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid API Gateway Quota Settings Period: %v", v, errors)
-		}
-	}
-
-	for _, v := range invalidEntries {
-		_, errors := validateApiGatewayUsagePlanQuotaSettingsPeriod(v, "name")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a API Gateway Quota Settings Period", v)
-		}
-	}
-}
-
 func TestValidateApiGatewayUsagePlanQuotaSettings(t *testing.T) {
 	cases := []struct {
 		Offset   int
