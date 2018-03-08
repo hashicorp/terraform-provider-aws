@@ -324,14 +324,7 @@ func validateCloudWatchLogResourcePolicyDocument(v interface{}, k string) (ws []
 }
 
 func validateMaxLength(length int) schema.SchemaValidateFunc {
-	return func(v interface{}, k string) (ws []string, errors []error) {
-		value := v.(string)
-		if len(value) > length {
-			errors = append(errors, fmt.Errorf(
-				"%q cannot be longer than %d characters: %q", k, length, value))
-		}
-		return
-	}
+	return validation.StringLenBetween(0, length)
 }
 
 func validateIntegerInRange(min, max int) schema.SchemaValidateFunc {
@@ -1079,35 +1072,6 @@ func validateDmsReplicationTaskId(v interface{}, k string) (ws []string, es []er
 		es = append(es, fmt.Errorf("%q must not end in a hyphen", k))
 	}
 
-	return
-}
-
-func validateAppautoscalingCustomizedMetricSpecificationStatistic(v interface{}, k string) (ws []string, errors []error) {
-	validStatistic := []string{
-		"Average",
-		"Minimum",
-		"Maximum",
-		"SampleCount",
-		"Sum",
-	}
-	statistic := v.(string)
-	for _, o := range validStatistic {
-		if statistic == o {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf(
-		"%q contains an invalid statistic %q. Valid statistic are %q.",
-		k, statistic, validStatistic))
-	return
-}
-
-func validateAppautoscalingPredefinedResourceLabel(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 1023 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be greater than 1023 characters", k))
-	}
 	return
 }
 
@@ -1916,23 +1880,6 @@ func validateCognitoRoleMappingsRulesConfiguration(v map[string]interface{}) (er
 	return
 }
 
-func validateCognitoRoleMappingsAmbiguousRoleResolution(v interface{}, k string) (ws []string, errors []error) {
-	validValues := []string{
-		cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
-		cognitoidentity.AmbiguousRoleResolutionTypeDeny,
-	}
-	value := v.(string)
-	for _, s := range validValues {
-		if value == s {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf(
-		"%q contains an invalid value %q. Valid values are %q.",
-		k, value, validValues))
-	return
-}
-
 func validateCognitoRoleMappingsRulesClaim(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -1940,55 +1887,6 @@ func validateCognitoRoleMappingsRulesClaim(v interface{}, k string) (ws []string
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores, colons, slashes and hyphens", k))
 	}
 
-	return
-}
-
-func validateCognitoRoleMappingsRulesMatchType(v interface{}, k string) (ws []string, errors []error) {
-	validValues := []string{
-		cognitoidentity.MappingRuleMatchTypeEquals,
-		cognitoidentity.MappingRuleMatchTypeContains,
-		cognitoidentity.MappingRuleMatchTypeStartsWith,
-		cognitoidentity.MappingRuleMatchTypeNotEqual,
-	}
-	value := v.(string)
-	for _, s := range validValues {
-		if value == s {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf(
-		"%q contains an invalid value %q. Valid values are %q.",
-		k, value, validValues))
-	return
-}
-
-func validateCognitoRoleMappingsRulesValue(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) < 1 {
-		errors = append(errors, fmt.Errorf("%q cannot be less than 1 character", k))
-	}
-
-	if len(value) > 128 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 1 characters", k))
-	}
-
-	return
-}
-
-func validateCognitoRoleMappingsType(v interface{}, k string) (ws []string, errors []error) {
-	validValues := []string{
-		cognitoidentity.RoleMappingTypeToken,
-		cognitoidentity.RoleMappingTypeRules,
-	}
-	value := v.(string)
-	for _, s := range validValues {
-		if value == s {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf(
-		"%q contains an invalid value %q. Valid values are %q.",
-		k, value, validValues))
 	return
 }
 
