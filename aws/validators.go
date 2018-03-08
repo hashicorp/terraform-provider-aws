@@ -1844,22 +1844,8 @@ func validateCognitoUserPoolDomain(v interface{}, k string) (ws []string, errors
 	return
 }
 
-func validateDxConnectionBandWidth(v interface{}, k string) (ws []string, errors []error) {
-	val, ok := v.(string)
-	if !ok {
-		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
-		return
-	}
-
-	validBandWidth := []string{"1Gbps", "10Gbps"}
-	for _, str := range validBandWidth {
-		if val == str {
-			return
-		}
-	}
-
-	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validBandWidth, val))
-	return
+func validateDxConnectionBandWidth() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{"1Gbps", "10Gbps"}, false)
 }
 
 func validateKmsKey(v interface{}, k string) (ws []string, errors []error) {
