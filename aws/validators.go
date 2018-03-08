@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -188,25 +187,6 @@ func validateDbParamGroupNamePrefix(v interface{}, k string) (ws []string, error
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than 226 characters", k))
 	}
-	return
-}
-
-func validateDynamoAttributeType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	validTypes := []string{
-		dynamodb.ScalarAttributeTypeB,
-		dynamodb.ScalarAttributeTypeN,
-		dynamodb.ScalarAttributeTypeS,
-	}
-
-	for _, t := range validTypes {
-		if t == value {
-			return
-		}
-	}
-
-	errors = append(errors, fmt.Errorf("%q must be a valid DynamoDB attribute type", k))
-
 	return
 }
 
