@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 // When released, replace all usage with upstream validation function:
@@ -483,26 +484,17 @@ func validateCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func validateHTTPMethod(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	validMethods := map[string]bool{
-		"ANY":     true,
-		"DELETE":  true,
-		"GET":     true,
-		"HEAD":    true,
-		"OPTIONS": true,
-		"PATCH":   true,
-		"POST":    true,
-		"PUT":     true,
-	}
-
-	if _, ok := validMethods[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid method %q. Valid methods are either %q, %q, %q, %q, %q, %q, %q, or %q.",
-			k, value, "ANY", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"))
-	}
-	return
+func validateHTTPMethod() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"ANY",
+		"DELETE",
+		"GET",
+		"HEAD",
+		"OPTIONS",
+		"PATCH",
+		"POST",
+		"PUT",
+	}, false)
 }
 
 func validateLogMetricFilterName(v interface{}, k string) (ws []string, errors []error) {
@@ -695,15 +687,6 @@ func validateDbEventSubscriptionName(v interface{}, k string) (ws []string, erro
 	return
 }
 
-func validateApiGatewayIntegrationPassthroughBehavior(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value != "WHEN_NO_MATCH" && value != "WHEN_NO_TEMPLATES" && value != "NEVER" {
-		errors = append(errors, fmt.Errorf(
-			"%q must be one of 'WHEN_NO_MATCH', 'WHEN_NO_TEMPLATES', 'NEVER'", k))
-	}
-	return
-}
-
 func validateJsonString(v interface{}, k string) (ws []string, errors []error) {
 	if _, err := structure.NormalizeJsonString(v); err != nil {
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
@@ -741,39 +724,11 @@ func validateCloudFormationTemplate(v interface{}, k string) (ws []string, error
 	return
 }
 
-func validateApiGatewayIntegrationType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	validTypes := map[string]bool{
-		"AWS":        true,
-		"AWS_PROXY":  true,
-		"HTTP":       true,
-		"HTTP_PROXY": true,
-		"MOCK":       true,
-	}
-
-	if _, ok := validTypes[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid integration type %q. Valid types are either %q, %q, %q, %q, or %q.",
-			k, value, "AWS", "AWS_PROXY", "HTTP", "HTTP_PROXY", "MOCK"))
-	}
-	return
-}
-
-func validateApiGatewayIntegrationContentHandling(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	validTypes := map[string]bool{
-		"CONVERT_TO_BINARY": true,
-		"CONVERT_TO_TEXT":   true,
-	}
-
-	if _, ok := validTypes[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid integration type %q. Valid types are either %q or %q.",
-			k, value, "CONVERT_TO_BINARY", "CONVERT_TO_TEXT"))
-	}
-	return
+func validateApiGatewayIntegrationContentHandling() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		apigateway.ContentHandlingStrategyConvertToBinary,
+		apigateway.ContentHandlingStrategyConvertToText,
+	}, false)
 }
 
 func validateSQSQueueName(v interface{}, k string) (ws []string, errors []error) {
