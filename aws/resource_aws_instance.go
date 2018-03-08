@@ -770,8 +770,14 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := readPasswordData(d, instance, conn); err != nil {
-		return err
+	if d.Get("get_password_data").(bool) {
+		passwordData, err := getAwsEc2InstancePasswordData(*instance.InstanceId, conn)
+		if err != nil {
+			return err
+		}
+		d.Set("password_data", passwordData)
+	} else {
+		d.Set("password_data", nil)
 	}
 
 	return nil
@@ -1543,44 +1549,35 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 	return nil
 }
 
-func readPasswordData(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {
-	if !d.Get("get_password_data").(bool) {
-		if err := d.Set("password_data", nil); err != nil {
-			return err
-		}
+func getAwsEc2InstancePasswordData(instanceID string, conn *ec2.EC2) (string, error) {
+	log.Printf("[INFO] Reading password data for instance %s", instanceID)
 
-		return nil
-	}
+	var passwordData string
 
-	log.Printf("[INFO] Reading password data for instance %s", d.Id())
-
-	timeout := time.Now().Add(15 * time.Minute)
-	for {
+	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
 		resp, err := conn.GetPasswordData(&ec2.GetPasswordDataInput{
-			InstanceId: instance.InstanceId,
+			InstanceId: aws.String(instanceID),
 		})
 
 		if err != nil {
-			return err
+			return resource.NonRetryableError(err)
 		}
 
-		if resp.PasswordData != nil && *resp.PasswordData != "" {
-			passwordData := strings.TrimSpace(*resp.PasswordData)
-			if err := d.Set("password_data", passwordData); err != nil {
-				return err
-			}
-
-			log.Printf("[INFO] Password data read for instance %s", d.Id())
-			return nil
+		if resp.PasswordData == nil || *resp.PasswordData == "" {
+			return resource.RetryableError(fmt.Errorf("Password data is blank for instance ID: %s", instanceID))
 		}
 
-		if time.Now().After(timeout) {
-			return fmt.Errorf("Timeout exceeded waiting for password data to become available for instance %s", d.Id())
-		}
+		passwordData = strings.TrimSpace(*resp.PasswordData)
 
-		log.Printf("[TRACE] Password data is blank for instance %s, will retry in 5s...", d.Id())
-		time.Sleep(5 * time.Second)
+		log.Printf("[INFO] Password data read for instance %s", instanceID)
+		return nil
+	})
+
+	if err != nil {
+		return "", err
 	}
+
+	return passwordData, nil
 }
 
 type awsInstanceOpts struct {

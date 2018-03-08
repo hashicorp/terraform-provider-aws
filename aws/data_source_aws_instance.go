@@ -280,9 +280,11 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("get_password_data").(bool) {
-		if err := readPasswordData(d, instance, conn); err != nil {
+		passwordData, err := getAwsEc2InstancePasswordData(*instance.InstanceId, conn)
+		if err != nil {
 			return err
 		}
+		d.Set("password_data", passwordData)
 	}
 
 	return nil
