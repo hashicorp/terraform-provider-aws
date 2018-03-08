@@ -113,7 +113,7 @@ func TestAccAWSEcsService_withARN(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_basicImport(t *testing.T) {
+func TestAccAWSEcsService_importBasic(t *testing.T) {
 	rString := acctest.RandString(8)
 
 	clusterName := fmt.Sprintf("tf-acc-cluster-svc-%s", rString)
