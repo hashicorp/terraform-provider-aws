@@ -921,6 +921,10 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				groups = append(groups, aws.String(v.(string)))
 			}
 		}
+
+		if len(groups) < 1 {
+			return fmt.Errorf("VPC-based instances require at least one security group to be attached.")
+		}
 		// If a user has multiple network interface attachments on the target EC2 instance, simply modifying the
 		// instance attributes via a `ModifyInstanceAttributes()` request would fail with the following error message:
 		// "There are multiple interfaces attached to instance 'i-XX'. Please specify an interface ID for the operation instead."
