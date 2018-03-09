@@ -31,16 +31,6 @@ func validateRFC3339TimeString(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-func validateInstanceUserDataSize(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	length := len(value)
-
-	if length > 16384 {
-		errors = append(errors, fmt.Errorf("%q is %d bytes, cannot be longer than 16384 bytes", k, length))
-	}
-	return
-}
-
 func validateRdsIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
