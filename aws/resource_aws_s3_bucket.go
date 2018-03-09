@@ -56,9 +56,41 @@ func resourceAwsS3Bucket() *schema.Resource {
 			},
 
 			"acl": {
-				Type:     schema.TypeString,
-				Default:  "private",
-				Optional: true,
+				Type:          schema.TypeString,
+				Default:       "private",
+				Optional:      true,
+				ConflictsWith: []string{"grant"},
+			},
+
+			"grant": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				ConflictsWith: []string{"acl"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateS3BucketGrantType,
+						},
+						"uri": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"permission": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validateS3BucketGrantPermission,
+							},
+						},
+					},
+				},
 			},
 
 			"policy": {
@@ -448,13 +480,17 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 		bucket = resource.UniqueId()
 	}
 	d.Set("bucket", bucket)
-	acl := d.Get("acl").(string)
 
-	log.Printf("[DEBUG] S3 bucket create: %s, ACL: %s", bucket, acl)
+	log.Printf("[DEBUG] S3 bucket create: %s", bucket)
 
 	req := &s3.CreateBucketInput{
 		Bucket: aws.String(bucket),
-		ACL:    aws.String(acl),
+	}
+
+	if acl, ok := d.GetOk("acl"); ok {
+		acl := acl.(string)
+		req.ACL = aws.String(acl)
+		log.Printf("[DEBUG] S3 bucket %s has canned ACL %s", bucket, acl)
 	}
 
 	var awsRegion string
@@ -535,6 +571,12 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("acl") {
 		if err := resourceAwsS3BucketAclUpdate(s3conn, d); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("grant") {
+		if err := resourceAwsS3BucketGrantsUpdate(s3conn, d); err != nil {
 			return err
 		}
 	}
@@ -632,6 +674,64 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 				}
 				d.Set("policy", policy)
 			}
+		}
+	}
+
+	//Do not evaluate if `acl` is set.
+	if acl, ok := d.GetOk("acl"); !ok || acl.(string) == "private" {
+		apResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+			return s3conn.GetBucketAcl(&s3.GetBucketAclInput{
+				Bucket: aws.String(d.Id()),
+			})
+		})
+		ap := apResponse.(*s3.GetBucketAclOutput)
+		if err != nil {
+			return err
+		}
+		log.Printf("[DEBUG] S3 bucket: %s, read ACL grants policy: %+v", d.Id(), ap)
+
+		grants := make([]map[string]interface{}, 0, len(ap.Grants))
+
+		for _, granteeObject := range ap.Grants {
+			grantee := make(map[string]interface{})
+			grantee["type"] = *granteeObject.Grantee.Type
+
+			if granteeObject.Grantee.ID != nil {
+				grantee["id"] = *granteeObject.Grantee.ID
+			}
+			if granteeObject.Grantee.URI != nil {
+				grantee["uri"] = *granteeObject.Grantee.URI
+			}
+
+			merged := false
+			for _, pg := range grants {
+				if pg["type"] == grantee["type"] && pg["id"] == grantee["id"] && pg["uri"] == grantee["uri"] {
+					pg["permission"] = append(pg["permission"].([]interface{}), *granteeObject.Permission)
+					merged = true
+					break
+				}
+			}
+
+			if !merged {
+				grantee["permission"] = []interface{}{*granteeObject.Permission}
+				grants = append(grants, grantee)
+			}
+		}
+
+		log.Printf("[DEBUG] S3 bucket: %s, read ACL grants policy before set: %+v", d.Id(), grants)
+		//if ACL grants contains bucket owner FULL_CONTROL only - it's "private" acl, skip the state
+		if len(grants) == 1 && grants[0]["id"].(string) == *ap.Owner.ID &&
+			len(grants[0]["permission"].([]interface{})) == 1 &&
+			(grants[0]["permission"].([]interface{}))[0].(string) == s3.PermissionFullControl {
+			log.Printf("[DEBUG] S3 bucket: %s, ACL grants policy matches private ACL", d.Id())
+		} else {
+			if err := d.Set("grant", grants); err != nil {
+				return err
+			}
+		}
+	} else {
+		if err := d.Set("grant", nil); err != nil {
+			return err
 		}
 	}
 
@@ -1174,6 +1274,71 @@ func resourceAwsS3BucketPolicyUpdate(s3conn *s3.S3, d *schema.ResourceData) erro
 		}
 	}
 
+	return nil
+}
+
+func resourceAwsS3BucketGrantsUpdate(s3conn *s3.S3, d *schema.ResourceData) error {
+	bucket := d.Get("bucket").(string)
+	rawGrants := d.Get("grant").([]interface{})
+
+	if len(rawGrants) == 0 {
+		log.Printf("[DEBUG] S3 bucket: %s, Grants fallback to canned ACL", bucket)
+		resourceAwsS3BucketAclUpdate(s3conn, d)
+	} else {
+		apResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+			return s3conn.GetBucketAcl(&s3.GetBucketAclInput{
+				Bucket: aws.String(d.Id()),
+			})
+		})
+
+		ap := apResponse.(*s3.GetBucketAclOutput)
+		if err != nil {
+			return err
+		}
+		log.Printf("[DEBUG] S3 bucket: %s, read ACL grants policy: %+v", d.Id(), ap)
+
+		grants := make([]*s3.Grant, 0, len(rawGrants))
+		for _, rawGrant := range rawGrants {
+			log.Printf("[DEBUG] S3 bucket: %s, put grant: %#v", bucket, rawGrant)
+			grantMap := rawGrant.(map[string]interface{})
+			for _, rawPermission := range grantMap["permission"].([]interface{}) {
+				ge := &s3.Grantee{}
+				if i := grantMap["id"].(string); i != "" {
+					ge.SetID(i)
+				}
+				if t := grantMap["type"].(string); t != "" {
+					ge.SetType(t)
+				}
+				if u := grantMap["uri"].(string); u != "" {
+					ge.SetURI(u)
+				}
+
+				g := &s3.Grant{
+					Grantee:    ge,
+					Permission: aws.String(rawPermission.(string)),
+				}
+				grants = append(grants, g)
+			}
+		}
+
+		grantsInput := &s3.PutBucketAclInput{
+			Bucket: aws.String(bucket),
+			AccessControlPolicy: &s3.AccessControlPolicy{
+				Grants: grants,
+				Owner:  ap.Owner,
+			},
+		}
+
+		log.Printf("[DEBUG] S3 bucket: %s, put Grants: %#v", bucket, grantsInput)
+
+		_, err = retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+			return s3conn.PutBucketAcl(grantsInput)
+		})
+
+		if err != nil {
+			return fmt.Errorf("Error putting S3 Grants: %s", err)
+		}
+	}
 	return nil
 }
 
