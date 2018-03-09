@@ -128,11 +128,11 @@ resource "aws_vpc" "foo" {
 
 resource "aws_vpc_secondary_ipv4_cidr_block" "secondary_cidr" {
   vpc_id = "${aws_vpc.foo.id}"
-  ipv4_cidr_block = "172.2.0.0/16"
+  cidr_block = "172.2.0.0/16"
 }
 
 resource "aws_vpc_secondary_ipv4_cidr_block" "tertiary_cidr" {
   vpc_id = "${aws_vpc.foo.id}"
-  ipv4_cidr_block = "170.2.0.0/16"
+  cidr_block = "170.2.0.0/16"
 }
 `

@@ -19,7 +19,7 @@ resource "aws_vpc" "main" {
 
 resource "aws_vpc_secondary_ipv4_cidr_block" "secondary_cidr" {
   vpc_id = "${aws_vpc.main.id}"
-  ipv4_cidr_block = "172.2.0.0/16"
+  cidr_block = "172.2.0.0/16"
 }
 ```
 
@@ -28,7 +28,7 @@ resource "aws_vpc_secondary_ipv4_cidr_block" "secondary_cidr" {
 The following arguments are supported:
 
 * `vpc_id` - (Required) The ID of the VPC to make the association with.
-* `ipv4_cidr_block` - (Required) The secondary IPv4 CIDR block to associate with the VPC.
+* `cidr_block` - (Required) The secondary IPv4 CIDR block to associate with the VPC.
 
 ## Attributes Reference
 

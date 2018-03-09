@@ -23,7 +23,7 @@ func resourceAwsVpcSecondaryIpv4CidrBlock() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"ipv4_cidr_block": {
+			"cidr_block": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -38,7 +38,7 @@ func resourceAwsVpcSecondaryIpv4CidrBlockCreate(d *schema.ResourceData, meta int
 
 	req := &ec2.AssociateVpcCidrBlockInput{
 		VpcId:     aws.String(d.Get("vpc_id").(string)),
-		CidrBlock: aws.String(d.Get("ipv4_cidr_block").(string)),
+		CidrBlock: aws.String(d.Get("cidr_block").(string)),
 	}
 	log.Printf("[DEBUG] Creating VPC secondary IPv4 CIDR block: %#v", req)
 	resp, err := conn.AssociateVpcCidrBlock(req)
@@ -70,7 +70,7 @@ func resourceAwsVpcSecondaryIpv4CidrBlockRead(d *schema.ResourceData, meta inter
 	for _, cidrAssociation := range vpc.CidrBlockAssociationSet {
 		if aws.StringValue(cidrAssociation.AssociationId) == d.Id() {
 			found = true
-			d.Set("ipv4_cidr_block", cidrAssociation.CidrBlock)
+			d.Set("cidr_block", cidrAssociation.CidrBlock)
 		}
 	}
 	if !found {
