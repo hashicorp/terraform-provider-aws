@@ -138,6 +138,9 @@ type Config struct {
 	SkipRequestingAccountId bool
 	SkipMetadataApiCheck    bool
 	S3ForcePathStyle        bool
+
+	ForceGovCloud   bool
+	ForceChinaCloud bool
 }
 
 type AWSClient struct {
@@ -214,6 +217,9 @@ type AWSClient struct {
 	dxconn                *directconnect.DirectConnect
 	mediastoreconn        *mediastore.MediaStore
 	appsyncconn           *appsync.AppSync
+
+	forcegovcloud   bool
+	forcechinacloud bool
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -226,12 +232,12 @@ func (c *AWSClient) DynamoDB() *dynamodb.DynamoDB {
 
 func (c *AWSClient) IsGovCloud() bool {
 	_, isGovCloud := endpoints.PartitionForRegion([]endpoints.Partition{endpoints.AwsUsGovPartition()}, c.region)
-	return isGovCloud
+	return isGovCloud || c.forcegovcloud
 }
 
 func (c *AWSClient) IsChinaCloud() bool {
 	_, isChinaCloud := endpoints.PartitionForRegion([]endpoints.Partition{endpoints.AwsCnPartition()}, c.region)
-	return isChinaCloud
+	return isChinaCloud || c.forcechinacloud
 }
 
 // Client configures and returns a fully initialized AWSClient
@@ -252,6 +258,10 @@ func (c *Config) Client() (interface{}, error) {
 	// store AWS region in client struct, for region specific operations such as
 	// bucket storage in S3
 	client.region = c.Region
+
+	// force gov/china cloud
+	client.forcegovcloud = c.ForceGovCloud
+	client.forcechinacloud = c.ForceChinaCloud
 
 	log.Println("[INFO] Building AWS auth structure")
 	creds, err := GetCredentials(c)
