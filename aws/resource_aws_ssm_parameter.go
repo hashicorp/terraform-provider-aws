@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSsmParameter() *schema.Resource {
@@ -33,9 +34,13 @@ func resourceAwsSsmParameter() *schema.Resource {
 				Optional: true,
 			},
 			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateSsmParameterType,
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ssm.ParameterTypeString,
+					ssm.ParameterTypeStringList,
+					ssm.ParameterTypeSecureString,
+				}, false),
 			},
 			"value": {
 				Type:      schema.TypeString,
