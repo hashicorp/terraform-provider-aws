@@ -131,11 +131,20 @@ func TestAccAWSEcsService_importBasic(t *testing.T) {
 			{
 				Config: testAccAWSEcsServiceWithFamilyAndRevision(clusterName, tdName, svcName),
 			},
+			// Test existent resource import
 			{
 				ResourceName:      resourceName,
 				ImportStateId:     importInput,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			// Test non-existent resource import
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/nonexistent", clusterName),
+				ImportState:       true,
+				ImportStateVerify: false,
+				ExpectError:       regexp.MustCompile(`No ECS service found`),
 			},
 		},
 	})
