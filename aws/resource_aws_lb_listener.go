@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsLbListener() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceAwsLbListener() *schema.Resource {
 			"port": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ValidateFunc: validateAwsLbListenerPort,
+				ValidateFunc: validation.IntBetween(1, 65535),
 			},
 
 			"protocol": {
@@ -50,7 +51,7 @@ func resourceAwsLbListener() *schema.Resource {
 				StateFunc: func(v interface{}) string {
 					return strings.ToUpper(v.(string))
 				},
-				ValidateFunc: validateAwsLbListenerProtocol,
+				ValidateFunc: validateLbListenerProtocol(),
 			},
 
 			"ssl_policy": {
@@ -76,7 +77,7 @@ func resourceAwsLbListener() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateAwsLbListenerActionType,
+							ValidateFunc: validateLbListenerActionType(),
 						},
 					},
 				},
@@ -252,33 +253,21 @@ func resourceAwsLbListenerDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func validateAwsLbListenerPort(v interface{}, k string) (ws []string, errors []error) {
-	port := v.(int)
-	if port < 1 || port > 65536 {
-		errors = append(errors, fmt.Errorf("%q must be a valid port number (1-65536)", k))
-	}
-	return
-}
-
-func validateAwsLbListenerProtocol(v interface{}, k string) (ws []string, errors []error) {
-	value := strings.ToLower(v.(string))
-	if value == "http" || value == "https" || value == "tcp" {
-		return
-	}
-
-	errors = append(errors, fmt.Errorf("%q must be either %q, %q or %q", k, "HTTP", "HTTPS", "TCP"))
-	return
-}
-
-func validateAwsLbListenerActionType(v interface{}, k string) (ws []string, errors []error) {
-	value := strings.ToLower(v.(string))
-	if value != "forward" {
-		errors = append(errors, fmt.Errorf("%q must have the value %q", k, "forward"))
-	}
-	return
-}
-
 func isListenerNotFound(err error) bool {
 	elberr, ok := err.(awserr.Error)
 	return ok && elberr.Code() == "ListenerNotFound"
+}
+
+func validateLbListenerActionType() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		elbv2.ActionTypeEnumForward,
+	}, true)
+}
+
+func validateLbListenerProtocol() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"http",
+		"https",
+		"tcp",
+	}, true)
 }
