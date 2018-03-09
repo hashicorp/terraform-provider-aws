@@ -32,6 +32,7 @@ BUG FIXES:
 * resource/aws_api_gateway_vpc_link: Ensure `target_arns` is properly read [GH-3569]
 * resource/aws_batch_compute_environment: Fix `state` updates [GH-3508]
 * resource/aws_ebs_snapshot: Prevent crash with outside snapshot deletion [GH-3462]
+* resource/aws_ecs_service: Prevent crash when importing non-existent service [GH-3672]
 * resource/aws_eip_association: Prevent deletion error InvalidAssociationID.NotFound [GH-3653]
 * resource/aws_instance: Ensure at least one security group is being attached when modifying vpc_security_group_ids [GH-2850]
 * resource/aws_lambda_function: Allow PutFunctionConcurrency retries on creation [GH-3570]
