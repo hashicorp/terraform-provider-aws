@@ -192,7 +192,7 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
-	return vpcEndpointAttributes(d, vpce.(*ec2.VpcEndpoint), meta)
+	return vpcEndpointAttributes(d, vpce.(*ec2.VpcEndpoint), conn)
 }
 
 func resourceAwsVpcEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -341,13 +341,14 @@ func vpcEndpointWaitUntilAvailable(d *schema.ResourceData, conn *ec2.EC2) error 
 	return nil
 }
 
-func vpcEndpointAttributes(d *schema.ResourceData, vpce *ec2.VpcEndpoint, meta interface{}) error {
+func vpcEndpointAttributes(d *schema.ResourceData, vpce *ec2.VpcEndpoint, conn *ec2.EC2) error {
 	d.Set("state", vpce.State)
 	d.Set("vpc_id", vpce.VpcId)
 
 	serviceName := aws.StringValue(vpce.ServiceName)
 	d.Set("service_name", serviceName)
-	if meta.(*AWSClient).IsGovCloud() && aws.StringValue(vpce.VpcEndpointType) == "" {
+	// VPC endpoints don't have types in GovCloud, so set type to default if empty
+	if aws.StringValue(vpce.VpcEndpointType) == "" {
 		d.Set("vpc_endpoint_type", ec2.VpcEndpointTypeGateway)
 	} else {
 		d.Set("vpc_endpoint_type", vpce.VpcEndpointType)
@@ -367,7 +368,7 @@ func vpcEndpointAttributes(d *schema.ResourceData, vpce *ec2.VpcEndpoint, meta i
 			"prefix-list-name": serviceName,
 		},
 	)
-	resp, err := meta.(*AWSClient).ec2conn.DescribePrefixLists(req)
+	resp, err := conn.DescribePrefixLists(req)
 	if err != nil {
 		return err
 	}
