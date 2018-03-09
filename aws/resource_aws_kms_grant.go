@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsKmsGrant() *schema.Resource {
@@ -47,8 +47,18 @@ func resourceAwsKmsGrant() *schema.Resource {
 				Type: schema.TypeSet,
 				Set:  schema.HashString,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validateAwsKmsGrantOperation,
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						kms.GrantOperationCreateGrant,
+						kms.GrantOperationDecrypt,
+						kms.GrantOperationDescribeKey,
+						kms.GrantOperationEncrypt,
+						kms.GrantOperationGenerateDataKey,
+						kms.GrantOperationGenerateDataKeyWithoutPlaintext,
+						kms.GrantOperationReEncryptFrom,
+						kms.GrantOperationReEncryptTo,
+						kms.GrantOperationRetireGrant,
+					}, false),
 				},
 				Required: true,
 				ForceNew: true,
@@ -89,6 +99,12 @@ func resourceAwsKmsGrant() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"retire_on_delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
 			"grant_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -103,10 +119,11 @@ func resourceAwsKmsGrant() *schema.Resource {
 
 func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
+	keyId := d.Get("key_id").(string)
 
 	input := kms.CreateGrantInput{
 		GranteePrincipal: aws.String(d.Get("grantee_principal").(string)),
-		KeyId:            aws.String(d.Get("key_id").(string)),
+		KeyId:            aws.String(keyId),
 		Operations:       expandStringSet(d.Get("operations").(*schema.Set)),
 	}
 
@@ -136,17 +153,15 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 		out, err = conn.CreateGrant(&input)
 
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				// Error Codes: https://docs.aws.amazon.com/sdk-for-go/api/service/kms/#KMS.CreateGrant
-				// Under some circumstances a newly created IAM Role doesn't show up and causes
-				// an InvalidArnException to be thrown.
-				if awsErr.Code() == "DependencyTimeoutException" ||
-					awsErr.Code() == "InternalException" ||
-					awsErr.Code() == "InvalidArnException" {
-					return resource.RetryableError(
-						fmt.Errorf("[WARN] Error adding new KMS Grant for key: %s, retrying %s",
-							*input.KeyId, err))
-				}
+			// Error Codes: https://docs.aws.amazon.com/sdk-for-go/api/service/kms/#KMS.CreateGrant
+			// Under some circumstances a newly created IAM Role doesn't show up and causes
+			// an InvalidArnException to be thrown.
+			if isAWSErr(err, kms.ErrCodeDependencyTimeoutException, "") ||
+				isAWSErr(err, kms.ErrCodeInternalException, "") ||
+				isAWSErr(err, kms.ErrCodeInvalidArnException, "") {
+				return resource.RetryableError(
+					fmt.Errorf("[WARN] Error adding new KMS Grant for key: %s, retrying %s",
+						*input.KeyId, err))
 			}
 			log.Printf("[ERROR] An error occured creating new AWS KMS Grant: %s", err)
 			return resource.NonRetryableError(err)
@@ -159,7 +174,7 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Created new KMS Grant: %s", *out.GrantId)
-	d.SetId(*out.GrantId)
+	d.SetId(fmt.Sprintf("%s:%s", keyId, *out.GrantId))
 	d.Set("grant_id", out.GrantId)
 	d.Set("grant_token", out.GrantToken)
 
@@ -169,8 +184,10 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsKmsGrantRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
-	grantId := d.Id()
-	keyId := d.Get("key_id").(string)
+	keyId, grantId, err := decodeKmsGrantId(d.Id())
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[DEBUG] Looking for grant id: %s", grantId)
 	grant, err := findKmsGrantByIdWithRetry(conn, keyId, grantId)
@@ -182,62 +199,76 @@ func resourceAwsKmsGrantRead(d *schema.ResourceData, meta interface{}) error {
 	if grant == nil {
 		log.Printf("[WARN] %s KMS grant id not found for key id %s, removing from state file", grantId, keyId)
 		d.SetId("")
+		return nil
 	}
 
-	if grant != nil {
-		// The grant sometimes contains principals that identified by their unique id: "AROAJYCVIVUZIMTXXXXX"
-		// instead of "arn:aws:...", in this case don't update the state file
-		if strings.HasPrefix(*grant.GranteePrincipal, "arn:aws") {
-			d.Set("grantee_principal", grant.GranteePrincipal)
+	// The grant sometimes contains principals that identified by their unique id: "AROAJYCVIVUZIMTXXXXX"
+	// instead of "arn:aws:...", in this case don't update the state file
+	if strings.HasPrefix(*grant.GranteePrincipal, "arn:aws") {
+		d.Set("grantee_principal", grant.GranteePrincipal)
+	} else {
+		log.Printf(
+			"[WARN] Unable to update grantee principal state %s for grant id %s for key id %s.",
+			*grant.GranteePrincipal, grantId, keyId)
+	}
+
+	if grant.RetiringPrincipal != nil {
+		if strings.HasPrefix(*grant.RetiringPrincipal, "arn:aws") {
+			d.Set("retiring_principal", grant.RetiringPrincipal)
 		} else {
 			log.Printf(
-				"[WARN] Unable to update grantee principal state %s for grant id %s for key id %s.",
-				*grant.GranteePrincipal, grantId, keyId)
+				"[WARN] Unable to update retiring principal state %s for grant id %s for key id %s",
+				*grant.RetiringPrincipal, grantId, keyId)
 		}
+	}
 
-		if grant.RetiringPrincipal != nil {
-			if strings.HasPrefix(*grant.RetiringPrincipal, "arn:aws") {
-				d.Set("retiring_principal", grant.RetiringPrincipal)
-			} else {
-				log.Printf(
-					"[WARN] Unable to update retiring principal state %s for grant id %s for key id %s",
-					*grant.RetiringPrincipal, grantId, keyId)
-			}
-		}
-
-		if err := d.Set("operations", aws.StringValueSlice(grant.Operations)); err != nil {
-			log.Printf("[DEBUG] Error setting operations for grant %s with error %s", grantId, err)
-		}
-		if *grant.Name != "" {
-			d.Set("name", grant.Name)
-		}
-		if grant.Constraints != nil {
-			if err := d.Set("constraints", flattenKmsGrantConstraints(grant.Constraints)); err != nil {
-				log.Printf("[DEBUG] Error setting constraints for grant %s with error %s", grantId, err)
-			}
+	if err := d.Set("operations", aws.StringValueSlice(grant.Operations)); err != nil {
+		log.Printf("[DEBUG] Error setting operations for grant %s with error %s", grantId, err)
+	}
+	if *grant.Name != "" {
+		d.Set("name", grant.Name)
+	}
+	if grant.Constraints != nil {
+		if err := d.Set("constraints", flattenKmsGrantConstraints(grant.Constraints)); err != nil {
+			log.Printf("[DEBUG] Error setting constraints for grant %s with error %s", grantId, err)
 		}
 	}
 
 	return nil
 }
 
-// Retiring grants requires special permissions (i.e. the
-// caller to be root, retiree principal, or grantee principal with retire grant
-// privileges). So just revoke grants.
 func resourceAwsKmsGrantDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
-	grantId := d.Get("grant_id").(string)
-	keyId := d.Get("key_id").(string)
-	input := kms.RevokeGrantInput{
-		GrantId: aws.String(grantId),
-		KeyId:   aws.String(keyId),
+	keyId, grantId, decodeErr := decodeKmsGrantId(d.Id())
+	if decodeErr != nil {
+		return decodeErr
+	}
+	doRetire := d.Get("retire_on_delete").(bool)
+
+	var err error
+	if doRetire {
+		retireInput := kms.RetireGrantInput{
+			GrantId: aws.String(grantId),
+			KeyId:   aws.String(keyId),
+		}
+
+		log.Printf("[DEBUG] Retiring KMS grant: %s", grantId)
+		_, err = conn.RetireGrant(&retireInput)
+	} else {
+		revokeInput := kms.RevokeGrantInput{
+			GrantId: aws.String(grantId),
+			KeyId:   aws.String(keyId),
+		}
+
+		log.Printf("[DEBUG] Revoking KMS grant: %s", grantId)
+		_, err = conn.RevokeGrant(&revokeInput)
 	}
 
-	log.Printf("[DEBUG] Revoking KMS grant: %s", grantId)
-	_, err := conn.RevokeGrant(&input)
-
 	if err != nil {
+		if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+			return nil
+		}
 		return err
 	}
 
@@ -248,15 +279,16 @@ func resourceAwsKmsGrantDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId("")
 	return nil
 }
 
 func resourceAwsKmsGrantExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	conn := meta.(*AWSClient).kmsconn
 
-	grantId := d.Id()
-	keyId := d.Get("key_id").(string)
+	keyId, grantId, err := decodeKmsGrantId(d.Id())
+	if err != nil {
+		return false, err
+	}
 
 	log.Printf("[DEBUG] Looking for Grant: %s", grantId)
 	grant, err := findKmsGrantByIdWithRetry(conn, keyId, grantId)
@@ -351,12 +383,10 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 		out, err = conn.ListGrants(&input)
 
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "NotFoundException" ||
-					awsErr.Code() == "DependencyTimeoutException" ||
-					awsErr.Code() == "InternalException" {
-					return resource.RetryableError(err)
-				}
+			if isAWSErr(err, kms.ErrCodeDependencyTimeoutException, "") ||
+				isAWSErr(err, kms.ErrCodeInternalException, "") ||
+				isAWSErr(err, kms.ErrCodeInvalidArnException, "") {
+				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
@@ -487,6 +517,14 @@ func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 	constraints.Add(m)
 
 	return constraints
+}
+
+func decodeKmsGrantId(id string) (string, string, error) {
+	parts := strings.Split(id, ":")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("unexpected format of ID (%q), expected KeyID:GrantID", id)
+	}
+	return parts[0], parts[1], nil
 }
 
 // Custom error, so we don't have to rely on

@@ -1395,34 +1395,6 @@ func validateAwsKmsName(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-func validateAwsKmsGrantOperation(v interface{}, k string) (ws []string, es []error) {
-	value := v.(string)
-
-	validTypes := map[string]struct{}{
-		"Decrypt":                         {},
-		"Encrypt":                         {},
-		"GenerateDataKey":                 {},
-		"GenerateDataKeyWithoutPlaintext": {},
-		"ReEncryptFrom":                   {},
-		"ReEncryptTo":                     {},
-		"CreateGrant":                     {},
-		"RetireGrant":                     {},
-		"DescribeKey":                     {},
-	}
-
-	validOperations := make([]string, len(validTypes))
-	for operation := range validTypes {
-		validOperations = append(validOperations, operation)
-	}
-
-	if _, ok := validTypes[value]; !ok {
-		es = append(es, fmt.Errorf(
-			"%s must be one of the following: %v", k, validOperations))
-
-	}
-	return
-}
-
 func validateAwsKmsGrantName(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 

@@ -2209,39 +2209,6 @@ func TestValidateAwsKmsGrantName(t *testing.T) {
 	}
 }
 
-func TestValidateAwsKmsGrantOperation(t *testing.T) {
-	validValues := []string{
-		"Decrypt",
-		"Encrypt",
-		"GenerateDataKey",
-		"GenerateDataKeyWithoutPlaintext",
-		"ReEncryptFrom",
-		"ReEncryptTo",
-		"CreateGrant",
-		"RetireGrant",
-		"DescribeKey",
-	}
-
-	for _, s := range validValues {
-		_, errors := validateAwsKmsGrantOperation(s, "operation")
-		if len(errors) > 0 {
-			t.Fatalf("%q should be a valid AWS KMS Grant Operation: %v", s, errors)
-		}
-	}
-
-	invalidValues := []string{
-		"foo",
-		"bar",
-	}
-
-	for _, s := range invalidValues {
-		_, errors := validateAwsKmsGrantOperation(s, "operation")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid AWS KMS Grant Operation", s)
-		}
-	}
-}
-
 func TestValidateCognitoIdentityPoolName(t *testing.T) {
 	validValues := []string{
 		"123",
