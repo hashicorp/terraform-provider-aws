@@ -1735,30 +1735,6 @@ func validateIoTTopicRuleElasticSearchEndpoint(v interface{}, k string) (ws []st
 	return
 }
 
-func validateServiceCatalogPortfolioName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if (len(value) > 20) || (len(value) == 0) {
-		errors = append(errors, fmt.Errorf("Service catalog name must be between 1 and 20 characters."))
-	}
-	return
-}
-
-func validateServiceCatalogPortfolioDescription(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 2000 {
-		errors = append(errors, fmt.Errorf("Service catalog description must be less than 2000 characters."))
-	}
-	return
-}
-
-func validateServiceCatalogPortfolioProviderName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if (len(value) > 20) || (len(value) == 0) {
-		errors = append(errors, fmt.Errorf("Service catalog provider name must be between 1 and 20 characters."))
-	}
-	return
-}
-
 func validateSesTemplateName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if (len(value) > 64) || (len(value) == 0) {
