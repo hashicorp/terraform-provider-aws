@@ -113,7 +113,7 @@ func TestAccAWSEcsService_withARN(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_basicImport(t *testing.T) {
+func TestAccAWSEcsService_importBasic(t *testing.T) {
 	rString := acctest.RandString(8)
 
 	clusterName := fmt.Sprintf("tf-acc-cluster-svc-%s", rString)
@@ -131,11 +131,20 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 			{
 				Config: testAccAWSEcsServiceWithFamilyAndRevision(clusterName, tdName, svcName),
 			},
+			// Test existent resource import
 			{
 				ResourceName:      resourceName,
 				ImportStateId:     importInput,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			// Test non-existent resource import
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/nonexistent", clusterName),
+				ImportState:       true,
+				ImportStateVerify: false,
+				ExpectError:       regexp.MustCompile(`No ECS service found`),
 			},
 		},
 	})
