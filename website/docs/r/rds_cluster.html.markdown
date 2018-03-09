@@ -114,7 +114,7 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `iam_database_authentication_enabled` - (Optional) Specifies whether or mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
 * `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `aurora`.
 * `engine_version` - (Optional) The database engine version.
-
+* `source_region` - (Optional) The source region for an encrypted replica DB cluster.
 
 ## Attributes Reference
 
