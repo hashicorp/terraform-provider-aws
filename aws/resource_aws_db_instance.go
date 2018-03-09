@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 
@@ -387,6 +388,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
 			Tags:                       tags,
 		}
+
 		if attr, ok := d.GetOk("iops"); ok {
 			opts.Iops = aws.Int64(int64(attr.(int)))
 		}
@@ -399,6 +401,34 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.AvailabilityZone = aws.String(attr.(string))
 		}
 
+		//
+		// If we are called with a Source DB ARN, and the ARN is a different region
+		// than the replica to be created, set SourceRegion.
+		//
+		// The correct way to do this would be to query the master, and see if it
+		// is encrypted and in the same region.  If it is encrypted and in the
+		// same region, drop the source region and the kms_key_id.  If the master is not
+		// encrypted, behavior is kinda undefined.
+		//
+		// The CLI docs for kms_key_id state:
+		// "If you specify this parameter when you create a Read Replica from an
+		// unencrypted DB instance, the Read Replica is encrypted.""
+		//
+		// The RDS userguide states:
+		// "You cannot have an encrypted Read Replica of an unencrypted DB instance
+		// or an unencrypted Read Replica of an encrypted DB instance."
+		//
+		// go figure, eh?
+		//
+		replicaRegion := meta.(*AWSClient).region
+
+		arnParts, arnErr := arn.Parse(d.Get("replicate_source_db").(string))
+		if arnErr == nil {
+			if arnParts.Region != replicaRegion {
+				opts.SourceRegion = aws.String(arnParts.Region)
+			}
+		}
+
 		if attr, ok := d.GetOk("storage_type"); ok {
 			opts.StorageType = aws.String(attr.(string))
 		}
@@ -407,11 +437,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
+		// TODO: Only allow this param if the master is not encrypted or
+		// is in a different region than the replica
+
 		if attr, ok := d.GetOk("kms_key_id"); ok {
 			opts.KmsKeyId = aws.String(attr.(string))
-			if arnParts := strings.Split(v.(string), ":"); len(arnParts) >= 4 {
-				opts.SourceRegion = aws.String(arnParts[3])
-			}
 		}
 
 		if attr, ok := d.GetOk("monitoring_role_arn"); ok {
@@ -777,7 +807,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	// list tags for resource
 	// set tags
 	conn := meta.(*AWSClient).rdsconn
-	arn, err := buildRDSARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
+	builtArn, err := buildRDSARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
 	if err != nil {
 		name := "<empty>"
 		if v.DBName != nil && *v.DBName != "" {
@@ -785,13 +815,13 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		log.Printf("[DEBUG] Error building ARN for DB Instance, not setting Tags for DB %s", name)
 	} else {
-		d.Set("arn", arn)
+		d.Set("arn", builtArn)
 		resp, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
-			ResourceName: aws.String(arn),
+			ResourceName: aws.String(builtArn),
 		})
 
 		if err != nil {
-			log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
+			log.Printf("[DEBUG] Error retrieving tags for ARN: %s", builtArn)
 		}
 
 		var dt []*rds.Tag
@@ -828,7 +858,13 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("[DEBUG] Error setting replicas attribute: %#v, error: %#v", replicas, err)
 	}
 
-	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
+	//  If an ARN was passed in, do NOT use what AWS passes back for replicate_source_id,
+	//  as it passes back the master's ID-
+	//  see https://github.com/terraform-providers/terraform-provider-aws/issues/2399
+	_, arnErr := arn.Parse(d.Get("replicate_source_db").(string))
+	if arnErr != nil {
+		d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
+	}
 
 	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
 
