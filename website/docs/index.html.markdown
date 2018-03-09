@@ -234,6 +234,13 @@ The following arguments are supported in the `provider` block:
   virtual hosted bucket addressing, `http://BUCKET.s3.amazonaws.com/KEY`,
   when possible. Specific to the Amazon S3 service.
 
+* `force_china_cloud` - (Optional) Set this to `true` to force the
+  ChinaCloud provider behavior. Setting this to `true` allows Terraform to
+  control a custom AWS-like cloud that has features similar to China Region
+* `force_gov_cloud` - (Optional) Set this to `true` to force the
+  GovCloud provider behavior. Setting this to `true` allows Terraform to
+  control a custom AWS-like cloud that has features similar to GovCloud.
+
 The nested `assume_role` block supports the following:
 
 * `role_arn` - (Required) The ARN of the role to assume.
