@@ -20,7 +20,7 @@ func resourceAwsVpc() *schema.Resource {
 		Update: resourceAwsVpcUpdate,
 		Delete: resourceAwsVpcDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceAwsVpcInstanceImport,
 		},
 		CustomizeDiff: resourceAwsVpcCustomizeDiff,
 
@@ -69,13 +69,7 @@ func resourceAwsVpc() *schema.Resource {
 			"assign_generated_ipv6_cidr_block": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if !d.IsNewResource() && old == "false" {
-						return true
-					}
-					return false
-				},
+				Default:  false,
 			},
 
 			"main_route_table_id": {
@@ -185,10 +179,6 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Tags
 	d.Set("tags", tagsToMap(vpc.Tags))
-
-	if len(vpc.Ipv6CidrBlockAssociationSet) == 0 {
-		d.Set("assign_generated_ipv6_cidr_block", false)
-	}
 
 	for _, a := range vpc.Ipv6CidrBlockAssociationSet {
 		if *a.Ipv6CidrBlockState.State == "associated" { //we can only ever have 1 IPv6 block associated at once
@@ -399,31 +389,65 @@ func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("assign_generated_ipv6_cidr_block") && !d.IsNewResource() {
-		//we know that the change is only going to be to disable IPv6 as we suppress the func for enabling
-		modifyOpts := &ec2.DisassociateVpcCidrBlockInput{
-			AssociationId: aws.String(d.Get("ipv6_association_id").(string)),
-		}
-		log.Printf("[INFO] Disabling assign_generated_ipv6_cidr_block vpc attribute for %s: %#v",
-			d.Id(), modifyOpts)
-		if _, err := conn.DisassociateVpcCidrBlock(modifyOpts); err != nil {
-			return err
+		toAssign := d.Get("assign_generated_ipv6_cidr_block").(bool)
+
+		log.Printf("[INFO] Modifying assign_generated_ipv6_cidr_block to %#v", toAssign)
+
+		if toAssign {
+			modifyOpts := &ec2.AssociateVpcCidrBlockInput{
+				VpcId: &vpcid,
+				AmazonProvidedIpv6CidrBlock: aws.Bool(toAssign),
+			}
+			log.Printf("[INFO] Enabling assign_generated_ipv6_cidr_block vpc attribute for %s: %#v",
+				d.Id(), modifyOpts)
+			resp, err := conn.AssociateVpcCidrBlock(modifyOpts)
+			if err != nil {
+				return err
+			}
+
+			// Wait for the CIDR to become available
+			log.Printf(
+				"[DEBUG] Waiting for IPv6 CIDR (%s) to become associated",
+				d.Id())
+			stateConf := &resource.StateChangeConf{
+				Pending: []string{"associating", "disassociated"},
+				Target:  []string{"associated"},
+				Refresh: Ipv6CidrStateRefreshFunc(conn, d.Id(), *resp.Ipv6CidrBlockAssociation.AssociationId),
+				Timeout: 1 * time.Minute,
+			}
+			if _, err := stateConf.WaitForState(); err != nil {
+				return fmt.Errorf(
+					"Error waiting for IPv6 CIDR (%s) to become associated: %s",
+					d.Id(), err)
+			}
+		} else {
+			modifyOpts := &ec2.DisassociateVpcCidrBlockInput{
+				AssociationId: aws.String(d.Get("ipv6_association_id").(string)),
+			}
+			log.Printf("[INFO] Disabling assign_generated_ipv6_cidr_block vpc attribute for %s: %#v",
+				d.Id(), modifyOpts)
+			if _, err := conn.DisassociateVpcCidrBlock(modifyOpts); err != nil {
+				return err
+			}
+
+			// Wait for the CIDR to become available
+			log.Printf(
+				"[DEBUG] Waiting for IPv6 CIDR (%s) to become disassociated",
+				d.Id())
+			stateConf := &resource.StateChangeConf{
+				Pending: []string{"disassociating", "associated"},
+				Target:  []string{"disassociated"},
+				Refresh: Ipv6CidrStateRefreshFunc(conn, d.Id(), d.Get("ipv6_association_id").(string)),
+				Timeout: 1 * time.Minute,
+			}
+			if _, err := stateConf.WaitForState(); err != nil {
+				return fmt.Errorf(
+					"Error waiting for IPv6 CIDR (%s) to become disassociated: %s",
+					d.Id(), err)
+			}
 		}
 
-		// Wait for the CIDR to become available
-		log.Printf(
-			"[DEBUG] Waiting for IPv6 CIDR (%s) to become disassociated",
-			d.Id())
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{"disassociating", "associated"},
-			Target:  []string{"disassociated"},
-			Refresh: Ipv6CidrStateRefreshFunc(conn, d.Id(), d.Get("ipv6_association_id").(string)),
-			Timeout: 1 * time.Minute,
-		}
-		if _, err := stateConf.WaitForState(); err != nil {
-			return fmt.Errorf(
-				"Error waiting for IPv6 CIDR (%s) to become disassociated: %s",
-				d.Id(), err)
-		}
+		d.SetPartial("assign_generated_ipv6_cidr_block")
 	}
 
 	if d.HasChange("instance_tenancy") && !d.IsNewResource() {
@@ -630,6 +654,12 @@ func resourceAwsVpcSetDefaultRouteTable(conn *ec2.EC2, d *schema.ResourceData) e
 	d.Set("default_route_table_id", resp.RouteTables[0].RouteTableId)
 
 	return nil
+}
+
+func resourceAwsVpcInstanceImport(
+	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	d.Set("assign_generated_ipv6_cidr_block", false)
+	return []*schema.ResourceData{d}, nil
 }
 
 func awsVpcDescribeVpcAttribute(attribute string, vpcId string, conn *ec2.EC2) (*ec2.DescribeVpcAttributeOutput, error) {
