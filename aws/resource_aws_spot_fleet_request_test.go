@@ -424,13 +424,6 @@ func TestAccAWSSpotFleetRequest_placementTenancy(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_CannotUseEmptyKeyName(t *testing.T) {
-	_, errs := validateSpotFleetRequestKeyName("", "key_name")
-	if len(errs) == 0 {
-		t.Fatal("Expected the key name to trigger a validation error")
-	}
-}
-
 func testAccCheckAWSSpotFleetRequestConfigRecreated(t *testing.T,
 	before, after *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -1706,7 +1699,7 @@ resource "aws_spot_fleet_request" "foo" {
 	    volume_type = "gp2"
 	    volume_size = "8"
         }
-	
+
 	ebs_block_device {
             device_name = "/dev/xvdcz"
 	    volume_type = "gp2"
