@@ -72,6 +72,7 @@ func TestAccAWSEIP_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
 					testAccCheckAWSEIPAttributes(&conf),
+					resource.TestCheckResourceAttrSet("aws_eip.bar", "public_dns"),
 				),
 			},
 		},

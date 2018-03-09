@@ -64,6 +64,11 @@ func resourceAwsEip() *schema.Resource {
 				Computed: true,
 			},
 
+			"public_dns": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"private_ip": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
@@ -199,6 +204,7 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("private_ip", address.PrivateIpAddress)
 	d.Set("public_ip", address.PublicIp)
+	d.Set("public_dns", reverseLookup(*address.PublicIp))
 
 	// On import (domain never set, which it must've been if we created),
 	// set the 'vpc' attribute depending on if we're in a VPC.

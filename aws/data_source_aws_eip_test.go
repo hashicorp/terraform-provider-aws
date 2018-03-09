@@ -18,6 +18,8 @@ func TestAccDataSourceAwsEip_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsEipCheck("data.aws_eip.by_id"),
 					testAccDataSourceAwsEipCheck("data.aws_eip.by_public_ip"),
+					testAccDataSourceAwsEipCheck("data.aws_eip.by_public_dns"),
+					resource.TestCheckResourceAttrSet("data.aws_eip.by_public_dns", "public_dns"),
 				),
 			},
 		},
@@ -36,22 +38,15 @@ func testAccDataSourceAwsEipCheck(name string) resource.TestCheckFunc {
 			return fmt.Errorf("can't find aws_eip.test in state")
 		}
 
-		attr := rs.Primary.Attributes
-
-		if attr["id"] != eipRs.Primary.Attributes["id"] {
-			return fmt.Errorf(
-				"id is %s; want %s",
-				attr["id"],
-				eipRs.Primary.Attributes["id"],
-			)
-		}
-
-		if attr["public_ip"] != eipRs.Primary.Attributes["public_ip"] {
-			return fmt.Errorf(
-				"public_ip is %s; want %s",
-				attr["public_ip"],
-				eipRs.Primary.Attributes["public_ip"],
-			)
+		for _, attr := range []string{"id", "public_ip", "public_dns"} {
+			if rs.Primary.Attributes[attr] != eipRs.Primary.Attributes[attr] {
+				return fmt.Errorf(
+					"%s is %s; want %s",
+					attr,
+					rs.Primary.Attributes[attr],
+					eipRs.Primary.Attributes[attr],
+				)
+			}
 		}
 
 		return nil
@@ -63,9 +58,7 @@ provider "aws" {
   region = "us-west-2"
 }
 
-resource "aws_eip" "wrong1" {}
 resource "aws_eip" "test" {}
-resource "aws_eip" "wrong2" {}
 
 data "aws_eip" "by_id" {
   id = "${aws_eip.test.id}"
@@ -73,5 +66,9 @@ data "aws_eip" "by_id" {
 
 data "aws_eip" "by_public_ip" {
   public_ip = "${aws_eip.test.public_ip}"
+}
+
+data "aws_eip" "by_public_dns" {
+	public_dns = "${aws_eip.test.public_dns}"
 }
 `
