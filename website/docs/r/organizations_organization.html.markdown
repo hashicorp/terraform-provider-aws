@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_organizations_organization
+page_title: "AWS: aws_organizations_organization"
 sidebar_current: "docs-aws-resource-organizations-organization|"
 description: |-
   Provides a resource to create an organization.
