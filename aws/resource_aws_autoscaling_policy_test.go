@@ -25,7 +25,7 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAutoscalingPolicyConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_simple", &policy),
@@ -58,7 +58,7 @@ func TestAccAWSAutoscalingPolicy_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAutoscalingPolicyConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_simple", &policy),
@@ -118,7 +118,7 @@ func TestAccAWSAutoscalingPolicy_upgrade(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAutoscalingPolicyConfig_upgrade_614(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_simple", &policy),
@@ -128,7 +128,7 @@ func TestAccAWSAutoscalingPolicy_upgrade(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccAWSAutoscalingPolicyConfig_upgrade_615(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_simple", &policy),
@@ -150,7 +150,7 @@ func TestAccAWSAutoscalingPolicy_TargetTrack_Predefined(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAwsAutoscalingPolicyConfig_TargetTracking_Predefined(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.test", &policy),
@@ -170,7 +170,7 @@ func TestAccAWSAutoscalingPolicy_TargetTrack_Custom(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAwsAutoscalingPolicyConfig_TargetTracking_Custom(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.test", &policy),
@@ -189,7 +189,7 @@ func TestAccAWSAutoscalingPolicy_zerovalue(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAutoscalingPolicyConfig_zerovalue(acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_simple", &simplepolicy),
@@ -391,7 +391,7 @@ func TestAccAWSAutoscalingPolicy_SimpleScalingStepAdjustment(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAutoscalingPolicyConfig_SimpleScalingStepAdjustment(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_simple", &policy),

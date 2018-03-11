@@ -21,73 +21,73 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 		Delete: resourceAwsAutoscalingPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"adjustment_type": &schema.Schema{
+			"adjustment_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"autoscaling_group_name": &schema.Schema{
+			"autoscaling_group_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"policy_type": &schema.Schema{
+			"policy_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "SimpleScaling", // preserve AWS's default to make validation easier.
 			},
-			"cooldown": &schema.Schema{
+			"cooldown": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"estimated_instance_warmup": &schema.Schema{
+			"estimated_instance_warmup": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"metric_aggregation_type": &schema.Schema{
+			"metric_aggregation_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"min_adjustment_magnitude": &schema.Schema{
+			"min_adjustment_magnitude": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"min_adjustment_step": &schema.Schema{
+			"min_adjustment_step": {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Deprecated:    "Use min_adjustment_magnitude instead, otherwise you may see a perpetual diff on this resource.",
 				ConflictsWith: []string{"min_adjustment_magnitude"},
 			},
-			"scaling_adjustment": &schema.Schema{
+			"scaling_adjustment": {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ConflictsWith: []string{"step_adjustment"},
 			},
-			"step_adjustment": &schema.Schema{
+			"step_adjustment": {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ConflictsWith: []string{"scaling_adjustment"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"metric_interval_lower_bound": &schema.Schema{
+						"metric_interval_lower_bound": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"metric_interval_upper_bound": &schema.Schema{
+						"metric_interval_upper_bound": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"scaling_adjustment": &schema.Schema{
+						"scaling_adjustment": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -95,77 +95,77 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 				},
 				Set: resourceAwsAutoscalingScalingAdjustmentHash,
 			},
-			"target_tracking_configuration": &schema.Schema{
+			"target_tracking_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"predefined_metric_specification": &schema.Schema{
+						"predefined_metric_specification": {
 							Type:          schema.TypeList,
 							Optional:      true,
 							MaxItems:      1,
 							ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"predefined_metric_type": &schema.Schema{
+									"predefined_metric_type": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"resource_label": &schema.Schema{
+									"resource_label": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
 								},
 							},
 						},
-						"customized_metric_specification": &schema.Schema{
+						"customized_metric_specification": {
 							Type:          schema.TypeList,
 							Optional:      true,
 							MaxItems:      1,
 							ConflictsWith: []string{"target_tracking_configuration.0.predefined_metric_specification"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"metric_dimension": &schema.Schema{
+									"metric_dimension": {
 										Type:     schema.TypeList,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"name": &schema.Schema{
+												"name": {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												"value": &schema.Schema{
+												"value": {
 													Type:     schema.TypeString,
 													Required: true,
 												},
 											},
 										},
 									},
-									"metric_name": &schema.Schema{
+									"metric_name": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"namespace": &schema.Schema{
+									"namespace": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"statistic": &schema.Schema{
+									"statistic": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"unit": &schema.Schema{
+									"unit": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
 								},
 							},
 						},
-						"target_value": &schema.Schema{
+						"target_value": {
 							Type:     schema.TypeFloat,
 							Required: true,
 						},
-						"disable_scale_in": &schema.Schema{
+						"disable_scale_in": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
