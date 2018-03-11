@@ -43,6 +43,11 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "SimpleScaling", // preserve AWS's default to make validation easier.
+				ValidateFunc: validation.StringInSlice([]string{
+					"SimpleScaling",
+					"StepScaling",
+					"TargetTrackingScaling",
+				}, false),
 			},
 			"cooldown": {
 				Type:     schema.TypeInt,
@@ -281,32 +286,54 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 		PolicyName:           aws.String(d.Get("name").(string)),
 	}
 
-	if v, ok := d.GetOk("adjustment_type"); ok {
+	// get policy_type first as parameter support depends on policy type
+	policyType := d.Get("policy_type")
+	params.PolicyType = aws.String(policyType.(string))
+
+	// This parameter is supported if the policy type is SimpleScaling or StepScaling.
+	if v, ok := d.GetOk("adjustment_type"); ok && (policyType == "SimpleScaling" || policyType == "StepScaling") {
 		params.AdjustmentType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOkExists("cooldown"); ok {
+	// This parameter is supported if the policy type is SimpleScaling.
+	if v, ok := d.GetOkExists("cooldown"); ok && policyType == "SimpleScaling" {
 		params.Cooldown = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOkExists("estimated_instance_warmup"); ok {
+	// This parameter is supported if the policy type is StepScaling or TargetTrackingScaling.
+	if v, ok := d.GetOkExists("estimated_instance_warmup"); ok && (policyType == "StepScaling" || policyType == "TargetTrackingScaling") {
 		params.EstimatedInstanceWarmup = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("metric_aggregation_type"); ok {
+	// This parameter is supported if the policy type is StepScaling.
+	if v, ok := d.GetOk("metric_aggregation_type"); ok && policyType == "StepScaling" {
 		params.MetricAggregationType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("policy_type"); ok {
-		params.PolicyType = aws.String(v.(string))
+	// MinAdjustmentMagnitude is supported if the policy type is SimpleScaling or StepScaling.
+	// MinAdjustmentStep is available for backward compatibility. Use MinAdjustmentMagnitude instead.
+	if v, ok := d.GetOkExists("min_adjustment_magnitude"); ok && v.(int) != 0 && (policyType == "SimpleScaling" || policyType == "StepScaling") {
+		params.MinAdjustmentMagnitude = aws.Int64(int64(v.(int)))
+	} else if v, ok := d.GetOkExists("min_adjustment_step"); ok && v.(int) != 0 && (policyType == "SimpleScaling" || policyType == "StepScaling") {
+		params.MinAdjustmentStep = aws.Int64(int64(v.(int)))
 	}
 
+	// This parameter is required if the policy type is SimpleScaling and not supported otherwise.
 	//if policy_type=="SimpleScaling" then scaling_adjustment is required and 0 is allowed
-	if v, ok := d.GetOkExists("scaling_adjustment"); ok || *params.PolicyType == "SimpleScaling" {
+	if policyType == "SimpleScaling" {
+		v, ok := d.GetOkExists("scaling_adjustment")
+		if !ok {
+			return params, fmt.Errorf("scaling_adjustment is required for policy type SimpleScaling")
+		}
 		params.ScalingAdjustment = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("step_adjustment"); ok {
+	// This parameter is required if the policy type is StepScaling and not supported otherwise.
+	if policyType == "StepScaling" {
+		v, ok := d.GetOk("step_adjustment")
+		if !ok {
+			return params, fmt.Errorf("step_adjustment is required for policy type StepScaling")
+		}
 		steps, err := expandStepAdjustments(v.(*schema.Set).List())
 		if err != nil {
 			return params, fmt.Errorf("metric_interval_lower_bound and metric_interval_upper_bound must be strings!")
@@ -314,62 +341,13 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 		params.StepAdjustments = steps
 	}
 
-	if v, ok := d.GetOkExists("min_adjustment_magnitude"); ok {
-		// params.MinAdjustmentMagnitude = aws.Int64(int64(d.Get("min_adjustment_magnitude").(int)))
-		params.MinAdjustmentMagnitude = aws.Int64(int64(v.(int)))
-	} else if v, ok := d.GetOkExists("min_adjustment_step"); ok {
-		// params.MinAdjustmentStep = aws.Int64(int64(d.Get("min_adjustment_step").(int)))
-		params.MinAdjustmentStep = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("target_tracking_configuration"); ok {
+	// This parameter is required if the policy type is TargetTrackingScaling and not supported otherwise.
+	if policyType == "TargetTrackingScaling" {
+		v, ok := d.GetOk("target_tracking_configuration")
+		if !ok {
+			return params, fmt.Errorf("target_tracking_configuration is required for policy type TargetTrackingScaling")
+		}
 		params.TargetTrackingConfiguration = expandTargetTrackingConfiguration(v.([]interface{}))
-	}
-
-	// Validate our final input to confirm it won't error when sent to AWS.
-	// First, SimpleScaling policy types...
-	if *params.PolicyType == "SimpleScaling" && params.StepAdjustments != nil {
-		return params, fmt.Errorf("SimpleScaling policy types cannot use step_adjustments!")
-	}
-	if *params.PolicyType == "SimpleScaling" && params.MetricAggregationType != nil {
-		return params, fmt.Errorf("SimpleScaling policy types cannot use metric_aggregation_type!")
-	}
-	if *params.PolicyType == "SimpleScaling" && params.EstimatedInstanceWarmup != nil {
-		return params, fmt.Errorf("SimpleScaling policy types cannot use estimated_instance_warmup!")
-	}
-	if *params.PolicyType == "SimpleScaling" && params.TargetTrackingConfiguration != nil {
-		return params, fmt.Errorf("SimpleScaling policy types cannot use target_tracking_configuration!")
-	}
-
-	// Second, StepScaling policy types...
-	if *params.PolicyType == "StepScaling" && params.ScalingAdjustment != nil {
-		return params, fmt.Errorf("StepScaling policy types cannot use scaling_adjustment!")
-	}
-	if *params.PolicyType == "StepScaling" && params.Cooldown != nil {
-		return params, fmt.Errorf("StepScaling policy types cannot use cooldown!")
-	}
-	if *params.PolicyType == "StepScaling" && params.TargetTrackingConfiguration != nil {
-		return params, fmt.Errorf("StepScaling policy types cannot use target_tracking_configuration!")
-	}
-
-	// Third, TargetTrackingScaling policy types...
-	if *params.PolicyType == "TargetTrackingScaling" && params.AdjustmentType != nil {
-		return params, fmt.Errorf("TargetTrackingScaling policy types cannot use adjustment_type!")
-	}
-	if *params.PolicyType == "TargetTrackingScaling" && params.Cooldown != nil {
-		return params, fmt.Errorf("TargetTrackingScaling policy types cannot use cooldown!")
-	}
-	if *params.PolicyType == "TargetTrackingScaling" && params.MetricAggregationType != nil {
-		return params, fmt.Errorf("TargetTrackingScaling policy types cannot use metric_aggregation_type!")
-	}
-	if *params.PolicyType == "TargetTrackingScaling" && params.MinAdjustmentMagnitude != nil {
-		return params, fmt.Errorf("TargetTrackingScaling policy types cannot use min_adjustment_magnitude!")
-	}
-	if *params.PolicyType == "TargetTrackingScaling" && params.ScalingAdjustment != nil {
-		return params, fmt.Errorf("TargetTrackingScaling policy types cannot use scaling_adjustment!")
-	}
-	if *params.PolicyType == "TargetTrackingScaling" && params.StepAdjustments != nil {
-		return params, fmt.Errorf("TargetTrackingScaling policy types cannot use step_adjustments!")
 	}
 
 	return params, nil

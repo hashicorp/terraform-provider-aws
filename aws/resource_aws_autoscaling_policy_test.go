@@ -42,16 +42,19 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "metric_aggregation_type", "Minimum"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "estimated_instance_warmup", "200"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "autoscaling_group_name", name),
-					testAccCheckScalingPolicyExists("aws_autoscaling_policy.ecs_general_purpose_scale_out", &policy),
-					resource.TestCheckResourceAttr("aws_autoscaling_policy.ecs_general_purpose_scale_out", "name", "memory-reservation-high"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "step_adjustment.2042107634.scaling_adjustment", "1"),
 				),
 			},
 			{
 				Config: testAccAWSAutoscalingPolicyConfig_basicUpdate(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists("aws_autoscaling_policy.ecs_general_purpose_scale_out", &policy),
-					resource.TestCheckResourceAttr("aws_autoscaling_policy.ecs_general_purpose_scale_out", "name", "memory-reservation-high"),
-					resource.TestCheckResourceAttr("aws_autoscaling_policy.ecs_general_purpose_scale_out", "step_adjustment.#", "1"),
+					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_simple", &policy),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_simple", "policy_type", "SimpleScaling"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_simple", "cooldown", "30"),
+					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_step", &policy),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "policy_type", "StepScaling"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "estimated_instance_warmup", "20"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "step_adjustment.997979330.scaling_adjustment", "10"),
 				),
 			},
 		},
@@ -302,18 +305,18 @@ data "aws_ami" "amzn" {
 data "aws_availability_zones" "available" {}
 
 resource "aws_launch_configuration" "test" {
-	name = "%s"
-	image_id = "${data.aws_ami.amzn.id}"
-	instance_type = "t2.micro"
+  name          = "%s"
+  image_id      = "${data.aws_ami.amzn.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "test" {
-	availability_zones = ["${data.aws_availability_zones.available.names}"]
-	name = "%s"
-	max_size = 0
-	min_size = 0
-	force_delete = true
-	launch_configuration = "${aws_launch_configuration.test.name}"
+  availability_zones   = ["${data.aws_availability_zones.available.names}"]
+  name                 = "%s"
+  max_size             = 0
+  min_size             = 0
+  force_delete         = true
+  launch_configuration = "${aws_launch_configuration.test.name}"
 }
 `, name, name)
 }
@@ -321,42 +324,27 @@ resource "aws_autoscaling_group" "test" {
 func testAccAWSAutoscalingPolicyConfig_basic(name string) string {
 	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
 resource "aws_autoscaling_policy" "foobar_simple" {
-	name = "%s-foobar_simple"
-	adjustment_type = "ChangeInCapacity"
-	cooldown = 300
-	policy_type = "SimpleScaling"
-	scaling_adjustment = 2
-	autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+  name                   = "%s-foobar_simple"
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = 300
+  policy_type            = "SimpleScaling"
+  scaling_adjustment     = 2
+  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
 }
 
 resource "aws_autoscaling_policy" "foobar_step" {
-    name = "%s-foobar_step"
-	adjustment_type = "ChangeInCapacity"
-	policy_type = "StepScaling"
-	estimated_instance_warmup = 200
-	metric_aggregation_type = "Minimum"
-	step_adjustment {
-		scaling_adjustment = 1
-		metric_interval_lower_bound = 2.0
-	}
-	autoscaling_group_name = "${aws_autoscaling_group.test.name}"
-}
-
-resource "aws_autoscaling_policy" "ecs_general_purpose_scale_out" {
-  name = "memory-reservation-high"
-
-  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
-  estimated_instance_warmup = 60
-
-  adjustment_type = "PercentChangeInCapacity"
-  policy_type     = "StepScaling"
-
-  metric_aggregation_type = "Maximum"
+  name                      = "%s-foobar_step"
+  adjustment_type           = "ChangeInCapacity"
+  policy_type               = "StepScaling"
+  estimated_instance_warmup = 200
+  metric_aggregation_type   = "Minimum"
 
   step_adjustment {
-    scaling_adjustment          = 100
-    metric_interval_lower_bound = 0
+    scaling_adjustment          = 1
+    metric_interval_lower_bound = 2.0
   }
+
+  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
 }
 `, name, name)
 }
@@ -364,42 +352,27 @@ resource "aws_autoscaling_policy" "ecs_general_purpose_scale_out" {
 func testAccAWSAutoscalingPolicyConfig_basicUpdate(name string) string {
 	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
 resource "aws_autoscaling_policy" "foobar_simple" {
-	name = "%s-foobar_simple"
-	adjustment_type = "ChangeInCapacity"
-	cooldown = 300
-	policy_type = "SimpleScaling"
-	scaling_adjustment = 2
-	autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+  name                   = "%s-foobar_simple"
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = 30
+  policy_type            = "SimpleScaling"
+  scaling_adjustment     = 2
+  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
 }
 
 resource "aws_autoscaling_policy" "foobar_step" {
-    name = "%s-foobar_step"
-	adjustment_type = "ChangeInCapacity"
-	policy_type = "StepScaling"
-	estimated_instance_warmup = 200
-	metric_aggregation_type = "Minimum"
-	step_adjustment {
-		scaling_adjustment = 1
-		metric_interval_lower_bound = 2.0
-	}
-	autoscaling_group_name = "${aws_autoscaling_group.test.name}"
-}
-
-resource "aws_autoscaling_policy" "ecs_general_purpose_scale_out" {
-  name = "memory-reservation-high"
-
-  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
-  estimated_instance_warmup = 60
-
-  adjustment_type = "PercentChangeInCapacity"
-  policy_type     = "StepScaling"
-
-  metric_aggregation_type = "Maximum"
+  name                      = "%s-foobar_step"
+  adjustment_type           = "ChangeInCapacity"
+  policy_type               = "StepScaling"
+  estimated_instance_warmup = 20
+  metric_aggregation_type   = "Minimum"
 
   step_adjustment {
     scaling_adjustment          = 10
-    metric_interval_lower_bound = 0
+    metric_interval_lower_bound = 2.0
   }
+
+  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
 }
 `, name, name)
 }
@@ -435,12 +408,12 @@ resource "aws_autoscaling_policy" "foobar_simple" {
 func testAccAWSAutoscalingPolicyConfig_SimpleScalingStepAdjustment(name string) string {
 	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
 resource "aws_autoscaling_policy" "foobar_simple" {
-  name                     = "%s-foobar_simple"
-  adjustment_type          = "ExactCapacity"
-  cooldown                 = 300
-  policy_type              = "SimpleScaling"
-  scaling_adjustment       = 0
-  autoscaling_group_name   = "${aws_autoscaling_group.test.name}"
+  name                   = "%s-foobar_simple"
+  adjustment_type        = "ExactCapacity"
+  cooldown               = 300
+  policy_type            = "SimpleScaling"
+  scaling_adjustment     = 0
+  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
 }
 `, name)
 }
@@ -448,14 +421,15 @@ resource "aws_autoscaling_policy" "foobar_simple" {
 func testAccAwsAutoscalingPolicyConfig_TargetTracking_Predefined(name string) string {
 	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
-  name                     = "%s-test"
-  policy_type              = "TargetTrackingScaling"
-  autoscaling_group_name   = "${aws_autoscaling_group.test.name}"
+  name                   = "%s-test"
+  policy_type            = "TargetTrackingScaling"
+  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
 
   target_tracking_configuration {
     predefined_metric_specification {
       predefined_metric_type = "ASGAverageCPUUtilization"
     }
+
     target_value = 40.0
   }
 }
@@ -465,20 +439,22 @@ resource "aws_autoscaling_policy" "test" {
 func testAccAwsAutoscalingPolicyConfig_TargetTracking_Custom(name string) string {
 	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
-  name                     = "%s-test"
-  policy_type              = "TargetTrackingScaling"
-  autoscaling_group_name   = "${aws_autoscaling_group.test.name}"
+  name                   = "%s-test"
+  policy_type            = "TargetTrackingScaling"
+  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
 
   target_tracking_configuration {
     customized_metric_specification {
       metric_dimension {
-        name = "fuga"
+        name  = "fuga"
         value = "fuga"
       }
+
       metric_name = "hoge"
-      namespace = "hoge"
-      statistic = "Average"
+      namespace   = "hoge"
+      statistic   = "Average"
     }
+
     target_value = 40.0
   }
 }
@@ -488,26 +464,28 @@ resource "aws_autoscaling_policy" "test" {
 func testAccAWSAutoscalingPolicyConfig_zerovalue(name string) string {
 	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
 resource "aws_autoscaling_policy" "foobar_simple" {
-  name                     = "%s-foobar_simple"
-  adjustment_type          = "ExactCapacity"
-  cooldown                 = 0
-  policy_type              = "SimpleScaling"
-  scaling_adjustment       = 0
-  autoscaling_group_name   = "${aws_autoscaling_group.test.name}"
+  name                   = "%s-foobar_simple"
+  adjustment_type        = "ExactCapacity"
+  cooldown               = 0
+  policy_type            = "SimpleScaling"
+  scaling_adjustment     = 0
+  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
 }
 
 resource "aws_autoscaling_policy" "foobar_step" {
-  name = "%s-foobar_step"
-  adjustment_type = "PercentChangeInCapacity"
-  policy_type = "StepScaling"
+  name                      = "%s-foobar_step"
+  adjustment_type           = "PercentChangeInCapacity"
+  policy_type               = "StepScaling"
   estimated_instance_warmup = 0
-	metric_aggregation_type = "Minimum"
-	step_adjustment {
-    scaling_adjustment = 1
+  metric_aggregation_type   = "Minimum"
+
+  step_adjustment {
+    scaling_adjustment          = 1
     metric_interval_lower_bound = 2.0
-	}
+  }
+
   min_adjustment_magnitude = 1
-	autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+  autoscaling_group_name   = "${aws_autoscaling_group.test.name}"
 }
 `, name, name)
 }
