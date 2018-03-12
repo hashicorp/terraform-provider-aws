@@ -912,35 +912,6 @@ func TestValidateSQSFifoQueueName(t *testing.T) {
 	}
 }
 
-func TestValidateSNSSubscriptionProtocol(t *testing.T) {
-	validProtocols := []string{
-		"lambda",
-		"sqs",
-		"sqs",
-		"application",
-		"http",
-		"https",
-		"sms",
-	}
-	for _, v := range validProtocols {
-		if _, errors := validateSNSSubscriptionProtocol(v, "protocol"); len(errors) > 0 {
-			t.Fatalf("%q should be a valid SNS Subscription protocol: %v", v, errors)
-		}
-	}
-
-	invalidProtocols := []string{
-		"Email",
-		"email",
-		"Email-JSON",
-		"email-json",
-	}
-	for _, v := range invalidProtocols {
-		if _, errors := validateSNSSubscriptionProtocol(v, "protocol"); len(errors) == 0 {
-			t.Fatalf("%q should be an invalid SNS Subscription protocol: %v", v, errors)
-		}
-	}
-}
-
 func TestValidateSecurityRuleType(t *testing.T) {
 	validTypes := []string{
 		"ingress",

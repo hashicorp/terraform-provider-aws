@@ -691,20 +691,6 @@ func validateSQSFifoQueueName(v interface{}, k string) (errors []error) {
 	return
 }
 
-func validateSNSSubscriptionProtocol(v interface{}, k string) (ws []string, errors []error) {
-	value := strings.ToLower(v.(string))
-	forbidden := []string{"email"}
-	for _, f := range forbidden {
-		if strings.Contains(value, f) {
-			errors = append(
-				errors,
-				fmt.Errorf("Unsupported protocol (%s) for SNS Topic", value),
-			)
-		}
-	}
-	return
-}
-
 func validateSecurityRuleType(v interface{}, k string) (ws []string, errors []error) {
 	value := strings.ToLower(v.(string))
 
