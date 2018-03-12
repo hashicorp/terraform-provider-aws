@@ -43,6 +43,15 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "estimated_instance_warmup", "200"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "autoscaling_group_name", name),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "step_adjustment.2042107634.scaling_adjustment", "1"),
+					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_target_tracking", &policy),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "policy_type", "TargetTrackingScaling"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "name", name+"-foobar_target_tracking"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "autoscaling_group_name", name),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "target_tracking_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "target_tracking_configuration.0.customized_metric_specification.#", "0"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "target_tracking_configuration.0.predefined_metric_specification.#", "1"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "target_tracking_configuration.0.predefined_metric_specification.0.predefined_metric_type", "ASGAverageCPUUtilization"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "target_tracking_configuration.0.target_value", "40"),
 				),
 			},
 			{
@@ -55,6 +64,13 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "policy_type", "StepScaling"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "estimated_instance_warmup", "20"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "step_adjustment.997979330.scaling_adjustment", "10"),
+					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_target_tracking", &policy),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "policy_type", "TargetTrackingScaling"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "target_tracking_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "target_tracking_configuration.0.customized_metric_specification.#", "1"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "target_tracking_configuration.0.customized_metric_specification.0.statistic", "Average"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "target_tracking_configuration.0.predefined_metric_specification.#", "0"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "target_tracking_configuration.0.target_value", "70"),
 				),
 			},
 		},
@@ -346,7 +362,21 @@ resource "aws_autoscaling_policy" "foobar_step" {
 
   autoscaling_group_name = "${aws_autoscaling_group.test.name}"
 }
-`, name, name)
+
+resource "aws_autoscaling_policy" "foobar_target_tracking" {
+  name                   = "%s-foobar_target_tracking"
+  policy_type            = "TargetTrackingScaling"
+  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+
+    target_value = 40.0
+  }
+}
+`, name, name, name)
 }
 
 func testAccAWSAutoscalingPolicyConfig_basicUpdate(name string) string {
@@ -374,7 +404,28 @@ resource "aws_autoscaling_policy" "foobar_step" {
 
   autoscaling_group_name = "${aws_autoscaling_group.test.name}"
 }
-`, name, name)
+
+resource "aws_autoscaling_policy" "foobar_target_tracking" {
+  name                   = "%s-foobar_target_tracking"
+  policy_type            = "TargetTrackingScaling"
+  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+
+  target_tracking_configuration {
+    customized_metric_specification {
+      metric_dimension {
+        name  = "fuga"
+        value = "fuga"
+      }
+
+      metric_name = "hoge"
+      namespace   = "hoge"
+      statistic   = "Average"
+    }
+
+    target_value = 70.0
+  }
+}
+`, name, name, name)
 }
 
 func testAccAWSAutoscalingPolicyConfig_upgrade_614(name string) string {
