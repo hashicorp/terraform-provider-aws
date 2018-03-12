@@ -5,6 +5,10 @@ FEATURES:
 * **New Resource:** `aws_wafregional_xss_match_set` [GH-1014]
 * **New Resource:** `aws_kms_grant` [GH-3038]
 
+BUG FIXES:
+
+* resource/aws_vpc_endpoint: Prevent perpertual diff in non-standard partitions [GH-3317]
+
 ## 1.11.0 (March 09, 2018)
 
 FEATURES:
