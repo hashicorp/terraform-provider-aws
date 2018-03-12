@@ -1,4 +1,10 @@
 ## 1.12.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_wafregional_xss_match_set` [GH-1014]
+* **New Resource:** `aws_kms_grant` [GH-3038]
+
 ## 1.11.0 (March 09, 2018)
 
 FEATURES:
