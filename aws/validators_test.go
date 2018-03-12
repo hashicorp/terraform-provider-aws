@@ -1267,45 +1267,6 @@ func TestValidateOnceADayWindowFormat(t *testing.T) {
 	}
 }
 
-func TestValidateRoute53RecordType(t *testing.T) {
-	validTypes := []string{
-		"AAAA",
-		"SOA",
-		"A",
-		"TXT",
-		"CNAME",
-		"MX",
-		"NAPTR",
-		"PTR",
-		"SPF",
-		"SRV",
-		"NS",
-		"CAA",
-	}
-
-	invalidTypes := []string{
-		"a",
-		"alias",
-		"SpF",
-		"Txt",
-		"AaAA",
-	}
-
-	for _, v := range validTypes {
-		_, errors := validateRoute53RecordType(v, "route53_record")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid Route53 record type: %v", v, errors)
-		}
-	}
-
-	for _, v := range invalidTypes {
-		_, errors := validateRoute53RecordType(v, "route53_record")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid Route53 record type", v)
-		}
-	}
-}
-
 func TestValidateEcsPlacementConstraint(t *testing.T) {
 	cases := []struct {
 		constType string

@@ -827,32 +827,6 @@ func validateOnceADayWindowFormat(v interface{}, k string) (ws []string, errors 
 	return
 }
 
-func validateRoute53RecordType(v interface{}, k string) (ws []string, errors []error) {
-	// Valid Record types
-	// SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA, CAA
-	validTypes := map[string]struct{}{
-		"SOA":   {},
-		"A":     {},
-		"TXT":   {},
-		"NS":    {},
-		"CNAME": {},
-		"MX":    {},
-		"NAPTR": {},
-		"PTR":   {},
-		"SRV":   {},
-		"SPF":   {},
-		"AAAA":  {},
-		"CAA":   {},
-	}
-
-	value := v.(string)
-	if _, ok := validTypes[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q must be one of [SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA, CAA]", k))
-	}
-	return
-}
-
 // Validates that ECS Placement Constraints are set correctly
 // Takes type, and expression as strings
 func validateAwsEcsPlacementConstraint(constType, constExpr string) error {
