@@ -7,10 +7,10 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"sort"
 	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/mitchellh/go-homedir"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -34,10 +34,18 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			},
 
 			"acl": {
-				Type:         schema.TypeString,
-				Default:      "private",
-				Optional:     true,
-				ValidateFunc: validateS3BucketObjectAclType,
+				Type:     schema.TypeString,
+				Default:  "private",
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					s3.ObjectCannedACLPrivate,
+					s3.ObjectCannedACLPublicRead,
+					s3.ObjectCannedACLPublicReadWrite,
+					s3.ObjectCannedACLAuthenticatedRead,
+					s3.ObjectCannedACLAwsExecRead,
+					s3.ObjectCannedACLBucketOwnerRead,
+					s3.ObjectCannedACLBucketOwnerFullControl,
+				}, false),
 			},
 
 			"cache_control": {
@@ -85,17 +93,24 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			},
 
 			"storage_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateS3BucketObjectStorageClassType,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					s3.StorageClassStandard,
+					s3.StorageClassReducedRedundancy,
+					s3.StorageClassStandardIa,
+				}, false),
 			},
 
 			"server_side_encryption": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateS3BucketObjectServerSideEncryption,
-				Computed:     true,
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					s3.ServerSideEncryptionAes256,
+					s3.ServerSideEncryptionAwsKms,
+				}, false),
+				Computed: true,
 			},
 
 			"kms_key_id": {
@@ -344,74 +359,4 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	return nil
-}
-
-func validateS3BucketObjectAclType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	cannedAcls := map[string]bool{
-		s3.ObjectCannedACLPrivate:                true,
-		s3.ObjectCannedACLPublicRead:             true,
-		s3.ObjectCannedACLPublicReadWrite:        true,
-		s3.ObjectCannedACLAuthenticatedRead:      true,
-		s3.ObjectCannedACLAwsExecRead:            true,
-		s3.ObjectCannedACLBucketOwnerRead:        true,
-		s3.ObjectCannedACLBucketOwnerFullControl: true,
-	}
-
-	sentenceJoin := func(m map[string]bool) string {
-		keys := make([]string, 0, len(m))
-		for k := range m {
-			keys = append(keys, fmt.Sprintf("%q", k))
-		}
-		sort.Strings(keys)
-
-		length := len(keys)
-		words := make([]string, length)
-		copy(words, keys)
-
-		words[length-1] = fmt.Sprintf("or %s", words[length-1])
-		return strings.Join(words, ", ")
-	}
-
-	if _, ok := cannedAcls[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid canned ACL type %q. Valid types are either %s",
-			k, value, sentenceJoin(cannedAcls)))
-	}
-	return
-}
-
-func validateS3BucketObjectStorageClassType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	storageClass := map[string]bool{
-		s3.StorageClassStandard:          true,
-		s3.StorageClassReducedRedundancy: true,
-		s3.StorageClassStandardIa:        true,
-	}
-
-	if _, ok := storageClass[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid Storage Class type %q. Valid types are either %q, %q, or %q",
-			k, value, s3.StorageClassStandard, s3.StorageClassReducedRedundancy,
-			s3.StorageClassStandardIa))
-	}
-	return
-}
-
-func validateS3BucketObjectServerSideEncryption(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	serverSideEncryption := map[string]bool{
-		s3.ServerSideEncryptionAes256: true,
-		s3.ServerSideEncryptionAwsKms: true,
-	}
-
-	if _, ok := serverSideEncryption[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid Server Side Encryption value %q. Valid values are %q and %q",
-			k, value, s3.ServerSideEncryptionAes256, s3.ServerSideEncryptionAwsKms))
-	}
-	return
 }
