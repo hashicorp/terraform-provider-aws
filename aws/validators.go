@@ -1127,6 +1127,20 @@ func validateAwsKmsName(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
+func validateAwsKmsGrantName(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+
+	if len(value) > 256 {
+		es = append(es, fmt.Errorf("%s can not be greater than 256 characters", k))
+	}
+
+	if !regexp.MustCompile(`^[a-zA-Z0-9:/_-]+$`).MatchString(value) {
+		es = append(es, fmt.Errorf("%s must only contain [a-zA-Z0-9:/_-]", k))
+	}
+
+	return
+}
+
 func validateCognitoIdentityPoolName(v interface{}, k string) (ws []string, errors []error) {
 	val := v.(string)
 	if !regexp.MustCompile("^[\\w _]+$").MatchString(val) {

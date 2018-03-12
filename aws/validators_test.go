@@ -1837,6 +1837,36 @@ func TestValidateAwsKmsName(t *testing.T) {
 	}
 }
 
+func TestValidateAwsKmsGrantName(t *testing.T) {
+	validValues := []string{
+		"123",
+		"Abc",
+		"grant_1",
+		"grant:/-",
+	}
+
+	for _, s := range validValues {
+		_, errors := validateAwsKmsGrantName(s, "name")
+		if len(errors) > 0 {
+			t.Fatalf("%q AWS KMS Grant Name should have been valid: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		strings.Repeat("w", 257),
+		"grant.invalid",
+		";",
+		"white space",
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateAwsKmsGrantName(s, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid AWS KMS Grant Name", s)
+		}
+	}
+}
+
 func TestValidateCognitoIdentityPoolName(t *testing.T) {
 	validValues := []string{
 		"123",
