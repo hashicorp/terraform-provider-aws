@@ -691,22 +691,6 @@ func validateSQSFifoQueueName(v interface{}, k string) (errors []error) {
 	return
 }
 
-func validateSecurityRuleType(v interface{}, k string) (ws []string, errors []error) {
-	value := strings.ToLower(v.(string))
-
-	validTypes := map[string]bool{
-		"ingress": true,
-		"egress":  true,
-	}
-
-	if _, ok := validTypes[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid Security Group Rule type %q. Valid types are either %q or %q.",
-			k, value, "ingress", "egress"))
-	}
-	return
-}
-
 func validateOnceAWeekWindowFormat(v interface{}, k string) (ws []string, errors []error) {
 	// valid time format is "ddd:hh24:mi"
 	validTimeFormat := "(sun|mon|tue|wed|thu|fri|sat):([0-1][0-9]|2[0-3]):([0-5][0-9])"
