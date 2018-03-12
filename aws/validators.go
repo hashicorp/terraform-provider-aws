@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -1685,44 +1684,6 @@ func validateAwsElastiCacheReplicationGroupAuthToken(v interface{}, k string) (w
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters or symbols (excluding @, \", and /) allowed in %q", k))
 	}
-	return
-}
-
-func validateGuardDutyIpsetFormat(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	validType := []string{
-		guardduty.IpSetFormatTxt,
-		guardduty.IpSetFormatStix,
-		guardduty.IpSetFormatOtxCsv,
-		guardduty.IpSetFormatAlienVault,
-		guardduty.IpSetFormatProofPoint,
-		guardduty.IpSetFormatFireEye,
-	}
-	for _, str := range validType {
-		if value == str {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
-	return
-}
-
-func validateGuardDutyThreatIntelSetFormat(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	validType := []string{
-		guardduty.ThreatIntelSetFormatTxt,
-		guardduty.ThreatIntelSetFormatStix,
-		guardduty.ThreatIntelSetFormatOtxCsv,
-		guardduty.ThreatIntelSetFormatAlienVault,
-		guardduty.ThreatIntelSetFormatProofPoint,
-		guardduty.ThreatIntelSetFormatFireEye,
-	}
-	for _, str := range validType {
-		if value == str {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
 	return
 }
 
