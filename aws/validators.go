@@ -581,91 +581,11 @@ func validateS3BucketLifecycleTimestamp(v interface{}, k string) (ws []string, e
 	return
 }
 
-func validateS3BucketLifecycleExpirationDays(v interface{}, k string) (ws []string, errors []error) {
-	if v.(int) <= 0 {
-		errors = append(errors, fmt.Errorf(
-			"%q must be greater than 0", k))
-	}
-
-	return
-}
-
-func validateS3BucketLifecycleTransitionDays(v interface{}, k string) (ws []string, errors []error) {
-	if v.(int) < 0 {
-		errors = append(errors, fmt.Errorf(
-			"%q must be greater than 0", k))
-	}
-
-	return
-}
-
-func validateS3BucketLifecycleStorageClass(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value != s3.TransitionStorageClassStandardIa && value != s3.TransitionStorageClassGlacier {
-		errors = append(errors, fmt.Errorf(
-			"%q must be one of '%q', '%q'", k, s3.TransitionStorageClassStandardIa, s3.TransitionStorageClassGlacier))
-	}
-
-	return
-}
-
-func validateS3BucketReplicationRuleId(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 255 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 255 characters: %q", k, value))
-	}
-
-	return
-}
-
-func validateS3BucketReplicationRulePrefix(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 1024 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 1024 characters: %q", k, value))
-	}
-
-	return
-}
-
-func validateS3BucketServerSideEncryptionAlgorithm(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value != s3.ServerSideEncryptionAes256 && value != s3.ServerSideEncryptionAwsKms {
-		errors = append(errors, fmt.Errorf(
-			"%q must be one of %q or %q", k, s3.ServerSideEncryptionAwsKms, s3.ServerSideEncryptionAes256))
-	}
-
-	return
-}
-
-func validateS3BucketReplicationDestinationStorageClass(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value != s3.StorageClassStandard && value != s3.StorageClassStandardIa && value != s3.StorageClassReducedRedundancy {
-		errors = append(errors, fmt.Errorf(
-			"%q must be one of '%q', '%q' or '%q'", k, s3.StorageClassStandard, s3.StorageClassStandardIa, s3.StorageClassReducedRedundancy))
-	}
-
-	return
-}
-
-func validateS3BucketReplicationRuleStatus(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value != s3.ReplicationRuleStatusEnabled && value != s3.ReplicationRuleStatusDisabled {
-		errors = append(errors, fmt.Errorf(
-			"%q must be one of '%q' or '%q'", k, s3.ReplicationRuleStatusEnabled, s3.ReplicationRuleStatusDisabled))
-	}
-
-	return
-}
-
-func validateS3BucketLifecycleRuleId(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 255 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot exceed 255 characters", k))
-	}
-	return
+func validateS3BucketLifecycleStorageClass() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		s3.TransitionStorageClassStandardIa,
+		s3.TransitionStorageClassGlacier,
+	}, false)
 }
 
 func validateDbEventSubscriptionName(v interface{}, k string) (ws []string, errors []error) {
@@ -771,36 +691,6 @@ func validateSQSFifoQueueName(v interface{}, k string) (errors []error) {
 	return
 }
 
-func validateSNSSubscriptionProtocol(v interface{}, k string) (ws []string, errors []error) {
-	value := strings.ToLower(v.(string))
-	forbidden := []string{"email"}
-	for _, f := range forbidden {
-		if strings.Contains(value, f) {
-			errors = append(
-				errors,
-				fmt.Errorf("Unsupported protocol (%s) for SNS Topic", value),
-			)
-		}
-	}
-	return
-}
-
-func validateSecurityRuleType(v interface{}, k string) (ws []string, errors []error) {
-	value := strings.ToLower(v.(string))
-
-	validTypes := map[string]bool{
-		"ingress": true,
-		"egress":  true,
-	}
-
-	if _, ok := validTypes[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid Security Group Rule type %q. Valid types are either %q or %q.",
-			k, value, "ingress", "egress"))
-	}
-	return
-}
-
 func validateOnceAWeekWindowFormat(v interface{}, k string) (ws []string, errors []error) {
 	// valid time format is "ddd:hh24:mi"
 	validTimeFormat := "(sun|mon|tue|wed|thu|fri|sat):([0-1][0-9]|2[0-3]):([0-5][0-9])"
@@ -823,32 +713,6 @@ func validateOnceADayWindowFormat(v interface{}, k string) (ws []string, errors 
 	if !regexp.MustCompile(validTimeFormatConsolidated).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q must satisfy the format of \"hh24:mi-hh24:mi\".", k))
-	}
-	return
-}
-
-func validateRoute53RecordType(v interface{}, k string) (ws []string, errors []error) {
-	// Valid Record types
-	// SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA, CAA
-	validTypes := map[string]struct{}{
-		"SOA":   {},
-		"A":     {},
-		"TXT":   {},
-		"NS":    {},
-		"CNAME": {},
-		"MX":    {},
-		"NAPTR": {},
-		"PTR":   {},
-		"SRV":   {},
-		"SPF":   {},
-		"AAAA":  {},
-		"CAA":   {},
-	}
-
-	value := v.(string)
-	if _, ok := validTypes[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q must be one of [SOA, A, TXT, NS, CNAME, MX, NAPTR, PTR, SRV, SPF, AAAA, CAA]", k))
 	}
 	return
 }
@@ -950,23 +814,6 @@ func validateAwsEmrCustomAmiId(v interface{}, k string) (ws []string, errors []e
 			"%q must begin with 'ami-' and be comprised of only [a-z0-9]: %v", k, value))
 	}
 
-	return
-}
-
-func validateSfnActivityName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 80 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 80 characters", k))
-	}
-
-	return
-}
-
-func validateSfnStateMachineDefinition(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 1048576 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 1048576 characters", k))
-	}
 	return
 }
 
@@ -1261,6 +1108,20 @@ func validateAwsKmsName(v interface{}, k string) (ws []string, es []error) {
 		es = append(es, fmt.Errorf(
 			"%q must begin with 'alias/' and be comprised of only [a-zA-Z0-9:/_-]", k))
 	}
+	return
+}
+
+func validateAwsKmsGrantName(v interface{}, k string) (ws []string, es []error) {
+	value := v.(string)
+
+	if len(value) > 256 {
+		es = append(es, fmt.Errorf("%s can not be greater than 256 characters", k))
+	}
+
+	if !regexp.MustCompile(`^[a-zA-Z0-9:/_-]+$`).MatchString(value) {
+		es = append(es, fmt.Errorf("%s must only contain [a-zA-Z0-9:/_-]", k))
+	}
+
 	return
 }
 
@@ -1718,55 +1579,6 @@ func validateIoTTopicRuleElasticSearchEndpoint(v interface{}, k string) (ws []st
 			"%q should be an URL: %q",
 			k, value))
 	}
-	return
-}
-
-func validateServiceCatalogPortfolioName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if (len(value) > 20) || (len(value) == 0) {
-		errors = append(errors, fmt.Errorf("Service catalog name must be between 1 and 20 characters."))
-	}
-	return
-}
-
-func validateServiceCatalogPortfolioDescription(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 2000 {
-		errors = append(errors, fmt.Errorf("Service catalog description must be less than 2000 characters."))
-	}
-	return
-}
-
-func validateServiceCatalogPortfolioProviderName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if (len(value) > 20) || (len(value) == 0) {
-		errors = append(errors, fmt.Errorf("Service catalog provider name must be between 1 and 20 characters."))
-	}
-	return
-}
-
-func validateSesTemplateName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if (len(value) > 64) || (len(value) == 0) {
-		errors = append(errors, fmt.Errorf("SES template name must be between 1 and 64 characters."))
-	}
-	return
-}
-
-func validateSesTemplateHtml(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 512000 {
-		errors = append(errors, fmt.Errorf("SES template must be less than 500KB in size, including both the text and HTML parts."))
-	}
-	return
-}
-
-func validateSesTemplateText(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 512000 {
-		errors = append(errors, fmt.Errorf("SES template must be less than 500KB in size, including both the text and HTML parts."))
-	}
-
 	return
 }
 

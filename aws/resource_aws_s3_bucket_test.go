@@ -192,34 +192,6 @@ func TestAccAWSS3Bucket_RequestPayer(t *testing.T) {
 	})
 }
 
-func TestResourceAWSS3BucketRequestPayer_validation(t *testing.T) {
-	_, errors := validateS3BucketRequestPayerType("incorrect", "request_payer")
-	if len(errors) == 0 {
-		t.Fatalf("Expected to trigger a validation error")
-	}
-
-	var testCases = []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "Requester",
-			ErrCount: 0,
-		},
-		{
-			Value:    "BucketOwner",
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range testCases {
-		_, errors := validateS3BucketRequestPayerType(tc.Value, "request_payer")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected not to trigger a validation error")
-		}
-	}
-}
-
 func TestAccAWSS3Bucket_Policy(t *testing.T) {
 	rInt := acctest.RandInt()
 
