@@ -277,13 +277,14 @@ func TestAccAWSDBInstance_replica(t *testing.T) {
 func TestAccAWSDBInstance_noSnapshot(t *testing.T) {
 	var snap rds.DBInstance
 
+	rName := acctest.RandString(5)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBInstanceNoSnapshot,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotInstanceConfig(),
+				Config: testAccSnapshotInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.snapshot", &snap),
 				),
@@ -323,7 +324,7 @@ func TestAccAWSDBInstance_enhancedMonitoring(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceNoSnapshot,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotInstanceConfig_enhancedMonitoring(rName),
+				Config: testAccSnapshotInstanceConfig_enhancedMonitoring(rName, testAccSnapshotInstanceConfig_enhancedMonitoringParams()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.enhanced_monitoring", &dbInstance),
 					resource.TestCheckResourceAttr(
@@ -366,6 +367,38 @@ func TestAccAWSDBInstance_separate_iops_update(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_monitoringUpdate(t *testing.T) {
+	var v rds.DBInstance
+
+	rName := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnapshotInstanceConfig_enhancedMonitoring(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.enhanced_monitoring", &v),
+					resource.TestCheckNoResourceAttr(
+						"aws_db_instance.enhanced_monitoring", "monitoring_role_arn"),
+				),
+			},
+
+			{
+				Config: testAccSnapshotInstanceConfig_enhancedMonitoring(rName, testAccSnapshotInstanceConfig_enhancedMonitoringParams()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.enhanced_monitoring", &v),
+					resource.TestCheckResourceAttrSet(
+						"aws_db_instance.enhanced_monitoring", "monitoring_role_arn"),
+					resource.TestCheckResourceAttrSet(
+						"aws_db_instance.enhanced_monitoring", "monitoring_interval"),
+				),
+			},
+		},
+	})
+}
 func TestAccAWSDBInstance_portUpdate(t *testing.T) {
 	var v rds.DBInstance
 
@@ -937,10 +970,10 @@ func testAccReplicaInstanceConfig(val int) string {
 	`, val, val)
 }
 
-func testAccSnapshotInstanceConfig() string {
+func testAccSnapshotInstanceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "snapshot" {
-	identifier = "tf-test-%d"
+	identifier = "tf-test-%s"
 
 	allocated_storage = 5
 	engine = "mysql"
@@ -957,7 +990,7 @@ resource "aws_db_instance" "snapshot" {
 
 	skip_final_snapshot = true
 	final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-1"
-}`, acctest.RandInt())
+}`, rName)
 }
 
 func testAccSnapshotInstanceConfigWithSnapshot(rInt int) string {
@@ -986,8 +1019,32 @@ resource "aws_db_instance" "snapshot" {
 `, rInt, rInt)
 }
 
-func testAccSnapshotInstanceConfig_enhancedMonitoring(rName string) string {
+func testAccSnapshotInstanceConfig_enhancedMonitoring(rName, enhancedMonitoring string) string {
 	return fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-db-instance-with-subnet-group"
+	}
+}
+
+resource "aws_subnet" "foo" {
+	cidr_block = "10.1.1.0/24"
+	availability_zone = "us-west-2a"
+	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-db-instance-with-subnet-group-1"
+	}
+}
+
+resource "aws_subnet" "bar" {
+	cidr_block = "10.1.2.0/24"
+	availability_zone = "us-west-2b"
+	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-db-instance-with-subnet-group-2"
+	}
+}
 resource "aws_iam_role" "enhanced_policy_role" {
     name = "enhanced-monitoring-role-%s"
     assume_role_policy = <<EOF
@@ -1052,26 +1109,38 @@ resource "aws_iam_policy" "test" {
 POLICY
 }
 
+resource "aws_db_subnet_group" "foo" {
+	name = "foo-%s"
+	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+	tags {
+		Name = "tf-dbsubnet-group-test"
+	}
+}
+
 resource "aws_db_instance" "enhanced_monitoring" {
 	identifier = "foobarbaz-enhanced-monitoring-%s"
 	depends_on = ["aws_iam_policy_attachment.test-attach"]
 
-	allocated_storage = 5
-	engine = "mysql"
-	engine_version = "5.6.35"
-	instance_class = "db.t2.micro"
+	allocated_storage = 20
+	engine = "oracle-ee"
+	engine_version = "12.1.0.2.v8"
+	instance_class = "db.m1.small"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
 	backup_retention_period = 1
-
-	parameter_group_name = "default.mysql5.6"
-
-	monitoring_role_arn = "${aws_iam_role.enhanced_policy_role.arn}"
-	monitoring_interval = "5"
+  db_subnet_group_name = "${aws_db_subnet_group.foo.name}"
+	%s
 
 	skip_final_snapshot = true
-}`, rName, rName, rName, rName)
+}`, rName, rName, rName, rName, rName, enhancedMonitoring)
+}
+
+func testAccSnapshotInstanceConfig_enhancedMonitoringParams() string {
+	return fmt.Sprintf(`
+	monitoring_role_arn = "${aws_iam_role.enhanced_policy_role.arn}"
+	monitoring_interval = "5"
+	`)
 }
 
 func testAccSnapshotInstanceConfig_iopsUpdate(rName string, iops int) string {
