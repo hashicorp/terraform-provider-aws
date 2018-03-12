@@ -833,23 +833,6 @@ func validateAwsEmrCustomAmiId(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-func validateSfnActivityName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 80 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 80 characters", k))
-	}
-
-	return
-}
-
-func validateSfnStateMachineDefinition(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 1048576 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 1048576 characters", k))
-	}
-	return
-}
-
 func validateSfnStateMachineName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 80 {
