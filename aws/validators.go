@@ -1629,31 +1629,6 @@ func validateIoTTopicRuleElasticSearchEndpoint(v interface{}, k string) (ws []st
 	return
 }
 
-func validateSesTemplateName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if (len(value) > 64) || (len(value) == 0) {
-		errors = append(errors, fmt.Errorf("SES template name must be between 1 and 64 characters."))
-	}
-	return
-}
-
-func validateSesTemplateHtml(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 512000 {
-		errors = append(errors, fmt.Errorf("SES template must be less than 500KB in size, including both the text and HTML parts."))
-	}
-	return
-}
-
-func validateSesTemplateText(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 512000 {
-		errors = append(errors, fmt.Errorf("SES template must be less than 500KB in size, including both the text and HTML parts."))
-	}
-
-	return
-}
-
 func validateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(v map[string]interface{}) (errors []error) {
 	t := v["type"].(string)
 	isRequired := t == cognitoidentity.RoleMappingTypeToken || t == cognitoidentity.RoleMappingTypeRules
