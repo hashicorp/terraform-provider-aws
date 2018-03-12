@@ -102,7 +102,7 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `port` - (Optional) The port on which the DB accepts connections
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate
   with the Cluster
-* `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. This correlates to the snapshot ID you'd find in the RDS console, e.g: rds:production-2015-06-26-06-05.
+* `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot.
 * `storage_encrypted` - (Optional) Specifies whether the DB cluster is encrypted. The default is `false` if not specified.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications
      are applied immediately, or during the next maintenance window. Default is
