@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -1685,19 +1684,6 @@ func validateAwsElastiCacheReplicationGroupAuthToken(v interface{}, k string) (w
 	if !regexp.MustCompile(`^[^@"\/]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters or symbols (excluding @, \", and /) allowed in %q", k))
-	}
-	return
-}
-
-func validateGameliftOperatingSystem(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	operatingSystems := map[string]bool{
-		gamelift.OperatingSystemAmazonLinux: true,
-		gamelift.OperatingSystemWindows2012: true,
-	}
-
-	if !operatingSystems[value] {
-		errors = append(errors, fmt.Errorf("%q must be a valid operating system value: %q", k, value))
 	}
 	return
 }
