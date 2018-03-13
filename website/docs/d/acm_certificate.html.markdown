@@ -21,6 +21,12 @@ data "aws_acm_certificate" "example" {
   domain   = "tf.example.com"
   statuses = ["ISSUED"]
 }
+
+data "aws_acm_certificate" "example" {
+  domain   = "tf.example.com"
+  types = ["AMAZON_ISSUED"]
+  most_recent = true
+}
 ```
 
 ## Argument Reference
@@ -29,6 +35,8 @@ data "aws_acm_certificate" "example" {
  * `statuses` - (Optional) A list of statuses on which to filter the returned list. Valid values are `PENDING_VALIDATION`, `ISSUED`,
    `INACTIVE`, `EXPIRED`, `VALIDATION_TIMED_OUT`, `REVOKED` and `FAILED`. If no value is specified, only certificates in the `ISSUED` state
    are returned.
+ * `types` - (Optional) A list of types on which to filter the returned list. Valid values are `AMAZON_ISSUED` and `IMPORTED`.
+ * `most_recent` - (Optional) If set to true, it sorts the certificates matched by previous criteria by the NotBefore field, returning only the most recent one. If set to false, it returns an error if more than one certificate is found. Defaults to false.
 
 ## Attributes Reference
 

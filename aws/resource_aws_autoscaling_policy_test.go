@@ -140,6 +140,70 @@ func TestAccAWSAutoscalingPolicy_upgrade(t *testing.T) {
 	})
 }
 
+func TestAccAWSAutoscalingPolicy_TargetTrack_Predefined(t *testing.T) {
+	var policy autoscaling.ScalingPolicy
+
+	name := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAwsAutoscalingPolicyConfig_TargetTracking_Predefined(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists("aws_autoscaling_policy.test", &policy),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAutoscalingPolicy_TargetTrack_Custom(t *testing.T) {
+	var policy autoscaling.ScalingPolicy
+
+	name := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAwsAutoscalingPolicyConfig_TargetTracking_Custom(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists("aws_autoscaling_policy.test", &policy),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAutoscalingPolicy_zerovalue(t *testing.T) {
+	var simplepolicy autoscaling.ScalingPolicy
+	var steppolicy autoscaling.ScalingPolicy
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSAutoscalingPolicyConfig_zerovalue(acctest.RandString(5)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_simple", &simplepolicy),
+					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_step", &steppolicy),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_simple", "cooldown", "0"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_simple", "scaling_adjustment", "0"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "min_adjustment_magnitude", "1"),
+					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "estimated_instance_warmup", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckScalingPolicyExists(n string, policy *autoscaling.ScalingPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -374,4 +438,160 @@ resource "aws_autoscaling_policy" "foobar_simple" {
   autoscaling_group_name   = "${aws_autoscaling_group.foobar.name}"
 }
 `, name, name, name)
+}
+
+func testAccAwsAutoscalingPolicyConfig_TargetTracking_Predefined(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "test" {}
+
+resource "aws_launch_configuration" "test" {
+  name          = "tf-test-%s"
+  image_id      = "${data.aws_ami.amzn.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones        = ["${data.aws_availability_zones.test.names[0]}"]
+  name                      = "tf-test-%s"
+  max_size                  = 5
+  min_size                  = 0
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = "${aws_launch_configuration.test.name}"
+}
+
+resource "aws_autoscaling_policy" "test" {
+  name                     = "tf-as-%s"
+  policy_type              = "TargetTrackingScaling"
+  autoscaling_group_name   = "${aws_autoscaling_group.test.name}"
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+    target_value = 40.0
+  }
+}
+`, rName, rName, rName)
+}
+
+func testAccAwsAutoscalingPolicyConfig_TargetTracking_Custom(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "test" {}
+
+resource "aws_launch_configuration" "test" {
+  name          = "tf-test-%s"
+  image_id      = "${data.aws_ami.amzn.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones        = ["${data.aws_availability_zones.test.names[0]}"]
+  name                      = "tf-test-%s"
+  max_size                  = 5
+  min_size                  = 0
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = "${aws_launch_configuration.test.name}"
+}
+
+resource "aws_autoscaling_policy" "test" {
+  name                     = "tf-as-%s"
+  policy_type              = "TargetTrackingScaling"
+  autoscaling_group_name   = "${aws_autoscaling_group.test.name}"
+
+  target_tracking_configuration {
+    customized_metric_specification {
+      metric_dimension {
+        name = "fuga"
+        value = "fuga"
+      }
+      metric_name = "hoge"
+      namespace = "hoge"
+      statistic = "Average"
+    }
+    target_value = 40.0
+  }
+}
+`, rName, rName, rName)
+}
+
+func testAccAWSAutoscalingPolicyConfig_zerovalue(name string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn" {
+  most_recent = true
+  owners      = ["amazon"]
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_configuration" "foobar" {
+  name          = "tf-test-%s"
+  image_id      = "${data.aws_ami.amzn.id}"
+  instance_type = "t2.micro"
+}
+
+data "aws_availability_zones" "test" {}
+
+resource "aws_autoscaling_group" "foobar" {
+  availability_zones        = ["${data.aws_availability_zones.test.names[0]}"]
+  name                      = "terraform-test-%s"
+  max_size                  = 5
+  min_size                  = 0
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = "${aws_launch_configuration.foobar.name}"
+}
+
+resource "aws_autoscaling_policy" "foobar_simple" {
+  name                     = "foobar_simple_%s"
+  adjustment_type          = "ExactCapacity"
+  cooldown                 = 0
+  policy_type              = "SimpleScaling"
+  scaling_adjustment       = 0
+  autoscaling_group_name   = "${aws_autoscaling_group.foobar.name}"
+}
+
+resource "aws_autoscaling_policy" "foobar_step" {
+  name = "foobar_step_%s"
+  adjustment_type = "PercentChangeInCapacity"
+  policy_type = "StepScaling"
+  estimated_instance_warmup = 0
+	metric_aggregation_type = "Minimum"
+	step_adjustment {
+    scaling_adjustment = 1
+    metric_interval_lower_bound = 2.0
+	}
+  min_adjustment_magnitude = 1
+	autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
+}
+`, name, name, name, name)
 }

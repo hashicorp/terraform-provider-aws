@@ -15,6 +15,31 @@ Specifically, we have provided checklists below for each type of issue and pull
 request that can happen on the project. These checklists represent everything
 we need to be able to review and respond quickly.
 
+<!-- TOC depthFrom:2 -->
+
+- [HashiCorp vs. Community Providers](#hashicorp-vs-community-providers)
+- [Issues](#issues)
+    - [Issue Reporting Checklists](#issue-reporting-checklists)
+        - [Bug Reports](#bug-reports)
+        - [Feature Requests](#feature-requests)
+        - [Questions](#questions)
+    - [Issue Lifecycle](#issue-lifecycle)
+- [Pull Requests](#pull-requests)
+    - [Pull Request Lifecycle](#pull-request-lifecycle)
+    - [Checklists for Contribution](#checklists-for-contribution)
+        - [Documentation Update](#documentation-update)
+        - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
+        - [New Resource](#new-resource)
+        - [New Provider](#new-provider)
+        - [New Region](#new-region)
+        - [Terraform Schema and Code Idiosyncracies](#terraform-schema-and-code-idiosyncracies)
+    - [Writing Acceptance Tests](#writing-acceptance-tests)
+        - [Acceptance Tests Often Cost Money to Run](#acceptance-tests-often-cost-money-to-run)
+        - [Running an Acceptance Test](#running-an-acceptance-test)
+        - [Writing an Acceptance Test](#writing-an-acceptance-test)
+
+<!-- /TOC -->
+
 ## HashiCorp vs. Community Providers
 
 We separate providers out into what we call "HashiCorp Providers" and
@@ -253,6 +278,19 @@ into Terraform.
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
 
+#### New Region
+
+While region validation is automatically added with SDK updates, new regions
+are generally limited in which services they support. Below are some
+manually sourced values from documentation.
+
+ - [ ] Check [Regions and Endpoints ELB regions](https://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elb_hosted_zone_id.go`
+ - [ ] Check [Regions and Endpoints S3 website endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) and add Route53 Hosted Zone ID if available to `aws/hosted_zones.go`
+ - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
+ - [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to `aws/data_source_aws_elb_service_account.go`
+ - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
+ - [ ] Check [Regions and Endpoints Elastic Beanstalk](https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`]
+
 #### Terraform Schema and Code Idiosyncracies
 
 There are aspects of the terraform code base and models which have a common theme
@@ -267,17 +305,17 @@ and style
  - [ ] __`Computed`__: The `Computed` attribute is generally used in isolation for
    any IDs or anything not defined in the config and returned by the API.
  - [ ] __`Computed` with `Optional`__: The `Computed` attribute is generally used
-   in conjunction with `Optional` when the API automatically sets unpredictable 
-   default value or when the value is generally not static and depends on other 
+   in conjunction with `Optional` when the API automatically sets unpredictable
+   default value or when the value is generally not static and depends on other
    attributes.
- - [ ] __Spelling__: When referencing reosources in the AWS API, use spelling which 
+ - [ ] __Spelling__: When referencing resources in the AWS API, use spelling which
    matches that of official AWS documentation. In all other cases, use American
    spelling for variables, functions, and constants.
  - [ ] __Removed Resources__:  If a resource is removed from AWS outside of
    Terraform (e.g. via different tool, API or web UI), make sure to catch this case.
    Print a `[WARN]` log message, and use `d.SetId("")` to remove the resource from
    state inside `Read()`.
- 
+
 
 ### Writing Acceptance Tests
 
@@ -307,6 +345,9 @@ For example, to run an acceptance test against the Amazon Web Services
 provider, the following environment variables must be set:
 
 ```sh
+# Using a profile
+export AWS_PROFILE=...
+# Otherwise
 export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
 export AWS_DEFAULT_REGION=...
@@ -316,32 +357,32 @@ Tests can then be run by specifying the target provider and a regular
 expression defining the tests to run:
 
 ```sh
-$ make testacc TEST=./builtin/providers/azurerm TESTARGS='-run=TestAccAzureRMPublicIpStatic_update'
+$ make testacc TEST=./aws TESTARGS='-run=TestAccAWSCloudWatchDashboard_update'
 ==> Checking that code complies with gofmt requirements...
-go generate ./...
-TF_ACC=1 go test ./builtin/providers/azurerm -v -run=TestAccAzureRMPublicIpStatic_update -timeout 120m
-=== RUN   TestAccAzureRMPublicIpStatic_update
---- PASS: TestAccAzureRMPublicIpStatic_update (177.48s)
+TF_ACC=1 go test ./aws -v -run=TestAccAWSCloudWatchDashboard_update -timeout 120m
+=== RUN   TestAccAWSCloudWatchDashboard_update
+--- PASS: TestAccAWSCloudWatchDashboard_update (26.56s)
 PASS
-ok      github.com/hashicorp/terraform/builtin/providers/azurerm    177.504s
+ok  	github.com/terraform-providers/terraform-provider-aws/aws	26.607s
 ```
 
 Entire resource test suites can be targeted by using the naming convention to
 write the regular expression. For example, to run all tests of the
-`azurerm_public_ip` resource rather than just the update test, you can start
+`aws_cloudwatch_dashboard` resource rather than just the update test, you can start
 testing like this:
 
 ```sh
-$ make testacc TEST=./builtin/providers/azurerm TESTARGS='-run=TestAccAzureRMPublicIpStatic'
+$ make testacc TEST=./aws TESTARGS='-run=TestAccAWSCloudWatchDashboard'
 ==> Checking that code complies with gofmt requirements...
-go generate ./...
-TF_ACC=1 go test ./builtin/providers/azurerm -v -run=TestAccAzureRMPublicIpStatic -timeout 120m
-=== RUN   TestAccAzureRMPublicIpStatic_basic
---- PASS: TestAccAzureRMPublicIpStatic_basic (137.74s)
-=== RUN   TestAccAzureRMPublicIpStatic_update
---- PASS: TestAccAzureRMPublicIpStatic_update (180.63s)
+TF_ACC=1 go test ./aws -v -run=TestAccAWSCloudWatchDashboard -timeout 120m
+=== RUN   TestAccAWSCloudWatchDashboard_importBasic
+--- PASS: TestAccAWSCloudWatchDashboard_importBasic (15.06s)
+=== RUN   TestAccAWSCloudWatchDashboard_basic
+--- PASS: TestAccAWSCloudWatchDashboard_basic (12.70s)
+=== RUN   TestAccAWSCloudWatchDashboard_update
+--- PASS: TestAccAWSCloudWatchDashboard_update (27.81s)
 PASS
-ok      github.com/hashicorp/terraform/builtin/providers/azurerm    318.392s
+ok  	github.com/terraform-providers/terraform-provider-aws/aws	55.619s
 ```
 
 #### Writing an Acceptance Test

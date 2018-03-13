@@ -217,7 +217,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-listener-basic"
   }
 }
 
@@ -313,7 +313,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-listener-bc"
   }
 }
 
@@ -380,6 +380,8 @@ resource "aws_lb" "alb_test" {
   tags {
     Name = "TestAccAWSALB_basic"
   }
+
+  depends_on = ["aws_internet_gateway.gw"]
 }
 
 resource "aws_lb_target_group" "test" {
@@ -411,7 +413,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-listener-https"
   }
 }
 

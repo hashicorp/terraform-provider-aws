@@ -364,13 +364,16 @@ const testAccInstanceDataSourceConfig_privateIP = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "testAccInstanceDataSourceConfig_privateIP"
+    Name = "terraform-testacc-instance-ds-private-ip"
   }
 }
 
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "tf-acc-instance-ds-private-ip"
+  }
 }
 
 resource "aws_instance" "foo" {
@@ -421,13 +424,16 @@ const testAccInstanceDataSourceConfig_VPC = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "testAccInstanceDataSourceConfig_VPC"
+    Name = "terraform-testacc-instance-data-source-vpc"
   }
 }
 
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
+  tags {
+   Name = "tf-acc-instance-data-source-vpc"
+  }
 }
 
 resource "aws_instance" "foo" {
@@ -451,13 +457,16 @@ func testAccInstanceDataSourceConfig_PlacementGroup(rStr string) string {
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "testAccInstanceDataSourceConfig_PlacementGroup_%s"
+    Name = "terraform-testacc-instance-data-source-placement-group"
   }
 }
 
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "tf-acc-instance-data-source-placement-group"
+  }
 }
 
 resource "aws_placement_group" "foo" {
@@ -480,7 +489,7 @@ resource "aws_instance" "foo" {
 data "aws_instance" "foo" {
   instance_id = "${aws_instance.foo.id}"
 }
-`, rStr, rStr)
+`, rStr)
 }
 
 func testAccInstanceDataSourceConfig_SecurityGroups(rInt int) string {
@@ -517,12 +526,16 @@ data "aws_instance" "foo" {
 const testAccInstanceDataSourceConfig_VPCSecurityGroups = `
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.foo.id}"
+
+  tags {
+    Name = "terraform-testacc-instance-data-source-vpc-sgs"
+  }
 }
 
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "tf-network-test"
+    Name = "terraform-testacc-instance-data-source-vpc-sgs"
   }
 }
 
@@ -542,6 +555,9 @@ resource "aws_security_group" "tf_test_foo" {
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "tf-acc-instance-data-source-vpc-sgs"
+  }
 }
 
 resource "aws_instance" "foo_instance" {

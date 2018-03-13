@@ -38,28 +38,13 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					// https://github.com/boto/botocore/blob/9f322b1/botocore/data/autoscaling/2011-01-01/service-2.json#L1862-L1873
-					value := v.(string)
-					if len(value) > 255 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 255 characters", k))
-					}
-					return
-				},
+				ValidateFunc:  validateMaxLength(255),
 			},
 			"name_prefix": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if len(value) > 229 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 229 characters, name is limited to 255", k))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateMaxLength(255 - 26),
 			},
 
 			"launch_configuration": {

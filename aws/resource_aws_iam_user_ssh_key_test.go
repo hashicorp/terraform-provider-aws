@@ -26,7 +26,7 @@ func TestAccAWSUserSSHKey_basic(t *testing.T) {
 			resource.TestStep{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSUserSSHKeyExists("aws_iam_user_ssh_key.user", &conf),
+					testAccCheckAWSUserSSHKeyExists("aws_iam_user_ssh_key.user", "Inactive", &conf),
 				),
 			},
 		},
@@ -47,7 +47,7 @@ func TestAccAWSUserSSHKey_pemEncoding(t *testing.T) {
 			resource.TestStep{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSUserSSHKeyExists("aws_iam_user_ssh_key.user", &conf),
+					testAccCheckAWSUserSSHKeyExists("aws_iam_user_ssh_key.user", "Active", &conf),
 				),
 			},
 		},
@@ -86,7 +86,7 @@ func testAccCheckAWSUserSSHKeyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSUserSSHKeyExists(n string, res *iam.GetSSHPublicKeyOutput) resource.TestCheckFunc {
+func testAccCheckAWSUserSSHKeyExists(n, status string, res *iam.GetSSHPublicKeyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -112,6 +112,12 @@ func testAccCheckAWSUserSSHKeyExists(n string, res *iam.GetSSHPublicKeyOutput) r
 
 		*res = *resp
 
+		keyStruct := resp.SSHPublicKey
+
+		if *keyStruct.Status != status {
+			return fmt.Errorf("Key status has wrong status should be %s is %s", status, *keyStruct.Status)
+		}
+
 		return nil
 	}
 }
@@ -126,6 +132,7 @@ resource "aws_iam_user_ssh_key" "user" {
 	username = "${aws_iam_user.user.name}"
 	encoding = "SSH"
 	public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
+	status = "Inactive"
 }
 `
 

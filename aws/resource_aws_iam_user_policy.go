@@ -19,13 +19,19 @@ func resourceAwsIamUserPolicy() *schema.Resource {
 		Create: resourceAwsIamUserPolicyPut,
 		Update: resourceAwsIamUserPolicyPut,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Read:   resourceAwsIamUserPolicyRead,
 		Delete: resourceAwsIamUserPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"policy": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateFunc:     validateIAMPolicyJson,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"name": &schema.Schema{
 				Type:          schema.TypeString,
@@ -57,7 +63,13 @@ func resourceAwsIamUserPolicyPut(d *schema.ResourceData, meta interface{}) error
 	}
 
 	var policyName string
-	if v, ok := d.GetOk("name"); ok {
+	var err error
+	if !d.IsNewResource() {
+		_, policyName, err = resourceAwsIamUserPolicyParseId(d.Id())
+		if err != nil {
+			return err
+		}
+	} else if v, ok := d.GetOk("name"); ok {
 		policyName = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
 		policyName = resource.PrefixedUniqueId(v.(string))
@@ -77,14 +89,16 @@ func resourceAwsIamUserPolicyPut(d *schema.ResourceData, meta interface{}) error
 func resourceAwsIamUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
 
-	user, name := resourceAwsIamUserPolicyParseId(d.Id())
+	user, name, err := resourceAwsIamUserPolicyParseId(d.Id())
+	if err != nil {
+		return err
+	}
 
 	request := &iam.GetUserPolicyInput{
 		PolicyName: aws.String(name),
 		UserName:   aws.String(user),
 	}
 
-	var err error
 	getResp, err := iamconn.GetUserPolicy(request)
 	if err != nil {
 		if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" { // XXX test me
@@ -102,13 +116,22 @@ func resourceAwsIamUserPolicyRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return err
 	}
-	return d.Set("policy", policy)
+	if err := d.Set("policy", policy); err != nil {
+		return err
+	}
+	if err := d.Set("name", name); err != nil {
+		return err
+	}
+	return d.Set("user", user)
 }
 
 func resourceAwsIamUserPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
 
-	user, name := resourceAwsIamUserPolicyParseId(d.Id())
+	user, name, err := resourceAwsIamUserPolicyParseId(d.Id())
+	if err != nil {
+		return err
+	}
 
 	request := &iam.DeleteUserPolicyInput{
 		PolicyName: aws.String(name),
@@ -121,8 +144,13 @@ func resourceAwsIamUserPolicyDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsIamUserPolicyParseId(id string) (userName, policyName string) {
+func resourceAwsIamUserPolicyParseId(id string) (userName, policyName string, err error) {
 	parts := strings.SplitN(id, ":", 2)
+	if len(parts) != 2 {
+		err = fmt.Errorf("user_policy id must be of the form <user name>:<policy name>")
+		return
+	}
+
 	userName = parts[0]
 	policyName = parts[1]
 	return
