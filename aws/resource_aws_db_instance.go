@@ -1177,6 +1177,7 @@ var resourceAwsDbInstanceDeletePendingStates = []string{
 	"configuring-enhanced-monitoring",
 	"creating",
 	"deleting",
+	"incompatible-parameters",
 	"modifying",
 	"starting",
 	"stopping",
