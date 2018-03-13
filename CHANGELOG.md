@@ -13,6 +13,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_db_instance: Support `incompatible-parameters` and `storage-full` state [GH-3708]
 * resource/aws_vpc_endpoint: Prevent perpertual diff in non-standard partitions [GH-3317]
 
 ## 1.11.0 (March 09, 2018)
