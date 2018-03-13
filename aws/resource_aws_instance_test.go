@@ -1335,6 +1335,68 @@ func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_getPasswordData_falseToTrue(t *testing.T) {
+	var before, after ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_getPasswordData(false, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "get_password_data", "false"),
+					resource.TestCheckResourceAttr(resName, "password_data", ""),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_getPasswordData(true, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &after),
+					testAccCheckInstanceNotRecreated(t, &before, &after),
+					resource.TestCheckResourceAttr(resName, "get_password_data", "true"),
+					resource.TestCheckResourceAttrSet(resName, "password_data"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
+	var before, after ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_getPasswordData(true, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "get_password_data", "true"),
+					resource.TestCheckResourceAttrSet(resName, "password_data"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_getPasswordData(false, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &after),
+					testAccCheckInstanceNotRecreated(t, &before, &after),
+					resource.TestCheckResourceAttr(resName, "get_password_data", "false"),
+					resource.TestCheckResourceAttr(resName, "password_data", ""),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceNotRecreated(t *testing.T,
 	before, after *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -2818,4 +2880,36 @@ resource "aws_instance" "foo" {
     Name = "tf-acctest-%d"
   }
 }`, rInt)
+}
+
+func testAccInstanceConfig_getPasswordData(val bool, rInt int) string {
+	return fmt.Sprintf(`
+	# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
+	data "aws_ami" "win2016core" {
+		most_recent = true
+
+		filter {
+			name = "owner-alias"
+			values = ["amazon"]
+		}
+
+		filter {
+			name = "name"
+			values = ["Windows_Server-2016-English-Core-Base-*"]
+		}
+	}
+
+	resource "aws_key_pair" "foo" {
+		key_name = "tf-acctest-%d"
+		public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAq6U3HQYC4g8WzU147gZZ7CKQH8TgYn3chZGRPxaGmHW1RUwsyEs0nmombmIhwxudhJ4ehjqXsDLoQpd6+c7BuLgTMvbv8LgE9LX53vnljFe1dsObsr/fYLvpU9LTlo8HgHAqO5ibNdrAUvV31ronzCZhms/Gyfdaue88Fd0/YnsZVGeOZPayRkdOHSpqme2CBrpa8myBeL1CWl0LkDG4+YCURjbaelfyZlIApLYKy3FcCan9XQFKaL32MJZwCgzfOvWIMtYcU8QtXMgnA3/I3gXk8YDUJv5P4lj0s/PJXuTM8DygVAUtebNwPuinS7wwonm5FXcWMuVGsVpG5K7FGQ== tf-acc-winpasswordtest"
+	}
+
+	resource "aws_instance" "foo" {
+		ami = "${data.aws_ami.win2016core.id}"
+		instance_type = "t2.medium"
+		key_name = "${aws_key_pair.foo.key_name}"
+
+		get_password_data = %t
+	}
+	`, rInt, val)
 }
