@@ -153,16 +153,11 @@ func checkGlueCatalogCrawlerExists(name string, crawlerName string) resource.Tes
 	}
 }
 
-const testAccGuardDutyDetectorConfigBasic = `
-resource "aws_glue_catalog_crawler" "tf-test" {
-	name = "tf-test"
+const testAccGuardDutyDetectorConfigBasic = `resource "aws_glue_catalog_crawler" "test" {
+	name = "test"
 	database_name = "db_name"
 	role = "glue_role"
-	targets {
-		s3_target = [
-			{
-				path = "s3://bucket"
-			}
-		] 
+	s3_target {
+		path = "s3://bucket"
 	}
-`
+}`

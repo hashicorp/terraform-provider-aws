@@ -68,45 +68,46 @@ func resourceAwsGlueCatalogCrawler() *schema.Resource {
 			//	Type:     schema.TypeString,
 			//	Optional: true,
 			//},
-			"targets": {
-				Type:     schema.TypeSet,
-				Required: true,
+			"s3_target": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"jdbc_targets": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"connection_name": {
-										Type: schema.TypeString,
-									},
-									"path": {
-										Type: schema.TypeString,
-									},
-									"exclusions": {
-										Type: schema.TypeList,
-									},
-								},
-							},
+						"path": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
-						"s3_targets": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"path": {
-										Type: schema.TypeList,
-									},
-									"exclusions": {
-										Type: schema.TypeList,
-									},
-								},
-							},
-						},
+						//"exclusions": {
+						//	Type:     schema.TypeSet,
+						//	Optional: true,
+						//	Elem:     schema.TypeString,
+						//},
 					},
 				},
 			},
+			//"jdbc_targets": {
+			//	Type:     schema.TypeList,
+			//	Optional: true,
+			//	MinItems: 1,
+			//	Elem: &schema.Resource{
+			//		Schema: map[string]*schema.Schema{
+			//			"connection_name": {
+			//				Type:     schema.TypeString,
+			//				Required: true,
+			//			},
+			//			"path": {
+			//				Type:     schema.TypeString,
+			//				Required: true,
+			//			},
+			//			"exclusions": {
+			//				Type:     schema.TypeSet,
+			//				Optional: true,
+			//				Elem:     schema.TypeString,
+			//			},
+			//		},
+			//	},
+			//},
 			//"configuration": {
 			//	Type:             schema.TypeString,
 			//	Optional:         true,
@@ -136,7 +137,7 @@ func createCrawlerInput(crawlerName string, resource *schema.ResourceData) *glue
 		Name:         aws.String(crawlerName),
 		DatabaseName: aws.String(resource.Get("database_name").(string)),
 		Role:         aws.String(resource.Get("role").(string)),
-		Targets:      createCrawlerTargets(resource.Get("targets")),
+		Targets:      createCrawlerTargets(resource),
 	}
 	//if description, ok := resource.GetOk("description"); ok {
 	//	crawlerInput.Description = aws.String(description.(string))
@@ -176,53 +177,80 @@ func createSchemaPolicy(v interface{}) *glue.SchemaChangePolicy {
 	return schemaPolicy
 }
 
-func createCrawlerTargets(v interface{}) *glue.CrawlerTargets {
-	attributes := v.(map[string]interface{})
+func createCrawlerTargets(d *schema.ResourceData) *glue.CrawlerTargets {
+	//attributes := d.(map[string]interface{})
 	crawlerTargets := &glue.CrawlerTargets{}
 
-	if jdbcTargetsResource, ok := attributes["jdbc_targets"]; ok {
-		jdbcTargets := jdbcTargetsResource.(*schema.Set).List()
-		var configsOut []*glue.JdbcTarget
+	//if jdbcTargetsResource, ok := attributes["jdbc_targets"]; ok {
+	//	jdbcTargets := jdbcTargetsResource.(*schema.Set).List()
+	//	var configsOut []*glue.JdbcTarget
+	//
+	//	for _, jdbcTarget := range jdbcTargets {
+	//		attributes := jdbcTarget.(map[string]interface{})
+	//
+	//		target := &glue.JdbcTarget{
+	//			ConnectionName: aws.String(attributes["connection_name"].(string)),
+	//			Path:           aws.String(attributes["path"].(string)),
+	//		}
+	//
+	//		if exclusions, ok := attributes["exclusions"]; ok {
+	//			target.Exclusions = expandStringList(exclusions.(*schema.Set).List())
+	//		}
+	//
+	//		configsOut = append(configsOut, target)
+	//	}
+	//
+	//	crawlerTargets.JdbcTargets = configsOut
+	//}
 
-		for _, jdbcTarget := range jdbcTargets {
-			attributes := jdbcTarget.(map[string]interface{})
-
-			target := &glue.JdbcTarget{
-				ConnectionName: aws.String(attributes["connection_name"].(string)),
-				Path:           aws.String(attributes["path"].(string)),
-			}
-
-			if exclusions, ok := attributes["exclusions"]; ok {
-				target.Exclusions = expandStringList(exclusions.(*schema.Set).List())
-			}
-
-			configsOut = append(configsOut, target)
-		}
-
-		crawlerTargets.JdbcTargets = configsOut
+	if v, ok := d.GetOk("s3_target"); ok {
+		crawlerTargets.S3Targets = expandS3Targets(v.([]interface{}))
 	}
 
-	if s3Targets, ok := attributes["s3_targets"]; ok {
-		targets := s3Targets.(*schema.Set).List()
-		var configsOut []*glue.S3Target
-
-		for _, target := range targets {
-			attributes := target.(map[string]interface{})
-
-			target := &glue.S3Target{
-				Path: aws.String(attributes["path"].(string)),
-			}
-
-			if exclusions, ok := attributes["exclusions"]; ok {
-				target.Exclusions = expandStringList(exclusions.(*schema.Set).List())
-			}
-
-			configsOut = append(configsOut, target)
-		}
-		crawlerTargets.S3Targets = configsOut
-	}
+	//if s3Targets, ok := attributes["s3_target"]; ok {
+	//	targets := s3Targets.(*schema.Set).List()
+	//	var configsOut []*glue.S3Target
+	//
+	//	for _, target := range targets {
+	//		attributes := target.(map[string]interface{})
+	//
+	//		target := &glue.S3Target{
+	//			Path: aws.String(attributes["path"].(string)),
+	//		}
+	//
+	//		if exclusions, ok := attributes["exclusions"]; ok {
+	//			target.Exclusions = expandStringList(exclusions.(*schema.Set).List())
+	//		}
+	//
+	//		configsOut = append(configsOut, target)
+	//	}
+	//	crawlerTargets.S3Targets = configsOut
+	//}
 
 	return crawlerTargets
+}
+
+func expandS3Targets(cfgs []interface{}) []*glue.S3Target {
+	if len(cfgs) < 1 {
+		return []*glue.S3Target{}
+	}
+
+	perms := make([]*glue.S3Target, len(cfgs), len(cfgs))
+	for i, rawCfg := range cfgs {
+		cfg := rawCfg.(map[string]interface{})
+		perms[i] = expandS3Target(cfg)
+	}
+	return perms
+}
+
+func expandS3Target(cfg map[string]interface{}) *glue.S3Target {
+	return &glue.S3Target{
+		Path: aws.String(cfg["path"].(string)),
+		//FromPort: aws.Int64(int64(cfg["from_port"].(int))),
+		//IpRange:  aws.String(cfg["ip_range"].(string)),
+		//Protocol: aws.String(cfg["protocol"].(string)),
+		//ToPort:   aws.Int64(int64(cfg["to_port"].(int))),
+	}
 }
 
 func resourceAwsGlueCatalogCrawlerUpdate(resource *schema.ResourceData, meta interface{}) error {
