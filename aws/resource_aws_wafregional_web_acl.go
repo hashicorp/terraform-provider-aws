@@ -82,7 +82,7 @@ func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateWebACLInput{
 			ChangeToken:   token,
-			DefaultAction: expandDefaultActionWR(d),
+			DefaultAction: expandDefaultActionWR(d.Get("default_action").([]interface{})),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
 			Name:          aws.String(d.Get("name").(string)),
 		}
@@ -166,7 +166,7 @@ func updateWebAclResourceWR(d *schema.ResourceData, meta interface{}, ChangeActi
 		}
 
 		if d.HasChange("default_action") {
-			req.DefaultAction = expandDefaultActionWR(d)
+			req.DefaultAction = expandDefaultActionWR(d.Get("default_action").([]interface{}))
 		}
 
 		rules := d.Get("rules").(*schema.Set)
@@ -191,23 +191,17 @@ func updateWebAclResourceWR(d *schema.ResourceData, meta interface{}, ChangeActi
 	return nil
 }
 
-func expandDefaultActionWR(d *schema.ResourceData) *waf.WafAction {
-	set, ok := d.GetOk("default_action")
-	if !ok {
+func expandDefaultActionWR(d []interface{}) *waf.WafAction {
+	if d == nil || len(d) == 0 {
 		return nil
 	}
 
-	s := set.(*schema.Set).List()
-	if s == nil || len(s) == 0 {
-		return nil
-	}
-
-	if s[0] == nil {
+	if d[0] == nil {
 		log.Printf("[ERR] First element of Default Action is set to nil")
 		return nil
 	}
 
-	dA := s[0].(map[string]interface{})
+	dA := d[0].(map[string]interface{})
 
 	return &waf.WafAction{
 		Type: aws.String(dA["type"].(string)),
