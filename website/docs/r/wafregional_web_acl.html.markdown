@@ -23,7 +23,6 @@ resource "aws_wafregional_ipset" "ipset" {
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  depends_on  = ["aws_wafregional_ipset.ipset"]
   name        = "tfWAFRule"
   metric_name = "tfWAFRule"
   
@@ -35,7 +34,6 @@ resource "aws_wafregional_rule" "wafrule" {
 }
 
 resource "aws_wafregional_web_acl" "wafacl" {
-  depends_on  = ["aws_wafregional_ipset.ipset", "aws_wafregional_rule.wafrule"]
   name        = "tfWebACL"
   metric_name = "tfWebACL"
   

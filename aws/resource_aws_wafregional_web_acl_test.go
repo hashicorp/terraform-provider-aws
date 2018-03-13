@@ -269,7 +269,6 @@ func testAccAWSWafRegionalWebAclConfig(name string) string {
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  depends_on = ["aws_wafregional_ipset.ipset"]
   name = "%s"
   metric_name = "%s"
   predicates {
@@ -279,7 +278,6 @@ resource "aws_wafregional_rule" "wafrule" {
   }
 }
 resource "aws_wafregional_web_acl" "waf_acl" {
-  depends_on = ["aws_wafregional_ipset.ipset", "aws_wafregional_rule.wafrule"]
   name = "%s"
   metric_name = "%s"
   default_action {
@@ -305,7 +303,6 @@ func testAccAWSWafRegionalWebAclConfigChangeName(name string) string {
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  depends_on = ["aws_wafregional_ipset.ipset"]
   name = "%s"
   metric_name = "%s"
   predicates {
@@ -315,7 +312,6 @@ resource "aws_wafregional_rule" "wafrule" {
   }
 }
 resource "aws_wafregional_web_acl" "waf_acl" {
-  depends_on = ["aws_wafregional_ipset.ipset", "aws_wafregional_rule.wafrule"]
   name = "%s"
   metric_name = "%s"
   default_action {
@@ -341,7 +337,6 @@ func testAccAWSWafRegionalWebAclConfigDefaultAction(name string) string {
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  depends_on = ["aws_wafregional_ipset.ipset"]
   name = "%s"
   metric_name = "%s"
   predicates {
@@ -351,7 +346,6 @@ resource "aws_wafregional_rule" "wafrule" {
   }
 }
 resource "aws_wafregional_web_acl" "waf_acl" {
-  depends_on = ["aws_wafregional_ipset.ipset", "aws_wafregional_rule.wafrule"]
   name = "%s"
   metric_name = "%s"
   default_action {
