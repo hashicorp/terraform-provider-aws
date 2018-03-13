@@ -24,7 +24,7 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 				ForceNew: true,
 			},
 			"default_action": &schema.Schema{
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -47,7 +47,7 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"action": &schema.Schema{
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
