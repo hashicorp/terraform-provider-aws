@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -1442,6 +1443,16 @@ func validateWafMetricName(v interface{}, k string) (ws []string, errors []error
 			k, value))
 	}
 	return
+}
+
+func validateWafPredicatesType() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		waf.PredicateTypeIpmatch,
+		waf.PredicateTypeByteMatch,
+		waf.PredicateTypeSqlInjectionMatch,
+		waf.PredicateTypeSizeConstraint,
+		waf.PredicateTypeXssMatch,
+	}, false)
 }
 
 func validateIamRoleDescription(v interface{}, k string) (ws []string, errors []error) {
