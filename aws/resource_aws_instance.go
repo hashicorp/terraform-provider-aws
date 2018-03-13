@@ -777,6 +777,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		d.Set("password_data", passwordData)
 	} else {
+		d.Set("get_password_data", false)
 		d.Set("password_data", nil)
 	}
 
