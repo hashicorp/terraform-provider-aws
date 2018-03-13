@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform/helper/acctest"
 )
 
@@ -218,10 +218,8 @@ func testAccCheckAWSWafRegionalWebAclDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the WebACL is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "WAFNonexistentItemException" {
-				return nil
-			}
+		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+			return nil
 		}
 
 		return err

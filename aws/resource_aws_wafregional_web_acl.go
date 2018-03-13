@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -105,7 +105,7 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.GetWebACL(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "WAFNonexistentItemException" {
+		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAF Regional ACL (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
