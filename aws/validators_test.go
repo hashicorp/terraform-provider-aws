@@ -1508,25 +1508,6 @@ func TestValidateApiGatewayUsagePlanQuotaSettings(t *testing.T) {
 	}
 }
 
-func TestValidateDynamoAttributeType(t *testing.T) {
-	validTypes := []string{"B", "N", "S"}
-
-	for _, s := range validTypes {
-		_, errors := validateDynamoAttributeType(s, "attribute")
-		if len(errors) > 0 {
-			t.Fatalf("%q should be a valid DynamoDB Attribute Type: %v", s, errors)
-		}
-	}
-
-	invalidTypes := []string{"A", "0", "DERP", "SO"}
-	for _, s := range invalidTypes {
-		_, errors := validateDynamoAttributeType(s, "attribute")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid DynamoDB Attribute Type", s)
-		}
-	}
-}
-
 func TestValidateElbName(t *testing.T) {
 	validNames := []string{
 		"tf-test-elb",
@@ -2378,33 +2359,6 @@ func TestValidateCognitoRoles(t *testing.T) {
 		errors := validateCognitoRoles(s, "roles")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito Roles: %v", s, errors)
-		}
-	}
-}
-
-func TestValidateDxConnectionBandWidth(t *testing.T) {
-	validValues := []string{
-		"1Gbps",
-		"10Gbps",
-	}
-
-	for _, s := range validValues {
-		_, errors := validateDxConnectionBandWidth(s, "match_type")
-		if len(errors) > 0 {
-			t.Fatalf("%s should be a valid Direct Connect Connection Bandwidth: %v", s, errors)
-		}
-	}
-
-	invalidValues := []string{
-		"1gbps",
-		"10GBPS",
-		"invalid character",
-	}
-
-	for _, s := range invalidValues {
-		_, errors := validateDxConnectionBandWidth(s, "match_type")
-		if len(errors) == 0 {
-			t.Fatalf("%s should not be a valid Direct Connect Connection Bandwidth: %v", s, errors)
 		}
 	}
 }

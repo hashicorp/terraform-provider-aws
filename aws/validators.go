@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -177,25 +176,6 @@ func validateDbParamGroupNamePrefix(v interface{}, k string) (ws []string, error
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than 226 characters", k))
 	}
-	return
-}
-
-func validateDynamoAttributeType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	validTypes := []string{
-		dynamodb.ScalarAttributeTypeB,
-		dynamodb.ScalarAttributeTypeN,
-		dynamodb.ScalarAttributeTypeS,
-	}
-
-	for _, t := range validTypes {
-		if t == value {
-			return
-		}
-	}
-
-	errors = append(errors, fmt.Errorf("%q must be a valid DynamoDB attribute type", k))
-
 	return
 }
 
@@ -1631,22 +1611,8 @@ func validateCognitoUserPoolDomain(v interface{}, k string) (ws []string, errors
 	return
 }
 
-func validateDxConnectionBandWidth(v interface{}, k string) (ws []string, errors []error) {
-	val, ok := v.(string)
-	if !ok {
-		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
-		return
-	}
-
-	validBandWidth := []string{"1Gbps", "10Gbps"}
-	for _, str := range validBandWidth {
-		if val == str {
-			return
-		}
-	}
-
-	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validBandWidth, val))
-	return
+func validateDxConnectionBandWidth() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{"1Gbps", "10Gbps"}, false)
 }
 
 func validateKmsKey(v interface{}, k string) (ws []string, errors []error) {
