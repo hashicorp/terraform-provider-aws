@@ -23,8 +23,10 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
 					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "bar"),
+					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 0),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "bar"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", ""),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "0"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
 					resource.TestCheckNoResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types"),
 				),
@@ -36,11 +38,22 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
 					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "test"),
 					testAccCheckAWSAPIGatewayRestAPIDescriptionAttribute(&conf, "test"),
+					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 10485760),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "test"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", "test"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "10485760"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types.0", "application/octet-stream"),
+				),
+			},
+
+			{
+				Config: testAccAWSAPIGatewayRestAPIDisableCompressionConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
+					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttributeIsNil(&conf),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "-1"),
 				),
 			},
 		},
@@ -96,6 +109,29 @@ func testAccCheckAWSAPIGatewayRestAPIDescriptionAttribute(conf *apigateway.RestA
 	return func(s *terraform.State) error {
 		if *conf.Description != description {
 			return fmt.Errorf("Wrong Description: %q", *conf.Description)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(conf *apigateway.RestApi, minimumCompressionSize int64) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if conf.MinimumCompressionSize == nil {
+			return fmt.Errorf("MinimumCompressionSize should not be nil")
+		}
+		if *conf.MinimumCompressionSize != minimumCompressionSize {
+			return fmt.Errorf("Wrong MinimumCompressionSize: %d", *conf.MinimumCompressionSize)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttributeIsNil(conf *apigateway.RestApi) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if conf.MinimumCompressionSize != nil {
+			return fmt.Errorf("MinimumCompressionSize should be nil: %d", *conf.MinimumCompressionSize)
 		}
 
 		return nil
@@ -191,6 +227,7 @@ func testAccCheckAWSAPIGatewayRestAPIDestroy(s *terraform.State) error {
 const testAccAWSAPIGatewayRestAPIConfig = `
 resource "aws_api_gateway_rest_api" "test" {
   name = "bar"
+  minimum_compression_size = 0
 }
 `
 
@@ -199,6 +236,16 @@ resource "aws_api_gateway_rest_api" "test" {
   name = "test"
   description = "test"
   binary_media_types = ["application/octet-stream"]
+  minimum_compression_size = 10485760
+}
+`
+
+const testAccAWSAPIGatewayRestAPIDisableCompressionConfig = `
+resource "aws_api_gateway_rest_api" "test" {
+  name = "test"
+  description = "test"
+  binary_media_types = ["application/octet-stream"]
+  minimum_compression_size = -1
 }
 `
 
