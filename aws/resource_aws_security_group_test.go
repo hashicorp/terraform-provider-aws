@@ -351,6 +351,7 @@ func TestAccAWSSecurityGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists("aws_security_group.web", &group),
 					testAccCheckAWSSecurityGroupAttributes(&group),
+					resource.TestMatchResourceAttr("aws_security_group.web", "arn", regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:[^:]+:security-group/.+$`)),
 					resource.TestCheckResourceAttr(
 						"aws_security_group.web", "name", "terraform_acceptance_test_example"),
 					resource.TestCheckResourceAttr(
