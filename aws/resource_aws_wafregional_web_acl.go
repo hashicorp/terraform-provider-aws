@@ -82,7 +82,7 @@ func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateWebACLInput{
 			ChangeToken:   token,
-			DefaultAction: expandDefaultAction(d),
+			DefaultAction: expandDefaultActionWR(d),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
 			Name:          aws.String(d.Get("name").(string)),
 		}
