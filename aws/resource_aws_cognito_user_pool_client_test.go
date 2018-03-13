@@ -35,6 +35,30 @@ func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPoolClient_importBasic(t *testing.T) {
+	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
+	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	resourceName := "aws_cognito_user_pool_client.client"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_basic(userPoolName, clientName),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     "user_pool_id/client_id", // how to get both ids here?
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
@@ -142,12 +166,10 @@ resource "aws_cognito_user_pool" "pool" {
 }
 
 resource "aws_cognito_user_pool_client" "client" {
-  name = "%s"
-
-  user_pool_id = "${aws_cognito_user_pool.pool.id}"
-  explicit_auth_flows = [ "ADMIN_NO_SRP_AUTH" ]
+  name                = "%s"
+  user_pool_id        = "${aws_cognito_user_pool.pool.id}"
+  explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
 }
-
 `, userPoolName, clientName)
 }
 
