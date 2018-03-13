@@ -167,16 +167,16 @@ func testAccCheckAWSWafRegionalWebAclDisappears(v *waf.WebACL) resource.TestChec
 				WebACLId:    v.WebACLId,
 			}
 
-			for _, ActivatedRule := range v.Rules {
-				WebACLUpdate := &waf.WebACLUpdate{
+			for _, activatedRule := range v.Rules {
+				webACLUpdate := &waf.WebACLUpdate{
 					Action: aws.String("DELETE"),
 					ActivatedRule: &waf.ActivatedRule{
-						Priority: ActivatedRule.Priority,
-						RuleId:   ActivatedRule.RuleId,
-						Action:   ActivatedRule.Action,
+						Priority: activatedRule.Priority,
+						RuleId:   activatedRule.RuleId,
+						Action:   activatedRule.Action,
 					},
 				}
-				req.Updates = append(req.Updates, WebACLUpdate)
+				req.Updates = append(req.Updates, webACLUpdate)
 			}
 
 			return conn.UpdateWebACL(req)
