@@ -5,6 +5,10 @@ FEATURES:
 * **New Resource:** `aws_wafregional_xss_match_set` [GH-1014]
 * **New Resource:** `aws_kms_grant` [GH-3038]
 
+ENHANCEMENTS:
+
+* resource/aws_security_group: Add arn attribute [GH-3751]
+
 BUG FIXES:
 
 * resource/aws_vpc_endpoint: Prevent perpertual diff in non-standard partitions [GH-3317]
