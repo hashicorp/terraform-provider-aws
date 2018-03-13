@@ -114,12 +114,7 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	defaultAction := flattenDefaultActionWR(resp.WebACL.DefaultAction)
-	if defaultAction != nil {
-		if err := d.Set("default_action", defaultAction); err != nil {
-			return fmt.Errorf("error setting default_action: %s", err)
-		}
-	}
+	d.Set("default_action", flattenDefaultActionWR(resp.WebACL.DefaultAction))
 	d.Set("name", resp.WebACL.Name)
 	d.Set("metric_name", resp.WebACL.MetricName)
 
