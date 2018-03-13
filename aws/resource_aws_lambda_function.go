@@ -97,9 +97,20 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Required: true,
 			},
 			"runtime": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateRuntime,
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
+					lambda.RuntimeNodejs43,
+					lambda.RuntimeNodejs610,
+					lambda.RuntimeJava8,
+					lambda.RuntimePython27,
+					lambda.RuntimePython36,
+					lambda.RuntimeDotnetcore10,
+					lambda.RuntimeDotnetcore20,
+					lambda.RuntimeNodejs43Edge,
+					lambda.RuntimeGo1X,
+				}, false),
 			},
 			"timeout": {
 				Type:     schema.TypeInt,
@@ -799,15 +810,4 @@ func readEnvironmentVariables(ev map[string]interface{}) map[string]string {
 	}
 
 	return variables
-}
-
-func validateRuntime(v interface{}, k string) (ws []string, errors []error) {
-	runtime := v.(string)
-
-	if runtime == lambda.RuntimeNodejs {
-		errors = append(errors, fmt.Errorf(
-			"%s has reached end of life since October 2016 and has been deprecated in favor of %s.",
-			runtime, lambda.RuntimeNodejs43))
-	}
-	return
 }
