@@ -112,7 +112,7 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `storage_encrypted` needs to be set to true.
 * `iam_roles` - (Optional) A List of ARNs for the IAM roles to associate to the RDS Cluster.
 * `iam_database_authentication_enabled` - (Optional) Specifies whether or mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
-* `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `aurora`.
+* `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `aurora`. Valid Values: aurora,aurora-mysql,aurora-postgresql
 * `engine_version` - (Optional) The database engine version.
 * `source_region` - (Optional) The source region for an encrypted replica DB cluster.
 
