@@ -19,7 +19,7 @@ resource "aws_db_instance" "prod" {
   allocated_storage    = 10
   engine               = "mysql"
   engine_version       = "5.6.17"
-  instance_class       = "db.t1.micro"
+  instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
   password             = "bar"
@@ -34,7 +34,7 @@ data "aws_db_snapshot" "latest_prod_snapshot" {
 
 # Use the latest production snapshot to create a dev instance.
 resource "aws_db_instance" "dev" {
-  instance_class      = "db.t1.micro"
+  instance_class      = "db.t2.micro"
   name                = "mydb-dev"
   snapshot_identifier = "${data.aws_db_snapshot.latest_prod_snapshot.id}"
   lifecycle {
