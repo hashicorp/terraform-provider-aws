@@ -669,12 +669,18 @@ resource "aws_subnet" "first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-first"
+  }
 }
 
 resource "aws_subnet" "second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-second"
+  }
 }
 
 resource "aws_security_group" "first" {
@@ -732,24 +738,36 @@ resource "aws_subnet" "az1_first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-update-az1-first"
+  }
 }
 
 resource "aws_subnet" "az2_first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-update-az2-first"
+  }
 }
 
 resource "aws_subnet" "az1_second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.2.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-update-az1-second"
+  }
 }
 
 resource "aws_subnet" "az2_second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.3.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-update-az2-second"
+  }
 }
 
 resource "aws_security_group" "first" {
@@ -798,12 +816,18 @@ resource "aws_subnet" "first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-internet-to-vpc-endpoint-first"
+  }
 }
 
 resource "aws_subnet" "second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-internet-to-vpc-endpoint-second"
+  }
 }
 
 resource "aws_security_group" "first" {

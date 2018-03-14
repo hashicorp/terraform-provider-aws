@@ -1618,6 +1618,9 @@ resource "aws_subnet" "public_a_one" {
 
   cidr_block        = "10.1.1.0/24"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-elb-subnets-a-one"
+  }
 }
 
 resource "aws_subnet" "public_b_one" {
@@ -1625,6 +1628,9 @@ resource "aws_subnet" "public_b_one" {
 
   cidr_block        = "10.1.7.0/24"
   availability_zone = "us-west-2b"
+  tags {
+    Name = "tf-acc-elb-subnets-b-one"
+  }
 }
 
 resource "aws_subnet" "public_a_two" {
@@ -1632,6 +1638,9 @@ resource "aws_subnet" "public_a_two" {
 
   cidr_block        = "10.1.2.0/24"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-elb-subnets-a-two"
+  }
 }
 
 resource "aws_elb" "ourapp" {
@@ -1680,6 +1689,9 @@ resource "aws_subnet" "public_a_one" {
 
   cidr_block        = "10.1.1.0/24"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-elb-subnet-swap-a-one"
+  }
 }
 
 resource "aws_subnet" "public_b_one" {
@@ -1687,6 +1699,9 @@ resource "aws_subnet" "public_b_one" {
 
   cidr_block        = "10.1.7.0/24"
   availability_zone = "us-west-2b"
+  tags {
+    Name = "tf-acc-elb-subnet-swap-b-one"
+  }
 }
 
 resource "aws_subnet" "public_a_two" {
@@ -1694,6 +1709,9 @@ resource "aws_subnet" "public_a_two" {
 
   cidr_block        = "10.1.2.0/24"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-elb-subnet-swap-a-two"
+  }
 }
 
 resource "aws_elb" "ourapp" {
