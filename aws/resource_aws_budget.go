@@ -97,7 +97,7 @@ func resourceAwsBudgetSchema() map[string]*schema.Schema {
 		"time_period_end": {
 			Type:     schema.TypeString,
 			Optional: true,
-			Default:  "2087-06-15_12:00",
+			Default:  "2087-06-15_00:00",
 		},
 		"time_unit": {
 			Type:     schema.TypeString,
