@@ -942,12 +942,18 @@ resource "aws_subnet" "foo" {
     cidr_block = "10.1.1.0/24"
     vpc_id = "${aws_vpc.foo.id}"
     availability_zone = "us-west-2a"
+    tags {
+        Name = "tf-acc-spot-fleet-request-w-subnet-foo"
+    }
 }
 
 resource "aws_subnet" "bar" {
     cidr_block = "10.1.20.0/24"
     vpc_id = "${aws_vpc.foo.id}"
     availability_zone = "us-west-2b"
+    tags {
+        Name = "tf-acc-spot-fleet-request-w-subnet-bar"
+    }
 }
 
 resource "aws_spot_fleet_request" "foo" {
@@ -1040,12 +1046,18 @@ resource "aws_subnet" "foo" {
     cidr_block = "10.1.1.0/24"
     vpc_id = "${aws_vpc.foo.id}"
     availability_zone = "us-west-2a"
+    tags {
+        Name = "tf-acc-spot-fleet-request-with-elb-foo"
+    }
 }
 
 resource "aws_subnet" "bar" {
     cidr_block = "10.1.20.0/24"
     vpc_id = "${aws_vpc.foo.id}"
     availability_zone = "us-west-2b"
+    tags {
+        Name = "tf-acc-spot-fleet-request-with-elb-bar"
+    }
 }
 
 resource "aws_elb" "elb" {
@@ -1146,12 +1158,18 @@ resource "aws_subnet" "foo" {
     cidr_block = "10.1.1.0/24"
     vpc_id = "${aws_vpc.foo.id}"
     availability_zone = "us-west-2a"
+    tags {
+        Name = "tf-acc-spot-fleet-request-with-target-groups-foo"
+    }
 }
 
 resource "aws_subnet" "bar" {
     cidr_block = "10.1.20.0/24"
     vpc_id = "${aws_vpc.foo.id}"
     availability_zone = "us-west-2b"
+    tags {
+        Name = "tf-acc-spot-fleet-request-with-target-groups-bar"
+    }
 }
 
 resource "aws_alb" "alb" {
@@ -1348,6 +1366,9 @@ resource "aws_subnet" "foo" {
     cidr_block = "10.1.1.0/24"
     vpc_id = "${aws_vpc.foo.id}"
     availability_zone = "us-west-2a"
+    tags {
+        Name = "tf-acc-spot-fleet-request-multi-instance-types"
+    }
 }
 
 resource "aws_spot_fleet_request" "foo" {
