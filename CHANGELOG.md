@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_waf_geo_match_set` [GH-3275]
 * **New Resource:** `aws_wafregional_xss_match_set` [GH-1014]
 * **New Resource:** `aws_kms_grant` [GH-3038]
 
