@@ -1,12 +1,15 @@
 package aws
 
 import (
+	"bytes"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/errwrap"
+	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -18,18 +21,19 @@ func resourceAwsWafRegionalSqlInjectionMatchSet() *schema.Resource {
 		Delete: resourceAwsWafRegionalSqlInjectionMatchSetDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"sql_injection_match_tuples": &schema.Schema{
+			"sql_injection_match_tuple": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Set:      resourceAwsWafRegionalSqlInjectionMatchSetTupleHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"field_to_match": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -37,6 +41,10 @@ func resourceAwsWafRegionalSqlInjectionMatchSet() *schema.Resource {
 									"data": {
 										Type:     schema.TypeString,
 										Optional: true,
+										StateFunc: func(v interface{}) string {
+											value := v.(string)
+											return strings.ToLower(value)
+										},
 									},
 									"type": {
 										Type:     schema.TypeString,
@@ -45,7 +53,7 @@ func resourceAwsWafRegionalSqlInjectionMatchSet() *schema.Resource {
 								},
 							},
 						},
-						"text_transformation": &schema.Schema{
+						"text_transformation": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -60,7 +68,7 @@ func resourceAwsWafRegionalSqlInjectionMatchSetCreate(d *schema.ResourceData, me
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region
 
-	log.Printf("[INFO] Creating SqlInjectionMatchSet: %s", d.Get("name").(string))
+	log.Printf("[INFO] Creating Regional WAF SQL Injection Match Set: %s", d.Get("name").(string))
 
 	wr := newWafRegionalRetryer(conn, region)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -72,7 +80,7 @@ func resourceAwsWafRegionalSqlInjectionMatchSetCreate(d *schema.ResourceData, me
 		return conn.CreateSqlInjectionMatchSet(params)
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error creating SqlInjectionMatchSet: {{err}}", err)
+		return fmt.Errorf("Failed creating Regional WAF SQL Injection Match Set: %s", err)
 	}
 	resp := out.(*waf.CreateSqlInjectionMatchSetOutput)
 	d.SetId(*resp.SqlInjectionMatchSet.SqlInjectionMatchSetId)
@@ -82,15 +90,15 @@ func resourceAwsWafRegionalSqlInjectionMatchSetCreate(d *schema.ResourceData, me
 
 func resourceAwsWafRegionalSqlInjectionMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
-	log.Printf("[INFO] Reading SqlInjectionMatchSet: %s", d.Get("name").(string))
+	log.Printf("[INFO] Reading Regional WAF SQL Injection Match Set: %s", d.Get("name").(string))
 	params := &waf.GetSqlInjectionMatchSetInput{
 		SqlInjectionMatchSetId: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetSqlInjectionMatchSet(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "WAFNonexistentItemException" {
-			log.Printf("[WARN] WAF IPSet (%s) not found, error code (404)", d.Id())
+		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+			log.Printf("[WARN] Regional WAF SQL Injection Match Set (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -99,16 +107,25 @@ func resourceAwsWafRegionalSqlInjectionMatchSetRead(d *schema.ResourceData, meta
 	}
 
 	d.Set("name", resp.SqlInjectionMatchSet.Name)
+	d.Set("sql_injection_match_tuple", flattenWafSqlInjectionMatchTuples(resp.SqlInjectionMatchSet.SqlInjectionMatchTuples))
 
 	return nil
 }
 
 func resourceAwsWafRegionalSqlInjectionMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating SqlInjectionMatchSet: %s", d.Get("name").(string))
-	err := updateSqlInjectionMatchSetResourceWR(d, meta, waf.ChangeActionInsert)
-	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error updating SqlInjectionMatchSet: {{err}}", err)
+	conn := meta.(*AWSClient).wafregionalconn
+	region := meta.(*AWSClient).region
+
+	if d.HasChange("sql_injection_match_tuple") {
+		o, n := d.GetChange("sql_injection_match_tuple")
+		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
+
+		err := updateSqlInjectionMatchSetResourceWR(d.Id(), oldT, newT, conn, region)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Error updating Regional WAF SQL Injection Match Set: %s", err)
+		}
 	}
+
 	return resourceAwsWafRegionalSqlInjectionMatchSetRead(d, meta)
 }
 
@@ -116,14 +133,18 @@ func resourceAwsWafRegionalSqlInjectionMatchSetDelete(d *schema.ResourceData, me
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region
 
-	log.Printf("[INFO] Deleting SqlInjectionMatchSet: %s", d.Get("name").(string))
-	err := updateSqlInjectionMatchSetResourceWR(d, meta, waf.ChangeActionDelete)
-	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error deleting SqlInjectionMatchSet: {{err}}", err)
+	oldTuples := d.Get("sql_injection_match_tuple").(*schema.Set).List()
+
+	if len(oldTuples) > 0 {
+		noTuples := []interface{}{}
+		err := updateSqlInjectionMatchSetResourceWR(d.Id(), oldTuples, noTuples, conn, region)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Error deleting Regional WAF SQL Injection Match Set: %s", err)
+		}
 	}
 
 	wr := newWafRegionalRetryer(conn, region)
-	_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
+	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteSqlInjectionMatchSetInput{
 			ChangeToken:            token,
 			SqlInjectionMatchSetId: aws.String(d.Id()),
@@ -132,41 +153,81 @@ func resourceAwsWafRegionalSqlInjectionMatchSetDelete(d *schema.ResourceData, me
 		return conn.DeleteSqlInjectionMatchSet(req)
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error deleting SqlInjectionMatchSet: {{err}}", err)
+		return fmt.Errorf("Failed deleting Regional WAF SQL Injection Match Set: %s", err)
 	}
 
 	return nil
 }
 
-func updateSqlInjectionMatchSetResourceWR(d *schema.ResourceData, meta interface{}, ChangeAction string) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
-
+func updateSqlInjectionMatchSetResourceWR(id string, oldT, newT []interface{}, conn *wafregional.WAFRegional, region string) error {
 	wr := newWafRegionalRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateSqlInjectionMatchSetInput{
 			ChangeToken:            token,
-			SqlInjectionMatchSetId: aws.String(d.Id()),
+			SqlInjectionMatchSetId: aws.String(id),
+			Updates:                diffWafSqlInjectionMatchTuplesWR(oldT, newT),
 		}
 
-		sqlInjectionMatchTuples := d.Get("sql_injection_match_tuples").(*schema.Set)
-		for _, sqlInjectionMatchTuple := range sqlInjectionMatchTuples.List() {
-			simt := sqlInjectionMatchTuple.(map[string]interface{})
-			sizeConstraintUpdate := &waf.SqlInjectionMatchSetUpdate{
-				Action: aws.String(ChangeAction),
-				SqlInjectionMatchTuple: &waf.SqlInjectionMatchTuple{
-					FieldToMatch:       expandFieldToMatch(simt["field_to_match"].(*schema.Set).List()[0].(map[string]interface{})),
-					TextTransformation: aws.String(simt["text_transformation"].(string)),
-				},
-			}
-			req.Updates = append(req.Updates, sizeConstraintUpdate)
-		}
-
+		log.Printf("[INFO] Updating Regional WAF SQL Injection Match Set: %s", req)
 		return conn.UpdateSqlInjectionMatchSet(req)
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error updating SqlInjectionMatchSet: {{err}}", err)
+		return fmt.Errorf("Failed updating Regional WAF SQL Injection Match Set: %s", err)
 	}
 
 	return nil
+}
+
+func diffWafSqlInjectionMatchTuplesWR(oldT, newT []interface{}) []*waf.SqlInjectionMatchSetUpdate {
+	updates := make([]*waf.SqlInjectionMatchSetUpdate, 0)
+
+	for _, od := range oldT {
+		tuple := od.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newT, tuple); contains {
+			newT = append(newT[:idx], newT[idx+1:]...)
+			continue
+		}
+
+		ftm := tuple["field_to_match"].([]interface{})
+
+		updates = append(updates, &waf.SqlInjectionMatchSetUpdate{
+			Action: aws.String(waf.ChangeActionDelete),
+			SqlInjectionMatchTuple: &waf.SqlInjectionMatchTuple{
+				FieldToMatch:       expandFieldToMatch(ftm[0].(map[string]interface{})),
+				TextTransformation: aws.String(tuple["text_transformation"].(string)),
+			},
+		})
+	}
+
+	for _, nd := range newT {
+		tuple := nd.(map[string]interface{})
+		ftm := tuple["field_to_match"].([]interface{})
+
+		updates = append(updates, &waf.SqlInjectionMatchSetUpdate{
+			Action: aws.String(waf.ChangeActionInsert),
+			SqlInjectionMatchTuple: &waf.SqlInjectionMatchTuple{
+				FieldToMatch:       expandFieldToMatch(ftm[0].(map[string]interface{})),
+				TextTransformation: aws.String(tuple["text_transformation"].(string)),
+			},
+		})
+	}
+	return updates
+}
+
+func resourceAwsWafRegionalSqlInjectionMatchSetTupleHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	if v, ok := m["field_to_match"]; ok {
+		ftms := v.([]interface{})
+		ftm := ftms[0].(map[string]interface{})
+
+		if v, ok := ftm["data"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(v.(string))))
+		}
+		buf.WriteString(fmt.Sprintf("%s-", ftm["type"].(string)))
+	}
+	buf.WriteString(fmt.Sprintf("%s-", m["text_transformation"].(string)))
+
+	return hashcode.String(buf.String())
 }

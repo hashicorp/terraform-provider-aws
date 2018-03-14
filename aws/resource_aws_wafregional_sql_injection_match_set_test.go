@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/acctest"
 )
 
 func TestAccAWSWafRegionalSqlInjectionMatchSet_basic(t *testing.T) {
@@ -30,7 +28,15 @@ func TestAccAWSWafRegionalSqlInjectionMatchSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "name", sqlInjectionMatchSet),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuples.#", "1"),
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.1913782288.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.1913782288.field_to_match.0.data", ""),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.1913782288.field_to_match.0.type", "QUERY_STRING"),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.1913782288.text_transformation", "URL_DECODE"),
 				),
 			},
 		},
@@ -54,17 +60,17 @@ func TestAccAWSWafRegionalSqlInjectionMatchSet_changeNameForceNew(t *testing.T) 
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "name", sqlInjectionMatchSet),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuples.#", "1"),
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.#", "1"),
 				),
 			},
 			{
-				Config: testAccAWSWafRegionalSqlInjectionMatchSetConfigChangeName(sqlInjectionMatchSetNewName),
+				Config: testAccAWSWafRegionalSqlInjectionMatchSetConfig(sqlInjectionMatchSetNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalSqlInjectionMatchSetExists("aws_wafregional_sql_injection_match_set.sql_injection_match_set", &after),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "name", sqlInjectionMatchSetNewName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuples.#", "1"),
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.#", "1"),
 				),
 			},
 		},
@@ -87,6 +93,78 @@ func TestAccAWSWafRegionalSqlInjectionMatchSet_disappears(t *testing.T) {
 					testAccCheckAWSWafRegionalSqlInjectionMatchSetDisappears(&v),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSWafRegionalSqlInjectionMatchSet_changeTuples(t *testing.T) {
+	var before, after waf.SqlInjectionMatchSet
+	setName := fmt.Sprintf("sqlInjectionMatchSet-%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRegionalSqlInjectionMatchSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafRegionalSqlInjectionMatchSetConfig(setName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafRegionalSqlInjectionMatchSetExists("aws_wafregional_sql_injection_match_set.sql_injection_match_set", &before),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "name", setName),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.1913782288.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.1913782288.field_to_match.0.data", ""),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.1913782288.field_to_match.0.type", "QUERY_STRING"),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.1913782288.text_transformation", "URL_DECODE"),
+				),
+			},
+			{
+				Config: testAccAWSWafRegionalSqlInjectionMatchSetConfig_changeTuples(setName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafRegionalSqlInjectionMatchSetExists("aws_wafregional_sql_injection_match_set.sql_injection_match_set", &after),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "name", setName),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.3961339938.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.3961339938.field_to_match.0.data", "user-agent"),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.3961339938.field_to_match.0.type", "HEADER"),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.3961339938.text_transformation", "NONE"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSWafRegionalSqlInjectionMatchSet_noTuples(t *testing.T) {
+	var ipset waf.SqlInjectionMatchSet
+	setName := fmt.Sprintf("sqlInjectionMatchSet-%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRegionalSqlInjectionMatchSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafRegionalSqlInjectionMatchSetConfig_noTuples(setName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafRegionalSqlInjectionMatchSetExists("aws_wafregional_sql_injection_match_set.sql_injection_match_set", &ipset),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "name", setName),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_sql_injection_match_set.sql_injection_match_set", "sql_injection_match_tuple.#", "0"),
+				),
 			},
 		},
 	})
@@ -117,7 +195,7 @@ func testAccCheckAWSWafRegionalSqlInjectionMatchSetDisappears(v *waf.SqlInjectio
 			return conn.UpdateSqlInjectionMatchSet(req)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating SqlInjectionMatchSet: {{err}}", err)
+			return fmt.Errorf("Failed updating SQL Injection Match Set: %s", err)
 		}
 
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -128,7 +206,7 @@ func testAccCheckAWSWafRegionalSqlInjectionMatchSetDisappears(v *waf.SqlInjectio
 			return conn.DeleteSqlInjectionMatchSet(opts)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error deleting SqlInjectionMatchSet: {{err}}", err)
+			return fmt.Errorf("Failed deleting SQL Injection Match Set: %s", err)
 		}
 		return nil
 	}
@@ -149,7 +227,6 @@ func testAccCheckAWSWafRegionalSqlInjectionMatchSetExists(n string, v *waf.SqlIn
 		resp, err := conn.GetSqlInjectionMatchSet(&waf.GetSqlInjectionMatchSetInput{
 			SqlInjectionMatchSetId: aws.String(rs.Primary.ID),
 		})
-
 		if err != nil {
 			return err
 		}
@@ -165,7 +242,7 @@ func testAccCheckAWSWafRegionalSqlInjectionMatchSetExists(n string, v *waf.SqlIn
 
 func testAccCheckAWSWafRegionalSqlInjectionMatchSetDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_wafregional_byte_match_set" {
+		if rs.Type != "aws_wafregional_sql_injection_match_set" {
 			continue
 		}
 
@@ -182,10 +259,8 @@ func testAccCheckAWSWafRegionalSqlInjectionMatchSetDestroy(s *terraform.State) e
 		}
 
 		// Return nil if the SqlInjectionMatchSet is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "WAFNonexistentItemException" {
-				return nil
-			}
+		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+			return nil
 		}
 
 		return err
@@ -198,7 +273,7 @@ func testAccAWSWafRegionalSqlInjectionMatchSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
   name = "%s"
-  sql_injection_match_tuples {
+  sql_injection_match_tuple {
     text_transformation = "URL_DECODE"
     field_to_match {
       type = "QUERY_STRING"
@@ -207,15 +282,23 @@ resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
 }`, name)
 }
 
-func testAccAWSWafRegionalSqlInjectionMatchSetConfigChangeName(name string) string {
+func testAccAWSWafRegionalSqlInjectionMatchSetConfig_changeTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
   name = "%s"
-  sql_injection_match_tuples {
-    text_transformation = "URL_DECODE"
+  sql_injection_match_tuple {
+    text_transformation = "NONE"
     field_to_match {
-      type = "QUERY_STRING"
+      type = "HEADER"
+      data = "User-Agent"
     }
   }
+}`, name)
+}
+
+func testAccAWSWafRegionalSqlInjectionMatchSetConfig_noTuples(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
+  name = "%s"
 }`, name)
 }
