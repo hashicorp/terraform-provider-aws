@@ -7,6 +7,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_eip: Support configurable timeouts [GH-3769]
 * resource/aws_instance: Support optionally fetching encrypted Windows password data [GH-2219]
 * resource/aws_security_group: Add arn attribute [GH-3751]
 * resource/aws_api_gateway_rest_api: Add support for content encoding [GH-3642]
