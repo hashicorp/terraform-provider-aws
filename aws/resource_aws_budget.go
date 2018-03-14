@@ -11,17 +11,17 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsBudget() *schema.Resource {
+func resourceAwsBudgetsBudget() *schema.Resource {
 	return &schema.Resource{
-		Schema: resourceAwsBudgetSchema(),
-		Create: resourceAwsBudgetCreate,
-		Read:   resourceAwsBudgetRead,
-		Update: resourceAwsBudgetUpdate,
-		Delete: resourceAwsBudgetDelete,
+		Schema: resourceAwsBudgetsBudgetSchema(),
+		Create: resourceAwsBudgetsBudgetCreate,
+		Read:   resourceAwsBudgetsBudgetRead,
+		Update: resourceAwsBudgetsBudgetUpdate,
+		Delete: resourceAwsBudgetsBudgetDelete,
 	}
 }
 
-func resourceAwsBudgetSchema() map[string]*schema.Schema {
+func resourceAwsBudgetsBudgetSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"name": {
 			Type:          schema.TypeString,
@@ -111,10 +111,10 @@ func resourceAwsBudgetSchema() map[string]*schema.Schema {
 	}
 }
 
-func resourceAwsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).budgetconn
 	accountID := meta.(*AWSClient).accountid
-	budget, err := newBudget(d)
+	budget, err := newBudgetsBudget(d)
 	if err != nil {
 		return fmt.Errorf("failed creating budget: %v", err)
 	}
@@ -128,10 +128,10 @@ func resourceAwsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(*budget.BudgetName)
-	return resourceAwsBudgetUpdate(d, meta)
+	return resourceAwsBudgetsBudgetUpdate(d, meta)
 }
 
-func resourceAwsBudgetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) error {
 	budgetName := d.Id()
 	describeBudgetOutput, err := describeBudget(budgetName, meta)
 	if isBudgetNotFoundException(err) {
@@ -166,10 +166,10 @@ func resourceAwsBudgetRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).budgetconn
 	accountID := meta.(*AWSClient).accountid
-	budget, err := newBudget(d)
+	budget, err := newBudgetsBudget(d)
 	if err != nil {
 		return fmt.Errorf("could not create budget: %v", err)
 	}
@@ -182,10 +182,10 @@ func resourceAwsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("updaate budget failed: %v", err)
 	}
 
-	return resourceAwsBudgetRead(d, meta)
+	return resourceAwsBudgetsBudgetRead(d, meta)
 }
 
-func resourceAwsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
 	budgetName := d.Id()
 	if !budgetExists(budgetName, meta) {
 		log.Printf("[INFO] budget %s could not be found. skipping delete.", d.Id())
@@ -205,7 +205,7 @@ func resourceAwsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func newBudget(d *schema.ResourceData) (*budgets.Budget, error) {
+func newBudgetsBudget(d *schema.ResourceData) (*budgets.Budget, error) {
 	var budgetName string
 	if id := d.Id(); id != "" {
 		budgetName = id

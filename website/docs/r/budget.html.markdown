@@ -1,19 +1,19 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_budget"
+page_title: "AWS: aws_budgets_budget"
 sidebar_current: "docs-aws-resource-budget"
 description: |-
   Provides a budget resource.
 ---
 
-# aws_budget
+# aws_budgets_budget
 
 Provides a budget resource. Budgets use the cost visualisation provided by Cost Explorer to show you the status of your budgets, to provide forecasts of your estimated costs, and to track your AWS usage, including your free tier usage.
 
 ## Example Usage
 
 ```hcl
-resource "aws_budget" "ec2" {
+resource "aws_budgets_budget" "ec2" {
   budget_name           = "budget-ec2-monthly"
   budget_type           = "spend"
   limit_amount          = "1200"
@@ -101,7 +101,7 @@ Refer to [AWS CostFilter documentation](http://docs.aws.amazon.com/awsaccountbil
 Create a budget for *$100*.
 
 ```hcl
-resource "aws_budget" "cost" {
+resource "aws_budgets_budget" "cost" {
   ...
   budget_type  = "spend"
   limit_amount = "100"
@@ -112,7 +112,7 @@ resource "aws_budget" "cost" {
 Create a budget for s3 with a limit of *3 GB* of storage.
 
 ```hcl
-resource "aws_budget" "s3" {
+resource "aws_budgets_budget" "s3" {
   ...
   budget_type  = "usage"
   limit_amount = "3"
@@ -124,4 +124,4 @@ resource "aws_budget" "s3" {
 
 Budgets can be imported using the budget `name`, e.g.
 
-``` $ terraform import aws_budget.default my-budget ```
+``` $ terraform import aws_budgets_budget.default my-budget ```

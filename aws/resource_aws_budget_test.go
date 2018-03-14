@@ -68,22 +68,22 @@ func TestAwsBudget_prefix(t *testing.T) {
 
 func newComposedBudgetTestCheck(config budgetTestConfig, provider *schema.Provider, nameField string) resource.TestCheckFunc {
 	return resource.ComposeTestCheckFunc(
-		resource.TestMatchResourceAttr("aws_budget.foo", nameField, regexp.MustCompile(config.BudgetName)),
-		resource.TestCheckResourceAttr("aws_budget.foo", "budget_type", config.BudgetType),
-		resource.TestCheckResourceAttr("aws_budget.foo", "limit_amount", config.LimitAmount),
-		resource.TestCheckResourceAttr("aws_budget.foo", "limit_unit", config.LimitUnit),
-		resource.TestCheckResourceAttr("aws_budget.foo", "time_period_start", config.TimePeriodStart),
-		resource.TestCheckResourceAttr("aws_budget.foo", "time_period_end", config.TimePeriodEnd),
-		resource.TestCheckResourceAttr("aws_budget.foo", "time_unit", config.TimeUnit),
+		resource.TestMatchResourceAttr("aws_budgets_budget.foo", nameField, regexp.MustCompile(config.BudgetName)),
+		resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", config.BudgetType),
+		resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", config.LimitAmount),
+		resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_unit", config.LimitUnit),
+		resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", config.TimePeriodStart),
+		resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", config.TimePeriodEnd),
+		resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", config.TimeUnit),
 		testBudgetExists(config, provider),
 	)
 }
 
 func testBudgetExists(config budgetTestConfig, provider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources["aws_budget.foo"]
+		rs, ok := s.RootModule().Resources["aws_budgets_budget.foo"]
 		if !ok {
-			return fmt.Errorf("Not found: %s", "aws_budget.foo")
+			return fmt.Errorf("Not found: %s", "aws_budgets_budget.foo")
 		}
 
 		b, err := describeBudget(rs.Primary.ID, provider.Meta())
@@ -247,7 +247,7 @@ func newBudgetTestConfigDefaults(name string) budgetTestConfig {
 func testBudgetHCLPrefixUseDefaults(budgetConfig budgetTestConfig) string {
 	t := template.Must(template.New("t1").
 		Parse(`
-resource "aws_budget" "foo" {
+resource "aws_budgets_budget" "foo" {
 	name_prefix = "{{.BudgetName}}"
 	budget_type = "{{.BudgetType}}"
  	limit_amount = "{{.LimitAmount}}"
@@ -267,7 +267,7 @@ resource "aws_budget" "foo" {
 func testBudgetHCLPrefix(budgetConfig budgetTestConfig) string {
 	t := template.Must(template.New("t1").
 		Parse(`
-resource "aws_budget" "foo" {
+resource "aws_budgets_budget" "foo" {
 	name_prefix = "{{.BudgetName}}"
 	budget_type = "{{.BudgetType}}"
  	limit_amount = "{{.LimitAmount}}"
@@ -291,7 +291,7 @@ resource "aws_budget" "foo" {
 func testBudgetHCLBasicUseDefaults(budgetConfig budgetTestConfig) string {
 	t := template.Must(template.New("t1").
 		Parse(`
-resource "aws_budget" "foo" {
+resource "aws_budgets_budget" "foo" {
 	name = "{{.BudgetName}}"
 	budget_type = "{{.BudgetType}}"
  	limit_amount = "{{.LimitAmount}}"
@@ -311,7 +311,7 @@ resource "aws_budget" "foo" {
 func testBudgetHCLBasic(budgetConfig budgetTestConfig) string {
 	t := template.Must(template.New("t1").
 		Parse(`
-resource "aws_budget" "foo" {
+resource "aws_budgets_budget" "foo" {
 	name = "{{.BudgetName}}"
 	budget_type = "{{.BudgetType}}"
  	limit_amount = "{{.LimitAmount}}"
