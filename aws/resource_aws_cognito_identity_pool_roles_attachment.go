@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"bytes"
@@ -10,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -118,11 +120,20 @@ func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
 
 func resourceAwsCognitoIdentityPoolRolesAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoconn
+	iamconn := meta.(*AWSClient).iamconn
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
-	if errors := validateCognitoRoles(d.Get("roles").(map[string]interface{}), "roles"); len(errors) > 0 {
-		return fmt.Errorf("Error validating Roles: %v", errors)
+	roles, errors := validateCognitoRoles(d.Get("roles").(map[string]interface{}), "roles")
+
+	if len(errors) > 0 {
+		return fmt.Errorf("Error validating roles argument: %v", errors)
+	}
+
+	errors = validateRoleExistance(iamconn, roles)
+
+	if len(errors) != 0 {
+		return fmt.Errorf("Error validating role existance: %v", errors)
 	}
 
 	params := &cognitoidentity.SetIdentityPoolRolesInput{
@@ -180,11 +191,20 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentRead(d *schema.ResourceData, m
 
 func resourceAwsCognitoIdentityPoolRolesAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoconn
+	iamconn := meta.(*AWSClient).iamconn
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
-	if errors := validateCognitoRoles(d.Get("roles").(map[string]interface{}), "roles"); len(errors) > 0 {
-		return fmt.Errorf("Error validating Roles: %v", errors)
+	roles, errors := validateCognitoRoles(d.Get("roles").(map[string]interface{}), "roles")
+
+	if len(errors) > 0 {
+		return fmt.Errorf("Error validating roles argument: %v", errors)
+	}
+
+	errors = validateRoleExistance(iamconn, roles)
+
+	if len(errors) != 0 {
+		return fmt.Errorf("Error validating role existance: %v", errors)
 	}
 
 	params := &cognitoidentity.SetIdentityPoolRolesInput{
@@ -294,4 +314,18 @@ func cognitoRoleMappingRulesConfigurationHash(v interface{}) int {
 	}
 
 	return hashcode.String(buf.String())
+}
+
+func validateRoleExistance(conn *iam.IAM, roles []string) (errors []error) {
+	for _, role := range roles {
+		if role != "" {
+			log.Printf("[DEBUG] validating role: %s", role)
+			roleName := strings.Split(role, "/")[1]
+			_, err := conn.GetRole(&iam.GetRoleInput{RoleName: aws.String(roleName)})
+			if err != nil {
+				errors = append(errors, err)
+			}
+		}
+	}
+	return
 }

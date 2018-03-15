@@ -43,6 +43,22 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoIdentityPoolRolesAttachment_invalidRole(t *testing.T) {
+	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSCognitoIdentityPoolRolesAttachmentConfig_invalidRole(name),
+				ExpectError: regexp.MustCompile(`Error validating role existance`),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
@@ -310,6 +326,18 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
 
   roles {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
+  }
+}
+`)
+}
+
+func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_invalidRole(name string) string {
+	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig(name) + `
+resource "aws_cognito_identity_pool_roles_attachment" "main" {
+  identity_pool_id = "${aws_cognito_identity_pool.main.id}"
+
+  roles {
+    "authenticated" = "${aws_iam_role.authenticated.arn}_invalid"
   }
 }
 `)
