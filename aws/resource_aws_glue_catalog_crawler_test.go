@@ -153,11 +153,37 @@ func checkGlueCatalogCrawlerExists(name string, crawlerName string) resource.Tes
 	}
 }
 
-const testAccGuardDutyDetectorConfigBasic = `resource "aws_glue_catalog_crawler" "test" {
-	name = "test"
-	database_name = "db_name"
-	role = "glue_role"
-	s3_target {
+const testAccGuardDutyDetectorConfigBasic = `
+	resource "aws_glue_catalog_crawler" "test" {
+	  name = "test"
+	  database_name = "db_name"
+	  role = "${aws_iam_role.glue.name}"
+	  s3_target {
 		path = "s3://bucket"
+	  }
 	}
-}`
+	
+	resource "aws_iam_role_policy_attachment" "aws-glue-service-role-default-policy-attachment" {
+  		policy_arn = "arn:aws:iam::aws:policy/AWSGlueServiceRole"
+  		role = "${aws_iam_role.glue.name}"
+	}
+	
+	resource "aws_iam_role" "glue" {
+  		name = "AWSGlueServiceRoleDefault"
+  		assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "glue.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+	}
+`
