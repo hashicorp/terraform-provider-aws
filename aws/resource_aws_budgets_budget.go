@@ -119,10 +119,10 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("failed creating budget: %v", err)
 	}
 
-	createBudgetInput := new(budgets.CreateBudgetInput)
-	createBudgetInput.SetAccountId(accountID)
-	createBudgetInput.SetBudget(budget)
-	_, err = client.CreateBudget(createBudgetInput)
+	_, err = client.CreateBudget(&budgets.CreateBudgetInput{
+		AccountId: &accountID,
+		Budget:    budget,
+	})
 	if err != nil {
 		return fmt.Errorf("create budget failed: %v", err)
 	}
