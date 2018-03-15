@@ -97,6 +97,29 @@ func TestAccAWSWafRegionalRule_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSWafRegionalRule_noPredicates(t *testing.T) {
+	var v waf.Rule
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRegionalRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafRegionalRule_noPredicates(wafRuleName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.wafrule", &v),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_rule.wafrule", "name", wafRuleName),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_rule.wafrule", "predicate.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSWafRegionalRuleDisappears(v *waf.Rule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
@@ -109,16 +132,16 @@ func testAccCheckAWSWafRegionalRuleDisappears(v *waf.Rule) resource.TestCheckFun
 				RuleId:      v.RuleId,
 			}
 
-			for _, Predicate := range v.Predicates {
-				Predicate := &waf.RuleUpdate{
+			for _, predicate := range v.Predicates {
+				predicate := &waf.RuleUpdate{
 					Action: aws.String("DELETE"),
 					Predicate: &waf.Predicate{
-						Negated: Predicate.Negated,
-						Type:    Predicate.Type,
-						DataId:  Predicate.DataId,
+						Negated: predicate.Negated,
+						Type:    predicate.Type,
+						DataId:  predicate.DataId,
 					},
 				}
-				req.Updates = append(req.Updates, Predicate)
+				req.Updates = append(req.Updates, predicate)
 			}
 
 			return conn.UpdateRule(req)
@@ -245,4 +268,13 @@ resource "aws_wafregional_rule" "wafrule" {
     type = "IPMatch"
   }
 }`, name, name, name)
+}
+
+func testAccAWSWafRegionalRule_noPredicates(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafregional_rule" "wafrule" {
+	name = "%s"
+	metric_name = "%s"
+}
+`, name, name)
 }

@@ -110,9 +110,11 @@ func resourceAwsWafRegionalRuleRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsWafRegionalRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	err := updateWafRegionalRuleResource(d, meta, waf.ChangeActionInsert)
-	if err != nil {
-		return fmt.Errorf("Error Updating WAF Rule: %s", err)
+	if d.HasChange("predicate") {
+		err := updateWafRegionalRuleResource(d, meta, waf.ChangeActionInsert)
+		if err != nil {
+			return fmt.Errorf("Error Updating WAF Rule: %s", err)
+		}
 	}
 	return resourceAwsWafRegionalRuleRead(d, meta)
 }
@@ -121,12 +123,18 @@ func resourceAwsWafRegionalRuleDelete(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region
 
-	err := updateWafRegionalRuleResource(d, meta, waf.ChangeActionDelete)
-	if err != nil {
-		return fmt.Errorf("Error Removing WAF Rule Predicates: %s", err)
+	if v, ok := d.GetOk("predicate"); ok {
+		predicates := v.(*schema.Set).List()
+		if len(predicates) > 0 {
+			err := updateWafRegionalRuleResource(d, meta, waf.ChangeActionDelete)
+			if err != nil {
+				return fmt.Errorf("Error Removing WAF Rule Predicates: %s", err)
+			}
+		}
 	}
+
 	wr := newWafRegionalRetryer(conn, region)
-	_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
+	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(d.Id()),
