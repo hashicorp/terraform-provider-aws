@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/wafregional"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 
@@ -159,7 +161,7 @@ func testAccCheckAWSWafRegionalRuleDestroy(s *terraform.State) error {
 
 		// Return nil if the Rule is already destroyed
 		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "WAFNonexistentItemException" {
+			if isAWSErr(awsErr, wafregional.ErrCodeWAFNonexistentItemException, "") {
 				return nil
 			}
 		}

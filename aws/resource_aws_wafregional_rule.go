@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go/service/wafregional"
+
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsWafRegionalRule() *schema.Resource {
@@ -38,28 +40,20 @@ func resourceAwsWafRegionalRule() *schema.Resource {
 							Required: true,
 						},
 						"data_id": &schema.Schema{
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								value := v.(string)
-								if len(value) > 128 {
-									errors = append(errors, fmt.Errorf(
-										"%q cannot be longer than 128 characters", k))
-								}
-								return
-							},
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
 						"type": &schema.Schema{
 							Type:     schema.TypeString,
 							Required: true,
-							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								value := v.(string)
-								if value != "IPMatch" && value != "ByteMatch" && value != "SqlInjectionMatch" && value != "SizeConstraint" && value != "XssMatch" {
-									errors = append(errors, fmt.Errorf(
-										"%q must be one of IPMatch | ByteMatch | SqlInjectionMatch | SizeConstraint | XssMatch", k))
-								}
-								return
-							},
+							ValidateFunc: validation.StringInSlice([]string{
+								"IPMatch",
+								"ByteMatch",
+								"SqlInjectionMatch",
+								"SizeConstraint",
+								"XssMatch",
+							}, false),
 						},
 					},
 				},
@@ -99,7 +93,7 @@ func resourceAwsWafRegionalRuleRead(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.GetRule(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "WAFNonexistentItemException" {
+		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAF Rule (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
