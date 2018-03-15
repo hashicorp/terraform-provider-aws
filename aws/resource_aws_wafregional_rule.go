@@ -28,7 +28,7 @@ func resourceAwsWafRegionalRule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"predicates": &schema.Schema{
+			"predicate": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -119,7 +119,7 @@ func resourceAwsWafRegionalRuleRead(d *schema.ResourceData, meta interface{}) er
 		predicates = append(predicates, predicate)
 	}
 
-	d.Set("predicates", predicates)
+	d.Set("predicate", predicates)
 	d.Set("name", resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
 
@@ -169,7 +169,7 @@ func updateWafRegionalRuleResource(d *schema.ResourceData, meta interface{}, Cha
 			RuleId:      aws.String(d.Id()),
 		}
 
-		predicatesSet := d.Get("predicates").(*schema.Set)
+		predicatesSet := d.Get("predicate").(*schema.Set)
 		for _, predicateI := range predicatesSet.List() {
 			predicate := predicateI.(map[string]interface{})
 			updatePredicate := &waf.RuleUpdate{

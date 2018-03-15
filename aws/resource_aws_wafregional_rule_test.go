@@ -28,7 +28,7 @@ func TestAccAWSWafRegionalRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_rule.wafrule", "name", wafRuleName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule.wafrule", "predicates.#", "1"),
+						"aws_wafregional_rule.wafrule", "predicate.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_rule.wafrule", "metric_name", wafRuleName),
 				),
@@ -54,7 +54,7 @@ func TestAccAWSWafRegionalRule_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_rule.wafrule", "name", wafRuleName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule.wafrule", "predicates.#", "1"),
+						"aws_wafregional_rule.wafrule", "predicate.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_rule.wafrule", "metric_name", wafRuleName),
 				),
@@ -66,7 +66,7 @@ func TestAccAWSWafRegionalRule_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_rule.wafrule", "name", wafRuleNewName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule.wafrule", "predicates.#", "1"),
+						"aws_wafregional_rule.wafrule", "predicate.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_rule.wafrule", "metric_name", wafRuleNewName),
 				),
@@ -203,17 +203,18 @@ func testAccAWSWafRegionalRuleConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
-  ip_set_descriptors {
+
+  ip_set_descriptor {
     type = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  depends_on = ["aws_wafregional_ipset.ipset"]
   name = "%s"
   metric_name = "%s"
-  predicates {
+
+  predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
     type = "IPMatch"
@@ -225,17 +226,18 @@ func testAccAWSWafRegionalRuleConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
-  ip_set_descriptors {
+
+  ip_set_descriptor {
     type = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  depends_on = ["aws_wafregional_ipset.ipset"]
   name = "%s"
   metric_name = "%s"
-  predicates {
+
+  predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
     type = "IPMatch"
