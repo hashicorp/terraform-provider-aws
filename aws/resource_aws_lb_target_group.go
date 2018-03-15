@@ -651,6 +651,9 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 				// LB and is a first run
 				return fmt.Errorf("%s: custom timeout is not supported for target_groups with TCP protocol", diff.Id())
 			}
+			if healthCheck["healthy_threshold"].(int) != healthCheck["unhealthy_threshold"].(int) {
+				return fmt.Errorf("%s: healthy_threshold %d and unhealthy_threshold %d must be the same for target_groups with TCP protocol", diff.Id(), healthCheck["healthy_threshold"].(int), healthCheck["unhealthy_threshold"].(int))
+			}
 		}
 	}
 
