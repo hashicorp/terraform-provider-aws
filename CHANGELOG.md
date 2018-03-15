@@ -12,7 +12,7 @@ ENHANCEMENTS:
 * resource/aws_eip: Support configurable timeouts [GH-3769]
 * resource/aws_emr_cluster: Add step support [GH-3673]
 * resource/aws_instance: Support optionally fetching encrypted Windows password data [GH-2219]
-* 
+* resource/aws_lb_target_group: Validate health check threshold for TCP protocol during plan [GH-3782]
 * resource/aws_security_group: Add arn attribute [GH-3751]
 * resource/aws_api_gateway_rest_api: Add support for content encoding [GH-3642]
 
