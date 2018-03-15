@@ -1715,7 +1715,11 @@ var awsPartition = partition{
 			},
 		},
 		"runtime.sagemaker": service{
-
+			Defaults: endpoint{
+				CredentialScope: credentialScope{
+					Service: "sagemaker",
+				},
+			},
 			Endpoints: endpoints{
 				"eu-west-1": endpoint{},
 				"us-east-1": endpoint{},
