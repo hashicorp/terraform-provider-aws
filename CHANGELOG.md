@@ -14,6 +14,7 @@ ENHANCEMENTS:
 * resource/aws_instance: Support optionally fetching encrypted Windows password data [GH-2219]
 * resource/aws_lb_target_group: Validate health check threshold for TCP protocol during plan [GH-3782]
 * resource/aws_security_group: Add arn attribute [GH-3751]
+* resource/aws_ssm_association: Prevent AssociationDoesNotExist error [GH-3776]
 * resource/aws_api_gateway_rest_api: Add support for content encoding [GH-3642]
 
 BUG FIXES:
