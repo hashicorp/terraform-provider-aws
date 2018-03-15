@@ -14,13 +14,13 @@ ENHANCEMENTS:
 * resource/aws_instance: Support optionally fetching encrypted Windows password data [GH-2219]
 * resource/aws_lb_target_group: Validate health check threshold for TCP protocol during plan [GH-3782]
 * resource/aws_security_group: Add arn attribute [GH-3751]
-* resource/aws_ssm_association: Prevent AssociationDoesNotExist error [GH-3776]
 * resource/aws_api_gateway_rest_api: Add support for content encoding [GH-3642]
 
 BUG FIXES:
 
 * resource/aws_cognito_user_pool_client: Fix `callback_urls` updates [GH-3404]
 * resource/aws_db_instance: Support `incompatible-parameters` and `storage-full` state [GH-3708]
+* resource/aws_ssm_association: Prevent AssociationDoesNotExist error [GH-3776]
 * resource/aws_vpc_endpoint: Prevent perpertual diff in non-standard partitions [GH-3317]
 
 ## 1.11.0 (March 09, 2018)
