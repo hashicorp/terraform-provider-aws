@@ -102,18 +102,7 @@ func resourceAwsWafRegionalRuleRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	var predicates []map[string]interface{}
-
-	for _, predicateSet := range resp.Rule.Predicates {
-		predicate := map[string]interface{}{
-			"negated": *predicateSet.Negated,
-			"type":    *predicateSet.Type,
-			"data_id": *predicateSet.DataId,
-		}
-		predicates = append(predicates, predicate)
-	}
-
-	d.Set("predicate", predicates)
+	d.Set("predicate", flattenWafPredicates(resp.Rule.Predicates))
 	d.Set("name", resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
 
@@ -184,4 +173,16 @@ func updateWafRegionalRuleResource(d *schema.ResourceData, meta interface{}, Cha
 	}
 
 	return nil
+}
+
+func flattenWafPredicates(ts []*waf.Predicate) []interface{} {
+	out := make([]interface{}, len(ts), len(ts))
+	for i, p := range ts {
+		m := make(map[string]interface{})
+		m["negated"] = *p.Negated
+		m["type"] = *p.Type
+		m["data_id"] = *p.DataId
+		out[i] = m
+	}
+	return out
 }
