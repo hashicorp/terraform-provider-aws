@@ -103,7 +103,7 @@ func resourceAwsBudgetsBudgetSchema() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"cost_filters": &schema.Schema{
+		"cost_filters": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
