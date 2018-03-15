@@ -1260,7 +1260,7 @@ resource "aws_subnet" "subnet_for_lambda" {
     cidr_block = "10.0.1.0/24"
 
     tags {
-        Name = "lambda"
+        Name = "tf-acc-lambda-function-1"
     }
 }
 
@@ -1640,7 +1640,7 @@ resource "aws_subnet" "subnet_for_lambda_2" {
     cidr_block = "10.0.2.0/24"
 
     tags {
-        Name = "lambda"
+        Name = "tf-acc-lambda-function-2"
     }
 }
 

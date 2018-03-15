@@ -744,7 +744,7 @@ resource "aws_subnet" "alb_test_1" {
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-with-ip-address-type-updated-1"
   }
 }
 
@@ -756,7 +756,7 @@ resource "aws_subnet" "alb_test_2" {
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-with-ip-address-type-updated-2"
   }
 }
 
@@ -855,7 +855,7 @@ resource "aws_subnet" "alb_test_1" {
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-with-ip-address-type-1"
   }
 }
 
@@ -867,7 +867,7 @@ resource "aws_subnet" "alb_test_2" {
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-with-ip-address-type-2"
   }
 }
 
@@ -927,7 +927,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-basic"
   }
 }
 
@@ -996,7 +996,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-basic-${count.index}"
   }
 }
 
@@ -1063,7 +1063,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-basic-${count.index}"
   }
 }
 
@@ -1127,7 +1127,7 @@ resource "aws_subnet" "alb_test_1" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
+    Name = "tf-acc-lb-network-load-balancer-subnets-1"
   }
 }
 
@@ -1137,7 +1137,7 @@ resource "aws_subnet" "alb_test_2" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
+    Name = "tf-acc-lb-network-load-balancer-subnets-2"
   }
 }
 
@@ -1147,7 +1147,7 @@ resource "aws_subnet" "alb_test_3" {
   availability_zone = "us-west-2c"
 
   tags {
-    Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
+    Name = "tf-acc-lb-network-load-balancer-subnets-3"
   }
 }
 `, lbName)
@@ -1186,7 +1186,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "us-west-2a"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-network-load-balancer"
   }
 }
 
@@ -1209,6 +1209,9 @@ resource "aws_subnet" "public" {
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   cidr_block = "10.10.${count.index}.0/24"
   vpc_id = "${aws_vpc.main.id}"
+  tags {
+    Name = "tf-acc-lb-network-load-balancer-eip-${count.index}"
+  }
 }
 
 resource "aws_internet_gateway" "default" {
@@ -1288,7 +1291,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-bc-${count.index}"
   }
 }
 
@@ -1355,7 +1358,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-update-subnets-${count.index}"
   }
 }
 
@@ -1430,7 +1433,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-generated-name-${count.index}"
   }
 }
 
@@ -1511,7 +1514,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-zero-value-name-${count.index}"
   }
 }
 
@@ -1579,7 +1582,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-name-prefix-${count.index}"
   }
 }
 
@@ -1646,7 +1649,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-updated-tags-${count.index}"
   }
 }
 
@@ -1757,7 +1760,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-access-logs-${count.index}"
   }
 }
 
@@ -1823,7 +1826,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-no-sg-${count.index}"
   }
 }`, lbName)
 }
@@ -1866,7 +1869,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-update-security-groups-${count.index}"
   }
 }
 

@@ -686,7 +686,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_cts"
+    Name = "tf-acc-emr-cluster-bootstrap"
   }
 }
 
@@ -854,7 +854,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%[1]d"
+    Name = "tf-acc-emr-cluster"
   }
 }
 
@@ -1166,7 +1166,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.main.id}"
 
   tags {
-    Name = "terraform-testacc-emr-cluster-kerberos-cluster-dedicated-kdc"
+    Name = "tf-acc-emr-cluster-kerberos-cluster-dedicated-kdc"
   }
 }
 
@@ -1286,7 +1286,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%d"
+    Name = "tf-acc-emr-cluster-security-configuration"
   }
 }
 
@@ -1541,7 +1541,7 @@ resource "aws_kms_key" "foo" {
 }
 POLICY
 }
-`, r, r, r, r, r, r, r, r, r, r)
+`, r, r, r, r, r, r, r, r, r)
 }
 
 const testAccAWSEmrClusterConfig_Step_DebugLoggingStep = `
@@ -1824,7 +1824,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%[1]d"
+    Name = "tf-acc-emr-cluster-instance-groups"
   }
 }
 
@@ -2126,7 +2126,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%[1]d"
+    Name = "tf-acc-emr-cluster-termination-policy"
   }
 }
 
@@ -2433,7 +2433,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%d"
+    Name = "tf-acc-emr-cluster-visible-to-all-users"
   }
 }
 
@@ -2647,7 +2647,7 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   role       = "${aws_iam_role.emr-autoscaling-role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
-`, r, r, r, r, r, r, r, r, r)
+`, r, r, r, r, r, r, r, r)
 }
 
 func testAccAWSEmrClusterConfigUpdatedTags(r int) string {
@@ -2735,7 +2735,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%[1]d"
+    Name = "tf-acc-emr-cluster-updated-tags"
   }
 }
 
@@ -3043,7 +3043,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%d"
+    Name = "tf-acc-emr-cluster-updated-root-volume-size"
   }
 }
 
@@ -3256,7 +3256,7 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   role       = "${aws_iam_role.emr-autoscaling-role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
-`, r, r, r, r, r, r, r, r, r)
+`, r, r, r, r, r, r, r, r)
 }
 
 func testAccAWSEmrClusterConfigS3Logging(rInt int) string {
@@ -3276,6 +3276,9 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
+  tags {
+    Name = "tf-acc-emr-cluster-s3-logging"
+  }
 }
 
 resource "aws_internet_gateway" "main" {
@@ -3425,7 +3428,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "emr_test_%d"
+    Name = "terraform-testacc-emr-cluster-custom-ami-id"
   }
 }
 
@@ -3434,7 +3437,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%d"
+    Name = "tf-acc-emr-cluster-custom-ami-id"
   }
 }
 
@@ -3673,5 +3676,5 @@ data "aws_ami" "emr-custom-ami" {
     values = ["hvm"]
   }
 }
-`, r, r, r, r, r, r, r, r, r, r)
+`, r, r, r, r, r, r, r, r)
 }
