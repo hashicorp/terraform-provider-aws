@@ -15,6 +15,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cognito_user_pool_client: Fix `callback_urls` updates [GH-3404]
 * resource/aws_db_instance: Support `incompatible-parameters` and `storage-full` state [GH-3708]
 * resource/aws_vpc_endpoint: Prevent perpertual diff in non-standard partitions [GH-3317]
 
