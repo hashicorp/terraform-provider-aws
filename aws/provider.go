@@ -556,6 +556,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_waf_geo_match_set":                        resourceAwsWafGeoMatchSet(),
 			"aws_wafregional_byte_match_set":               resourceAwsWafRegionalByteMatchSet(),
 			"aws_wafregional_ipset":                        resourceAwsWafRegionalIPSet(),
+			"aws_wafregional_sql_injection_match_set":      resourceAwsWafRegionalSqlInjectionMatchSet(),
 			"aws_wafregional_xss_match_set":                resourceAwsWafRegionalXssMatchSet(),
 			"aws_batch_compute_environment":                resourceAwsBatchComputeEnvironment(),
 			"aws_batch_job_definition":                     resourceAwsBatchJobDefinition(),
