@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -143,26 +144,62 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("describe budget failed: %v", err)
 	}
 
-	if _, ok := d.GetOk("name"); ok {
-		d.Set("name", describeBudgetOutput.Budget.BudgetName)
+	budget := describeBudgetOutput.Budget
+	if budget == nil {
+		return fmt.Errorf("empty budget returned from budget output: %v", describeBudgetOutput)
 	}
 
-	d.Set("budget_type", describeBudgetOutput.Budget.BudgetType)
-	d.Set("limit_amount", describeBudgetOutput.Budget.BudgetLimit.Amount)
-	d.Set("limit_unit", describeBudgetOutput.Budget.BudgetLimit.Unit)
-	d.Set("include_credit", describeBudgetOutput.Budget.CostTypes.IncludeCredit)
-	d.Set("include_other_subscription", describeBudgetOutput.Budget.CostTypes.IncludeOtherSubscription)
-	d.Set("include_recurring", describeBudgetOutput.Budget.CostTypes.IncludeRecurring)
-	d.Set("include_refund", describeBudgetOutput.Budget.CostTypes.IncludeRefund)
-	d.Set("include_subscription", describeBudgetOutput.Budget.CostTypes.IncludeSubscription)
-	d.Set("include_support", describeBudgetOutput.Budget.CostTypes.IncludeSupport)
-	d.Set("include_tax", describeBudgetOutput.Budget.CostTypes.IncludeTax)
-	d.Set("include_upfront", describeBudgetOutput.Budget.CostTypes.IncludeUpfront)
-	d.Set("use_blended", describeBudgetOutput.Budget.CostTypes.UseBlended)
-	d.Set("time_period_start", describeBudgetOutput.Budget.TimePeriod.Start)
-	d.Set("time_period_end", describeBudgetOutput.Budget.TimePeriod.End)
-	d.Set("time_unit", describeBudgetOutput.Budget.TimeUnit)
-	d.Set("cost_filters", describeBudgetOutput.Budget.CostFilters)
+	budgetLimit := budget.BudgetLimit
+	if budgetLimit == nil {
+		return fmt.Errorf("empty limit in budget: %v", budget)
+	}
+
+	budgetCostTypes := budget.CostTypes
+	if budgetCostTypes == nil {
+		return fmt.Errorf("empty CostTypes in budget: %v", budget)
+	}
+
+	budgetTimePeriod := budget.TimePeriod
+	if budgetTimePeriod == nil {
+		return fmt.Errorf("empty TimePeriod in budget: %v", budget)
+	}
+
+	budgetTimePeriodStart := budgetTimePeriod.Start
+	if budgetTimePeriodStart == nil {
+		return fmt.Errorf("empty TimePeriodStart in budget: %v", budget)
+	}
+
+	budgetTimePeriodEnd := budgetTimePeriod.End
+	if budgetTimePeriodEnd == nil {
+		return fmt.Errorf("empty TimePeriodEnd in budget: %v", budget)
+	}
+
+	if _, ok := d.GetOk("name"); ok {
+		d.Set("name", budget.BudgetName)
+	}
+
+	for k, v := range map[string]interface{}{
+		"budget_type":                budget.BudgetType,
+		"time_unit":                  budget.TimeUnit,
+		"cost_filters":               convertCostFiltersToStringMap(budget.CostFilters),
+		"limit_amount":               budgetLimit.Amount,
+		"limit_unit":                 budgetLimit.Unit,
+		"include_credit":             budgetCostTypes.IncludeCredit,
+		"include_other_subscription": budgetCostTypes.IncludeOtherSubscription,
+		"include_recurring":          budgetCostTypes.IncludeRecurring,
+		"include_refund":             budgetCostTypes.IncludeRefund,
+		"include_subscription":       budgetCostTypes.IncludeSubscription,
+		"include_support":            budgetCostTypes.IncludeSupport,
+		"include_tax":                budgetCostTypes.IncludeTax,
+		"include_upfront":            budgetCostTypes.IncludeUpfront,
+		"use_blended":                budgetCostTypes.UseBlended,
+		"time_period_start":          budgetTimePeriodStart.Format("2006-01-02_15:04"),
+		"time_period_end":            budgetTimePeriodEnd.Format("2006-01-02_15:04"),
+	} {
+		if err := d.Set(k, v); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -203,6 +240,20 @@ func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	return nil
+}
+
+func convertCostFiltersToStringMap(costFilters map[string][]*string) map[string]string {
+	convertedCostFilters := make(map[string]string)
+	for k, v := range costFilters {
+		filterValues := make([]string, 0)
+		for _, singleFilterValue := range v {
+			filterValues = append(filterValues, *singleFilterValue)
+		}
+
+		convertedCostFilters[k] = strings.Join(filterValues, ",")
+	}
+
+	return convertedCostFilters
 }
 
 func newBudgetsBudget(d *schema.ResourceData) (*budgets.Budget, error) {
