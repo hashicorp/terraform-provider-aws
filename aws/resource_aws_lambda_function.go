@@ -89,8 +89,10 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Default:  128,
 			},
 			"reserved_concurrent_executions": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      -1,
+				ValidateFunc: validation.IntAtLeast(-1),
 			},
 			"role": {
 				Type:     schema.TypeString,
@@ -409,7 +411,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(d.Get("function_name").(string))
 
-	if reservedConcurrentExecutions > 0 {
+	if reservedConcurrentExecutions >= 0 {
 
 		log.Printf("[DEBUG] Setting Concurrency to %d for the Lambda Function %s", reservedConcurrentExecutions, functionName)
 
@@ -532,7 +534,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	if getFunctionOutput.Concurrency != nil {
 		d.Set("reserved_concurrent_executions", getFunctionOutput.Concurrency.ReservedConcurrentExecutions)
 	} else {
-		d.Set("reserved_concurrent_executions", nil)
+		d.Set("reserved_concurrent_executions", -1)
 	}
 
 	return nil
@@ -798,7 +800,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("reserved_concurrent_executions") {
 		nc := d.Get("reserved_concurrent_executions")
 
-		if nc.(int) > 0 {
+		if nc.(int) >= 0 {
 			log.Printf("[DEBUG] Updating Concurrency to %d for the Lambda Function %s", nc.(int), d.Id())
 
 			concurrencyParams := &lambda.PutFunctionConcurrencyInput{
