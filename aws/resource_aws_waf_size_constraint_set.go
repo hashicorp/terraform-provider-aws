@@ -74,9 +74,9 @@ func resourceAwsWafSizeConstraintSetUpdate(d *schema.ResourceData, meta interfac
 
 	if d.HasChange("size_constraints") {
 		o, n := d.GetChange("size_constraints")
-		oldS, newS := o.(*schema.Set).List(), n.(*schema.Set).List()
+		oldConstraints, newConstraints := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateSizeConstraintSetResource(d.Id(), oldS, newS, conn)
+		err := updateSizeConstraintSetResource(d.Id(), oldConstraints, newConstraints, conn)
 		if err != nil {
 			return errwrap.Wrapf("[ERROR] Error updating SizeConstraintSet: {{err}}", err)
 		}

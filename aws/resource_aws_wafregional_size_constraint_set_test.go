@@ -8,14 +8,14 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 )
 
 func TestAccAWSWafRegionalSizeConstraintSet_basic(t *testing.T) {
-	var v waf.SizeConstraintSet
+	var constraints waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
@@ -26,7 +26,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccAWSWafRegionalSizeConstraintSetConfig(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalSizeConstraintSetExists("aws_wafregional_size_constraint_set.size_constraint_set", &v),
+					testAccCheckAWSWafRegionalSizeConstraintSetExists("aws_wafregional_size_constraint_set.size_constraint_set", &constraints),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_size_constraint_set.size_constraint_set", "name", sizeConstraintSet),
 					resource.TestCheckResourceAttr(
@@ -84,7 +84,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 }
 
 func TestAccAWSWafRegionalSizeConstraintSet_disappears(t *testing.T) {
-	var v waf.SizeConstraintSet
+	var constraints waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
@@ -95,8 +95,8 @@ func TestAccAWSWafRegionalSizeConstraintSet_disappears(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalSizeConstraintSetConfig(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalSizeConstraintSetExists("aws_wafregional_size_constraint_set.size_constraint_set", &v),
-					testAccCheckAWSWafRegionalSizeConstraintSetDisappears(&v),
+					testAccCheckAWSWafRegionalSizeConstraintSetExists("aws_wafregional_size_constraint_set.size_constraint_set", &constraints),
+					testAccCheckAWSWafRegionalSizeConstraintSetDisappears(&constraints),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -162,7 +162,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 }
 
 func TestAccAWSWafRegionalSizeConstraintSet_noConstraints(t *testing.T) {
-	var ipset waf.SizeConstraintSet
+	var constraints waf.SizeConstraintSet
 	setName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
@@ -173,7 +173,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalSizeConstraintSetConfig_noConstraints(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalSizeConstraintSetExists("aws_wafregional_size_constraint_set.size_constraint_set", &ipset),
+					testAccCheckAWSWafRegionalSizeConstraintSetExists("aws_wafregional_size_constraint_set.size_constraint_set", &constraints),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_size_constraint_set.size_constraint_set", "name", setName),
 					resource.TestCheckResourceAttr(
@@ -184,7 +184,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSWafRegionalSizeConstraintSetDisappears(v *waf.SizeConstraintSet) resource.TestCheckFunc {
+func testAccCheckAWSWafRegionalSizeConstraintSetDisappears(constraints *waf.SizeConstraintSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
 		region := testAccProvider.Meta().(*AWSClient).region
@@ -193,10 +193,10 @@ func testAccCheckAWSWafRegionalSizeConstraintSetDisappears(v *waf.SizeConstraint
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateSizeConstraintSetInput{
 				ChangeToken:         token,
-				SizeConstraintSetId: v.SizeConstraintSetId,
+				SizeConstraintSetId: constraints.SizeConstraintSetId,
 			}
 
-			for _, sizeConstraint := range v.SizeConstraints {
+			for _, sizeConstraint := range constraints.SizeConstraints {
 				sizeConstraintUpdate := &waf.SizeConstraintSetUpdate{
 					Action: aws.String("DELETE"),
 					SizeConstraint: &waf.SizeConstraint{
@@ -217,7 +217,7 @@ func testAccCheckAWSWafRegionalSizeConstraintSetDisappears(v *waf.SizeConstraint
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
 			opts := &waf.DeleteSizeConstraintSetInput{
 				ChangeToken:         token,
-				SizeConstraintSetId: v.SizeConstraintSetId,
+				SizeConstraintSetId: constraints.SizeConstraintSetId,
 			}
 			return conn.DeleteSizeConstraintSet(opts)
 		})
@@ -228,7 +228,7 @@ func testAccCheckAWSWafRegionalSizeConstraintSetDisappears(v *waf.SizeConstraint
 	}
 }
 
-func testAccCheckAWSWafRegionalSizeConstraintSetExists(n string, v *waf.SizeConstraintSet) resource.TestCheckFunc {
+func testAccCheckAWSWafRegionalSizeConstraintSetExists(n string, constraints *waf.SizeConstraintSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -249,7 +249,7 @@ func testAccCheckAWSWafRegionalSizeConstraintSetExists(n string, v *waf.SizeCons
 		}
 
 		if *resp.SizeConstraintSet.SizeConstraintSetId == rs.Primary.ID {
-			*v = *resp.SizeConstraintSet
+			*constraints = *resp.SizeConstraintSet
 			return nil
 		}
 
@@ -259,9 +259,6 @@ func testAccCheckAWSWafRegionalSizeConstraintSetExists(n string, v *waf.SizeCons
 
 func testAccCheckAWSWafRegionalSizeConstraintSetDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_wafregional_byte_match_set" {
-			continue
-		}
 
 		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
 		resp, err := conn.GetSizeConstraintSet(
@@ -276,10 +273,8 @@ func testAccCheckAWSWafRegionalSizeConstraintSetDestroy(s *terraform.State) erro
 		}
 
 		// Return nil if the SizeConstraintSet is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "WAFNonexistentItemException" {
-				return nil
-			}
+		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+			return nil
 		}
 
 		return err

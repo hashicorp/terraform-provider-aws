@@ -1,13 +1,12 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -28,7 +27,7 @@ func resourceAwsWafRegionalSizeConstraintSetCreate(d *schema.ResourceData, meta 
 
 	name := d.Get("name").(string)
 
-	log.Printf("[INFO] Creating SizeConstraintSet: %s", name)
+	log.Printf("[INFO] Creating WAF Regional SizeConstraintSet: %s", name)
 
 	wr := newWafRegionalRetryer(conn, region)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -40,7 +39,7 @@ func resourceAwsWafRegionalSizeConstraintSetCreate(d *schema.ResourceData, meta 
 		return conn.CreateSizeConstraintSet(params)
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error creating SizeConstraintSet: {{err}}", err)
+		return fmt.Errorf("[ERROR] Error creating WAF Regional SizeConstraintSet: %s", err)
 	}
 	resp := out.(*waf.CreateSizeConstraintSetOutput)
 
@@ -52,19 +51,18 @@ func resourceAwsWafRegionalSizeConstraintSetCreate(d *schema.ResourceData, meta 
 func resourceAwsWafRegionalSizeConstraintSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
 
-	log.Printf("[INFO] Reading SizeConstraintSet: %s", d.Get("name").(string))
+	log.Printf("[INFO] Reading WAF Regional SizeConstraintSet: %s", d.Get("name").(string))
 	params := &waf.GetSizeConstraintSetInput{
 		SizeConstraintSetId: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetSizeConstraintSet(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "WAFNonexistentItemException" {
-			log.Printf("[WARN] WAF SizeConstraintSet (%s) not found, removing from state", d.Id())
+		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+			log.Printf("[WARN] WAF Regional SizeConstraintSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-
 		return err
 	}
 
@@ -79,10 +77,10 @@ func resourceAwsWafRegionalSizeConstraintSetUpdate(d *schema.ResourceData, meta 
 
 	if d.HasChange("size_constraints") {
 		o, n := d.GetChange("size_constraints")
-		oldS, newS := o.(*schema.Set).List(), n.(*schema.Set).List()
+		oldConstraints, newConstraints := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		if err := updateRegionalSizeConstraintSetResource(d.Id(), oldS, newS, client.wafregionalconn, client.region); err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating SizeConstraintSet: {{err}}", err)
+		if err := updateRegionalSizeConstraintSetResource(d.Id(), oldConstraints, newConstraints, client.wafregionalconn, client.region); err != nil {
+			return fmt.Errorf("[ERROR] Error updating WAF Regional SizeConstraintSet: %s", err)
 		}
 	}
 
@@ -98,7 +96,7 @@ func resourceAwsWafRegionalSizeConstraintSetDelete(d *schema.ResourceData, meta 
 	if len(oldConstraints) > 0 {
 		noConstraints := []interface{}{}
 		if err := updateRegionalSizeConstraintSetResource(d.Id(), oldConstraints, noConstraints, conn, region); err != nil {
-			return errwrap.Wrapf("[ERROR] Error deleting SizeConstraintSet: {{err}}", err)
+			return fmt.Errorf("[ERROR] Error deleting WAF Regional SizeConstraintSet: %s", err)
 		}
 	}
 
@@ -111,26 +109,26 @@ func resourceAwsWafRegionalSizeConstraintSetDelete(d *schema.ResourceData, meta 
 		return conn.DeleteSizeConstraintSet(req)
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error deleting SizeConstraintSet: {{err}}", err)
+		return fmt.Errorf("[ERROR] Error deleting WAF Regional SizeConstraintSet: %s", err)
 	}
 
 	return nil
 }
 
-func updateRegionalSizeConstraintSetResource(id string, oldS, newS []interface{}, conn *wafregional.WAFRegional, region string) error {
+func updateRegionalSizeConstraintSetResource(id string, oldConstraints, newConstraints []interface{}, conn *wafregional.WAFRegional, region string) error {
 	wr := newWafRegionalRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateSizeConstraintSetInput{
 			ChangeToken:         token,
 			SizeConstraintSetId: aws.String(id),
-			Updates:             diffWafSizeConstraints(oldS, newS),
+			Updates:             diffWafSizeConstraints(oldConstraints, newConstraints),
 		}
 
-		log.Printf("[INFO] Updating SizeConstraintSet: %s", req)
+		log.Printf("[INFO] Updating WAF Regional SizeConstraintSet: %s", req)
 		return conn.UpdateSizeConstraintSet(req)
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error updating SizeConstraintSet: {{err}}", err)
+		return fmt.Errorf("[ERROR] Error updating WAF Regional SizeConstraintSet: %s", err)
 	}
 
 	return nil
