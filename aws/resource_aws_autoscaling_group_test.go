@@ -474,6 +474,26 @@ func TestAccAWSAutoScalingGroup_withMetrics(t *testing.T) {
 	})
 }
 
+func TestAccAWSAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
+	var group autoscaling.Group
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSAutoScalingGroupConfig_withServiceLinkedRoleARN,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttrSet(
+						"aws_autoscaling_group.bar", "service_linked_role_arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSAutoScalingGroup_ALB_TargetGroups(t *testing.T) {
 	var group autoscaling.Group
 	var tg elbv2.TargetGroup
@@ -1433,6 +1453,40 @@ resource "aws_autoscaling_group" "bar" {
 }
 `, name, name)
 }
+
+const testAccAWSAutoScalingGroupConfig_withServiceLinkedRoleARN = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_iam_role" "autoscaling_service_linked_role" {
+  name = "AWSServiceRoleForAutoScaling"
+}
+
+resource "aws_launch_configuration" "foobar" {
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["us-west-2a"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  service_linked_role_arn = "${data.aws_iam_role.autoscaling_service_linked_role.arn}"
+}
+`
 
 const testAccAWSAutoscalingMetricsCollectionConfig_allMetricsCollected = `
 data "aws_ami" "test_ami" {
