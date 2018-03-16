@@ -19,6 +19,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cognito_user_pool: Detect `auto_verified_attributes` changes [GH-3786]
 * resource/aws_cognito_user_pool_client: Fix `callback_urls` updates [GH-3404]
 * resource/aws_db_instance: Support `incompatible-parameters` and `storage-full` state [GH-3708]
 * resource/aws_lambda_function: Only retry IAM eventual consistency errors for one minute [GH-3765]
