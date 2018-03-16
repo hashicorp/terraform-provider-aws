@@ -344,7 +344,7 @@ func resourceAwsCognitoUserPoolClientDelete(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCognitoUserPoolClientImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	if len(strings.Split(d.Id(), "/")) != 2 {
+	if len(strings.Split(d.Id(), "/")) != 2 || len(d.Id()) < 3 {
 		return []*schema.ResourceData{}, fmt.Errorf("[ERR] Wrong format of resource: %s. Please follow 'user-pool-id/client-id'", d.Id())
 	}
 	userPoolId := strings.Split(d.Id(), "/")[0]

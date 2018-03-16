@@ -41,6 +41,44 @@ func TestAccAWSCognitoUserPoolClient_importBasic(t *testing.T) {
 
 	resourceName := "aws_cognito_user_pool_client.client"
 
+	getStateId := func(*terraform.State) (string, error) {
+		var userPoolId string
+		var clientId string
+
+		conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
+		// do we need pagination-like logic here in case too many existing user pools?
+		pools, err := conn.ListUserPools(&cognitoidentityprovider.ListUserPoolsInput{MaxResults: aws.Int64(60)})
+		if err != nil {
+			return "", fmt.Errorf("failed to list cognito user pools: %s", err)
+		}
+		for _, pool := range pools.UserPools {
+			if aws.StringValue(pool.Name) == userPoolName {
+				userPoolId = aws.StringValue(pool.Id)
+			}
+		}
+		if len(userPoolId) == 0 {
+			return "", fmt.Errorf("cognito user pool %s not found", userPoolName)
+		}
+
+		clients, err := conn.ListUserPoolClients(&cognitoidentityprovider.ListUserPoolClientsInput{
+			UserPoolId: aws.String(userPoolId),
+			MaxResults: aws.Int64(10),
+		})
+		if err != nil {
+			return "", fmt.Errorf("failed to list clients in user pool %s: %s", userPoolName, err)
+		}
+		for _, client := range clients.UserPoolClients {
+			if aws.StringValue(client.ClientName) == clientName {
+				clientId = aws.StringValue(client.ClientId)
+			}
+		}
+		if len(clientId) == 0 {
+			return "", fmt.Errorf("client %s not found in cognito user pool %s", clientName, userPoolName)
+		}
+
+		return fmt.Sprintf("%s/%s", userPoolId, clientId), nil
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -51,7 +89,7 @@ func TestAccAWSCognitoUserPoolClient_importBasic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     "user_pool_id/client_id", // how to get both ids here?
+				ImportStateIdFunc: getStateId,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
