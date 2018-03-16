@@ -172,6 +172,7 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
 * `protect_from_scale_in` (Optional) Allows setting instance protection. The
    autoscaling group will not select instances with this setting for terminination
    during scale in events.
+*  `service_linked_role_arn` (Optional) The ARN of the service-linked role that the ASG will use to call other AWS services
 
 Tags support the following:
 
