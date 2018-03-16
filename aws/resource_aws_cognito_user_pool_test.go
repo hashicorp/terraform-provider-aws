@@ -274,7 +274,7 @@ func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "1"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.1888159429", "preferred_username"),
-					resource.TestCheckNoResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#", "0"),
 				),
 			},
 			{
