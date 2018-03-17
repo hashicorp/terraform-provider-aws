@@ -291,7 +291,7 @@ func testAccCheckAWSCloudFormationDestroy(s *terraform.State) error {
 func testAccAWSCloudFormationStackConfig(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "network" {
-  name = "%s"
+  name = "%[1]s"
   template_body = <<STACK
 {
   "Resources" : {
@@ -300,7 +300,7 @@ resource "aws_cloudformation_stack" "network" {
       "Properties" : {
         "CidrBlock" : "10.0.0.0/16",
         "Tags" : [
-          {"Key": "Name", "Value": "Primary_CF_VPC"}
+          {"Key": "Name", "Value": "%[1]s"}
         ]
       }
     }
@@ -323,7 +323,7 @@ STACK
 func testAccAWSCloudFormationStackConfig_yaml(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "yaml" {
-  name = "%s"
+  name = "%[1]s"
   template_body = <<STACK
 Resources:
   MyVPC:
@@ -333,7 +333,7 @@ Resources:
       Tags:
         -
           Key: Name
-          Value: Primary_CF_VPC
+          Value: %[1]s
 
 Outputs:
   DefaultSgId:
@@ -349,7 +349,7 @@ STACK
 func testAccAWSCloudFormationStackConfig_defaultParams(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "asg-demo" {
-  name = "%s"
+  name = "%[1]s"
   template_body = <<BODY
 {
     "Parameters": {
@@ -379,7 +379,7 @@ resource "aws_cloudformation_stack" "asg-demo" {
                 "Tags": [
                     {
                         "Key": "Name",
-                        "Value": "Primary_CF_VPC"
+                        "Value": "%[1]s"
                     }
                 ]
             }
@@ -396,7 +396,7 @@ resource "aws_cloudformation_stack" "asg-demo" {
 BODY
 
   parameters {
-    TopicName = "ExampleTopic"
+    TopicName = "%[1]s"
   }
 }
 `, stackName)
@@ -404,7 +404,7 @@ BODY
 
 var testAccAWSCloudFormationStackConfig_allAttributesWithBodies_tpl = `
 resource "aws_cloudformation_stack" "full" {
-  name = "%s"
+  name = "%[1]s"
   template_body = <<STACK
 {
   "Parameters" : {
@@ -419,7 +419,7 @@ resource "aws_cloudformation_stack" "full" {
       "Properties" : {
         "CidrBlock" : {"Ref": "VpcCIDR"},
         "Tags" : [
-          {"Key": "Name", "Value": "%s"}
+          {"Key": "Name", "Value": "%[1]s"}
         ]
       }
     },
@@ -428,7 +428,7 @@ resource "aws_cloudformation_stack" "full" {
       "Properties" : {
         "CidrBlock" : {"Ref": "VpcCIDR"},
         "Tags" : [
-          {"Key": "Name", "Value": "Static_CF_VPC"}
+          {"Key": "Name", "Value": "%[1]s-2"}
         ]
       }
     },
@@ -465,7 +465,7 @@ STACK
   }
 
   policy_body = <<POLICY
-%s
+%[2]s
 POLICY
   capabilities = ["CAPABILITY_IAM"]
   notification_arns = ["${aws_sns_topic.cf-updates.arn}"]
@@ -505,7 +505,6 @@ func testAccAWSCloudFormationStackConfig_allAttributesWithBodies(stackName strin
 	return fmt.Sprintf(
 		testAccAWSCloudFormationStackConfig_allAttributesWithBodies_tpl,
 		stackName,
-		"Primary_CF_VPC",
 		policyBody)
 }
 
@@ -513,15 +512,14 @@ func testAccAWSCloudFormationStackConfig_allAttributesWithBodies_modified(stackN
 	return fmt.Sprintf(
 		testAccAWSCloudFormationStackConfig_allAttributesWithBodies_tpl,
 		stackName,
-		"Primary_CloudFormation_VPC",
 		policyBody)
 }
 
 var tpl_testAccAWSCloudFormationStackConfig_withParams = `
 resource "aws_cloudformation_stack" "with_params" {
-  name = "%s"
+  name = "%[1]s"
   parameters {
-    VpcCIDR = "%s"
+    VpcCIDR = "%[2]s"
   }
   template_body = <<STACK
 {
@@ -537,7 +535,7 @@ resource "aws_cloudformation_stack" "with_params" {
       "Properties" : {
         "CidrBlock" : {"Ref": "VpcCIDR"},
         "Tags" : [
-          {"Key": "Name", "Value": "Primary_CF_VPC"}
+          {"Key": "Name", "Value": "%[1]s"}
         ]
       }
     }
@@ -567,7 +565,7 @@ func testAccAWSCloudFormationStackConfig_withParams_modified(stackName string) s
 func testAccAWSCloudFormationStackConfig_templateUrl_withParams(rName, bucketKey, vpcCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "b" {
-  bucket = "%s"
+  bucket = "%[1]s"
   acl = "public-read"
   policy = <<POLICY
 {
@@ -580,7 +578,7 @@ resource "aws_s3_bucket" "b" {
         "AWS": "*"
       },
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::%s/*"
+      "Resource": "arn:aws:s3:::%[1]s/*"
     }
   ]
 }
@@ -594,26 +592,26 @@ POLICY
 
 resource "aws_s3_bucket_object" "object" {
   bucket = "${aws_s3_bucket.b.id}"
-  key = "%s"
+  key = "%[2]s"
   source = "test-fixtures/cloudformation-template.json"
 }
 
 resource "aws_cloudformation_stack" "with-url-and-params" {
-  name = "%s"
+  name = "%[1]s"
   parameters {
-    VpcCIDR = "%s"
+    VpcCIDR = "%[3]s"
   }
   template_url = "https://${aws_s3_bucket.b.id}.s3-us-west-2.amazonaws.com/${aws_s3_bucket_object.object.key}"
   on_failure = "DELETE"
   timeout_in_minutes = 1
 }
-`, rName, rName, bucketKey, rName, vpcCidr)
+`, rName, bucketKey, vpcCidr)
 }
 
 func testAccAWSCloudFormationStackConfig_templateUrl_withParams_withYaml(rName, bucketKey, vpcCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "b" {
-  bucket = "%s"
+  bucket = "%[1]s"
   acl = "public-read"
   policy = <<POLICY
 {
@@ -626,7 +624,7 @@ resource "aws_s3_bucket" "b" {
         "AWS": "*"
       },
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::%s/*"
+      "Resource": "arn:aws:s3:::%[1]s/*"
     }
   ]
 }
@@ -640,18 +638,18 @@ POLICY
 
 resource "aws_s3_bucket_object" "object" {
   bucket = "${aws_s3_bucket.b.id}"
-  key = "%s"
+  key = "%[2]s"
   source = "test-fixtures/cloudformation-template.yaml"
 }
 
 resource "aws_cloudformation_stack" "with-url-and-params-and-yaml" {
-  name = "%s"
+  name = "%[1]s"
   parameters {
-    VpcCIDR = "%s"
+    VpcCIDR = "%[3]s"
   }
   template_url = "https://${aws_s3_bucket.b.id}.s3-us-west-2.amazonaws.com/${aws_s3_bucket_object.object.key}"
   on_failure = "DELETE"
   timeout_in_minutes = 1
 }
-`, rName, rName, bucketKey, rName, vpcCidr)
+`, rName, bucketKey, vpcCidr)
 }
