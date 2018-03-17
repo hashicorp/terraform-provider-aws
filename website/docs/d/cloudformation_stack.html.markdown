@@ -42,6 +42,7 @@ The following attributes are exported:
 * `capabilities` - A list of capabilities
 * `description` - Description of the stack
 * `disable_rollback` - Whether the rollback of the stack is disabled when stack creation fails
+* `enable_termination_protection` - Whether the contents of the stack are protected from being terminated later
 * `notification_arns` - A list of SNS topic ARNs to publish stack related events
 * `outputs` - A map of outputs from the stack.
 * `parameters` - A map of parameters that specify input parameters for the stack.

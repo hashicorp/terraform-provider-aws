@@ -108,6 +108,7 @@ func TestAccAWSCloudFormation_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "capabilities.#", "1"),
 					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "capabilities.1328347040", "CAPABILITY_IAM"),
 					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "disable_rollback", "false"),
+					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "enable_termination_protection", "true"),
 					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "notification_arns.#", "1"),
 					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "parameters.%", "1"),
 					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "parameters.VpcCIDR", "10.0.0.0/16"),
@@ -126,6 +127,7 @@ func TestAccAWSCloudFormation_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "capabilities.#", "1"),
 					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "capabilities.1328347040", "CAPABILITY_IAM"),
 					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "disable_rollback", "false"),
+					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "enable_termination_protection", "false"),
 					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "notification_arns.#", "1"),
 					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "parameters.%", "1"),
 					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "parameters.VpcCIDR", "10.0.0.0/16"),
@@ -323,7 +325,9 @@ STACK
 func testAccAWSCloudFormationConfig_yaml(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "yaml" {
-  name = "%s"
+	name = "%s"
+	enable_termination_protection = false
+	disable_rollback = false
   template_body = <<STACK
 Resources:
   MyVPC:
@@ -470,7 +474,9 @@ POLICY
   capabilities = ["CAPABILITY_IAM"]
   notification_arns = ["${aws_sns_topic.cf-updates.arn}"]
   on_failure = "DELETE"
-  timeout_in_minutes = 10
+	timeout_in_minutes = 10
+	enable_termination_protection = false
+	disable_rollback = false
   tags {
     First = "Mickey"
     Second = "Mouse"
