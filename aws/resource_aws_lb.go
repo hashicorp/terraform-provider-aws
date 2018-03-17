@@ -617,6 +617,23 @@ func flattenSubnetsFromAvailabilityZones(availabilityZones []*elbv2.Availability
 	return result
 }
 
+func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.AvailabilityZone) []map[string]interface{} {
+	l := make([]map[string]interface{}, 0)
+	for _, availabilityZone := range availabilityZones {
+		for _, loadBalancerAddress := range availabilityZone.LoadBalancerAddresses {
+			m := make(map[string]interface{}, 0)
+			m["subnet_id"] = *availabilityZone.SubnetId
+
+			if loadBalancerAddress.AllocationId != nil {
+				m["allocation_id"] = *loadBalancerAddress.AllocationId
+			}
+
+			l = append(l, m)
+		}
+	}
+	return l
+}
+
 func lbSuffixFromARN(arn *string) string {
 	if arn == nil {
 		return ""
@@ -640,29 +657,19 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 	d.Set("name", lb.LoadBalancerName)
 	d.Set("internal", (lb.Scheme != nil && *lb.Scheme == "internal"))
 	d.Set("security_groups", flattenStringList(lb.SecurityGroups))
-	d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones))
 	d.Set("vpc_id", lb.VpcId)
 	d.Set("zone_id", lb.CanonicalHostedZoneId)
 	d.Set("dns_name", lb.DNSName)
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
 
-	subnetMappings := make([]interface{}, 0)
-	for _, az := range lb.AvailabilityZones {
-		subnetMappingRaw := make([]map[string]interface{}, len(az.LoadBalancerAddresses))
-		for _, subnet := range az.LoadBalancerAddresses {
-			subnetMap := make(map[string]interface{}, 0)
-			subnetMap["subnet_id"] = *az.SubnetId
-
-			if subnet.AllocationId != nil {
-				subnetMap["allocation_id"] = *subnet.AllocationId
-			}
-
-			subnetMappingRaw = append(subnetMappingRaw, subnetMap)
-		}
-		subnetMappings = append(subnetMappings, subnetMappingRaw)
+	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
+		return fmt.Errorf("error setting subnets: %s", err)
 	}
-	d.Set("subnet_mapping", subnetMappings)
+
+	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
+		return fmt.Errorf("error setting subnet_mapping: %s", err)
+	}
 
 	respTags, err := elbconn.DescribeTags(&elbv2.DescribeTagsInput{
 		ResourceArns: []*string{lb.LoadBalancerArn},
