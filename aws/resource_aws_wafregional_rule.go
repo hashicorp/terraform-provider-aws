@@ -41,7 +41,7 @@ func resourceAwsWafRegionalRule() *schema.Resource {
 						},
 						"data_id": &schema.Schema{
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
 						"type": &schema.Schema{
