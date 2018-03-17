@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -472,6 +473,11 @@ func TestAccAWSDBInstance_diffSuppressInitialState(t *testing.T) {
 
 func TestAccAWSDBInstance_ec2Classic(t *testing.T) {
 	var v rds.DBInstance
+
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -1141,7 +1147,7 @@ resource "aws_subnet" "foo" {
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-1"
+		Name = "tf-acc-db-instance-with-subnet-group-1"
 	}
 }
 
@@ -1150,7 +1156,7 @@ resource "aws_subnet" "bar" {
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-2"
+		Name = "tf-acc-db-instance-with-subnet-group-2"
 	}
 }
 
@@ -1202,7 +1208,7 @@ resource "aws_subnet" "foo" {
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-1"
+		Name = "tf-acc-db-instance-with-subnet-group-1"
 	}
 }
 
@@ -1211,7 +1217,7 @@ resource "aws_subnet" "bar" {
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-2"
+		Name = "tf-acc-db-instance-with-subnet-group-2"
 	}
 }
 
@@ -1220,7 +1226,7 @@ resource "aws_subnet" "test" {
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.bar.id}"
 	tags {
-		Name = "tf-dbsubnet-test-3"
+		Name = "tf-acc-db-instance-with-subnet-group-3"
 	}
 }
 
@@ -1229,7 +1235,7 @@ resource "aws_subnet" "another_test" {
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.bar.id}"
 	tags {
-		Name = "tf-dbsubnet-test-4"
+		Name = "tf-acc-db-instance-with-subnet-group-4"
 	}
 }
 
@@ -1290,12 +1296,18 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
+  tags {
+    Name = "tf-acc-db-instance-mssql-timezone-main"
+  }
 }
 
 resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
+  tags {
+    Name = "tf-acc-db-instance-mssql-timezone-other"
+  }
 }
 
 resource "aws_db_instance" "mssql" {
@@ -1356,12 +1368,18 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
+  tags {
+    Name = "tf-acc-db-instance-mssql-timezone-akst-main"
+  }
 }
 
 resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
+  tags {
+    Name = "tf-acc-db-instance-mssql-timezone-akst-other"
+  }
 }
 
 resource "aws_db_instance" "mssql" {
@@ -1418,10 +1436,6 @@ resource "aws_db_instance" "bar" {
 
 func testAccAWSDBInstanceConfigEc2Classic(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_db_instance" "bar" {
   identifier = "foobarbaz-test-terraform-%d"
   allocated_storage = 10

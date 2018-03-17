@@ -451,23 +451,3 @@ DOC
 
 `, rName, rName, rName)
 }
-
-func TestAccAWSSSMDocument_documentTypeValidation(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{Value: "Command", ErrCount: 0},
-		{Value: "Policy", ErrCount: 0},
-		{Value: "Automation", ErrCount: 0},
-		{Value: "XYZ", ErrCount: 1},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateAwsSSMDocumentType(tc.Value, "aws_ssm_document")
-
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected the AWS SSM Document document_type to trigger a validation error")
-		}
-	}
-}

@@ -113,7 +113,7 @@ func TestAccAWSEcsService_withARN(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_basicImport(t *testing.T) {
+func TestAccAWSEcsService_importBasic(t *testing.T) {
 	rString := acctest.RandString(8)
 
 	clusterName := fmt.Sprintf("tf-acc-cluster-svc-%s", rString)
@@ -131,11 +131,20 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 			{
 				Config: testAccAWSEcsServiceWithFamilyAndRevision(clusterName, tdName, svcName),
 			},
+			// Test existent resource import
 			{
 				ResourceName:      resourceName,
 				ImportStateId:     importInput,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			// Test non-existent resource import
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/nonexistent", clusterName),
+				ImportState:       true,
+				ImportStateVerify: false,
+				ExpectError:       regexp.MustCompile(`No ECS service found`),
 			},
 		},
 	})
@@ -841,6 +850,9 @@ resource "aws_subnet" "main" {
   cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
+  tags {
+    Name = "tf-acc-ecs-service-with-launch-type-fargate"
+  }
 }
 
 resource "aws_security_group" "allow_all_a" {
@@ -926,6 +938,9 @@ resource "aws_subnet" "main" {
   cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
+  tags {
+    Name = "tf-acc-ecs-service-health-check-grace-period"
+  }
 }
 
 resource "aws_ecs_cluster" "main" {
@@ -1409,6 +1424,9 @@ resource "aws_subnet" "main" {
   cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
+  tags {
+    Name = "tf-acc-ecs-service-with-alb"
+  }
 }
 
 resource "aws_ecs_cluster" "main" {
@@ -1553,6 +1571,9 @@ resource "aws_subnet" "main" {
   cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
+  tags {
+    Name = "tf-acc-ecs-service-with-network-config"
+  }
 }
 
 resource "aws_security_group" "allow_all_a" {

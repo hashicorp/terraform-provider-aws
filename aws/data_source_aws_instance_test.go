@@ -233,6 +233,56 @@ func TestAccAWSInstanceDataSource_VPCSecurityGroups(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstanceDataSource_getPasswordData_trueToFalse(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_getPasswordData(true, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_instance.foo", "get_password_data", "true"),
+					resource.TestCheckResourceAttrSet("data.aws_instance.foo", "password_data"),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceConfig_getPasswordData(false, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_instance.foo", "get_password_data", "false"),
+					resource.TestCheckNoResourceAttr("data.aws_instance.foo", "password_data"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_getPasswordData(false, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_instance.foo", "get_password_data", "false"),
+					resource.TestCheckNoResourceAttr("data.aws_instance.foo", "password_data"),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceConfig_getPasswordData(true, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_instance.foo", "get_password_data", "true"),
+					resource.TestCheckResourceAttrSet("data.aws_instance.foo", "password_data"),
+				),
+			},
+		},
+	})
+}
+
 // Lookup based on InstanceID
 const testAccInstanceDataSourceConfig = `
 resource "aws_instance" "web" {
@@ -371,6 +421,9 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "tf-acc-instance-ds-private-ip"
+  }
 }
 
 resource "aws_instance" "foo" {
@@ -428,6 +481,9 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
+  tags {
+   Name = "tf-acc-instance-data-source-vpc"
+  }
 }
 
 resource "aws_instance" "foo" {
@@ -458,6 +514,9 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "tf-acc-instance-data-source-placement-group"
+  }
 }
 
 resource "aws_placement_group" "foo" {
@@ -517,6 +576,10 @@ data "aws_instance" "foo" {
 const testAccInstanceDataSourceConfig_VPCSecurityGroups = `
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.foo.id}"
+
+  tags {
+    Name = "terraform-testacc-instance-data-source-vpc-sgs"
+  }
 }
 
 resource "aws_vpc" "foo" {
@@ -542,6 +605,9 @@ resource "aws_security_group" "tf_test_foo" {
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "tf-acc-instance-data-source-vpc-sgs"
+  }
 }
 
 resource "aws_instance" "foo_instance" {
@@ -556,3 +622,39 @@ data "aws_instance" "foo" {
   instance_id = "${aws_instance.foo_instance.id}"
 }
 `
+
+func testAccInstanceDataSourceConfig_getPasswordData(val bool, rInt int) string {
+	return fmt.Sprintf(`
+	# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
+	data "aws_ami" "win2016core" {
+		most_recent = true
+
+		filter {
+			name = "owner-alias"
+			values = ["amazon"]
+		}
+
+		filter {
+			name = "name"
+			values = ["Windows_Server-2016-English-Core-Base-*"]
+		}
+	}
+
+	resource "aws_key_pair" "foo" {
+		key_name = "tf-acctest-%d"
+		public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAq6U3HQYC4g8WzU147gZZ7CKQH8TgYn3chZGRPxaGmHW1RUwsyEs0nmombmIhwxudhJ4ehjqXsDLoQpd6+c7BuLgTMvbv8LgE9LX53vnljFe1dsObsr/fYLvpU9LTlo8HgHAqO5ibNdrAUvV31ronzCZhms/Gyfdaue88Fd0/YnsZVGeOZPayRkdOHSpqme2CBrpa8myBeL1CWl0LkDG4+YCURjbaelfyZlIApLYKy3FcCan9XQFKaL32MJZwCgzfOvWIMtYcU8QtXMgnA3/I3gXk8YDUJv5P4lj0s/PJXuTM8DygVAUtebNwPuinS7wwonm5FXcWMuVGsVpG5K7FGQ== tf-acc-winpasswordtest"
+	}
+
+	resource "aws_instance" "foo" {
+		ami = "${data.aws_ami.win2016core.id}"
+		instance_type = "t2.medium"
+		key_name = "${aws_key_pair.foo.key_name}"
+	}
+
+	data "aws_instance" "foo" {
+		instance_id = "${aws_instance.foo.id}"
+
+		get_password_data = %t
+	}
+	`, rInt, val)
+}

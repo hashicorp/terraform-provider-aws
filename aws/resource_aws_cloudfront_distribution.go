@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsCloudFrontDistribution() *schema.Resource {
@@ -57,7 +58,8 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						},
 						"default_ttl": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  86400,
 						},
 						"forwarded_values": {
 							Type:     schema.TypeSet,
@@ -122,11 +124,13 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						},
 						"max_ttl": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  31536000,
 						},
 						"min_ttl": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  0,
 						},
 						"path_pattern": {
 							Type:     schema.TypeString,
@@ -205,7 +209,8 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						},
 						"default_ttl": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  86400,
 						},
 						"forwarded_values": {
 							Type:     schema.TypeSet,
@@ -270,11 +275,13 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						},
 						"max_ttl": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  31536000,
 						},
 						"min_ttl": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  0,
 						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,
@@ -308,7 +315,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "http2",
-				ValidateFunc: validateHTTP,
+				ValidateFunc: validation.StringInSlice([]string{"http1.1", "http2"}, false),
 			},
 			"logging_config": {
 				Type:     schema.TypeSet,
@@ -723,17 +730,4 @@ func resourceAwsCloudFrontWebDistributionStateRefreshFunc(id string, meta interf
 
 		return resp.Distribution, *resp.Distribution.Status, nil
 	}
-}
-
-// validateHTTP ensures that the http_version resource parameter is
-// correct.
-func validateHTTP(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	if value != "http1.1" && value != "http2" {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid HTTP version parameter %q. Valid parameters are either %q or %q.",
-			k, value, "http1.1", "http2"))
-	}
-	return
 }

@@ -217,6 +217,10 @@ func TestAccAWSBatchComputeEnvironment_createSpotWithoutBidPercentage(t *testing
 	})
 }
 
+				Config: testAccAWSBatchComputeEnvironmentConfigEC2UpdateState(rInt, batch.CEStateEnabled),
+					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "state", batch.CEStateEnabled),
+				Config: testAccAWSBatchComputeEnvironmentConfigEC2UpdateState(rInt, batch.CEStateDisabled),
+					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "state", batch.CEStateDisabled),
 func testAccCheckBatchComputeEnvironmentDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).batchconn
 
@@ -373,6 +377,9 @@ resource "aws_vpc" "test_acc" {
 resource "aws_subnet" "test_acc" {
   vpc_id = "${aws_vpc.test_acc.id}"
   cidr_block = "10.1.1.0/24"
+  tags {
+    Name = "tf-acc-batch-compute-environment"
+  }
 }
 `, rInt, rInt, rInt, rInt, rInt)
 }
@@ -524,6 +531,10 @@ resource "aws_batch_compute_environment" "ec2" {
 `, rInt)
 }
 
+func testAccAWSBatchComputeEnvironmentConfigEC2UpdateState(rInt int, state string) string {
+  type = "MANAGED"
+  state = "%s"
+`, rInt, state)
 func testAccAWSBatchComputeEnvironmentConfigEC2UpdateComputeEnvironmentName(rInt int) string {
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "ec2" {

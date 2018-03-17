@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/hashcode"
@@ -27,6 +28,11 @@ func resourceAwsSecurityGroup() *schema.Resource {
 			State: resourceAwsSecurityGroupImportState,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsSecurityGroupMigrateState,
 
@@ -37,43 +43,22 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if len(value) > 255 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 255 characters", k))
-					}
-					return
-				},
+				ValidateFunc:  validateMaxLength(255),
 			},
 
 			"name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if len(value) > 100 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 100 characters, name is limited to 255", k))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateMaxLength(100),
 			},
 
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "Managed by Terraform",
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if len(value) > 255 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 255 characters", k))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "Managed by Terraform",
+				ValidateFunc: validateMaxLength(255),
 			},
 
 			"vpc_id": {
@@ -215,6 +200,11 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Set: resourceAwsSecurityGroupRuleHash,
 			},
 
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -274,7 +264,7 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 		Pending: []string{""},
 		Target:  []string{"exists"},
 		Refresh: SGStateRefreshFunc(conn, d.Id()),
-		Timeout: 10 * time.Minute,
+		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	resp, err := stateConf.WaitForState()
@@ -374,6 +364,15 @@ func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) erro
 	ingressRules := matchRules("ingress", localIngressRules, remoteIngressRules)
 	egressRules := matchRules("egress", localEgressRules, remoteEgressRules)
 
+	sgArn := arn.ARN{
+		AccountID: aws.StringValue(sg.OwnerId),
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(sg.GroupId)),
+		Service:   ec2.ServiceName,
+	}
+
+	d.Set("arn", sgArn.String())
 	d.Set("description", sg.Description)
 	d.Set("name", sg.GroupName)
 	d.Set("vpc_id", sg.VpcId)
@@ -443,7 +442,7 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
 			GroupId: aws.String(d.Id()),
 		})
@@ -1281,7 +1280,7 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
 				Pending: []string{"true"},
 				Target:  []string{"false"},
 				Refresh: networkInterfaceAttachedRefreshFunc(conn, *eni.NetworkInterfaceId),
-				Timeout: 10 * time.Minute,
+				Timeout: d.Timeout(schema.TimeoutDelete),
 			}
 			if _, err := stateConf.WaitForState(); err != nil {
 				return fmt.Errorf(

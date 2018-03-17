@@ -9,9 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsDynamoDbTable() *schema.Resource {
@@ -30,9 +32,20 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		CustomizeDiff: func(diff *schema.ResourceDiff, v interface{}) error {
-			return validateDynamoDbStreamSpec(diff)
-		},
+		CustomizeDiff: customdiff.Sequence(
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				return validateDynamoDbStreamSpec(diff)
+			},
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
+					o, n := diff.GetChange("server_side_encryption")
+					if isDynamoDbTableSSEDisabled(o) && isDynamoDbTableSSEDisabled(n) {
+						return diff.Clear("server_side_encryption")
+					}
+				}
+				return nil
+			},
+		),
 
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsDynamoDbTableMigrateState,
@@ -75,9 +88,13 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 							Required: true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateDynamoAttributeType,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								dynamodb.ScalarAttributeTypeB,
+								dynamodb.ScalarAttributeTypeN,
+								dynamodb.ScalarAttributeTypeS,
+							}, false),
 						},
 					},
 				},
@@ -186,7 +203,13 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 					value := v.(string)
 					return strings.ToUpper(value)
 				},
-				ValidateFunc: validateStreamViewType,
+				ValidateFunc: validation.StringInSlice([]string{
+					"",
+					dynamodb.StreamViewTypeNewImage,
+					dynamodb.StreamViewTypeOldImage,
+					dynamodb.StreamViewTypeNewAndOldImages,
+					dynamodb.StreamViewTypeKeysOnly,
+				}, false),
 			},
 			"stream_arn": {
 				Type:     schema.TypeString,
@@ -195,6 +218,21 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 			"stream_label": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"server_side_encryption": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
 			},
 			"tags": tagsSchema(),
 		},
@@ -248,6 +286,16 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 			StreamEnabled:  aws.Bool(v.(bool)),
 			StreamViewType: aws.String(d.Get("stream_view_type").(string)),
 		}
+	}
+
+	if v, ok := d.GetOk("server_side_encryption"); ok {
+		options := v.([]interface{})
+		if options[0] == nil {
+			return fmt.Errorf("At least one field is expected inside server_side_encryption")
+		}
+
+		s := options[0].(map[string]interface{})
+		req.SSESpecification = expandDynamoDbEncryptAtRestOptions(s)
 	}
 
 	var output *dynamodb.CreateTableOutput
@@ -696,4 +744,13 @@ func waitForDynamoDbTtlUpdateToBeCompleted(tableName string, toEnable bool, conn
 
 	_, err := stateConf.WaitForState()
 	return err
+}
+
+func isDynamoDbTableSSEDisabled(v interface{}) bool {
+	options := v.([]interface{})
+	if len(options) == 0 {
+		return true
+	}
+	e := options[0].(map[string]interface{})["enabled"]
+	return !e.(bool)
 }

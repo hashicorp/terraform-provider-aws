@@ -2843,6 +2843,9 @@ func (c *Redshift) DescribeClusterSnapshotsRequest(input *DescribeClusterSnapsho
 // API operation DescribeClusterSnapshots for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeClusterNotFoundFault "ClusterNotFound"
+//   The ClusterIdentifier parameter does not refer to an existing cluster.
+//
 //   * ErrCodeClusterSnapshotNotFoundFault "ClusterSnapshotNotFound"
 //   The snapshot identifier does not refer to an existing cluster snapshot.
 //
@@ -7163,6 +7166,8 @@ type AvailabilityZone struct {
 
 	// The name of the availability zone.
 	Name *string `type:"string"`
+
+	SupportedPlatforms []*SupportedPlatform `locationNameList:"SupportedPlatform" type:"list"`
 }
 
 // String returns the string representation
@@ -7178,6 +7183,12 @@ func (s AvailabilityZone) GoString() string {
 // SetName sets the Name field's value.
 func (s *AvailabilityZone) SetName(v string) *AvailabilityZone {
 	s.Name = &v
+	return s
+}
+
+// SetSupportedPlatforms sets the SupportedPlatforms field's value.
+func (s *AvailabilityZone) SetSupportedPlatforms(v []*SupportedPlatform) *AvailabilityZone {
+	s.SupportedPlatforms = v
 	return s
 }
 
@@ -8397,7 +8408,7 @@ type CreateClusterInput struct {
 	//
 	// Constraints:
 	//
-	//    * Must be 1 - 128 alphanumeric characters.
+	//    * Must be 1 - 128 alphanumeric characters. The user name can't be PUBLIC.
 	//
 	//    * First character must be a letter.
 	//
@@ -8412,8 +8423,8 @@ type CreateClusterInput struct {
 	// types, go to  Working with Clusters (http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#how-many-nodes)
 	// in the Amazon Redshift Cluster Management Guide.
 	//
-	// Valid Values: ds1.xlarge | ds1.8xlarge | ds2.xlarge | ds2.8xlarge | dc1.large
-	// | dc1.8xlarge.
+	// Valid Values: ds2.xlarge | ds2.8xlarge | ds2.xlarge | ds2.8xlarge | dc1.large
+	// | dc1.8xlarge | dc2.large | dc2.8xlarge
 	//
 	// NodeType is a required field
 	NodeType *string `type:"string" required:"true"`
@@ -10700,6 +10711,12 @@ func (s *DescribeClusterSecurityGroupsOutput) SetMarker(v string) *DescribeClust
 type DescribeClusterSnapshotsInput struct {
 	_ struct{} `type:"structure"`
 
+	// A value that indicates whether to return snapshots only for an existing cluster.
+	// Table-level restore can be performed only using a snapshot of an existing
+	// cluster, that is, a cluster that has not been deleted. If ClusterExists is
+	// set to true, ClusterIdentifier is required.
+	ClusterExists *bool `type:"boolean"`
+
 	// The identifier of the cluster for which information about snapshots is requested.
 	ClusterIdentifier *string `type:"string"`
 
@@ -10775,6 +10792,12 @@ func (s DescribeClusterSnapshotsInput) String() string {
 // GoString returns the string representation
 func (s DescribeClusterSnapshotsInput) GoString() string {
 	return s.String()
+}
+
+// SetClusterExists sets the ClusterExists field's value.
+func (s *DescribeClusterSnapshotsInput) SetClusterExists(v bool) *DescribeClusterSnapshotsInput {
+	s.ClusterExists = &v
+	return s
 }
 
 // SetClusterIdentifier sets the ClusterIdentifier field's value.
@@ -13542,7 +13565,8 @@ type GetClusterCredentialsInput struct {
 	//
 	// Constraints:
 	//
-	//    * Must be 1 to 64 alphanumeric characters or hyphens
+	//    * Must be 1 to 64 alphanumeric characters or hyphens. The user name can't
+	//    be PUBLIC.
 	//
 	//    * Must contain only lowercase letters, numbers, underscore, plus sign,
 	//    period (dot), at symbol (@), or hyphen.
@@ -14183,8 +14207,8 @@ type ModifyClusterInput struct {
 	// permissions for the cluster are restored. You can use DescribeResize to track
 	// the progress of the resize request.
 	//
-	// Valid Values:  ds1.xlarge | ds1.8xlarge |  ds2.xlarge | ds2.8xlarge | dc1.large
-	// | dc1.8xlarge.
+	// Valid Values: ds2.xlarge | ds2.8xlarge | dc1.large | dc1.8xlarge | dc2.large
+	// | dc2.8xlarge
 	NodeType *string `type:"string"`
 
 	// The new number of nodes of the cluster. If you specify a new number of nodes,
@@ -15211,6 +15235,8 @@ type ReservedNode struct {
 	// The identifier for the reserved node offering.
 	ReservedNodeOfferingId *string `type:"string"`
 
+	ReservedNodeOfferingType *string `type:"string" enum:"ReservedNodeOfferingType"`
+
 	// The time the reservation started. You purchase a reserved node offering for
 	// a duration. This is the start time of that duration.
 	StartTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
@@ -15296,6 +15322,12 @@ func (s *ReservedNode) SetReservedNodeOfferingId(v string) *ReservedNode {
 	return s
 }
 
+// SetReservedNodeOfferingType sets the ReservedNodeOfferingType field's value.
+func (s *ReservedNode) SetReservedNodeOfferingType(v string) *ReservedNode {
+	s.ReservedNodeOfferingType = &v
+	return s
+}
+
 // SetStartTime sets the StartTime field's value.
 func (s *ReservedNode) SetStartTime(v time.Time) *ReservedNode {
 	s.StartTime = &v
@@ -15342,6 +15374,8 @@ type ReservedNodeOffering struct {
 
 	// The offering identifier.
 	ReservedNodeOfferingId *string `type:"string"`
+
+	ReservedNodeOfferingType *string `type:"string" enum:"ReservedNodeOfferingType"`
 
 	// The rate you are charged for each hour the cluster that is using the offering
 	// is running.
@@ -15397,6 +15431,12 @@ func (s *ReservedNodeOffering) SetRecurringCharges(v []*RecurringCharge) *Reserv
 // SetReservedNodeOfferingId sets the ReservedNodeOfferingId field's value.
 func (s *ReservedNodeOffering) SetReservedNodeOfferingId(v string) *ReservedNodeOffering {
 	s.ReservedNodeOfferingId = &v
+	return s
+}
+
+// SetReservedNodeOfferingType sets the ReservedNodeOfferingType field's value.
+func (s *ReservedNodeOffering) SetReservedNodeOfferingType(v string) *ReservedNodeOffering {
+	s.ReservedNodeOfferingType = &v
 	return s
 }
 
@@ -15581,12 +15621,14 @@ type RestoreFromClusterSnapshotInput struct {
 	// Default: The node type of the cluster from which the snapshot was taken.
 	// You can modify this if you are using any DS node type. In that case, you
 	// can choose to restore into another DS node type of the same size. For example,
-	// you can restore ds1.8xlarge into ds2.8xlarge, or ds2.xlarge into ds1.xlarge.
+	// you can restore ds1.8xlarge into ds2.8xlarge, or ds1.xlarge into ds2.xlarge.
 	// If you have a DC instance type, you must restore into that same instance
 	// type and size. In other words, you can only restore a dc1.large instance
-	// type into another dc1.large instance type. For more information about node
-	// types, see  About Clusters and Nodes (http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#rs-about-clusters-and-nodes)
-	// in the Amazon Redshift Cluster Management Guide
+	// type into another dc1.large instance type or dc2.large instance type. You
+	// can't restore dc1.8xlarge to dc2.8xlarge. First restore to a dc1.8xlareg
+	// cluster, then resize to a dc2.8large cluster. For more information about
+	// node types, see  About Clusters and Nodes (http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#rs-about-clusters-and-nodes)
+	// in the Amazon Redshift Cluster Management Guide.
 	NodeType *string `type:"string"`
 
 	// The AWS customer account used to create or copy the snapshot. Required if
@@ -16687,6 +16729,29 @@ func (s *Subnet) SetSubnetStatus(v string) *Subnet {
 	return s
 }
 
+// A list of supported platforms for orderable clusters.
+type SupportedPlatform struct {
+	_ struct{} `type:"structure"`
+
+	Name *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SupportedPlatform) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SupportedPlatform) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *SupportedPlatform) SetName(v string) *SupportedPlatform {
+	s.Name = &v
+	return s
+}
+
 // Describes the status of a RestoreTableFromClusterSnapshot operation.
 type TableRestoreStatus struct {
 	_ struct{} `type:"structure"`
@@ -16971,6 +17036,14 @@ const (
 
 	// ParameterApplyTypeDynamic is a ParameterApplyType enum value
 	ParameterApplyTypeDynamic = "dynamic"
+)
+
+const (
+	// ReservedNodeOfferingTypeRegular is a ReservedNodeOfferingType enum value
+	ReservedNodeOfferingTypeRegular = "Regular"
+
+	// ReservedNodeOfferingTypeUpgradable is a ReservedNodeOfferingType enum value
+	ReservedNodeOfferingTypeUpgradable = "Upgradable"
 )
 
 const (

@@ -560,7 +560,11 @@ resource "aws_subnet" "blob" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
+	tags {
+		Name = "tf-acc-network-acl-ipv6"
+	}
 }
+
 resource "aws_network_acl" "foos" {
 	vpc_id = "${aws_vpc.foo.id}"
 	ingress = {
@@ -621,6 +625,9 @@ resource "aws_subnet" "blob" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
+	tags {
+		Name = "tf-acc-network-acl-ingress"
+	}
 }
 
 resource "aws_network_acl" "foos" {
@@ -661,6 +668,9 @@ resource "aws_subnet" "blob" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
+	tags {
+		Name = "tf-acc-network-acl-ingress"
+	}
 }
 
 resource "aws_network_acl" "foos" {
@@ -692,6 +702,9 @@ resource "aws_subnet" "blob" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
+	tags {
+		Name = "tf-acc-network-acl-ingress"
+	}
 }
 
 resource "aws_network_acl" "foos" {
@@ -723,6 +736,9 @@ resource "aws_subnet" "blob" {
 	cidr_block = "10.2.0.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
+	tags {
+		Name = "tf-acc-network-acl-egress"
+	}
 }
 
 resource "aws_network_acl" "bond" {
@@ -782,6 +798,9 @@ resource "aws_subnet" "blob" {
 	cidr_block = "10.3.0.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
+	tags {
+		Name = "tf-acc-network-acl-egress-and-ingress"
+	}
 }
 
 resource "aws_network_acl" "bar" {
@@ -820,12 +839,18 @@ resource "aws_subnet" "old" {
 	cidr_block = "10.1.111.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
+	tags {
+		Name = "tf-acc-network-acl-subnet-change-old"
+	}
 }
 
 resource "aws_subnet" "new" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
+	tags {
+		Name = "tf-acc-network-acl-subnet-change-new"
+	}
 }
 
 resource "aws_network_acl" "roll" {
@@ -857,12 +882,18 @@ resource "aws_subnet" "old" {
 	cidr_block = "10.1.111.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
+	tags {
+		Name = "tf-acc-network-acl-subnet-change-old"
+	}
 }
 
 resource "aws_subnet" "new" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
+	tags {
+		Name = "tf-acc-network-acl-subnet-change-new"
+	}
 }
 
 resource "aws_network_acl" "bar" {
@@ -886,7 +917,7 @@ resource "aws_subnet" "one" {
 	cidr_block = "10.1.111.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "acl-subnets-test"
+		Name = "tf-acc-network-acl-subnet-ids-one"
 	}
 }
 
@@ -894,7 +925,7 @@ resource "aws_subnet" "two" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "acl-subnets-test"
+		Name = "tf-acc-network-acl-subnet-ids-two"
 	}
 }
 
@@ -919,7 +950,7 @@ resource "aws_subnet" "one" {
 	cidr_block = "10.1.111.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "acl-subnets-test"
+		Name = "tf-acc-network-acl-subnet-ids-one"
 	}
 }
 
@@ -927,7 +958,7 @@ resource "aws_subnet" "two" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "acl-subnets-test"
+		Name = "tf-acc-network-acl-subnet-ids-two"
 	}
 }
 
@@ -935,7 +966,7 @@ resource "aws_subnet" "three" {
 	cidr_block = "10.1.222.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "acl-subnets-test"
+		Name = "tf-acc-network-acl-subnet-ids-three"
 	}
 }
 
@@ -943,7 +974,7 @@ resource "aws_subnet" "four" {
 	cidr_block = "10.1.4.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "acl-subnets-test"
+		Name = "tf-acc-network-acl-subnet-ids-four"
 	}
 }
 

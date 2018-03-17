@@ -99,6 +99,7 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 						return ""
 					}
 				},
+				ValidateFunc: validateInstanceUserDataSize,
 			},
 
 			"security_groups": {

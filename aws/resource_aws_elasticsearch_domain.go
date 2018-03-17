@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -205,17 +206,10 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 						"log_type": {
 							Type:     schema.TypeString,
 							Required: true,
-							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								value := v.(string)
-								validLogTypes := []string{"INDEX_SLOW_LOGS", "SEARCH_SLOW_LOGS"}
-								for _, str := range validLogTypes {
-									if value == str {
-										return
-									}
-								}
-								errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validLogTypes, value))
-								return
-							},
+							ValidateFunc: validation.StringInSlice([]string{
+								elasticsearch.LogTypeIndexSlowLogs,
+								elasticsearch.LogTypeSearchSlowLogs,
+							}, false),
 						},
 						"cloudwatch_log_group_arn": {
 							Type:     schema.TypeString,
