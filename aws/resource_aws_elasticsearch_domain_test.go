@@ -39,10 +39,10 @@ func testSweepElasticSearchDomains(region string) error {
 		return fmt.Errorf("Error retrieving Elasticsearch Domains: %s", err)
 	}
 	for _, domain := range out.DomainNames {
-		skip := false
+		skip := true
 		for _, prefix := range prefixes {
-			if !strings.HasPrefix(*domain.DomainName, prefix) {
-				skip = true
+			if strings.HasPrefix(*domain.DomainName, prefix) {
+				skip = false
 				break
 			}
 		}
@@ -59,6 +59,7 @@ func testSweepElasticSearchDomains(region string) error {
 			log.Printf("[ERROR] Failed to delete Elasticsearch Domain %s: %s", *domain.DomainName, err)
 			continue
 		}
+		resourceAwsElasticSearchDomainDeleteWaiter(*domain.DomainName, conn)
 	}
 
 	return nil
