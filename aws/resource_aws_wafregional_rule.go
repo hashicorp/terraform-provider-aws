@@ -111,7 +111,10 @@ func resourceAwsWafRegionalRuleRead(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsWafRegionalRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("predicate") {
-		err := updateWafRegionalRuleResource(d, meta, waf.ChangeActionInsert)
+		o, n := d.GetChange("predicate")
+		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
+
+		err := updateWafRegionalRuleResource(d.Id(), oldP, newP, meta)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rule: %s", err)
 		}
@@ -123,13 +126,12 @@ func resourceAwsWafRegionalRuleDelete(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region
 
-	if v, ok := d.GetOk("predicate"); ok {
-		predicates := v.(*schema.Set).List()
-		if len(predicates) > 0 {
-			err := updateWafRegionalRuleResource(d, meta, waf.ChangeActionDelete)
-			if err != nil {
-				return fmt.Errorf("Error Removing WAF Rule Predicates: %s", err)
-			}
+	oldPredicates := d.Get("predicate").(*schema.Set).List()
+	if len(oldPredicates) > 0 {
+		noPredicates := []interface{}{}
+		err := updateWafRegionalRuleResource(d.Id(), oldPredicates, noPredicates, meta)
+		if err != nil {
+			return fmt.Errorf("Error Removing WAF Rule Predicates: %s", err)
 		}
 	}
 
@@ -149,7 +151,8 @@ func resourceAwsWafRegionalRuleDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func updateWafRegionalRuleResource(d *schema.ResourceData, meta interface{}, ChangeAction string) error {
+//func updateWafRegionalRuleResource(d *schema.ResourceData, meta interface{}, ChangeAction string) error {
+func updateWafRegionalRuleResource(id string, oldP, newP []interface{}, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region
 
@@ -157,25 +160,13 @@ func updateWafRegionalRuleResource(d *schema.ResourceData, meta interface{}, Cha
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRuleInput{
 			ChangeToken: token,
-			RuleId:      aws.String(d.Id()),
-		}
-
-		predicatesSet := d.Get("predicate").(*schema.Set)
-		for _, predicateI := range predicatesSet.List() {
-			predicate := predicateI.(map[string]interface{})
-			updatePredicate := &waf.RuleUpdate{
-				Action: aws.String(ChangeAction),
-				Predicate: &waf.Predicate{
-					Negated: aws.Bool(predicate["negated"].(bool)),
-					Type:    aws.String(predicate["type"].(string)),
-					DataId:  aws.String(predicate["data_id"].(string)),
-				},
-			}
-			req.Updates = append(req.Updates, updatePredicate)
+			RuleId:      aws.String(id),
+			Updates:     diffWafRulePredicates(oldP, newP),
 		}
 
 		return conn.UpdateRule(req)
 	})
+
 	if err != nil {
 		return fmt.Errorf("Error Updating WAF Rule: %s", err)
 	}

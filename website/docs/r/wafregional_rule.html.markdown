@@ -40,7 +40,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name or description of the rule.
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
-* `predicate` - (Optional) The ByteMatchSet, IPSet, SizeConstraintSet, SqlInjectionMatchSet, or XssMatchSet objects to include in a rule.
+* `predicate` - (Optional) The `ByteMatchSet`, `IPSet`, `SizeConstraintSet`, `SqlInjectionMatchSet`, or `XssMatchSet` objects to include in a rule.
 
 ## Nested Fields
 
@@ -51,7 +51,7 @@ See [docs](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-pr
 #### Arguments
 
 * `type` - (Required) The type of predicate in a rule, such as an IPSet (IPMatch)
-* `data_id` - (Required) The unique identifier of a predicate, such as the ID of a ByteMatchSet or IPSet.
+* `data_id` - (Required) The unique identifier of a predicate, such as the ID of a `ByteMatchSet` or `IPSet`.
 * `negated` - (Required) Whether to use the settings or the negated settings that you specified in the `ByteMatchSet`, `IPSet`, `SizeConstraintSet`, `SqlInjectionMatchSet`, or `XssMatchSet` objects.
 
 ## Remarks
@@ -60,4 +60,4 @@ See [docs](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-pr
 
 The following attributes are exported:
 
-* `id` - The ID of the WAF rule.
+* `id` - The ID of the WAF Regional Rule.
