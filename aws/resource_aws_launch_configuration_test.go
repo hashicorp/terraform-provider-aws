@@ -90,7 +90,7 @@ func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.bar", &conf),
 					testAccCheckAWSLaunchConfigurationGeneratedNamePrefix(
-						"aws_launch_configuration.bar", "tf-acc-test-"),
+						"aws_launch_configuration.bar", "terraform-"),
 				),
 			},
 			{
