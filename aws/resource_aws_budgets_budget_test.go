@@ -272,9 +272,11 @@ resource "aws_budgets_budget" "foo" {
 	budget_type = "{{.BudgetType}}"
  	limit_amount = "{{.LimitAmount}}"
  	limit_unit = "{{.LimitUnit}}"
-	include_tax = "{{.IncludeTax}}"
-	include_subscription = "{{.IncludeSubscription}}"
-	use_blended = "{{.UseBlended}}"
+	cost_types = {
+		include_tax = "{{.IncludeTax}}"
+		include_subscription = "{{.IncludeSubscription}}"
+		use_blended = "{{.UseBlended}}"
+	}
 	time_period_start = "{{.TimePeriodStart}}" 
 	time_period_end = "{{.TimePeriodEnd}}"
  	time_unit = "{{.TimeUnit}}"
@@ -316,9 +318,11 @@ resource "aws_budgets_budget" "foo" {
 	budget_type = "{{.BudgetType}}"
  	limit_amount = "{{.LimitAmount}}"
  	limit_unit = "{{.LimitUnit}}"
-	include_tax = "{{.IncludeTax}}"
-	include_subscription = "{{.IncludeSubscription}}"
-	use_blended = "{{.UseBlended}}"
+	cost_types = {
+		include_tax = "{{.IncludeTax}}"
+		include_subscription = "{{.IncludeSubscription}}"
+		use_blended = "{{.UseBlended}}"
+	}
 	time_period_start = "{{.TimePeriodStart}}" 
 	time_period_end = "{{.TimePeriodEnd}}"
  	time_unit = "{{.TimeUnit}}"
