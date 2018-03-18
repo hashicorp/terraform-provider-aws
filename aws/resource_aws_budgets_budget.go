@@ -186,12 +186,12 @@ func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("could not create budget: %v", err)
 	}
 
-	updateBudgetInput := new(budgets.UpdateBudgetInput)
-	updateBudgetInput.SetAccountId(accountID)
-	updateBudgetInput.SetNewBudget(budget)
-	_, err = client.UpdateBudget(updateBudgetInput)
+	_, err = client.UpdateBudget(&budgets.UpdateBudgetInput{
+		AccountId: &accountID,
+		NewBudget: budget,
+	})
 	if err != nil {
-		return fmt.Errorf("updaate budget failed: %v", err)
+		return fmt.Errorf("update budget failed: %v", err)
 	}
 
 	return resourceAwsBudgetsBudgetRead(d, meta)
@@ -206,10 +206,10 @@ func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) er
 
 	client := meta.(*AWSClient).budgetconn
 	accountID := meta.(*AWSClient).accountid
-	deleteBudgetInput := new(budgets.DeleteBudgetInput)
-	deleteBudgetInput.SetBudgetName(budgetName)
-	deleteBudgetInput.SetAccountId(accountID)
-	_, err := client.DeleteBudget(deleteBudgetInput)
+	_, err := client.DeleteBudget(&budgets.DeleteBudgetInput{
+		BudgetName: &budgetName,
+		AccountId:  &accountID,
+	})
 	if err != nil {
 		return fmt.Errorf("delete budget failed: %v", err)
 	}
@@ -346,30 +346,21 @@ func newBudgetsBudget(d *schema.ResourceData) (*budgets.Budget, error) {
 		return nil, fmt.Errorf("failure parsing time: %v", err)
 	}
 
-	budget := new(budgets.Budget)
-	budget.SetBudgetName(budgetName)
-	budget.SetBudgetType(budgetType)
-	budget.SetBudgetLimit(&budgets.Spend{
-		Amount: &budgetLimitAmount,
-		Unit:   &budgetLimitUnit,
-	})
-	budget.SetCostTypes(&budgets.CostTypes{
-		IncludeCredit:            &budgetIncludeCredit,
-		IncludeOtherSubscription: &budgetIncludeOtherSubscription,
-		IncludeRecurring:         &budgetIncludeRecurring,
-		IncludeRefund:            &budgetIncludeRefund,
-		IncludeSubscription:      &budgetIncludeSubscription,
-		IncludeSupport:           &budgetIncludeSupport,
-		IncludeTax:               &budgetIncludeTax,
-		IncludeUpfront:           &budgetIncludeUpfront,
-		UseBlended:               &budgetUseBlended,
-	})
-	budget.SetTimePeriod(&budgets.TimePeriod{
-		End:   &budgetTimePeriodEnd,
-		Start: &budgetTimePeriodStart,
-	})
-	budget.SetTimeUnit(budgetTimeUnit)
-	budget.SetCostFilters(budgetCostFilters)
+	budget := &budgets.Budget{
+		BudgetName: &budgetName,
+		BudgetType: &budgetType,
+		BudgetLimit: &budgets.Spend{
+			Amount: &budgetLimitAmount,
+			Unit:   &budgetLimitUnit,
+		},
+		CostTypes: costTypes,
+		TimePeriod: &budgets.TimePeriod{
+			End:   &budgetTimePeriodEnd,
+			Start: &budgetTimePeriodStart,
+		},
+		TimeUnit:    &budgetTimeUnit,
+		CostFilters: budgetCostFilters,
+	}
 	return budget, nil
 }
 
@@ -393,8 +384,8 @@ func isBudgetNotFoundException(err error) bool {
 func describeBudget(budgetName string, meta interface{}) (*budgets.DescribeBudgetOutput, error) {
 	client := meta.(*AWSClient).budgetconn
 	accountID := meta.(*AWSClient).accountid
-	describeBudgetInput := new(budgets.DescribeBudgetInput)
-	describeBudgetInput.SetBudgetName(budgetName)
-	describeBudgetInput.SetAccountId(accountID)
-	return client.DescribeBudget(describeBudgetInput)
+	return client.DescribeBudget(&budgets.DescribeBudgetInput{
+		BudgetName: &budgetName,
+		AccountId:  &accountID,
+	})
 }
