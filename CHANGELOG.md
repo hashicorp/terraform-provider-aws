@@ -20,6 +20,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_api_gateway_client_certificate: Export `*_date` fields correctly [GH-3805]
 * resource/aws_cognito_user_pool: Detect `auto_verified_attributes` changes [GH-3786]
 * resource/aws_cognito_user_pool_client: Fix `callback_urls` updates [GH-3404]
 * resource/aws_db_instance: Support `incompatible-parameters` and `storage-full` state [GH-3708]
