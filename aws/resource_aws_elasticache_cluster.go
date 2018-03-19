@@ -424,6 +424,7 @@ func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	requestUpdate := false
+	requestRecreate := false
 	if d.HasChange("security_group_ids") {
 		if attr := d.Get("security_group_ids").(*schema.Set); attr.Len() > 0 {
 			req.SecurityGroupIds = expandStringList(attr.List())
@@ -462,8 +463,13 @@ func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("node_type") {
-		req.CacheNodeType = aws.String(d.Get("node_type").(string))
-		requestUpdate = true
+		if d.Get("engine").(string) == "memcached" {
+			req.CacheNodeType = aws.String(d.Get("node_type").(string))
+			requestRecreate = true
+		} else {
+			req.CacheNodeType = aws.String(d.Get("node_type").(string))
+			requestUpdate = true
+		}
 	}
 
 	if d.HasChange("snapshot_retention_limit") {
@@ -516,6 +522,12 @@ func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{
 		if sterr != nil {
 			return fmt.Errorf("Error waiting for elasticache (%s) to update: %s", d.Id(), sterr)
 		}
+	}
+
+	if requestRecreate {
+		log.Printf("[DEBUG] Recreating ElastiCache Cluster (%s), opts:\n%s", d.Id(), req)
+		resourceAwsElasticacheClusterDelete(d, meta)
+		resourceAwsElasticacheClusterCreate(d, meta)
 	}
 
 	return resourceAwsElasticacheClusterRead(d, meta)
