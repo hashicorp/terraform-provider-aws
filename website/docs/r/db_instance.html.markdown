@@ -29,6 +29,11 @@ server reboots. See the AWS Docs on [RDS Maintenance][2] for more information.
 the raw state as plain-text. [Read more about sensitive data in
 state](/docs/state/sensitive-data.html).
 
+## RDS Instance Class Types
+Amazon RDS supports three types of instance classes: Standard, Memory Optimized,
+and Burstable Performance. For more information please read the AWS RDS documentation
+about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
+
 ## Example Usage
 
 ```hcl
@@ -36,13 +41,12 @@ resource "aws_db_instance" "default" {
   allocated_storage    = 10
   storage_type         = "gp2"
   engine               = "mysql"
-  engine_version       = "5.6.17"
-  instance_class       = "db.t1.micro"
+  engine_version       = "5.7"
+  instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
-  password             = "bar"
-  db_subnet_group_name = "my_database_subnet_group"
-  parameter_group_name = "default.mysql5.6"
+  password             = "foobarbaz"
+  parameter_group_name = "default.mysql5.7"
 }
 ```
 

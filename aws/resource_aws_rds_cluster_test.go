@@ -483,18 +483,18 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
-	tags {
-		Name = "testAccAWSClusterConfig_namePrefix"
-	}
+  tags {
+    Name = "tf-acc-rds-cluster-name-prefix-a"
+  }
 }
 
 resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
-	tags {
-		Name = "testAccAWSClusterConfig_namePrefix"
-	}
+  tags {
+    Name = "tf-acc-rds-cluster-name-prefix-b"
+  }
 }
 
 resource "aws_db_subnet_group" "test" {
@@ -524,12 +524,18 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-rds-cluster-generated-name-a"
+  }
 }
 
 resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
+  tags {
+    Name = "tf-acc-rds-cluster-generated-name-b"
+  }
 }
 
 resource "aws_db_subnet_group" "test" {
@@ -987,6 +993,9 @@ resource "aws_subnet" "db" {
   vpc_id            = "${aws_vpc.main.id}"
   availability_zone = "${data.aws_availability_zones.us-east-1.names[count.index]}"
   cidr_block        = "10.0.${count.index}.0/24"
+  tags {
+    Name = "tf-acc-rds-cluster-encrypted-cross-region-replica-${count.index}"
+  }
 }
 
 resource "aws_db_subnet_group" "replica" {

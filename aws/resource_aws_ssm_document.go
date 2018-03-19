@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 const (
@@ -41,9 +42,13 @@ func resourceAwsSsmDocument() *schema.Resource {
 				Required: true,
 			},
 			"document_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateAwsSSMDocumentType,
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ssm.DocumentTypeCommand,
+					ssm.DocumentTypePolicy,
+					ssm.DocumentTypeAutomation,
+				}, false),
 			},
 			"schema_version": {
 				Type:     schema.TypeString,
@@ -465,18 +470,4 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 		return errwrap.Wrapf("Error updating the default document version to that of the updated document: {{err}}", err)
 	}
 	return nil
-}
-
-func validateAwsSSMDocumentType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		"Command":    true,
-		"Policy":     true,
-		"Automation": true,
-	}
-
-	if !types[value] {
-		errors = append(errors, fmt.Errorf("Document type %s is invalid. Valid types are Command, Policy or Automation", value))
-	}
-	return
 }

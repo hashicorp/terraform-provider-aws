@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -51,22 +52,29 @@ func resourceAwsRoute53Record() *schema.Resource {
 			},
 
 			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateRoute53RecordType,
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					route53.RRTypeSoa,
+					route53.RRTypeA,
+					route53.RRTypeTxt,
+					route53.RRTypeNs,
+					route53.RRTypeCname,
+					route53.RRTypeMx,
+					route53.RRTypeNaptr,
+					route53.RRTypePtr,
+					route53.RRTypeSrv,
+					route53.RRTypeSpf,
+					route53.RRTypeAaaa,
+					route53.RRTypeCaa,
+				}, false),
 			},
 
 			"zone_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(string)
-					if value == "" {
-						es = append(es, fmt.Errorf("Cannot have empty zone_id"))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
 			},
 
 			"ttl": {

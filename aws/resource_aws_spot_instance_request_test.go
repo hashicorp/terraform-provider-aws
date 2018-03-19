@@ -462,6 +462,9 @@ func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
 	resource "aws_subnet" "foo_VPC" {
 		cidr_block = "10.1.1.0/24"
 		vpc_id = "${aws_vpc.foo_VPC.id}"
+		tags {
+			Name = "tf-acc-spot-instance-request-vpc"
+		}
 	}
 
 	resource "aws_key_pair" "debugging" {
@@ -518,7 +521,7 @@ func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int)
 		map_public_ip_on_launch = true
 
 		tags {
-			Name = "tf_test_subnet-%d"
+			Name = "tf-acc-spot-instance-request-subnet-and-sg-public-ip"
 		}
 	}
 
@@ -530,5 +533,5 @@ func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int)
 		tags {
 			Name = "tf_test_sg_ssh-%d"
 		}
-	}`, rInt, rInt, rInt)
+	}`, rInt, rInt)
 }

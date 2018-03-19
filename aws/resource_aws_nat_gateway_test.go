@@ -188,12 +188,18 @@ resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.1.0/24"
   map_public_ip_on_launch = false
+  tags {
+    Name = "tf-acc-nat-gw-basic-private"
+  }
 }
 
 resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.2.0/24"
   map_public_ip_on_launch = true
+  tags {
+    Name = "tf-acc-nat-gw-basic-public"
+  }
 }
 
 resource "aws_internet_gateway" "gw" {
@@ -257,12 +263,18 @@ resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.1.0/24"
   map_public_ip_on_launch = false
+  tags {
+    Name = "tf-acc-nat-gw-tags-private"
+  }
 }
 
 resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.2.0/24"
   map_public_ip_on_launch = true
+  tags {
+    Name = "tf-acc-nat-gw-tags-public"
+  }
 }
 
 resource "aws_internet_gateway" "gw" {
@@ -327,12 +339,18 @@ resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.1.0/24"
   map_public_ip_on_launch = false
+  tags {
+    Name = "tf-acc-nat-gw-tags-private"
+  }
 }
 
 resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.2.0/24"
   map_public_ip_on_launch = true
+  tags {
+    Name = "tf-acc-nat-gw-tags-public"
+  }
 }
 
 resource "aws_internet_gateway" "gw" {

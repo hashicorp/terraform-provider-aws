@@ -88,9 +88,13 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 							Required: true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateDynamoAttributeType,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								dynamodb.ScalarAttributeTypeB,
+								dynamodb.ScalarAttributeTypeN,
+								dynamodb.ScalarAttributeTypeS,
+							}, false),
 						},
 					},
 				},

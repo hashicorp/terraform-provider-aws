@@ -1335,6 +1335,68 @@ func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_getPasswordData_falseToTrue(t *testing.T) {
+	var before, after ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_getPasswordData(false, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "get_password_data", "false"),
+					resource.TestCheckResourceAttr(resName, "password_data", ""),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_getPasswordData(true, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &after),
+					testAccCheckInstanceNotRecreated(t, &before, &after),
+					resource.TestCheckResourceAttr(resName, "get_password_data", "true"),
+					resource.TestCheckResourceAttrSet(resName, "password_data"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
+	var before, after ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_getPasswordData(true, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "get_password_data", "true"),
+					resource.TestCheckResourceAttrSet(resName, "password_data"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_getPasswordData(false, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &after),
+					testAccCheckInstanceNotRecreated(t, &before, &after),
+					resource.TestCheckResourceAttr(resName, "get_password_data", "false"),
+					resource.TestCheckResourceAttr(resName, "password_data", ""),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceNotRecreated(t *testing.T,
 	before, after *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -1630,6 +1692,9 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-instance-source-dest-enable"
+	}
 }
 
 resource "aws_instance" "foo" {
@@ -1651,6 +1716,9 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-instance-source-dest-disable"
+	}
 }
 
 resource "aws_instance" "foo" {
@@ -1674,6 +1742,9 @@ func testAccInstanceConfigDisableAPITermination(val bool) string {
 	resource "aws_subnet" "foo" {
 		cidr_block = "10.1.1.0/24"
 		vpc_id = "${aws_vpc.foo.id}"
+		tags {
+			Name = "tf-acc-instance-disable-api-termination"
+		}
 	}
 
 	resource "aws_instance" "foo" {
@@ -1697,6 +1768,9 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-instance-vpc"
+	}
 }
 
 resource "aws_instance" "foo" {
@@ -1723,6 +1797,9 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
+  tags {
+  	Name = "tf-acc-instance-placement-group"
+  }
 }
 
 resource "aws_placement_group" "foo" {
@@ -1758,7 +1835,7 @@ resource "aws_subnet" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
 	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 1)}"
 	tags {
-		Name = "tf-ipv6-instance-acc-test"
+		Name = "tf-acc-instance-ipv6-err"
 	}
 }
 
@@ -1789,7 +1866,7 @@ resource "aws_subnet" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
 	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 1)}"
 	tags {
-		Name = "tf-ipv6-instance-acc-test"
+		Name = "tf-acc-instance-ipv6-support"
 	}
 }
 
@@ -1820,7 +1897,7 @@ resource "aws_subnet" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
 	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 1)}"
 	tags {
-		Name = "tf-ipv6-instance-acc-test"
+		Name = "tf-acc-instance-ipv6-support-with-ipv4"
 	}
 }
 
@@ -2107,6 +2184,9 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-instance-private-ip"
+	}
 }
 
 resource "aws_instance" "foo" {
@@ -2128,6 +2208,9 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-instance-public-ip-and-private-ip"
+	}
 }
 
 resource "aws_instance" "foo" {
@@ -2168,6 +2251,9 @@ resource "aws_security_group" "tf_test_foo" {
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
+  tags {
+  	Name = "tf-acc-instance-network-security-groups"
+  }
 }
 
 resource "aws_instance" "foo_instance" {
@@ -2216,6 +2302,9 @@ resource "aws_security_group" "tf_test_foo" {
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
+  tags {
+  	Name = "tf-acc-instance-network-vpc-sg-ids"
+  }
 }
 
 resource "aws_instance" "foo_instance" {
@@ -2243,7 +2332,7 @@ resource "aws_internet_gateway" "gw" {
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
     tags {
-        Name = "tf-network-test"
+        Name = "terraform-testacc-instance-network-vpc-sg-ids"
     }
 }
 
@@ -2263,6 +2352,9 @@ resource "aws_security_group" "tf_test_foo" {
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
+  tags {
+  	Name = "tf-acc-instance-network-vpc-sg-ids"
+  }
 }
 
 resource "aws_instance" "foo_instance" {
@@ -2314,6 +2406,9 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-instance-root-block-device-mismatch"
+	}
 }
 
 resource "aws_instance" "foo" {
@@ -2338,6 +2433,9 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-instance-force-new-and-tags-drift"
+	}
 }
 
 resource "aws_instance" "foo" {
@@ -2358,6 +2456,9 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-instance-force-new-and-tags-drift"
+	}
 }
 
 resource "aws_instance" "foo" {
@@ -2380,7 +2481,7 @@ resource "aws_subnet" "foo" {
   cidr_block = "172.16.10.0/24"
   availability_zone = "us-west-2a"
   tags {
-    Name = "tf-instance-test"
+    Name = "tf-acc-instance-primary-network-iface"
   }
 }
 
@@ -2415,7 +2516,7 @@ resource "aws_subnet" "foo" {
   cidr_block = "172.16.10.0/24"
   availability_zone = "us-west-2a"
   tags {
-    Name = "tf-instance-test"
+    Name = "tf-acc-instance-primary-network-iface-source-dest-check"
   }
 }
 
@@ -2451,7 +2552,7 @@ resource "aws_subnet" "foo" {
   cidr_block = "172.16.10.0/24"
   availability_zone = "us-west-2a"
   tags {
-    Name = "tf-instance-test"
+    Name = "tf-acc-instance-add-secondary-network-iface"
   }
 }
 
@@ -2494,7 +2595,7 @@ resource "aws_subnet" "foo" {
   cidr_block = "172.16.10.0/24"
   availability_zone = "us-west-2a"
   tags {
-    Name = "tf-instance-test"
+    Name = "tf-acc-instance-add-secondary-network-iface"
   }
 }
 
@@ -2541,18 +2642,18 @@ resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "172.16.10.0/24"
     availability_zone = "us-west-2a"
-        tags {
-            Name = "tf-foo-instance-add-sg-test"
-        }
+    tags {
+        Name = "tf-acc-instance-add-security-group-foo"
+    }
 }
 
 resource "aws_subnet" "bar" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "172.16.11.0/24"
     availability_zone = "us-west-2a"
-        tags {
-            Name = "tf-bar-instance-add-sg-test"
-        }
+    tags {
+        Name = "tf-acc-instance-add-security-group-bar"
+    }
 }
 
 resource "aws_security_group" "foo" {
@@ -2606,18 +2707,18 @@ resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "172.16.10.0/24"
     availability_zone = "us-west-2a"
-        tags {
-            Name = "tf-foo-instance-add-sg-test"
-        }
+    tags {
+        Name = "tf-acc-instance-add-security-group-foo"
+    }
 }
 
 resource "aws_subnet" "bar" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "172.16.11.0/24"
     availability_zone = "us-west-2a"
-        tags {
-            Name = "tf-bar-instance-add-sg-test"
-        }
+    tags {
+        Name = "tf-acc-instance-add-security-group-bar"
+    }
 }
 
 resource "aws_security_group" "foo" {
@@ -2674,6 +2775,9 @@ resource "aws_subnet" "public_subnet" {
   cidr_block = "172.16.20.0/24"
   availability_zone = "us-west-2a"
   map_public_ip_on_launch = false
+  tags {
+    Name = "tf-acc-instance-associate-public-default-private"
+  }
 }
 
 resource "aws_instance" "foo" {
@@ -2700,6 +2804,9 @@ resource "aws_subnet" "public_subnet" {
   cidr_block = "172.16.20.0/24"
   availability_zone = "us-west-2a"
   map_public_ip_on_launch = true
+  tags {
+    Name = "tf-acc-instance-associate-public-default-public"
+  }
 }
 
 resource "aws_instance" "foo" {
@@ -2726,6 +2833,9 @@ resource "aws_subnet" "public_subnet" {
   cidr_block = "172.16.20.0/24"
   availability_zone = "us-west-2a"
   map_public_ip_on_launch = true
+  tags {
+    Name = "tf-acc-instance-associate-public-explicit-public"
+  }
 }
 
 resource "aws_instance" "foo" {
@@ -2753,6 +2863,9 @@ resource "aws_subnet" "public_subnet" {
   cidr_block = "172.16.20.0/24"
   availability_zone = "us-west-2a"
   map_public_ip_on_launch = false
+  tags {
+    Name = "tf-acc-instance-associate-public-explicit-private"
+  }
 }
 
 resource "aws_instance" "foo" {
@@ -2780,6 +2893,9 @@ resource "aws_subnet" "public_subnet" {
   cidr_block = "172.16.20.0/24"
   availability_zone = "us-west-2a"
   map_public_ip_on_launch = false
+  tags {
+    Name = "tf-acc-instance-associate-public-override-public"
+  }
 }
 
 resource "aws_instance" "foo" {
@@ -2807,6 +2923,9 @@ resource "aws_subnet" "public_subnet" {
   cidr_block = "172.16.20.0/24"
   availability_zone = "us-west-2a"
   map_public_ip_on_launch = true
+  tags {
+    Name = "tf-acc-instance-associate-public-override-private"
+  }
 }
 
 resource "aws_instance" "foo" {
@@ -2818,4 +2937,36 @@ resource "aws_instance" "foo" {
     Name = "tf-acctest-%d"
   }
 }`, rInt)
+}
+
+func testAccInstanceConfig_getPasswordData(val bool, rInt int) string {
+	return fmt.Sprintf(`
+	# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
+	data "aws_ami" "win2016core" {
+		most_recent = true
+
+		filter {
+			name = "owner-alias"
+			values = ["amazon"]
+		}
+
+		filter {
+			name = "name"
+			values = ["Windows_Server-2016-English-Core-Base-*"]
+		}
+	}
+
+	resource "aws_key_pair" "foo" {
+		key_name = "tf-acctest-%d"
+		public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAq6U3HQYC4g8WzU147gZZ7CKQH8TgYn3chZGRPxaGmHW1RUwsyEs0nmombmIhwxudhJ4ehjqXsDLoQpd6+c7BuLgTMvbv8LgE9LX53vnljFe1dsObsr/fYLvpU9LTlo8HgHAqO5ibNdrAUvV31ronzCZhms/Gyfdaue88Fd0/YnsZVGeOZPayRkdOHSpqme2CBrpa8myBeL1CWl0LkDG4+YCURjbaelfyZlIApLYKy3FcCan9XQFKaL32MJZwCgzfOvWIMtYcU8QtXMgnA3/I3gXk8YDUJv5P4lj0s/PJXuTM8DygVAUtebNwPuinS7wwonm5FXcWMuVGsVpG5K7FGQ== tf-acc-winpasswordtest"
+	}
+
+	resource "aws_instance" "foo" {
+		ami = "${data.aws_ami.win2016core.id}"
+		instance_type = "t2.medium"
+		key_name = "${aws_key_pair.foo.key_name}"
+
+		get_password_data = %t
+	}
+	`, rInt, val)
 }
