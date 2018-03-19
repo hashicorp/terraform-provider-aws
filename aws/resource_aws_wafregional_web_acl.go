@@ -41,7 +41,7 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"rules": &schema.Schema{
+			"rule": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -169,10 +169,10 @@ func updateWebAclResourceWR(d *schema.ResourceData, meta interface{}, ChangeActi
 			req.DefaultAction = expandDefaultActionWR(d.Get("default_action").([]interface{}))
 		}
 
-		rules := d.Get("rules").(*schema.Set)
+		rules := d.Get("rule").(*schema.Set)
 		for _, rule := range rules.List() {
 			aclRule := rule.(map[string]interface{})
-			action := aclRule["action"].(*schema.Set).List()[0].(map[string]interface{})
+			action := aclRule["action"].([]interface{})[0].(map[string]interface{})
 			aclRuleUpdate := &waf.WebACLUpdate{
 				Action: aws.String(ChangeAction),
 				ActivatedRule: &waf.ActivatedRule{

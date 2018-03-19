@@ -29,11 +29,11 @@ func TestAccAWSWafRegionalWebAcl_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "default_action.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_web_acl.waf_acl", "default_action.4234791575.type", "ALLOW"),
+						"aws_wafregional_web_acl.waf_acl", "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "name", wafAclName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_web_acl.waf_acl", "rules.#", "1"),
+						"aws_wafregional_web_acl.waf_acl", "rule.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "metric_name", wafAclName),
 				),
@@ -59,11 +59,11 @@ func TestAccAWSWafRegionalWebAcl_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "default_action.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_web_acl.waf_acl", "default_action.4234791575.type", "ALLOW"),
+						"aws_wafregional_web_acl.waf_acl", "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "name", wafAclName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_web_acl.waf_acl", "rules.#", "1"),
+						"aws_wafregional_web_acl.waf_acl", "rule.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "metric_name", wafAclName),
 				),
@@ -75,11 +75,11 @@ func TestAccAWSWafRegionalWebAcl_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "default_action.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_web_acl.waf_acl", "default_action.4234791575.type", "ALLOW"),
+						"aws_wafregional_web_acl.waf_acl", "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "name", wafAclNewName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_web_acl.waf_acl", "rules.#", "1"),
+						"aws_wafregional_web_acl.waf_acl", "rule.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "metric_name", wafAclNewName),
 				),
@@ -105,11 +105,11 @@ func TestAccAWSWafRegionalWebAcl_changeDefaultAction(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "default_action.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_web_acl.waf_acl", "default_action.4234791575.type", "ALLOW"),
+						"aws_wafregional_web_acl.waf_acl", "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "name", wafAclName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_web_acl.waf_acl", "rules.#", "1"),
+						"aws_wafregional_web_acl.waf_acl", "rule.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "metric_name", wafAclName),
 				),
@@ -121,11 +121,11 @@ func TestAccAWSWafRegionalWebAcl_changeDefaultAction(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "default_action.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_web_acl.waf_acl", "default_action.2267395054.type", "BLOCK"),
+						"aws_wafregional_web_acl.waf_acl", "default_action.0.type", "BLOCK"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "name", wafAclNewName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_web_acl.waf_acl", "rules.#", "1"),
+						"aws_wafregional_web_acl.waf_acl", "rule.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "metric_name", wafAclNewName),
 				),
@@ -258,9 +258,10 @@ func testAccCheckAWSWafRegionalWebAclExists(n string, v *waf.WebACL) resource.Te
 }
 
 func testAccAWSWafRegionalWebAclConfig(name string) string {
-	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
-  ip_set_descriptors {
+  ip_set_descriptor {
     type = "IPV4"
     value = "192.0.7.0/24"
   }
@@ -269,19 +270,20 @@ func testAccAWSWafRegionalWebAclConfig(name string) string {
 resource "aws_wafregional_rule" "wafrule" {
   name = "%s"
   metric_name = "%s"
-  predicates {
+  predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
     type = "IPMatch"
   }
 }
+
 resource "aws_wafregional_web_acl" "waf_acl" {
   name = "%s"
   metric_name = "%s"
   default_action {
     type = "ALLOW"
   }
-  rules {
+  rule {
     action {
        type = "BLOCK"
     }
@@ -292,9 +294,10 @@ resource "aws_wafregional_web_acl" "waf_acl" {
 }
 
 func testAccAWSWafRegionalWebAclConfigChangeName(name string) string {
-	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
-  ip_set_descriptors {
+  ip_set_descriptor {
     type = "IPV4"
     value = "192.0.7.0/24"
   }
@@ -303,19 +306,20 @@ func testAccAWSWafRegionalWebAclConfigChangeName(name string) string {
 resource "aws_wafregional_rule" "wafrule" {
   name = "%s"
   metric_name = "%s"
-  predicates {
+  predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
     type = "IPMatch"
   }
 }
+
 resource "aws_wafregional_web_acl" "waf_acl" {
   name = "%s"
   metric_name = "%s"
   default_action {
     type = "ALLOW"
   }
-  rules {
+  rule {
     action {
        type = "BLOCK"
     }
@@ -326,9 +330,10 @@ resource "aws_wafregional_web_acl" "waf_acl" {
 }
 
 func testAccAWSWafRegionalWebAclConfigDefaultAction(name string) string {
-	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
-  ip_set_descriptors {
+  ip_set_descriptor {
     type = "IPV4"
     value = "192.0.7.0/24"
   }
@@ -337,19 +342,20 @@ func testAccAWSWafRegionalWebAclConfigDefaultAction(name string) string {
 resource "aws_wafregional_rule" "wafrule" {
   name = "%s"
   metric_name = "%s"
-  predicates {
+  predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
     type = "IPMatch"
   }
 }
+
 resource "aws_wafregional_web_acl" "waf_acl" {
   name = "%s"
   metric_name = "%s"
   default_action {
     type = "BLOCK"
   }
-  rules {
+  rule {
     action {
        type = "BLOCK"
     }
