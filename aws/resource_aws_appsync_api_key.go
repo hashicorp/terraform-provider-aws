@@ -144,7 +144,7 @@ func resourceAwsAppsyncApiKeyUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	return resourceAwsAppsyncApiKeyRead(d, meta)
-	return nil
+
 }
 
 func resourceAwsAppsyncApiKeyDelete(d *schema.ResourceData, meta interface{}) error {
