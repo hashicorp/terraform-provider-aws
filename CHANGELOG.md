@@ -18,6 +18,7 @@ ENHANCEMENTS:
 * resource/aws_security_group: Add arn attribute [GH-3751]
 * resource/aws_sqs_queue: Support lack of ListQueueTags for all non-standard AWS implementations [GH-3794]
 * resource/aws_api_gateway_rest_api: Add support for content encoding [GH-3642]
+* resource/aws_s3_bucket_object: New `content_base64` argument allows uploading raw binary data created in-memory, rather than reading from disk as with `source`. [GH-3788]
 
 BUG FIXES:
 
