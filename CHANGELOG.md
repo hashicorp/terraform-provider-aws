@@ -1,5 +1,9 @@
 ## 1.12.0 (Unreleased)
 
+NOTES:
+
+* provider: For resources implementing the IAM policy equivalence library (https://github.com/jen20/awspolicyequivalence/) on an attribute via `suppressEquivalentAwsPolicyDiffs`, the dependency has been updated, which should mark additional IAM policies as equivalent. [GH-3832]
+
 FEATURES:
 
 * **New Resource:** `aws_waf_geo_match_set` [GH-3275]
@@ -10,6 +14,8 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* provider: Treat IAM policies with account ID principals as equivalent to IAM account root ARN [GH-3832]
+* provider: Treat additional IAM policy scenarios with empty principal trees as equivalent [GH-3832]
 * resource/aws_eip: Support configurable timeouts [GH-3769]
 * resource/aws_emr_cluster: Add step support [GH-3673]
 * resource/aws_instance: Support optionally fetching encrypted Windows password data [GH-2219]
