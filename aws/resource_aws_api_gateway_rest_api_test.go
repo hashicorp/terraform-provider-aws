@@ -2,13 +2,80 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_api_gateway_rest_api", &resource.Sweeper{
+		Name: "aws_api_gateway_rest_api",
+		F:    testSweepAPIGatewayRestApis,
+	})
+}
+
+func testSweepAPIGatewayRestApis(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).apigateway
+
+	// https://github.com/terraform-providers/terraform-provider-aws/issues/3808
+	prefixes := []string{
+		"test",
+		"tf_acc_",
+		"tf-acc-",
+	}
+
+	err = conn.GetRestApisPages(&apigateway.GetRestApisInput{}, func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
+		for _, item := range page.Items {
+			skip := true
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(*item.Name, prefix) {
+					skip = false
+					break
+				}
+			}
+			if skip {
+				log.Printf("[INFO] Skipping API Gateway REST API: %s", *item.Name)
+				continue
+			}
+
+			input := &apigateway.DeleteRestApiInput{
+				RestApiId: item.Id,
+			}
+			log.Printf("[INFO] Deleting API Gateway REST API: %s", input)
+			// TooManyRequestsException: Too Many Requests can take over a minute to resolve itself
+			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+				_, err := conn.DeleteRestApi(input)
+				if err != nil {
+					if isAWSErr(err, apigateway.ErrCodeTooManyRequestsException, "") {
+						return resource.RetryableError(err)
+					}
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete API Gateway REST API %s: %s", *item.Name, err)
+				continue
+			}
+		}
+		return !lastPage
+	})
+	if err != nil {
+		return fmt.Errorf("Error retrieving API Gateway REST APIs: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 	var conf apigateway.RestApi
