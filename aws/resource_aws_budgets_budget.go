@@ -124,7 +124,7 @@ func resourceAwsBudgetsBudgetSchema() map[string]*schema.Schema {
 func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).budgetconn
 	accountID := meta.(*AWSClient).accountid
-	budget, err := expandBudgetsBudget(d)
+	budget, err := expandBudgetsBudgetUnmarshal(d)
 	if err != nil {
 		return fmt.Errorf("failed creating budget: %v", err)
 	}
@@ -189,7 +189,7 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).budgetconn
 	accountID := meta.(*AWSClient).accountid
-	budget, err := expandBudgetsBudget(d)
+	budget, err := expandBudgetsBudgetUnmarshal(d)
 	if err != nil {
 		return fmt.Errorf("could not create budget: %v", err)
 	}
@@ -305,7 +305,7 @@ func convertCostFiltersToStringMap(costFilters map[string][]*string) map[string]
 	return convertedCostFilters
 }
 
-func expandBudgetsBudget(d *schema.ResourceData) (*budgets.Budget, error) {
+func expandBudgetsBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
 	var budgetName string
 	if id := d.Id(); id != "" {
 		budgetName = id
@@ -323,37 +323,7 @@ func expandBudgetsBudget(d *schema.ResourceData) (*budgets.Budget, error) {
 	budgetType := d.Get("budget_type").(string)
 	budgetLimitAmount := d.Get("limit_amount").(string)
 	budgetLimitUnit := d.Get("limit_unit").(string)
-	budgetCostTypes := d.Get("cost_types").([]interface{})
-	costTypes := &budgets.CostTypes{
-		IncludeCredit:            aws.Bool(true),
-		IncludeOtherSubscription: aws.Bool(true),
-		IncludeRecurring:         aws.Bool(true),
-		IncludeRefund:            aws.Bool(true),
-		IncludeSubscription:      aws.Bool(true),
-		IncludeSupport:           aws.Bool(true),
-		IncludeTax:               aws.Bool(true),
-		IncludeUpfront:           aws.Bool(true),
-		UseBlended:               aws.Bool(false),
-	}
-	if len(budgetCostTypes) == 1 {
-		costTypesMap := budgetCostTypes[0].(map[string]interface{})
-		for k, v := range map[string]*bool{
-			"include_credit":             costTypes.IncludeCredit,
-			"include_other_subscription": costTypes.IncludeOtherSubscription,
-			"include_recurring":          costTypes.IncludeRecurring,
-			"include_refund":             costTypes.IncludeRefund,
-			"include_subscription":       costTypes.IncludeSubscription,
-			"include_support":            costTypes.IncludeSupport,
-			"include_tax":                costTypes.IncludeTax,
-			"include_upfront":            costTypes.IncludeUpfront,
-			"use_blended":                costTypes.UseBlended,
-		} {
-			if val, ok := costTypesMap[k]; ok {
-				*v = val.(bool)
-			}
-		}
-	}
-
+	costTypes := expandBudgetsCostTypesUnmarshal(d.Get("cost_types").([]interface{}))
 	budgetTimeUnit := d.Get("time_unit").(string)
 	budgetCostFilters := make(map[string][]*string)
 	for k, v := range d.Get("cost_filters").(map[string]interface{}) {
@@ -387,6 +357,40 @@ func expandBudgetsBudget(d *schema.ResourceData) (*budgets.Budget, error) {
 		CostFilters: budgetCostFilters,
 	}
 	return budget, nil
+}
+
+func expandBudgetsCostTypesUnmarshal(budgetCostTypes []interface{}) *budgets.CostTypes {
+	costTypes := &budgets.CostTypes{
+		IncludeCredit:            aws.Bool(true),
+		IncludeOtherSubscription: aws.Bool(true),
+		IncludeRecurring:         aws.Bool(true),
+		IncludeRefund:            aws.Bool(true),
+		IncludeSubscription:      aws.Bool(true),
+		IncludeSupport:           aws.Bool(true),
+		IncludeTax:               aws.Bool(true),
+		IncludeUpfront:           aws.Bool(true),
+		UseBlended:               aws.Bool(false),
+	}
+	if len(budgetCostTypes) == 1 {
+		costTypesMap := budgetCostTypes[0].(map[string]interface{})
+		for k, v := range map[string]*bool{
+			"include_credit":             costTypes.IncludeCredit,
+			"include_other_subscription": costTypes.IncludeOtherSubscription,
+			"include_recurring":          costTypes.IncludeRecurring,
+			"include_refund":             costTypes.IncludeRefund,
+			"include_subscription":       costTypes.IncludeSubscription,
+			"include_support":            costTypes.IncludeSupport,
+			"include_tax":                costTypes.IncludeTax,
+			"include_upfront":            costTypes.IncludeUpfront,
+			"use_blended":                costTypes.UseBlended,
+		} {
+			if val, ok := costTypesMap[k]; ok {
+				*v = val.(bool)
+			}
+		}
+	}
+
+	return costTypes
 }
 
 func budgetExists(budgetName string, meta interface{}) bool {
