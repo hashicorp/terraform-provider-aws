@@ -144,7 +144,7 @@ func TestAccAWSIAMServerCertificate_disappears(t *testing.T) {
 }
 
 func TestAccAWSIAMServerCertificate_file(t *testing.T) {
-	var _cert iam.ServerCertificate
+	var cert iam.ServerCertificate
 
 	rInt := acctest.RandInt()
 	unixFile := "test-fixtures/iam-ssl-unix-line-endings.pem"
@@ -158,13 +158,13 @@ func TestAccAWSIAMServerCertificate_file(t *testing.T) {
 			{
 				Config: testAccIAMServerCertConfig_file(rInt, unixFile),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &_cert),
+					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &cert),
 				),
 			},
 			{
 				Config: testAccIAMServerCertConfig_file(rInt, winFile),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &_cert),
+					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &cert),
 				),
 			},
 		},
