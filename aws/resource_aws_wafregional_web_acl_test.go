@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -184,6 +185,8 @@ func TestAccAWSWafRegionalWebAcl_noRules(t *testing.T) {
 
 func TestAccAWSWafRegionalWebAcl_changeRules(t *testing.T) {
 	var v waf.WebACL
+	var r waf.Rule
+	var idx int
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
@@ -194,6 +197,7 @@ func TestAccAWSWafRegionalWebAcl_changeRules(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalWebAclConfig(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.wafrule", &r),
 					testAccCheckAWSWafRegionalWebAclExists("aws_wafregional_web_acl.waf_acl", &v),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "default_action.#", "1"),
@@ -203,6 +207,8 @@ func TestAccAWSWafRegionalWebAcl_changeRules(t *testing.T) {
 						"aws_wafregional_web_acl.waf_acl", "name", wafAclName),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "rule.#", "1"),
+					computeWafRegionalWebAclRuleIndex(&r.RuleId, 1, "BLOCK", &idx),
+					testCheckResourceAttrWithIndexesAddr("aws_wafregional_web_acl.waf_acl", "rule.%d.priority", &idx, "1"),
 				),
 			},
 			{
@@ -221,6 +227,26 @@ func TestAccAWSWafRegionalWebAcl_changeRules(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Calculates the index which isn't static because ruleId is generated as part of the test
+func computeWafRegionalWebAclRuleIndex(ruleId **string, priority int, action string, idx *int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		ruleResource := resourceAwsWafRegionalWebAcl().Schema["rule"].Elem.(*schema.Resource)
+		actionType := map[string]interface{}{
+			"type": action,
+		}
+		m := map[string]interface{}{
+			"rule_id":  **ruleId,
+			"priority": priority,
+			"action":   actionType,
+		}
+
+		f := schema.HashResource(ruleResource)
+		*idx = f(m)
+
+		return nil
+	}
 }
 
 func testAccCheckAWSWafRegionalWebAclDisappears(v *waf.WebACL) resource.TestCheckFunc {
