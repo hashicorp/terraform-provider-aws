@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -144,8 +143,13 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) error {
 	budgetName := d.Id()
-	describeBudgetOutput, err := describeBudget(budgetName, meta)
-	if isBudgetNotFoundException(err) {
+	client := meta.(*AWSClient).budgetconn
+	accountID := meta.(*AWSClient).accountid
+	describeBudgetOutput, err := client.DescribeBudget(&budgets.DescribeBudgetInput{
+		BudgetName: &budgetName,
+		AccountId:  &accountID,
+	})
+	if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
 		d.SetId("")
 		return nil
 	}
@@ -386,27 +390,15 @@ func newBudgetsBudget(d *schema.ResourceData) (*budgets.Budget, error) {
 }
 
 func budgetExists(budgetName string, meta interface{}) bool {
-	_, err := describeBudget(budgetName, meta)
-	if isBudgetNotFoundException(err) {
+	client := meta.(*AWSClient).budgetconn
+	accountID := meta.(*AWSClient).accountid
+	_, err := client.DescribeBudget(&budgets.DescribeBudgetInput{
+		BudgetName: &budgetName,
+		AccountId:  &accountID,
+	})
+	if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
 		return false
 	}
 
 	return true
-}
-
-func isBudgetNotFoundException(err error) bool {
-	if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == budgets.ErrCodeNotFoundException {
-		return true
-	}
-
-	return false
-}
-
-func describeBudget(budgetName string, meta interface{}) (*budgets.DescribeBudgetOutput, error) {
-	client := meta.(*AWSClient).budgetconn
-	accountID := meta.(*AWSClient).accountid
-	return client.DescribeBudget(&budgets.DescribeBudgetInput{
-		BudgetName: &budgetName,
-		AccountId:  &accountID,
-	})
 }

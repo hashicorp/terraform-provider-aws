@@ -86,7 +86,14 @@ func testBudgetExists(config budgetTestConfig, provider *schema.Provider) resour
 			return fmt.Errorf("Not found: %s", "aws_budgets_budget.foo")
 		}
 
-		b, err := describeBudget(rs.Primary.ID, provider.Meta())
+		budgetName := rs.Primary.ID
+		client := provider.Meta().(*AWSClient).budgetconn
+		accountID := provider.Meta().(*AWSClient).accountid
+		b, err := client.DescribeBudget(&budgets.DescribeBudgetInput{
+			BudgetName: &budgetName,
+			AccountId:  &accountID,
+		})
+
 		if err != nil {
 			return fmt.Errorf("Describebudget error: %v", err)
 		}
