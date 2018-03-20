@@ -23,6 +23,7 @@ ENHANCEMENTS:
 * resource/aws_launch_configuration: Validate `user_data` length during plan [GH-2973]
 * resource/aws_lb_target_group: Validate health check threshold for TCP protocol during plan [GH-3782]
 * resource/aws_security_group: Add arn attribute [GH-3751]
+* resource/aws_ses_domain_identity: Support trailing period in domain name [GH-3840]
 * resource/aws_sqs_queue: Support lack of ListQueueTags for all non-standard AWS implementations [GH-3794]
 * resource/aws_ssm_document: Add `document_format` argument to support YAML [GH-3814]
 * resource/aws_api_gateway_rest_api: Add support for content encoding [GH-3642]
