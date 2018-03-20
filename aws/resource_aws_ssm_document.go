@@ -41,6 +41,15 @@ func resourceAwsSsmDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"document_format": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  ssm.DocumentFormatJson,
+				ValidateFunc: validation.StringInSlice([]string{
+					ssm.DocumentFormatJson,
+					ssm.DocumentFormatYaml,
+				}, false),
+			},
 			"document_type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -141,9 +150,10 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[INFO] Creating SSM Document: %s", d.Get("name").(string))
 
 	docInput := &ssm.CreateDocumentInput{
-		Name:         aws.String(d.Get("name").(string)),
-		Content:      aws.String(d.Get("content").(string)),
-		DocumentType: aws.String(d.Get("document_type").(string)),
+		Name:           aws.String(d.Get("name").(string)),
+		Content:        aws.String(d.Get("content").(string)),
+		DocumentFormat: aws.String(d.Get("document_format").(string)),
+		DocumentType:   aws.String(d.Get("document_type").(string)),
 	}
 
 	log.Printf("[DEBUG] Waiting for SSM Document %q to be created", d.Get("name").(string))
@@ -202,6 +212,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		d.Set("document_type", doc.DocumentType)
 	}
 
+	d.Set("document_format", doc.DocumentFormat)
 	d.Set("document_version", doc.DocumentVersion)
 	d.Set("hash", doc.Hash)
 	d.Set("hash_type", doc.HashType)
@@ -439,6 +450,7 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 	updateDocInput := &ssm.UpdateDocumentInput{
 		Name:            aws.String(name),
 		Content:         aws.String(d.Get("content").(string)),
+		DocumentFormat:  aws.String(d.Get("document_format").(string)),
 		DocumentVersion: aws.String(d.Get("default_version").(string)),
 	}
 

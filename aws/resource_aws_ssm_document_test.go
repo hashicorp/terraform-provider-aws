@@ -23,6 +23,7 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 				Config: testAccAWSSSMDocumentBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "document_format", "JSON"),
 				),
 			},
 		},
@@ -125,6 +126,55 @@ func TestAccAWSSSMDocument_automation(t *testing.T) {
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_document.foo", "document_type", "Automation"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMDocument_DocumentFormat_YAML(t *testing.T) {
+	name := acctest.RandString(10)
+	content1 := `
+---
+schemaVersion: '2.2'
+description: Sample document
+mainSteps:
+- action: aws:runPowerShellScript
+  name: runPowerShellScript
+  inputs:
+    runCommand:
+      - hostname
+`
+	content2 := `
+---
+schemaVersion: '2.2'
+description: Sample document
+mainSteps:
+- action: aws:runPowerShellScript
+  name: runPowerShellScript
+  inputs:
+    runCommand:
+      - Get-Process
+`
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentConfig_DocumentFormat_YAML(name, content1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "content", content1+"\n"),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "document_format", "YAML"),
+				),
+			},
+			{
+				Config: testAccAWSSSMDocumentConfig_DocumentFormat_YAML(name, content2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "content", content2+"\n"),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "document_format", "YAML"),
 				),
 			},
 		},
@@ -450,4 +500,18 @@ DOC
 }
 
 `, rName, rName, rName)
+}
+
+func testAccAWSSSMDocumentConfig_DocumentFormat_YAML(rName, content string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "foo" {
+  document_format = "YAML"
+  document_type   = "Command"
+  name            = "test_document-%s"
+
+  content = <<DOC
+%s
+DOC
+}
+`, rName, content)
 }
