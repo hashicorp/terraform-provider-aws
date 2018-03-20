@@ -198,7 +198,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateAwsEmrEbsVolumeType,
+										ValidateFunc: validateAwsEmrEbsVolumeType(),
 									},
 									"volumes_per_instance": {
 										Type:     schema.TypeInt,
@@ -224,9 +224,13 @@ func resourceAwsEMRCluster() *schema.Resource {
 							},
 						},
 						"instance_role": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsEmrInstanceGroupRole,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								emr.InstanceFleetTypeMaster,
+								emr.InstanceFleetTypeCore,
+								emr.InstanceFleetTypeTask,
+							}, false),
 						},
 						"instance_type": {
 							Type:     schema.TypeString,
