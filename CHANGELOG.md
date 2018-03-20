@@ -16,6 +16,7 @@ ENHANCEMENTS:
 
 * provider: Treat IAM policies with account ID principals as equivalent to IAM account root ARN [GH-3832]
 * provider: Treat additional IAM policy scenarios with empty principal trees as equivalent [GH-3832]
+* resource/aws_cloudfront_distribution: Validate origin `domain_name` and `origin_id` at plan time [GH-3767]
 * resource/aws_eip: Support configurable timeouts [GH-3769]
 * resource/aws_emr_cluster: Add step support [GH-3673]
 * resource/aws_instance: Support optionally fetching encrypted Windows password data [GH-2219]
