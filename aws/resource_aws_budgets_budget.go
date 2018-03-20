@@ -124,7 +124,7 @@ func resourceAwsBudgetsBudgetSchema() map[string]*schema.Schema {
 func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).budgetconn
 	accountID := meta.(*AWSClient).accountid
-	budget, err := newBudgetsBudget(d)
+	budget, err := expandBudgetsBudget(d)
 	if err != nil {
 		return fmt.Errorf("failed creating budget: %v", err)
 	}
@@ -189,7 +189,7 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).budgetconn
 	accountID := meta.(*AWSClient).accountid
-	budget, err := newBudgetsBudget(d)
+	budget, err := expandBudgetsBudget(d)
 	if err != nil {
 		return fmt.Errorf("could not create budget: %v", err)
 	}
@@ -225,7 +225,7 @@ func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-type expandBudgetsBudgetFlattenedBudget struct {
+type flattenedBudgetsBudget struct {
 	name            *string
 	budgetType      *string
 	timeUnit        *string
@@ -237,7 +237,7 @@ type expandBudgetsBudgetFlattenedBudget struct {
 	timePeriodEnd   *time.Time
 }
 
-func expandBudgetsBudgetFlatten(budget *budgets.Budget) (*expandBudgetsBudgetFlattenedBudget, error) {
+func expandBudgetsBudgetFlatten(budget *budgets.Budget) (*flattenedBudgetsBudget, error) {
 	if budget == nil {
 		return nil, fmt.Errorf("empty budget returned from budget output: %v", budget)
 	}
@@ -278,7 +278,7 @@ func expandBudgetsBudgetFlatten(budget *budgets.Budget) (*expandBudgetsBudgetFla
 		return nil, fmt.Errorf("empty TimePeriodEnd in budget: %v", budget)
 	}
 
-	return &expandBudgetsBudgetFlattenedBudget{
+	return &flattenedBudgetsBudget{
 		name:            budget.BudgetName,
 		budgetType:      budget.BudgetType,
 		timeUnit:        budget.TimeUnit,
@@ -305,7 +305,7 @@ func convertCostFiltersToStringMap(costFilters map[string][]*string) map[string]
 	return convertedCostFilters
 }
 
-func newBudgetsBudget(d *schema.ResourceData) (*budgets.Budget, error) {
+func expandBudgetsBudget(d *schema.ResourceData) (*budgets.Budget, error) {
 	var budgetName string
 	if id := d.Id(); id != "" {
 		budgetName = id

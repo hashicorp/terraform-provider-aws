@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAwsBudget_basic(t *testing.T) {
+func TestAccAWSBudget_basic(t *testing.T) {
 	name := fmt.Sprintf("test-budget-%d", acctest.RandInt())
 	configBasicDefaults := newBudgetTestConfigDefaults(name)
 	configBasicUpdate := newBudgetTestConfigUpdate(name)
@@ -41,7 +41,7 @@ func TestAwsBudget_basic(t *testing.T) {
 	})
 }
 
-func TestAwsBudget_prefix(t *testing.T) {
+func TestAccAWSBudget_prefix(t *testing.T) {
 	name := "test-budget-"
 	configBasicDefaults := newBudgetTestConfigDefaults(name)
 	configBasicUpdate := newBudgetTestConfigUpdate(name)
