@@ -40,6 +40,7 @@ BUG FIXES:
 * resource/aws_lambda_function: Only retry IAM eventual consistency errors for one minute [GH-3765]
 * resource/aws_ssm_association: Prevent AssociationDoesNotExist error [GH-3776]
 * resource/aws_vpc_endpoint: Prevent perpertual diff in non-standard partitions [GH-3317]
+* resource/aws_dynamodb_table: Update and validate attributes correctly [GH-3194]
 
 ## 1.11.0 (March 09, 2018)
 
