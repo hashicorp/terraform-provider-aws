@@ -59,7 +59,10 @@ func testSweepElasticSearchDomains(region string) error {
 			log.Printf("[ERROR] Failed to delete Elasticsearch Domain %s: %s", *domain.DomainName, err)
 			continue
 		}
-		resourceAwsElasticSearchDomainDeleteWaiter(*domain.DomainName, conn)
+		err = resourceAwsElasticSearchDomainDeleteWaiter(*domain.DomainName, conn)
+		if err != nil {
+			log.Printf("[ERROR] Failed to wait for deletion of Elasticsearch Domain %s: %s", *domain.DomainName, err)
+		}
 	}
 
 	return nil
