@@ -2,10 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"reflect"
 	"regexp"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,6 +18,60 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_elb", &resource.Sweeper{
+		Name: "aws_elb",
+		F:    testSweepELBs,
+	})
+}
+
+func testSweepELBs(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).elbconn
+
+	prefixes := []string{
+		"test-elb-",
+	}
+
+	return conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, isLast bool) bool {
+		if len(out.LoadBalancerDescriptions) == 0 {
+			log.Println("[INFO] No ELBs found for sweeping")
+			return false
+		}
+
+		for _, lb := range out.LoadBalancerDescriptions {
+			skip := true
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(*lb.LoadBalancerName, prefix) {
+					skip = false
+					break
+				}
+			}
+			if skip {
+				log.Printf("[INFO] Skipping ELB: %s", *lb.LoadBalancerName)
+				continue
+			}
+			log.Printf("[INFO] Deleting ELB: %s", *lb.LoadBalancerName)
+
+			_, err := conn.DeleteLoadBalancer(&elb.DeleteLoadBalancerInput{
+				LoadBalancerName: lb.LoadBalancerName,
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete ELB %s: %s", *lb.LoadBalancerName, err)
+				continue
+			}
+			err = cleanupELBNetworkInterfaces(client.(*AWSClient).ec2conn, *lb.LoadBalancerName)
+			if err != nil {
+				log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %s", *lb.LoadBalancerName, err)
+			}
+		}
+		return !isLast
+	})
+}
 
 func TestAccAWSELB_basic(t *testing.T) {
 	var conf elb.LoadBalancerDescription
