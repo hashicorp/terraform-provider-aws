@@ -30,12 +30,30 @@ func TestAccAWSBudget_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testBudgetHCLBasicUseDefaults(configBasicDefaults),
-				Check:  newComposedBudgetTestCheck(configBasicDefaults, testAccProvider, "name"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name", regexp.MustCompile(configBasicDefaults.BudgetName)),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", configBasicDefaults.BudgetType),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", configBasicDefaults.LimitAmount),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_unit", configBasicDefaults.LimitUnit),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", configBasicDefaults.TimePeriodStart),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", configBasicDefaults.TimePeriodEnd),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", configBasicDefaults.TimeUnit),
+					testBudgetExists(configBasicDefaults, testAccProvider),
+				),
 			},
 
 			{
 				Config: testBudgetHCLBasic(configBasicUpdate),
-				Check:  newComposedBudgetTestCheck(configBasicUpdate, testAccProvider, "name"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name", regexp.MustCompile(configBasicUpdate.BudgetName)),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", configBasicUpdate.BudgetType),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", configBasicUpdate.LimitAmount),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_unit", configBasicUpdate.LimitUnit),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", configBasicUpdate.TimePeriodStart),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", configBasicUpdate.TimePeriodEnd),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", configBasicUpdate.TimeUnit),
+					testBudgetExists(configBasicUpdate, testAccProvider),
+				),
 			},
 		},
 	})
@@ -55,28 +73,33 @@ func TestAccAWSBudget_prefix(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testBudgetHCLPrefixUseDefaults(configBasicDefaults),
-				Check:  newComposedBudgetTestCheck(configBasicDefaults, testAccProvider, "name_prefix"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name_prefix", regexp.MustCompile(configBasicDefaults.BudgetName)),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", configBasicDefaults.BudgetType),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", configBasicDefaults.LimitAmount),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_unit", configBasicDefaults.LimitUnit),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", configBasicDefaults.TimePeriodStart),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", configBasicDefaults.TimePeriodEnd),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", configBasicDefaults.TimeUnit),
+					testBudgetExists(configBasicDefaults, testAccProvider),
+				),
 			},
 
 			{
 				Config: testBudgetHCLPrefix(configBasicUpdate),
-				Check:  newComposedBudgetTestCheck(configBasicUpdate, testAccProvider, "name_prefix"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name_prefix", regexp.MustCompile(configBasicUpdate.BudgetName)),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", configBasicUpdate.BudgetType),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", configBasicUpdate.LimitAmount),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_unit", configBasicUpdate.LimitUnit),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", configBasicUpdate.TimePeriodStart),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", configBasicUpdate.TimePeriodEnd),
+					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", configBasicUpdate.TimeUnit),
+					testBudgetExists(configBasicUpdate, testAccProvider),
+				),
 			},
 		},
 	})
-}
-
-func newComposedBudgetTestCheck(config budgetTestConfig, provider *schema.Provider, nameField string) resource.TestCheckFunc {
-	return resource.ComposeTestCheckFunc(
-		resource.TestMatchResourceAttr("aws_budgets_budget.foo", nameField, regexp.MustCompile(config.BudgetName)),
-		resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", config.BudgetType),
-		resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", config.LimitAmount),
-		resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_unit", config.LimitUnit),
-		resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", config.TimePeriodStart),
-		resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", config.TimePeriodEnd),
-		resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", config.TimeUnit),
-		testBudgetExists(config, provider),
-	)
 }
 
 func testBudgetExists(config budgetTestConfig, provider *schema.Provider) resource.TestCheckFunc {
