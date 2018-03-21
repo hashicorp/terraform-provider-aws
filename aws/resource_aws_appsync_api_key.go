@@ -2,13 +2,14 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsAppsyncApiKey() *schema.Resource {
@@ -25,32 +26,14 @@ func resourceAwsAppsyncApiKey() *schema.Resource {
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-			"appsync_api_id": {
+			"api_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"valid_till_date": {
-				Type:          schema.TypeString,
-				ConflictsWith: []string{"validity_period_days"},
-				Optional:      true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(string)
-					// reference - http://www.regexlib.com/REDetails.aspx?regexp_id=409
-					if !regexp.MustCompile(`^(((0[1-9]|[12]\d|3[01])\/(0[13578]|1[02])\/((1[6-9]|[2-9]\d)\d{2}))|((0[1-9]|[12]\d|30)\/(0[13456789]|1[012])\/((1[6-9]|[2-9]\d)\d{2}))|((0[1-9]|1\d|2[0-8])\/02\/((1[6-9]|[2-9]\d)\d{2}))|(29\/02\/((1[6-9]|[2-9]\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00))))$`).MatchString(value) {
-						es = append(es, fmt.Errorf(
-							"only dd/mm/yyyy in %q", k))
-					}
-					return
-				},
-			},
-			"validity_period_days": {
-				Type:          schema.TypeInt,
-				ConflictsWith: []string{"valid_till_date"},
-				Optional:      true,
-			},
-			"expiry_date": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"expires": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.ValidateRFC3339TimeString,
 			},
 			"key": {
 				Type:      schema.TypeString,
@@ -64,78 +47,82 @@ func resourceAwsAppsyncApiKey() *schema.Resource {
 func resourceAwsAppsyncApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appsyncconn
 	params := &appsync.CreateApiKeyInput{
-		ApiId:       aws.String(d.Get("appsync_api_id").(string)),
+		ApiId:       aws.String(d.Get("api_id").(string)),
 		Description: aws.String(d.Get("description").(string)),
 	}
-	layout := "02/01/2006 15:04:05 -0700 MST"
-	if v, ok := d.GetOk("validity_period_days"); ok {
-		params.Expires = aws.Int64(time.Now().Add(time.Hour * 24 * time.Duration(v.(int))).Unix())
-	}
-	if v, ok := d.GetOk("valid_till_date"); ok {
-		tx := strings.Split(time.Now().Format(layout), " ")
-		tx[0] = v.(string)
-		t, _ := time.Parse(layout, strings.Join(tx, " "))
+	if v, ok := d.GetOk("expires"); ok {
+		t, _ := time.Parse(time.RFC3339, v.(string))
 		params.Expires = aws.Int64(t.Unix())
 	}
-
 	resp, err := conn.CreateApiKey(params)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(*resp.ApiKey.Id)
+	d.SetId(fmt.Sprintf("%s:%s", d.Get("api_id").(string), *resp.ApiKey.Id))
 	return resourceAwsAppsyncApiKeyRead(d, meta)
 }
 
 func resourceAwsAppsyncApiKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appsyncconn
-
-	input := &appsync.ListApiKeysInput{
-		ApiId: aws.String(d.Get("appsync_api_id").(string)),
+	var listKeys func(*appsync.ListApiKeysInput) (*appsync.ApiKey, error)
+	ApiId, Id, er := decodeAppSyncApiKeyId(d.Id())
+	if er != nil {
+		return er
 	}
-
-	resp, err := conn.ListApiKeys(input)
+	listKeys = func(input *appsync.ListApiKeysInput) (*appsync.ApiKey, error) {
+		resp, err := conn.ListApiKeys(input)
+		if err != nil {
+			return nil, err
+		}
+		for _, v := range resp.ApiKeys {
+			if *v.Id == Id {
+				return v, nil
+			}
+		}
+		if resp.NextToken != nil {
+			listKeys(&appsync.ListApiKeysInput{
+				ApiId:     aws.String(ApiId),
+				NextToken: resp.NextToken,
+			})
+		}
+		return nil, nil
+	}
+	key, err := listKeys(
+		&appsync.ListApiKeysInput{
+			ApiId: aws.String(ApiId),
+		})
 	if err != nil {
 		return err
 	}
-	var key appsync.ApiKey
-	for _, v := range resp.ApiKeys {
-		if *v.Id == d.Id() {
-			key = *v
-		}
+	if key == nil {
+		log.Printf("[WARN] AppSync API Key %q not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	d.Set("key", key.Id)
 	d.Set("description", key.Description)
-	d.Set("expiry_date", time.Unix(*key.Expires, 0).String())
+	d.Set("expires", time.Unix(*key.Expires, 0).Format(time.RFC3339))
 	return nil
 }
 
 func resourceAwsAppsyncApiKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appsyncconn
-
+	ApiId, Id, er := decodeAppSyncApiKeyId(d.Id())
+	if er != nil {
+		return er
+	}
 	params := &appsync.UpdateApiKeyInput{
-		ApiId: aws.String(d.Get("appsync_api_id").(string)),
-		Id:    aws.String(d.Id()),
+		ApiId: aws.String(ApiId),
+		Id:    aws.String(Id),
 	}
 	if d.HasChange("description") {
 		params.Description = aws.String(d.Get("description").(string))
 	}
-	if v, ok := d.GetOk("validity_period_days"); ok {
-
-		if d.HasChange("validity_period_days") {
-			params.Expires = aws.Int64(time.Now().Add(time.Hour * 24 * time.Duration(v.(int))).Unix())
-		}
-	}
-	if v, ok := d.GetOk("valid_till_date"); ok {
-		layout := "02/01/2006 15:04:05 -0700 MST"
-		if d.HasChange("valid_till_date") {
-			tx := strings.Split(time.Now().Format(layout), " ")
-			tx[0] = v.(string)
-			t, _ := time.Parse(layout, strings.Join(tx, " "))
-			params.Expires = aws.Int64(t.Unix())
-
-		}
+	if d.HasChange("expires") {
+		t, _ := time.Parse(time.RFC3339, d.Get("expires").(string))
+		params.Expires = aws.Int64(t.Unix())
 	}
 
 	_, err := conn.UpdateApiKey(params)
@@ -149,10 +136,13 @@ func resourceAwsAppsyncApiKeyUpdate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsAppsyncApiKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appsyncconn
-
+	ApiId, Id, er := decodeAppSyncApiKeyId(d.Id())
+	if er != nil {
+		return er
+	}
 	input := &appsync.DeleteApiKeyInput{
-		ApiId: aws.String(d.Get("appsync_api_id").(string)),
-		Id:    aws.String(d.Id()),
+		ApiId: aws.String(ApiId),
+		Id:    aws.String(Id),
 	}
 	_, err := conn.DeleteApiKey(input)
 	if err != nil {
@@ -163,4 +153,12 @@ func resourceAwsAppsyncApiKeyDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	return nil
+}
+
+func decodeAppSyncApiKeyId(id string) (string, string, error) {
+	parts := strings.Split(id, ":")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected API-ID:API-KEY-ID", id)
+	}
+	return parts[0], parts[1], nil
 }

@@ -14,37 +14,19 @@ import (
 
 func TestAccAwsAppsyncApiKey_basic(t *testing.T) {
 	// sample date to test
-	dateAfterOneYear := time.Now().Add(time.Hour * 24 * time.Duration(360)).Format("02/01/2006")
-	// test sample date against time of expiry
-	layout := "02/01/2006 15:04:05 -0700 MST"
-	tx := strings.Split(time.Now().Format(layout), " ")
-	tx[0] = dateAfterOneYear
-	timeAfterOneYear, _ := time.Parse(layout, strings.Join(tx, " "))
-
-	thirtyDays := "30"
-	timeAfterThirdyDays := time.Now().Add(time.Hour * 24 * 30)
+	dateAfterOneYear := time.Now().Add(time.Hour * 24 * time.Duration(364))
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncApiKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppsyncApiKeyConfigValidTillDate(dateAfterOneYear),
+				Config:       testAccAppsyncApiKeyConfigBasic(dateAfterOneYear.Format(time.RFC3339)),
+				ResourceName: "aws_appsync_api_key.test",
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncApiKeyExistsTillDate(
-						"aws_appsync_graphql_api.test1",
-						"aws_appsync_api_key.test_valid_till_date",
-						timeAfterOneYear.Unix(),
-					),
-				),
-			},
-			{
-				Config: testAccAppsyncApiKeyConfigValidityPeriodDays(thirtyDays),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncApiKeyExistsTillDate(
-						"aws_appsync_graphql_api.test2",
-						"aws_appsync_api_key.test_validity_period_days",
-						timeAfterThirdyDays.Unix(),
+						"aws_appsync_api_key.test",
+						dateAfterOneYear.Unix(),
 					),
 				),
 			},
@@ -58,46 +40,48 @@ func testAccCheckAwsAppsyncApiKeyDestroy(s *terraform.State) error {
 		if rs.Type != "aws_appsync_api_key" {
 			continue
 		}
-
-		describe, err := conn.ListApiKeys(&appsync.ListApiKeysInput{})
-
+		ApiId, _, er := decodeAppSyncApiKeyId(rs.Primary.ID)
+		if er != nil {
+			return er
+		}
+		describe, err := conn.ListApiKeys(&appsync.ListApiKeysInput{ApiId: aws.String(ApiId)})
 		if err == nil {
-			if len(describe.ApiKeys) != 0 &&
-				*describe.ApiKeys[0].Id == rs.Primary.ID {
+			if len(describe.ApiKeys) != 0 {
 				return fmt.Errorf("Appsync ApiKey still exists")
 			}
-			return err
 		}
+
+		return nil
 
 	}
 	return nil
 }
 
-func testAccCheckAwsAppsyncApiKeyExistsTillDate(GqlApiName string, ApiKeyName string, date int64) resource.TestCheckFunc {
+func testAccCheckAwsAppsyncApiKeyExistsTillDate(ApiKeyName string, date int64) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rsGql, ok := s.RootModule().Resources[GqlApiName]
-		if !ok {
-			return fmt.Errorf("Gql Not found in state: %s", GqlApiName)
-		}
 
 		rsApiKey, ok := s.RootModule().Resources[ApiKeyName]
 		if !ok {
 			return fmt.Errorf("Key Not found in state: %s", ApiKeyName)
 		}
+		ApiId, Id, er := decodeAppSyncApiKeyId(rsApiKey.Primary.ID)
+		if er != nil {
+			return er
+		}
 
 		conn := testAccProvider.Meta().(*AWSClient).appsyncconn
-
 		input := &appsync.ListApiKeysInput{
-			ApiId: aws.String(rsGql.Primary.ID),
+			ApiId: aws.String(ApiId),
 		}
 
 		resp, err := conn.ListApiKeys(input)
 		if err != nil {
 			return err
 		}
+
 		var key appsync.ApiKey
 		for _, v := range resp.ApiKeys {
-			if *v.Id == *aws.String(rsApiKey.Primary.ID) {
+			if *v.Id == *aws.String(Id) {
 				key = *v
 			}
 		}
@@ -115,31 +99,16 @@ func testAccCheckAwsAppsyncApiKeyExistsTillDate(GqlApiName string, ApiKeyName st
 	}
 }
 
-func testAccAppsyncApiKeyConfigValidTillDate(rDate string) string {
+func testAccAppsyncApiKeyConfigBasic(rDate string) string {
 	return fmt.Sprintf(`
-resource "aws_appsync_graphql_api" "test1" {
+resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
-  name = "tf_appsync_test1"
+  name = "tf_appsync_test"
 }
-resource "aws_appsync_api_key" "test_valid_till_date" {
-	appsync_api_id = "${aws_appsync_graphql_api.test1.id}"
-	valid_till_date = "%s"
-}
-
-`, rDate)
+resource "aws_appsync_api_key" "test" {
+	api_id = "${aws_appsync_graphql_api.test.id}"
+	expires = "%sT00:00:00Z"
 }
 
-func testAccAppsyncApiKeyConfigValidityPeriodDays(rDays string) string {
-	return fmt.Sprintf(`
-resource "aws_appsync_graphql_api" "test2" {
-  authentication_type = "API_KEY"
-  name = "tf_appsync_test2"
-}
-
-resource "aws_appsync_api_key" "test_validity_period_days" {
-	appsync_api_id = "${aws_appsync_graphql_api.test2.id}"
-	validity_period_days = %s
-}
-
-`, rDays)
+`, strings.Split(rDate, "T")[0])
 }
