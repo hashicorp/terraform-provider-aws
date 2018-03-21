@@ -37,6 +37,13 @@ The following attributes are exported:
 * `registry_id` - The registry ID where the repository was created.
 * `repository_url` - The URL of the repository (in the form `aws_account_id.dkr.ecr.region.amazonaws.com/repositoryName`
 
+## Timeouts
+
+`aws_ecr_repository` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+configuration options:
+
+- `read` - (Default `10 minutes`) How long to wait for a repository to be listed.
+- `delete` - (Default `20 minutes`) How long to wait for a repository to be deleted.
 
 ## Import
 
