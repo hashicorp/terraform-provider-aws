@@ -15,6 +15,31 @@ Specifically, we have provided checklists below for each type of issue and pull
 request that can happen on the project. These checklists represent everything
 we need to be able to review and respond quickly.
 
+<!-- TOC depthFrom:2 -->
+
+- [HashiCorp vs. Community Providers](#hashicorp-vs-community-providers)
+- [Issues](#issues)
+    - [Issue Reporting Checklists](#issue-reporting-checklists)
+        - [Bug Reports](#bug-reports)
+        - [Feature Requests](#feature-requests)
+        - [Questions](#questions)
+    - [Issue Lifecycle](#issue-lifecycle)
+- [Pull Requests](#pull-requests)
+    - [Pull Request Lifecycle](#pull-request-lifecycle)
+    - [Checklists for Contribution](#checklists-for-contribution)
+        - [Documentation Update](#documentation-update)
+        - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
+        - [New Resource](#new-resource)
+        - [New Provider](#new-provider)
+        - [New Region](#new-region)
+        - [Terraform Schema and Code Idiosyncracies](#terraform-schema-and-code-idiosyncracies)
+    - [Writing Acceptance Tests](#writing-acceptance-tests)
+        - [Acceptance Tests Often Cost Money to Run](#acceptance-tests-often-cost-money-to-run)
+        - [Running an Acceptance Test](#running-an-acceptance-test)
+        - [Writing an Acceptance Test](#writing-an-acceptance-test)
+
+<!-- /TOC -->
+
 ## HashiCorp vs. Community Providers
 
 We separate providers out into what we call "HashiCorp Providers" and

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -51,22 +52,29 @@ func resourceAwsRoute53Record() *schema.Resource {
 			},
 
 			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateRoute53RecordType,
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					route53.RRTypeSoa,
+					route53.RRTypeA,
+					route53.RRTypeTxt,
+					route53.RRTypeNs,
+					route53.RRTypeCname,
+					route53.RRTypeMx,
+					route53.RRTypeNaptr,
+					route53.RRTypePtr,
+					route53.RRTypeSrv,
+					route53.RRTypeSpf,
+					route53.RRTypeAaaa,
+					route53.RRTypeCaa,
+				}, false),
 			},
 
 			"zone_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(string)
-					if value == "" {
-						es = append(es, fmt.Errorf("Cannot have empty zone_id"))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
 			},
 
 			"ttl": {
@@ -235,6 +243,12 @@ func resourceAwsRoute53Record() *schema.Resource {
 				Optional:      true,
 				Set:           schema.HashString,
 			},
+
+			"allow_overwrite": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 		},
 	}
 }
@@ -382,6 +396,16 @@ func resourceAwsRoute53RecordCreate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
+	// Protect existing DNS records which might be managed in another way
+	// Use UPSERT only if the overwrite flag is true or if the current action is an update
+	// Else CREATE is used and fail if the same record exists
+	var action string
+	if d.Get("allow_overwrite").(bool) || !d.IsNewResource() {
+		action = "UPSERT"
+	} else {
+		action = "CREATE"
+	}
+
 	// Create the new records. We abuse StateChangeConf for this to
 	// retry for us since Route53 sometimes returns errors about another
 	// operation happening at the same time.
@@ -389,7 +413,7 @@ func resourceAwsRoute53RecordCreate(d *schema.ResourceData, meta interface{}) er
 		Comment: aws.String("Managed by Terraform"),
 		Changes: []*route53.Change{
 			{
-				Action:            aws.String("UPSERT"),
+				Action:            aws.String(action),
 				ResourceRecordSet: rec,
 			},
 		},
@@ -922,5 +946,6 @@ func parseRecordId(id string) [4]string {
 			}
 		}
 	}
+	recName = strings.TrimSuffix(recName, ".")
 	return [4]string{recZone, recName, recType, recSet}
 }

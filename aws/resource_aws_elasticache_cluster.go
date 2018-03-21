@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsElastiCacheCommonSchema() map[string]*schema.Schema {
@@ -110,16 +111,9 @@ func resourceAwsElastiCacheCommonSchema() map[string]*schema.Schema {
 		},
 
 		"snapshot_retention_limit": {
-			Type:     schema.TypeInt,
-			Optional: true,
-			ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-				value := v.(int)
-				if value > 35 {
-					es = append(es, fmt.Errorf(
-						"snapshot retention limit cannot be more than 35 days"))
-				}
-				return
-			},
+			Type:         schema.TypeInt,
+			Optional:     true,
+			ValidateFunc: validation.IntAtMost(35),
 		},
 
 		"apply_immediately": {

@@ -338,6 +338,31 @@ func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccAWSDynamoDbConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "name", rName),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "read_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "write_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "hash_key", "TestTableHashKey"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "attribute.2990477658.name", "TestTableHashKey"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "attribute.2990477658.type", "S"),
+				),
+			},
+		},
+	})
+}
+func TestAccAWSDynamoDbTable_extended(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
 				Config: testAccAWSDynamoDbConfigInitialState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
@@ -631,6 +656,65 @@ func TestAccAWSDynamoDbTable_ttl(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAWSDynamoDbTable_attributeUpdate(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigOneAttribute(rName, "firstKey", "firstKey", "S"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+				),
+			},
+			{ // Attribute type change
+				Config: testAccAWSDynamoDbConfigOneAttribute(rName, "firstKey", "firstKey", "N"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+				),
+			},
+			{ // New attribute addition (index update)
+				Config: testAccAWSDynamoDbConfigTwoAttributes(rName, "firstKey", "secondKey", "firstKey", "N", "secondKey", "S"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+				),
+			},
+			{ // Attribute removal (index update)
+				Config: testAccAWSDynamoDbConfigOneAttribute(rName, "firstKey", "firstKey", "S"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSDynamoDbConfigOneAttribute(rName, "firstKey", "unusedKey", "S"),
+				ExpectError: regexp.MustCompile(`All attributes must be indexed. Unused attributes: \["unusedKey"\]$`),
+			},
+			{
+				Config:      testAccAWSDynamoDbConfigTwoAttributes(rName, "firstKey", "secondKey", "firstUnused", "N", "secondUnused", "S"),
+				ExpectError: regexp.MustCompile(`All attributes must be indexed. Unused attributes: \["firstUnused"\ \"secondUnused\"]$`),
+			},
+		},
+	})
+}
+
 func testAccCheckDynamoDbTableTimeToLiveWasUpdated(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		log.Printf("[DEBUG] Trying to create initial table state!")
@@ -671,44 +755,52 @@ func testAccCheckDynamoDbTableTimeToLiveWasUpdated(n string) resource.TestCheckF
 	}
 }
 
-func TestResourceAWSDynamoDbTableStreamViewType_validation(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "KEYS-ONLY",
-			ErrCount: 1,
-		},
-		{
-			Value:    "RANDOM-STRING",
-			ErrCount: 1,
-		},
-		{
-			Value:    "KEYS_ONLY",
-			ErrCount: 0,
-		},
-		{
-			Value:    "NEW_AND_OLD_IMAGES",
-			ErrCount: 0,
-		},
-		{
-			Value:    "NEW_IMAGE",
-			ErrCount: 0,
-		},
-		{
-			Value:    "OLD_IMAGE",
-			ErrCount: 0,
-		},
-	}
+func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
+	var confEncEnabled, confEncDisabled, confBasic dynamodb.DescribeTableOutput
 
-	for _, tc := range cases {
-		_, errors := validateStreamViewType(tc.Value, "aws_dynamodb_table_stream_view_type")
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
 
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected the DynamoDB stream_view_type to trigger a validation error")
-		}
-	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigInitialStateWithEncryption(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &confEncEnabled),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.0.enabled", "true"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbConfigInitialStateWithEncryption(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &confEncDisabled),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.#", "0"),
+					func(s *terraform.State) error {
+						if confEncDisabled.Table.CreationDateTime.Equal(*confEncEnabled.Table.CreationDateTime) {
+							return fmt.Errorf("[ERROR] DynamoDB table not recreated when changing SSE")
+						}
+						return nil
+					},
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &confBasic),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.#", "0"),
+					func(s *terraform.State) error {
+						if !confBasic.Table.CreationDateTime.Equal(*confEncDisabled.Table.CreationDateTime) {
+							return fmt.Errorf("[ERROR] DynamoDB table was recreated unexpectedly")
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
 }
 
 func testAccCheckAWSDynamoDbTableDestroy(s *terraform.State) error {
@@ -805,6 +897,10 @@ func testAccCheckInitialAWSDynamoDbTableConf(n string) resource.TestCheckFunc {
 
 		if *table.ProvisionedThroughput.ReadCapacityUnits != 1 {
 			return fmt.Errorf("Provisioned read capacity was %d, not 1!", table.ProvisionedThroughput.ReadCapacityUnits)
+		}
+
+		if table.SSEDescription != nil && *table.SSEDescription.Status != dynamodb.SSEStatusDisabled {
+			return fmt.Errorf("SSE status was %s, not %s", *table.SSEDescription.Status, dynamodb.SSEStatusDisabled)
 		}
 
 		attrCount := len(table.AttributeDefinitions)
@@ -926,6 +1022,22 @@ func dynamoDbAttributesToMap(attributes *[]*dynamodb.AttributeDefinition) map[st
 	return attrmap
 }
 
+func testAccAWSDynamoDbConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  read_capacity = 1
+  write_capacity = 1
+  hash_key = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+`, rName)
+}
+
 func testAccAWSDynamoDbConfigInitialState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
@@ -971,6 +1083,26 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 }
 `, rName)
+}
+
+func testAccAWSDynamoDbConfigInitialStateWithEncryption(rName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  read_capacity = 1
+  write_capacity = 1
+  hash_key = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  server_side_encryption {
+    enabled = %t
+  }
+}
+`, rName, enabled)
 }
 
 func testAccAWSDynamoDbConfigAddSecondaryGSI(rName string) string {
@@ -1394,4 +1526,66 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 }
 `, rName)
+}
+
+func testAccAWSDynamoDbConfigOneAttribute(rName, hashKey, attrName, attrType string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  read_capacity = 10
+  write_capacity = 10
+  hash_key = "staticHashKey"
+
+  attribute {
+    name = "staticHashKey"
+    type = "S"
+  }
+  attribute {
+    name = "%s"
+    type = "%s"
+  }
+
+  global_secondary_index {
+    name = "gsiName"
+    hash_key = "%s"
+    write_capacity = 10
+    read_capacity = 10
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName, attrName, attrType, hashKey)
+}
+
+func testAccAWSDynamoDbConfigTwoAttributes(rName, hashKey, rangeKey, attrName1, attrType1, attrName2, attrType2 string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  read_capacity = 10
+  write_capacity = 10
+  hash_key = "staticHashKey"
+
+  attribute {
+    name = "staticHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "%s"
+    type = "%s"
+  }
+  attribute {
+    name = "%s"
+    type = "%s"
+  }
+
+  global_secondary_index {
+    name = "gsiName"
+    hash_key = "%s"
+    range_key = "%s"
+    write_capacity = 10
+    read_capacity = 10
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName, attrName1, attrType1, attrName2, attrType2, hashKey, rangeKey)
 }

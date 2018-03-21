@@ -860,12 +860,12 @@ func (c *ServiceCatalog) CreateProvisionedProductPlanRequest(input *CreateProvis
 
 // CreateProvisionedProductPlan API operation for AWS Service Catalog.
 //
-// Creates a plan. A plan includes the list of resources that will be created
-// (when provisioning a new product) or modified (when updating a provisioned
-// product) when the plan is executed.
+// Creates a plan. A plan includes the list of resources to be created (when
+// provisioning a new product) or modified (when updating a provisioned product)
+// when the plan is executed.
 //
 // You can create one plan per provisioned product. To create a plan for an
-// existing provisioned product, it's status must be AVAILBLE or TAINTED.
+// existing provisioned product, the product status must be AVAILBLE or TAINTED.
 //
 // To view the resource changes in the change set, use DescribeProvisionedProductPlan.
 // To create or modify the provisioned product, use ExecuteProvisionedProductPlan.
@@ -1608,6 +1608,96 @@ func (c *ServiceCatalog) DeleteProvisioningArtifact(input *DeleteProvisioningArt
 // for more information on using Contexts.
 func (c *ServiceCatalog) DeleteProvisioningArtifactWithContext(ctx aws.Context, input *DeleteProvisioningArtifactInput, opts ...request.Option) (*DeleteProvisioningArtifactOutput, error) {
 	req, out := c.DeleteProvisioningArtifactRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteTagOption = "DeleteTagOption"
+
+// DeleteTagOptionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteTagOption operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteTagOption for more information on using the DeleteTagOption
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteTagOptionRequest method.
+//    req, resp := client.DeleteTagOptionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteTagOption
+func (c *ServiceCatalog) DeleteTagOptionRequest(input *DeleteTagOptionInput) (req *request.Request, output *DeleteTagOptionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteTagOption,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteTagOptionInput{}
+	}
+
+	output = &DeleteTagOptionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteTagOption API operation for AWS Service Catalog.
+//
+// Deletes the specified TagOption.
+//
+// You cannot delete a TagOption if it is associated with a product or portfolio.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation DeleteTagOption for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+//   An operation requiring TagOptions failed because the TagOptions migration
+//   process has not been performed for this account. Please use the AWS console
+//   to perform the migration process before retrying the operation.
+//
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   A resource that is currently in use. Ensure that the resource is not in use
+//   and retry the operation.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteTagOption
+func (c *ServiceCatalog) DeleteTagOption(input *DeleteTagOptionInput) (*DeleteTagOptionOutput, error) {
+	req, out := c.DeleteTagOptionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteTagOptionWithContext is the same as DeleteTagOption with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteTagOption for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) DeleteTagOptionWithContext(ctx aws.Context, input *DeleteTagOptionInput, opts ...request.Option) (*DeleteTagOptionOutput, error) {
+	req, out := c.DeleteTagOptionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3878,8 +3968,8 @@ func (c *ServiceCatalog) ListProvisionedProductPlansRequest(input *ListProvision
 
 // ListProvisionedProductPlans API operation for AWS Service Catalog.
 //
-// Lists the plans for the specified provisioned product or all plans the user
-// has access to.
+// Lists the plans for the specified provisioned product or all plans to which
+// the user has access.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7862,6 +7952,61 @@ func (s DeleteProvisioningArtifactOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteTagOptionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The TagOption identifier.
+	//
+	// Id is a required field
+	Id *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteTagOptionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTagOptionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteTagOptionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteTagOptionInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *DeleteTagOptionInput) SetId(v string) *DeleteTagOptionInput {
+	s.Id = &v
+	return s
+}
+
+type DeleteTagOptionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteTagOptionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTagOptionOutput) GoString() string {
+	return s.String()
+}
+
 type DescribeConstraintInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8609,8 +8754,7 @@ type DescribeProvisionedProductPlanOutput struct {
 	// Information about the plan.
 	ProvisionedProductPlanDetails *ProvisionedProductPlanDetails `type:"structure"`
 
-	// Information about the resources changes that will occur when the plan is
-	// executed.
+	// Information about the resource changes that will occur when the plan is executed.
 	ResourceChanges []*ResourceChange `type:"list"`
 }
 
@@ -12610,12 +12754,12 @@ type ResourceChangeDetail struct {
 	// The ID of the entity that caused the change.
 	CausingEntity *string `type:"string"`
 
-	// For static evaluations, the value the resource attribute will change and
+	// For static evaluations, the value of the resource attribute will change and
 	// the new value is known. For dynamic evaluations, the value might change,
 	// and any new value will be determined when the plan is updated.
 	Evaluation *string `type:"string" enum:"EvaluationType"`
 
-	// Information about the resource attribute that will be modified.
+	// Information about the resource attribute to be modified.
 	Target *ResourceTargetDefinition `type:"structure"`
 }
 
@@ -12711,7 +12855,7 @@ func (s *ResourceDetail) SetName(v string) *ResourceDetail {
 type ResourceTargetDefinition struct {
 	_ struct{} `type:"structure"`
 
-	// The attribute that will change.
+	// The attribute to be changed.
 	Attribute *string `type:"string" enum:"ResourceAttribute"`
 
 	// If the attribute is Properties, the value is the name of the property. Otherwise,
@@ -12719,7 +12863,7 @@ type ResourceTargetDefinition struct {
 	Name *string `type:"string"`
 
 	// If the attribute is Properties, indicates whether a change to this property
-	// causes the resource to be recreated.
+	// causes the resource to be re-created.
 	RequiresRecreation *string `type:"string" enum:"RequiresRecreation"`
 }
 

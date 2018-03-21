@@ -100,32 +100,31 @@ func TestAccAWSRoute53Zone_forceDestroy(t *testing.T) {
 	// record the initialized providers so that we can use them to
 	// check for the instances in each region
 	var providers []*schema.Provider
-	providerFactories := map[string]terraform.ResourceProviderFactory{
-		"aws": func() (terraform.ResourceProvider, error) {
-			p := Provider()
-			providers = append(providers, p.(*schema.Provider))
-			return p, nil
-		},
-	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		IDRefreshName:     "aws_route53_zone.destroyable",
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckRoute53ZoneDestroyWithProviders(&providers),
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckRoute53ZoneDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccRoute53ZoneConfig_forceDestroy(zoneName1, zoneName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ZoneExistsWithProviders("aws_route53_zone.destroyable", &zone, &providers),
+					testAccCheckRoute53ZoneExistsWithProvider("aws_route53_zone.destroyable", &zone,
+						testAccAwsRegionProviderFunc("us-west-2", &providers)),
 					// Add >100 records to verify pagination works ok
-					testAccCreateRandomRoute53RecordsInZoneIdWithProviders(&providers, &zone, 100),
-					testAccCreateRandomRoute53RecordsInZoneIdWithProviders(&providers, &zone, 5),
+					testAccCreateRandomRoute53RecordsInZoneIdWithProvider(
+						testAccAwsRegionProviderFunc("us-west-2", &providers), &zone, 100),
+					testAccCreateRandomRoute53RecordsInZoneIdWithProvider(
+						testAccAwsRegionProviderFunc("us-west-2", &providers), &zone, 5),
 
-					testAccCheckRoute53ZoneExistsWithProviders("aws_route53_zone.with_trailing_dot", &zoneWithDot, &providers),
+					testAccCheckRoute53ZoneExistsWithProvider("aws_route53_zone.with_trailing_dot", &zoneWithDot,
+						testAccAwsRegionProviderFunc("us-west-2", &providers)),
 					// Add >100 records to verify pagination works ok
-					testAccCreateRandomRoute53RecordsInZoneIdWithProviders(&providers, &zoneWithDot, 100),
-					testAccCreateRandomRoute53RecordsInZoneIdWithProviders(&providers, &zoneWithDot, 5),
+					testAccCreateRandomRoute53RecordsInZoneIdWithProvider(
+						testAccAwsRegionProviderFunc("us-west-2", &providers), &zoneWithDot, 100),
+					testAccCreateRandomRoute53RecordsInZoneIdWithProvider(
+						testAccAwsRegionProviderFunc("us-west-2", &providers), &zoneWithDot, 5),
 				),
 			},
 		},
@@ -201,24 +200,18 @@ func TestAccAWSRoute53Zone_private_region(t *testing.T) {
 	// record the initialized providers so that we can use them to
 	// check for the instances in each region
 	var providers []*schema.Provider
-	providerFactories := map[string]terraform.ResourceProviderFactory{
-		"aws": func() (terraform.ResourceProvider, error) {
-			p := Provider()
-			providers = append(providers, p.(*schema.Provider))
-			return p, nil
-		},
-	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		IDRefreshName:     "aws_route53_zone.main",
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckRoute53ZoneDestroyWithProviders(&providers),
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckRoute53ZoneDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccRoute53PrivateZoneRegionConfig(zoneName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ZoneExistsWithProviders("aws_route53_zone.main", &zone, &providers),
+					testAccCheckRoute53ZoneExistsWithProvider("aws_route53_zone.main", &zone,
+						testAccAwsRegionProviderFunc("us-west-2", &providers)),
 					testAccCheckRoute53ZoneAssociatesWithVpc("aws_vpc.main", &zone),
 				),
 			},
@@ -228,20 +221,6 @@ func TestAccAWSRoute53Zone_private_region(t *testing.T) {
 
 func testAccCheckRoute53ZoneDestroy(s *terraform.State) error {
 	return testAccCheckRoute53ZoneDestroyWithProvider(s, testAccProvider)
-}
-
-func testAccCheckRoute53ZoneDestroyWithProviders(providers *[]*schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		for _, provider := range *providers {
-			if provider.Meta() == nil {
-				continue
-			}
-			if err := testAccCheckRoute53ZoneDestroyWithProvider(s, provider); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
 }
 
 func testAccCheckRoute53ZoneDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
@@ -259,118 +238,93 @@ func testAccCheckRoute53ZoneDestroyWithProvider(s *terraform.State, provider *sc
 	return nil
 }
 
-func testAccCreateRandomRoute53RecordsInZoneIdWithProviders(providers *[]*schema.Provider,
-	zone *route53.GetHostedZoneOutput, recordsCount int) resource.TestCheckFunc {
+func testAccCreateRandomRoute53RecordsInZoneIdWithProvider(providerF func() *schema.Provider, zone *route53.GetHostedZoneOutput, recordsCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		for _, provider := range *providers {
-			if provider.Meta() == nil {
-				continue
-			}
-			if err := testAccCreateRandomRoute53RecordsInZoneId(provider, zone, recordsCount); err != nil {
-				return err
-			}
+		provider := providerF()
+		conn := provider.Meta().(*AWSClient).r53conn
+
+		var changes []*route53.Change
+		if recordsCount > 100 {
+			return fmt.Errorf("Route53 API only allows 100 record sets in a single batch")
 		}
-		return nil
-	}
-}
-
-func testAccCreateRandomRoute53RecordsInZoneId(provider *schema.Provider, zone *route53.GetHostedZoneOutput, recordsCount int) error {
-	conn := provider.Meta().(*AWSClient).r53conn
-
-	var changes []*route53.Change
-	if recordsCount > 100 {
-		return fmt.Errorf("Route53 API only allows 100 record sets in a single batch")
-	}
-	for i := 0; i < recordsCount; i++ {
-		changes = append(changes, &route53.Change{
-			Action: aws.String("UPSERT"),
-			ResourceRecordSet: &route53.ResourceRecordSet{
-				Name: aws.String(fmt.Sprintf("%d-tf-acc-random.%s", acctest.RandInt(), *zone.HostedZone.Name)),
-				Type: aws.String("CNAME"),
-				ResourceRecords: []*route53.ResourceRecord{
-					&route53.ResourceRecord{Value: aws.String(fmt.Sprintf("random.%s", *zone.HostedZone.Name))},
+		for i := 0; i < recordsCount; i++ {
+			changes = append(changes, &route53.Change{
+				Action: aws.String("UPSERT"),
+				ResourceRecordSet: &route53.ResourceRecordSet{
+					Name: aws.String(fmt.Sprintf("%d-tf-acc-random.%s", acctest.RandInt(), *zone.HostedZone.Name)),
+					Type: aws.String("CNAME"),
+					ResourceRecords: []*route53.ResourceRecord{
+						&route53.ResourceRecord{Value: aws.String(fmt.Sprintf("random.%s", *zone.HostedZone.Name))},
+					},
+					TTL: aws.Int64(int64(30)),
 				},
-				TTL: aws.Int64(int64(30)),
-			},
-		})
-	}
+			})
+		}
 
-	req := &route53.ChangeResourceRecordSetsInput{
-		HostedZoneId: zone.HostedZone.Id,
-		ChangeBatch: &route53.ChangeBatch{
-			Comment: aws.String("Generated by Terraform"),
-			Changes: changes,
-		},
-	}
-	log.Printf("[DEBUG] Change set: %s\n", *req)
-	resp, err := changeRoute53RecordSet(conn, req)
-	if err != nil {
+		req := &route53.ChangeResourceRecordSetsInput{
+			HostedZoneId: zone.HostedZone.Id,
+			ChangeBatch: &route53.ChangeBatch{
+				Comment: aws.String("Generated by Terraform"),
+				Changes: changes,
+			},
+		}
+		log.Printf("[DEBUG] Change set: %s\n", *req)
+		resp, err := changeRoute53RecordSet(conn, req)
+		if err != nil {
+			return err
+		}
+		changeInfo := resp.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
+		err = waitForRoute53RecordSetToSync(conn, cleanChangeID(*changeInfo.Id))
 		return err
 	}
-	changeInfo := resp.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
-	err = waitForRoute53RecordSetToSync(conn, cleanChangeID(*changeInfo.Id))
-	return err
 }
 
 func testAccCheckRoute53ZoneExists(n string, zone *route53.GetHostedZoneOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		return testAccCheckRoute53ZoneExistsWithProvider(s, n, zone, testAccProvider)
-	}
+	return testAccCheckRoute53ZoneExistsWithProvider(n, zone, func() *schema.Provider { return testAccProvider })
 }
 
-func testAccCheckRoute53ZoneExistsWithProviders(n string, zone *route53.GetHostedZoneOutput, providers *[]*schema.Provider) resource.TestCheckFunc {
+func testAccCheckRoute53ZoneExistsWithProvider(n string, zone *route53.GetHostedZoneOutput, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		for _, provider := range *providers {
-			if provider.Meta() == nil {
-				continue
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No hosted zone ID is set")
+		}
+
+		provider := providerF()
+		conn := provider.Meta().(*AWSClient).r53conn
+		resp, err := conn.GetHostedZone(&route53.GetHostedZoneInput{Id: aws.String(rs.Primary.ID)})
+		if err != nil {
+			return fmt.Errorf("Hosted zone err: %v", err)
+		}
+
+		aws_comment := *resp.HostedZone.Config.Comment
+		rs_comment := rs.Primary.Attributes["comment"]
+		if rs_comment != "" && rs_comment != aws_comment {
+			return fmt.Errorf("Hosted zone with comment '%s' found but does not match '%s'", aws_comment, rs_comment)
+		}
+
+		if !*resp.HostedZone.Config.PrivateZone {
+			sorted_ns := make([]string, len(resp.DelegationSet.NameServers))
+			for i, ns := range resp.DelegationSet.NameServers {
+				sorted_ns[i] = *ns
 			}
-			if err := testAccCheckRoute53ZoneExistsWithProvider(s, n, zone, provider); err != nil {
-				return err
+			sort.Strings(sorted_ns)
+			for idx, ns := range sorted_ns {
+				attribute := fmt.Sprintf("name_servers.%d", idx)
+				dsns := rs.Primary.Attributes[attribute]
+				if dsns != ns {
+					return fmt.Errorf("Got: %v for %v, Expected: %v", dsns, attribute, ns)
+				}
 			}
 		}
+
+		*zone = *resp
 		return nil
 	}
-}
-
-func testAccCheckRoute53ZoneExistsWithProvider(s *terraform.State, n string, zone *route53.GetHostedZoneOutput, provider *schema.Provider) error {
-	rs, ok := s.RootModule().Resources[n]
-	if !ok {
-		return fmt.Errorf("Not found: %s", n)
-	}
-
-	if rs.Primary.ID == "" {
-		return fmt.Errorf("No hosted zone ID is set")
-	}
-
-	conn := provider.Meta().(*AWSClient).r53conn
-	resp, err := conn.GetHostedZone(&route53.GetHostedZoneInput{Id: aws.String(rs.Primary.ID)})
-	if err != nil {
-		return fmt.Errorf("Hosted zone err: %v", err)
-	}
-
-	aws_comment := *resp.HostedZone.Config.Comment
-	rs_comment := rs.Primary.Attributes["comment"]
-	if rs_comment != "" && rs_comment != aws_comment {
-		return fmt.Errorf("Hosted zone with comment '%s' found but does not match '%s'", aws_comment, rs_comment)
-	}
-
-	if !*resp.HostedZone.Config.PrivateZone {
-		sorted_ns := make([]string, len(resp.DelegationSet.NameServers))
-		for i, ns := range resp.DelegationSet.NameServers {
-			sorted_ns[i] = *ns
-		}
-		sort.Strings(sorted_ns)
-		for idx, ns := range sorted_ns {
-			attribute := fmt.Sprintf("name_servers.%d", idx)
-			dsns := rs.Primary.Attributes[attribute]
-			if dsns != ns {
-				return fmt.Errorf("Got: %v for %v, Expected: %v", dsns, attribute, ns)
-			}
-		}
-	}
-
-	*zone = *resp
-	return nil
 }
 
 func testAccCheckRoute53ZoneAssociatesWithVpc(n string, zone *route53.GetHostedZoneOutput) resource.TestCheckFunc {
@@ -469,6 +423,9 @@ resource "aws_vpc" "main" {
 	instance_tenancy = "default"
 	enable_dns_support = true
 	enable_dns_hostnames = true
+	tags {
+		Name = "terraform-testacc-route53-zone-private"
+	}
 }
 
 resource "aws_route53_zone" "main" {
@@ -496,6 +453,9 @@ resource "aws_vpc" "main" {
 	instance_tenancy = "default"
 	enable_dns_support = true
 	enable_dns_hostnames = true
+	tags {
+		Name = "terraform-testacc-route53-zone-private-region"
+	}
 }
 
 resource "aws_route53_zone" "main" {

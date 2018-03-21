@@ -175,7 +175,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-data-source-basic"
   }
 }
 
@@ -282,7 +282,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-data-source-bc"
   }
 }
 
@@ -386,6 +386,7 @@ resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.alb_test.id}"
 
   tags {
+    Name     = "terraform-testacc-lb-listener-data-source-https"
     TestName = "TestAccAWSALB_basic"
   }
 }
@@ -398,7 +399,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-data-source-https"
   }
 }
 

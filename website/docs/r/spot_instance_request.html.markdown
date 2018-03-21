@@ -67,7 +67,7 @@ Spot Instance Requests support all the same arguments as
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
 
 * `create` - (Defaults to 10 mins) Used when requesting the spot instance (only valid if `wait_for_fulfillment = true`)
-* `delete` - (Defaults to 10 mins) Used when terminating all instances launched via the given spot instance request
+* `delete` - (Defaults to 20 mins) Used when terminating all instances launched via the given spot instance request
 
 ## Attributes Reference
 

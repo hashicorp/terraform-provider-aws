@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsServiceDiscoveryService_private(t *testing.T) {
+func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 	rName := acctest.RandString(5)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -45,7 +45,7 @@ func TestAccAwsServiceDiscoveryService_private(t *testing.T) {
 	})
 }
 
-func TestAccAwsServiceDiscoveryService_public(t *testing.T) {
+func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 	rName := acctest.RandString(5)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -77,7 +77,7 @@ func TestAccAwsServiceDiscoveryService_public(t *testing.T) {
 	})
 }
 
-func TestAccAwsServiceDiscoveryService_import(t *testing.T) {
+func TestAccAWSServiceDiscoveryService_import(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.Test(t, resource.TestCase{
@@ -147,6 +147,9 @@ func testAccServiceDiscoveryServiceConfig_private(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-service-discovery-service-private"
+  }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
@@ -172,6 +175,9 @@ func testAccServiceDiscoveryServiceConfig_private_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-service-discovery-service-private"
+  }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {

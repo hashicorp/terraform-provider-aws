@@ -1005,13 +1005,16 @@ func testAccAwsOpsworksStackConfigVpcCreate(name string) string {
 resource "aws_vpc" "tf-acc" {
   cidr_block = "10.3.5.0/24"
   tags {
-    Name = "testAccAwsOpsworksStackConfigVpcCreate"
+    Name = "terraform-testacc-opsworks-stack-vpc-create"
   }
 }
 resource "aws_subnet" "tf-acc" {
   vpc_id = "${aws_vpc.tf-acc.id}"
   cidr_block = "${aws_vpc.tf-acc.cidr_block}"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-opsworks-stack-vpc-create"
+  }
 }
 resource "aws_opsworks_stack" "tf-acc" {
   name = "%s"
@@ -1099,13 +1102,16 @@ func testAccAWSOpsworksStackConfigVpcUpdate(name string) string {
 resource "aws_vpc" "tf-acc" {
   cidr_block = "10.3.5.0/24"
   tags {
-    Name = "testAccAWSOpsworksStackConfigVpcUpdate"
+    Name = "terraform-testacc-opsworks-stack-vpc-update"
   }
 }
 resource "aws_subnet" "tf-acc" {
   vpc_id = "${aws_vpc.tf-acc.id}"
   cidr_block = "${aws_vpc.tf-acc.cidr_block}"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-opsworks-stack-vpc-update"
+  }
 }
 resource "aws_opsworks_stack" "tf-acc" {
   name = "%s"

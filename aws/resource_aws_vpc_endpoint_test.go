@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsVpcEndpoint_gatewayBasic(t *testing.T) {
+func TestAccAWSVpcEndpoint_gatewayBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 
 	resource.Test(t, resource.TestCase{
@@ -41,7 +41,7 @@ func TestAccAwsVpcEndpoint_gatewayBasic(t *testing.T) {
 	})
 }
 
-func TestAccAwsVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
+func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	var routeTable ec2.RouteTable
 
@@ -81,7 +81,7 @@ func TestAccAwsVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAwsVpcEndpoint_interfaceBasic(t *testing.T) {
+func TestAccAWSVpcEndpoint_interfaceBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 
 	resource.Test(t, resource.TestCase{
@@ -107,7 +107,7 @@ func TestAccAwsVpcEndpoint_interfaceBasic(t *testing.T) {
 	})
 }
 
-func TestAccAwsVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
+func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 
 	resource.Test(t, resource.TestCase{
@@ -144,7 +144,7 @@ func TestAccAwsVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	})
 }
 
-func TestAccAwsVpcEndpoint_interfaceNonAWSService(t *testing.T) {
+func TestAccAWSVpcEndpoint_interfaceNonAWSService(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	var endpoint ec2.VpcEndpoint
 
@@ -169,7 +169,7 @@ func TestAccAwsVpcEndpoint_interfaceNonAWSService(t *testing.T) {
 		},
 	})
 }
-func TestAccAwsVpcEndpoint_removed(t *testing.T) {
+func TestAccAWSVpcEndpoint_removed(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 
 	// reach out and DELETE the VPC Endpoint outside of Terraform
@@ -294,17 +294,19 @@ func testAccCheckVpcEndpointPrefixListAvailable(n string) resource.TestCheckFunc
 }
 
 const testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicy = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpc-endpoint-gw-w-route-table-and-policy"
+  }
 }
 
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "10.0.1.0/24"
+  tags {
+    Name = "tf-acc-vpc-endpoint-gw-w-route-table-and-policy"
+  }
 }
 
 resource "aws_vpc_endpoint" "s3" {
@@ -336,17 +338,19 @@ resource "aws_route_table_association" "main" {
 `
 
 const testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicyModified = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpc-endpoint-gw-w-route-table-and-policy"
+  }
 }
 
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "10.0.1.0/24"
+  tags {
+    Name = "tf-acc-vpc-endpoint-gw-w-route-table-and-policy"
+  }
 }
 
 resource "aws_vpc_endpoint" "s3" {
@@ -376,12 +380,11 @@ resource "aws_route_table_association" "main" {
 `
 
 const testAccVpcEndpointConfig_gatewayWithoutRouteTableOrPolicy = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpc-endpoint-gw-wout-route-table-or-policy"
+  }
 }
 
 resource "aws_vpc_endpoint" "s3" {
@@ -391,12 +394,11 @@ resource "aws_vpc_endpoint" "s3" {
 `
 
 const testAccVpcEndpointConfig_interfaceWithoutSubnet = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpc-endpoint-iface-wout-subnet"
+  }
 }
 
 data "aws_security_group" "default" {
@@ -413,26 +415,31 @@ resource "aws_vpc_endpoint" "ec2" {
 `
 
 const testAccVpcEndpointConfig_interfaceWithSubnet = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	enable_dns_support = true
 	enable_dns_hostnames = true
+	tags {
+		Name = "terraform-testacc-vpc-endpoint-iface-w-subnet"
+	}
 }
 
 resource "aws_subnet" "sn1" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "10.0.0.0/17"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-vpc-endpoint-iface-w-subnet-1"
+  }
 }
 
 resource "aws_subnet" "sn2" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "10.0.128.0/17"
   availability_zone = "us-west-2b"
+  tags {
+    Name = "tf-acc-vpc-endpoint-iface-w-subnet-2"
+  }
 }
 
 resource "aws_security_group" "sg1" {
@@ -454,26 +461,31 @@ resource "aws_vpc_endpoint" "ec2" {
 `
 
 const testAccVpcEndpointConfig_interfaceWithSubnetModified = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	enable_dns_support = true
 	enable_dns_hostnames = true
+	tags {
+		Name = "terraform-testacc-vpc-endpoint-iface-w-subnet"
+	}
 }
 
 resource "aws_subnet" "sn1" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "10.0.0.0/17"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-vpc-endpoint-iface-w-subnet-1"
+  }
 }
 
 resource "aws_subnet" "sn2" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "10.0.128.0/17"
   availability_zone = "us-west-2b"
+  tags {
+    Name = "tf-acc-vpc-endpoint-iface-w-subnet-2"
+  }
 }
 
 resource "aws_security_group" "sg1" {
@@ -495,13 +507,12 @@ resource "aws_vpc_endpoint" "ec2" {
 `
 
 func testAccVpcEndpointConfig_interfaceNonAWSService(lbName string) string {
-	return fmt.Sprintf(
-		`
+	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_vpc"
+    Name = "terraform-testacc-vpc-endpoint-iface-non-aws-svc"
   }
 }
 
@@ -529,7 +540,7 @@ resource "aws_subnet" "nlb_test_1" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_subnet1"
+    Name = "tf-acc-vpc-endpoint-iface-non-aws-svc-1"
   }
 }
 
@@ -539,7 +550,7 @@ resource "aws_subnet" "nlb_test_2" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_subnet2"
+    Name = "tf-acc-vpc-endpoint-iface-non-aws-svc-2"
   }
 }
 

@@ -12,7 +12,7 @@ import (
 
 const ACMCertificateRe = `^arn:[^:]+:acm:[^:]+:[^:]+:certificate/.+$`
 
-func TestAccAwsAcmCertificateDataSource_singleIssued(t *testing.T) {
+func TestAccAWSAcmCertificateDataSource_singleIssued(t *testing.T) {
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -78,7 +78,7 @@ func TestAccAwsAcmCertificateDataSource_singleIssued(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificateDataSource_multipleIssued(t *testing.T) {
+func TestAccAWSAcmCertificateDataSource_multipleIssued(t *testing.T) {
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -138,7 +138,7 @@ func TestAccAwsAcmCertificateDataSource_multipleIssued(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
+func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}

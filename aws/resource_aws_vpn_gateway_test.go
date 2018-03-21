@@ -441,7 +441,7 @@ const testAccNoVpnGatewayConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "terraform-testacc-vpn-gateway"
+    Name = "terraform-testacc-vpn-gateway-removed"
   }
 }
 `
@@ -466,7 +466,7 @@ const testAccVpnGatewayConfigChangeVPC = `
 resource "aws_vpc" "bar" {
   cidr_block = "10.2.0.0/16"
   tags {
-    Name = "terraform-testacc-vpn-gateway"
+    Name = "terraform-testacc-vpn-gateway-change-vpc"
   }
 }
 
@@ -482,7 +482,7 @@ const testAccCheckVpnGatewayConfigTags = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "terraform-testacc-vpn-gateway"
+    Name = "terraform-testacc-vpn-gateway-tags"
   }
 }
 
@@ -498,7 +498,7 @@ const testAccCheckVpnGatewayConfigTagsUpdate = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "terraform-testacc-vpn-gateway"
+    Name = "terraform-testacc-vpn-gateway-tags"
   }
 }
 
@@ -514,14 +514,14 @@ const testAccCheckVpnGatewayConfigReattach = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "terraform-testacc-vpn-gateway"
+    Name = "terraform-testacc-vpn-gateway-reattach-foo"
   }
 }
 
 resource "aws_vpc" "bar" {
   cidr_block = "10.2.0.0/16"
   tags {
-    Name = "terraform-testacc-vpn-gateway"
+    Name = "terraform-testacc-vpn-gateway-reattach-bar"
   }
 }
 
@@ -544,14 +544,14 @@ const testAccCheckVpnGatewayConfigReattachChange = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "terraform-testacc-vpn-gateway"
+    Name = "terraform-testacc-vpn-gateway-reattach-foo"
   }
 }
 
 resource "aws_vpc" "bar" {
   cidr_block = "10.2.0.0/16"
   tags {
-    Name = "terraform-testacc-vpn-gateway"
+    Name = "terraform-testacc-vpn-gateway-reattach-bar"
   }
 }
 
@@ -574,7 +574,7 @@ const testAccVpnGatewayConfigWithAZ = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags {
-    Name = "terraform-testacc-vpn-gateway"
+    Name = "terraform-testacc-vpn-gateway-with-az"
   }
 }
 
@@ -590,6 +590,9 @@ resource "aws_vpn_gateway" "foo" {
 const testAccVpnGatewayConfigWithASN = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-with-asn"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {

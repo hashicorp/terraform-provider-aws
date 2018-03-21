@@ -1382,9 +1382,11 @@ var resourceAwsDbInstanceDeletePendingStates = []string{
 	"configuring-enhanced-monitoring",
 	"creating",
 	"deleting",
+	"incompatible-parameters",
 	"modifying",
 	"starting",
 	"stopping",
+	"storage-full",
 	"storage-optimization",
 }
 
@@ -1400,5 +1402,6 @@ var resourceAwsDbInstanceUpdatePendingStates = []string{
 	"resetting-master-credentials",
 	"starting",
 	"stopping",
+	"storage-full",
 	"upgrading",
 }

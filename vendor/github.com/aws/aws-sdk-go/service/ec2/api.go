@@ -3135,6 +3135,9 @@ func (c *EC2) CreateFlowLogsRequest(input *CreateFlowLogsInput) (req *request.Re
 // In your request, you must also specify an IAM role that has permission to
 // publish logs to CloudWatch Logs.
 //
+// For more information, see VPC Flow Logs (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/flow-logs.html)
+// in the Amazon Virtual Private Cloud User Guide.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -4649,6 +4652,9 @@ func (c *EC2) CreateSnapshotRequest(input *CreateSnapshotInput) (req *request.Re
 // Volumes that are created from encrypted snapshots are also automatically
 // encrypted. Your encrypted volumes and any associated snapshots always remain
 // protected.
+//
+// You can tag your snapshots during creation. For more information, see Tagging
+// Your Amazon EC2 Resources (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html).
 //
 // For more information, see Amazon Elastic Block Store (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AmazonEBS.html)
 // and Amazon EBS Encryption (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
@@ -7862,7 +7868,8 @@ func (c *EC2) DeleteVpcPeeringConnectionRequest(input *DeleteVpcPeeringConnectio
 // Deletes a VPC peering connection. Either the owner of the requester VPC or
 // the owner of the accepter VPC can delete the VPC peering connection if it's
 // in the active state. The owner of the requester VPC can delete a VPC peering
-// connection in the pending-acceptance state.
+// connection in the pending-acceptance state. You cannot delete a VPC peering
+// connection that's in the failed state.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8443,12 +8450,12 @@ func (c *EC2) DescribeAggregateIdFormatRequest(input *DescribeAggregateIdFormatI
 // IDs.
 //
 // The following resource types support longer IDs: bundle | conversion-task
-// | dhcp-options | elastic-ip-allocation | elastic-ip-association | export-task
-// | flow-log | image | import-task | instance | internet-gateway | network-acl
-// | network-acl-association | network-interface | network-interface-attachment
+// | customer-gateway | dhcp-options | elastic-ip-allocation | elastic-ip-association
+// | export-task | flow-log | image | import-task | instance | internet-gateway
+// | network-acl | network-acl-association | network-interface | network-interface-attachment
 // | prefix-list | reservation | route-table | route-table-association | security-group
 // | snapshot | subnet | subnet-cidr-block-association | volume | vpc | vpc-cidr-block-association
-// | vpc-peering-connection.
+// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9755,12 +9762,12 @@ func (c *EC2) DescribeIdFormatRequest(input *DescribeIdFormatInput) (req *reques
 // be modified; it does not return information about other resource types.
 //
 // The following resource types support longer IDs: bundle | conversion-task
-// | dhcp-options | elastic-ip-allocation | elastic-ip-association | export-task
-// | flow-log | image | import-task | instance | internet-gateway | network-acl
-// | network-acl-association | network-interface | network-interface-attachment
+// | customer-gateway | dhcp-options | elastic-ip-allocation | elastic-ip-association
+// | export-task | flow-log | image | import-task | instance | internet-gateway
+// | network-acl | network-acl-association | network-interface | network-interface-attachment
 // | prefix-list | reservation | route-table | route-table-association | security-group
 // | snapshot | subnet | subnet-cidr-block-association | volume | vpc | vpc-cidr-block-association
-// | vpc-peering-connection.
+// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway.
 //
 // These settings apply to the IAM user who makes the request; they do not apply
 // to the entire AWS account. By default, an IAM user defaults to the same settings
@@ -9849,12 +9856,12 @@ func (c *EC2) DescribeIdentityIdFormatRequest(input *DescribeIdentityIdFormatInp
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // The following resource types support longer IDs: bundle | conversion-task
-// | dhcp-options | elastic-ip-allocation | elastic-ip-association | export-task
-// | flow-log | image | import-task | instance | internet-gateway | network-acl
-// | network-acl-association | network-interface | network-interface-attachment
+// | customer-gateway | dhcp-options | elastic-ip-allocation | elastic-ip-association
+// | export-task | flow-log | image | import-task | instance | internet-gateway
+// | network-acl | network-acl-association | network-interface | network-interface-attachment
 // | prefix-list | reservation | route-table | route-table-association | security-group
 // | snapshot | subnet | subnet-cidr-block-association | volume | vpc | vpc-cidr-block-association
-// | vpc-peering-connection.
+// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway.
 //
 // These settings apply to the principal specified in the request. They do not
 // apply to the principal that makes the request.
@@ -11670,12 +11677,12 @@ func (c *EC2) DescribePrincipalIdFormatRequest(input *DescribePrincipalIdFormatI
 // the default ID settings.
 //
 // The following resource types support longer IDs: bundle | conversion-task
-// | dhcp-options | elastic-ip-allocation | elastic-ip-association | export-task
-// | flow-log | image | import-task | instance | internet-gateway | network-acl
-// | network-acl-association | network-interface | network-interface-attachment
+// | customer-gateway | dhcp-options | elastic-ip-allocation | elastic-ip-association
+// | export-task | flow-log | image | import-task | instance | internet-gateway
+// | network-acl | network-acl-association | network-interface | network-interface-attachment
 // | prefix-list | reservation | route-table | route-table-association | security-group
 // | snapshot | subnet | subnet-cidr-block-association | volume | vpc | vpc-cidr-block-association
-// | vpc-peering-connection.
+// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -17625,12 +17632,12 @@ func (c *EC2) ModifyIdFormatRequest(input *ModifyIdFormatInput) (req *request.Re
 //
 // This request can only be used to modify longer ID settings for resource types
 // that are within the opt-in period. Resources currently in their opt-in period
-// include: bundle | conversion-task | dhcp-options | elastic-ip-allocation
+// include: bundle | conversion-task | customer-gateway | dhcp-options | elastic-ip-allocation
 // | elastic-ip-association | export-task | flow-log | image | import-task |
 // internet-gateway | network-acl | network-acl-association | network-interface
 // | network-interface-attachment | prefix-list | route-table | route-table-association
 // | security-group | subnet | subnet-cidr-block-association | vpc | vpc-cidr-block-association
-// | vpc-peering-connection.
+// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway.
 //
 // This setting applies to the IAM user who makes the request; it does not apply
 // to the entire AWS account. By default, an IAM user defaults to the same settings
@@ -17724,12 +17731,12 @@ func (c *EC2) ModifyIdentityIdFormatRequest(input *ModifyIdentityIdFormatInput) 
 //
 // This request can only be used to modify longer ID settings for resource types
 // that are within the opt-in period. Resources currently in their opt-in period
-// include: bundle | conversion-task | dhcp-options | elastic-ip-allocation
+// include: bundle | conversion-task | customer-gateway | dhcp-options | elastic-ip-allocation
 // | elastic-ip-association | export-task | flow-log | image | import-task |
 // internet-gateway | network-acl | network-acl-association | network-interface
 // | network-interface-attachment | prefix-list | route-table | route-table-association
 // | security-group | subnet | subnet-cidr-block-association | vpc | vpc-cidr-block-association
-// | vpc-peering-connection..
+// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway.
 //
 // For more information, see Resource IDs (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/resource-ids.html)
 // in the Amazon Elastic Compute Cloud User Guide.
@@ -18057,25 +18064,28 @@ func (c *EC2) ModifyInstancePlacementRequest(input *ModifyInstancePlacementInput
 
 // ModifyInstancePlacement API operation for Amazon Elastic Compute Cloud.
 //
-// Set the instance affinity value for a specific stopped instance and modify
-// the instance tenancy setting.
+// Modifies the placement attributes for a specified instance. You can do the
+// following:
 //
-// Instance affinity is disabled by default. When instance affinity is host
-// and it is not associated with a specific Dedicated Host, the next time it
-// is launched it will automatically be associated with the host it lands on.
-// This relationship will persist if the instance is stopped/started, or rebooted.
+//    * Modify the affinity between an instance and a Dedicated Host (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-overview.html).
+//    When affinity is set to host and the instance is not associated with a
+//    specific Dedicated Host, the next time the instance is launched, it is
+//    automatically associated with the host on which it lands. If the instance
+//    is restarted or rebooted, this relationship persists.
 //
-// You can modify the host ID associated with a stopped instance. If a stopped
-// instance has a new host ID association, the instance will target that host
-// when restarted.
+//    * Change the Dedicated Host with which an instance is associated.
 //
-// You can modify the tenancy of a stopped instance with a tenancy of host or
-// dedicated.
+//    * Change the instance tenancy of an instance from host to dedicated, or
+//    from dedicated to host.
 //
-// Affinity, hostID, and tenancy are not required parameters, but at least one
-// of them must be specified in the request. Affinity and tenancy can be modified
-// in the same request, but tenancy can only be modified on instances that are
-// stopped.
+//    * Move an instance to or from a placement group (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html).
+//
+// At least one attribute for affinity, host ID, tenancy, or placement group
+// name must be specified in the request. Affinity and tenancy can be modified
+// in the same request.
+//
+// To modify the host ID, tenancy, or placement group for an instance, the instance
+// must be in the stopped state.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -19225,7 +19235,7 @@ func (c *EC2) ModifyVpcPeeringConnectionOptionsRequest(input *ModifyVpcPeeringCo
 //    * Enable/disable communication over the peering connection between instances
 //    in your VPC and an EC2-Classic instance that's linked to the peer VPC.
 //
-//    * Enable/disable a local VPC to resolve public DNS hostnames to private
+//    * Enable/disable the ability to resolve public DNS hostnames to private
 //    IP addresses when queried from instances in the peer VPC.
 //
 // If the peered VPCs are in different accounts, each owner must initiate a
@@ -26422,7 +26432,7 @@ type CopyImageInput struct {
 	//
 	//    * Key ID
 	//
-	//    * Key alias
+	//    * Key alias, in the form alias/ExampleAlias
 	//
 	//    * ARN using key ID. The ID ARN contains the arn:aws:kms namespace, followed
 	//    by the region of the CMK, the AWS account ID of the CMK owner, the key
@@ -26618,15 +26628,16 @@ type CopySnapshotInput struct {
 	// will eventually fail.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
-	// The pre-signed URL that facilitates copying an encrypted snapshot. This parameter
-	// is only required when copying an encrypted snapshot with the Amazon EC2 Query
-	// API; it is available as an optional parameter in all other cases. The PresignedUrl
-	// should use the snapshot source endpoint, the CopySnapshot action, and include
-	// the SourceRegion, SourceSnapshotId, and DestinationRegion parameters. The
-	// PresignedUrl must be signed using AWS Signature Version 4. Because EBS snapshots
-	// are stored in Amazon S3, the signing algorithm for this parameter uses the
-	// same logic that is described in Authenticating Requests by Using Query Parameters
-	// (AWS Signature Version 4) (http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html)
+	// The pre-signed URL parameter is required when copying an encrypted snapshot
+	// with the Amazon EC2 Query API; it is available as an optional parameter in
+	// all other cases. For more information, see Query Requests (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/Query-Requests.html).
+	//
+	// The PresignedUrl should use the snapshot source endpoint, the CopySnapshot
+	// action, and include the SourceRegion, SourceSnapshotId, and DestinationRegion
+	// parameters. The PresignedUrl must be signed using AWS Signature Version 4.
+	// Because EBS snapshots are stored in Amazon S3, the signing algorithm for
+	// this parameter uses the same logic that is described in Authenticating Requests
+	// by Using Query Parameters (AWS Signature Version 4) (http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html)
 	// in the Amazon Simple Storage Service API Reference. An invalid or improperly
 	// signed PresignedUrl will cause the copy operation to fail asynchronously,
 	// and the snapshot will move to an error state.
@@ -29174,6 +29185,9 @@ type CreateSnapshotInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
+	// The tags to apply to the snapshot during creation.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
+
 	// The ID of the EBS volume.
 	//
 	// VolumeId is a required field
@@ -29212,6 +29226,12 @@ func (s *CreateSnapshotInput) SetDescription(v string) *CreateSnapshotInput {
 // SetDryRun sets the DryRun field's value.
 func (s *CreateSnapshotInput) SetDryRun(v bool) *CreateSnapshotInput {
 	s.DryRun = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateSnapshotInput) SetTagSpecifications(v []*TagSpecification) *CreateSnapshotInput {
+	s.TagSpecifications = v
 	return s
 }
 
@@ -32330,12 +32350,14 @@ type DeleteTagsInput struct {
 	// Resources is a required field
 	Resources []*string `locationName:"resourceId" type:"list" required:"true"`
 
-	// One or more tags to delete. If you omit this parameter, we delete all tags
-	// for the specified resources. Specify a tag key and an optional tag value
-	// to delete specific tags. If you specify a tag key without a tag value, we
-	// delete any tag with this key regardless of its value. If you specify a tag
-	// key with an empty string as the tag value, we delete the tag only if its
-	// value is an empty string.
+	// One or more tags to delete. Specify a tag key and an optional tag value to
+	// delete specific tags. If you specify a tag key without a tag value, we delete
+	// any tag with this key regardless of its value. If you specify a tag key with
+	// an empty string as the tag value, we delete the tag only if its value is
+	// an empty string.
+	//
+	// If you omit this parameter, we delete all user-defined tags for the specified
+	// resources. We do not delete AWS-generated tags (tags that have the aws: prefix).
 	Tags []*Tag `locationName:"tag" locationNameList:"item" type:"list"`
 }
 
@@ -34885,12 +34907,13 @@ func (s *DescribeIamInstanceProfileAssociationsOutput) SetNextToken(v string) *D
 type DescribeIdFormatInput struct {
 	_ struct{} `type:"structure"`
 
-	// The type of resource: bundle | conversion-task | dhcp-options | elastic-ip-allocation
-	// | elastic-ip-association | export-task | flow-log | image | import-task |
-	// instance | internet-gateway | network-acl | network-acl-association | network-interface
-	// | network-interface-attachment | prefix-list | reservation | route-table
-	// | route-table-association | security-group | snapshot | subnet | subnet-cidr-block-association
-	// | volume | vpc | vpc-cidr-block-association | vpc-peering-connection
+	// The type of resource: bundle | conversion-task | customer-gateway | dhcp-options
+	// | elastic-ip-allocation | elastic-ip-association | export-task | flow-log
+	// | image | import-task | instance | internet-gateway | network-acl | network-acl-association
+	// | network-interface | network-interface-attachment | prefix-list | reservation
+	// | route-table | route-table-association | security-group | snapshot | subnet
+	// | subnet-cidr-block-association | volume | vpc | vpc-cidr-block-association
+	// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway
 	Resource *string `type:"string"`
 }
 
@@ -34944,12 +34967,13 @@ type DescribeIdentityIdFormatInput struct {
 	// PrincipalArn is a required field
 	PrincipalArn *string `locationName:"principalArn" type:"string" required:"true"`
 
-	// The type of resource: bundle | conversion-task | dhcp-options | elastic-ip-allocation
-	// | elastic-ip-association | export-task | flow-log | image | import-task |
-	// instance | internet-gateway | network-acl | network-acl-association | network-interface
-	// | network-interface-attachment | prefix-list | reservation | route-table
-	// | route-table-association | security-group | snapshot | subnet | subnet-cidr-block-association
-	// | volume | vpc | vpc-cidr-block-association | vpc-peering-connection
+	// The type of resource: bundle | conversion-task | customer-gateway | dhcp-options
+	// | elastic-ip-allocation | elastic-ip-association | export-task | flow-log
+	// | image | import-task | instance | internet-gateway | network-acl | network-acl-association
+	// | network-interface | network-interface-attachment | prefix-list | reservation
+	// | route-table | route-table-association | security-group | snapshot | subnet
+	// | subnet-cidr-block-association | volume | vpc | vpc-cidr-block-association
+	// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway
 	Resource *string `locationName:"resource" type:"string"`
 }
 
@@ -37761,12 +37785,13 @@ type DescribePrincipalIdFormatInput struct {
 	// The token to request the next page of results.
 	NextToken *string `type:"string"`
 
-	// The type of resource: bundle | conversion-task | dhcp-options | elastic-ip-allocation
-	// | elastic-ip-association | export-task | flow-log | image | import-task |
-	// instance | internet-gateway | network-acl | network-acl-association | network-interface
-	// | network-interface-attachment | prefix-list | reservation | route-table
-	// | route-table-association | security-group | snapshot | subnet | subnet-cidr-block-association
-	// | volume | vpc | vpc-cidr-block-association | vpc-peering-connection
+	// The type of resource: bundle | conversion-task | customer-gateway | dhcp-options
+	// | elastic-ip-allocation | elastic-ip-association | export-task | flow-log
+	// | image | import-task | instance | internet-gateway | network-acl | network-acl-association
+	// | network-interface | network-interface-attachment | prefix-list | reservation
+	// | route-table | route-table-association | security-group | snapshot | subnet
+	// | subnet-cidr-block-association | volume | vpc | vpc-cidr-block-association
+	// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway
 	Resources []*string `locationName:"Resource" locationNameList:"item" type:"list"`
 }
 
@@ -40160,8 +40185,8 @@ func (s *DescribeSpotPriceHistoryInput) SetStartTime(v time.Time) *DescribeSpotP
 type DescribeSpotPriceHistoryOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The token required to retrieve the next set of results. This value is an
-	// empty string when there are no more results to return.
+	// The token required to retrieve the next set of results. This value is null
+	// or an empty string when there are no more results to return.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// The historical Spot prices.
@@ -51735,12 +51760,13 @@ func (s *ModifyHostsOutput) SetUnsuccessful(v []*UnsuccessfulItem) *ModifyHostsO
 type ModifyIdFormatInput struct {
 	_ struct{} `type:"structure"`
 
-	// The type of resource: bundle | conversion-task | dhcp-options | elastic-ip-allocation
-	// | elastic-ip-association | export-task | flow-log | image | import-task |
-	// internet-gateway | network-acl | network-acl-association | network-interface
-	// | network-interface-attachment | prefix-list | route-table | route-table-association
-	// | security-group | subnet | subnet-cidr-block-association | vpc | vpc-cidr-block-association
-	// | vpc-peering-connection.
+	// The type of resource: bundle | conversion-task | customer-gateway | dhcp-options
+	// | elastic-ip-allocation | elastic-ip-association | export-task | flow-log
+	// | image | import-task | internet-gateway | network-acl | network-acl-association
+	// | network-interface | network-interface-attachment | prefix-list | route-table
+	// | route-table-association | security-group | subnet | subnet-cidr-block-association
+	// | vpc | vpc-cidr-block-association | vpc-endpoint | vpc-peering-connection
+	// | vpn-connection | vpn-gateway.
 	//
 	// Alternatively, use the all-current option to include all resource types that
 	// are currently within their opt-in period for longer IDs.
@@ -51817,12 +51843,13 @@ type ModifyIdentityIdFormatInput struct {
 	// PrincipalArn is a required field
 	PrincipalArn *string `locationName:"principalArn" type:"string" required:"true"`
 
-	// The type of resource: bundle | conversion-task | dhcp-options | elastic-ip-allocation
-	// | elastic-ip-association | export-task | flow-log | image | import-task |
-	// internet-gateway | network-acl | network-acl-association | network-interface
-	// | network-interface-attachment | prefix-list | route-table | route-table-association
-	// | security-group | subnet | subnet-cidr-block-association | vpc | vpc-cidr-block-association
-	// | vpc-peering-connection.
+	// The type of resource: bundle | conversion-task | customer-gateway | dhcp-options
+	// | elastic-ip-allocation | elastic-ip-association | export-task | flow-log
+	// | image | import-task | internet-gateway | network-acl | network-acl-association
+	// | network-interface | network-interface-attachment | prefix-list | route-table
+	// | route-table-association | security-group | subnet | subnet-cidr-block-association
+	// | vpc | vpc-cidr-block-association | vpc-endpoint | vpc-peering-connection
+	// | vpn-connection | vpn-gateway.
 	//
 	// Alternatively, use the all-current option to include all resource types that
 	// are currently within their opt-in period for longer IDs.
@@ -52369,10 +52396,17 @@ func (s *ModifyInstanceCreditSpecificationOutput) SetUnsuccessfulInstanceCreditS
 type ModifyInstancePlacementInput struct {
 	_ struct{} `type:"structure"`
 
-	// The new affinity setting for the instance.
+	// The affinity setting for the instance.
 	Affinity *string `locationName:"affinity" type:"string" enum:"Affinity"`
 
-	// The ID of the Dedicated Host that the instance will have affinity with.
+	// The name of the placement group in which to place the instance. For spread
+	// placement groups, the instance must have a tenancy of default. For cluster
+	// placement groups, the instance must have a tenancy of default or dedicated.
+	//
+	// To remove an instance from a placement group, specify an empty string ("").
+	GroupName *string `type:"string"`
+
+	// The ID of the Dedicated Host with which to associate the instance.
 	HostId *string `locationName:"hostId" type:"string"`
 
 	// The ID of the instance that you are modifying.
@@ -52380,7 +52414,7 @@ type ModifyInstancePlacementInput struct {
 	// InstanceId is a required field
 	InstanceId *string `locationName:"instanceId" type:"string" required:"true"`
 
-	// The tenancy of the instance that you are modifying.
+	// The tenancy for the instance.
 	Tenancy *string `locationName:"tenancy" type:"string" enum:"HostTenancy"`
 }
 
@@ -52410,6 +52444,12 @@ func (s *ModifyInstancePlacementInput) Validate() error {
 // SetAffinity sets the Affinity field's value.
 func (s *ModifyInstancePlacementInput) SetAffinity(v string) *ModifyInstancePlacementInput {
 	s.Affinity = &v
+	return s
+}
+
+// SetGroupName sets the GroupName field's value.
+func (s *ModifyInstancePlacementInput) SetGroupName(v string) *ModifyInstancePlacementInput {
+	s.GroupName = &v
 	return s
 }
 
@@ -53128,6 +53168,8 @@ type ModifyVolumeInput struct {
 	// Default: If no size is specified, the existing size is retained.
 	Size *int64 `type:"integer"`
 
+	// The ID of the volume.
+	//
 	// VolumeId is a required field
 	VolumeId *string `type:"string" required:"true"`
 
@@ -55192,8 +55234,8 @@ func (s *PciId) SetVendorId(v string) *PciId {
 type PeeringConnectionOptions struct {
 	_ struct{} `type:"structure"`
 
-	// If true, enables a local VPC to resolve public DNS hostnames to private IP
-	// addresses when queried from instances in the peer VPC.
+	// If true, the public DNS hostnames of instances in the specified VPC resolve
+	// to private IP addresses when queried from instances in the peer VPC.
 	AllowDnsResolutionFromRemoteVpc *bool `locationName:"allowDnsResolutionFromRemoteVpc" type:"boolean"`
 
 	// If true, enables outbound communication from an EC2-Classic instance that's

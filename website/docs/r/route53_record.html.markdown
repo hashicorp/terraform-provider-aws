@@ -108,6 +108,7 @@ The following arguments are supported:
 * `latency_routing_policy` - (Optional) A block indicating a routing policy based on the latency between the requestor and an AWS region. Conflicts with any other routing policy. Documented below.
 * `weighted_routing_policy` - (Optional) A block indicating a weighted routing policy. Conflicts with any other routing policy. Documented below.
 * `multivalue_answer_routing_policy` - (Optional) A block indicating a multivalue answer routing policy. Conflicts with any other routing policy.
+* `allow_overwrite` - (Optional) Allow creation of this record in Terraform to overwrite an existing record, if any. This does not prevent other resources within Terraform or manual Route53 changes from overwriting this record. `true` by default.
 
 Exactly one of `records` or `alias` must be specified: this determines whether it's an alias record.
 

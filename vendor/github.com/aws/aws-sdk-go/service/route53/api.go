@@ -14680,6 +14680,9 @@ const (
 	// CloudWatchRegionApNortheast2 is a CloudWatchRegion enum value
 	CloudWatchRegionApNortheast2 = "ap-northeast-2"
 
+	// CloudWatchRegionApNortheast3 is a CloudWatchRegion enum value
+	CloudWatchRegionApNortheast3 = "ap-northeast-3"
+
 	// CloudWatchRegionSaEast1 is a CloudWatchRegion enum value
 	CloudWatchRegionSaEast1 = "sa-east-1"
 )
@@ -14866,6 +14869,9 @@ const (
 	// ResourceRecordSetRegionApNortheast2 is a ResourceRecordSetRegion enum value
 	ResourceRecordSetRegionApNortheast2 = "ap-northeast-2"
 
+	// ResourceRecordSetRegionApNortheast3 is a ResourceRecordSetRegion enum value
+	ResourceRecordSetRegionApNortheast3 = "ap-northeast-3"
+
 	// ResourceRecordSetRegionSaEast1 is a ResourceRecordSetRegion enum value
 	ResourceRecordSetRegionSaEast1 = "sa-east-1"
 
@@ -14948,6 +14954,9 @@ const (
 
 	// VPCRegionApNortheast2 is a VPCRegion enum value
 	VPCRegionApNortheast2 = "ap-northeast-2"
+
+	// VPCRegionApNortheast3 is a VPCRegion enum value
+	VPCRegionApNortheast3 = "ap-northeast-3"
 
 	// VPCRegionSaEast1 is a VPCRegion enum value
 	VPCRegionSaEast1 = "sa-east-1"

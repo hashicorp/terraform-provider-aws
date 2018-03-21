@@ -356,6 +356,19 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 			}
 			return resource.NonRetryableError(err)
 		}
+
+		if len(out.Services) < 1 {
+			if d.IsNewResource() {
+				return resource.RetryableError(fmt.Errorf("ECS service not created yet: %q", d.Id()))
+			}
+			return resource.NonRetryableError(fmt.Errorf("No ECS service found: %q", d.Id()))
+		}
+
+		service := out.Services[0]
+		if d.IsNewResource() && *service.Status == "INACTIVE" {
+			return resource.RetryableError(fmt.Errorf("ECS service currently INACTIVE: %q", d.Id()))
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -363,7 +376,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(out.Services) < 1 {
-		log.Printf("[DEBUG] Removing ECS service %s (%s) because it's gone", d.Get("name").(string), d.Id())
+		log.Printf("[WARN] Removing ECS service %s (%s) because it's gone", d.Get("name").(string), d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -372,7 +385,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Status==INACTIVE means deleted service
 	if *service.Status == "INACTIVE" {
-		log.Printf("[DEBUG] Removing ECS service %q because it's INACTIVE", *service.ServiceArn)
+		log.Printf("[WARN] Removing ECS service %q because it's INACTIVE", *service.ServiceArn)
 		d.SetId("")
 		return nil
 	}
@@ -418,7 +431,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if service.LoadBalancers != nil {
-		d.Set("load_balancers", flattenEcsLoadBalancers(service.LoadBalancers))
+		d.Set("load_balancer", flattenEcsLoadBalancers(service.LoadBalancers))
 	}
 
 	if err := d.Set("placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
