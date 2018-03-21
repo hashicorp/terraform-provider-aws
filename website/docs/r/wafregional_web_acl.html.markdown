@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF Regional web access control group (ACL) resource for use with ALB.
 ---
 
-# aws\_wafregional\_web\_acl
+# aws_wafregional_web_acl
 
 Provides a WAF Regional Web ACL Resource for use with Application Load Balancer.
 
@@ -63,13 +63,6 @@ The following arguments are supported:
 
 ## Nested Fields
 
-### `default_action`
-
-#### Arguments
-
-* `type` - (Required) Specifies how you want AWS WAF Regional to respond to requests that match the settings in a rule.
-  e.g. `ALLOW`, `BLOCK` or `COUNT`
-
 ### `rule`
 
 See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_regional_ActivatedRule.html) for all details and supported values.
@@ -77,10 +70,16 @@ See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_regional_Acti
 #### Arguments
 
 * `action` - (Required) The action that CloudFront or AWS WAF takes when a web request matches the conditions in the rule.
-  e.g. `ALLOW`, `BLOCK` or `COUNT`
 * `priority` - (Required) Specifies the order in which the rules in a WebACL are evaluated.
   Rules with a lower value are evaluated before rules with a higher value.
 * `rule_id` - (Required) ID of the associated [rule](/docs/providers/aws/r/wafregional_rule.html)
+
+### `default_action` / `action`
+
+#### Arguments
+
+* `type` - (Required) Specifies how you want AWS WAF Regional to respond to requests that match the settings in a rule.
+  e.g. `ALLOW`, `BLOCK` or `COUNT`
 
 ## Attributes Reference
 
