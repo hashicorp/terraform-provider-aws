@@ -151,7 +151,6 @@ func resourceAwsWafRegionalRuleDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-//func updateWafRegionalRuleResource(d *schema.ResourceData, meta interface{}, ChangeAction string) error {
 func updateWafRegionalRuleResource(id string, oldP, newP []interface{}, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region
