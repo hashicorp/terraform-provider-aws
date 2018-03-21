@@ -222,32 +222,34 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 			func(diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for az_mode
 				// InvalidParameterCombination: Must specify at least two cache nodes in order to specify AZ Mode of 'cross-az'.
-				azMode, azModeOk := diff.GetOk("az_mode")
-				numCacheNodes, numCacheNodesOk := diff.GetOk("num_cache_nodes")
-				if azModeOk && numCacheNodesOk && azMode.(string) == elasticache.AZModeCrossAz && numCacheNodes.(int) == 1 {
-					return errors.New(`az_mode "cross-az" is not supported with num_cache_nodes = 1`)
+				if v, ok := diff.GetOk("az_mode"); !ok || v.(string) != elasticache.AZModeCrossAz {
+					return nil
 				}
-				return nil
+				if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) != 1 {
+					return nil
+				}
+				return errors.New(`az_mode "cross-az" is not supported with num_cache_nodes = 1`)
 			},
 			func(diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for engine_version
 				// InvalidParameterCombination: Cannot modify memcached from 1.4.33 to 1.4.24
 				// InvalidParameterCombination: Cannot modify redis from 3.2.6 to 3.2.4
-				if diff.Id() != "" && diff.HasChange("engine_version") {
-					o, n := diff.GetChange("engine_version")
-					oVersion, err := gversion.NewVersion(o.(string))
-					if err != nil {
-						return err
-					}
-					nVersion, err := gversion.NewVersion(n.(string))
-					if err != nil {
-						return err
-					}
-					if nVersion.LessThan(oVersion) {
-						return diff.ForceNew("engine_version")
-					}
+				if diff.Id() == "" || !diff.HasChange("engine_version") {
+					return nil
 				}
-				return nil
+				o, n := diff.GetChange("engine_version")
+				oVersion, err := gversion.NewVersion(o.(string))
+				if err != nil {
+					return err
+				}
+				nVersion, err := gversion.NewVersion(n.(string))
+				if err != nil {
+					return err
+				}
+				if nVersion.GreaterThan(oVersion) {
+					return nil
+				}
+				return diff.ForceNew("engine_version")
 			},
 			func(diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for node_type
@@ -261,8 +263,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 					"cache.t2.small",
 					"cache.t2.medium",
 				}
-				_, subnetGroupNameOk := diff.GetOk("subnet_group_name")
-				if !subnetGroupNameOk {
+				if _, ok := diff.GetOk("subnet_group_name"); !ok {
 					for _, vpcOnlyNodeType := range vpcOnlyNodeTypes {
 						if nodeType == vpcOnlyNodeType {
 							return fmt.Errorf("node_type %q can only be created in a VPC", nodeType)
@@ -274,22 +275,25 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 			func(diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for num_cache_nodes
 				// InvalidParameterValue: Cannot create a Redis cluster with a NumCacheNodes parameter greater than 1.
-				engine, engineOk := diff.GetOk("engine")
-				numCacheNodes, numCacheNodesOk := diff.GetOk("num_cache_nodes")
-				if engineOk && numCacheNodesOk && engine.(string) == "redis" && numCacheNodes.(int) > 1 {
-					return errors.New(`engine "redis" does not support num_cache_nodes > 1`)
+				if v, ok := diff.GetOk("engine"); !ok || v.(string) == "memcached" {
+					return nil
 				}
-				return nil
+				if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) == 1 {
+					return nil
+				}
+				return errors.New(`engine "redis" does not support num_cache_nodes > 1`)
 			},
 			func(diff *schema.ResourceDiff, v interface{}) error {
 				// Engine memcached does not currently support vertical scaling
 				// InvalidParameterCombination: Scaling is not supported for engine memcached
 				// https://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/Scaling.Memcached.html#Scaling.Memcached.Vertically
-				engine, engineOk := diff.GetOk("engine")
-				if diff.Id() != "" && engineOk && engine.(string) == "memcached" && diff.HasChange("node_type") {
-					return diff.ForceNew("node_type")
+				if diff.Id() == "" || !diff.HasChange("node_type") {
+					return nil
 				}
-				return nil
+				if v, ok := diff.GetOk("engine"); !ok || v.(string) == "redis" {
+					return nil
+				}
+				return diff.ForceNew("node_type")
 			},
 		),
 	}
