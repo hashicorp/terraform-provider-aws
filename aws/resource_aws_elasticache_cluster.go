@@ -30,11 +30,14 @@ func resourceAwsElastiCacheCommonSchema() map[string]*schema.Schema {
 		},
 		"node_type": {
 			Type:     schema.TypeString,
-			Required: true,
+			Optional: true,
+			Computed: true,
 		},
 		"engine": {
 			Type:     schema.TypeString,
-			Required: true,
+			Optional: true,
+			//Computed: true, Set in resourceAwsElasticacheCluster because this Schema is used in resource_aws_elasticache_replication_group with a default value.
+			ForceNew: true,
 		},
 		"engine_version": {
 			Type:     schema.TypeString,
@@ -105,8 +108,9 @@ func resourceAwsElastiCacheCommonSchema() map[string]*schema.Schema {
 		},
 		"port": {
 			Type:     schema.TypeInt,
-			Required: true,
 			ForceNew: true,
+			Optional: true,
+			Computed: true,
 		},
 		"notification_topic_arn": {
 			Type:     schema.TypeString,
@@ -132,6 +136,8 @@ func resourceAwsElastiCacheCommonSchema() map[string]*schema.Schema {
 func resourceAwsElasticacheCluster() *schema.Resource {
 	resourceSchema := resourceAwsElastiCacheCommonSchema()
 
+	resourceSchema["engine"].Computed = true
+
 	resourceSchema["cluster_id"] = &schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
@@ -147,7 +153,8 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 
 	resourceSchema["num_cache_nodes"] = &schema.Schema{
 		Type:     schema.TypeInt,
-		Required: true,
+		Optional: true,
+		Computed: true,
 	}
 
 	resourceSchema["az_mode"] = &schema.Schema{
@@ -177,11 +184,6 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 		Computed: true,
 	}
 
-	resourceSchema["replication_group_id"] = &schema.Schema{
-		Type:     schema.TypeString,
-		Computed: true,
-	}
-
 	resourceSchema["cache_nodes"] = &schema.Schema{
 		Type:     schema.TypeList,
 		Computed: true,
@@ -205,6 +207,33 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				},
 			},
 		},
+	}
+
+	resourceSchema["replication_group_id"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		ForceNew: true,
+		ConflictsWith: []string{
+			"availability_zone",
+			"availability_zones",
+			"az_mode",
+			"node_type",
+			"engine",
+			"engine_version",
+			"maintenance_window",
+			"notification_topic_arn",
+			"num_cache_nodes",
+			"parameter_group_name",
+			"port",
+			"security_group_names",
+			"security_group_ids",
+			"snapshot_arns",
+			"snapshot_name",
+			"snapshot_retention_limit",
+			"snapshot_window",
+			"subnet_group_name",
+		},
+		Computed: true,
 	}
 
 	return &schema.Resource{
@@ -302,31 +331,48 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	clusterId := d.Get("cluster_id").(string)
-	nodeType := d.Get("node_type").(string)           // e.g) cache.m1.small
-	numNodes := int64(d.Get("num_cache_nodes").(int)) // 2
-	engine := d.Get("engine").(string)                // memcached
-	engineVersion := d.Get("engine_version").(string) // 1.4.14
-	port := int64(d.Get("port").(int))                // e.g) 11211
-	subnetGroupName := d.Get("subnet_group_name").(string)
-	securityNameSet := d.Get("security_group_names").(*schema.Set)
-	securityIdSet := d.Get("security_group_ids").(*schema.Set)
+	req := &elasticache.CreateCacheClusterInput{}
 
-	securityNames := expandStringList(securityNameSet.List())
-	securityIds := expandStringList(securityIdSet.List())
-	tags := tagsFromMapEC(d.Get("tags").(map[string]interface{}))
+	if v, ok := d.GetOk("replication_group_id"); ok {
+		req.ReplicationGroupId = aws.String(v.(string))
+	} else {
+		securityNameSet := d.Get("security_group_names").(*schema.Set)
+		securityIdSet := d.Get("security_group_ids").(*schema.Set)
+		securityNames := expandStringList(securityNameSet.List())
+		securityIds := expandStringList(securityIdSet.List())
+		tags := tagsFromMapEC(d.Get("tags").(map[string]interface{}))
 
-	req := &elasticache.CreateCacheClusterInput{
-		CacheClusterId:          aws.String(clusterId),
-		CacheNodeType:           aws.String(nodeType),
-		NumCacheNodes:           aws.Int64(numNodes),
-		Engine:                  aws.String(engine),
-		EngineVersion:           aws.String(engineVersion),
-		Port:                    aws.Int64(port),
-		CacheSubnetGroupName:    aws.String(subnetGroupName),
-		CacheSecurityGroupNames: securityNames,
-		SecurityGroupIds:        securityIds,
-		Tags:                    tags,
+		req.CacheSecurityGroupNames = securityNames
+		req.SecurityGroupIds = securityIds
+		req.Tags = tags
+	}
+
+	if v, ok := d.GetOk("cluster_id"); ok {
+		req.CacheClusterId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("node_type"); ok {
+		req.CacheNodeType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("num_cache_nodes"); ok {
+		req.NumCacheNodes = aws.Int64(v.(int64))
+	}
+
+	if v, ok := d.GetOk("engine"); ok {
+		req.Engine = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("engine_version"); ok {
+		req.EngineVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("port"); ok {
+		req.Port = aws.Int64(v.(int64))
+	}
+
+	if v, ok := d.GetOk("subnet_group_name"); ok {
+		req.CacheSubnetGroupName = aws.String(v.(string))
 	}
 
 	// parameter groups are optional and can be defaulted by AWS
@@ -373,10 +419,6 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 	if len(preferred_azs) > 0 {
 		azs := expandStringList(preferred_azs)
 		req.PreferredAvailabilityZones = azs
-	}
-
-	if v, ok := d.GetOk("replication_group_id"); ok {
-		req.ReplicationGroupId = aws.String(v.(string))
 	}
 
 	resp, err := conn.CreateCacheCluster(req)
