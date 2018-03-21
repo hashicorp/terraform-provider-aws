@@ -40,7 +40,7 @@ func TestAccAWSElasticacheCluster_Engine_Memcached_Ec2Classic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "port", "11211"),
 				),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -72,7 +72,7 @@ func TestAccAWSElasticacheCluster_Engine_Redis_Ec2Classic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
 				),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -107,7 +107,7 @@ func TestAccAWSElasticacheCluster_Port_Ec2Classic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "port", strconv.Itoa(port)),
 				),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
