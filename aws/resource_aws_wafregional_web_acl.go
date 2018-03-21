@@ -124,11 +124,14 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsWafRegionalWebAclUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("default_action") || d.HasChange("rule") {
+		conn := meta.(*AWSClient).wafregionalconn
+		region := meta.(*AWSClient).region
+
 		action := expandDefaultActionWR(d.Get("default_action").([]interface{}))
 		o, n := d.GetChange("rule")
 		oldR, newR := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateWebAclResourceWR(d.Id(), action, oldR, newR, meta, waf.ChangeActionInsert)
+		err := updateWebAclResourceWR(d.Id(), action, oldR, newR, conn, region)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Regional ACL: %s", err)
 		}
@@ -144,7 +147,7 @@ func resourceAwsWafRegionalWebAclDelete(d *schema.ResourceData, meta interface{}
 	rules := d.Get("rule").(*schema.Set).List()
 	if len(rules) > 0 {
 		noRules := []interface{}{}
-		err := updateWebAclResourceWR(d.Id(), action, rules, noRules, meta, waf.ChangeActionDelete)
+		err := updateWebAclResourceWR(d.Id(), action, rules, noRules, conn, region)
 		if err != nil {
 			return fmt.Errorf("Error Removing WAF Regional ACL Rules: %s", err)
 		}
@@ -166,10 +169,7 @@ func resourceAwsWafRegionalWebAclDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func updateWebAclResourceWR(id string, a *waf.WafAction, oldR, newR []interface{}, meta interface{}, ChangeAction string) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
-
+func updateWebAclResourceWR(id string, a *waf.WafAction, oldR, newR []interface{}, conn *wafregional.WAFRegional, region string) error {
 	wr := newWafRegionalRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateWebACLInput{
@@ -217,8 +217,11 @@ func flattenDefaultActionWR(n *waf.WafAction) []map[string]interface{} {
 func flattenWafWebAclRules(ts []*waf.ActivatedRule) []interface{} {
 	out := make([]interface{}, len(ts), len(ts))
 	for i, r := range ts {
+		actionMap := map[string]interface{}{
+			"type": *r.Action.Type,
+		}
 		m := make(map[string]interface{})
-		m["action"] = *r.Action
+		m["action"] = []interface{}{actionMap}
 		m["priority"] = *r.Priority
 		m["rule_id"] = *r.RuleId
 		out[i] = m

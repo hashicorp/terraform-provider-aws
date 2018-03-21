@@ -230,16 +230,16 @@ func TestAccAWSWafRegionalWebAcl_changeRules(t *testing.T) {
 }
 
 // Calculates the index which isn't static because ruleId is generated as part of the test
-func computeWafRegionalWebAclRuleIndex(ruleId **string, priority int, action string, idx *int) resource.TestCheckFunc {
+func computeWafRegionalWebAclRuleIndex(ruleId **string, priority int, actionType string, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		ruleResource := resourceAwsWafRegionalWebAcl().Schema["rule"].Elem.(*schema.Resource)
-		actionType := map[string]interface{}{
-			"type": action,
+		actionMap := map[string]interface{}{
+			"type": actionType,
 		}
 		m := map[string]interface{}{
 			"rule_id":  **ruleId,
 			"priority": priority,
-			"action":   actionType,
+			"action":   []interface{}{actionMap},
 		}
 
 		f := schema.HashResource(ruleResource)
