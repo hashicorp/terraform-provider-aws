@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -10,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	gversion "github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -151,6 +154,10 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 		Type:     schema.TypeString,
 		Optional: true,
 		Computed: true,
+		ValidateFunc: validation.StringInSlice([]string{
+			elasticache.AZModeCrossAz,
+			elasticache.AZModeSingleAz,
+		}, false),
 	}
 
 	resourceSchema["availability_zone"] = &schema.Schema{
@@ -210,6 +217,81 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 		},
 
 		Schema: resourceSchema,
+
+		CustomizeDiff: customdiff.Sequence(
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for az_mode
+				// InvalidParameterCombination: Must specify at least two cache nodes in order to specify AZ Mode of 'cross-az'.
+				azMode, azModeOk := diff.GetOk("az_mode")
+				numCacheNodes, numCacheNodesOk := diff.GetOk("num_cache_nodes")
+				if azModeOk && numCacheNodesOk && azMode.(string) == elasticache.AZModeCrossAz && numCacheNodes.(int) == 1 {
+					return errors.New(`az_mode "cross-az" is not supported with num_cache_nodes = 1`)
+				}
+				return nil
+			},
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for engine_version
+				// InvalidParameterCombination: Cannot modify memcached from 1.4.33 to 1.4.24
+				// InvalidParameterCombination: Cannot modify redis from 3.2.6 to 3.2.4
+				if diff.Id() != "" && diff.HasChange("engine_version") {
+					o, n := diff.GetChange("engine_version")
+					oVersion, err := gversion.NewVersion(o.(string))
+					if err != nil {
+						return err
+					}
+					nVersion, err := gversion.NewVersion(n.(string))
+					if err != nil {
+						return err
+					}
+					if nVersion.LessThan(oVersion) {
+						return diff.ForceNew("engine_version")
+					}
+				}
+				return nil
+			},
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for node_type
+				// InvalidParameterCombination: Instance type cache.t2.micro can only be created in a VPC.
+				nodeType, nodeTypeOk := diff.GetOk("node_type")
+				if !nodeTypeOk {
+					return nil
+				}
+				vpcOnlyNodeTypes := []string{
+					"cache.t2.micro",
+					"cache.t2.small",
+					"cache.t2.medium",
+				}
+				_, subnetGroupNameOk := diff.GetOk("subnet_group_name")
+				if !subnetGroupNameOk {
+					for _, vpcOnlyNodeType := range vpcOnlyNodeTypes {
+						if nodeType == vpcOnlyNodeType {
+							return fmt.Errorf("node_type %q can only be created in a VPC", nodeType)
+						}
+					}
+				}
+				return nil
+			},
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for num_cache_nodes
+				// InvalidParameterValue: Cannot create a Redis cluster with a NumCacheNodes parameter greater than 1.
+				engine, engineOk := diff.GetOk("engine")
+				numCacheNodes, numCacheNodesOk := diff.GetOk("num_cache_nodes")
+				if engineOk && numCacheNodesOk && engine.(string) == "redis" && numCacheNodes.(int) > 1 {
+					return errors.New(`engine "redis" does not support num_cache_nodes > 1`)
+				}
+				return nil
+			},
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				// Engine memcached does not currently support vertical scaling
+				// InvalidParameterCombination: Scaling is not supported for engine memcached
+				// https://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/Scaling.Memcached.html#Scaling.Memcached.Vertically
+				engine, engineOk := diff.GetOk("engine")
+				if diff.Id() != "" && engineOk && engine.(string) == "memcached" && diff.HasChange("node_type") {
+					return diff.ForceNew("node_type")
+				}
+				return nil
+			},
+		),
 	}
 }
 
@@ -480,9 +562,6 @@ func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{
 		oraw, nraw := d.GetChange("num_cache_nodes")
 		o := oraw.(int)
 		n := nraw.(int)
-		if v, ok := d.GetOk("az_mode"); ok && v.(string) == "cross-az" && n == 1 {
-			return fmt.Errorf("[WARN] Error updateing Elasticache cluster (%s), error: Cross-AZ mode is not supported in a single cache node.", d.Id())
-		}
 		if n < o {
 			log.Printf("[INFO] Cluster %s is marked for Decreasing cache nodes from %d to %d", d.Id(), o, n)
 			nodesToRemove := getCacheNodesToRemove(d, o, o-n)
