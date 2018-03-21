@@ -94,6 +94,20 @@ resource "aws_codebuild_project" "foo" {
     location = "https://github.com/mitchellh/packer.git"
   }
 
+  vpc_config {
+    vpc_id = "vpc-725fca"
+
+    subnets = [
+      "subnet-ba35d2e0",
+      "subnet-ab129af1",
+    ]
+
+    security_group_ids = [
+      "sg-f9f27d91",
+      "sg-e4f48g23",
+    ]
+  }
+
   tags {
     "Environment" = "Test"
   }
@@ -113,6 +127,7 @@ The following arguments are supported:
 * `artifacts` - (Required) Information about the project's build output artifacts. Artifact blocks are documented below.
 * `environment` - (Required) Information about the project's build environment. Environment blocks are documented below.
 * `source` - (Required) Information about the project's input source code. Source blocks are documented below.
+* `vpc_config` - (Optional) Configuration for the builds to run inside a VPC. VPC config blocks are documented below.
 
 `artifacts` supports the following:
 
@@ -132,12 +147,13 @@ The following arguments are supported:
 * `environment_variable` - (Optional) A set of environment variables to make available to builds for this build project.
 
 `environment_variable` supports the following:
+
 * `name` - (Required) The environment variable's name or key.
 * `value` - (Required) The environment variable's value.
 
 `source` supports the following:
 
-* `type` - (Required) The type of repository that contains the source code to be built. Valid values for this parameter are: `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `BITBUCKET` or `S3`.
+* `type` - (Required) The type of repository that contains the source code to be built. Valid values for this parameter are: `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `GITHUB_ENTERPRISE`, `BITBUCKET` or `S3`.
 * `auth` - (Optional) Information about the authorization settings for AWS CodeBuild to access the source code to be built. Auth blocks are documented below.
 * `buildspec` - (Optional) The build spec declaration to use for this build project's related builds.
 * `location` - (Optional) The location of the source code from git or s3.
@@ -146,6 +162,12 @@ The following arguments are supported:
 
 * `type` - (Required) The authorization type to use. The only valid value is `OAUTH`
 * `resource` - (Optional) The resource value that applies to the specified authorization type.
+
+`vpc_config` supports the following:
+
+* `vpc_id` - (Required) The ID of the VPC within which to run builds.
+* `subnets` - (Required) The subnet IDs within which to run builds.
+* `security_group_ids` - (Required) The security group IDs to assign to running builds.
 
 ## Attributes Reference
 
@@ -156,4 +178,3 @@ The following attributes are exported:
 * `encryption_key` - The AWS Key Management Service (AWS KMS) customer master key (CMK) that was used for encrypting the build project's build output artifacts.
 * `name` - The projects name.
 * `service_role` - The ARN of the IAM service role.
-

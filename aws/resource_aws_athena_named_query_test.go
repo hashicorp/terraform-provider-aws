@@ -27,7 +27,7 @@ func TestAccAWSAthenaNamedQuery_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAthenaNamedQuery_import(t *testing.T) {
+func TestAccAWSAthenaNamedQuery_import(t *testing.T) {
 	resourceName := "aws_athena_named_query.foo"
 
 	resource.Test(t, resource.TestCase{

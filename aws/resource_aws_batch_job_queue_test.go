@@ -198,11 +198,17 @@ resource "aws_security_group" "test_acc" {
 
 resource "aws_vpc" "test_acc" {
   cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-batch-job-queue"
+  }
 }
 
 resource "aws_subnet" "test_acc" {
   vpc_id = "${aws_vpc.test_acc.id}"
   cidr_block = "10.1.1.0/24"
+  tags {
+    Name = "tf-acc-batch-job-queue"
+  }
 }
 
 resource "aws_batch_compute_environment" "test_environment" {

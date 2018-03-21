@@ -35,7 +35,7 @@ func resourceAwsInstance() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -78,6 +78,17 @@ func resourceAwsInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"get_password_data": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
+			"password_data": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"subnet_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -116,7 +127,7 @@ func resourceAwsInstance() *schema.Resource {
 						return ""
 					}
 				},
-				ValidateFunc: validateInstanceUserDataSize,
+				ValidateFunc: validateMaxLength(16384),
 			},
 
 			"user_data_base64": {
@@ -552,7 +563,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"pending"},
 		Target:     []string{"running"},
-		Refresh:    InstanceStateRefreshFunc(conn, *instance.InstanceId, "terminated"),
+		Refresh:    InstanceStateRefreshFunc(conn, *instance.InstanceId, []string{"terminated", "shutting-down"}),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -773,6 +784,17 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.Get("get_password_data").(bool) {
+		passwordData, err := getAwsEc2InstancePasswordData(*instance.InstanceId, conn)
+		if err != nil {
+			return err
+		}
+		d.Set("password_data", passwordData)
+	} else {
+		d.Set("get_password_data", false)
+		d.Set("password_data", nil)
+	}
+
 	return nil
 }
 
@@ -914,12 +936,16 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("vpc_security_group_ids") {
+	if d.HasChange("vpc_security_group_ids") && !d.IsNewResource() {
 		var groups []*string
 		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
 			for _, v := range v.List() {
 				groups = append(groups, aws.String(v.(string)))
 			}
+		}
+
+		if len(groups) < 1 {
+			return fmt.Errorf("VPC-based instances require at least one security group to be attached.")
 		}
 		// If a user has multiple network interface attachments on the target EC2 instance, simply modifying the
 		// instance attributes via a `ModifyInstanceAttributes()` request would fail with the following error message:
@@ -965,7 +991,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
 			Target:     []string{"stopped"},
-			Refresh:    InstanceStateRefreshFunc(conn, d.Id(), ""),
+			Refresh:    InstanceStateRefreshFunc(conn, d.Id(), []string{}),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
@@ -996,7 +1022,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		stateConf = &resource.StateChangeConf{
 			Pending:    []string{"pending", "stopped"},
 			Target:     []string{"running"},
-			Refresh:    InstanceStateRefreshFunc(conn, d.Id(), "terminated"),
+			Refresh:    InstanceStateRefreshFunc(conn, d.Id(), []string{"terminated"}),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
@@ -1074,7 +1100,7 @@ func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 
 // InstanceStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an EC2 instance.
-func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID, failState string) resource.StateRefreshFunc {
+func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
 			InstanceIds: []*string{aws.String(instanceID)},
@@ -1098,10 +1124,11 @@ func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID, failState string) resou
 		i := resp.Reservations[0].Instances[0]
 		state := *i.State.Name
 
-		if state == failState {
-			return i, state, fmt.Errorf("Failed to reach target state. Reason: %s",
-				stringifyStateReason(i.StateReason))
-
+		for _, failState := range failStates {
+			if state == failState {
+				return i, state, fmt.Errorf("Failed to reach target state. Reason: %s",
+					stringifyStateReason(i.StateReason))
+			}
 		}
 
 		return i, state, nil
@@ -1553,6 +1580,37 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 	return nil
 }
 
+func getAwsEc2InstancePasswordData(instanceID string, conn *ec2.EC2) (string, error) {
+	log.Printf("[INFO] Reading password data for instance %s", instanceID)
+
+	var passwordData string
+
+	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+		resp, err := conn.GetPasswordData(&ec2.GetPasswordDataInput{
+			InstanceId: aws.String(instanceID),
+		})
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		if resp.PasswordData == nil || *resp.PasswordData == "" {
+			return resource.RetryableError(fmt.Errorf("Password data is blank for instance ID: %s", instanceID))
+		}
+
+		passwordData = strings.TrimSpace(*resp.PasswordData)
+
+		log.Printf("[INFO] Password data read for instance %s", instanceID)
+		return nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return passwordData, nil
+}
+
 type awsInstanceOpts struct {
 	BlockDeviceMappings               []*ec2.BlockDeviceMapping
 	DisableAPITermination             *bool
@@ -1716,7 +1774,7 @@ func awsTerminateInstance(conn *ec2.EC2, id string, d *schema.ResourceData) erro
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
 		Target:     []string{"terminated"},
-		Refresh:    InstanceStateRefreshFunc(conn, id, ""),
+		Refresh:    InstanceStateRefreshFunc(conn, id, []string{}),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,

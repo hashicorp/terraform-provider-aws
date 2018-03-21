@@ -18,9 +18,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
@@ -35,6 +37,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
@@ -65,6 +68,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -138,6 +142,7 @@ type Config struct {
 
 type AWSClient struct {
 	cfconn                *cloudformation.CloudFormation
+	cloud9conn            *cloud9.Cloud9
 	cloudfrontconn        *cloudfront.CloudFront
 	cloudtrailconn        *cloudtrail.CloudTrail
 	cloudwatchconn        *cloudwatch.CloudWatch
@@ -146,6 +151,7 @@ type AWSClient struct {
 	cognitoconn           *cognitoidentity.CognitoIdentity
 	cognitoidpconn        *cognitoidentityprovider.CognitoIdentityProvider
 	configconn            *configservice.ConfigService
+	daxconn               *dax.DAX
 	devicefarmconn        *devicefarm.DeviceFarm
 	dmsconn               *databasemigrationservice.DatabaseMigrationService
 	dsconn                *directoryservice.DirectoryService
@@ -189,6 +195,7 @@ type AWSClient struct {
 	lightsailconn         *lightsail.Lightsail
 	mqconn                *mq.MQ
 	opsworksconn          *opsworks.OpsWorks
+	organizationsconn     *organizations.Organizations
 	glacierconn           *glacier.Glacier
 	guarddutyconn         *guardduty.GuardDuty
 	codebuildconn         *codebuild.CodeBuild
@@ -206,6 +213,7 @@ type AWSClient struct {
 	athenaconn            *athena.Athena
 	dxconn                *directconnect.DirectConnect
 	mediastoreconn        *mediastore.MediaStore
+	appsyncconn           *appsync.AppSync
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -398,6 +406,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.apigateway = apigateway.New(awsApigatewaySess)
 	client.appautoscalingconn = applicationautoscaling.New(sess)
 	client.autoscalingconn = autoscaling.New(sess)
+	client.cloud9conn = cloud9.New(sess)
 	client.cfconn = cloudformation.New(awsCfSess)
 	client.cloudfrontconn = cloudfront.New(sess)
 	client.cloudtrailconn = cloudtrail.New(sess)
@@ -410,8 +419,9 @@ func (c *Config) Client() (interface{}, error) {
 	client.configconn = configservice.New(sess)
 	client.cognitoconn = cognitoidentity.New(sess)
 	client.cognitoidpconn = cognitoidentityprovider.New(sess)
-	client.dmsconn = databasemigrationservice.New(sess)
 	client.codepipelineconn = codepipeline.New(sess)
+	client.daxconn = dax.New(awsDynamoSess)
+	client.dmsconn = databasemigrationservice.New(sess)
 	client.dsconn = directoryservice.New(sess)
 	client.dynamodbconn = dynamodb.New(awsDynamoSess)
 	client.ecrconn = ecr.New(awsEcrSess)
@@ -436,6 +446,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.lightsailconn = lightsail.New(sess)
 	client.mqconn = mq.New(sess)
 	client.opsworksconn = opsworks.New(sess)
+	client.organizationsconn = organizations.New(sess)
 	client.r53conn = route53.New(r53Sess)
 	client.rdsconn = rds.New(awsRdsSess)
 	client.redshiftconn = redshift.New(sess)
@@ -455,6 +466,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.athenaconn = athena.New(sess)
 	client.dxconn = directconnect.New(sess)
 	client.mediastoreconn = mediastore.New(sess)
+	client.appsyncconn = appsync.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
@@ -481,6 +493,29 @@ func (c *Config) Client() (interface{}, error) {
 		}
 		if err.Code() == applicationautoscaling.ErrCodeFailedResourceAccessException {
 			r.Retryable = aws.Bool(true)
+		}
+	})
+
+	// See https://github.com/aws/aws-sdk-go/pull/1276
+	client.dynamodbconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name != "PutItem" && r.Operation.Name != "UpdateItem" && r.Operation.Name != "DeleteItem" {
+			return
+		}
+		if isAWSErr(r.Error, dynamodb.ErrCodeLimitExceededException, "Subscriber limit exceeded:") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
+	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name == "CreateStream" {
+			if isAWSErr(r.Error, kinesis.ErrCodeLimitExceededException, "simultaneously be in CREATING or DELETING") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+		if r.Operation.Name == "CreateStream" || r.Operation.Name == "DeleteStream" {
+			if isAWSErr(r.Error, kinesis.ErrCodeLimitExceededException, "Rate exceeded for stream") {
+				r.Retryable = aws.Bool(true)
+			}
 		}
 	})
 

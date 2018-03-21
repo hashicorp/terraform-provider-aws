@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDynamoDbGlobalTable_basic(t *testing.T) {
+func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
 	resourceName := "aws_dynamodb_global_table.test"
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
@@ -47,7 +47,7 @@ func TestAccAwsDynamoDbGlobalTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDynamoDbGlobalTable_multipleRegions(t *testing.T) {
+func TestAccAWSDynamoDbGlobalTable_multipleRegions(t *testing.T) {
 	resourceName := "aws_dynamodb_global_table.test"
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
@@ -89,7 +89,7 @@ func TestAccAwsDynamoDbGlobalTable_multipleRegions(t *testing.T) {
 	})
 }
 
-func TestAccAwsDynamoDbGlobalTable_import(t *testing.T) {
+func TestAccAWSDynamoDbGlobalTable_import(t *testing.T) {
 	resourceName := "aws_dynamodb_global_table.test"
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 

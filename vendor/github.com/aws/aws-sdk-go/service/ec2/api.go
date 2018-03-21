@@ -3135,6 +3135,9 @@ func (c *EC2) CreateFlowLogsRequest(input *CreateFlowLogsInput) (req *request.Re
 // In your request, you must also specify an IAM role that has permission to
 // publish logs to CloudWatch Logs.
 //
+// For more information, see VPC Flow Logs (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/flow-logs.html)
+// in the Amazon Virtual Private Cloud User Guide.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -4649,6 +4652,9 @@ func (c *EC2) CreateSnapshotRequest(input *CreateSnapshotInput) (req *request.Re
 // Volumes that are created from encrypted snapshots are also automatically
 // encrypted. Your encrypted volumes and any associated snapshots always remain
 // protected.
+//
+// You can tag your snapshots during creation. For more information, see Tagging
+// Your Amazon EC2 Resources (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html).
 //
 // For more information, see Amazon Elastic Block Store (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AmazonEBS.html)
 // and Amazon EBS Encryption (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
@@ -7862,7 +7868,8 @@ func (c *EC2) DeleteVpcPeeringConnectionRequest(input *DeleteVpcPeeringConnectio
 // Deletes a VPC peering connection. Either the owner of the requester VPC or
 // the owner of the accepter VPC can delete the VPC peering connection if it's
 // in the active state. The owner of the requester VPC can delete a VPC peering
-// connection in the pending-acceptance state.
+// connection in the pending-acceptance state. You cannot delete a VPC peering
+// connection that's in the failed state.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8272,7 +8279,7 @@ func (c *EC2) DescribeAccountAttributesRequest(input *DescribeAccountAttributesI
 //
 //    * default-vpc: The ID of the default VPC for your account, or none.
 //
-//    * max-instances: The maximum number of On-Demand instances that you can
+//    * max-instances: The maximum number of On-Demand Instances that you can
 //    run.
 //
 //    * vpc-max-security-groups-per-interface: The maximum number of security
@@ -8385,6 +8392,94 @@ func (c *EC2) DescribeAddresses(input *DescribeAddressesInput) (*DescribeAddress
 // for more information on using Contexts.
 func (c *EC2) DescribeAddressesWithContext(ctx aws.Context, input *DescribeAddressesInput, opts ...request.Option) (*DescribeAddressesOutput, error) {
 	req, out := c.DescribeAddressesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeAggregateIdFormat = "DescribeAggregateIdFormat"
+
+// DescribeAggregateIdFormatRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAggregateIdFormat operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAggregateIdFormat for more information on using the DescribeAggregateIdFormat
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAggregateIdFormatRequest method.
+//    req, resp := client.DescribeAggregateIdFormatRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeAggregateIdFormat
+func (c *EC2) DescribeAggregateIdFormatRequest(input *DescribeAggregateIdFormatInput) (req *request.Request, output *DescribeAggregateIdFormatOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAggregateIdFormat,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeAggregateIdFormatInput{}
+	}
+
+	output = &DescribeAggregateIdFormatOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAggregateIdFormat API operation for Amazon Elastic Compute Cloud.
+//
+// Describes the longer ID format settings for all resource types in a specific
+// region. This request is useful for performing a quick audit to determine
+// whether a specific region is fully opted in for longer IDs (17-character
+// IDs).
+//
+// This request only returns information about resource types that support longer
+// IDs.
+//
+// The following resource types support longer IDs: bundle | conversion-task
+// | customer-gateway | dhcp-options | elastic-ip-allocation | elastic-ip-association
+// | export-task | flow-log | image | import-task | instance | internet-gateway
+// | network-acl | network-acl-association | network-interface | network-interface-attachment
+// | prefix-list | reservation | route-table | route-table-association | security-group
+// | snapshot | subnet | subnet-cidr-block-association | volume | vpc | vpc-cidr-block-association
+// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DescribeAggregateIdFormat for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeAggregateIdFormat
+func (c *EC2) DescribeAggregateIdFormat(input *DescribeAggregateIdFormatInput) (*DescribeAggregateIdFormatOutput, error) {
+	req, out := c.DescribeAggregateIdFormatRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAggregateIdFormatWithContext is the same as DescribeAggregateIdFormat with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAggregateIdFormat for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeAggregateIdFormatWithContext(ctx aws.Context, input *DescribeAggregateIdFormatInput, opts ...request.Option) (*DescribeAggregateIdFormatOutput, error) {
+	req, out := c.DescribeAggregateIdFormatRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -9666,8 +9761,13 @@ func (c *EC2) DescribeIdFormatRequest(input *DescribeIdFormatInput) (req *reques
 // request only returns information about resource types whose ID formats can
 // be modified; it does not return information about other resource types.
 //
-// The following resource types support longer IDs: instance | reservation |
-// snapshot | volume.
+// The following resource types support longer IDs: bundle | conversion-task
+// | customer-gateway | dhcp-options | elastic-ip-allocation | elastic-ip-association
+// | export-task | flow-log | image | import-task | instance | internet-gateway
+// | network-acl | network-acl-association | network-interface | network-interface-attachment
+// | prefix-list | reservation | route-table | route-table-association | security-group
+// | snapshot | subnet | subnet-cidr-block-association | volume | vpc | vpc-cidr-block-association
+// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway.
 //
 // These settings apply to the IAM user who makes the request; they do not apply
 // to the entire AWS account. By default, an IAM user defaults to the same settings
@@ -9755,8 +9855,13 @@ func (c *EC2) DescribeIdentityIdFormatRequest(input *DescribeIdentityIdFormatInp
 // other resource types. For more information, see Resource IDs (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/resource-ids.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
-// The following resource types support longer IDs: instance | reservation |
-// snapshot | volume.
+// The following resource types support longer IDs: bundle | conversion-task
+// | customer-gateway | dhcp-options | elastic-ip-allocation | elastic-ip-association
+// | export-task | flow-log | image | import-task | instance | internet-gateway
+// | network-acl | network-acl-association | network-interface | network-interface-attachment
+// | prefix-list | reservation | route-table | route-table-association | security-group
+// | snapshot | subnet | subnet-cidr-block-association | volume | vpc | vpc-cidr-block-association
+// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway.
 //
 // These settings apply to the principal specified in the request. They do not
 // apply to the principal that makes the request.
@@ -11514,6 +11619,94 @@ func (c *EC2) DescribePrefixLists(input *DescribePrefixListsInput) (*DescribePre
 // for more information on using Contexts.
 func (c *EC2) DescribePrefixListsWithContext(ctx aws.Context, input *DescribePrefixListsInput, opts ...request.Option) (*DescribePrefixListsOutput, error) {
 	req, out := c.DescribePrefixListsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribePrincipalIdFormat = "DescribePrincipalIdFormat"
+
+// DescribePrincipalIdFormatRequest generates a "aws/request.Request" representing the
+// client's request for the DescribePrincipalIdFormat operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribePrincipalIdFormat for more information on using the DescribePrincipalIdFormat
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribePrincipalIdFormatRequest method.
+//    req, resp := client.DescribePrincipalIdFormatRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribePrincipalIdFormat
+func (c *EC2) DescribePrincipalIdFormatRequest(input *DescribePrincipalIdFormatInput) (req *request.Request, output *DescribePrincipalIdFormatOutput) {
+	op := &request.Operation{
+		Name:       opDescribePrincipalIdFormat,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribePrincipalIdFormatInput{}
+	}
+
+	output = &DescribePrincipalIdFormatOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribePrincipalIdFormat API operation for Amazon Elastic Compute Cloud.
+//
+// Describes the ID format settings for the root user and all IAM roles and
+// IAM users that have explicitly specified a longer ID (17-character ID) preference.
+//
+// By default, all IAM roles and IAM users default to the same ID settings as
+// the root user, unless they explicitly override the settings. This request
+// is useful for identifying those IAM users and IAM roles that have overridden
+// the default ID settings.
+//
+// The following resource types support longer IDs: bundle | conversion-task
+// | customer-gateway | dhcp-options | elastic-ip-allocation | elastic-ip-association
+// | export-task | flow-log | image | import-task | instance | internet-gateway
+// | network-acl | network-acl-association | network-interface | network-interface-attachment
+// | prefix-list | reservation | route-table | route-table-association | security-group
+// | snapshot | subnet | subnet-cidr-block-association | volume | vpc | vpc-cidr-block-association
+// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DescribePrincipalIdFormat for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribePrincipalIdFormat
+func (c *EC2) DescribePrincipalIdFormat(input *DescribePrincipalIdFormatInput) (*DescribePrincipalIdFormatOutput, error) {
+	req, out := c.DescribePrincipalIdFormatRequest(input)
+	return out, req.Send()
+}
+
+// DescribePrincipalIdFormatWithContext is the same as DescribePrincipalIdFormat with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribePrincipalIdFormat for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribePrincipalIdFormatWithContext(ctx aws.Context, input *DescribePrincipalIdFormatInput, opts ...request.Option) (*DescribePrincipalIdFormatOutput, error) {
+	req, out := c.DescribePrincipalIdFormatRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -17435,8 +17628,16 @@ func (c *EC2) ModifyIdFormatRequest(input *ModifyIdFormatInput) (req *request.Re
 //
 // Modifies the ID format for the specified resource on a per-region basis.
 // You can specify that resources should receive longer IDs (17-character IDs)
-// when they are created. The following resource types support longer IDs: instance
-// | reservation | snapshot | volume.
+// when they are created.
+//
+// This request can only be used to modify longer ID settings for resource types
+// that are within the opt-in period. Resources currently in their opt-in period
+// include: bundle | conversion-task | customer-gateway | dhcp-options | elastic-ip-allocation
+// | elastic-ip-association | export-task | flow-log | image | import-task |
+// internet-gateway | network-acl | network-acl-association | network-interface
+// | network-interface-attachment | prefix-list | route-table | route-table-association
+// | security-group | subnet | subnet-cidr-block-association | vpc | vpc-cidr-block-association
+// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway.
 //
 // This setting applies to the IAM user who makes the request; it does not apply
 // to the entire AWS account. By default, an IAM user defaults to the same settings
@@ -17528,8 +17729,16 @@ func (c *EC2) ModifyIdentityIdFormatRequest(input *ModifyIdentityIdFormatInput) 
 // user for an account. You can specify that resources should receive longer
 // IDs (17-character IDs) when they are created.
 //
-// The following resource types support longer IDs: instance | reservation |
-// snapshot | volume. For more information, see Resource IDs (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/resource-ids.html)
+// This request can only be used to modify longer ID settings for resource types
+// that are within the opt-in period. Resources currently in their opt-in period
+// include: bundle | conversion-task | customer-gateway | dhcp-options | elastic-ip-allocation
+// | elastic-ip-association | export-task | flow-log | image | import-task |
+// internet-gateway | network-acl | network-acl-association | network-interface
+// | network-interface-attachment | prefix-list | route-table | route-table-association
+// | security-group | subnet | subnet-cidr-block-association | vpc | vpc-cidr-block-association
+// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway.
+//
+// For more information, see Resource IDs (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/resource-ids.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // This setting applies to the principal specified in the request; it does not
@@ -17855,25 +18064,28 @@ func (c *EC2) ModifyInstancePlacementRequest(input *ModifyInstancePlacementInput
 
 // ModifyInstancePlacement API operation for Amazon Elastic Compute Cloud.
 //
-// Set the instance affinity value for a specific stopped instance and modify
-// the instance tenancy setting.
+// Modifies the placement attributes for a specified instance. You can do the
+// following:
 //
-// Instance affinity is disabled by default. When instance affinity is host
-// and it is not associated with a specific Dedicated Host, the next time it
-// is launched it will automatically be associated with the host it lands on.
-// This relationship will persist if the instance is stopped/started, or rebooted.
+//    * Modify the affinity between an instance and a Dedicated Host (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-overview.html).
+//    When affinity is set to host and the instance is not associated with a
+//    specific Dedicated Host, the next time the instance is launched, it is
+//    automatically associated with the host on which it lands. If the instance
+//    is restarted or rebooted, this relationship persists.
 //
-// You can modify the host ID associated with a stopped instance. If a stopped
-// instance has a new host ID association, the instance will target that host
-// when restarted.
+//    * Change the Dedicated Host with which an instance is associated.
 //
-// You can modify the tenancy of a stopped instance with a tenancy of host or
-// dedicated.
+//    * Change the instance tenancy of an instance from host to dedicated, or
+//    from dedicated to host.
 //
-// Affinity, hostID, and tenancy are not required parameters, but at least one
-// of them must be specified in the request. Affinity and tenancy can be modified
-// in the same request, but tenancy can only be modified on instances that are
-// stopped.
+//    * Move an instance to or from a placement group (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html).
+//
+// At least one attribute for affinity, host ID, tenancy, or placement group
+// name must be specified in the request. Affinity and tenancy can be modified
+// in the same request.
+//
+// To modify the host ID, tenancy, or placement group for an instance, the instance
+// must be in the stopped state.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -19023,7 +19235,7 @@ func (c *EC2) ModifyVpcPeeringConnectionOptionsRequest(input *ModifyVpcPeeringCo
 //    * Enable/disable communication over the peering connection between instances
 //    in your VPC and an EC2-Classic instance that's linked to the peer VPC.
 //
-//    * Enable/disable a local VPC to resolve public DNS hostnames to private
+//    * Enable/disable the ability to resolve public DNS hostnames to private
 //    IP addresses when queried from instances in the peer VPC.
 //
 // If the peered VPCs are in different accounts, each owner must initiate a
@@ -24165,7 +24377,7 @@ func (s *AttributeBooleanValue) SetValue(v bool) *AttributeBooleanValue {
 type AttributeValue struct {
 	_ struct{} `type:"structure"`
 
-	// The attribute value. Note that the value is case-sensitive.
+	// The attribute value. The value is case-sensitive.
 	Value *string `locationName:"value" type:"string"`
 }
 
@@ -26210,14 +26422,34 @@ type CopyImageInput struct {
 	// in the Amazon Elastic Compute Cloud User Guide.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
-	// The full ARN of the AWS Key Management Service (AWS KMS) CMK to use when
-	// encrypting the snapshots of an image during a copy operation. This parameter
-	// is only required if you want to use a non-default CMK; if this parameter
-	// is not specified, the default CMK for EBS is used. The ARN contains the arn:aws:kms
-	// namespace, followed by the region of the CMK, the AWS account ID of the CMK
-	// owner, the key namespace, and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
+	// An identifier for the AWS Key Management Service (AWS KMS) customer master
+	// key (CMK) to use when creating the encrypted volume. This parameter is only
+	// required if you want to use a non-default CMK; if this parameter is not specified,
+	// the default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted
+	// flag must also be set.
+	//
+	// The CMK identifier may be provided in any of the following formats:
+	//
+	//    * Key ID
+	//
+	//    * Key alias, in the form alias/ExampleAlias
+	//
+	//    * ARN using key ID. The ID ARN contains the arn:aws:kms namespace, followed
+	//    by the region of the CMK, the AWS account ID of the CMK owner, the key
+	//    namespace, and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
+	//
+	//
+	//    * ARN using key alias. The alias ARN contains the arn:aws:kms namespace,
+	//    followed by the region of the CMK, the AWS account ID of the CMK owner,
+	//    the alias namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//
+	//
+	// AWS parses KmsKeyId asynchronously, meaning that the action you call may
+	// appear to complete even though you provided an invalid identifier. This action
+	// will eventually report failure.
+	//
 	// The specified CMK must exist in the region that the snapshot is being copied
-	// to. If a KmsKeyId is specified, the Encrypted flag must also be set.
+	// to.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
 	// The name of the new AMI in the destination region.
@@ -26369,25 +26601,43 @@ type CopySnapshotInput struct {
 	// the Amazon Elastic Compute Cloud User Guide.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
-	// The full ARN of the AWS Key Management Service (AWS KMS) CMK to use when
-	// creating the snapshot copy. This parameter is only required if you want to
-	// use a non-default CMK; if this parameter is not specified, the default CMK
-	// for EBS is used. The ARN contains the arn:aws:kms namespace, followed by
-	// the region of the CMK, the AWS account ID of the CMK owner, the key namespace,
-	// and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
-	// The specified CMK must exist in the region that the snapshot is being copied
-	// to. If a KmsKeyId is specified, the Encrypted flag must also be set.
+	// An identifier for the AWS Key Management Service (AWS KMS) customer master
+	// key (CMK) to use when creating the encrypted volume. This parameter is only
+	// required if you want to use a non-default CMK; if this parameter is not specified,
+	// the default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted
+	// flag must also be set.
+	//
+	// The CMK identifier may be provided in any of the following formats:
+	//
+	//    * Key ID
+	//
+	//    * Key alias
+	//
+	//    * ARN using key ID. The ID ARN contains the arn:aws:kms namespace, followed
+	//    by the region of the CMK, the AWS account ID of the CMK owner, the key
+	//    namespace, and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
+	//
+	//
+	//    * ARN using key alias. The alias ARN contains the arn:aws:kms namespace,
+	//    followed by the region of the CMK, the AWS account ID of the CMK owner,
+	//    the alias namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//
+	//
+	// AWS parses KmsKeyId asynchronously, meaning that the action you call may
+	// appear to complete even though you provided an invalid identifier. The action
+	// will eventually fail.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
-	// The pre-signed URL that facilitates copying an encrypted snapshot. This parameter
-	// is only required when copying an encrypted snapshot with the Amazon EC2 Query
-	// API; it is available as an optional parameter in all other cases. The PresignedUrl
-	// should use the snapshot source endpoint, the CopySnapshot action, and include
-	// the SourceRegion, SourceSnapshotId, and DestinationRegion parameters. The
-	// PresignedUrl must be signed using AWS Signature Version 4. Because EBS snapshots
-	// are stored in Amazon S3, the signing algorithm for this parameter uses the
-	// same logic that is described in Authenticating Requests by Using Query Parameters
-	// (AWS Signature Version 4) (http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html)
+	// The pre-signed URL parameter is required when copying an encrypted snapshot
+	// with the Amazon EC2 Query API; it is available as an optional parameter in
+	// all other cases. For more information, see Query Requests (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/Query-Requests.html).
+	//
+	// The PresignedUrl should use the snapshot source endpoint, the CopySnapshot
+	// action, and include the SourceRegion, SourceSnapshotId, and DestinationRegion
+	// parameters. The PresignedUrl must be signed using AWS Signature Version 4.
+	// Because EBS snapshots are stored in Amazon S3, the signing algorithm for
+	// this parameter uses the same logic that is described in Authenticating Requests
+	// by Using Query Parameters (AWS Signature Version 4) (http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html)
 	// in the Amazon Simple Storage Service API Reference. An invalid or improperly
 	// signed PresignedUrl will cause the copy operation to fail asynchronously,
 	// and the snapshot will move to an error state.
@@ -28835,7 +29085,7 @@ type CreateSecurityGroupInput struct {
 
 	// The name of the security group.
 	//
-	// Constraints: Up to 255 characters in length
+	// Constraints: Up to 255 characters in length. Cannot start with sg-.
 	//
 	// Constraints for EC2-Classic: ASCII characters
 	//
@@ -28935,6 +29185,9 @@ type CreateSnapshotInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
+	// The tags to apply to the snapshot during creation.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
+
 	// The ID of the EBS volume.
 	//
 	// VolumeId is a required field
@@ -28973,6 +29226,12 @@ func (s *CreateSnapshotInput) SetDescription(v string) *CreateSnapshotInput {
 // SetDryRun sets the DryRun field's value.
 func (s *CreateSnapshotInput) SetDryRun(v bool) *CreateSnapshotInput {
 	s.DryRun = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateSnapshotInput) SetTagSpecifications(v []*TagSpecification) *CreateSnapshotInput {
+	s.TagSpecifications = v
 	return s
 }
 
@@ -29290,13 +29549,31 @@ type CreateVolumeInput struct {
 	// Constraint: Range is 100 to 20000 for Provisioned IOPS SSD volumes
 	Iops *int64 `type:"integer"`
 
-	// The full ARN of the AWS Key Management Service (AWS KMS) customer master
+	// An identifier for the AWS Key Management Service (AWS KMS) customer master
 	// key (CMK) to use when creating the encrypted volume. This parameter is only
 	// required if you want to use a non-default CMK; if this parameter is not specified,
-	// the default CMK for EBS is used. The ARN contains the arn:aws:kms namespace,
-	// followed by the region of the CMK, the AWS account ID of the CMK owner, the
-	// key namespace, and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
-	// If a KmsKeyId is specified, the Encrypted flag must also be set.
+	// the default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted
+	// flag must also be set.
+	//
+	// The CMK identifier may be provided in any of the following formats:
+	//
+	//    * Key ID
+	//
+	//    * Key alias
+	//
+	//    * ARN using key ID. The ID ARN contains the arn:aws:kms namespace, followed
+	//    by the region of the CMK, the AWS account ID of the CMK owner, the key
+	//    namespace, and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
+	//
+	//
+	//    * ARN using key alias. The alias ARN contains the arn:aws:kms namespace,
+	//    followed by the region of the CMK, the AWS account ID of the CMK owner,
+	//    the alias namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//
+	//
+	// AWS parses KmsKeyId asynchronously, meaning that the action you call may
+	// appear to complete even though you provided an invalid identifier. The action
+	// will eventually fail.
 	KmsKeyId *string `type:"string"`
 
 	// The size of the volume, in GiBs.
@@ -32073,12 +32350,14 @@ type DeleteTagsInput struct {
 	// Resources is a required field
 	Resources []*string `locationName:"resourceId" type:"list" required:"true"`
 
-	// One or more tags to delete. If you omit this parameter, we delete all tags
-	// for the specified resources. Specify a tag key and an optional tag value
-	// to delete specific tags. If you specify a tag key without a tag value, we
-	// delete any tag with this key regardless of its value. If you specify a tag
-	// key with an empty string as the tag value, we delete the tag only if its
-	// value is an empty string.
+	// One or more tags to delete. Specify a tag key and an optional tag value to
+	// delete specific tags. If you specify a tag key without a tag value, we delete
+	// any tag with this key regardless of its value. If you specify a tag key with
+	// an empty string as the tag value, we delete the tag only if its value is
+	// an empty string.
+	//
+	// If you omit this parameter, we delete all user-defined tags for the specified
+	// resources. We do not delete AWS-generated tags (tags that have the aws: prefix).
 	Tags []*Tag `locationName:"tag" locationNameList:"item" type:"list"`
 }
 
@@ -32996,6 +33275,66 @@ func (s DescribeAddressesOutput) GoString() string {
 // SetAddresses sets the Addresses field's value.
 func (s *DescribeAddressesOutput) SetAddresses(v []*Address) *DescribeAddressesOutput {
 	s.Addresses = v
+	return s
+}
+
+type DescribeAggregateIdFormatInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s DescribeAggregateIdFormatInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAggregateIdFormatInput) GoString() string {
+	return s.String()
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DescribeAggregateIdFormatInput) SetDryRun(v bool) *DescribeAggregateIdFormatInput {
+	s.DryRun = &v
+	return s
+}
+
+type DescribeAggregateIdFormatOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about each resource's ID format.
+	Statuses []*IdFormat `locationName:"statusSet" locationNameList:"item" type:"list"`
+
+	// Indicates whether all resource types in the region are configured to use
+	// longer IDs. This value is only true if all users are configured to use longer
+	// IDs for all resources types in the region.
+	UseLongIdsAggregated *bool `locationName:"useLongIdsAggregated" type:"boolean"`
+}
+
+// String returns the string representation
+func (s DescribeAggregateIdFormatOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAggregateIdFormatOutput) GoString() string {
+	return s.String()
+}
+
+// SetStatuses sets the Statuses field's value.
+func (s *DescribeAggregateIdFormatOutput) SetStatuses(v []*IdFormat) *DescribeAggregateIdFormatOutput {
+	s.Statuses = v
+	return s
+}
+
+// SetUseLongIdsAggregated sets the UseLongIdsAggregated field's value.
+func (s *DescribeAggregateIdFormatOutput) SetUseLongIdsAggregated(v bool) *DescribeAggregateIdFormatOutput {
+	s.UseLongIdsAggregated = &v
 	return s
 }
 
@@ -34568,7 +34907,13 @@ func (s *DescribeIamInstanceProfileAssociationsOutput) SetNextToken(v string) *D
 type DescribeIdFormatInput struct {
 	_ struct{} `type:"structure"`
 
-	// The type of resource: instance | reservation | snapshot | volume
+	// The type of resource: bundle | conversion-task | customer-gateway | dhcp-options
+	// | elastic-ip-allocation | elastic-ip-association | export-task | flow-log
+	// | image | import-task | instance | internet-gateway | network-acl | network-acl-association
+	// | network-interface | network-interface-attachment | prefix-list | reservation
+	// | route-table | route-table-association | security-group | snapshot | subnet
+	// | subnet-cidr-block-association | volume | vpc | vpc-cidr-block-association
+	// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway
 	Resource *string `type:"string"`
 }
 
@@ -34622,7 +34967,13 @@ type DescribeIdentityIdFormatInput struct {
 	// PrincipalArn is a required field
 	PrincipalArn *string `locationName:"principalArn" type:"string" required:"true"`
 
-	// The type of resource: instance | reservation | snapshot | volume
+	// The type of resource: bundle | conversion-task | customer-gateway | dhcp-options
+	// | elastic-ip-allocation | elastic-ip-association | export-task | flow-log
+	// | image | import-task | instance | internet-gateway | network-acl | network-acl-association
+	// | network-interface | network-interface-attachment | prefix-list | reservation
+	// | route-table | route-table-association | security-group | snapshot | subnet
+	// | subnet-cidr-block-association | volume | vpc | vpc-cidr-block-association
+	// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway
 	Resource *string `locationName:"resource" type:"string"`
 }
 
@@ -37418,6 +37769,99 @@ func (s *DescribePrefixListsOutput) SetPrefixLists(v []*PrefixList) *DescribePre
 	return s
 }
 
+type DescribePrincipalIdFormatInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The maximum number of results to return in a single call. To retrieve the
+	// remaining results, make another call with the returned NextToken value.
+	MaxResults *int64 `type:"integer"`
+
+	// The token to request the next page of results.
+	NextToken *string `type:"string"`
+
+	// The type of resource: bundle | conversion-task | customer-gateway | dhcp-options
+	// | elastic-ip-allocation | elastic-ip-association | export-task | flow-log
+	// | image | import-task | instance | internet-gateway | network-acl | network-acl-association
+	// | network-interface | network-interface-attachment | prefix-list | reservation
+	// | route-table | route-table-association | security-group | snapshot | subnet
+	// | subnet-cidr-block-association | volume | vpc | vpc-cidr-block-association
+	// | vpc-endpoint | vpc-peering-connection | vpn-connection | vpn-gateway
+	Resources []*string `locationName:"Resource" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribePrincipalIdFormatInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePrincipalIdFormatInput) GoString() string {
+	return s.String()
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DescribePrincipalIdFormatInput) SetDryRun(v bool) *DescribePrincipalIdFormatInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribePrincipalIdFormatInput) SetMaxResults(v int64) *DescribePrincipalIdFormatInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribePrincipalIdFormatInput) SetNextToken(v string) *DescribePrincipalIdFormatInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResources sets the Resources field's value.
+func (s *DescribePrincipalIdFormatInput) SetResources(v []*string) *DescribePrincipalIdFormatInput {
+	s.Resources = v
+	return s
+}
+
+type DescribePrincipalIdFormatOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// Information about the ID format settings for the ARN.
+	Principals []*PrincipalIdFormat `locationName:"principalSet" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribePrincipalIdFormatOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePrincipalIdFormatOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribePrincipalIdFormatOutput) SetNextToken(v string) *DescribePrincipalIdFormatOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetPrincipals sets the Principals field's value.
+func (s *DescribePrincipalIdFormatOutput) SetPrincipals(v []*PrincipalIdFormat) *DescribePrincipalIdFormatOutput {
+	s.Principals = v
+	return s
+}
+
 // Contains the parameters for DescribeRegions.
 type DescribeRegionsInput struct {
 	_ struct{} `type:"structure"`
@@ -38648,7 +39092,8 @@ type DescribeSecurityGroupsInput struct {
 
 	// The maximum number of results to return in a single call. To retrieve the
 	// remaining results, make another request with the returned NextToken value.
-	// This value can be between 5 and 1000.
+	// This value can be between 5 and 1000. If this parameter is not specified,
+	// then all results are returned.
 	MaxResults *int64 `type:"integer"`
 
 	// The token to request the next page of results.
@@ -39741,7 +40186,7 @@ type DescribeSpotPriceHistoryOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The token required to retrieve the next set of results. This value is null
-	// when there are no more results to return.
+	// or an empty string when there are no more results to return.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// The historical Spot prices.
@@ -43295,7 +43740,8 @@ type EbsBlockDevice struct {
 	// it is not used in requests to create gp2, st1, sc1, or standard volumes.
 	Iops *int64 `locationName:"iops" type:"integer"`
 
-	// ID for a user-managed CMK under which the EBS volume is encrypted.
+	// Identifier (key ID, key alias, ID ARN, or alias ARN) for a user-managed CMK
+	// under which the EBS volume is encrypted.
 	//
 	// Note: This parameter is only supported on BlockDeviceMapping objects called
 	// by RunInstances (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html),
@@ -46241,7 +46687,7 @@ type ImageDiskContainer struct {
 
 	// The format of the disk image being imported.
 	//
-	// Valid values: RAW | VHD | VMDK | OVA
+	// Valid values: VHD | VMDK | OVA
 	Format *string `type:"string"`
 
 	// The ID of the EBS snapshot to be used for importing the snapshot.
@@ -46763,7 +47209,7 @@ type ImportInstanceLaunchSpecification struct {
 	InstanceInitiatedShutdownBehavior *string `locationName:"instanceInitiatedShutdownBehavior" type:"string" enum:"ShutdownBehavior"`
 
 	// The instance type. For more information about the instance types that you
-	// can import, see Instance Types (http://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#vmimport-instance-types)
+	// can import, see Instance Types (http://docs.aws.amazon.com/vm-import/latest/userguide/vmie_prereqs.html#vmimport-instance-types)
 	// in the VM Import/Export User Guide.
 	InstanceType *string `locationName:"instanceType" type:"string" enum:"InstanceType"`
 
@@ -46779,9 +47225,7 @@ type ImportInstanceLaunchSpecification struct {
 	// [EC2-VPC] The ID of the subnet in which to launch the instance.
 	SubnetId *string `locationName:"subnetId" type:"string"`
 
-	// The user data to make available to the instance. If you are using an AWS
-	// SDK or command line tool, Base64-encoding is performed for you, and you can
-	// load the text from a file. Otherwise, you must provide Base64-encoded text.
+	// The Base64-encoded user data to make available to the instance.
 	UserData *UserData `locationName:"userData" type:"structure"`
 }
 
@@ -49431,9 +49875,7 @@ type LaunchSpecification struct {
 	// The ID of the subnet in which to launch the instance.
 	SubnetId *string `locationName:"subnetId" type:"string"`
 
-	// The user data to make available to the instances. If you are using an AWS
-	// SDK or command line tool, Base64-encoding is performed for you, and you can
-	// load the text from a file. Otherwise, you must provide Base64-encoded text.
+	// The Base64-encoded user data for the instance.
 	UserData *string `locationName:"userData" type:"string"`
 }
 
@@ -51318,7 +51760,16 @@ func (s *ModifyHostsOutput) SetUnsuccessful(v []*UnsuccessfulItem) *ModifyHostsO
 type ModifyIdFormatInput struct {
 	_ struct{} `type:"structure"`
 
-	// The type of resource: instance | reservation | snapshot | volume
+	// The type of resource: bundle | conversion-task | customer-gateway | dhcp-options
+	// | elastic-ip-allocation | elastic-ip-association | export-task | flow-log
+	// | image | import-task | internet-gateway | network-acl | network-acl-association
+	// | network-interface | network-interface-attachment | prefix-list | route-table
+	// | route-table-association | security-group | subnet | subnet-cidr-block-association
+	// | vpc | vpc-cidr-block-association | vpc-endpoint | vpc-peering-connection
+	// | vpn-connection | vpn-gateway.
+	//
+	// Alternatively, use the all-current option to include all resource types that
+	// are currently within their opt-in period for longer IDs.
 	//
 	// Resource is a required field
 	Resource *string `type:"string" required:"true"`
@@ -51392,7 +51843,16 @@ type ModifyIdentityIdFormatInput struct {
 	// PrincipalArn is a required field
 	PrincipalArn *string `locationName:"principalArn" type:"string" required:"true"`
 
-	// The type of resource: instance | reservation | snapshot | volume
+	// The type of resource: bundle | conversion-task | customer-gateway | dhcp-options
+	// | elastic-ip-allocation | elastic-ip-association | export-task | flow-log
+	// | image | import-task | internet-gateway | network-acl | network-acl-association
+	// | network-interface | network-interface-attachment | prefix-list | route-table
+	// | route-table-association | security-group | subnet | subnet-cidr-block-association
+	// | vpc | vpc-cidr-block-association | vpc-endpoint | vpc-peering-connection
+	// | vpn-connection | vpn-gateway.
+	//
+	// Alternatively, use the all-current option to include all resource types that
+	// are currently within their opt-in period for longer IDs.
 	//
 	// Resource is a required field
 	Resource *string `locationName:"resource" type:"string" required:"true"`
@@ -51936,10 +52396,17 @@ func (s *ModifyInstanceCreditSpecificationOutput) SetUnsuccessfulInstanceCreditS
 type ModifyInstancePlacementInput struct {
 	_ struct{} `type:"structure"`
 
-	// The new affinity setting for the instance.
+	// The affinity setting for the instance.
 	Affinity *string `locationName:"affinity" type:"string" enum:"Affinity"`
 
-	// The ID of the Dedicated Host that the instance will have affinity with.
+	// The name of the placement group in which to place the instance. For spread
+	// placement groups, the instance must have a tenancy of default. For cluster
+	// placement groups, the instance must have a tenancy of default or dedicated.
+	//
+	// To remove an instance from a placement group, specify an empty string ("").
+	GroupName *string `type:"string"`
+
+	// The ID of the Dedicated Host with which to associate the instance.
 	HostId *string `locationName:"hostId" type:"string"`
 
 	// The ID of the instance that you are modifying.
@@ -51947,7 +52414,7 @@ type ModifyInstancePlacementInput struct {
 	// InstanceId is a required field
 	InstanceId *string `locationName:"instanceId" type:"string" required:"true"`
 
-	// The tenancy of the instance that you are modifying.
+	// The tenancy for the instance.
 	Tenancy *string `locationName:"tenancy" type:"string" enum:"HostTenancy"`
 }
 
@@ -51977,6 +52444,12 @@ func (s *ModifyInstancePlacementInput) Validate() error {
 // SetAffinity sets the Affinity field's value.
 func (s *ModifyInstancePlacementInput) SetAffinity(v string) *ModifyInstancePlacementInput {
 	s.Affinity = &v
+	return s
+}
+
+// SetGroupName sets the GroupName field's value.
+func (s *ModifyInstancePlacementInput) SetGroupName(v string) *ModifyInstancePlacementInput {
+	s.GroupName = &v
 	return s
 }
 
@@ -52695,6 +53168,8 @@ type ModifyVolumeInput struct {
 	// Default: If no size is specified, the existing size is retained.
 	Size *int64 `type:"integer"`
 
+	// The ID of the volume.
+	//
 	// VolumeId is a required field
 	VolumeId *string `type:"string" required:"true"`
 
@@ -53126,7 +53601,7 @@ type ModifyVpcEndpointServiceConfigurationInput struct {
 
 	// The Amazon Resource Names (ARNs) of Network Load Balancers to add to your
 	// service configuration.
-	AddNetworkLoadBalancerArns []*string `locationName:"addNetworkLoadBalancerArn" locationNameList:"item" type:"list"`
+	AddNetworkLoadBalancerArns []*string `locationName:"AddNetworkLoadBalancerArn" locationNameList:"item" type:"list"`
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have
@@ -53136,7 +53611,7 @@ type ModifyVpcEndpointServiceConfigurationInput struct {
 
 	// The Amazon Resource Names (ARNs) of Network Load Balancers to remove from
 	// your service configuration.
-	RemoveNetworkLoadBalancerArns []*string `locationName:"removeNetworkLoadBalancerArn" locationNameList:"item" type:"list"`
+	RemoveNetworkLoadBalancerArns []*string `locationName:"RemoveNetworkLoadBalancerArn" locationNameList:"item" type:"list"`
 
 	// The ID of the service.
 	//
@@ -54759,8 +55234,8 @@ func (s *PciId) SetVendorId(v string) *PciId {
 type PeeringConnectionOptions struct {
 	_ struct{} `type:"structure"`
 
-	// If true, enables a local VPC to resolve public DNS hostnames to private IP
-	// addresses when queried from instances in the peer VPC.
+	// If true, the public DNS hostnames of instances in the specified VPC resolve
+	// to private IP addresses when queried from instances in the peer VPC.
 	AllowDnsResolutionFromRemoteVpc *bool `locationName:"allowDnsResolutionFromRemoteVpc" type:"boolean"`
 
 	// If true, enables outbound communication from an EC2-Classic instance that's
@@ -55208,6 +55683,39 @@ func (s *PricingDetail) SetCount(v int64) *PricingDetail {
 // SetPrice sets the Price field's value.
 func (s *PricingDetail) SetPrice(v float64) *PricingDetail {
 	s.Price = &v
+	return s
+}
+
+// PrincipalIdFormat description
+type PrincipalIdFormat struct {
+	_ struct{} `type:"structure"`
+
+	// PrincipalIdFormatARN description
+	Arn *string `locationName:"arn" type:"string"`
+
+	// PrincipalIdFormatStatuses description
+	Statuses []*IdFormat `locationName:"statusSet" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s PrincipalIdFormat) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PrincipalIdFormat) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *PrincipalIdFormat) SetArn(v string) *PrincipalIdFormat {
+	s.Arn = &v
+	return s
+}
+
+// SetStatuses sets the Statuses field's value.
+func (s *PrincipalIdFormat) SetStatuses(v []*IdFormat) *PrincipalIdFormat {
+	s.Statuses = v
 	return s
 }
 
@@ -57297,12 +57805,10 @@ type RequestLaunchTemplateData struct {
 	// are created during launch.
 	TagSpecifications []*LaunchTemplateTagSpecificationRequest `locationName:"TagSpecification" locationNameList:"LaunchTemplateTagSpecificationRequest" type:"list"`
 
-	// The user data to make available to the instance. For more information, see
-	// Running Commands on Your Linux Instance at Launch (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html)
+	// The Base64-encoded user data to make available to the instance. For more
+	// information, see Running Commands on Your Linux Instance at Launch (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html)
 	// (Linux) and Adding User Data (http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/ec2-instance-metadata.html#instancedata-add-user-data)
-	// (Windows). If you are using a command line tool, base64-encoding is performed
-	// for you and you can load the text from a file. Otherwise, you must provide
-	// base64-encoded text.
+	// (Windows).
 	UserData *string `type:"string"`
 }
 
@@ -57827,9 +58333,7 @@ type RequestSpotLaunchSpecification struct {
 	// The ID of the subnet in which to launch the instance.
 	SubnetId *string `locationName:"subnetId" type:"string"`
 
-	// The user data to make available to the instances. If you are using an AWS
-	// SDK or command line tool, Base64-encoding is performed for you, and you can
-	// load the text from a file. Otherwise, you must provide Base64-encoded text.
+	// The Base64-encoded user data for the instance.
 	UserData *string `locationName:"userData" type:"string"`
 }
 
@@ -62422,7 +62926,7 @@ type SnapshotDiskContainer struct {
 
 	// The format of the disk image being imported.
 	//
-	// Valid values: RAW | VHD | VMDK | OVA
+	// Valid values: VHD | VMDK | OVA
 	Format *string `type:"string"`
 
 	// The URL to the Amazon S3-based disk image being imported. It can either be
@@ -62691,9 +63195,7 @@ type SpotFleetLaunchSpecification struct {
 	// The tags to apply during creation.
 	TagSpecifications []*SpotFleetTagSpecification `locationName:"tagSpecificationSet" locationNameList:"item" type:"list"`
 
-	// The user data to make available to the instances. If you are using an AWS
-	// SDK or command line tool, Base64-encoding is performed for you, and you can
-	// load the text from a file. Otherwise, you must provide Base64-encoded text.
+	// The Base64-encoded user data to make available to the instances.
 	UserData *string `locationName:"userData" type:"string"`
 
 	// The number of units provided by the specified instance type. These are the
@@ -67007,7 +67509,7 @@ type VpnConnectionOptionsSpecification struct {
 
 	// Indicate whether the VPN connection uses static routes only. If you are creating
 	// a VPN connection for a device that does not support BGP, you must specify
-	// true.
+	// true. Use CreateVpnConnectionRoute to create a static route.
 	//
 	// Default: false
 	StaticRoutesOnly *bool `locationName:"staticRoutesOnly" type:"boolean"`
@@ -68215,6 +68717,9 @@ const (
 const (
 	// NetworkInterfaceStatusAvailable is a NetworkInterfaceStatus enum value
 	NetworkInterfaceStatusAvailable = "available"
+
+	// NetworkInterfaceStatusAssociated is a NetworkInterfaceStatus enum value
+	NetworkInterfaceStatusAssociated = "associated"
 
 	// NetworkInterfaceStatusAttaching is a NetworkInterfaceStatus enum value
 	NetworkInterfaceStatusAttaching = "attaching"

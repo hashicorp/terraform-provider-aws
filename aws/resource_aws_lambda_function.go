@@ -97,9 +97,20 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Required: true,
 			},
 			"runtime": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateRuntime,
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
+					lambda.RuntimeNodejs43,
+					lambda.RuntimeNodejs610,
+					lambda.RuntimeJava8,
+					lambda.RuntimePython27,
+					lambda.RuntimePython36,
+					lambda.RuntimeDotnetcore10,
+					lambda.RuntimeDotnetcore20,
+					lambda.RuntimeNodejs43Edge,
+					lambda.RuntimeGo1X,
+				}, false),
 			},
 			"timeout": {
 				Type:     schema.TypeInt,
@@ -200,7 +211,21 @@ func resourceAwsLambdaFunction() *schema.Resource {
 
 			"tags": tagsSchema(),
 		},
+
+		CustomizeDiff: updateComputedAttributesOnPublish,
 	}
+}
+
+func updateComputedAttributesOnPublish(d *schema.ResourceDiff, meta interface{}) error {
+	if needsFunctionCodeUpdate(d) {
+		d.SetNewComputed("last_modified")
+		publish := d.Get("publish").(bool)
+		if publish {
+			d.SetNewComputed("version")
+			d.SetNewComputed("qualified_arn")
+		}
+	}
+	return nil
 }
 
 // resourceAwsLambdaFunction maps to:
@@ -335,10 +360,8 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		params.Tags = tagsFromMapGeneric(v.(map[string]interface{}))
 	}
 
-	// IAM profiles can take ~10 seconds to propagate in AWS:
-	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-	// Error creating Lambda function: InvalidParameterValueException: The role defined for the task cannot be assumed by Lambda.
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+	// IAM changes can take 1 minute to propagate in AWS
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateFunction(params)
 		if err != nil {
 			log.Printf("[DEBUG] Error creating Lambda Function: %s", err)
@@ -361,8 +384,30 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("Error creating Lambda function: %s", err)
+		if !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
+			return fmt.Errorf("Error creating Lambda function: %s", err)
+		}
+		// Allow 9 more minutes for EC2 throttling
+		err := resource.Retry(9*time.Minute, func() *resource.RetryError {
+			_, err := conn.CreateFunction(params)
+			if err != nil {
+				log.Printf("[DEBUG] Error creating Lambda Function: %s", err)
+
+				if isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
+					log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("Error creating Lambda function: %s", err)
+		}
 	}
+
+	d.SetId(d.Get("function_name").(string))
 
 	if reservedConcurrentExecutions > 0 {
 
@@ -373,13 +418,20 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 			ReservedConcurrentExecutions: aws.Int64(int64(reservedConcurrentExecutions)),
 		}
 
-		_, err := conn.PutFunctionConcurrency(concurrencyParams)
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.PutFunctionConcurrency(concurrencyParams)
+			if err != nil {
+				if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
 		if err != nil {
 			return fmt.Errorf("Error setting concurrency for Lambda %s: %s", functionName, err)
 		}
 	}
-
-	d.SetId(d.Get("function_name").(string))
 
 	return resourceAwsLambdaFunctionRead(d, meta)
 }
@@ -525,6 +577,14 @@ func resourceAwsLambdaFunctionDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
+type resourceDiffer interface {
+	HasChange(string) bool
+}
+
+func needsFunctionCodeUpdate(d resourceDiffer) bool {
+	return d.HasChange("filename") || d.HasChange("source_code_hash") || d.HasChange("s3_bucket") || d.HasChange("s3_key") || d.HasChange("s3_object_version")
+}
+
 // resourceAwsLambdaFunctionUpdate maps to:
 // UpdateFunctionCode in the API / SDK
 func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -644,7 +704,8 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	if configUpdate {
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
-		err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+		// IAM changes can take 1 minute to propagate in AWS
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.UpdateFunctionConfiguration(configReq)
 			if err != nil {
 				log.Printf("[DEBUG] Received error modifying Lambda Function Configuration %s: %s", d.Id(), err)
@@ -662,7 +723,26 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			return nil
 		})
 		if err != nil {
-			return fmt.Errorf("Error modifying Lambda Function Configuration %s: %s", d.Id(), err)
+			if !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2, please make sure you have enough API rate limit.") {
+				return fmt.Errorf("Error modifying Lambda Function Configuration %s: %s", d.Id(), err)
+			}
+			// Allow 9 more minutes for EC2 throttling
+			err := resource.Retry(9*time.Minute, func() *resource.RetryError {
+				_, err := conn.UpdateFunctionConfiguration(configReq)
+				if err != nil {
+					log.Printf("[DEBUG] Received error modifying Lambda Function Configuration %s: %s", d.Id(), err)
+
+					if isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2, please make sure you have enough API rate limit.") {
+						log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
+						return resource.RetryableError(err)
+					}
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+			if err != nil {
+				return fmt.Errorf("Error modifying Lambda Function Configuration %s: %s", d.Id(), err)
+			}
 		}
 
 		d.SetPartial("description")
@@ -672,7 +752,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		d.SetPartial("timeout")
 	}
 
-	if d.HasChange("filename") || d.HasChange("source_code_hash") || d.HasChange("s3_bucket") || d.HasChange("s3_key") || d.HasChange("s3_object_version") {
+	if needsFunctionCodeUpdate(d) {
 		codeReq := &lambda.UpdateFunctionCodeInput{
 			FunctionName: aws.String(d.Id()),
 			Publish:      aws.Bool(d.Get("publish").(bool)),
@@ -768,15 +848,4 @@ func readEnvironmentVariables(ev map[string]interface{}) map[string]string {
 	}
 
 	return variables
-}
-
-func validateRuntime(v interface{}, k string) (ws []string, errors []error) {
-	runtime := v.(string)
-
-	if runtime == lambda.RuntimeNodejs {
-		errors = append(errors, fmt.Errorf(
-			"%s has reached end of life since October 2016 and has been deprecated in favor of %s.",
-			runtime, lambda.RuntimeNodejs43))
-	}
-	return
 }

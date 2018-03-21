@@ -90,6 +90,8 @@ func (c *GameLift) AcceptMatchRequest(input *AcceptMatchInput) (req *request.Req
 //
 //    * AcceptMatch
 //
+//    * StartMatchBackfill
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -309,24 +311,43 @@ func (c *GameLift) CreateBuildRequest(input *CreateBuildInput) (req *request.Req
 
 // CreateBuild API operation for Amazon GameLift.
 //
-// Creates a new Amazon GameLift build from a set of game server binary files
-// stored in an Amazon Simple Storage Service (Amazon S3) location. To use this
-// API call, create a .zip file containing all of the files for the build and
-// store it in an Amazon S3 bucket under your AWS account. For help on packaging
-// your build files and creating a build, see Uploading Your Game to Amazon
-// GameLift (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-build-intro.html).
+// Creates a new Amazon GameLift build record for your game server binary files
+// and points to the location of your game server build files in an Amazon Simple
+// Storage Service (Amazon S3) location.
 //
-// Use this API action ONLY if you are storing your game build files in an Amazon
-// S3 bucket. To create a build using files stored locally, use the CLI command
-// upload-build (http://docs.aws.amazon.com/cli/latest/reference/gamelift/upload-build.html),
-// which uploads the build files from a file location you specify.
+// Game server binaries must be combined into a .zip file for use with Amazon
+// GameLift. See Uploading Your Game (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-build-intro.html)
+// for more information.
 //
-// To create a new build using CreateBuild, identify the storage location and
-// operating system of your game build. You also have the option of specifying
-// a build name and version. If successful, this action creates a new build
-// record with an unique build ID and in INITIALIZED status. Use the API call
-// DescribeBuild to check the status of your build. A build must be in READY
-// status before it can be used to create fleets to host your game.
+// To create new builds quickly and easily, use the AWS CLI command upload-build
+// (http://docs.aws.amazon.com/cli/latest/reference/gamelift/upload-build.html).
+// This helper command uploads your build and creates a new build record in
+// one step, and automatically handles the necessary permissions. See  Upload
+// Build Files to Amazon GameLift (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-build-cli-uploading.html)
+// for more help.
+//
+// The CreateBuild operation should be used only when you need to manually upload
+// your build files, as in the following scenarios:
+//
+//    * Store a build file in an Amazon S3 bucket under your own AWS account.
+//    To use this option, you must first give Amazon GameLift access to that
+//    Amazon S3 bucket. See  Create a Build with Files in Amazon S3 (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-build-cli-uploading.html#gamelift-build-cli-uploading-create-build)
+//    for detailed help. To create a new build record using files in your Amazon
+//    S3 bucket, call CreateBuild and specify a build name, operating system,
+//    and the storage location of your game build.
+//
+//    * Upload a build file directly to Amazon GameLift's Amazon S3 account.
+//    To use this option, you first call CreateBuild with a build name and operating
+//    system. This action creates a new build record and returns an Amazon S3
+//    storage location (bucket and key only) and temporary access credentials.
+//    Use the credentials to manually upload your build file to the storage
+//    location (see the Amazon S3 topic Uploading Objects (http://docs.aws.amazon.com/AmazonS3/latest/dev/UploadingObjects.html)).
+//    You can upload files to a location only once.
+//
+// If successful, this operation creates a new build record with a unique build
+// ID and places it in INITIALIZED status. You can use DescribeBuild to check
+// the status of your build. A build must be in READY status before it can be
+// used to create fleets.
 //
 // Build-related operations include:
 //
@@ -433,17 +454,15 @@ func (c *GameLift) CreateFleetRequest(input *CreateFleetInput) (req *request.Req
 //
 // Creates a new fleet to run your game servers. A fleet is a set of Amazon
 // Elastic Compute Cloud (Amazon EC2) instances, each of which can run multiple
-// server processes to host game sessions. You configure a fleet to create instances
+// server processes to host game sessions. You set up a fleet to use instances
 // with certain hardware specifications (see Amazon EC2 Instance Types (http://aws.amazon.com/ec2/instance-types/)
-// for more information), and deploy a specified game build to each instance.
-// A newly created fleet passes through several statuses; once it reaches the
-// ACTIVE status, it can begin hosting game sessions.
+// for more information), and deploy your game build to run on each instance.
 //
-// To create a new fleet, you must specify the following: (1) fleet name, (2)
-// build ID of an uploaded game build, (3) an EC2 instance type, and (4) a run-time
-// configuration that describes which server processes to run on each instance
-// in the fleet. (Although the run-time configuration is not a required parameter,
-// the fleet cannot be successfully activated without it.)
+// To create a new fleet, you must specify the following: (1) a fleet name,
+// (2) the build ID of a successfully uploaded game build, (3) an EC2 instance
+// type, and (4) a run-time configuration, which describes the server processes
+// to run on each instance in the fleet. If you don't specify a fleet type (on-demand
+// or spot), the new fleet uses on-demand instances by default.
 //
 // You can also configure the new fleet with the following settings:
 //
@@ -453,34 +472,36 @@ func (c *GameLift) CreateFleetRequest(input *CreateFleetInput) (req *request.Req
 //
 //    * Fleet-wide game session protection
 //
-//    * Resource creation limit
+//    * Resource usage limits
+//
+//    * VPC peering connection (see VPC Peering with Amazon GameLift Fleets
+//    (http://docs.aws.amazon.com/gamelift/latest/developerguide/vpc-peering.html))
 //
 // If you use Amazon CloudWatch for metrics, you can add the new fleet to a
-// metric group. This allows you to view aggregated metrics for a set of fleets.
-// Once you specify a metric group, the new fleet's metrics are included in
-// the metric group's data.
-//
-// You have the option of creating a VPC peering connection with the new fleet.
-// For more information, see VPC Peering with Amazon GameLift Fleets (http://docs.aws.amazon.com/gamelift/latest/developerguide/vpc-peering.html).
+// metric group. By adding multiple fleets to a metric group, you can view aggregated
+// metrics for all the fleets in the group.
 //
 // If the CreateFleet call is successful, Amazon GameLift performs the following
-// tasks:
+// tasks. You can track the process of a fleet by checking the fleet status
+// or by monitoring fleet creation events:
 //
-//    * Creates a fleet record and sets the status to NEW (followed by other
-//    statuses as the fleet is activated).
-//
-//    * Sets the fleet's target capacity to 1 (desired instances), which causes
-//    Amazon GameLift to start one new EC2 instance.
-//
-//    * Starts launching server processes on the instance. If the fleet is configured
-//    to run multiple server processes per instance, Amazon GameLift staggers
-//    each launch by a few seconds.
+//    * Creates a fleet record. Status: NEW.
 //
 //    * Begins writing events to the fleet event log, which can be accessed
 //    in the Amazon GameLift console.
 //
-//    * Sets the fleet's status to ACTIVE as soon as one server process in the
-//    fleet is ready to host a game session.
+// Sets the fleet's target capacity to 1 (desired instances), which triggers
+//    Amazon GameLift to start one new EC2 instance.
+//
+//    * Downloads the game build to the new instance and installs it. Statuses:
+//    DOWNLOADING, VALIDATING, BUILDING.
+//
+//    * Starts launching server processes on the instance. If the fleet is configured
+//    to run multiple server processes per instance, Amazon GameLift staggers
+//    each launch by a few seconds. Status: ACTIVATING.
+//
+//    * Sets the fleet's status to ACTIVE as soon as one server process is ready
+//    to host a game session.
 //
 // Fleet-related operations include:
 //
@@ -931,9 +952,9 @@ func (c *GameLift) CreateMatchmakingConfigurationRequest(input *CreateMatchmakin
 // Defines a new matchmaking configuration for use with FlexMatch. A matchmaking
 // configuration sets out guidelines for matching players and getting the matches
 // into games. You can set up multiple matchmaking configurations to handle
-// the scenarios needed for your game. Each matchmaking request (StartMatchmaking)
-// specifies a configuration for the match and provides player attributes to
-// support the configuration being used.
+// the scenarios needed for your game. Each matchmaking ticket (StartMatchmaking
+// or StartMatchBackfill) specifies a configuration for the match and provides
+// player attributes to support the configuration being used.
 //
 // To create a matchmaking configuration, at a minimum you must specify the
 // following: configuration name; a rule set that governs how to evaluate players
@@ -1080,7 +1101,7 @@ func (c *GameLift) CreateMatchmakingRuleSetRequest(input *CreateMatchmakingRuleS
 // Game (http://docs.aws.amazon.com/gamelift/latest/developerguide/match-intro.html).
 //
 // Once created, matchmaking rule sets cannot be changed or deleted, so we recommend
-// checking the rule set syntax using ValidateMatchmakingRuleSetbefore creating
+// checking the rule set syntax using ValidateMatchmakingRuleSet before creating
 // the rule set.
 //
 // To create a matchmaking rule set, provide the set of rules and a unique name.
@@ -2773,7 +2794,7 @@ func (c *GameLift) DescribeBuildRequest(input *DescribeBuildInput) (req *request
 
 // DescribeBuild API operation for Amazon GameLift.
 //
-// Retrieves properties for a build. To get a build record, specify a build
+// Retrieves properties for a build. To request a build record, specify a build
 // ID. If successful, an object containing the build properties is returned.
 //
 // Build-related operations include:
@@ -4320,19 +4341,18 @@ func (c *GameLift) DescribeMatchmakingRequest(input *DescribeMatchmakingInput) (
 
 // DescribeMatchmaking API operation for Amazon GameLift.
 //
-// Retrieves a set of one or more matchmaking tickets. Use this operation to
-// retrieve ticket information, including status and--once a successful match
-// is made--acquire connection information for the resulting new game session.
+// Retrieves one or more matchmaking tickets. Use this operation to retrieve
+// ticket information, including status and--once a successful match is made--acquire
+// connection information for the resulting new game session.
 //
 // You can use this operation to track the progress of matchmaking requests
 // (through polling) as an alternative to using event notifications. See more
 // details on tracking matchmaking requests through polling or notifications
 // in StartMatchmaking.
 //
-// You can request data for a one or a list of ticket IDs. If the request is
-// successful, a ticket object is returned for each requested ID. When specifying
-// a list of ticket IDs, objects are returned only for tickets that currently
-// exist.
+// To request matchmaking tickets, provide a list of up to 10 ticket IDs. If
+// the request is successful, a ticket object is returned for each requested
+// ID that currently exists.
 //
 // Matchmaking-related operations include:
 //
@@ -4343,6 +4363,8 @@ func (c *GameLift) DescribeMatchmakingRequest(input *DescribeMatchmakingInput) (
 //    * StopMatchmaking
 //
 //    * AcceptMatch
+//
+//    * StartMatchBackfill
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6005,9 +6027,13 @@ func (c *GameLift) RequestUploadCredentialsRequest(input *RequestUploadCredentia
 
 // RequestUploadCredentials API operation for Amazon GameLift.
 //
-// This API call is not currently in use.  Retrieves a fresh set of upload credentials
-// and the assigned Amazon S3 storage location for a specific build. Valid credentials
-// are required to upload your game build files to Amazon S3.
+// Retrieves a fresh set of credentials for use when uploading a new set of
+// game build files to Amazon GameLift's Amazon S3. This is done as part of
+// the build creation process; see CreateBuild.
+//
+// To request new credentials, specify the build ID as returned with an initial
+// CreateBuild request. If successful, a new set of credentials are returned,
+// along with the S3 storage location associated with the build ID.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6212,14 +6238,9 @@ func (c *GameLift) SearchGameSessionsRequest(input *SearchGameSessionsInput) (re
 
 // SearchGameSessions API operation for Amazon GameLift.
 //
-// Retrieves a set of game sessions that match a set of search criteria and
-// sorts them in a specified order. A game session search is limited to a single
-// fleet. Search results include only game sessions that are in ACTIVE status.
-// If you need to retrieve game sessions with a status other than active, use
-// DescribeGameSessions. If you need to retrieve the protection policy for each
-// game session, use DescribeGameSessionDetails.
-//
-// You can search or sort by the following game session attributes:
+// Retrieves all active game sessions that match a set of search criteria and
+// sorts them in a specified order. You can search or sort by the following
+// game session attributes:
 //
 //    * gameSessionId -- Unique identifier for the game session. You can use
 //    either a GameSessionId or GameSessionArn value.
@@ -6229,6 +6250,17 @@ func (c *GameLift) SearchGameSessionsRequest(input *SearchGameSessionsInput) (re
 //    with UpdateGameSession. Game session names do not need to be unique to
 //    a game session.
 //
+//    * gameSessionProperties -- Custom data defined in a game session's GameProperty
+//    parameter. GameProperty values are stored as key:value pairs; the filter
+//    expression must indicate the key and a string to search the data values
+//    for. For example, to search for game sessions with custom data containing
+//    the key:value pair "gameMode:brawl", specify the following: gameSessionProperties.gameMode
+//    = "brawl". All custom data values are searched as strings.
+//
+//    * maximumSessions -- Maximum number of player sessions allowed for a game
+//    session. This value is set when requesting a new game session with CreateGameSession
+//    or updating with UpdateGameSession.
+//
 //    * creationTimeMillis -- Value indicating when a game session was created.
 //    It is expressed in Unix time as milliseconds.
 //
@@ -6236,25 +6268,25 @@ func (c *GameLift) SearchGameSessionsRequest(input *SearchGameSessionsInput) (re
 //    session. This value changes rapidly as players join the session or drop
 //    out.
 //
-//    * maximumSessions -- Maximum number of player sessions allowed for a game
-//    session. This value is set when requesting a new game session with CreateGameSession
-//    or updating with UpdateGameSession.
-//
 //    * hasAvailablePlayerSessions -- Boolean value indicating whether a game
-//    session has reached its maximum number of players. When searching with
-//    this attribute, the search value must be true or false. It is highly recommended
+//    session has reached its maximum number of players. It is highly recommended
 //    that all search requests include this filter attribute to optimize search
 //    performance and return only sessions that players can join.
-//
-// To search or sort, specify either a fleet ID or an alias ID, and provide
-// a search filter expression, a sort expression, or both. Use the pagination
-// parameters to retrieve results as a set of sequential pages. If successful,
-// a collection of GameSession objects matching the request is returned.
 //
 // Returned values for playerSessionCount and hasAvailablePlayerSessions change
 // quickly as players join sessions and others drop out. Results should be considered
 // a snapshot in time. Be sure to refresh search results often, and handle sessions
 // that fill up before a player can join.
+//
+// To search or sort, specify either a fleet ID or an alias ID, and provide
+// a search filter expression, a sort expression, or both. If successful, a
+// collection of GameSession objects matching the request is returned. Use the
+// pagination parameters to retrieve results as a set of sequential pages.
+//
+// You can search for game sessions one fleet at a time only. To find game sessions
+// across multiple fleets, you must search each fleet separately and combine
+// the results. This search feature finds only game sessions that are in ACTIVE
+// status. To locate games in statuses other than active, use DescribeGameSessionDetails.
 //
 // Game-session-related operations include:
 //
@@ -6485,6 +6517,134 @@ func (c *GameLift) StartGameSessionPlacementWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opStartMatchBackfill = "StartMatchBackfill"
+
+// StartMatchBackfillRequest generates a "aws/request.Request" representing the
+// client's request for the StartMatchBackfill operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartMatchBackfill for more information on using the StartMatchBackfill
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartMatchBackfillRequest method.
+//    req, resp := client.StartMatchBackfillRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StartMatchBackfill
+func (c *GameLift) StartMatchBackfillRequest(input *StartMatchBackfillInput) (req *request.Request, output *StartMatchBackfillOutput) {
+	op := &request.Operation{
+		Name:       opStartMatchBackfill,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartMatchBackfillInput{}
+	}
+
+	output = &StartMatchBackfillOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartMatchBackfill API operation for Amazon GameLift.
+//
+// Finds new players to fill open slots in an existing game session. This operation
+// can be used to add players to matched games that start with fewer than the
+// maximum number of players or to replace players when they drop out. By backfilling
+// with the same matchmaker used to create the original match, you ensure that
+// new players meet the match criteria and maintain a consistent experience
+// throughout the game session. You can backfill a match anytime after a game
+// session has been created.
+//
+// To request a match backfill, specify a unique ticket ID, the existing game
+// session's ARN, a matchmaking configuration, and a set of data that describes
+// all current players in the game session. If successful, a match backfill
+// ticket is created and returned with status set to QUEUED. The ticket is placed
+// in the matchmaker's ticket pool and processed. Track the status of the ticket
+// to respond as needed. For more detail how to set up backfilling, see  Backfill
+// Existing Games with FlexMatch (http://docs.aws.amazon.com/gamelift/latest/developerguide/match-backfill.html).
+//
+// The process of finding backfill matches is essentially identical to the initial
+// matchmaking process. The matchmaker searches the pool and groups tickets
+// together to form potential matches, allowing only one backfill ticket per
+// potential match. Once the a match is formed, the matchmaker creates player
+// sessions for the new players. All tickets in the match are updated with the
+// game session's connection information, and the GameSession object is updated
+// to include matchmaker data on the new players. For more detail on how match
+// backfill requests are processed, see  How Amazon GameLift FlexMatch Works
+// (http://docs.aws.amazon.com/gamelift/latest/developerguide/match-intro.html).
+//
+// Matchmaking-related operations include:
+//
+//    * StartMatchmaking
+//
+//    * DescribeMatchmaking
+//
+//    * StopMatchmaking
+//
+//    * AcceptMatch
+//
+//    * StartMatchBackfill
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon GameLift's
+// API operation StartMatchBackfill for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   One or more parameter values in the request are invalid. Correct the invalid
+//   parameter values before retrying.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   A service resource associated with the request could not be found. Clients
+//   should not retry such requests.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   The service encountered an unrecoverable internal failure while processing
+//   the request. Clients can retry such requests immediately or after a waiting
+//   period.
+//
+//   * ErrCodeUnsupportedRegionException "UnsupportedRegionException"
+//   The requested operation is not supported in the region specified.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StartMatchBackfill
+func (c *GameLift) StartMatchBackfill(input *StartMatchBackfillInput) (*StartMatchBackfillOutput, error) {
+	req, out := c.StartMatchBackfillRequest(input)
+	return out, req.Send()
+}
+
+// StartMatchBackfillWithContext is the same as StartMatchBackfill with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartMatchBackfill for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *GameLift) StartMatchBackfillWithContext(ctx aws.Context, input *StartMatchBackfillInput, opts ...request.Option) (*StartMatchBackfillOutput, error) {
+	req, out := c.StartMatchBackfillRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opStartMatchmaking = "StartMatchmaking"
 
 // StartMatchmakingRequest generates a "aws/request.Request" representing the
@@ -6600,6 +6760,8 @@ func (c *GameLift) StartMatchmakingRequest(input *StartMatchmakingInput) (req *r
 //    * StopMatchmaking
 //
 //    * AcceptMatch
+//
+//    * StartMatchBackfill
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6820,6 +6982,8 @@ func (c *GameLift) StopMatchmakingRequest(input *StopMatchmakingInput) (req *req
 //    * StopMatchmaking
 //
 //    * AcceptMatch
+//
+//    * StartMatchBackfill
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8341,7 +8505,7 @@ func (s *Alias) SetRoutingStrategy(v *RoutingStrategy) *Alias {
 	return s
 }
 
-// Values for use in Player attribute type:value pairs. This object lets you
+// Values for use in Player attribute key:value pairs. This object lets you
 // specify an attribute value using any of the valid data types: string, number,
 // string array or data map. Each AttributeValue object can use only one of
 // the available properties.
@@ -8354,8 +8518,8 @@ type AttributeValue struct {
 	// For single string values. Maximum string length is 100 characters.
 	S *string `min:"1" type:"string"`
 
-	// For a map of up to 10 type:value pairs. Maximum length for each string value
-	// is 100 characters.
+	// For a map of up to 10 data type:value pairs. Maximum length for each string
+	// value is 100 characters.
 	SDM map[string]*float64 `type:"map"`
 
 	// For a list of up to 10 strings. Maximum length for each string is 100 characters.
@@ -8668,15 +8832,17 @@ type CreateBuildInput struct {
 	// Operating system that the game server binaries are built to run on. This
 	// value determines the type of fleet resources that you can use for this build.
 	// If your game build contains multiple executables, they all must run on the
-	// same operating system.
+	// same operating system. If an operating system is not specified when creating
+	// a build, Amazon GameLift uses the default value (WINDOWS_2012). This value
+	// cannot be changed later.
 	OperatingSystem *string `type:"string" enum:"OperatingSystem"`
 
-	// Amazon S3 location of the game build files to be uploaded. The S3 bucket
-	// must be owned by the same AWS account that you're using to manage Amazon
-	// GameLift. It also must in the same region that you want to create a new build
-	// in. Before calling CreateBuild with this location, you must allow Amazon
-	// GameLift to access your Amazon S3 bucket (see Create a Build with Files in
-	// Amazon S3 (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-build-cli-uploading.html#gamelift-build-cli-uploading-create-build)).
+	// Information indicating where your game build files are stored. Use this parameter
+	// only when creating a build with files stored in an Amazon S3 bucket that
+	// you own. The storage location must specify an Amazon S3 bucket name and key,
+	// as well as a role ARN that you set up to allow Amazon GameLift to access
+	// your Amazon S3 bucket. The S3 bucket must be in the same region that you
+	// want to create a new build in.
 	StorageLocation *S3Location `type:"structure"`
 
 	// Version that is associated with this build. Version strings do not need to
@@ -8746,10 +8912,13 @@ type CreateBuildOutput struct {
 	// The newly created build record, including a unique build ID and status.
 	Build *Build `type:"structure"`
 
-	// Amazon S3 location specified in the request.
+	// Amazon S3 location for your game build file, including bucket name and key.
 	StorageLocation *S3Location `type:"structure"`
 
-	// This element is not currently in use.
+	// This element is returned only when the operation is called without a storage
+	// location. It contains credentials to use when you are uploading a build file
+	// to an Amazon S3 bucket that is owned by Amazon GameLift. Credentials have
+	// a limited life span. To refresh these credentials, call RequestUploadCredentials.
 	UploadCredentials *AwsCredentials `type:"structure"`
 }
 
@@ -8811,15 +8980,26 @@ type CreateFleetInput struct {
 	// EC2InstanceType is a required field
 	EC2InstanceType *string `type:"string" required:"true" enum:"EC2InstanceType"`
 
+	// Indicates whether to use on-demand instances or spot instances for this fleet.
+	// If empty, the default is ON_DEMAND. Both categories of instances use identical
+	// hardware and configurations, based on the instance type selected for this
+	// fleet. You can acquire on-demand instances at any time for a fixed price
+	// and keep them as long as you need them. Spot instances have lower prices,
+	// but spot pricing is variable, and while in use they can be interrupted (with
+	// a two-minute notification). Learn more about Amazon GameLift spot instances
+	// with at  Choose Computing Resources (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-ec2-instances.html).
+	FleetType *string `type:"string" enum:"FleetType"`
+
 	// This parameter is no longer used. Instead, to specify where Amazon GameLift
 	// should store log files once a server process shuts down, use the Amazon GameLift
 	// server API ProcessReady() and specify one or more directory paths in logParameters.
 	// See more information in the Server API Reference (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api-ref.html#gamelift-sdk-server-api-ref-dataypes-process).
 	LogPaths []*string `type:"list"`
 
-	// Names of metric groups to add this fleet to. Use an existing metric group
-	// name to add this fleet to the group. Or use a new name to create a new metric
-	// group. A fleet can only be included in one metric group at a time.
+	// Name of a metric group to add this fleet to. A metric group tracks metrics
+	// across all fleets in the group. Use an existing metric group name to add
+	// this fleet to the group, or use a new name to create a new metric group.
+	// A fleet can only be included in one metric group at a time.
 	MetricGroups []*string `type:"list"`
 
 	// Descriptive label that is associated with a fleet. Fleet names do not need
@@ -8968,6 +9148,12 @@ func (s *CreateFleetInput) SetEC2InstanceType(v string) *CreateFleetInput {
 	return s
 }
 
+// SetFleetType sets the FleetType field's value.
+func (s *CreateFleetInput) SetFleetType(v string) *CreateFleetInput {
+	s.FleetType = &v
+	return s
+}
+
 // SetLogPaths sets the LogPaths field's value.
 func (s *CreateFleetInput) SetLogPaths(v []*string) *CreateFleetInput {
 	s.LogPaths = v
@@ -9070,16 +9256,14 @@ type CreateGameSessionInput struct {
 	// reference either a fleet ID or alias ID, but not both.
 	FleetId *string `type:"string"`
 
-	// Set of developer-defined properties for a game session, formatted as a set
-	// of type:value pairs. These properties are included in the GameSession object,
-	// which is passed to the game server with a request to start a new game session
-	// (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// Set of custom properties for a game session, formatted as key:value pairs.
+	// These properties are passed to a game server process in the GameSession object
+	// with a request to start a new game session (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
 	GameProperties []*GameProperty `type:"list"`
 
-	// Set of developer-defined game session properties, formatted as a single string
-	// value. This data is included in the GameSession object, which is passed to
-	// the game server with a request to start a new game session (see Start a Game
-	// Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// Set of custom game session properties, formatted as a single string value.
+	// This data is passed to a game server process in the GameSession object with
+	// a request to start a new game session (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
 	GameSessionData *string `min:"1" type:"string"`
 
 	// This parameter is no longer preferred. Please use IdempotencyToken instead.
@@ -9380,18 +9564,16 @@ type CreateMatchmakingConfigurationInput struct {
 	// Meaningful description of the matchmaking configuration.
 	Description *string `min:"1" type:"string"`
 
-	// Set of developer-defined properties for a game session, formatted as a set
-	// of type:value pairs. These properties are included in the GameSession object,
-	// which is passed to the game server with a request to start a new game session
-	// (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// Set of custom properties for a game session, formatted as key:value pairs.
+	// These properties are passed to a game server process in the GameSession object
+	// with a request to start a new game session (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
 	// This information is added to the new GameSession object that is created for
 	// a successful match.
 	GameProperties []*GameProperty `type:"list"`
 
-	// Set of developer-defined game session properties, formatted as a single string
-	// value. This data is included in the GameSession object, which is passed to
-	// the game server with a request to start a new game session (see Start a Game
-	// Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// Set of custom game session properties, formatted as a single string value.
+	// This data is passed to a game server process in the GameSession object with
+	// a request to start a new game session (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
 	// This information is added to the new GameSession object that is created for
 	// a successful match.
 	GameSessionData *string `min:"1" type:"string"`
@@ -11872,8 +12054,7 @@ func (s *DescribeMatchmakingConfigurationsOutput) SetNextToken(v string) *Descri
 type DescribeMatchmakingInput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique identifier for a matchmaking ticket. To request all existing tickets,
-	// leave this parameter empty.
+	// Unique identifier for a matchmaking ticket. You can include up to 10 ID values.
 	//
 	// TicketIds is a required field
 	TicketIds []*string `type:"list" required:"true"`
@@ -12693,10 +12874,6 @@ type Event struct {
 
 	// Type of event being logged. The following events are currently in use:
 	//
-	// General events:
-	//
-	//    *  GENERIC_EVENT -- An unspecified event has occurred.
-	//
 	// Fleet creation events:
 	//
 	//    * FLEET_CREATED -- A fleet record was successfully created with a status
@@ -12772,6 +12949,11 @@ type Event struct {
 	//    * FLEET_VPC_PEERING_DELETED -- A VPC peering connection has been successfully
 	//    deleted.
 	//
+	// Spot instance events:
+	//
+	//    *  INSTANCE_INTERRUPTED -- A spot instance was interrupted by EC2 with
+	//    a two-minute notification.
+	//
 	// Other fleet events:
 	//
 	//    * FLEET_SCALING_EVENT -- A change was made to the fleet's capacity settings
@@ -12783,6 +12965,8 @@ type Event struct {
 	//    includes both the old and new policy setting.
 	//
 	//    * FLEET_DELETED -- A request to delete a fleet was initiated.
+	//
+	//    *  GENERIC_EVENT -- An unspecified event has occurred.
 	EventCode *string `type:"string" enum:"EventCode"`
 
 	// Unique identifier for a fleet event.
@@ -12914,6 +13098,16 @@ type FleetAttributes struct {
 	// Unique identifier for a fleet.
 	FleetId *string `type:"string"`
 
+	// Indicates whether the fleet uses on-demand or spot instances. A spot instance
+	// in use may be interrupted with a two-minute notification.
+	FleetType *string `type:"string" enum:"FleetType"`
+
+	// EC2 instance type indicating the computing resources of each instance in
+	// the fleet, including CPU, memory, storage, and networking capacity. See Amazon
+	// EC2 Instance Types (http://aws.amazon.com/ec2/instance-types/) for detailed
+	// descriptions.
+	InstanceType *string `type:"string" enum:"EC2InstanceType"`
+
 	// Location of default log files. When a server process is shut down, Amazon
 	// GameLift captures and stores any log files in this location. These logs are
 	// in addition to game session logs; see more on game session logs in the Amazon
@@ -13026,6 +13220,18 @@ func (s *FleetAttributes) SetFleetArn(v string) *FleetAttributes {
 // SetFleetId sets the FleetId field's value.
 func (s *FleetAttributes) SetFleetId(v string) *FleetAttributes {
 	s.FleetId = &v
+	return s
+}
+
+// SetFleetType sets the FleetType field's value.
+func (s *FleetAttributes) SetFleetType(v string) *FleetAttributes {
+	s.FleetType = &v
+	return s
+}
+
+// SetInstanceType sets the InstanceType field's value.
+func (s *FleetAttributes) SetInstanceType(v string) *FleetAttributes {
+	s.InstanceType = &v
 	return s
 }
 
@@ -13398,16 +13604,15 @@ type GameSession struct {
 	// Unique identifier for a fleet that the game session is running on.
 	FleetId *string `type:"string"`
 
-	// Set of developer-defined properties for a game session, formatted as a set
-	// of type:value pairs. These properties are included in the GameSession object,
-	// which is passed to the game server with a request to start a new game session
-	// (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// Set of custom properties for a game session, formatted as key:value pairs.
+	// These properties are passed to a game server process in the GameSession object
+	// with a request to start a new game session (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// You can search for active game sessions based on this custom data with SearchGameSessions.
 	GameProperties []*GameProperty `type:"list"`
 
-	// Set of developer-defined game session properties, formatted as a single string
-	// value. This data is included in the GameSession object, which is passed to
-	// the game server with a request to start a new game session (see Start a Game
-	// Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// Set of custom game session properties, formatted as a single string value.
+	// This data is passed to a game server process in the GameSession object with
+	// a request to start a new game session (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
 	GameSessionData *string `min:"1" type:"string"`
 
 	// Unique identifier for the game session. A game session ARN has the following
@@ -13418,6 +13623,15 @@ type GameSession struct {
 	// IP address of the game session. To connect to a Amazon GameLift game server,
 	// an app needs both the IP address and port number.
 	IpAddress *string `type:"string"`
+
+	// Information about the matchmaking process that was used to create the game
+	// session. It is in JSON syntax, formated as a string. In addition the matchmaking
+	// configuration used, it contains data on all players assigned to the match,
+	// including player attributes and team assignments. For more details on matchmaker
+	// data, see Match Data (http://docs.aws.amazon.com/gamelift/latest/developerguide/match-server.html#match-server-data).
+	// Matchmaker data is useful when requesting match backfills, and is updated
+	// whenever new players are added during a successful backfill (see StartMatchBackfill).
+	MatchmakerData *string `min:"1" type:"string"`
 
 	// Maximum number of players that can be connected simultaneously to the game
 	// session.
@@ -13437,6 +13651,11 @@ type GameSession struct {
 	// Current status of the game session. A game session must have an ACTIVE status
 	// to have player sessions.
 	Status *string `type:"string" enum:"GameSessionStatus"`
+
+	// Provides additional information about game session status. INTERRUPTED indicates
+	// that the game session was hosted on a spot instance that was reclaimed, causing
+	// the active game session to be terminated.
+	StatusReason *string `type:"string" enum:"GameSessionStatusReason"`
 
 	// Time stamp indicating when this data object was terminated. Format is a number
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
@@ -13501,6 +13720,12 @@ func (s *GameSession) SetIpAddress(v string) *GameSession {
 	return s
 }
 
+// SetMatchmakerData sets the MatchmakerData field's value.
+func (s *GameSession) SetMatchmakerData(v string) *GameSession {
+	s.MatchmakerData = &v
+	return s
+}
+
 // SetMaximumPlayerSessionCount sets the MaximumPlayerSessionCount field's value.
 func (s *GameSession) SetMaximumPlayerSessionCount(v int64) *GameSession {
 	s.MaximumPlayerSessionCount = &v
@@ -13528,6 +13753,12 @@ func (s *GameSession) SetPort(v int64) *GameSession {
 // SetStatus sets the Status field's value.
 func (s *GameSession) SetStatus(v string) *GameSession {
 	s.Status = &v
+	return s
+}
+
+// SetStatusReason sets the StatusReason field's value.
+func (s *GameSession) SetStatusReason(v string) *GameSession {
+	s.StatusReason = &v
 	return s
 }
 
@@ -13654,10 +13885,9 @@ type GameSessionPlacement struct {
 	// out.
 	EndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// Set of developer-defined properties for a game session, formatted as a set
-	// of type:value pairs. These properties are included in the GameSession object,
-	// which is passed to the game server with a request to start a new game session
-	// (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// Set of custom properties for a game session, formatted as key:value pairs.
+	// These properties are passed to a game server process in the GameSession object
+	// with a request to start a new game session (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
 	GameProperties []*GameProperty `type:"list"`
 
 	// Identifier for the game session created by this placement request. This value
@@ -13666,10 +13896,9 @@ type GameSessionPlacement struct {
 	// GameSessionId value as needed.
 	GameSessionArn *string `min:"1" type:"string"`
 
-	// Set of developer-defined game session properties, formatted as a single string
-	// value. This data is included in the GameSession object, which is passed to
-	// the game server with a request to start a new game session (see Start a Game
-	// Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// Set of custom game session properties, formatted as a single string value.
+	// This data is passed to a game server process in the GameSession object with
+	// a request to start a new game session (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
 	GameSessionData *string `min:"1" type:"string"`
 
 	// Unique identifier for the game session. This value is set once the new game
@@ -13693,6 +13922,13 @@ type GameSessionPlacement struct {
 	// an app needs both the IP address and port number. This value is set once
 	// the new game session is placed (placement status is FULFILLED).
 	IpAddress *string `type:"string"`
+
+	// Information on the matchmaking process for this game. Data is in JSON syntax,
+	// formated as a string. It identifies the matchmaking configuration used to
+	// create the match, and contains data on all players assigned to the match,
+	// including player attributes and team assignments. For more details on matchmaker
+	// data, see Match Data (http://docs.aws.amazon.com/gamelift/latest/developerguide/match-server.html#match-server-data).
+	MatchmakerData *string `min:"1" type:"string"`
 
 	// Maximum number of players that can be connected simultaneously to the game
 	// session.
@@ -13799,6 +14035,12 @@ func (s *GameSessionPlacement) SetGameSessionRegion(v string) *GameSessionPlacem
 // SetIpAddress sets the IpAddress field's value.
 func (s *GameSessionPlacement) SetIpAddress(v string) *GameSessionPlacement {
 	s.IpAddress = &v
+	return s
+}
+
+// SetMatchmakerData sets the MatchmakerData field's value.
+func (s *GameSessionPlacement) SetMatchmakerData(v string) *GameSessionPlacement {
+	s.MatchmakerData = &v
 	return s
 }
 
@@ -14824,18 +15066,16 @@ type MatchmakingConfiguration struct {
 	// Descriptive label that is associated with matchmaking configuration.
 	Description *string `min:"1" type:"string"`
 
-	// Set of developer-defined properties for a game session, formatted as a set
-	// of type:value pairs. These properties are included in the GameSession object,
-	// which is passed to the game server with a request to start a new game session
-	// (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// Set of custom properties for a game session, formatted as key:value pairs.
+	// These properties are passed to a game server process in the GameSession object
+	// with a request to start a new game session (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
 	// This information is added to the new GameSession object that is created for
 	// a successful match.
 	GameProperties []*GameProperty `type:"list"`
 
-	// Set of developer-defined game session properties, formatted as a single string
-	// value. This data is included in the GameSession object, which is passed to
-	// the game server with a request to start a new game session (see Start a Game
-	// Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// Set of custom game session properties, formatted as a single string value.
+	// This data is passed to a game server process in the GameSession object with
+	// a request to start a new game session (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
 	// This information is added to the new GameSession object that is created for
 	// a successful match.
 	GameSessionData *string `min:"1" type:"string"`
@@ -14958,8 +15198,8 @@ func (s *MatchmakingConfiguration) SetRuleSetName(v string) *MatchmakingConfigur
 // sets are used in MatchmakingConfiguration objects.
 //
 // A rule set may define the following elements for a match. For detailed information
-// and examples showing how to construct a rule set, see Create Matchmaking
-// Rules for Your Game (http://docs.aws.amazon.com/gamelift/latest/developerguide/match-rules.html).
+// and examples showing how to construct a rule set, see Build a FlexMatch Rule
+// Set (http://docs.aws.amazon.com/gamelift/latest/developerguide/match-rulesets.html).
 //
 //    * Teams -- Required. A rule set must define one or multiple teams for
 //    the match and set minimum and maximum team sizes. For example, a rule
@@ -14974,12 +15214,15 @@ func (s *MatchmakingConfiguration) SetRuleSetName(v string) *MatchmakingConfigur
 //
 //    * Rules -- Optional. Rules define how to evaluate potential players for
 //    a match based on player attributes. A rule might specify minimum requirements
-//    for individual players--such as each player must meet a certain skill
-//    level, or may describe an entire group--such as all teams must be evenly
-//    matched or have at least one player in a certain role.
+//    for individual players, teams, or entire matches. For example, a rule
+//    might require each player to meet a certain skill level, each team to
+//    have at least one player in a certain role, or the match to have a minimum
+//    average skill level. or may describe an entire group--such as all teams
+//    must be evenly matched or have at least one player in a certain role.
+//
 //
 //    * Expansions -- Optional. Expansions allow you to relax the rules after
-//    a period of time if no acceptable matches are found. This feature lets
+//    a period of time when no acceptable matches are found. This feature lets
 //    you balance getting players into games in a reasonable amount of time
 //    instead of making them wait indefinitely for the best possible match.
 //    For example, you might use an expansion to increase the maximum skill
@@ -15041,9 +15284,9 @@ type MatchmakingTicket struct {
 	// game session is created for the match.
 	ConfigurationName *string `min:"1" type:"string"`
 
-	// Time stamp indicating when the matchmaking request stopped being processed
-	// due to successful completion, timeout, or cancellation. Format is a number
-	// expressed in Unix time as milliseconds (for example "1469498468.057").
+	// Time stamp indicating when this matchmaking request stopped being processed
+	// due to success, failure, or cancellation. Format is a number expressed in
+	// Unix time as milliseconds (for example "1469498468.057").
 	EndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Average amount of time (in seconds) that players are currently waiting for
@@ -15084,14 +15327,16 @@ type MatchmakingTicket struct {
 	//    information for players.
 	//
 	//    * FAILED -- The matchmaking request was not completed. Tickets with players
-	//    who fail to accept a proposed match are placed in FAILED status; new matchmaking
-	//    requests can be submitted for these players.
+	//    who fail to accept a proposed match are placed in FAILED status.
 	//
 	//    * CANCELLED -- The matchmaking request was canceled with a call to StopMatchmaking.
 	//
-	//    * TIMED_OUT -- The matchmaking request was not completed within the duration
-	//    specified in the matchmaking configuration. Matchmaking requests that
-	//    time out can be resubmitted.
+	//    * TIMED_OUT -- The matchmaking request was not successful within the duration
+	//    specified in the matchmaking configuration.
+	//
+	// Matchmaking requests that fail to successfully complete (statuses FAILED,
+	// CANCELLED, TIMED_OUT) can be resubmitted as new requests with new ticket
+	// IDs.
 	Status *string `type:"string" enum:"MatchmakingConfigurationStatus"`
 
 	// Additional information about the current status.
@@ -15245,9 +15490,9 @@ type Player struct {
 	// is not matchable.
 	LatencyInMs map[string]*int64 `type:"map"`
 
-	// Collection of name:value pairs containing player information for use in matchmaking.
-	// Player attribute names need to match playerAttributes names in the rule set
-	// being used. Example: "PlayerAttributes": {"skill": {"N": "23"}, "gameMode":
+	// Collection of key:value pairs containing player information for use in matchmaking.
+	// Player attribute keys must match the playerAttributes used in a matchmaking
+	// rule set. Example: "PlayerAttributes": {"skill": {"N": "23"}, "gameMode":
 	// {"S": "deathmatch"}}.
 	PlayerAttributes map[string]*AttributeValue `type:"map"`
 
@@ -16474,17 +16719,17 @@ type SearchGameSessionsInput struct {
 	// consists of the following:
 	//
 	//    * Operand -- Name of a game session attribute. Valid values are gameSessionName,
-	//    gameSessionId, creationTimeMillis, playerSessionCount, maximumSessions,
-	//    hasAvailablePlayerSessions.
+	//    gameSessionId, gameSessionProperties, maximumSessions, creationTimeMillis,
+	//    playerSessionCount, hasAvailablePlayerSessions.
 	//
 	//    * Comparator -- Valid comparators are: =, <>, <, >, <=, >=.
 	//
-	//    * Value -- Value to be searched for. Values can be numbers, boolean values
-	//    (true/false) or strings. String values are case sensitive, enclosed in
-	//    single quotes. Special characters must be escaped. Boolean and string
-	//    values can only be used with the comparators = and <>. For example, the
-	//    following filter expression searches on gameSessionName: "FilterExpression":
-	//    "gameSessionName = 'Matt\\'s Awesome Game 1'".
+	//    * Value -- Value to be searched for. Values may be numbers, boolean values
+	//    (true/false) or strings depending on the operand. String values are case
+	//    sensitive and must be enclosed in single quotes. Special characters must
+	//    be escaped. Boolean and string values can only be used with the comparators
+	//    = and <>. For example, the following filter expression searches on gameSessionName:
+	//    "FilterExpression": "gameSessionName = 'Matt\\'s Awesome Game 1'".
 	//
 	// To chain multiple conditions in a single expression, use the logical keywords
 	// AND, OR, and NOT and parentheses as needed. For example: x AND y AND NOT
@@ -16526,8 +16771,8 @@ type SearchGameSessionsInput struct {
 	// consists of the following elements:
 	//
 	//    * Operand -- Name of a game session attribute. Valid values are gameSessionName,
-	//    gameSessionId, creationTimeMillis, playerSessionCount, maximumSessions,
-	//    hasAvailablePlayerSessions.
+	//    gameSessionId, gameSessionProperties, maximumSessions, creationTimeMillis,
+	//    playerSessionCount, hasAvailablePlayerSessions.
 	//
 	//    * Order -- Valid sort orders are ASC (ascending) and DESC (descending).
 	//
@@ -16729,16 +16974,14 @@ type StartGameSessionPlacementInput struct {
 	// Set of information on each player to create a player session for.
 	DesiredPlayerSessions []*DesiredPlayerSession `type:"list"`
 
-	// Set of developer-defined properties for a game session, formatted as a set
-	// of type:value pairs. These properties are included in the GameSession object,
-	// which is passed to the game server with a request to start a new game session
-	// (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// Set of custom properties for a game session, formatted as key:value pairs.
+	// These properties are passed to a game server process in the GameSession object
+	// with a request to start a new game session (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
 	GameProperties []*GameProperty `type:"list"`
 
-	// Set of developer-defined game session properties, formatted as a single string
-	// value. This data is included in the GameSession object, which is passed to
-	// the game server with a request to start a new game session (see Start a Game
-	// Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// Set of custom game session properties, formatted as a single string value.
+	// This data is passed to a game server process in the GameSession object with
+	// a request to start a new game session (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
 	GameSessionData *string `min:"1" type:"string"`
 
 	// Descriptive label that is associated with a game session. Session names do
@@ -16916,6 +17159,148 @@ func (s *StartGameSessionPlacementOutput) SetGameSessionPlacement(v *GameSession
 }
 
 // Represents the input for a request action.
+type StartMatchBackfillInput struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the matchmaker to use for this request. The name of the matchmaker
+	// that was used with the original game session is listed in the GameSession
+	// object, MatchmakerData property. This property contains a matchmaking configuration
+	// ARN value, which includes the matchmaker name. (In the ARN value "arn:aws:gamelift:us-west-2:111122223333:matchmakingconfiguration/MM-4v4",
+	// the matchmaking configuration name is "MM-4v4".) Use only the name for this
+	// parameter.
+	//
+	// ConfigurationName is a required field
+	ConfigurationName *string `min:"1" type:"string" required:"true"`
+
+	// Amazon Resource Name (ARN (http://docs.aws.amazon.com/AmazonS3/latest/dev/s3-arn-format.html))
+	// that is assigned to a game session and uniquely identifies it.
+	//
+	// GameSessionArn is a required field
+	GameSessionArn *string `min:"1" type:"string" required:"true"`
+
+	// Match information on all players that are currently assigned to the game
+	// session. This information is used by the matchmaker to find new players and
+	// add them to the existing game.
+	//
+	//    * PlayerID, PlayerAttributes, Team -\\- This information is maintained
+	//    in the GameSession object, MatchmakerData property, for all players who
+	//    are currently assigned to the game session. The matchmaker data is in
+	//    JSON syntax, formatted as a string. For more details, see  Match Data
+	//    (http://docs.aws.amazon.com/gamelift/latest/developerguide/match-server.html#match-server-data).
+	//
+	//
+	//    * LatencyInMs -\\- If the matchmaker uses player latency, include a latency
+	//    value, in milliseconds, for the region that the game session is currently
+	//    in. Do not include latency values for any other region.
+	//
+	// Players is a required field
+	Players []*Player `type:"list" required:"true"`
+
+	// Unique identifier for a matchmaking ticket. If no ticket ID is specified
+	// here, Amazon GameLift will generate one in the form of a UUID. Use this identifier
+	// to track the match backfill ticket status and retrieve match results.
+	TicketId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s StartMatchBackfillInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartMatchBackfillInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartMatchBackfillInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartMatchBackfillInput"}
+	if s.ConfigurationName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConfigurationName"))
+	}
+	if s.ConfigurationName != nil && len(*s.ConfigurationName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ConfigurationName", 1))
+	}
+	if s.GameSessionArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("GameSessionArn"))
+	}
+	if s.GameSessionArn != nil && len(*s.GameSessionArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GameSessionArn", 1))
+	}
+	if s.Players == nil {
+		invalidParams.Add(request.NewErrParamRequired("Players"))
+	}
+	if s.TicketId != nil && len(*s.TicketId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TicketId", 1))
+	}
+	if s.Players != nil {
+		for i, v := range s.Players {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Players", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfigurationName sets the ConfigurationName field's value.
+func (s *StartMatchBackfillInput) SetConfigurationName(v string) *StartMatchBackfillInput {
+	s.ConfigurationName = &v
+	return s
+}
+
+// SetGameSessionArn sets the GameSessionArn field's value.
+func (s *StartMatchBackfillInput) SetGameSessionArn(v string) *StartMatchBackfillInput {
+	s.GameSessionArn = &v
+	return s
+}
+
+// SetPlayers sets the Players field's value.
+func (s *StartMatchBackfillInput) SetPlayers(v []*Player) *StartMatchBackfillInput {
+	s.Players = v
+	return s
+}
+
+// SetTicketId sets the TicketId field's value.
+func (s *StartMatchBackfillInput) SetTicketId(v string) *StartMatchBackfillInput {
+	s.TicketId = &v
+	return s
+}
+
+// Represents the returned data in response to a request action.
+type StartMatchBackfillOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Ticket representing the backfill matchmaking request. This object includes
+	// the information in the request, ticket status, and match results as generated
+	// during the matchmaking process.
+	MatchmakingTicket *MatchmakingTicket `type:"structure"`
+}
+
+// String returns the string representation
+func (s StartMatchBackfillOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartMatchBackfillOutput) GoString() string {
+	return s.String()
+}
+
+// SetMatchmakingTicket sets the MatchmakingTicket field's value.
+func (s *StartMatchBackfillOutput) SetMatchmakingTicket(v *MatchmakingTicket) *StartMatchBackfillOutput {
+	s.MatchmakingTicket = v
+	return s
+}
+
+// Represents the input for a request action.
 type StartMatchmakingInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16933,8 +17318,9 @@ type StartMatchmakingInput struct {
 	// Players is a required field
 	Players []*Player `type:"list" required:"true"`
 
-	// Unique identifier for a matchmaking ticket. Use this identifier to track
-	// the matchmaking ticket status and retrieve match results.
+	// Unique identifier for a matchmaking ticket. If no ticket ID is specified
+	// here, Amazon GameLift will generate one in the form of a UUID. Use this identifier
+	// to track the matchmaking ticket status and retrieve match results.
 	TicketId *string `min:"1" type:"string"`
 }
 
@@ -17909,18 +18295,16 @@ type UpdateMatchmakingConfigurationInput struct {
 	// Descriptive label that is associated with matchmaking configuration.
 	Description *string `min:"1" type:"string"`
 
-	// Set of developer-defined properties for a game session, formatted as a set
-	// of type:value pairs. These properties are included in the GameSession object,
-	// which is passed to the game server with a request to start a new game session
-	// (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// Set of custom properties for a game session, formatted as key:value pairs.
+	// These properties are passed to a game server process in the GameSession object
+	// with a request to start a new game session (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
 	// This information is added to the new GameSession object that is created for
 	// a successful match.
 	GameProperties []*GameProperty `type:"list"`
 
-	// Set of developer-defined game session properties, formatted as a single string
-	// value. This data is included in the GameSession object, which is passed to
-	// the game server with a request to start a new game session (see Start a Game
-	// Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
+	// Set of custom game session properties, formatted as a single string value.
+	// This data is passed to a game server process in the GameSession object with
+	// a request to start a new game session (see Start a Game Session (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-startsession)).
 	// This information is added to the new GameSession object that is created for
 	// a successful match.
 	GameSessionData *string `min:"1" type:"string"`
@@ -18434,7 +18818,7 @@ func (s *VpcPeeringConnection) SetVpcPeeringConnectionId(v string) *VpcPeeringCo
 
 // Represents status information for a VPC peering connection. Status is associated
 // with a VpcPeeringConnection object. Status codes and messages are provided
-// from EC2 (). (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_VpcPeeringConnectionStateReason.html)
+// from EC2 (see VpcPeeringConnectionStateReason (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_VpcPeeringConnectionStateReason.html)).
 // Connection status information is also communicated as a fleet Event.
 type VpcPeeringConnectionStatus struct {
 	_ struct{} `type:"structure"`
@@ -18701,6 +19085,9 @@ const (
 
 	// EventCodeFleetVpcPeeringDeleted is a EventCode enum value
 	EventCodeFleetVpcPeeringDeleted = "FLEET_VPC_PEERING_DELETED"
+
+	// EventCodeInstanceInterrupted is a EventCode enum value
+	EventCodeInstanceInterrupted = "INSTANCE_INTERRUPTED"
 )
 
 const (
@@ -18733,6 +19120,14 @@ const (
 )
 
 const (
+	// FleetTypeOnDemand is a FleetType enum value
+	FleetTypeOnDemand = "ON_DEMAND"
+
+	// FleetTypeSpot is a FleetType enum value
+	FleetTypeSpot = "SPOT"
+)
+
+const (
 	// GameSessionPlacementStatePending is a GameSessionPlacementState enum value
 	GameSessionPlacementStatePending = "PENDING"
 
@@ -18761,6 +19156,11 @@ const (
 
 	// GameSessionStatusError is a GameSessionStatus enum value
 	GameSessionStatusError = "ERROR"
+)
+
+const (
+	// GameSessionStatusReasonInterrupted is a GameSessionStatusReason enum value
+	GameSessionStatusReasonInterrupted = "INTERRUPTED"
 )
 
 const (

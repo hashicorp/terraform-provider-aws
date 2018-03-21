@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsVpcEndpointConnectionNotification_basic(t *testing.T) {
+func TestAccAWSVpcEndpointConnectionNotification_basic(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
@@ -106,7 +106,7 @@ resource "aws_vpc" "nlb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "testAccVpcEndpointConnectionNotificationBasicConfig_vpc"
+    Name = "terraform-testacc-vpc-endpoint-connection-notification"
   }
 }
 
@@ -134,7 +134,7 @@ resource "aws_subnet" "nlb_test_1" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccVpcEndpointConnectionNotificationBasicConfig_subnet1"
+    Name = "tf-acc-vpc-endpoint-connection-notification-1"
   }
 }
 
@@ -144,7 +144,7 @@ resource "aws_subnet" "nlb_test_2" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccVpcEndpointConnectionNotificationBasicConfig_subnet2"
+    Name = "tf-acc-vpc-endpoint-connection-notification-2"
   }
 }
 
@@ -195,7 +195,7 @@ func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) strin
 			cidr_block = "10.0.0.0/16"
 
 			tags {
-				Name = "testAccVpcEndpointConnectionNotificationBasicConfig_vpc"
+				Name = "terraform-testacc-vpc-endpoint-connection-notification"
 			}
 		}
 
@@ -223,7 +223,7 @@ func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) strin
 			availability_zone = "us-west-2a"
 
 			tags {
-				Name = "testAccVpcEndpointConnectionNotificationBasicConfig_subnet1"
+				Name = "tf-acc-vpc-endpoint-connection-notification-1"
 			}
 		}
 
@@ -233,7 +233,7 @@ func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) strin
 			availability_zone = "us-west-2b"
 
 			tags {
-				Name = "testAccVpcEndpointConnectionNotificationBasicConfig_subnet2"
+				Name = "tf-acc-vpc-endpoint-connection-notification-2"
 			}
 		}
 

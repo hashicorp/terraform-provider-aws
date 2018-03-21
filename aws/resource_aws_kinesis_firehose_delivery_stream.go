@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -198,7 +197,7 @@ func flattenFirehoseS3Configuration(s3 firehose.S3DestinationDescription) []inte
 		s3Configuration["cloudwatch_logging_options"] = flattenCloudwatchLoggingOptions(*s3.CloudWatchLoggingOptions)
 	}
 	if s3.EncryptionConfiguration.KMSEncryptionConfig != nil {
-		s3Configuration["kms_key_arn"] = *s3.EncryptionConfiguration.KMSEncryptionConfig
+		s3Configuration["kms_key_arn"] = *s3.EncryptionConfiguration.KMSEncryptionConfig.AWSKMSKeyARN
 	}
 	if s3.Prefix != nil {
 		s3Configuration["prefix"] = *s3.Prefix
@@ -263,20 +262,25 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 			password := d.Get("redshift_configuration.0.password").(string)
 
 			redshiftConfiguration := map[string]interface{}{
-				"cluster_jdbcurl":            *destination.RedshiftDestinationDescription.ClusterJDBCURL,
-				"role_arn":                   *destination.RedshiftDestinationDescription.RoleARN,
-				"username":                   *destination.RedshiftDestinationDescription.Username,
-				"password":                   password,
-				"data_table_name":            *destination.RedshiftDestinationDescription.CopyCommand.DataTableName,
-				"copy_options":               *destination.RedshiftDestinationDescription.CopyCommand.CopyOptions,
-				"data_table_columns":         *destination.RedshiftDestinationDescription.CopyCommand.DataTableColumns,
-				"s3_backup_mode":             *destination.RedshiftDestinationDescription.S3BackupMode,
-				"retry_duration":             *destination.RedshiftDestinationDescription.RetryOptions.DurationInSeconds,
-				"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(*destination.RedshiftDestinationDescription.CloudWatchLoggingOptions),
+				"cluster_jdbcurl":    *destination.RedshiftDestinationDescription.ClusterJDBCURL,
+				"role_arn":           *destination.RedshiftDestinationDescription.RoleARN,
+				"username":           *destination.RedshiftDestinationDescription.Username,
+				"password":           password,
+				"data_table_name":    *destination.RedshiftDestinationDescription.CopyCommand.DataTableName,
+				"copy_options":       *destination.RedshiftDestinationDescription.CopyCommand.CopyOptions,
+				"data_table_columns": *destination.RedshiftDestinationDescription.CopyCommand.DataTableColumns,
+				"s3_backup_mode":     *destination.RedshiftDestinationDescription.S3BackupMode,
+				"retry_duration":     *destination.RedshiftDestinationDescription.RetryOptions.DurationInSeconds,
 			}
-			if s3bd := destination.RedshiftDestinationDescription.S3BackupDescription; s3bd != nil {
-				redshiftConfiguration["s3_backup_configuration"] = flattenFirehoseS3Configuration(*s3bd)
+
+			if v := destination.RedshiftDestinationDescription.CloudWatchLoggingOptions; v != nil {
+				redshiftConfiguration["cloudwatch_logging_options"] = flattenCloudwatchLoggingOptions(*v)
 			}
+
+			if v := destination.RedshiftDestinationDescription.S3BackupDescription; v != nil {
+				redshiftConfiguration["s3_backup_configuration"] = flattenFirehoseS3Configuration(*v)
+			}
+
 			redshiftConfList := make([]map[string]interface{}, 1)
 			redshiftConfList[0] = redshiftConfiguration
 			d.Set("redshift_configuration", redshiftConfList)
@@ -286,17 +290,21 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 			d.Set("destination", "elasticsearch")
 
 			elasticsearchConfiguration := map[string]interface{}{
-				"buffering_interval":         *destination.ElasticsearchDestinationDescription.BufferingHints.IntervalInSeconds,
-				"buffering_size":             *destination.ElasticsearchDestinationDescription.BufferingHints.SizeInMBs,
-				"domain_arn":                 *destination.ElasticsearchDestinationDescription.DomainARN,
-				"role_arn":                   *destination.ElasticsearchDestinationDescription.RoleARN,
-				"type_name":                  *destination.ElasticsearchDestinationDescription.TypeName,
-				"index_name":                 *destination.ElasticsearchDestinationDescription.IndexName,
-				"s3_backup_mode":             *destination.ElasticsearchDestinationDescription.S3BackupMode,
-				"retry_duration":             *destination.ElasticsearchDestinationDescription.RetryOptions.DurationInSeconds,
-				"index_rotation_period":      *destination.ElasticsearchDestinationDescription.IndexRotationPeriod,
-				"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(*destination.ElasticsearchDestinationDescription.CloudWatchLoggingOptions),
+				"buffering_interval":    *destination.ElasticsearchDestinationDescription.BufferingHints.IntervalInSeconds,
+				"buffering_size":        *destination.ElasticsearchDestinationDescription.BufferingHints.SizeInMBs,
+				"domain_arn":            *destination.ElasticsearchDestinationDescription.DomainARN,
+				"role_arn":              *destination.ElasticsearchDestinationDescription.RoleARN,
+				"type_name":             *destination.ElasticsearchDestinationDescription.TypeName,
+				"index_name":            *destination.ElasticsearchDestinationDescription.IndexName,
+				"s3_backup_mode":        *destination.ElasticsearchDestinationDescription.S3BackupMode,
+				"retry_duration":        *destination.ElasticsearchDestinationDescription.RetryOptions.DurationInSeconds,
+				"index_rotation_period": *destination.ElasticsearchDestinationDescription.IndexRotationPeriod,
 			}
+
+			if v := destination.ElasticsearchDestinationDescription.CloudWatchLoggingOptions; v != nil {
+				elasticsearchConfiguration["cloudwatch_logging_options"] = flattenCloudwatchLoggingOptions(*v)
+			}
+
 			elasticsearchConfList := make([]map[string]interface{}, 1)
 			elasticsearchConfList[0] = elasticsearchConfiguration
 			d.Set("elasticsearch_configuration", elasticsearchConfList)
@@ -311,8 +319,12 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 				"hec_token":                  *destination.SplunkDestinationDescription.HECToken,
 				"s3_backup_mode":             *destination.SplunkDestinationDescription.S3BackupMode,
 				"retry_duration":             *destination.SplunkDestinationDescription.RetryOptions.DurationInSeconds,
-				"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(*destination.SplunkDestinationDescription.CloudWatchLoggingOptions),
 			}
+
+			if v := destination.SplunkDestinationDescription.CloudWatchLoggingOptions; v != nil {
+				splunkConfiguration["cloudwatch_logging_options"] = flattenCloudwatchLoggingOptions(*v)
+			}
+
 			splunkConfList := make([]map[string]interface{}, 1)
 			splunkConfList[0] = splunkConfiguration
 			d.Set("splunk_configuration", splunkConfList)
@@ -333,13 +345,15 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 				"prefix":                     *destination.ExtendedS3DestinationDescription.Prefix,
 				"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(*destination.ExtendedS3DestinationDescription.CloudWatchLoggingOptions),
 			}
-			if destination.ExtendedS3DestinationDescription.EncryptionConfiguration.KMSEncryptionConfig != nil {
-				extendedS3Configuration["kms_key_arn"] = *destination.ExtendedS3DestinationDescription.EncryptionConfiguration.KMSEncryptionConfig
+
+			if v := destination.ExtendedS3DestinationDescription.EncryptionConfiguration.KMSEncryptionConfig; v != nil {
+				extendedS3Configuration["kms_key_arn"] = *v.AWSKMSKeyARN
 			}
-			if destination.ExtendedS3DestinationDescription.ProcessingConfiguration != nil {
-				extendedS3Configuration["processing_configuration"] = flattenProcessingConfiguration(
-					*destination.ExtendedS3DestinationDescription.ProcessingConfiguration, roleArn)
+
+			if v := destination.ExtendedS3DestinationDescription.ProcessingConfiguration; v != nil {
+				extendedS3Configuration["processing_configuration"] = flattenProcessingConfiguration(*v, roleArn)
 			}
+
 			extendedS3ConfList := make([]map[string]interface{}, 1)
 			extendedS3ConfList[0] = extendedS3Configuration
 
@@ -362,11 +376,16 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idErr := fmt.Errorf("Expected ID in format of arn:PARTITION:firehose:REGION:ACCOUNTID:deliverystream/NAME and provided: %s", d.Id())
 				resARN, err := arn.Parse(d.Id())
 				if err != nil {
-					return nil, err
+					return nil, idErr
 				}
-				d.Set("name", strings.Split(resARN.Resource, "/")[1])
+				resourceParts := strings.Split(resARN.Resource, "/")
+				if len(resourceParts) != 2 {
+					return nil, idErr
+				}
+				d.Set("name", resourceParts[1])
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -1305,13 +1324,15 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 			log.Printf("[DEBUG] Error creating Firehose Delivery Stream: %s", err)
 			lastError = err
 
-			if awsErr, ok := err.(awserr.Error); ok {
-				// IAM roles can take ~10 seconds to propagate in AWS:
-				// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-				if awsErr.Code() == "InvalidArgumentException" && strings.Contains(awsErr.Message(), "Firehose is unable to assume role") {
-					log.Printf("[DEBUG] Firehose could not assume role referenced, retrying...")
-					return resource.RetryableError(awsErr)
-				}
+			// Retry for IAM eventual consistency
+			if isAWSErr(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to perform") {
+				return resource.RetryableError(err)
+			}
+			// IAM roles can take ~10 seconds to propagate in AWS:
+			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
+			if isAWSErr(err, firehose.ErrCodeInvalidArgumentException, "Firehose is unable to assume role") {
+				log.Printf("[DEBUG] Firehose could not assume role referenced, retrying...")
+				return resource.RetryableError(err)
 			}
 			// Not retryable
 			return resource.NonRetryableError(err)
@@ -1320,10 +1341,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		return nil
 	})
 	if err != nil {
-		if awsErr, ok := lastError.(awserr.Error); ok {
-			return fmt.Errorf("[WARN] Error creating Kinesis Firehose Delivery Stream: %s", awsErr.Error())
-		}
-		return err
+		return fmt.Errorf("error creating Kinesis Firehose Delivery Stream: %s", err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -1444,14 +1462,12 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 	})
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "ResourceNotFoundException" {
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("[WARN] Error reading Kinesis Firehose Delivery Stream: %s", awsErr.Error())
+		if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[WARN] Kinesis Firehose Delivery Stream (%s) not found, removing from state", d.Get("name").(string))
+			d.SetId("")
+			return nil
 		}
-		return err
+		return fmt.Errorf("error reading Kinesis Firehose Delivery Stream: %s", err)
 	}
 
 	s := resp.DeliveryStreamDescription
@@ -1502,11 +1518,8 @@ func firehoseStreamStateRefreshFunc(conn *firehose.Firehose, sn string) resource
 		}
 		resp, err := conn.DescribeDeliveryStream(describeOpts)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "ResourceNotFoundException" {
-					return 42, "DESTROYED", nil
-				}
-				return nil, awsErr.Code(), err
+			if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
+				return 42, "DESTROYED", nil
 			}
 			return nil, "failed", err
 		}

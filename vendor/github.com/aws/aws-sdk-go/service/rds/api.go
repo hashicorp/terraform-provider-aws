@@ -841,8 +841,6 @@ func (c *RDS) CopyDBSnapshotRequest(input *CopyDBSnapshotInput) (req *request.Re
 // AWS Region where you call the CopyDBSnapshot action is the destination AWS
 // Region for the DB snapshot copy.
 //
-// You can't copy an encrypted, shared DB snapshot from one AWS Region to another.
-//
 // For more information about copying snapshots, see Copying a DB Snapshot (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_CopyDBSnapshot.html)
 // in the Amazon RDS User Guide.
 //
@@ -1504,12 +1502,12 @@ func (c *RDS) CreateDBInstanceReadReplicaRequest(input *CreateDBInstanceReadRepl
 // MariaDB, or PostgreSQL. For more information, see Working with PostgreSQL,
 // MySQL, and MariaDB Read Replicas (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html).
 //
-// Amazon Aurora does not support this action. You must call the CreateDBInstance
+// Amazon Aurora doesn't support this action. You must call the CreateDBInstance
 // action to create a DB instance for an Aurora DB cluster.
 //
 // All Read Replica DB instances are created with backups disabled. All other
 // DB instance attributes (including DB security groups and DB parameter groups)
-// are inherited from the source DB instance, except as specified below.
+// are inherited from the source DB instance, except as specified following.
 //
 // Your source DB instance must have backup retention enabled.
 //
@@ -3126,7 +3124,7 @@ func (c *RDS) DescribeAccountAttributesRequest(input *DescribeAccountAttributesI
 // The description for a quota includes the quota name, current usage toward
 // that quota, and the quota's maximum value.
 //
-// This command does not take any parameters.
+// This command doesn't take any parameters.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7686,10 +7684,15 @@ func (c *RDS) PromoteReadReplicaRequest(input *PromoteReadReplicaInput) (req *re
 //
 // Promotes a Read Replica DB instance to a standalone DB instance.
 //
-// We recommend that you enable automated backups on your Read Replica before
-// promoting the Read Replica. This ensures that no backup is taken during the
-// promotion process. Once the instance is promoted to a primary instance, backups
-// are taken based on your backup settings.
+// Backup duration is a function of the amount of changes to the database since
+// the previous backup. If you plan to promote a Read Replica to a standalone
+// instance, we recommend that you enable backups and complete at least one
+// backup prior to promotion. In addition, a Read Replica cannot be promoted
+// to a standalone instance when it is in the backing-up status. If you have
+// enabled backups on your Read Replica, configure the automated backup window
+// so that daily backups do not interfere with Read Replica promotion.
+//
+// This command doesn't apply to Aurora MySQL and Aurora PostgreSQL.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8903,15 +8906,18 @@ func (c *RDS) RestoreDBInstanceFromDBSnapshotRequest(input *RestoreDBInstanceFro
 //
 // If your intent is to replace your original DB instance with the new, restored
 // DB instance, then rename your original DB instance before you call the RestoreDBInstanceFromDBSnapshot
-// action. RDS does not allow two DB instances with the same name. Once you
-// have renamed your original DB instance with a different identifier, then
-// you can pass the original name of the DB instance as the DBInstanceIdentifier
-// in the call to the RestoreDBInstanceFromDBSnapshot action. The result is
-// that you will replace the original DB instance with the DB instance created
-// from the snapshot.
+// action. RDS doesn't allow two DB instances with the same name. Once you have
+// renamed your original DB instance with a different identifier, then you can
+// pass the original name of the DB instance as the DBInstanceIdentifier in
+// the call to the RestoreDBInstanceFromDBSnapshot action. The result is that
+// you will replace the original DB instance with the DB instance created from
+// the snapshot.
 //
 // If you are restoring from a shared manual DB snapshot, the DBSnapshotIdentifier
 // must be the ARN of the shared DB snapshot.
+//
+// This command doesn't apply to Aurora MySQL and Aurora PostgreSQL. For Aurora,
+// use RestoreDBClusterFromSnapshot.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9203,6 +9209,9 @@ func (c *RDS) RestoreDBInstanceToPointInTimeRequest(input *RestoreDBInstanceToPo
 // with mirroring; in this case, the instance becomes a mirrored deployment
 // and not a single-AZ deployment.
 //
+// This command doesn't apply to Aurora MySQL and Aurora PostgreSQL. For Aurora,
+// use RestoreDBClusterToPointInTime.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -9440,7 +9449,7 @@ func (c *RDS) StartDBInstanceRequest(input *StartDBInstanceInput) (req *request.
 // AWS CLI command, or the StopDBInstance action. For more information, see
 // Stopping and Starting a DB instance in the AWS RDS user guide.
 //
-// This command does not apply to Aurora MySQL and Aurora PostgreSQL.
+// This command doesn't apply to Aurora MySQL and Aurora PostgreSQL.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9563,7 +9572,7 @@ func (c *RDS) StopDBInstanceRequest(input *StopDBInstanceInput) (req *request.Re
 // do a point-in-time restore if necessary. For more information, see Stopping
 // and Starting a DB instance in the AWS RDS user guide.
 //
-// This command does not apply to Aurora MySQL and Aurora PostgreSQL.
+// This command doesn't apply to Aurora MySQL and Aurora PostgreSQL.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11143,16 +11152,21 @@ type CreateDBClusterInput struct {
 
 	// The name of the database engine to be used for this DB cluster.
 	//
-	// Valid Values: aurora, aurora-postgresql
+	// Valid Values: aurora (for MySQL 5.6-compatible Aurora), aurora-mysql (for
+	// MySQL 5.7-compatible Aurora), and aurora-postgresql
 	//
 	// Engine is a required field
 	Engine *string `type:"string" required:"true"`
 
 	// The version number of the database engine to use.
 	//
-	// Aurora
+	// Aurora MySQL
 	//
-	// Example: 5.6.10a
+	// Example: 5.6.10a, 5.7.12
+	//
+	// Aurora PostgreSQL
+	//
+	// Example: 9.6.3
 	EngineVersion *string `type:"string"`
 
 	// The AWS KMS key identifier for an encrypted DB cluster.
@@ -11506,6 +11520,14 @@ type CreateDBClusterParameterGroupInput struct {
 	// can be associated with one and only one DB cluster parameter group family,
 	// and can be applied only to a DB cluster running a database engine and engine
 	// version compatible with that DB cluster parameter group family.
+	//
+	// Aurora MySQL
+	//
+	// Example: aurora5.6, aurora-mysql5.7
+	//
+	// Aurora PostgreSQL
+	//
+	// Example: aurora-postgresql9.6
 	//
 	// DBParameterGroupFamily is a required field
 	DBParameterGroupFamily *string `type:"string" required:"true"`
@@ -11994,7 +12016,9 @@ type CreateDBInstanceInput struct {
 	//
 	// Valid Values:
 	//
-	//    * aurora
+	//    * aurora (for MySQL 5.6-compatible Aurora)
+	//
+	//    * aurora-mysql (for MySQL 5.7-compatible Aurora)
 	//
 	//    * aurora-postgresql
 	//
@@ -12874,14 +12898,12 @@ type CreateDBInstanceReadReplicaInput struct {
 	// a MonitoringRoleArn value.
 	MonitoringRoleArn *string `type:"string"`
 
-	// Specifies whether the read replica is in a Multi-AZ deployment.
+	// Specifies whether the Read Replica is in a Multi-AZ deployment.
 	//
 	// You can create a Read Replica as a Multi-AZ DB instance. RDS creates a standby
 	// of your replica in another Availability Zone for failover support for the
 	// replica. Creating your Read Replica as a Multi-AZ DB instance is independent
 	// of whether the source database is a Multi-AZ DB instance.
-	//
-	// Currently PostgreSQL Read Replicas can only be created as single-AZ DB instances.
 	MultiAZ *bool `type:"boolean"`
 
 	// The option group the DB instance is associated with. If omitted, the default
@@ -14819,6 +14841,9 @@ type DBEngineVersion struct {
 	// log types specified by ExportableLogTypes to CloudWatch Logs.
 	SupportsLogExportsToCloudwatchLogs *bool `type:"boolean"`
 
+	// Indicates whether the database engine version supports read replicas.
+	SupportsReadReplica *bool `type:"boolean"`
+
 	// A list of engine versions that this database engine version can be upgraded
 	// to.
 	ValidUpgradeTarget []*UpgradeTarget `locationNameList:"UpgradeTarget" type:"list"`
@@ -14891,6 +14916,12 @@ func (s *DBEngineVersion) SetSupportedTimezones(v []*Timezone) *DBEngineVersion 
 // SetSupportsLogExportsToCloudwatchLogs sets the SupportsLogExportsToCloudwatchLogs field's value.
 func (s *DBEngineVersion) SetSupportsLogExportsToCloudwatchLogs(v bool) *DBEngineVersion {
 	s.SupportsLogExportsToCloudwatchLogs = &v
+	return s
+}
+
+// SetSupportsReadReplica sets the SupportsReadReplica field's value.
+func (s *DBEngineVersion) SetSupportsReadReplica(v bool) *DBEngineVersion {
+	s.SupportsReadReplica = &v
 	return s
 }
 
@@ -21492,7 +21523,7 @@ type ModifyDBClusterInput struct {
 	NewDBClusterIdentifier *string `type:"string"`
 
 	// A value that indicates that the DB cluster should be associated with the
-	// specified option group. Changing this parameter does not result in an outage
+	// specified option group. Changing this parameter doesn't result in an outage
 	// except in the following case, and the change is applied during the next maintenance
 	// window unless the ApplyImmediately parameter is set to true for this request.
 	// If the parameter change results in an option group that enables OEM, this
@@ -21851,8 +21882,8 @@ type ModifyDBInstanceInput struct {
 	AllocatedStorage *int64 `type:"integer"`
 
 	// Indicates that major version upgrades are allowed. Changing this parameter
-	// does not result in an outage and the change is asynchronously applied as
-	// soon as possible.
+	// doesn't result in an outage and the change is asynchronously applied as soon
+	// as possible.
 	//
 	// Constraints: This parameter must be set to true when specifying a value for
 	// the EngineVersion parameter that is a different major version than the DB
@@ -21875,8 +21906,8 @@ type ModifyDBInstanceInput struct {
 	ApplyImmediately *bool `type:"boolean"`
 
 	// Indicates that minor version upgrades are applied automatically to the DB
-	// instance during the maintenance window. Changing this parameter does not
-	// result in an outage except in the following case and the change is asynchronously
+	// instance during the maintenance window. Changing this parameter doesn't result
+	// in an outage except in the following case and the change is asynchronously
 	// applied as soon as possible. An outage will result if this parameter is set
 	// to true during the maintenance window, and a newer minor version is available,
 	// and RDS has enabled auto patching for that engine version.
@@ -21947,7 +21978,7 @@ type ModifyDBInstanceInput struct {
 	DBInstanceIdentifier *string `type:"string" required:"true"`
 
 	// The name of the DB parameter group to apply to the DB instance. Changing
-	// this setting does not result in an outage. The parameter group name itself
+	// this setting doesn't result in an outage. The parameter group name itself
 	// is changed immediately, but the actual parameter changes are not applied
 	// until you reboot the instance without failover. The db instance will NOT
 	// be rebooted automatically and the parameter changes will NOT be applied during
@@ -22008,7 +22039,7 @@ type ModifyDBInstanceInput struct {
 	DBPortNumber *int64 `type:"integer"`
 
 	// A list of DB security groups to authorize on this DB instance. Changing this
-	// setting does not result in an outage and the change is asynchronously applied
+	// setting doesn't result in an outage and the change is asynchronously applied
 	// as soon as possible.
 	//
 	// Constraints:
@@ -22075,7 +22106,7 @@ type ModifyDBInstanceInput struct {
 
 	// The new Provisioned IOPS (I/O operations per second) value for the RDS instance.
 	//
-	// Changing this setting does not result in an outage and the change is applied
+	// Changing this setting doesn't result in an outage and the change is applied
 	// during the next maintenance window unless the ApplyImmediately parameter
 	// is set to true for this request. If you are migrating from Provisioned IOPS
 	// to standard storage, set this value to 0. The DB instance will require a
@@ -22110,7 +22141,7 @@ type ModifyDBInstanceInput struct {
 	// The new password for the master user. The password can include any printable
 	// ASCII character except "/", """, or "@".
 	//
-	// Changing this parameter does not result in an outage and the change is asynchronously
+	// Changing this parameter doesn't result in an outage and the change is asynchronously
 	// applied as soon as possible. Between the time of the request and the completion
 	// of the request, the MasterUserPassword element exists in the PendingModifiedValues
 	// element of the operation response.
@@ -22167,7 +22198,7 @@ type ModifyDBInstanceInput struct {
 	MonitoringRoleArn *string `type:"string"`
 
 	// Specifies if the DB instance is a Multi-AZ deployment. Changing this parameter
-	// does not result in an outage and the change is applied during the next maintenance
+	// doesn't result in an outage and the change is applied during the next maintenance
 	// window unless the ApplyImmediately parameter is set to true for this request.
 	MultiAZ *bool `type:"boolean"`
 
@@ -22189,7 +22220,7 @@ type ModifyDBInstanceInput struct {
 	NewDBInstanceIdentifier *string `type:"string"`
 
 	// Indicates that the DB instance should be associated with the specified option
-	// group. Changing this parameter does not result in an outage except in the
+	// group. Changing this parameter doesn't result in an outage except in the
 	// following case and the change is applied during the next maintenance window
 	// unless the ApplyImmediately parameter is set to true for this request. If
 	// the parameter change results in an option group that enables OEM, this change
@@ -22208,7 +22239,7 @@ type ModifyDBInstanceInput struct {
 
 	// The daily time range during which automated backups are created if automated
 	// backups are enabled, as determined by the BackupRetentionPeriod parameter.
-	// Changing this parameter does not result in an outage and the change is asynchronously
+	// Changing this parameter doesn't result in an outage and the change is asynchronously
 	// applied as soon as possible.
 	//
 	// Amazon Aurora
@@ -22228,8 +22259,8 @@ type ModifyDBInstanceInput struct {
 	PreferredBackupWindow *string `type:"string"`
 
 	// The weekly time range (in UTC) during which system maintenance can occur,
-	// which might result in an outage. Changing this parameter does not result
-	// in an outage, except in the following situation, and the change is asynchronously
+	// which might result in an outage. Changing this parameter doesn't result in
+	// an outage, except in the following situation, and the change is asynchronously
 	// applied as soon as possible. If there are pending actions that cause a reboot,
 	// and the maintenance window is changed to include the current time, then changing
 	// this parameter will cause a reboot of the DB instance. If moving this window
@@ -25573,9 +25604,13 @@ type RestoreDBClusterFromS3Input struct {
 
 	// The version number of the database engine to use.
 	//
-	// Aurora
+	// Aurora MySQL
 	//
 	// Example: 5.6.10a
+	//
+	// Aurora PostgreSQL
+	//
+	// Example: 9.6.3
 	EngineVersion *string `type:"string"`
 
 	// The AWS KMS key identifier for an encrypted DB cluster.
@@ -25937,7 +25972,7 @@ type RestoreDBClusterFromSnapshotInput struct {
 	//
 	// Constraints:
 	//
-	//    * Must contain from 1 to 255 letters, numbers, or hyphens
+	//    * Must contain from 1 to 63 letters, numbers, or hyphens
 	//
 	//    * First character must be a letter
 	//
@@ -26492,8 +26527,6 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	//
 	//    * For MySQL 5.7, minor version 5.7.16 or higher
 	//
-	//    * Aurora 5.6 or higher.
-	//
 	// Default: false
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
@@ -26505,10 +26538,6 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	// you can restore a MariaDB 10.1 DB instance from a MySQL 5.6 snapshot.
 	//
 	// Valid Values:
-	//
-	//    * aurora
-	//
-	//    * aurora-postgresql
 	//
 	//    * mariadb
 	//
@@ -27438,8 +27467,6 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	//
 	//    * For MySQL 5.7, minor version 5.7.16 or higher
 	//
-	//    * Aurora 5.6 or higher.
-	//
 	// Default: false
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
@@ -27450,10 +27477,6 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	// Constraint: Must be compatible with the engine of the source
 	//
 	// Valid Values:
-	//
-	//    * aurora
-	//
-	//    * aurora-postgresql
 	//
 	//    * mariadb
 	//
