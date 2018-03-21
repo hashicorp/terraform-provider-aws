@@ -6,12 +6,100 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_batch_job_queue", &resource.Sweeper{
+		Name: "aws_batch_job_queue",
+		F:    testSweepBatchJobQueues,
+	})
+}
+
+func testSweepBatchJobQueues(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).batchconn
+
+	prefixes := []string{
+		"tf_acc",
+	}
+
+	out, err := conn.DescribeJobQueues(&batch.DescribeJobQueuesInput{})
+	if err != nil {
+		return fmt.Errorf("Error retrieving Batch Job Queues: %s", err)
+	}
+	for _, jobQueue := range out.JobQueues {
+		name := jobQueue.JobQueueName
+		skip := true
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(*name, prefix) {
+				skip = false
+				break
+			}
+		}
+		if skip {
+			log.Printf("[INFO] Skipping Batch Job Queue: %s", *name)
+			continue
+		}
+
+		log.Printf("[INFO] Disabling Batch Job Queue: %s", *name)
+
+		updateInput := &batch.UpdateJobQueueInput{
+			JobQueue: name,
+			State:    aws.String(batch.JQStateDisabled),
+		}
+		if _, err := conn.UpdateJobQueue(updateInput); err != nil {
+			log.Printf("[ERROR] Failed to disable Batch Job Queue %s: %s", *name, err)
+			continue
+		}
+
+		stateConfForDisable := &resource.StateChangeConf{
+			Pending:    []string{batch.JQStatusUpdating},
+			Target:     []string{batch.JQStatusValid},
+			Refresh:    batchJobQueueRefreshStatusFunc(conn, *name),
+			Timeout:    10 * time.Minute,
+			Delay:      10 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		if _, err := stateConfForDisable.WaitForState(); err != nil {
+			log.Printf("[ERROR] Failed to wait for disable of Batch Job Queue %s: %s", *name, err)
+			continue
+		}
+
+		log.Printf("[INFO] Deleting Batch Job Queue: %s", *name)
+
+		deleteInput := &batch.DeleteJobQueueInput{
+			JobQueue: name,
+		}
+		if _, err := conn.DeleteJobQueue(deleteInput); err != nil {
+			log.Printf("[ERROR] Failed to delete Batch Job Queue %s: %s", *name, err)
+			continue
+		}
+
+		stateConfForDelete := &resource.StateChangeConf{
+			Pending:    []string{batch.JQStateDisabled, batch.JQStatusDeleting},
+			Target:     []string{batch.JQStatusDeleted},
+			Refresh:    resourceAwsBatchComputeEnvironmentDeleteRefreshFunc(*name, conn),
+			Timeout:    10 * time.Minute,
+			Delay:      10 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		if _, err := stateConfForDelete.WaitForState(); err != nil {
+			log.Printf("[ERROR] Failed to wait for deletion of Batch Job Queue %s: %s", *name, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSBatchJobQueue_basic(t *testing.T) {
 	var jq batch.JobQueueDetail

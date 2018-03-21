@@ -228,7 +228,7 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{batch.CEStatusCreating},
 		Target:     []string{batch.CEStatusValid},
-		Refresh:    resourceAwsBatchComputeEnvironmentStatusRefreshFunc(d, meta),
+		Refresh:    resourceAwsBatchComputeEnvironmentStatusRefreshFunc(computeEnvironmentName, conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 5 * time.Second,
 	}
@@ -320,7 +320,7 @@ func resourceAwsBatchComputeEnvironmentDelete(d *schema.ResourceData, meta inter
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{batch.CEStatusUpdating},
 		Target:     []string{batch.CEStatusValid},
-		Refresh:    resourceAwsBatchComputeEnvironmentStatusRefreshFunc(d, meta),
+		Refresh:    resourceAwsBatchComputeEnvironmentStatusRefreshFunc(computeEnvironmentName, conn),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 5 * time.Second,
 	}
@@ -339,7 +339,7 @@ func resourceAwsBatchComputeEnvironmentDelete(d *schema.ResourceData, meta inter
 	stateConfForDelete := &resource.StateChangeConf{
 		Pending:    []string{batch.CEStatusDeleting},
 		Target:     []string{batch.CEStatusDeleted},
-		Refresh:    resourceAwsBatchComputeEnvironmentDeleteRefreshFunc(d, meta),
+		Refresh:    resourceAwsBatchComputeEnvironmentDeleteRefreshFunc(computeEnvironmentName, conn),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 5 * time.Second,
 	}
@@ -390,12 +390,8 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 	return resourceAwsBatchComputeEnvironmentRead(d, meta)
 }
 
-func resourceAwsBatchComputeEnvironmentStatusRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
+func resourceAwsBatchComputeEnvironmentStatusRefreshFunc(computeEnvironmentName string, conn *batch.Batch) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).batchconn
-
-		computeEnvironmentName := d.Get("compute_environment_name").(string)
-
 		result, err := conn.DescribeComputeEnvironments(&batch.DescribeComputeEnvironmentsInput{
 			ComputeEnvironments: []*string{
 				aws.String(computeEnvironmentName),
@@ -414,12 +410,8 @@ func resourceAwsBatchComputeEnvironmentStatusRefreshFunc(d *schema.ResourceData,
 	}
 }
 
-func resourceAwsBatchComputeEnvironmentDeleteRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
+func resourceAwsBatchComputeEnvironmentDeleteRefreshFunc(computeEnvironmentName string, conn *batch.Batch) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).batchconn
-
-		computeEnvironmentName := d.Get("compute_environment_name").(string)
-
 		result, err := conn.DescribeComputeEnvironments(&batch.DescribeComputeEnvironmentsInput{
 			ComputeEnvironments: []*string{
 				aws.String(computeEnvironmentName),
