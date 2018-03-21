@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
@@ -83,13 +84,19 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			"source": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"content"},
+				ConflictsWith: []string{"content", "content_base64"},
 			},
 
 			"content": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"source"},
+				ConflictsWith: []string{"source", "content_base64"},
+			},
+
+			"content_base64": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"source", "content"},
 			},
 
 			"storage_class": {
@@ -166,8 +173,17 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 	} else if v, ok := d.GetOk("content"); ok {
 		content := v.(string)
 		body = bytes.NewReader([]byte(content))
+	} else if v, ok := d.GetOk("content_base64"); ok {
+		content := v.(string)
+		// We can't do streaming decoding here (with base64.NewDecoder) because
+		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
+		contentRaw, err := base64.StdEncoding.DecodeString(content)
+		if err != nil {
+			return fmt.Errorf("error decoding content_base64: %s", err)
+		}
+		body = bytes.NewReader(contentRaw)
 	} else {
-		return fmt.Errorf("Must specify \"source\" or \"content\" field")
+		return fmt.Errorf("Must specify \"source\", \"content\", or \"content_base64\" field")
 	}
 
 	bucket := d.Get("bucket").(string)

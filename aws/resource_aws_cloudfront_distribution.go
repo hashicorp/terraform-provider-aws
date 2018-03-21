@@ -386,8 +386,9 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							},
 						},
 						"domain_name": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
 						},
 						"custom_header": {
 							Type:     schema.TypeSet,
@@ -407,8 +408,9 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							},
 						},
 						"origin_id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
 						},
 						"origin_path": {
 							Type:     schema.TypeString,

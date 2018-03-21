@@ -44,7 +44,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateMaxLength(255 - 26),
+				ValidateFunc: validateMaxLength(255 - resource.UniqueIDSuffixLength),
 			},
 
 			"launch_configuration": {

@@ -127,7 +127,7 @@ func resourceAwsInstance() *schema.Resource {
 						return ""
 					}
 				},
-				ValidateFunc: validateInstanceUserDataSize,
+				ValidateFunc: validateMaxLength(16384),
 			},
 
 			"user_data_base64": {

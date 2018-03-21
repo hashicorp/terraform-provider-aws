@@ -2,7 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,6 +14,59 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_elasticsearch_domain", &resource.Sweeper{
+		Name: "aws_elasticsearch_domain",
+		F:    testSweepElasticSearchDomains,
+	})
+}
+
+func testSweepElasticSearchDomains(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).esconn
+
+	prefixes := []string{
+		"tf-test-",
+		"tf-acc-test-",
+	}
+
+	out, err := conn.ListDomainNames(&elasticsearch.ListDomainNamesInput{})
+	if err != nil {
+		return fmt.Errorf("Error retrieving Elasticsearch Domains: %s", err)
+	}
+	for _, domain := range out.DomainNames {
+		skip := true
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(*domain.DomainName, prefix) {
+				skip = false
+				break
+			}
+		}
+		if skip {
+			log.Printf("[INFO] Skipping Elasticsearch Domain: %s", *domain.DomainName)
+			continue
+		}
+		log.Printf("[INFO] Deleting Elasticsearch Domain: %s", *domain.DomainName)
+
+		_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
+			DomainName: domain.DomainName,
+		})
+		if err != nil {
+			log.Printf("[ERROR] Failed to delete Elasticsearch Domain %s: %s", *domain.DomainName, err)
+			continue
+		}
+		err = resourceAwsElasticSearchDomainDeleteWaiter(*domain.DomainName, conn)
+		if err != nil {
+			log.Printf("[ERROR] Failed to wait for deletion of Elasticsearch Domain %s: %s", *domain.DomainName, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus

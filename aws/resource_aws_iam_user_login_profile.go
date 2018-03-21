@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -13,6 +12,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/encryption"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsIamUserLoginProfile() *schema.Resource {
@@ -40,7 +40,7 @@ func resourceAwsIamUserLoginProfile() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      20,
-				ValidateFunc: validateAwsIamLoginProfilePasswordLength,
+				ValidateFunc: validation.StringLenBetween(4, 128),
 			},
 
 			"key_fingerprint": {
@@ -53,17 +53,6 @@ func resourceAwsIamUserLoginProfile() *schema.Resource {
 			},
 		},
 	}
-}
-
-func validateAwsIamLoginProfilePasswordLength(v interface{}, _ string) (_ []string, es []error) {
-	length := v.(int)
-	if length < 4 {
-		es = append(es, errors.New("minimum password_length is 4 characters"))
-	}
-	if length > 128 {
-		es = append(es, errors.New("maximum password_length is 128 characters"))
-	}
-	return
 }
 
 // generatePassword generates a random password of a given length using

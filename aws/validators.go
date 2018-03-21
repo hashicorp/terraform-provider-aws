@@ -31,16 +31,6 @@ func validateRFC3339TimeString(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-func validateInstanceUserDataSize(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	length := len(value)
-
-	if length > 16384 {
-		errors = append(errors, fmt.Errorf("%q is %d bytes, cannot be longer than 16384 bytes", k, length))
-	}
-	return
-}
-
 func validateRdsIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
@@ -741,36 +731,12 @@ func validateAwsEcsPlacementStrategy(stratType, stratField string) error {
 	return nil
 }
 
-func validateAwsEmrEbsVolumeType(v interface{}, k string) (ws []string, errors []error) {
-	validTypes := map[string]struct{}{
-		"gp2":      {},
-		"io1":      {},
-		"standard": {},
-	}
-
-	value := v.(string)
-
-	if _, ok := validTypes[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q must be one of ['gp2', 'io1', 'standard']", k))
-	}
-	return
-}
-
-func validateAwsEmrInstanceGroupRole(v interface{}, k string) (ws []string, errors []error) {
-	validRoles := map[string]struct{}{
-		"MASTER": {},
-		"CORE":   {},
-		"TASK":   {},
-	}
-
-	value := v.(string)
-
-	if _, ok := validRoles[value]; !ok {
-		errors = append(errors, fmt.Errorf(
-			"%q must be one of ['MASTER', 'CORE', 'TASK']", k))
-	}
-	return
+func validateAwsEmrEbsVolumeType() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"gp2",
+		"io1",
+		"standard",
+	}, false)
 }
 
 func validateAwsEmrCustomAmiId(v interface{}, k string) (ws []string, errors []error) {
@@ -1036,22 +1002,6 @@ func validateDbOptionGroupNamePrefix(v interface{}, k string) (ws []string, erro
 	if len(value) > 229 {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than 229 characters", k))
-	}
-	return
-}
-
-func validateAwsLbTargetGroupName(v interface{}, k string) (ws []string, errors []error) {
-	name := v.(string)
-	if len(name) > 32 {
-		errors = append(errors, fmt.Errorf("%q (%q) cannot be longer than '32' characters", k, name))
-	}
-	return
-}
-
-func validateAwsLbTargetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
-	name := v.(string)
-	if len(name) > 6 {
-		errors = append(errors, fmt.Errorf("%q (%q) cannot be longer than '6' characters", k, name))
 	}
 	return
 }
@@ -1739,4 +1689,54 @@ func validateIotThingTypeSearchableAttribute(v interface{}, k string) (ws []stri
 			"only alphanumeric characters, underscores, dots, commas, arobases, slashes, colons, hashes and hyphens allowed in %q", k))
 	}
 	return
+}
+
+func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
+	// Collect all indexed attributes
+	primaryHashKey := d.Get("hash_key").(string)
+	indexedAttributes := map[string]bool{
+		primaryHashKey: true,
+	}
+	if v, ok := d.GetOk("range_key"); ok {
+		indexedAttributes[v.(string)] = true
+	}
+	if v, ok := d.GetOk("local_secondary_index"); ok {
+		indexes := v.(*schema.Set).List()
+		for _, idx := range indexes {
+			index := idx.(map[string]interface{})
+			rangeKey := index["range_key"].(string)
+			indexedAttributes[rangeKey] = true
+		}
+	}
+	if v, ok := d.GetOk("global_secondary_index"); ok {
+		indexes := v.(*schema.Set).List()
+		for _, idx := range indexes {
+			index := idx.(map[string]interface{})
+
+			hashKey := index["hash_key"].(string)
+			indexedAttributes[hashKey] = true
+
+			if rk, ok := index["range_key"]; ok {
+				indexedAttributes[rk.(string)] = true
+			}
+		}
+	}
+
+	// Check if all indexed attributes have an attribute definition
+	attributes := d.Get("attribute").(*schema.Set).List()
+	missingAttrDefs := []string{}
+	for _, attr := range attributes {
+		attribute := attr.(map[string]interface{})
+		attrName := attribute["name"].(string)
+
+		if _, ok := indexedAttributes[attrName]; !ok {
+			missingAttrDefs = append(missingAttrDefs, attrName)
+		}
+	}
+
+	if len(missingAttrDefs) > 0 {
+		return fmt.Errorf("All attributes must be indexed. Unused attributes: %q", missingAttrDefs)
+	}
+
+	return nil
 }
