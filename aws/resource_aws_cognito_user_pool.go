@@ -68,7 +68,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      7,
-							ValidateFunc: validateIntegerInRange(0, 90),
+							ValidateFunc: validation.IntBetween(0, 90),
 						},
 					},
 				},
@@ -79,8 +79,12 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validateCognitoUserPoolAliasAttribute,
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						cognitoidentityprovider.AliasAttributeTypeEmail,
+						cognitoidentityprovider.AliasAttributeTypePhoneNumber,
+						cognitoidentityprovider.AliasAttributeTypePreferredUsername,
+					}, false),
 				},
 				ConflictsWith: []string{"username_attributes"},
 			},
@@ -94,8 +98,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validateCognitoUserPoolAutoVerifiedAttribute,
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						cognitoidentityprovider.VerifiedAttributeTypePhoneNumber,
+						cognitoidentityprovider.VerifiedAttributeTypeEmail,
+					}, false),
 				},
 			},
 
@@ -198,6 +205,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validateArn,
 						},
+						"pre_token_generation": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
 						"verify_auth_challenge_response": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -213,10 +225,14 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"mfa_configuration": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      cognitoidentityprovider.UserPoolMfaTypeOff,
-				ValidateFunc: validateCognitoUserPoolMfaConfiguration,
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  cognitoidentityprovider.UserPoolMfaTypeOff,
+				ValidateFunc: validation.StringInSlice([]string{
+					cognitoidentityprovider.UserPoolMfaTypeOff,
+					cognitoidentityprovider.UserPoolMfaTypeOn,
+					cognitoidentityprovider.UserPoolMfaTypeOptional,
+				}, false),
 			},
 
 			"name": {
@@ -235,7 +251,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"minimum_length": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validateIntegerInRange(6, 99),
+							ValidateFunc: validation.IntBetween(6, 99),
 						},
 						"require_lowercase": {
 							Type:     schema.TypeBool,
@@ -385,10 +401,13 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"default_email_option": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithCode,
-							ValidateFunc: validateCognitoUserPoolTemplateDefaultEmailOption,
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithCode,
+							ValidateFunc: validation.StringInSlice([]string{
+								cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithLink,
+								cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithCode,
+							}, false),
 						},
 						"email_message": {
 							Type:         schema.TypeString,
@@ -620,9 +639,8 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		Resource:  fmt.Sprintf("userpool/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
-	if resp.UserPool.AutoVerifiedAttributes != nil {
-		d.Set("auto_verified_attributes", flattenStringList(resp.UserPool.AutoVerifiedAttributes))
-	}
+	d.Set("auto_verified_attributes", flattenStringList(resp.UserPool.AutoVerifiedAttributes))
+
 	if resp.UserPool.EmailVerificationSubject != nil {
 		d.Set("email_verification_subject", *resp.UserPool.EmailVerificationSubject)
 	}

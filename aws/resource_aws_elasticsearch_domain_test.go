@@ -2,7 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,6 +14,59 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_elasticsearch_domain", &resource.Sweeper{
+		Name: "aws_elasticsearch_domain",
+		F:    testSweepElasticSearchDomains,
+	})
+}
+
+func testSweepElasticSearchDomains(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).esconn
+
+	prefixes := []string{
+		"tf-test-",
+		"tf-acc-test-",
+	}
+
+	out, err := conn.ListDomainNames(&elasticsearch.ListDomainNamesInput{})
+	if err != nil {
+		return fmt.Errorf("Error retrieving Elasticsearch Domains: %s", err)
+	}
+	for _, domain := range out.DomainNames {
+		skip := true
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(*domain.DomainName, prefix) {
+				skip = false
+				break
+			}
+		}
+		if skip {
+			log.Printf("[INFO] Skipping Elasticsearch Domain: %s", *domain.DomainName)
+			continue
+		}
+		log.Printf("[INFO] Deleting Elasticsearch Domain: %s", *domain.DomainName)
+
+		_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
+			DomainName: domain.DomainName,
+		})
+		if err != nil {
+			log.Printf("[ERROR] Failed to delete Elasticsearch Domain %s: %s", *domain.DomainName, err)
+			continue
+		}
+		err = resourceAwsElasticSearchDomainDeleteWaiter(*domain.DomainName, conn)
+		if err != nil {
+			log.Printf("[ERROR] Failed to wait for deletion of Elasticsearch Domain %s: %s", *domain.DomainName, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
@@ -28,6 +83,7 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
 					resource.TestCheckResourceAttr(
 						"aws_elasticsearch_domain.example", "elasticsearch_version", "1.5"),
+					resource.TestMatchResourceAttr("aws_elasticsearch_domain.example", "kibana_endpoint", regexp.MustCompile(".*es.amazonaws.com/_plugin/kibana/")),
 				),
 			},
 		},
@@ -261,6 +317,44 @@ func TestAccAWSElasticSearchDomain_policy(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_encrypt_at_rest_default_key(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfigWithEncryptAtRestDefaultKey(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESEncrypted(true, &domain),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_encrypt_at_rest_specify_key(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfigWithEncryptAtRestWithKey(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESEncrypted(true, &domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	var td elasticsearch.ListTagsOutput
@@ -339,6 +433,16 @@ func testAccCheckESNumberOfInstances(numberOfInstances int, status *elasticsearc
 	}
 }
 
+func testAccCheckESEncrypted(encrypted bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conf := status.EncryptionAtRestOptions
+		if *conf.Enabled != encrypted {
+			return fmt.Errorf("Encrypt at rest not set properly. Given: %t, Expected: %t", *conf.Enabled, encrypted)
+		}
+		return nil
+	}
+}
+
 func testAccLoadESTags(conf *elasticsearch.ElasticsearchDomainStatus, td *elasticsearch.ListTagsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).esconn
@@ -411,6 +515,7 @@ func testAccESDomainConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
+
   ebs_options {
     ebs_enabled = true
     volume_size = 10
@@ -504,6 +609,61 @@ data "aws_iam_policy_document" "instance-assume-role-policy" {
 `, randESId, randRoleId)
 }
 
+func testAccESDomainConfigWithEncryptAtRestDefaultKey(randESId int) string {
+	return fmt.Sprintf(`
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+  elasticsearch_version = "6.0"
+
+  # Encrypt at rest requires m4/c4/r4/i2 instances. See http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html
+  cluster_config {
+    instance_type = "m4.large.elasticsearch"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  encrypt_at_rest {
+    enabled    = true
+  }
+}
+`, randESId)
+}
+
+func testAccESDomainConfigWithEncryptAtRestWithKey(randESId int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "es" {
+  description             = "kms-key-for-tf-test-%d"
+  deletion_window_in_days = 7
+}
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+  elasticsearch_version = "6.0"
+
+  # Encrypt at rest requires m4/c4/r4/i2 instances. See http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html
+  cluster_config {
+    instance_type = "m4.large.elasticsearch"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  encrypt_at_rest {
+    enabled    = true
+    kms_key_id = "${aws_kms_key.es.key_id}"
+  }
+}
+`, randESId, randESId)
+}
+
 func testAccESDomainConfig_complex(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
@@ -555,18 +715,27 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
+  tags {
+    Name = "terraform-testacc-elasticsearch-domain-in-vpc"
+  }
 }
 
 resource "aws_subnet" "first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-first"
+  }
 }
 
 resource "aws_subnet" "second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-second"
+  }
 }
 
 resource "aws_security_group" "first" {
@@ -615,30 +784,45 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
+  tags {
+    Name = "terraform-testacc-elasticsearch-domain-in-vpc-update"
+  }
 }
 
 resource "aws_subnet" "az1_first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-update-az1-first"
+  }
 }
 
 resource "aws_subnet" "az2_first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-update-az2-first"
+  }
 }
 
 resource "aws_subnet" "az1_second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.2.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-update-az1-second"
+  }
 }
 
 resource "aws_subnet" "az2_second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.3.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-update-az2-second"
+  }
 }
 
 resource "aws_security_group" "first" {
@@ -678,18 +862,27 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
+  tags {
+    Name = "terraform-testacc-elasticsearch-domain-internet-to-vpc-endpoint"
+  }
 }
 
 resource "aws_subnet" "first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-internet-to-vpc-endpoint-first"
+  }
 }
 
 resource "aws_subnet" "second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
+  tags {
+    Name = "tf-acc-elasticsearch-domain-internet-to-vpc-endpoint-second"
+  }
 }
 
 resource "aws_security_group" "first" {

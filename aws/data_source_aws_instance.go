@@ -50,6 +50,15 @@ func dataSourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"get_password_data": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"password_data": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"public_dns": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -173,6 +182,11 @@ func dataSourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+
+						"volume_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -197,6 +211,11 @@ func dataSourceAwsInstance() *schema.Resource {
 						},
 
 						"volume_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"volume_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -270,7 +289,19 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] aws_instance - Single Instance ID found: %s", *instance.InstanceId)
-	return instanceDescriptionAttributes(d, instance, conn)
+	if err := instanceDescriptionAttributes(d, instance, conn); err != nil {
+		return err
+	}
+
+	if d.Get("get_password_data").(bool) {
+		passwordData, err := getAwsEc2InstancePasswordData(*instance.InstanceId, conn)
+		if err != nil {
+			return err
+		}
+		d.Set("password_data", passwordData)
+	}
+
+	return nil
 }
 
 // Populate instance attribute fields with the returned instance

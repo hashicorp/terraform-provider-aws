@@ -28,6 +28,11 @@ func resourceAwsRoute() *schema.Resource {
 		Delete: resourceAwsRouteDelete,
 		Exists: resourceAwsRouteExists,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(2 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"destination_cidr_block": {
 				Type:     schema.TypeString,
@@ -159,16 +164,32 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	case "instance_id":
 		createOpts = &ec2.CreateRouteInput{
-			RouteTableId:         aws.String(d.Get("route_table_id").(string)),
-			DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
-			InstanceId:           aws.String(d.Get("instance_id").(string)),
+			RouteTableId: aws.String(d.Get("route_table_id").(string)),
+			InstanceId:   aws.String(d.Get("instance_id").(string)),
 		}
+
+		if v, ok := d.GetOk("destination_cidr_block"); ok {
+			createOpts.DestinationCidrBlock = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
+			createOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
+		}
+
 	case "network_interface_id":
 		createOpts = &ec2.CreateRouteInput{
-			RouteTableId:         aws.String(d.Get("route_table_id").(string)),
-			DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
-			NetworkInterfaceId:   aws.String(d.Get("network_interface_id").(string)),
+			RouteTableId:       aws.String(d.Get("route_table_id").(string)),
+			NetworkInterfaceId: aws.String(d.Get("network_interface_id").(string)),
 		}
+
+		if v, ok := d.GetOk("destination_cidr_block"); ok {
+			createOpts.DestinationCidrBlock = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
+			createOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
+		}
+
 	case "vpc_peering_connection_id":
 		createOpts = &ec2.CreateRouteInput{
 			RouteTableId:           aws.String(d.Get("route_table_id").(string)),
@@ -191,7 +212,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	// Create the route
 	var err error
 
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		_, err = conn.CreateRoute(createOpts)
 
 		if err != nil {
@@ -216,7 +237,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	var route *ec2.Route
 
 	if v, ok := d.GetOk("destination_cidr_block"); ok {
-		err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			route, err = findResourceRoute(conn, d.Get("route_table_id").(string), v.(string), "")
 			return resource.RetryableError(err)
 		})
@@ -226,7 +247,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
-		err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			route, err = findResourceRoute(conn, d.Get("route_table_id").(string), "", v.(string))
 			return resource.RetryableError(err)
 		})
@@ -378,7 +399,7 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Route delete opts: %s", deleteOpts)
 
 	var err error
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		log.Printf("[DEBUG] Trying to delete route with opts %s", deleteOpts)
 		resp, err := conn.DeleteRoute(deleteOpts)
 		log.Printf("[DEBUG] Route delete result: %s", resp)

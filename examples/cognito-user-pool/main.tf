@@ -1,5 +1,6 @@
 resource "aws_iam_role" "main" {
   name = "terraform-example-lambda"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -74,7 +75,7 @@ EOF
 }
 
 resource "aws_cognito_user_pool" "pool" {
-  name = "terraform-example"
+  name                       = "terraform-example"
   email_verification_subject = "Device Verification Code"
   email_verification_message = "Please use the following code {####}"
   sms_verification_message   = "{####} Baz"
@@ -105,6 +106,7 @@ resource "aws_cognito_user_pool" "pool" {
     post_confirmation              = "${aws_lambda_function.main.arn}"
     pre_authentication             = "${aws_lambda_function.main.arn}"
     pre_sign_up                    = "${aws_lambda_function.main.arn}"
+    pre_token_generation           = "${aws_lambda_function.main.arn}"
     verify_auth_challenge_response = "${aws_lambda_function.main.arn}"
   }
 

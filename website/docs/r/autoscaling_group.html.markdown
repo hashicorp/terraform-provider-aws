@@ -144,10 +144,9 @@ The following arguments are supported:
    drains all the instances before deleting the group.  This bypasses that
    behavior and potentially leaves resources dangling.
 * `load_balancers` (Optional) A list of elastic load balancer names to add to the autoscaling
-   group names.
+   group names. Only valid for classic load balancers. For ALBs, use `target_group_arns` instead.
 * `vpc_zone_identifier` (Optional) A list of subnet IDs to launch resources in.
-* `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with
-Application Load Balancing
+* `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with Application Load Balancing.
 * `termination_policies` (Optional) A list of policies to decide how the instances in the auto scale group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `Default`.
 * `suspended_processes` - (Optional) A list of processes to suspend for the AutoScaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`.
 Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your autoscaling group from functioning properly.
@@ -228,7 +227,7 @@ care to not duplicate these hooks in `aws_autoscaling_lifecycle_hook`.
 `autoscaling_group` provides the following
 [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
 
-- `delete` - (Default `5 minutes`) Used for destroying ASG.
+- `delete` - (Default `10 minutes`) Used for destroying ASG.
 
 
 ## Waiting for Capacity

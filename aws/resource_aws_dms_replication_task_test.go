@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDmsReplicationTaskBasic(t *testing.T) {
+func TestAccAWSDmsReplicationTaskBasic(t *testing.T) {
 	resourceName := "aws_dms_replication_task.dms_replication_task"
 	randId := acctest.RandString(8)
 
@@ -107,7 +107,7 @@ func dmsReplicationTaskConfig(randId string) string {
 resource "aws_vpc" "dms_vpc" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-test-dms-vpc-%[1]s"
+		Name = "terraform-testacc-dms-replication-task"
 	}
 }
 
@@ -116,7 +116,7 @@ resource "aws_subnet" "dms_subnet_1" {
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.dms_vpc.id}"
 	tags {
-		Name = "tf-test-dms-subnet-%[1]s"
+		Name = "tf-acc-dms-replication-task-1"
 	}
 	depends_on = ["aws_vpc.dms_vpc"]
 }
@@ -126,7 +126,7 @@ resource "aws_subnet" "dms_subnet_2" {
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.dms_vpc.id}"
 	tags {
-		Name = "tf-test-dms-subnet-%[1]s"
+		Name = "tf-acc-dms-replication-task-2"
 	}
 	depends_on = ["aws_vpc.dms_vpc"]
 }
@@ -191,7 +191,7 @@ func dmsReplicationTaskConfigUpdate(randId string) string {
 resource "aws_vpc" "dms_vpc" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "tf-test-dms-vpc-%[1]s"
+		Name = "terraform-testacc-dms-replication-task"
 	}
 }
 
@@ -200,7 +200,7 @@ resource "aws_subnet" "dms_subnet_1" {
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.dms_vpc.id}"
 	tags {
-		Name = "tf-test-dms-subnet-%[1]s"
+		Name = "tf-acc-dms-replication-task-1"
 	}
 	depends_on = ["aws_vpc.dms_vpc"]
 }
@@ -210,7 +210,7 @@ resource "aws_subnet" "dms_subnet_2" {
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.dms_vpc.id}"
 	tags {
-		Name = "tf-test-dms-subnet-%[1]s"
+		Name = "tf-acc-dms-replication-task-2"
 	}
 	depends_on = ["aws_vpc.dms_vpc"]
 }

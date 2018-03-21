@@ -410,7 +410,7 @@ var testAccAWSElasticacheClusterInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-            Name = "tf-test"
+        Name = "terraform-testacc-elasticache-cluster-in-vpc"
     }
 }
 
@@ -419,7 +419,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
     tags {
-            Name = "tf-test"
+        Name = "tf-acc-elasticache-cluster-in-vpc"
     }
 }
 
@@ -467,7 +467,7 @@ var testAccAWSElasticacheClusterMultiAZInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-            Name = "tf-test"
+        Name = "terraform-testacc-elasticache-cluster-multi-az-in-vpc"
     }
 }
 
@@ -476,7 +476,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
     tags {
-            Name = "tf-test-%03d"
+        Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-foo"
     }
 }
 
@@ -485,7 +485,7 @@ resource "aws_subnet" "bar" {
     cidr_block = "192.168.16.0/20"
     availability_zone = "us-west-2b"
     tags {
-            Name = "tf-test-%03d"
+        Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-bar"
     }
 }
 
@@ -525,4 +525,4 @@ resource "aws_elasticache_cluster" "bar" {
         "us-west-2b"
     ]
 }
-`, acctest.RandInt(), acctest.RandInt(), acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
+`, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
