@@ -559,6 +559,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafregional_byte_match_set":               resourceAwsWafRegionalByteMatchSet(),
 			"aws_wafregional_geo_match_set":                resourceAwsWafRegionalGeoMatchSet(),
 			"aws_wafregional_ipset":                        resourceAwsWafRegionalIPSet(),
+			"aws_wafregional_rate_based_rule":              resourceAwsWafRegionalRateBasedRule(),
 			"aws_wafregional_regex_pattern_set":            resourceAwsWafRegionalRegexPatternSet(),
 			"aws_wafregional_rule":                         resourceAwsWafRegionalRule(),
 			"aws_wafregional_size_constraint_set":          resourceAwsWafRegionalSizeConstraintSet(),
