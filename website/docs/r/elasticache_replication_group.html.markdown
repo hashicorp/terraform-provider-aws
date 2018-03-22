@@ -12,22 +12,52 @@ Provides an ElastiCache Replication Group resource.
 
 ## Example Usage
 
-### Redis Master with One Replica
+### Redis Cluster Mode Disabled
+
+To create a single shard primary with single read replica:
 
 ```hcl
-resource "aws_elasticache_replication_group" "bar" {
+resource "aws_elasticache_replication_group" "example" {
+  automatic_failover_enabled    = true
+  availability_zones            = ["us-west-2a", "us-west-2b"]
   replication_group_id          = "tf-rep-group-1"
   replication_group_description = "test description"
-  node_type                     = "cache.m1.small"
+  node_type                     = "cache.m3.medium"
   number_cache_clusters         = 2
-  port                          = 6379
   parameter_group_name          = "default.redis3.2"
-  availability_zones            = ["us-west-2a", "us-west-2b"]
-  automatic_failover_enabled    = true
+  port                          = 6379
 }
 ```
 
-### Native Redis Cluster 2 Masters 2 Replicas
+Additional read replicas can be added or removed with the [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html) and its `replication_group_id` attribute. In this situation, you will need to utilize the [lifecycle configuration block](/docs/configuration/resources.html) with `ignore_changes` to prevent replication group recreation.
+
+```hcl
+resource "aws_elasticache_replication_group" "example" {
+  automatic_failover_enabled    = true
+  availability_zones            = ["us-west-2a", "us-west-2b"]
+  replication_group_id          = "tf-rep-group-1"
+  replication_group_description = "test description"
+  node_type                     = "cache.m3.medium"
+  number_cache_clusters         = 2
+  parameter_group_name          = "default.redis3.2"
+  port                          = 6379
+
+  lifecycle {
+    ignore_changes = ["number_cache_clusters"]
+  }
+}
+
+resource "aws_elasticache_cluster" "replica" {
+  count = 1
+
+  cluster_id           = "tf-rep-group-1-${count.index}"
+  replication_group_id = "${aws_elasticache_replication_group.example.id}"
+}
+```
+
+### Redis Cluster Mode Enabled
+
+To create two shards with a primary and a single read replica each:
 
 ```hcl
 resource "aws_elasticache_replication_group" "baz" {
