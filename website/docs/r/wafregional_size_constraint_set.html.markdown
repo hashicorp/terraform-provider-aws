@@ -1,19 +1,19 @@
 ---
 layout: "aws"
-page_title: "AWS: waf_size_constraint_set"
-sidebar_current: "docs-aws-resource-waf-size-constraint-set"
+page_title: "AWS: wafregional_size_constraint_set"
+sidebar_current: "docs-aws-resource-wafregional-size-constraint-set"
 description: |-
-  Provides a AWS WAF Size Constraint Set resource.
+  Provides an AWS WAF Regional Size Constraint Set resource for use with ALB.
 ---
 
-# aws_waf_size_constraint_set
+# aws_wafregional_size_constraint_set
 
-Provides a WAF Size Constraint Set Resource
+Provides a WAF Regional Size Constraint Set Resource for use with Application Load Balancer.
 
 ## Example Usage
 
 ```hcl
-resource "aws_waf_size_constraint_set" "size_constraint_set" {
+resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
   name = "tfsize_constraints"
 
   size_constraints {
