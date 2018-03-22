@@ -545,8 +545,8 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_MultipleReplica_Ec2Classic(
 	var cluster1, cluster2 elasticache.CacheCluster
 	var replicationGroup elasticache.ReplicationGroup
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(7))
-	clusterResourceName1 := "aws_elasticache_cluster.0.replica"
-	clusterResourceName2 := "aws_elasticache_cluster.1.replica"
+	clusterResourceName1 := "aws_elasticache_cluster.replica.0"
+	clusterResourceName2 := "aws_elasticache_cluster.replica.1"
 	replicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.Test(t, resource.TestCase{
