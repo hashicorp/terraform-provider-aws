@@ -9,22 +9,36 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 )
 
 func TestAccAWSWafRegionalWebAclAssociation_basic(t *testing.T) {
-	var webAcl waf.WebACL
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckWafRegionalWebAclAssociationDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCheckWafRegionalWebAclAssociationConfig,
+				Config: testAccCheckWafRegionalWebAclAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWafRegionalWebAclAssociationExists("aws_wafregional_web_acl_association.foo", &webAcl),
+					testAccCheckWafRegionalWebAclAssociationExists("aws_wafregional_web_acl_association.foo"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSWafRegionalWebAclAssociation_multipleAssociations(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckWafRegionalWebAclAssociationDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccCheckWafRegionalWebAclAssociationConfig_multipleAssociations,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWafRegionalWebAclAssociationExists("aws_wafregional_web_acl_association.foo"),
+					testAccCheckWafRegionalWebAclAssociationExists("aws_wafregional_web_acl_association.bar"),
 				),
 			},
 		},
@@ -61,13 +75,13 @@ func testAccCheckWafRegionalWebAclAssociationDestroyWithProvider(s *terraform.St
 	return nil
 }
 
-func testAccCheckWafRegionalWebAclAssociationExists(n string, webAcl *waf.WebACL) resource.TestCheckFunc {
+func testAccCheckWafRegionalWebAclAssociationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return testAccCheckWafRegionalWebAclAssociationExistsWithProvider(s, n, webAcl, testAccProvider)
+		return testAccCheckWafRegionalWebAclAssociationExistsWithProvider(s, n, testAccProvider)
 	}
 }
 
-func testAccCheckWafRegionalWebAclAssociationExistsWithProvider(s *terraform.State, n string, webAcl *waf.WebACL, provider *schema.Provider) error {
+func testAccCheckWafRegionalWebAclAssociationExistsWithProvider(s *terraform.State, n string, provider *schema.Provider) error {
 	rs, ok := s.RootModule().Resources[n]
 	if !ok {
 		return fmt.Errorf("Not found: %s", n)
@@ -100,7 +114,7 @@ func testAccCheckWafRegionalWebAclAssociationExistsWithProvider(s *terraform.Sta
 	return nil
 }
 
-const testAccCheckWafRegionalWebAclAssociationConfig = `
+const testAccCheckWafRegionalWebAclAssociationConfig_basic = `
 resource "aws_wafregional_rule" "foo" {
   name = "foo"
   metric_name = "foo"
@@ -146,6 +160,18 @@ resource "aws_alb" "foo" {
 
 resource "aws_wafregional_web_acl_association" "foo" {
   resource_arn = "${aws_alb.foo.arn}"
+  web_acl_id = "${aws_wafregional_web_acl.foo.id}"
+}
+`
+
+const testAccCheckWafRegionalWebAclAssociationConfig_multipleAssociations = testAccCheckWafRegionalWebAclAssociationConfig_basic + `
+resource "aws_alb" "bar" {
+  internal = true
+  subnets = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+}
+
+resource "aws_wafregional_web_acl_association" "bar" {
+  resource_arn = "${aws_alb.bar.arn}"
   web_acl_id = "${aws_wafregional_web_acl.foo.id}"
 }
 `
