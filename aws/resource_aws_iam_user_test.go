@@ -149,7 +149,7 @@ func testAccCheckAWSUserDestroy(s *terraform.State) error {
 			UserName: aws.String(rs.Primary.ID),
 		})
 		if err == nil {
-			return fmt.Errorf("still exist.")
+			return fmt.Errorf("User still exists")
 		}
 
 		// Verify the error is what we want
