@@ -356,7 +356,7 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("num_cache_nodes"); ok {
-		req.NumCacheNodes = aws.Int64(v.(int64))
+		req.NumCacheNodes = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("engine"); ok {
@@ -368,7 +368,7 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("port"); ok {
-		req.Port = aws.Int64(v.(int64))
+		req.Port = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("subnet_group_name"); ok {
