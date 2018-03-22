@@ -287,9 +287,6 @@ func (c *Config) Client() (interface{}, error) {
 			log.Printf("[INFO] AWS Auth using Profile: %q", c.Profile)
 			opt.Profile = c.Profile
 			opt.SharedConfigState = session.SharedConfigEnable
-
-			// add Stdin Token Provider for MFA
-			opt.AssumeRoleTokenProvider = stscreds.StdinTokenProvider
 		} else {
 			return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)
 		}
@@ -310,6 +307,9 @@ func (c *Config) Client() (interface{}, error) {
 			InsecureSkipVerify: true,
 		}
 	}
+
+	// add Stdin Token Provider for MFA
+	opt.AssumeRoleTokenProvider = stscreds.StdinTokenProvider
 
 	// create base session with no retries. MaxRetries will be set later
 	sess, err := session.NewSessionWithOptions(opt)
