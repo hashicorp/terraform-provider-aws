@@ -18,6 +18,7 @@ ENHANCEMENTS:
 
 * provider: Treat IAM policies with account ID principals as equivalent to IAM account root ARN [GH-3832]
 * provider: Treat additional IAM policy scenarios with empty principal trees as equivalent [GH-3832]
+* resource/aws_acm_certificate: Retry on ResourceInUseException during deletion for eventual consistency [GH-3868]
 * resource/aws_cloudfront_distribution: Validate origin `domain_name` and `origin_id` at plan time [GH-3767]
 * resource/aws_eip: Support configurable timeouts [GH-3769]
 * resource/aws_elasticache_cluster: Support plan time validation of az_mode [GH-3857]
