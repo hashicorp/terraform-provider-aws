@@ -217,16 +217,16 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 			"availability_zone",
 			"availability_zones",
 			"az_mode",
-			"node_type",
-			"engine",
 			"engine_version",
+			"engine",
 			"maintenance_window",
+			"node_type",
 			"notification_topic_arn",
 			"num_cache_nodes",
 			"parameter_group_name",
 			"port",
-			"security_group_names",
 			"security_group_ids",
+			"security_group_names",
 			"snapshot_arns",
 			"snapshot_name",
 			"snapshot_retention_limit",
@@ -480,6 +480,8 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 			d.Set("port", c.ConfigurationEndpoint.Port)
 			d.Set("configuration_endpoint", aws.String(fmt.Sprintf("%s:%d", *c.ConfigurationEndpoint.Address, *c.ConfigurationEndpoint.Port)))
 			d.Set("cluster_address", aws.String(fmt.Sprintf("%s", *c.ConfigurationEndpoint.Address)))
+		} else if len(c.CacheNodes) > 0 {
+			d.Set("port", int(aws.Int64Value(c.CacheNodes[0].Endpoint.Port)))
 		}
 
 		if c.ReplicationGroupId != nil {
