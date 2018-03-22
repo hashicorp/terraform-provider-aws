@@ -187,6 +187,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_elastic_beanstalk_hosted_zone":    dataSourceAwsElasticBeanstalkHostedZone(),
 			"aws_elastic_beanstalk_solution_stack": dataSourceAwsElasticBeanstalkSolutionStack(),
 			"aws_elasticache_cluster":              dataSourceAwsElastiCacheCluster(),
+			"aws_elasticsearch_domain":             dataSourceAwsElasticsearchDomain(),
 			"aws_elb":                              dataSourceAwsElb(),
 			"aws_elasticache_replication_group":    dataSourceAwsElasticacheReplicationGroup(),
 			"aws_elb_hosted_zone_id":               dataSourceAwsElbHostedZoneId(),
