@@ -8,6 +8,7 @@ FEATURES:
 
 * **New Resource:** `aws_waf_geo_match_set` [GH-3275]
 * **New Resource:** `aws_wafregional_rule` [GH-3756]
+* **New Resource:** `aws_wafregional_size_constraint_set` [GH-3796]
 * **New Resource:** `aws_wafregional_sql_injection_match_set` [GH-1013]
 * **New Resource:** `aws_wafregional_web_acl` [GH-3754]
 * **New Resource:** `aws_wafregional_xss_match_set` [GH-1014]
