@@ -95,6 +95,7 @@ import (
 type Config struct {
 	AccessKey     string
 	SecretKey     string
+	MFA           bool
 	CredsFilename string
 	Profile       string
 	Token         string
@@ -308,8 +309,10 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	}
 
-	// add Stdin Token Provider for MFA
-	opt.AssumeRoleTokenProvider = stscreds.StdinTokenProvider
+	if c.MFA {
+		// add StdinTokenProvider for MFA
+		opt.AssumeRoleTokenProvider = stscreds.StdinTokenProvider
+	}
 
 	// create base session with no retries. MaxRetries will be set later
 	sess, err := session.NewSessionWithOptions(opt)

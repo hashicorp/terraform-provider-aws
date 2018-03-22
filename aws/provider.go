@@ -34,6 +34,13 @@ func Provider() terraform.ResourceProvider {
 				Description: descriptions["secret_key"],
 			},
 
+			"mfa": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: descriptions["mfa"],
+			},
+
 			"profile": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -599,6 +606,9 @@ func init() {
 		"secret_key": "The secret key for API operations. You can retrieve this\n" +
 			"from the 'Security & Credentials' section of the AWS console.",
 
+		"mfa": "Explicitly configure the provider to use MFA. If omitted," +
+			"default value is `false`",
+
 		"profile": "The profile for API operations. If not set, the default profile\n" +
 			"created with `aws configure` will be used.",
 
@@ -689,6 +699,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	config := Config{
 		AccessKey:               d.Get("access_key").(string),
 		SecretKey:               d.Get("secret_key").(string),
+		MFA:                     d.Get("mfa").(bool),
 		Profile:                 d.Get("profile").(string),
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
