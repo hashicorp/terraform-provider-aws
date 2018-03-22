@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -286,6 +287,9 @@ func (c *Config) Client() (interface{}, error) {
 			log.Printf("[INFO] AWS Auth using Profile: %q", c.Profile)
 			opt.Profile = c.Profile
 			opt.SharedConfigState = session.SharedConfigEnable
+
+			// add Stdin Token Provider for MFA
+			opt.AssumeRoleTokenProvider = stscreds.StdinTokenProvider
 		} else {
 			return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)
 		}
