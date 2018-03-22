@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -17,13 +16,13 @@ func resourceAwsWafRegionalWebAclAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsWafRegionalWebAclAssociationCreate,
 		Read:   resourceAwsWafRegionalWebAclAssociationRead,
-		Update: resourceAwsWafRegionalWebAclAssociationUpdate,
 		Delete: resourceAwsWafRegionalWebAclAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
 			"web_acl_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"resource_arn": &schema.Schema{
 				Type:     schema.TypeString,
@@ -53,10 +52,8 @@ func resourceAwsWafRegionalWebAclAssociationCreate(d *schema.ResourceData, meta 
 	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err = conn.AssociateWebACL(params)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "WAFUnavailableEntityException" {
-					return resource.RetryableError(awsErr)
-				}
+			if isAWSErr(err, wafregional.ErrCodeWAFUnavailableEntityException, "") {
+				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
@@ -96,15 +93,11 @@ func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta in
 		}
 	}
 	if !found {
-		// It seems it doesn't exist anymore, so clear the ID
+		log.Printf("[WARN] WAF Regional Web ACL association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 	}
 
 	return nil
-}
-
-func resourceAwsWafRegionalWebAclAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAwsWafRegionalWebAclAssociationRead(d, meta)
 }
 
 func resourceAwsWafRegionalWebAclAssociationDelete(d *schema.ResourceData, meta interface{}) error {

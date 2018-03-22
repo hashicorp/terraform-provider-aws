@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create an association between a WAF Regional WebACL and Application Load Balancer.
 ---
 
-# aws\_wafregional\_web\_acl\_association
+# aws_wafregional_web_acl_association
 
 Provides a resource to create an association between a WAF Regional WebACL and Application Load Balancer.
 
@@ -18,65 +18,64 @@ Provides a resource to create an association between a WAF Regional WebACL and A
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
   
-  ip_set_descriptors {
+  ip_set_descriptor {
     type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
-resource "aws_wafregional_rule" "wafrule" {
-  depends_on  = ["aws_wafregional_ipset.ipset"]
+resource "aws_wafregional_rule" "foo" {
   name        = "tfWAFRule"
   metric_name = "tfWAFRule"
   
-  predicates {
+  predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
     type    = "IPMatch"
   }
 }
 
-resource "aws_wafregional_web_acl" "wafacl" {
-  depends_on  = ["aws_wafregional_ipset.ipset", "aws_wafregional_rule.wafrule"]
-  name        = "tfWebACL"
-  metric_name = "tfWebACL"
-  
+resource "aws_wafregional_web_acl" "foo" {
+  name = "foo"
+  metric_name = "foo"
   default_action {
     type = "ALLOW"
   }
-  
-  rules {
+  rule {
     action {
-       type = "BLOCK"
+      type = "BLOCK"
     }
-    
     priority = 1
-    rule_id  = "${aws_wafregional_rule.wafrule.id}"
+    rule_id = "${aws_wafregional_rule.foo.id}"
   }
 }
 
-resource "aws_vpc" "main" {
+resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 }
 
+data "aws_availability_zones" "available" {}
+
 resource "aws_subnet" "foo" {
-	vpc_id     = "${aws_vpc.main.id}"
-	cidr_block = "10.1.1.0/24"
+	vpc_id = "${aws_vpc.foo.id}"
+  cidr_block = "10.1.1.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_subnet" "bar" {
-	vpc_id     = "${aws_vpc.main.id}"
-	cidr_block = "10.1.2.0/24"
+	vpc_id = "${aws_vpc.foo.id}"
+  cidr_block = "10.1.2.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
 }
 
-resource "aws_alb" "alb" {
-    subnets = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+resource "aws_alb" "foo" {
+  internal = true
+  subnets = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
 }
 
-resource "aws_wafregional_web_acl_association" "wafassociation" {
-    depends_on   = ["aws_alb.alb", "aws_wafregional_web_acl.wafacl"]
-    web_acl_id   = "${aws_wafregional_web_acl.wafacl.id}"
-    resource_arn = "${aws_alb.alb.arn}"
+resource "aws_wafregional_web_acl_association" "foo" {
+  resource_arn = "${aws_alb.foo.arn}"
+  web_acl_id = "${aws_wafregional_web_acl.foo.id}"
 }
 ```
 
