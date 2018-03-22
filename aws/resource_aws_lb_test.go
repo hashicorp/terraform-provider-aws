@@ -567,8 +567,8 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
 					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.enabled", "false"),
-					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.bucket", ""),
-					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.prefix", ""),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.bucket", bucketName),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.prefix", "testAccAWSALBConfig_accessLogs"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
