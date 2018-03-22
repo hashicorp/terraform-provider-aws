@@ -258,6 +258,9 @@ func testAccCheckAWSWafSizeConstraintSetExists(n string, v *waf.SizeConstraintSe
 
 func testAccCheckAWSWafSizeConstraintSetDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_waf_size_contraint_set" {
+			continue
+		}
 
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
 		resp, err := conn.GetSizeConstraintSet(
