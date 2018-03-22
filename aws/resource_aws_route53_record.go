@@ -636,29 +636,38 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 		StartRecordType: aws.String(d.Get("type").(string)),
 	}
 
-	log.Printf("[DEBUG] List resource records sets for zone: %s, opts: %s",
-		zone, lopts)
-	resp, err := conn.ListResourceRecordSets(lopts)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, record := range resp.ResourceRecordSets {
-		name := cleanRecordName(*record.Name)
-		if FQDN(strings.ToLower(name)) != FQDN(strings.ToLower(*lopts.StartRecordName)) {
-			continue
-		}
-		if strings.ToUpper(*record.Type) != strings.ToUpper(*lopts.StartRecordType) {
-			continue
+	for {
+		log.Printf("[DEBUG] List resource records sets for zone: %s, opts: %s",
+			zone, lopts)
+		resp, err := conn.ListResourceRecordSets(lopts)
+		if err != nil {
+			return nil, err
 		}
 
-		if record.SetIdentifier != nil && *record.SetIdentifier != d.Get("set_identifier") {
-			continue
+		for _, record := range resp.ResourceRecordSets {
+			name := cleanRecordName(*record.Name)
+			if FQDN(strings.ToLower(name)) != FQDN(strings.ToLower(*lopts.StartRecordName)) {
+				continue
+			}
+			if strings.ToUpper(*record.Type) != strings.ToUpper(*lopts.StartRecordType) {
+				continue
+			}
+
+			if record.SetIdentifier != nil && *record.SetIdentifier != d.Get("set_identifier") {
+				continue
+			}
+			// The only safe return where a record is found
+			return record, nil
 		}
-		// The only safe return where a record is found
-		return record, nil
+
+		if !*resp.IsTruncated {
+			return nil, r53NoRecordsFound
+		}
+
+		lopts.StartRecordName = resp.NextRecordName
+		lopts.StartRecordType = resp.NextRecordType
+		lopts.StartRecordIdentifier = resp.NextRecordIdentifier
 	}
-	return nil, r53NoRecordsFound
 }
 
 func resourceAwsRoute53RecordDelete(d *schema.ResourceData, meta interface{}) error {
