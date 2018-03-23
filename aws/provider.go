@@ -549,6 +549,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_waf_ipset":                                resourceAwsWafIPSet(),
 			"aws_waf_rule":                                 resourceAwsWafRule(),
 			"aws_waf_rate_based_rule":                      resourceAwsWafRateBasedRule(),
+			"aws_waf_regex_pattern_set":                    resourceAwsWafRegexPatternSet(),
 			"aws_waf_size_constraint_set":                  resourceAwsWafSizeConstraintSet(),
 			"aws_waf_web_acl":                              resourceAwsWafWebAcl(),
 			"aws_waf_xss_match_set":                        resourceAwsWafXssMatchSet(),
