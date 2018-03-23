@@ -123,6 +123,6 @@ Refer to [AWS CostFilter documentation](http://docs.aws.amazon.com/awsaccountbil
 
 ## Import
 
-Budgets can be imported using the budget `name`, e.g.
+Budgets can be imported using `AccountID:BudgetName`, e.g.
 
-``` $ terraform import aws_budgets_budget.default my-budget ```
+`$ terraform import aws_budgets_budget.myBudget 123456789012:myBudget`

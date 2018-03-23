@@ -24,6 +24,12 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 
 func resourceAwsBudgetsBudgetSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"account_id": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ForceNew:     true,
+			ValidateFunc: validateAwsAccountId,
+		},
 		"name": {
 			Type:          schema.TypeString,
 			Optional:      true,
@@ -123,7 +129,13 @@ func resourceAwsBudgetsBudgetSchema() map[string]*schema.Schema {
 
 func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).budgetconn
-	accountID := meta.(*AWSClient).accountid
+	var accountID string
+	if v, ok := d.GetOk("account_id"); ok {
+		accountID = v.(string)
+	} else {
+		accountID = meta.(*AWSClient).accountid
+	}
+
 	budget, err := expandBudgetsBudgetUnmarshal(d)
 	if err != nil {
 		return fmt.Errorf("failed creating budget: %v", err)
@@ -137,14 +149,17 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("create budget failed: %v", err)
 	}
 
-	d.SetId(*budget.BudgetName)
+	d.SetId(fmt.Sprintf("%s:%s", accountID, *budget.BudgetName))
 	return resourceAwsBudgetsBudgetUpdate(d, meta)
 }
 
 func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) error {
-	budgetName := d.Id()
+	accountID, budgetName, err := decodeBudgetsBudgetID(d.Id())
+	if err != nil {
+		return err
+	}
+
 	client := meta.(*AWSClient).budgetconn
-	accountID := meta.(*AWSClient).accountid
 	describeBudgetOutput, err := client.DescribeBudget(&budgets.DescribeBudgetInput{
 		BudgetName: &budgetName,
 		AccountId:  &accountID,
@@ -168,6 +183,7 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	for k, v := range map[string]interface{}{
+		"account_id":        accountID,
 		"budget_type":       flattenedBudget.budgetType,
 		"time_unit":         flattenedBudget.timeUnit,
 		"cost_filters":      convertCostFiltersToStringMap(flattenedBudget.costFilters),
@@ -188,7 +204,13 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).budgetconn
-	accountID := meta.(*AWSClient).accountid
+	var accountID string
+	if v, ok := d.GetOk("account_id"); ok {
+		accountID = v.(string)
+	} else {
+		accountID = meta.(*AWSClient).accountid
+	}
+
 	budget, err := expandBudgetsBudgetUnmarshal(d)
 	if err != nil {
 		return fmt.Errorf("could not create budget: %v", err)
@@ -206,15 +228,22 @@ func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
-	budgetName := d.Id()
-	if !budgetExists(budgetName, meta) {
+	accountID, budgetName, err := decodeBudgetsBudgetID(d.Id())
+	if err != nil {
+		return err
+	}
+
+	client := meta.(*AWSClient).budgetconn
+	_, err = client.DescribeBudget(&budgets.DescribeBudgetInput{
+		BudgetName: &budgetName,
+		AccountId:  &accountID,
+	})
+	if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
 		log.Printf("[INFO] budget %s could not be found. skipping delete.", d.Id())
 		return nil
 	}
 
-	client := meta.(*AWSClient).budgetconn
-	accountID := meta.(*AWSClient).accountid
-	_, err := client.DeleteBudget(&budgets.DeleteBudgetInput{
+	_, err = client.DeleteBudget(&budgets.DeleteBudgetInput{
 		BudgetName: &budgetName,
 		AccountId:  &accountID,
 	})
@@ -251,6 +280,7 @@ func expandBudgetsBudgetFlatten(budget *budgets.Budget) (*flattenedBudgetsBudget
 	if budgetCostTypes == nil {
 		return nil, fmt.Errorf("empty CostTypes in budget: %v", budget)
 	}
+
 	costTypesMap := map[string]bool{
 		"include_credit":             *budgetCostTypes.IncludeCredit,
 		"include_other_subscription": *budgetCostTypes.IncludeOtherSubscription,
@@ -262,7 +292,6 @@ func expandBudgetsBudgetFlatten(budget *budgets.Budget) (*flattenedBudgetsBudget
 		"include_upfront":            *budgetCostTypes.IncludeUpfront,
 		"use_blended":                *budgetCostTypes.UseBlended,
 	}
-
 	budgetTimePeriod := budget.TimePeriod
 	if budgetTimePeriod == nil {
 		return nil, fmt.Errorf("empty TimePeriod in budget: %v", budget)
@@ -307,7 +336,7 @@ func convertCostFiltersToStringMap(costFilters map[string][]*string) map[string]
 
 func expandBudgetsBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
 	var budgetName string
-	if id := d.Id(); id != "" {
+	if _, id, err := decodeBudgetsBudgetID(d.Id()); err == nil && id != "" {
 		budgetName = id
 
 	} else if v, ok := d.GetOk("name"); ok {
@@ -359,6 +388,14 @@ func expandBudgetsBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, erro
 	return budget, nil
 }
 
+func decodeBudgetsBudgetID(id string) (string, string, error) {
+	parts := strings.Split(id, ":")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected AccountID:BudgetName", id)
+	}
+	return parts[0], parts[1], nil
+}
+
 func expandBudgetsCostTypesUnmarshal(budgetCostTypes []interface{}) *budgets.CostTypes {
 	costTypes := &budgets.CostTypes{
 		IncludeCredit:            aws.Bool(true),
@@ -391,18 +428,4 @@ func expandBudgetsCostTypesUnmarshal(budgetCostTypes []interface{}) *budgets.Cos
 	}
 
 	return costTypes
-}
-
-func budgetExists(budgetName string, meta interface{}) bool {
-	client := meta.(*AWSClient).budgetconn
-	accountID := meta.(*AWSClient).accountid
-	_, err := client.DescribeBudget(&budgets.DescribeBudgetInput{
-		BudgetName: &budgetName,
-		AccountId:  &accountID,
-	})
-	if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
-		return false
-	}
-
-	return true
 }

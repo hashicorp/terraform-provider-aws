@@ -19,6 +19,7 @@ import (
 func TestAccAWSBudget_basic(t *testing.T) {
 	name := fmt.Sprintf("test-budget-%d", acctest.RandInt())
 	configBasicDefaults := newBudgetTestConfigDefaults(name)
+	configBasicDefaults.AccountID = "012345678910"
 	configBasicUpdate := newBudgetTestConfigUpdate(name)
 
 	resource.Test(t, resource.TestCase{
@@ -31,6 +32,7 @@ func TestAccAWSBudget_basic(t *testing.T) {
 			{
 				Config: testBudgetHCLBasicUseDefaults(configBasicDefaults),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name", regexp.MustCompile(configBasicDefaults.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", configBasicDefaults.BudgetType),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", configBasicDefaults.LimitAmount),
@@ -41,10 +43,15 @@ func TestAccAWSBudget_basic(t *testing.T) {
 					testBudgetExists(configBasicDefaults, testAccProvider),
 				),
 			},
-
+			{
+				PlanOnly:    true,
+				Config:      testBudgetHCLWithAccountID(configBasicDefaults),
+				ExpectError: regexp.MustCompile("account_id.*" + configBasicDefaults.AccountID),
+			},
 			{
 				Config: testBudgetHCLBasic(configBasicUpdate),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name", regexp.MustCompile(configBasicUpdate.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", configBasicUpdate.BudgetType),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", configBasicUpdate.LimitAmount),
@@ -74,6 +81,7 @@ func TestAccAWSBudget_prefix(t *testing.T) {
 			{
 				Config: testBudgetHCLPrefixUseDefaults(configBasicDefaults),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name_prefix", regexp.MustCompile(configBasicDefaults.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", configBasicDefaults.BudgetType),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", configBasicDefaults.LimitAmount),
@@ -88,6 +96,7 @@ func TestAccAWSBudget_prefix(t *testing.T) {
 			{
 				Config: testBudgetHCLPrefix(configBasicUpdate),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name_prefix", regexp.MustCompile(configBasicUpdate.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", configBasicUpdate.BudgetType),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", configBasicUpdate.LimitAmount),
@@ -109,9 +118,12 @@ func testBudgetExists(config budgetTestConfig, provider *schema.Provider) resour
 			return fmt.Errorf("Not found: %s", "aws_budgets_budget.foo")
 		}
 
-		budgetName := rs.Primary.ID
+		accountID, budgetName, err := decodeBudgetsBudgetID(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("failed decoding ID: %v", err)
+		}
+
 		client := provider.Meta().(*AWSClient).budgetconn
-		accountID := provider.Meta().(*AWSClient).accountid
 		b, err := client.DescribeBudget(&budgets.DescribeBudgetInput{
 			BudgetName: &budgetName,
 			AccountId:  &accountID,
@@ -198,7 +210,14 @@ func checkBudgetCostTypes(config budgetTestConfig, costTypes budgets.CostTypes) 
 }
 
 func testCheckBudgetDestroy(budgetName string, provider *schema.Provider) error {
-	if budgetExists(budgetName, provider.Meta()) {
+	meta := provider.Meta()
+	client := meta.(*AWSClient).budgetconn
+	accountID := meta.(*AWSClient).accountid
+	_, err := client.DescribeBudget(&budgets.DescribeBudgetInput{
+		BudgetName: &budgetName,
+		AccountId:  &accountID,
+	})
+	if !isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
 		return fmt.Errorf("Budget '%s' was not deleted properly", budgetName)
 	}
 
@@ -206,6 +225,7 @@ func testCheckBudgetDestroy(budgetName string, provider *schema.Provider) error 
 }
 
 type budgetTestConfig struct {
+	AccountID                string
 	BudgetName               string
 	BudgetType               string
 	LimitAmount              string
@@ -272,6 +292,27 @@ func newBudgetTestConfigDefaults(name string) budgetTestConfig {
 		TimePeriodStart:          "2017-01-01_12:00",
 		TimePeriodEnd:            "2087-06-15_00:00",
 	}
+}
+
+func testBudgetHCLWithAccountID(budgetConfig budgetTestConfig) string {
+	t := template.Must(template.New("t1").
+		Parse(`
+resource "aws_budgets_budget" "foo" {
+	account_id = "{{.AccountID}}"
+	name_prefix = "{{.BudgetName}}"
+	budget_type = "{{.BudgetType}}"
+ 	limit_amount = "{{.LimitAmount}}"
+ 	limit_unit = "{{.LimitUnit}}"
+	time_period_start = "{{.TimePeriodStart}}" 
+ 	time_unit = "{{.TimeUnit}}"
+	cost_filters {
+		{{.FilterKey}} = "{{.FilterValue}}"
+	}
+}
+`))
+	var doc bytes.Buffer
+	t.Execute(&doc, budgetConfig)
+	return doc.String()
 }
 
 func testBudgetHCLPrefixUseDefaults(budgetConfig budgetTestConfig) string {
