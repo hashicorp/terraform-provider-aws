@@ -1,23 +1,96 @@
-## 1.11.0 (Unreleased)
+## 1.12.0 (Unreleased)
+
+NOTES:
+
+* provider: For resources implementing the IAM policy equivalence library (https://github.com/jen20/awspolicyequivalence/) on an attribute via `suppressEquivalentAwsPolicyDiffs`, the dependency has been updated, which should mark additional IAM policies as equivalent. [GH-3832]
 
 FEATURES:
 
-* **New Data Source:** `aws_kms_key` [GH-2224]
-* **New Resource:** `aws_organizations_organization` [GH-903]
-* **New Resource:** `aws_iot_thing` [GH-3521]
+* **New Resource:** `aws_waf_geo_match_set` [GH-3275]
+* **New Resource:** `aws_wafregional_rule` [GH-3756]
+* **New Resource:** `aws_wafregional_size_constraint_set` [GH-3796]
+* **New Resource:** `aws_wafregional_sql_injection_match_set` [GH-1013]
+* **New Resource:** `aws_wafregional_web_acl` [GH-3754]
+* **New Resource:** `aws_wafregional_web_acl_association` [GH-3755]
+* **New Resource:** `aws_wafregional_xss_match_set` [GH-1014]
+* **New Resource:** `aws_kms_grant` [GH-3038]
 
 ENHANCEMENTS:
 
-* resource/aws_dms_endpoint: Add aurora-postgresql as a target [GH-2615]
-* resource/aws_elastic_beanstalk_environment: Support modifying `tags` [GH-3513]
-* resource/aws_iam_user_policy: Add support for import [GH-3198]
-* resource/aws_lb: Add `enable_cross_zone_load_balancing` argument for NLBs [GH-3537]
+* provider: Treat IAM policies with account ID principals as equivalent to IAM account root ARN [GH-3832]
+* provider: Treat additional IAM policy scenarios with empty principal trees as equivalent [GH-3832]
+* resource/aws_acm_certificate: Retry on ResourceInUseException during deletion for eventual consistency [GH-3868]
+* resource/aws_cloudfront_distribution: Validate origin `domain_name` and `origin_id` at plan time [GH-3767]
+* resource/aws_eip: Support configurable timeouts [GH-3769]
+* resource/aws_elasticache_cluster: Support plan time validation of az_mode [GH-3857]
+* resource/aws_elasticache_cluster: Support plan time validation of node_type requiring VPC for cache.t2 instances [GH-3857]
+* resource/aws_elasticache_cluster: Support plan time validation of num_cache_nodes > 1 for redis [GH-3857]
+* resource/aws_elasticache_cluster: ForceNew on node_type changes for memcached engine [GH-3857]
+* resource/aws_elasticache_cluster: ForceNew on engine_version downgrades [GH-3857]
+* resource/aws_emr_cluster: Add step support [GH-3673]
+* resource/aws_instance: Support optionally fetching encrypted Windows password data [GH-2219]
+* resource/aws_launch_configuration: Validate `user_data` length during plan [GH-2973]
+* resource/aws_lb_target_group: Validate health check threshold for TCP protocol during plan [GH-3782]
+* resource/aws_security_group: Add arn attribute [GH-3751]
+* resource/aws_ses_domain_identity: Support trailing period in domain name [GH-3840]
+* resource/aws_sqs_queue: Support lack of ListQueueTags for all non-standard AWS implementations [GH-3794]
+* resource/aws_ssm_document: Add `document_format` argument to support YAML [GH-3814]
+* resource/aws_api_gateway_rest_api: Add support for content encoding [GH-3642]
+* resource/aws_s3_bucket_object: New `content_base64` argument allows uploading raw binary data created in-memory, rather than reading from disk as with `source`. [GH-3788]
 
 BUG FIXES:
 
-* resource/aws_api_gateway_vpc_link: Ensure `target_arns` is properly read [GH-3569]
-* resource/aws_spot_instance_request: Retry for 1 minute instead of 15 seconds for IAM eventual consistency [GH-3561]
-* resource/aws_ssm_activation: Prevent crash with expiration_date [GH-3597]
+* resource/aws_api_gateway_client_certificate: Export `*_date` fields correctly [GH-3805]
+* resource/aws_cognito_user_pool: Detect `auto_verified_attributes` changes [GH-3786]
+* resource/aws_cognito_user_pool_client: Fix `callback_urls` updates [GH-3404]
+* resource/aws_db_instance: Support `incompatible-parameters` and `storage-full` state [GH-3708]
+* resource/aws_ecs_task_definition: Correctly read `volume` attribute into Terraform state [GH-3823]
+* resource/aws_kinesis_firehose_delivery_stream: Prevent crash on malformed ID for import [GH-3834]
+* resource/aws_lambda_function: Only retry IAM eventual consistency errors for one minute [GH-3765]
+* resource/aws_ssm_association: Prevent AssociationDoesNotExist error [GH-3776]
+* resource/aws_vpc_endpoint: Prevent perpertual diff in non-standard partitions [GH-3317]
+* resource/aws_dynamodb_table: Update and validate attributes correctly [GH-3194]
+
+## 1.11.0 (March 09, 2018)
+
+FEATURES:
+
+* **New Data Source:** `aws_kms_key` ([#2224](https://github.com/terraform-providers/terraform-provider-aws/issues/2224))
+* **New Resource:** `aws_organizations_organization` ([#903](https://github.com/terraform-providers/terraform-provider-aws/issues/903))
+* **New Resource:** `aws_iot_thing` ([#3521](https://github.com/terraform-providers/terraform-provider-aws/issues/3521))
+
+ENHANCEMENTS:
+
+* resource/aws_api_gateway_authorizer: Support COGNITO_USER_POOLS type ([#3156](https://github.com/terraform-providers/terraform-provider-aws/issues/3156))
+* resource/aws_cloud9_environment_ec2: Retry creation for IAM eventual consistency ([#3651](https://github.com/terraform-providers/terraform-provider-aws/issues/3651))
+* resource/aws_cloudfront_distribution: Make `default_ttl`, `max_ttl`, and `min_ttl` arguments optional ([#3571](https://github.com/terraform-providers/terraform-provider-aws/issues/3571))
+* resource/aws_dms_endpoint: Add aurora-postgresql as a target ([#2615](https://github.com/terraform-providers/terraform-provider-aws/issues/2615))
+* resource/aws_dynamodb_table: Support Server Side Encryption ([#3303](https://github.com/terraform-providers/terraform-provider-aws/issues/3303))
+* resource/aws_elastic_beanstalk_environment: Support modifying `tags` ([#3513](https://github.com/terraform-providers/terraform-provider-aws/issues/3513))
+* resource/aws_emr_cluster: Add Kerberos support ([#3553](https://github.com/terraform-providers/terraform-provider-aws/issues/3553))
+* resource/aws_iam_account_alias: Improve error messages to include API errors ([#3590](https://github.com/terraform-providers/terraform-provider-aws/issues/3590))
+* resource/aws_iam_user_policy: Add support for import ([#3198](https://github.com/terraform-providers/terraform-provider-aws/issues/3198))
+* resource/aws_lb: Add `enable_cross_zone_load_balancing` argument for NLBs ([#3537](https://github.com/terraform-providers/terraform-provider-aws/issues/3537))
+* resource/aws_lb: Add `enable_http2` argument for ALBs ([#3609](https://github.com/terraform-providers/terraform-provider-aws/issues/3609))
+* resource/aws_route: Add configurable timeouts ([#3639](https://github.com/terraform-providers/terraform-provider-aws/issues/3639))
+* resource/aws_security_group: Add configurable timeouts ([#3599](https://github.com/terraform-providers/terraform-provider-aws/issues/3599))
+* resource/aws_spot_fleet_request: Add `load_balancers` and `target_group_arns` arguments ([#2564](https://github.com/terraform-providers/terraform-provider-aws/issues/2564))
+* resource/aws_ssm_parameter: Add `allowed_pattern`, `description`, and `tags` arguments ([#1520](https://github.com/terraform-providers/terraform-provider-aws/issues/1520))
+* resource/aws_ssm_parameter: Allow `key_id` updates ([#1520](https://github.com/terraform-providers/terraform-provider-aws/issues/1520))
+
+BUG FIXES:
+
+* data-source/aws_db_instance: Prevent crash with EC2 Classic ([#3619](https://github.com/terraform-providers/terraform-provider-aws/issues/3619))
+* data-source/aws_vpc_endpoint_service: Fix aws-us-gov partition handling ([#3514](https://github.com/terraform-providers/terraform-provider-aws/issues/3514))
+* resource/aws_api_gateway_vpc_link: Ensure `target_arns` is properly read ([#3569](https://github.com/terraform-providers/terraform-provider-aws/issues/3569))
+* resource/aws_batch_compute_environment: Fix `state` updates ([#3508](https://github.com/terraform-providers/terraform-provider-aws/issues/3508))
+* resource/aws_ebs_snapshot: Prevent crash with outside snapshot deletion ([#3462](https://github.com/terraform-providers/terraform-provider-aws/issues/3462))
+* resource/aws_ecs_service: Prevent crash when importing non-existent service ([#3672](https://github.com/terraform-providers/terraform-provider-aws/issues/3672))
+* resource/aws_eip_association: Prevent deletion error InvalidAssociationID.NotFound ([#3653](https://github.com/terraform-providers/terraform-provider-aws/issues/3653))
+* resource/aws_instance: Ensure at least one security group is being attached when modifying vpc_security_group_ids ([#2850](https://github.com/terraform-providers/terraform-provider-aws/issues/2850))
+* resource/aws_lambda_function: Allow PutFunctionConcurrency retries on creation ([#3570](https://github.com/terraform-providers/terraform-provider-aws/issues/3570))
+* resource/aws_spot_instance_request: Retry for 1 minute instead of 15 seconds for IAM eventual consistency ([#3561](https://github.com/terraform-providers/terraform-provider-aws/issues/3561))
+* resource/aws_ssm_activation: Prevent crash with expiration_date ([#3597](https://github.com/terraform-providers/terraform-provider-aws/issues/3597))
 
 ## 1.10.0 (February 24, 2018)
 

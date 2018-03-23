@@ -80,7 +80,7 @@ resource "aws_subnet" "tf_test_subnet" {
   map_public_ip_on_launch = true
 
   tags {
-    Name = "tf-rt-import-test"
+    Name = "tf-acc-route-table-import-complex-default"
   }
 }
 

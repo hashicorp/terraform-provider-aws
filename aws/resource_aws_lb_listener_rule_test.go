@@ -247,10 +247,6 @@ func TestAccAWSLBListenerRule_priority(t *testing.T) {
 				),
 			},
 			{
-				Config:      testAccAWSLBListenerRuleConfig_priorityRuleNumberLimit(lbName, targetGroupName),
-				ExpectError: regexp.MustCompile(`Error creating LB Listener Rule: TooManyRules`),
-			},
-			{
 				Config: testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.50000", &rule),
@@ -422,7 +418,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-rule-multiple-conditions-${count.index}"
   }
 }
 
@@ -533,7 +529,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-rule-basic-${count.index}"
   }
 }
 
@@ -644,7 +640,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-rule-bc-${count.index}"
   }
 }
 
@@ -756,7 +752,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-rule-update-rule-priority-${count.index}"
   }
 }
 
@@ -879,7 +875,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-rule-change-rule-arn-${count.index}"
   }
 }
 
@@ -964,7 +960,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-listener-rule-priority"
   }
 }
 
@@ -976,7 +972,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-rule-priority-${count.index}"
   }
 }
 
@@ -1081,28 +1077,6 @@ func testAccAWSLBListenerRuleConfig_priorityParallelism(lbName, targetGroupName 
 	return testAccAWSLBListenerRuleConfig_priorityStatic(lbName, targetGroupName) + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "parallelism" {
   count = 10
-
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-
-  action {
-    type = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
-  }
-
-  condition {
-    field = "path-pattern"
-    values = ["/${count.index}/*"]
-  }
-}
-`)
-}
-
-// Rules per load balancer (not counting default rules): 100
-// https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html
-func testAccAWSLBListenerRuleConfig_priorityRuleNumberLimit(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priorityParallelism(lbName, targetGroupName) + fmt.Sprintf(`
-resource "aws_lb_listener_rule" "limit" {
-  count = 88
 
   listener_arn = "${aws_lb_listener.front_end.arn}"
 

@@ -1053,6 +1053,9 @@ resource "aws_route" "r" {
 resource "aws_subnet" "main" {
   vpc_id     = "${aws_vpc.tf_b_test.id}"
   cidr_block = "10.0.0.0/24"
+  tags {
+    Name = "tf-acc-elastic-beanstalk-env-vpc"
+  }
 }
 
 resource "aws_security_group" "default" {

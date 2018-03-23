@@ -3534,6 +3534,17 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 		return err
 	}
 
+	sseOptions := []map[string]interface{}{}
+	if table.SSEDescription != nil {
+		m := map[string]interface{}{}
+		m["enabled"] = aws.StringValue(table.SSEDescription.Status) == dynamodb.SSEStatusEnabled
+		sseOptions = []map[string]interface{}{m}
+	}
+	err = d.Set("server_side_encryption", sseOptions)
+	if err != nil {
+		return err
+	}
+
 	d.Set("arn", table.TableArn)
 
 	return nil
@@ -3620,6 +3631,16 @@ func expandDynamoDbKeySchema(data map[string]interface{}) []*dynamodb.KeySchemaE
 	}
 
 	return keySchema
+}
+
+func expandDynamoDbEncryptAtRestOptions(m map[string]interface{}) *dynamodb.SSESpecification {
+	options := dynamodb.SSESpecification{}
+
+	if v, ok := m["enabled"]; ok {
+		options.Enabled = aws.Bool(v.(bool))
+	}
+
+	return &options
 }
 
 func flattenVpcEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) []string {

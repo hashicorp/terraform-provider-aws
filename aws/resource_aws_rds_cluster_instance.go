@@ -89,7 +89,7 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "aurora",
-				ValidateFunc: validateRdsEngine,
+				ValidateFunc: validateRdsEngine(),
 			},
 
 			"engine_version": {

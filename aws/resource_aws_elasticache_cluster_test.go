@@ -1,7 +1,10 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
+	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -152,6 +155,268 @@ func TestAccAWSElasticacheCluster_multiAZInVpc(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticacheCluster_AZMode_Memcached_Ec2Classic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	var cluster elasticache.CacheCluster
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_elasticache_cluster.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSElasticacheClusterConfig_AZMode_Memcached_Ec2Classic(rName, "unknown"),
+				ExpectError: regexp.MustCompile(`expected az_mode to be one of .*, got unknown`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_AZMode_Memcached_Ec2Classic(rName, "cross-az"),
+				ExpectError: regexp.MustCompile(`az_mode "cross-az" is not supported with num_cache_nodes = 1`),
+			},
+			{
+				Config: testAccAWSElasticacheClusterConfig_AZMode_Memcached_Ec2Classic(rName, "single-az"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "az_mode", "single-az"),
+				),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_AZMode_Memcached_Ec2Classic(rName, "cross-az"),
+				ExpectError: regexp.MustCompile(`az_mode "cross-az" is not supported with num_cache_nodes = 1`),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_AZMode_Redis_Ec2Classic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	var cluster elasticache.CacheCluster
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_elasticache_cluster.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSElasticacheClusterConfig_AZMode_Redis_Ec2Classic(rName, "unknown"),
+				ExpectError: regexp.MustCompile(`expected az_mode to be one of .*, got unknown`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_AZMode_Redis_Ec2Classic(rName, "cross-az"),
+				ExpectError: regexp.MustCompile(`az_mode "cross-az" is not supported with num_cache_nodes = 1`),
+			},
+			{
+				Config: testAccAWSElasticacheClusterConfig_AZMode_Redis_Ec2Classic(rName, "single-az"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "az_mode", "single-az"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_EngineVersion_Memcached_Ec2Classic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	var pre, mid, post elasticache.CacheCluster
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_elasticache_cluster.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheClusterConfig_EngineVersion_Memcached_Ec2Classic(rName, "1.4.33"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &pre),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.4.33"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheClusterConfig_EngineVersion_Memcached_Ec2Classic(rName, "1.4.24"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &mid),
+					testAccCheckAWSElasticacheClusterRecreated(&pre, &mid),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.4.24"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheClusterConfig_EngineVersion_Memcached_Ec2Classic(rName, "1.4.34"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &post),
+					testAccCheckAWSElasticacheClusterNotRecreated(&mid, &post),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.4.34"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_EngineVersion_Redis_Ec2Classic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	var pre, mid, post elasticache.CacheCluster
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_elasticache_cluster.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheClusterConfig_EngineVersion_Redis_Ec2Classic(rName, "3.2.6"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &pre),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.2.6"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheClusterConfig_EngineVersion_Redis_Ec2Classic(rName, "3.2.4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &mid),
+					testAccCheckAWSElasticacheClusterRecreated(&pre, &mid),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.2.4"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheClusterConfig_EngineVersion_Redis_Ec2Classic(rName, "3.2.10"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &post),
+					testAccCheckAWSElasticacheClusterNotRecreated(&mid, &post),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.2.10"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_NodeTypeResize_Memcached_Ec2Classic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	var pre, post elasticache.CacheCluster
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_elasticache_cluster.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSElasticacheClusterConfig_NodeType_Memcached_Ec2Classic(rName, "cache.t2.micro"),
+				ExpectError: regexp.MustCompile(`node_type "cache.t2.micro" can only be created in a VPC`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_NodeType_Memcached_Ec2Classic(rName, "cache.t2.small"),
+				ExpectError: regexp.MustCompile(`node_type "cache.t2.small" can only be created in a VPC`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_NodeType_Memcached_Ec2Classic(rName, "cache.t2.medium"),
+				ExpectError: regexp.MustCompile(`node_type "cache.t2.medium" can only be created in a VPC`),
+			},
+			{
+				Config: testAccAWSElasticacheClusterConfig_NodeType_Memcached_Ec2Classic(rName, "cache.m3.medium"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &pre),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.m3.medium"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheClusterConfig_NodeType_Memcached_Ec2Classic(rName, "cache.m3.large"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &post),
+					testAccCheckAWSElasticacheClusterRecreated(&pre, &post),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.m3.large"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_NodeTypeResize_Redis_Ec2Classic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	var pre, post elasticache.CacheCluster
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_elasticache_cluster.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSElasticacheClusterConfig_NodeType_Redis_Ec2Classic(rName, "cache.t2.micro"),
+				ExpectError: regexp.MustCompile(`node_type "cache.t2.micro" can only be created in a VPC`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_NodeType_Redis_Ec2Classic(rName, "cache.t2.small"),
+				ExpectError: regexp.MustCompile(`node_type "cache.t2.small" can only be created in a VPC`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_NodeType_Redis_Ec2Classic(rName, "cache.t2.medium"),
+				ExpectError: regexp.MustCompile(`node_type "cache.t2.medium" can only be created in a VPC`),
+			},
+			{
+				Config: testAccAWSElasticacheClusterConfig_NodeType_Redis_Ec2Classic(rName, "cache.m3.medium"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &pre),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.m3.medium"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheClusterConfig_NodeType_Redis_Ec2Classic(rName, "cache.m3.large"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &post),
+					testAccCheckAWSElasticacheClusterNotRecreated(&pre, &post),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.m3.large"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_NumCacheNodes_Redis_Ec2Classic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSElasticacheClusterConfig_NumCacheNodes_Redis_Ec2Classic(rName, 2),
+				ExpectError: regexp.MustCompile(`engine "redis" does not support num_cache_nodes > 1`),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSElasticacheClusterAttributes(v *elasticache.CacheCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if v.NotificationConfiguration == nil {
@@ -160,6 +425,26 @@ func testAccCheckAWSElasticacheClusterAttributes(v *elasticache.CacheCluster) re
 
 		if strings.ToLower(*v.NotificationConfiguration.TopicStatus) != "active" {
 			return fmt.Errorf("Expected NotificationConfiguration status to be 'active', got (%s)", *v.NotificationConfiguration.TopicStatus)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSElasticacheClusterNotRecreated(i, j *elasticache.CacheCluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.TimeValue(i.CacheClusterCreateTime) != aws.TimeValue(j.CacheClusterCreateTime) {
+			return errors.New("Elasticache Cluster was recreated")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSElasticacheClusterRecreated(i, j *elasticache.CacheCluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.TimeValue(i.CacheClusterCreateTime) == aws.TimeValue(j.CacheClusterCreateTime) {
+			return errors.New("Elasticache Cluster was not recreated")
 		}
 
 		return nil
@@ -419,7 +704,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
     tags {
-            Name = "tf-test"
+        Name = "tf-acc-elasticache-cluster-in-vpc"
     }
 }
 
@@ -476,7 +761,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
     tags {
-            Name = "tf-test-%03d"
+        Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-foo"
     }
 }
 
@@ -485,7 +770,7 @@ resource "aws_subnet" "bar" {
     cidr_block = "192.168.16.0/20"
     availability_zone = "us-west-2b"
     tags {
-            Name = "tf-test-%03d"
+        Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-bar"
     }
 }
 
@@ -525,4 +810,106 @@ resource "aws_elasticache_cluster" "bar" {
         "us-west-2b"
     ]
 }
-`, acctest.RandInt(), acctest.RandInt(), acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
+`, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
+
+func testAccAWSElasticacheClusterConfig_AZMode_Memcached_Ec2Classic(rName, azMode string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "bar" {
+  apply_immediately    = true
+  az_mode              = "%[2]s"
+  cluster_id           = "%[1]s"
+  engine               = "memcached"
+  node_type            = "cache.m3.medium"
+  num_cache_nodes      = 1
+  parameter_group_name = "default.memcached1.4"
+  port                 = 11211
+}
+`, rName, azMode)
+}
+
+func testAccAWSElasticacheClusterConfig_AZMode_Redis_Ec2Classic(rName, azMode string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "bar" {
+  apply_immediately    = true
+  az_mode              = "%[2]s"
+  cluster_id           = "%[1]s"
+  engine               = "redis"
+  node_type            = "cache.m3.medium"
+  num_cache_nodes      = 1
+  parameter_group_name = "default.redis3.2"
+  port                 = 6379
+}
+`, rName, azMode)
+}
+
+func testAccAWSElasticacheClusterConfig_EngineVersion_Memcached_Ec2Classic(rName, engineVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "bar" {
+  apply_immediately    = true
+  cluster_id           = "%[1]s"
+  engine               = "memcached"
+  engine_version       = "%[2]s"
+  node_type            = "cache.m3.medium"
+  num_cache_nodes      = 1
+  parameter_group_name = "default.memcached1.4"
+  port                 = 11211
+}
+`, rName, engineVersion)
+}
+
+func testAccAWSElasticacheClusterConfig_EngineVersion_Redis_Ec2Classic(rName, engineVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "bar" {
+  apply_immediately    = true
+  cluster_id           = "%[1]s"
+  engine               = "redis"
+  engine_version       = "%[2]s"
+  node_type            = "cache.m3.medium"
+  num_cache_nodes      = 1
+  parameter_group_name = "default.redis3.2"
+  port                 = 6379
+}
+`, rName, engineVersion)
+}
+
+func testAccAWSElasticacheClusterConfig_NodeType_Memcached_Ec2Classic(rName, nodeType string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "bar" {
+  apply_immediately    = true
+  cluster_id           = "%[1]s"
+  engine               = "memcached"
+  node_type            = "%[2]s"
+  num_cache_nodes      = 1
+  parameter_group_name = "default.memcached1.4"
+  port                 = 11211
+}
+`, rName, nodeType)
+}
+
+func testAccAWSElasticacheClusterConfig_NodeType_Redis_Ec2Classic(rName, nodeType string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "bar" {
+  apply_immediately    = true
+  cluster_id           = "%[1]s"
+  engine               = "redis"
+  node_type            = "%[2]s"
+  num_cache_nodes      = 1
+  parameter_group_name = "default.redis3.2"
+  port                 = 6379
+}
+`, rName, nodeType)
+}
+
+func testAccAWSElasticacheClusterConfig_NumCacheNodes_Redis_Ec2Classic(rName string, numCacheNodes int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "bar" {
+  apply_immediately    = true
+  cluster_id           = "%[1]s"
+  engine               = "redis"
+  node_type            = "cache.m3.medium"
+  num_cache_nodes      = %[2]d
+  parameter_group_name = "default.redis3.2"
+  port                 = 6379
+}
+`, rName, numCacheNodes)
+}

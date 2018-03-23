@@ -42,6 +42,11 @@ func defaultInitRequestFn(r *request.Request) {
 		r.Handlers.Validate.PushFront(populateLocationConstraint)
 	case opCopyObject, opUploadPartCopy, opCompleteMultipartUpload:
 		r.Handlers.Unmarshal.PushFront(copyMultipartStatusOKUnmarhsalError)
+	case opPutObject, opUploadPart:
+		r.Handlers.Build.PushBack(computeBodyHashes)
+	case opGetObject:
+		r.Handlers.Build.PushBack(askForTxEncodingAppendMD5)
+		r.Handlers.Unmarshal.PushBack(useMD5ValidationReader)
 	}
 }
 

@@ -37,11 +37,14 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 				Computed: true,
 			},
 			"feature_set": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      organizations.OrganizationFeatureSetAll,
-				ValidateFunc: validation.StringInSlice([]string{organizations.OrganizationFeatureSetAll, organizations.OrganizationFeatureSetConsolidatedBilling}, true),
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  organizations.OrganizationFeatureSetAll,
+				ValidateFunc: validation.StringInSlice([]string{
+					organizations.OrganizationFeatureSetAll,
+					organizations.OrganizationFeatureSetConsolidatedBilling,
+				}, true),
 			},
 		},
 	}

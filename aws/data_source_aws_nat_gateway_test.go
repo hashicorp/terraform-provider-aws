@@ -56,7 +56,7 @@ resource "aws_subnet" "test" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "terraform-testacc-nat-gateway-data-source-%d"
+    Name = "tf-acc-nat-gw-data-source"
   }
 }
 
@@ -93,5 +93,5 @@ data "aws_nat_gateway" "test_by_subnet_id" {
   subnet_id = "${aws_nat_gateway.test.subnet_id}"
 }
 
-`, rInt, rInt, rInt, rInt)
+`, rInt, rInt, rInt)
 }

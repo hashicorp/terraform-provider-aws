@@ -376,11 +376,16 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idErr := fmt.Errorf("Expected ID in format of arn:PARTITION:firehose:REGION:ACCOUNTID:deliverystream/NAME and provided: %s", d.Id())
 				resARN, err := arn.Parse(d.Id())
 				if err != nil {
-					return nil, err
+					return nil, idErr
 				}
-				d.Set("name", strings.Split(resARN.Resource, "/")[1])
+				resourceParts := strings.Split(resARN.Resource, "/")
+				if len(resourceParts) != 2 {
+					return nil, idErr
+				}
+				d.Set("name", resourceParts[1])
 				return []*schema.ResourceData{d}, nil
 			},
 		},

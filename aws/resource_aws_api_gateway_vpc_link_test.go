@@ -107,6 +107,9 @@ resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.10.0.0/21"
   availability_zone = "${data.aws_availability_zones.test.names[0]}"
+  tags {
+    Name = "tf-acc-api-gateway-vpc-link"
+  }
 }
 `, rName)
 }

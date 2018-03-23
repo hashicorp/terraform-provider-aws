@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsCodeBuildProject() *schema.Resource {
@@ -38,9 +38,12 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Optional: true,
 						},
 						"namespace_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateAwsCodeBuildArifactsNamespaceType,
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ArtifactNamespaceNone,
+								codebuild.ArtifactNamespaceBuildId,
+							}, false),
 						},
 						"packaging": {
 							Type:     schema.TypeString,
@@ -51,9 +54,13 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Optional: true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsCodeBuildArifactsType,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ArtifactsTypeCodepipeline,
+								codebuild.ArtifactsTypeS3,
+								codebuild.ArtifactsTypeNoArtifacts,
+							}, false),
 						},
 					},
 				},
@@ -63,7 +70,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateAwsCodeBuildProjectDescription,
+				ValidateFunc: validateMaxLength(255),
 			},
 			"encryption_key": {
 				Type:     schema.TypeString,
@@ -77,9 +84,13 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"compute_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsCodeBuildEnvironmentComputeType,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ComputeTypeBuildGeneral1Small,
+								codebuild.ComputeTypeBuildGeneral1Medium,
+								codebuild.ComputeTypeBuildGeneral1Large,
+							}, false),
 						},
 						"environment_variable": {
 							Type:     schema.TypeList,
@@ -103,9 +114,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Required: true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsCodeBuildEnvironmentType,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.EnvironmentTypeLinuxContainer,
+							}, false),
 						},
 						"privileged_mode": {
 							Type:     schema.TypeBool,
@@ -140,9 +153,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										Optional: true,
 									},
 									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateAwsCodeBuildSourceAuthType,
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											codebuild.SourceAuthTypeOauth,
+										}, false),
 									},
 								},
 							},
@@ -158,9 +173,16 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Optional: true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsCodeBuildSourceType,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.SourceTypeCodecommit,
+								codebuild.SourceTypeCodepipeline,
+								codebuild.SourceTypeGithub,
+								codebuild.SourceTypeS3,
+								codebuild.SourceTypeBitbucket,
+								codebuild.SourceTypeGithubEnterprise,
+							}, false),
 						},
 					},
 				},
@@ -171,14 +193,14 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 			"timeout": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateAwsCodeBuildTimeout,
+				ValidateFunc: validation.IntBetween(5, 480),
 				Removed:      "This field has been removed. Please use build_timeout instead",
 			},
 			"build_timeout": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      "60",
-				ValidateFunc: validateAwsCodeBuildTimeout,
+				ValidateFunc: validation.IntBetween(5, 480),
 			},
 			"tags": tagsSchema(),
 			"vpc_config": {
@@ -708,33 +730,6 @@ func sourceAuthToMap(sourceAuth *codebuild.SourceAuth) map[string]interface{} {
 	return auth
 }
 
-func validateAwsCodeBuildArifactsType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		"CODEPIPELINE": true,
-		"NO_ARTIFACTS": true,
-		"S3":           true,
-	}
-
-	if !types[value] {
-		errors = append(errors, fmt.Errorf("CodeBuild: Arifacts Type can only be CODEPIPELINE / NO_ARTIFACTS / S3"))
-	}
-	return
-}
-
-func validateAwsCodeBuildArifactsNamespaceType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		"NONE":     true,
-		"BUILD_ID": true,
-	}
-
-	if !types[value] {
-		errors = append(errors, fmt.Errorf("CodeBuild: Arifacts Namespace Type can only be NONE / BUILD_ID"))
-	}
-	return
-}
-
 func validateAwsCodeBuildProjectName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[A-Za-z0-9]`).MatchString(value) {
@@ -752,82 +747,5 @@ func validateAwsCodeBuildProjectName(v interface{}, k string) (ws []string, erro
 			"%q cannot be greater than 255 characters", value))
 	}
 
-	return
-}
-
-func validateAwsCodeBuildProjectDescription(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 255 {
-		errors = append(errors, fmt.Errorf("%q cannot be greater than 255 characters", value))
-	}
-	return
-}
-
-func validateAwsCodeBuildEnvironmentComputeType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		"BUILD_GENERAL1_SMALL":  true,
-		"BUILD_GENERAL1_MEDIUM": true,
-		"BUILD_GENERAL1_LARGE":  true,
-	}
-
-	if !types[value] {
-		errors = append(errors, fmt.Errorf("CodeBuild: Environment Compute Type can only be BUILD_GENERAL1_SMALL / BUILD_GENERAL1_MEDIUM / BUILD_GENERAL1_LARGE"))
-	}
-	return
-}
-
-func validateAwsCodeBuildEnvironmentType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		"LINUX_CONTAINER": true,
-	}
-
-	if !types[value] {
-		errors = append(errors, fmt.Errorf("CodeBuild: Environment Type can only be LINUX_CONTAINER"))
-	}
-	return
-}
-
-func validateAwsCodeBuildSourceType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		codebuild.SourceTypeBitbucket:    true,
-		codebuild.SourceTypeCodecommit:   true,
-		codebuild.SourceTypeCodepipeline: true,
-		codebuild.SourceTypeGithub:       true,
-		codebuild.SourceTypeS3:           true,
-	}
-	s := make([]string, 0, len(types))
-
-	for key, _ := range types {
-		s = append(s, key)
-	}
-
-	if !types[value] {
-		strings.Join(s, ", ")
-		errors = append(errors, fmt.Errorf("CodeBuild: Source Type can only be one of: %s", strings.Join(s, ", ")))
-	}
-	return
-}
-
-func validateAwsCodeBuildSourceAuthType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		"OAUTH": true,
-	}
-
-	if !types[value] {
-		errors = append(errors, fmt.Errorf("CodeBuild: Source Auth Type can only be OAUTH"))
-	}
-	return
-}
-
-func validateAwsCodeBuildTimeout(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(int)
-
-	if value < 5 || value > 480 {
-		errors = append(errors, fmt.Errorf("%q must be greater than 5 minutes and less than 480 minutes (8 hours)", value))
-	}
 	return
 }

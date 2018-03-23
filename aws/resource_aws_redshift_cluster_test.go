@@ -43,10 +43,11 @@ func testSweepRedshiftClusters(region string) error {
 				continue
 			}
 
-			_, err := deleteAwsRedshiftCluster(&redshift.DeleteClusterInput{
+			input := &redshift.DeleteClusterInput{
 				ClusterIdentifier:        c.ClusterIdentifier,
 				SkipFinalClusterSnapshot: aws.Bool(true),
-			}, conn)
+			}
+			_, err := conn.DeleteCluster(input)
 			if err != nil {
 				log.Printf("[ERROR] Failed deleting Redshift cluster (%s): %s",
 					*c.ClusterIdentifier, err)
@@ -863,6 +864,8 @@ func testAccAWSRedshiftClusterConfig_loggingDisabledDeprecated(rInt int) string 
 
 func testAccAWSRedshiftClusterConfig_loggingEnabledDeprecated(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_redshift_service_account" "main" {}
+
  resource "aws_s3_bucket" "bucket" {
 	 bucket = "tf-redshift-logging-%d"
 	 force_destroy = true
@@ -874,7 +877,7 @@ func testAccAWSRedshiftClusterConfig_loggingEnabledDeprecated(rInt int) string {
 		 "Sid": "Stmt1376526643067",
 		 "Effect": "Allow",
 		 "Principal": {
-			 "AWS": "arn:aws:iam::902366379725:user/logs"
+			 "AWS": "${data.aws_redshift_service_account.main.arn}"
 		 },
 		 "Action": "s3:PutObject",
 		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d/*"
@@ -883,7 +886,7 @@ func testAccAWSRedshiftClusterConfig_loggingEnabledDeprecated(rInt int) string {
 		 "Sid": "Stmt137652664067",
 		 "Effect": "Allow",
 		 "Principal": {
-			 "AWS": "arn:aws:iam::902366379725:user/logs"
+			 "AWS": "${data.aws_redshift_service_account.main.arn}"
 		 },
 		 "Action": "s3:GetBucketAcl",
 		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d"
@@ -929,6 +932,8 @@ func testAccAWSRedshiftClusterConfig_loggingDisabled(rInt int) string {
 
 func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_redshift_service_account" "main" {}
+
  resource "aws_s3_bucket" "bucket" {
 	 bucket = "tf-redshift-logging-%d"
 	 force_destroy = true
@@ -940,7 +945,7 @@ func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
 		 "Sid": "Stmt1376526643067",
 		 "Effect": "Allow",
 		 "Principal": {
-			 "AWS": "arn:aws:iam::902366379725:user/logs"
+			 "AWS": "${data.aws_redshift_service_account.main.arn}"
 		 },
 		 "Action": "s3:PutObject",
 		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d/*"
@@ -949,7 +954,7 @@ func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
 		 "Sid": "Stmt137652664067",
 		 "Effect": "Allow",
 		 "Principal": {
-			 "AWS": "arn:aws:iam::902366379725:user/logs"
+			 "AWS": "${data.aws_redshift_service_account.main.arn}"
 		 },
 		 "Action": "s3:GetBucketAcl",
 		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d"
@@ -1054,7 +1059,7 @@ func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 	resource "aws_vpc" "foo" {
 		cidr_block = "10.1.0.0/16"
 		tags {
-			Name = "terraform-testacc-redshift-cluster-no-publicly-accessible"
+			Name = "terraform-testacc-redshift-cluster-not-publicly-accessible"
 		}
 	}
 	resource "aws_internet_gateway" "foo" {
@@ -1068,7 +1073,7 @@ func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 		availability_zone = "us-west-2a"
 		vpc_id = "${aws_vpc.foo.id}"
 		tags {
-			Name = "tf-dbsubnet-test-1"
+			Name = "tf-acc-redshift-cluster-not-publicly-accessible-foo"
 		}
 	}
 	resource "aws_subnet" "bar" {
@@ -1076,7 +1081,7 @@ func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 		availability_zone = "us-west-2b"
 		vpc_id = "${aws_vpc.foo.id}"
 		tags {
-			Name = "tf-dbsubnet-test-2"
+			Name = "tf-acc-redshift-cluster-not-publicly-accessible-bar"
 		}
 	}
 	resource "aws_subnet" "foobar" {
@@ -1084,7 +1089,7 @@ func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 		availability_zone = "us-west-2c"
 		vpc_id = "${aws_vpc.foo.id}"
 		tags {
-			Name = "tf-dbsubnet-test-3"
+			Name = "tf-acc-redshift-cluster-not-publicly-accessible-foobar"
 		}
 	}
 	resource "aws_redshift_subnet_group" "foo" {
@@ -1128,7 +1133,7 @@ func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 		availability_zone = "us-west-2a"
 		vpc_id = "${aws_vpc.foo.id}"
 		tags {
-			Name = "tf-dbsubnet-test-1"
+			Name = "tf-acc-redshift-cluster-upd-publicly-accessible-foo"
 		}
 	}
 	resource "aws_subnet" "bar" {
@@ -1136,7 +1141,7 @@ func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 		availability_zone = "us-west-2b"
 		vpc_id = "${aws_vpc.foo.id}"
 		tags {
-			Name = "tf-dbsubnet-test-2"
+			Name = "tf-acc-redshift-cluster-upd-publicly-accessible-bar"
 		}
 	}
 	resource "aws_subnet" "foobar" {
@@ -1144,7 +1149,7 @@ func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 		availability_zone = "us-west-2c"
 		vpc_id = "${aws_vpc.foo.id}"
 		tags {
-			Name = "tf-dbsubnet-test-3"
+			Name = "tf-acc-redshift-cluster-upd-publicly-accessible-foobar"
 		}
 	}
 	resource "aws_redshift_subnet_group" "foo" {
