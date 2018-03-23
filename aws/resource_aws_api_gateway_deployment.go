@@ -172,14 +172,32 @@ func resourceAwsApiGatewayDeploymentDelete(d *schema.ResourceData, meta interfac
 
 	return resource.Retry(5*time.Minute, func() *resource.RetryError {
 		log.Printf("[DEBUG] schema is %#v", d)
-		if _, err := conn.DeleteStage(&apigateway.DeleteStageInput{
+
+		stage, err := conn.GetStage(&apigateway.GetStageInput{
 			StageName: aws.String(d.Get("stage_name").(string)),
 			RestApiId: aws.String(d.Get("rest_api_id").(string)),
-		}); err == nil {
-			return nil
+		})
+		if err != nil {
+			return resource.RetryableError(err)
 		}
 
-		_, err := conn.DeleteDeployment(&apigateway.DeleteDeploymentInput{
+		// If the stage has been updated to point at a different deployment, then
+		// the stage should not be removed then this deployment is deleted.
+		var shouldDeleteStage = true
+		if *stage.DeploymentId != d.Id() {
+			shouldDeleteStage = false
+		}
+
+		if shouldDeleteStage {
+			if _, err := conn.DeleteStage(&apigateway.DeleteStageInput{
+				StageName: aws.String(d.Get("stage_name").(string)),
+				RestApiId: aws.String(d.Get("rest_api_id").(string)),
+			}); err == nil {
+				return nil
+			}
+		}
+
+		_, err = conn.DeleteDeployment(&apigateway.DeleteDeploymentInput{
 			DeploymentId: aws.String(d.Id()),
 			RestApiId:    aws.String(d.Get("rest_api_id").(string)),
 		})
