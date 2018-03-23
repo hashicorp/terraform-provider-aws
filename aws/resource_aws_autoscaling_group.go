@@ -246,6 +246,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 			"service_linked_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}
