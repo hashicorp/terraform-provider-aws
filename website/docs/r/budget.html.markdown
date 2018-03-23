@@ -55,6 +55,7 @@ resource "aws_budgets_budget" "s3" {
 The following attributes are exported:
 
 * `id` - id of resource.
+* `account_id` - target account id for budget
 * `name` - name of resource
 * `name_prefix` - prefix for name of resource
 * `budget_type` - The type of the budget.
@@ -73,6 +74,7 @@ documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-
 
 The following arguments are supported:
 
+* `account_id` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
 * `name` - (Optional) The name of a budget. Unique within accounts.
 * `name_prefix` - (Optional) The prefix of the name of a budget. Unique within accounts.
 * `budget_type` - (Required) Whether this budget tracks monetary cost or usage.
