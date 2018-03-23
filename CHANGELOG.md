@@ -1,56 +1,56 @@
-## 1.12.0 (Unreleased)
+## 1.12.0 (March 23, 2018)
 
 NOTES:
 
-* provider: For resources implementing the IAM policy equivalence library (https://github.com/jen20/awspolicyequivalence/) on an attribute via `suppressEquivalentAwsPolicyDiffs`, the dependency has been updated, which should mark additional IAM policies as equivalent. [GH-3832]
+* provider: For resources implementing the IAM policy equivalence library (https://github.com/jen20/awspolicyequivalence/) on an attribute via `suppressEquivalentAwsPolicyDiffs`, the dependency has been updated, which should mark additional IAM policies as equivalent. ([#3832](https://github.com/terraform-providers/terraform-provider-aws/issues/3832))
 
 FEATURES:
 
-* **New Resource:** `aws_waf_geo_match_set` [GH-3275]
-* **New Resource:** `aws_wafregional_rule` [GH-3756]
-* **New Resource:** `aws_wafregional_size_constraint_set` [GH-3796]
-* **New Resource:** `aws_wafregional_sql_injection_match_set` [GH-1013]
-* **New Resource:** `aws_wafregional_web_acl` [GH-3754]
-* **New Resource:** `aws_wafregional_web_acl_association` [GH-3755]
-* **New Resource:** `aws_wafregional_xss_match_set` [GH-1014]
-* **New Resource:** `aws_kms_grant` [GH-3038]
+* **New Resource:** `aws_waf_geo_match_set` ([#3275](https://github.com/terraform-providers/terraform-provider-aws/issues/3275))
+* **New Resource:** `aws_wafregional_rule` ([#3756](https://github.com/terraform-providers/terraform-provider-aws/issues/3756))
+* **New Resource:** `aws_wafregional_size_constraint_set` ([#3796](https://github.com/terraform-providers/terraform-provider-aws/issues/3796))
+* **New Resource:** `aws_wafregional_sql_injection_match_set` ([#1013](https://github.com/terraform-providers/terraform-provider-aws/issues/1013))
+* **New Resource:** `aws_wafregional_web_acl` ([#3754](https://github.com/terraform-providers/terraform-provider-aws/issues/3754))
+* **New Resource:** `aws_wafregional_web_acl_association` ([#3755](https://github.com/terraform-providers/terraform-provider-aws/issues/3755))
+* **New Resource:** `aws_wafregional_xss_match_set` ([#1014](https://github.com/terraform-providers/terraform-provider-aws/issues/1014))
+* **New Resource:** `aws_kms_grant` ([#3038](https://github.com/terraform-providers/terraform-provider-aws/issues/3038))
 
 ENHANCEMENTS:
 
-* provider: Treat IAM policies with account ID principals as equivalent to IAM account root ARN [GH-3832]
-* provider: Treat additional IAM policy scenarios with empty principal trees as equivalent [GH-3832]
-* resource/aws_acm_certificate: Retry on ResourceInUseException during deletion for eventual consistency [GH-3868]
-* resource/aws_autoscaling_group: Add `service_linked_role_arn` argument [GH-3812]
-* resource/aws_cloudfront_distribution: Validate origin `domain_name` and `origin_id` at plan time [GH-3767]
-* resource/aws_eip: Support configurable timeouts [GH-3769]
-* resource/aws_elasticache_cluster: Support plan time validation of az_mode [GH-3857]
-* resource/aws_elasticache_cluster: Support plan time validation of node_type requiring VPC for cache.t2 instances [GH-3857]
-* resource/aws_elasticache_cluster: Support plan time validation of num_cache_nodes > 1 for redis [GH-3857]
-* resource/aws_elasticache_cluster: ForceNew on node_type changes for memcached engine [GH-3857]
-* resource/aws_elasticache_cluster: ForceNew on engine_version downgrades [GH-3857]
-* resource/aws_emr_cluster: Add step support [GH-3673]
-* resource/aws_instance: Support optionally fetching encrypted Windows password data [GH-2219]
-* resource/aws_launch_configuration: Validate `user_data` length during plan [GH-2973]
-* resource/aws_lb_target_group: Validate health check threshold for TCP protocol during plan [GH-3782]
-* resource/aws_security_group: Add arn attribute [GH-3751]
-* resource/aws_ses_domain_identity: Support trailing period in domain name [GH-3840]
-* resource/aws_sqs_queue: Support lack of ListQueueTags for all non-standard AWS implementations [GH-3794]
-* resource/aws_ssm_document: Add `document_format` argument to support YAML [GH-3814]
-* resource/aws_api_gateway_rest_api: Add support for content encoding [GH-3642]
-* resource/aws_s3_bucket_object: New `content_base64` argument allows uploading raw binary data created in-memory, rather than reading from disk as with `source`. [GH-3788]
+* provider: Treat IAM policies with account ID principals as equivalent to IAM account root ARN ([#3832](https://github.com/terraform-providers/terraform-provider-aws/issues/3832))
+* provider: Treat additional IAM policy scenarios with empty principal trees as equivalent ([#3832](https://github.com/terraform-providers/terraform-provider-aws/issues/3832))
+* resource/aws_acm_certificate: Retry on ResourceInUseException during deletion for eventual consistency ([#3868](https://github.com/terraform-providers/terraform-provider-aws/issues/3868))
+* resource/aws_autoscaling_group: Add `service_linked_role_arn` argument ([#3812](https://github.com/terraform-providers/terraform-provider-aws/issues/3812))
+* resource/aws_cloudfront_distribution: Validate origin `domain_name` and `origin_id` at plan time ([#3767](https://github.com/terraform-providers/terraform-provider-aws/issues/3767))
+* resource/aws_eip: Support configurable timeouts ([#3769](https://github.com/terraform-providers/terraform-provider-aws/issues/3769))
+* resource/aws_elasticache_cluster: Support plan time validation of az_mode ([#3857](https://github.com/terraform-providers/terraform-provider-aws/issues/3857))
+* resource/aws_elasticache_cluster: Support plan time validation of node_type requiring VPC for cache.t2 instances ([#3857](https://github.com/terraform-providers/terraform-provider-aws/issues/3857))
+* resource/aws_elasticache_cluster: Support plan time validation of num_cache_nodes > 1 for redis ([#3857](https://github.com/terraform-providers/terraform-provider-aws/issues/3857))
+* resource/aws_elasticache_cluster: ForceNew on node_type changes for memcached engine ([#3857](https://github.com/terraform-providers/terraform-provider-aws/issues/3857))
+* resource/aws_elasticache_cluster: ForceNew on engine_version downgrades ([#3857](https://github.com/terraform-providers/terraform-provider-aws/issues/3857))
+* resource/aws_emr_cluster: Add step support ([#3673](https://github.com/terraform-providers/terraform-provider-aws/issues/3673))
+* resource/aws_instance: Support optionally fetching encrypted Windows password data ([#2219](https://github.com/terraform-providers/terraform-provider-aws/issues/2219))
+* resource/aws_launch_configuration: Validate `user_data` length during plan ([#2973](https://github.com/terraform-providers/terraform-provider-aws/issues/2973))
+* resource/aws_lb_target_group: Validate health check threshold for TCP protocol during plan ([#3782](https://github.com/terraform-providers/terraform-provider-aws/issues/3782))
+* resource/aws_security_group: Add arn attribute ([#3751](https://github.com/terraform-providers/terraform-provider-aws/issues/3751))
+* resource/aws_ses_domain_identity: Support trailing period in domain name ([#3840](https://github.com/terraform-providers/terraform-provider-aws/issues/3840))
+* resource/aws_sqs_queue: Support lack of ListQueueTags for all non-standard AWS implementations ([#3794](https://github.com/terraform-providers/terraform-provider-aws/issues/3794))
+* resource/aws_ssm_document: Add `document_format` argument to support YAML ([#3814](https://github.com/terraform-providers/terraform-provider-aws/issues/3814))
+* resource/aws_api_gateway_rest_api: Add support for content encoding ([#3642](https://github.com/terraform-providers/terraform-provider-aws/issues/3642))
+* resource/aws_s3_bucket_object: New `content_base64` argument allows uploading raw binary data created in-memory, rather than reading from disk as with `source`. ([#3788](https://github.com/terraform-providers/terraform-provider-aws/issues/3788))
 
 BUG FIXES:
 
-* resource/aws_api_gateway_client_certificate: Export `*_date` fields correctly [GH-3805]
-* resource/aws_cognito_user_pool: Detect `auto_verified_attributes` changes [GH-3786]
-* resource/aws_cognito_user_pool_client: Fix `callback_urls` updates [GH-3404]
-* resource/aws_db_instance: Support `incompatible-parameters` and `storage-full` state [GH-3708]
-* resource/aws_ecs_task_definition: Correctly read `volume` attribute into Terraform state [GH-3823]
-* resource/aws_kinesis_firehose_delivery_stream: Prevent crash on malformed ID for import [GH-3834]
-* resource/aws_lambda_function: Only retry IAM eventual consistency errors for one minute [GH-3765]
-* resource/aws_ssm_association: Prevent AssociationDoesNotExist error [GH-3776]
-* resource/aws_vpc_endpoint: Prevent perpertual diff in non-standard partitions [GH-3317]
-* resource/aws_dynamodb_table: Update and validate attributes correctly [GH-3194]
+* resource/aws_api_gateway_client_certificate: Export `*_date` fields correctly ([#3805](https://github.com/terraform-providers/terraform-provider-aws/issues/3805))
+* resource/aws_cognito_user_pool: Detect `auto_verified_attributes` changes ([#3786](https://github.com/terraform-providers/terraform-provider-aws/issues/3786))
+* resource/aws_cognito_user_pool_client: Fix `callback_urls` updates ([#3404](https://github.com/terraform-providers/terraform-provider-aws/issues/3404))
+* resource/aws_db_instance: Support `incompatible-parameters` and `storage-full` state ([#3708](https://github.com/terraform-providers/terraform-provider-aws/issues/3708))
+* resource/aws_ecs_task_definition: Correctly read `volume` attribute into Terraform state ([#3823](https://github.com/terraform-providers/terraform-provider-aws/issues/3823))
+* resource/aws_kinesis_firehose_delivery_stream: Prevent crash on malformed ID for import ([#3834](https://github.com/terraform-providers/terraform-provider-aws/issues/3834))
+* resource/aws_lambda_function: Only retry IAM eventual consistency errors for one minute ([#3765](https://github.com/terraform-providers/terraform-provider-aws/issues/3765))
+* resource/aws_ssm_association: Prevent AssociationDoesNotExist error ([#3776](https://github.com/terraform-providers/terraform-provider-aws/issues/3776))
+* resource/aws_vpc_endpoint: Prevent perpertual diff in non-standard partitions ([#3317](https://github.com/terraform-providers/terraform-provider-aws/issues/3317))
+* resource/aws_dynamodb_table: Update and validate attributes correctly ([#3194](https://github.com/terraform-providers/terraform-provider-aws/issues/3194))
 
 ## 1.11.0 (March 09, 2018)
 
