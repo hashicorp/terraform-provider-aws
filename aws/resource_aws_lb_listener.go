@@ -127,16 +127,12 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 		var err error
 		log.Printf("[DEBUG] Creating LB listener for ARN: %s", d.Get("load_balancer_arn").(string))
 		resp, err = elbconn.CreateListener(params)
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "CertificateNotFound" {
-				log.Printf("[WARN] Got an error while trying to create LB listener for ARN: %s: %s", lbArn, err)
+		if err != nil {
+			if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
-		}
-		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-
 		return nil
 	})
 
@@ -232,7 +228,16 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	_, err := elbconn.ModifyListener(params)
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := elbconn.ModifyListener(params)
+		if err != nil {
+			if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
 		return errwrap.Wrapf("Error modifying LB Listener: {{err}}", err)
 	}
