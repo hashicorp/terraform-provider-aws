@@ -534,6 +534,8 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 			log.Printf("[WARN] Error setting metrics for (%s): %s", d.Id(), err)
 		}
 		d.Set("metrics_granularity", g.EnabledMetrics[0].Granularity)
+	} else {
+		d.Set("enabled_metrics", nil)
 	}
 
 	return nil
