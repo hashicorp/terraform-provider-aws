@@ -332,10 +332,18 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	sgRaw, err := waitForSgToExist(conn, d.Id(), d.Timeout(schema.TimeoutRead))
+	var sgRaw interface{}
+	var err error
+	if d.IsNewResource() {
+		sgRaw, err = waitForSgToExist(conn, d.Id(), d.Timeout(schema.TimeoutRead))
+	} else {
+		sgRaw, _, err = SGStateRefreshFunc(conn, d.Id())()
+	}
+
 	if err != nil {
 		return err
 	}
+
 	if sgRaw == nil {
 		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -384,7 +392,14 @@ func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	sgRaw, err := waitForSgToExist(conn, d.Id(), d.Timeout(schema.TimeoutRead))
+	var sgRaw interface{}
+	var err error
+	if d.IsNewResource() {
+		sgRaw, err = waitForSgToExist(conn, d.Id(), d.Timeout(schema.TimeoutRead))
+	} else {
+		sgRaw, _, err = SGStateRefreshFunc(conn, d.Id())()
+	}
+
 	if err != nil {
 		return err
 	}
