@@ -11,6 +11,7 @@ FEATURES:
 * **New Resource:** `aws_wafregional_size_constraint_set` [GH-3796]
 * **New Resource:** `aws_wafregional_sql_injection_match_set` [GH-1013]
 * **New Resource:** `aws_wafregional_web_acl` [GH-3754]
+* **New Resource:** `aws_wafregional_web_acl_association` [GH-3755]
 * **New Resource:** `aws_wafregional_xss_match_set` [GH-1014]
 * **New Resource:** `aws_kms_grant` [GH-3038]
 
