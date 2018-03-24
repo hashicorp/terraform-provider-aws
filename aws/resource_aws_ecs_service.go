@@ -204,6 +204,24 @@ func resourceAwsEcsService() *schema.Resource {
 					},
 				},
 			},
+
+			"service_registries": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"port": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"registry_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -303,6 +321,23 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 			pc = append(pc, constraint)
 		}
 		input.PlacementConstraints = pc
+	}
+
+	serviceRegistries := d.Get("service_registries").(*schema.Set).List()
+	if len(serviceRegistries) > 0 {
+		srs := make([]*ecs.ServiceRegistry, 0, len(serviceRegistries))
+		for _, v := range serviceRegistries {
+			raw := v.(map[string]interface{})
+			sr := &ecs.ServiceRegistry{
+				RegistryArn: aws.String(raw["registry_arn"].(string)),
+			}
+			if port, ok := raw["port"].(int); ok {
+				sr.Port = aws.Int64(int64(port))
+			}
+
+			srs = append(srs, sr)
+		}
+		input.ServiceRegistries = srs
 	}
 
 	log.Printf("[DEBUG] Creating ECS service: %s", input)
@@ -445,6 +480,10 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("[ERR] Error setting network_configuration for (%s): %s", d.Id(), err)
 	}
 
+	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
+		return fmt.Errorf("[ERR] Error setting service_registries for (%s): %s", d.Id(), err)
+	}
+
 	return nil
 }
 
@@ -516,6 +555,24 @@ func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []map[string]interfa
 			c["field"] = strings.ToLower(*ps.Field)
 		}
 
+		results = append(results, c)
+	}
+	return results
+}
+
+func flattenServiceRegistries(srs []*ecs.ServiceRegistry) []map[string]interface{} {
+	if len(srs) == 0 {
+		return nil
+	}
+	results := make([]map[string]interface{}, 0)
+	for _, sr := range srs {
+		c := make(map[string]interface{})
+		if sr.Port != nil {
+			c["port"] = *sr.Port
+		}
+		if sr.RegistryArn != nil {
+			c["registry_arn"] = *sr.RegistryArn
+		}
 		results = append(results, c)
 	}
 	return results
