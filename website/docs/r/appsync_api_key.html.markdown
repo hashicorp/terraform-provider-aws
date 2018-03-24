@@ -31,10 +31,9 @@ resource "aws_appsync_api_key" "partner" {
 
 The following arguments are supported:
 
-* `appsync_api_id` - (Required) The ID of the associated AppSync API
+* `api_id` - (Required) The ID of the associated AppSync API
 * `description` - (Optional) The API key description. Defaults to "Managed by Terraform".
-* `validity_period_days` - (Optional) The number of days of validity from date of creation, (aws supports less than 365 days). By default, it is 7 days.
-* `valid_till_date` - (Optional) The date till the key should be valid, use the format dd/mm/yyyy.
+* `expires` - (Optional)  RFC3339 string representation of the expiry date. By default, it is 7 days from the date of creation.
 
 
 ## Attributes Reference
