@@ -18,13 +18,10 @@ resource "aws_appsync_graphql_api" "example" {
   name = "example"
 }
 resource "aws_appsync_api_key" "self" {
- appsync_api_id = "${aws_appsync_graphql_api.example.id}"
- validity_period_days = 364
+ api_id = "${aws_appsync_graphql_api.example.id}"
+ expires = "2018-05-03T04:21:15+01:00"
 }
-resource "aws_appsync_api_key" "partner" {
- appsync_api_id = "${aws_appsync_graphql_api.example.id}"
- valid_till_date = "30/11/2018"
-}
+
 ```
 
 ## Argument Reference
