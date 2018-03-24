@@ -1054,7 +1054,7 @@ func (c *CloudWatchEvents) PutTargetsRequest(input *PutTargetsInput) (req *reque
 //
 //    * Amazon SNS topics
 //
-//    * Amazon SQS queues
+//    * Amazon SQS queues, including FIFO queues
 //
 //    * The default event bus of another AWS account
 //
@@ -3275,6 +3275,31 @@ func (s *RunCommandTarget) SetValues(v []*string) *RunCommandTarget {
 	return s
 }
 
+// This structure includes the custom parameter to be used when the target is
+// an SQS FIFO queue.
+type SqsParameters struct {
+	_ struct{} `type:"structure"`
+
+	// The FIFO message group ID to use as the target.
+	MessageGroupId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SqsParameters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SqsParameters) GoString() string {
+	return s.String()
+}
+
+// SetMessageGroupId sets the MessageGroupId field's value.
+func (s *SqsParameters) SetMessageGroupId(v string) *SqsParameters {
+	s.MessageGroupId = &v
+	return s
+}
+
 // Targets are the resources to be invoked when a rule is triggered. Target
 // types include EC2 instances, AWS Lambda functions, Amazon Kinesis streams,
 // Amazon ECS tasks, AWS Step Functions state machines, Run Command, and built-in
@@ -3331,6 +3356,9 @@ type Target struct {
 
 	// Parameters used when you are using the rule to invoke Amazon EC2 Run Command.
 	RunCommandParameters *RunCommandParameters `type:"structure"`
+
+	// Contains the message group ID to use when the target is a FIFO queue.
+	SqsParameters *SqsParameters `type:"structure"`
 }
 
 // String returns the string representation
@@ -3450,6 +3478,12 @@ func (s *Target) SetRoleArn(v string) *Target {
 // SetRunCommandParameters sets the RunCommandParameters field's value.
 func (s *Target) SetRunCommandParameters(v *RunCommandParameters) *Target {
 	s.RunCommandParameters = v
+	return s
+}
+
+// SetSqsParameters sets the SqsParameters field's value.
+func (s *Target) SetSqsParameters(v *SqsParameters) *Target {
+	s.SqsParameters = v
 	return s
 }
 

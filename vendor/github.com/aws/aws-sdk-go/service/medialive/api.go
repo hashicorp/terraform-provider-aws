@@ -64,9 +64,9 @@ func (c *MediaLive) CreateChannelRequest(input *CreateChannelInput) (req *reques
 // API operation CreateChannel for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
-//
 //   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//
+//   * ErrCodeBadRequestException "BadRequestException"
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
 //
@@ -1492,9 +1492,9 @@ func (c *MediaLive) UpdateChannelRequest(input *UpdateChannelInput) (req *reques
 // API operation UpdateChannel for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
-//
 //   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//
+//   * ErrCodeBadRequestException "BadRequestException"
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
 //
@@ -1523,6 +1523,186 @@ func (c *MediaLive) UpdateChannel(input *UpdateChannelInput) (*UpdateChannelOutp
 // for more information on using Contexts.
 func (c *MediaLive) UpdateChannelWithContext(ctx aws.Context, input *UpdateChannelInput, opts ...request.Option) (*UpdateChannelOutput, error) {
 	req, out := c.UpdateChannelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateInput = "UpdateInput"
+
+// UpdateInputRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateInput operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateInput for more information on using the UpdateInput
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateInputRequest method.
+//    req, resp := client.UpdateInputRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateInput
+func (c *MediaLive) UpdateInputRequest(input *UpdateInputInput) (req *request.Request, output *UpdateInputOutput) {
+	op := &request.Operation{
+		Name:       opUpdateInput,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/prod/inputs/{inputId}",
+	}
+
+	if input == nil {
+		input = &UpdateInputInput{}
+	}
+
+	output = &UpdateInputOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateInput API operation for AWS Elemental MediaLive.
+//
+// Updates an input.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation UpdateInput for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateInput
+func (c *MediaLive) UpdateInput(input *UpdateInputInput) (*UpdateInputOutput, error) {
+	req, out := c.UpdateInputRequest(input)
+	return out, req.Send()
+}
+
+// UpdateInputWithContext is the same as UpdateInput with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateInput for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) UpdateInputWithContext(ctx aws.Context, input *UpdateInputInput, opts ...request.Option) (*UpdateInputOutput, error) {
+	req, out := c.UpdateInputRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateInputSecurityGroup = "UpdateInputSecurityGroup"
+
+// UpdateInputSecurityGroupRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateInputSecurityGroup operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateInputSecurityGroup for more information on using the UpdateInputSecurityGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateInputSecurityGroupRequest method.
+//    req, resp := client.UpdateInputSecurityGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateInputSecurityGroup
+func (c *MediaLive) UpdateInputSecurityGroupRequest(input *UpdateInputSecurityGroupInput) (req *request.Request, output *UpdateInputSecurityGroupOutput) {
+	op := &request.Operation{
+		Name:       opUpdateInputSecurityGroup,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/prod/inputSecurityGroups/{inputSecurityGroupId}",
+	}
+
+	if input == nil {
+		input = &UpdateInputSecurityGroupInput{}
+	}
+
+	output = &UpdateInputSecurityGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateInputSecurityGroup API operation for AWS Elemental MediaLive.
+//
+// Update an Input Security Group's Whilelists.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation UpdateInputSecurityGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateInputSecurityGroup
+func (c *MediaLive) UpdateInputSecurityGroup(input *UpdateInputSecurityGroupInput) (*UpdateInputSecurityGroupOutput, error) {
+	req, out := c.UpdateInputSecurityGroupRequest(input)
+	return out, req.Send()
+}
+
+// UpdateInputSecurityGroupWithContext is the same as UpdateInputSecurityGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateInputSecurityGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) UpdateInputSecurityGroupWithContext(ctx aws.Context, input *UpdateInputSecurityGroupInput, opts ...request.Option) (*UpdateInputSecurityGroupOutput, error) {
+	req, out := c.UpdateInputSecurityGroupRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4447,6 +4627,10 @@ type DescribeInputSecurityGroupOutput struct {
 
 	Id *string `locationName:"id" type:"string"`
 
+	Inputs []*string `locationName:"inputs" type:"list"`
+
+	State *string `locationName:"state" type:"string" enum:"InputSecurityGroupState"`
+
 	WhitelistRules []*InputWhitelistRule `locationName:"whitelistRules" type:"list"`
 }
 
@@ -4469,6 +4653,18 @@ func (s *DescribeInputSecurityGroupOutput) SetArn(v string) *DescribeInputSecuri
 // SetId sets the Id field's value.
 func (s *DescribeInputSecurityGroupOutput) SetId(v string) *DescribeInputSecurityGroupOutput {
 	s.Id = &v
+	return s
+}
+
+// SetInputs sets the Inputs field's value.
+func (s *DescribeInputSecurityGroupOutput) SetInputs(v []*string) *DescribeInputSecurityGroupOutput {
+	s.Inputs = v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *DescribeInputSecurityGroupOutput) SetState(v string) *DescribeInputSecurityGroupOutput {
+	s.State = &v
 	return s
 }
 
@@ -7305,6 +7501,12 @@ type InputSecurityGroup struct {
 	// The Id of the Input Security Group
 	Id *string `locationName:"id" type:"string"`
 
+	// The list of inputs currently using this Input Security Group.
+	Inputs []*string `locationName:"inputs" type:"list"`
+
+	// The current state of the Input Security Group.
+	State *string `locationName:"state" type:"string" enum:"InputSecurityGroupState"`
+
 	// Whitelist rules and their sync status
 	WhitelistRules []*InputWhitelistRule `locationName:"whitelistRules" type:"list"`
 }
@@ -7328,6 +7530,18 @@ func (s *InputSecurityGroup) SetArn(v string) *InputSecurityGroup {
 // SetId sets the Id field's value.
 func (s *InputSecurityGroup) SetId(v string) *InputSecurityGroup {
 	s.Id = &v
+	return s
+}
+
+// SetInputs sets the Inputs field's value.
+func (s *InputSecurityGroup) SetInputs(v []*string) *InputSecurityGroup {
+	s.Inputs = v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *InputSecurityGroup) SetState(v string) *InputSecurityGroup {
+	s.State = &v
 	return s
 }
 
@@ -7624,7 +7838,7 @@ func (s *InputWhitelistRule) SetCidr(v string) *InputWhitelistRule {
 type InputWhitelistRuleCidr struct {
 	_ struct{} `type:"structure"`
 
-	// The IPv4 CIDR to whitelist
+	// The IPv4 CIDR to whitelist.
 	Cidr *string `locationName:"cidr" type:"string"`
 }
 
@@ -10347,6 +10561,8 @@ type UpdateChannelInput struct {
 
 	EncoderSettings *EncoderSettings `locationName:"encoderSettings" type:"structure"`
 
+	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
 	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
 
 	Name *string `locationName:"name" type:"string"`
@@ -10375,6 +10591,16 @@ func (s *UpdateChannelInput) Validate() error {
 			invalidParams.AddNested("EncoderSettings", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.InputAttachments != nil {
+		for i, v := range s.InputAttachments {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "InputAttachments", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10397,6 +10623,12 @@ func (s *UpdateChannelInput) SetDestinations(v []*OutputDestination) *UpdateChan
 // SetEncoderSettings sets the EncoderSettings field's value.
 func (s *UpdateChannelInput) SetEncoderSettings(v *EncoderSettings) *UpdateChannelInput {
 	s.EncoderSettings = v
+	return s
+}
+
+// SetInputAttachments sets the InputAttachments field's value.
+func (s *UpdateChannelInput) SetInputAttachments(v []*InputAttachment) *UpdateChannelInput {
+	s.InputAttachments = v
 	return s
 }
 
@@ -10437,6 +10669,163 @@ func (s UpdateChannelOutput) GoString() string {
 // SetChannel sets the Channel field's value.
 func (s *UpdateChannelOutput) SetChannel(v *Channel) *UpdateChannelOutput {
 	s.Channel = v
+	return s
+}
+
+type UpdateInputInput struct {
+	_ struct{} `type:"structure"`
+
+	Destinations []*InputDestinationRequest `locationName:"destinations" type:"list"`
+
+	// InputId is a required field
+	InputId *string `location:"uri" locationName:"inputId" type:"string" required:"true"`
+
+	InputSecurityGroups []*string `locationName:"inputSecurityGroups" type:"list"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	Sources []*InputSourceRequest `locationName:"sources" type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateInputInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateInputInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateInputInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateInputInput"}
+	if s.InputId == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestinations sets the Destinations field's value.
+func (s *UpdateInputInput) SetDestinations(v []*InputDestinationRequest) *UpdateInputInput {
+	s.Destinations = v
+	return s
+}
+
+// SetInputId sets the InputId field's value.
+func (s *UpdateInputInput) SetInputId(v string) *UpdateInputInput {
+	s.InputId = &v
+	return s
+}
+
+// SetInputSecurityGroups sets the InputSecurityGroups field's value.
+func (s *UpdateInputInput) SetInputSecurityGroups(v []*string) *UpdateInputInput {
+	s.InputSecurityGroups = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateInputInput) SetName(v string) *UpdateInputInput {
+	s.Name = &v
+	return s
+}
+
+// SetSources sets the Sources field's value.
+func (s *UpdateInputInput) SetSources(v []*InputSourceRequest) *UpdateInputInput {
+	s.Sources = v
+	return s
+}
+
+type UpdateInputOutput struct {
+	_ struct{} `type:"structure"`
+
+	Input *Input `locationName:"input" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateInputOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateInputOutput) GoString() string {
+	return s.String()
+}
+
+// SetInput sets the Input field's value.
+func (s *UpdateInputOutput) SetInput(v *Input) *UpdateInputOutput {
+	s.Input = v
+	return s
+}
+
+type UpdateInputSecurityGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// InputSecurityGroupId is a required field
+	InputSecurityGroupId *string `location:"uri" locationName:"inputSecurityGroupId" type:"string" required:"true"`
+
+	WhitelistRules []*InputWhitelistRuleCidr `locationName:"whitelistRules" type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateInputSecurityGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateInputSecurityGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateInputSecurityGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateInputSecurityGroupInput"}
+	if s.InputSecurityGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputSecurityGroupId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInputSecurityGroupId sets the InputSecurityGroupId field's value.
+func (s *UpdateInputSecurityGroupInput) SetInputSecurityGroupId(v string) *UpdateInputSecurityGroupInput {
+	s.InputSecurityGroupId = &v
+	return s
+}
+
+// SetWhitelistRules sets the WhitelistRules field's value.
+func (s *UpdateInputSecurityGroupInput) SetWhitelistRules(v []*InputWhitelistRuleCidr) *UpdateInputSecurityGroupInput {
+	s.WhitelistRules = v
+	return s
+}
+
+type UpdateInputSecurityGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An Input Security Group
+	SecurityGroup *InputSecurityGroup `locationName:"securityGroup" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateInputSecurityGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateInputSecurityGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetSecurityGroup sets the SecurityGroup field's value.
+func (s *UpdateInputSecurityGroupOutput) SetSecurityGroup(v *InputSecurityGroup) *UpdateInputSecurityGroupOutput {
+	s.SecurityGroup = v
 	return s
 }
 
@@ -11925,6 +12314,20 @@ const (
 
 	// InputResolutionUhd is a InputResolution enum value
 	InputResolutionUhd = "UHD"
+)
+
+const (
+	// InputSecurityGroupStateIdle is a InputSecurityGroupState enum value
+	InputSecurityGroupStateIdle = "IDLE"
+
+	// InputSecurityGroupStateInUse is a InputSecurityGroupState enum value
+	InputSecurityGroupStateInUse = "IN_USE"
+
+	// InputSecurityGroupStateUpdating is a InputSecurityGroupState enum value
+	InputSecurityGroupStateUpdating = "UPDATING"
+
+	// InputSecurityGroupStateDeleted is a InputSecurityGroupState enum value
+	InputSecurityGroupStateDeleted = "DELETED"
 )
 
 const (

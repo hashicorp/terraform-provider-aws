@@ -12060,15 +12060,21 @@ type CreateDBInstanceInput struct {
 	//
 	// MariaDB
 	//
+	//    * 10.2.12 (supported in all AWS Regions)
+	//
 	//    * 10.2.11 (supported in all AWS Regions)
 	//
-	// 10.1.26 (supported in all AWS Regions)
+	// 10.1.31 (supported in all AWS Regions)
+	//
+	//    * 10.1.26 (supported in all AWS Regions)
 	//
 	//    * 10.1.23 (supported in all AWS Regions)
 	//
 	//    * 10.1.19 (supported in all AWS Regions)
 	//
 	//    * 10.1.14 (supported in all AWS Regions except us-east-2)
+	//
+	//    * 10.0.34 (supported in all AWS Regions)
 	//
 	//    * 10.0.32 (supported in all AWS Regions)
 	//
@@ -12127,11 +12133,15 @@ type CreateDBInstanceInput struct {
 	//
 	// MySQL
 	//
+	//    * 5.7.21 (supported in all AWS regions)
+	//
 	//    * 5.7.19 (supported in all AWS regions)
 	//
 	//    * 5.7.17 (supported in all AWS regions)
 	//
 	//    * 5.7.16 (supported in all AWS regions)
+	//
+	// 5.6.39(supported in all AWS Regions)
 	//
 	// 5.6.37(supported in all AWS Regions)
 	//
