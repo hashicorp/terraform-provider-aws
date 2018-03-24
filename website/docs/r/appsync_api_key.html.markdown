@@ -37,5 +37,5 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - API ID
+* `id` - API Key ID (Formatted as ApiId:Key)
 * `key` - The API key
