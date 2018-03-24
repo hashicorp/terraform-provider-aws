@@ -558,6 +558,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_vpc_dhcp_options":                         resourceAwsVpcDhcpOptions(),
 			"aws_vpc_peering_connection":                   resourceAwsVpcPeeringConnection(),
 			"aws_vpc_peering_connection_accepter":          resourceAwsVpcPeeringConnectionAccepter(),
+			"aws_vpc_peering_connection_options":           resourceAwsVpcPeeringConnectionOptions(),
 			"aws_default_vpc":                              resourceAwsDefaultVpc(),
 			"aws_vpc":                                      resourceAwsVpc(),
 			"aws_vpc_endpoint":                             resourceAwsVpcEndpoint(),

@@ -4050,3 +4050,39 @@ func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecificat
 
 	return result
 }
+
+func flattenVpcPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if options.AllowDnsResolutionFromRemoteVpc != nil {
+		m["allow_remote_vpc_dns_resolution"] = *options.AllowDnsResolutionFromRemoteVpc
+	}
+
+	if options.AllowEgressFromLocalClassicLinkToRemoteVpc != nil {
+		m["allow_classic_link_to_remote_vpc"] = *options.AllowEgressFromLocalClassicLinkToRemoteVpc
+	}
+
+	if options.AllowEgressFromLocalVpcToRemoteClassicLink != nil {
+		m["allow_vpc_to_remote_classic_link"] = *options.AllowEgressFromLocalVpcToRemoteClassicLink
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandVpcPeeringConnectionOptions(m map[string]interface{}) *ec2.PeeringConnectionOptionsRequest {
+	options := &ec2.PeeringConnectionOptionsRequest{}
+
+	if v, ok := m["allow_remote_vpc_dns_resolution"]; ok {
+		options.AllowDnsResolutionFromRemoteVpc = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["allow_classic_link_to_remote_vpc"]; ok {
+		options.AllowEgressFromLocalClassicLinkToRemoteVpc = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["allow_vpc_to_remote_classic_link"]; ok {
+		options.AllowEgressFromLocalVpcToRemoteClassicLink = aws.Bool(v.(bool))
+	}
+
+	return options
+}
