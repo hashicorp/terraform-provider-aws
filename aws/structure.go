@@ -2800,7 +2800,7 @@ func cognitoUserPoolSchemaAttributeMatchesStandardAttribute(input *cognitoidenti
 		{
 			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
 			DeveloperOnlyAttribute: aws.Bool(false),
-			Mutable:                aws.Bool(false),
+			Mutable:                aws.Bool(true),
 			Name:                   aws.String("email"),
 			Required:               aws.Bool(false),
 			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
