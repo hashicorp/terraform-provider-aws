@@ -1,4 +1,9 @@
 ## 1.13.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/appsync_graphql_api: Support import [GH-3500]
+
 ## 1.12.0 (March 23, 2018)
 
 NOTES:
