@@ -64,8 +64,7 @@ the highest numbered nodes will be removed.
 * `parameter_group_name` – (Required) Name of the parameter group to associate
 with this cache cluster
 
-* `port` – (Required) The port number on which each of the cache nodes will
-accept connections. For Memcache the default is 11211, and for Redis the default port is 6379.
+* `port` – (Optional) The port number on which each of the cache nodes will accept connections. For Memcache the default is 11211, and for Redis the default port is 6379.
 
 * `subnet_group_name` – (Optional, VPC only) Name of the subnet group to be used
 for the cache cluster.

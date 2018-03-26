@@ -133,7 +133,6 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 		AutoMinorVersionUpgrade:     aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		CacheNodeType:               aws.String(d.Get("node_type").(string)),
 		Engine:                      aws.String(d.Get("engine").(string)),
-		Port:                        aws.Int64(int64(d.Get("port").(int))),
 		Tags:                        tags,
 	}
 
@@ -149,6 +148,10 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
 		params.CacheParameterGroupName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("port"); ok {
+		params.Port = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("subnet_group_name"); ok {

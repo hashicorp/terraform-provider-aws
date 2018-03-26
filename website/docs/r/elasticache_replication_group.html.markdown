@@ -69,7 +69,7 @@ The following arguments are supported:
 * `auth_token` - (Optional) The password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
 * `engine_version` - (Optional) The version number of the cache engine to be used for the cache clusters in this replication group.
 * `parameter_group_name` - (Optional) The name of the parameter group to associate with this replication group. If this argument is omitted, the default cache parameter group for the specified engine is used.
-* `port` – (Required) The port number on which each of the cache nodes will accept connections. For Memcache the default is 11211, and for Redis the default port is 6379.
+* `port` – (Optional) The port number on which each of the cache nodes will accept connections. For Memcache the default is 11211, and for Redis the default port is 6379.
 * `subnet_group_name` - (Optional) The name of the cache subnet group to be used for the replication group.
 * `security_group_names` - (Optional) A list of cache security group names to associate with this replication group.
 * `security_group_ids` - (Optional) One or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud

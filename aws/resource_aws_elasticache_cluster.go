@@ -105,8 +105,15 @@ func resourceAwsElastiCacheCommonSchema() map[string]*schema.Schema {
 		},
 		"port": {
 			Type:     schema.TypeInt,
-			Required: true,
+			Optional: true,
 			ForceNew: true,
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				// Supress default memcached/redis ports when not defined
+				if !d.IsNewResource() && new == "0" && (old == "6379" || old == "11211") {
+					return true
+				}
+				return false
+			},
 		},
 		"notification_topic_arn": {
 			Type:     schema.TypeString,
@@ -307,7 +314,6 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 	numNodes := int64(d.Get("num_cache_nodes").(int)) // 2
 	engine := d.Get("engine").(string)                // memcached
 	engineVersion := d.Get("engine_version").(string) // 1.4.14
-	port := int64(d.Get("port").(int))                // e.g) 11211
 	subnetGroupName := d.Get("subnet_group_name").(string)
 	securityNameSet := d.Get("security_group_names").(*schema.Set)
 	securityIdSet := d.Get("security_group_ids").(*schema.Set)
@@ -322,7 +328,6 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 		NumCacheNodes:           aws.Int64(numNodes),
 		Engine:                  aws.String(engine),
 		EngineVersion:           aws.String(engineVersion),
-		Port:                    aws.Int64(port),
 		CacheSubnetGroupName:    aws.String(subnetGroupName),
 		CacheSecurityGroupNames: securityNames,
 		SecurityGroupIds:        securityIds,
@@ -332,6 +337,10 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 	// parameter groups are optional and can be defaulted by AWS
 	if v, ok := d.GetOk("parameter_group_name"); ok {
 		req.CacheParameterGroupName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("port"); ok {
+		req.Port = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("snapshot_retention_limit"); ok {
@@ -438,6 +447,8 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 			d.Set("port", c.ConfigurationEndpoint.Port)
 			d.Set("configuration_endpoint", aws.String(fmt.Sprintf("%s:%d", *c.ConfigurationEndpoint.Address, *c.ConfigurationEndpoint.Port)))
 			d.Set("cluster_address", aws.String(fmt.Sprintf("%s", *c.ConfigurationEndpoint.Address)))
+		} else if len(c.CacheNodes) > 0 {
+			d.Set("port", int(aws.Int64Value(c.CacheNodes[0].Endpoint.Port)))
 		}
 
 		if c.ReplicationGroupId != nil {
