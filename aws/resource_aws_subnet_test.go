@@ -18,6 +18,7 @@ func init() {
 		Name: "aws_subnet",
 		F:    testSweepSubnets,
 		Dependencies: []string{
+			"aws_batch_compute_environment",
 			"aws_elb",
 		},
 	})
