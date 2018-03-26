@@ -40,7 +40,7 @@ func resourceAwsIamUserLoginProfile() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      20,
-				ValidateFunc: validation.StringLenBetween(4, 128),
+				ValidateFunc: validation.IntBetween(4, 128),
 			},
 
 			"key_fingerprint": {
