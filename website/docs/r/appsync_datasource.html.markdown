@@ -76,9 +76,9 @@ resource "aws_appsync_datasource" "example" {
   type = "AMAZON_DYNAMODB"
   dynamodb_config {
     region = "us-west-2"
-    table = "${aws_dynamodb_table.example.name}"
+    table_name = "${aws_dynamodb_table.example.name}"
   }
-  service_role = "${aws_iam_role.example.arn}"
+  service_role_arn = "${aws_iam_role.example.arn}"
 }
 ```
 
@@ -90,7 +90,7 @@ The following arguments are supported:
 * `name` - (Required) A user-supplied name for the DataSource.
 * `type` - (Required) The type of the DataSource. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB` and `AMAZON_ELASTICSEARCH`
 * `description` - (Optional) A description of the DataSource.
-* `service_role` - (Optional) The IAM service role ARN for the data source.
+* `service_role_arn` - (Optional) The IAM service role ARN for the data source.
 * `dynamodb_config` - (Optional) DynamoDB settings. See [below](#dynamodb_config)
 * `elasticsearch_config` - (Optional) Amazon Elasticsearch settings. See [below](#elasticsearch_config)
 * `lambda_config` - (Optional) AWS Lambda settings. See [below](#lambda_config)
@@ -100,7 +100,7 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `region` - (Required) The AWS region.
-* `table` - (Required) The table name.
+* `table_name` - (Required) The table name.
 * `use_caller_credentials` - (Optional) Set to TRUE to use Amazon Cognito credentials with this data source.
 
 ### elasticsearch_config
@@ -114,7 +114,7 @@ The following arguments are supported:
 
 The following arguments are supported:
 
-* `arn` - (Required) The ARN for the Lambda function.
+* `function_arn` - (Required) The ARN for the Lambda function.
 
 ## Attributes Reference
 

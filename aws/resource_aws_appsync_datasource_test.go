@@ -125,6 +125,8 @@ func testAccCheckAwsAppsyncDatasourceExists(name string) resource.TestCheckFunc 
 
 func testAccAppsyncDatasourceConfig_ddb(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name = "tf_appsync_%s"
@@ -187,16 +189,18 @@ resource "aws_appsync_datasource" "test" {
   name = "tf_appsync_%s"
   type = "AMAZON_DYNAMODB"
   dynamodb_config {
-    region = "us-west-2"
-    table = "${aws_dynamodb_table.test.name}"
+    region = "${data.aws_region.current.name}"
+    table_name = "${aws_dynamodb_table.test.name}"
   }
-  service_role = "${aws_iam_role.test.arn}"
+  service_role_arn = "${aws_iam_role.test.arn}"
 }
 `, rName, rName, rName, rName, rName)
 }
 
 func testAccAppsyncDatasourceConfig_es(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name = "tf_appsync_%s"
@@ -256,10 +260,10 @@ resource "aws_appsync_datasource" "test" {
   name = "tf_appsync_%s"
   type = "AMAZON_ELASTICSEARCH"
   elasticsearch_config {
-    region = "us-west-2"
+    region = "${data.aws_region.current.name}"
     endpoint = "${aws_elasticsearch_domain.test.endpoint}"
   }
-  service_role = "${aws_iam_role.test.arn}"
+  service_role_arn = "${aws_iam_role.test.arn}"
 }
 `, rName, rName, rName, rName, rName)
 }
@@ -344,9 +348,9 @@ resource "aws_appsync_datasource" "test" {
   name = "tf_appsync_%s"
   type = "AWS_LAMBDA"
   lambda_config {
-    arn = "${aws_lambda_function.test.arn}"
+    function_arn = "${aws_lambda_function.test.arn}"
   }
-  service_role = "${aws_iam_role.test.arn}"
+  service_role_arn = "${aws_iam_role.test.arn}"
 }
 `, rName, rName, rName, rName, rName, rName)
 }
@@ -431,9 +435,9 @@ resource "aws_appsync_datasource" "test" {
   name = "tf_appsync_%s"
   type = "AWS_LAMBDA"
   lambda_config {
-    arn = "${aws_lambda_function.test.arn}"
+    function_arn = "${aws_lambda_function.test.arn}"
   }
-  service_role = "${aws_iam_role.test_applambda.arn}"
+  service_role_arn = "${aws_iam_role.test_applambda.arn}"
 }
 `, rName, rName, rName, rName, rName, rName)
 }

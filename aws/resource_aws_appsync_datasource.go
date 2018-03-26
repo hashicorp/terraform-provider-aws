@@ -2,12 +2,14 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsAppsyncDatasource() *schema.Resource {
@@ -36,17 +38,12 @@ func resourceAwsAppsyncDatasource() *schema.Resource {
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := strings.ToUpper(v.(string))
-					validTypes := []string{"AWS_LAMBDA", "AMAZON_DYNAMODB", "AMAZON_ELASTICSEARCH"}
-					for _, str := range validTypes {
-						if value == str {
-							return
-						}
-					}
-					errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validTypes, value))
-					return
-				},
+				ValidateFunc: validation.StringInSlice([]string{
+					appsync.DataSourceTypeAwsLambda,
+					appsync.DataSourceTypeAmazonDynamodb,
+					appsync.DataSourceTypeAmazonElasticsearch,
+					appsync.DataSourceTypeNone,
+				}, true),
 				StateFunc: func(v interface{}) string {
 					return strings.ToUpper(v.(string))
 				},
@@ -65,7 +62,7 @@ func resourceAwsAppsyncDatasource() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"table": {
+						"table_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -101,7 +98,7 @@ func resourceAwsAppsyncDatasource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						"function_arn": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -109,7 +106,7 @@ func resourceAwsAppsyncDatasource() *schema.Resource {
 				},
 				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config"},
 			},
-			"service_role": {
+			"service_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -134,7 +131,7 @@ func resourceAwsAppsyncDatasourceCreate(d *schema.ResourceData, meta interface{}
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("service_role"); ok {
+	if v, ok := d.GetOk("service_role_arn"); ok {
 		input.ServiceRoleArn = aws.String(v.(string))
 	}
 
@@ -172,6 +169,7 @@ func resourceAwsAppsyncDatasourceRead(d *schema.ResourceData, meta interface{}) 
 	resp, err := conn.GetDataSource(input)
 	if err != nil {
 		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+			log.Printf("[WARN] AppSync Datasource %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -184,7 +182,7 @@ func resourceAwsAppsyncDatasourceRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("elasticsearch_config", flattenAppsyncElasticsearchDataSourceConfig(resp.DataSource.ElasticsearchConfig))
 	d.Set("lambda_config", flattenAppsyncLambdaDataSourceConfig(resp.DataSource.LambdaConfig))
 	d.Set("name", resp.DataSource.Name)
-	d.Set("service_role", resp.DataSource.ServiceRoleArn)
+	d.Set("service_role_arn", resp.DataSource.ServiceRoleArn)
 	d.Set("type", resp.DataSource.Type)
 
 	return nil
@@ -201,8 +199,8 @@ func resourceAwsAppsyncDatasourceUpdate(d *schema.ResourceData, meta interface{}
 	if d.HasChange("description") {
 		input.Description = aws.String(d.Get("description").(string))
 	}
-	if d.HasChange("service_role") {
-		input.ServiceRoleArn = aws.String(d.Get("service_role").(string))
+	if d.HasChange("service_role_arn") {
+		input.ServiceRoleArn = aws.String(d.Get("service_role_arn").(string))
 	}
 	if d.HasChange("type") {
 		input.Type = aws.String(d.Get("type").(string))
@@ -245,20 +243,18 @@ func resourceAwsAppsyncDatasourceDelete(d *schema.ResourceData, meta interface{}
 	_, err := conn.DeleteDataSource(input)
 	if err != nil {
 		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
-			d.SetId("")
 			return nil
 		}
 		return err
 	}
 
-	d.SetId("")
 	return nil
 }
 
 func expandAppsyncDynamodbDataSourceConfig(configured map[string]interface{}) *appsync.DynamodbDataSourceConfig {
 	result := &appsync.DynamodbDataSourceConfig{
 		AwsRegion: aws.String(configured["region"].(string)),
-		TableName: aws.String(configured["table"].(string)),
+		TableName: aws.String(configured["table_name"].(string)),
 	}
 
 	if v, ok := configured["use_caller_credentials"]; ok {
@@ -276,7 +272,7 @@ func flattenAppsyncDynamodbDataSourceConfig(config *appsync.DynamodbDataSourceCo
 	result := map[string]interface{}{}
 
 	result["region"] = *config.AwsRegion
-	result["table"] = *config.TableName
+	result["table_name"] = *config.TableName
 	if config.UseCallerCredentials != nil {
 		result["use_caller_credentials"] = *config.UseCallerCredentials
 	}
@@ -308,7 +304,7 @@ func flattenAppsyncElasticsearchDataSourceConfig(config *appsync.ElasticsearchDa
 
 func expandAppsyncLambdaDataSourceConfig(configured map[string]interface{}) *appsync.LambdaDataSourceConfig {
 	result := &appsync.LambdaDataSourceConfig{
-		LambdaFunctionArn: aws.String(configured["arn"].(string)),
+		LambdaFunctionArn: aws.String(configured["function_arn"].(string)),
 	}
 
 	return result
@@ -321,7 +317,7 @@ func flattenAppsyncLambdaDataSourceConfig(config *appsync.LambdaDataSourceConfig
 
 	result := map[string]interface{}{}
 
-	result["arn"] = *config.LambdaFunctionArn
+	result["function_arn"] = *config.LambdaFunctionArn
 
 	return []map[string]interface{}{result}
 }
