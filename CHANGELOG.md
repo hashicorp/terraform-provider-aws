@@ -3,6 +3,8 @@
 ENHANCEMENTS:
 
 * resource/appsync_graphql_api: Support import [GH-3500]
+* resource/aws_elasticache_cluster: Allow port to be optional [GH-3835]
+* resource/aws_elasticache_replication_group: Allow port to be optional [GH-3835]
 
 ## 1.12.0 (March 23, 2018)
 
