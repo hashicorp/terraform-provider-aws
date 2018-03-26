@@ -7,6 +7,10 @@ ENHANCEMENTS:
 * resource/aws_elasticache_cluster: Add `replication_group_id` argument [GH-3869]
 * resource/aws_elasticache_replication_group: Allow port to be optional [GH-3835]
 
+BUG FIXES:
+
+* resource/aws_iam_user_login_profile: Fix `password_length` validation function regression from 1.12.0 [GH-3919]
+
 ## 1.12.0 (March 23, 2018)
 
 NOTES:
