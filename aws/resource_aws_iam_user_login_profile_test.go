@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -30,7 +31,7 @@ func TestAccAWSUserLoginProfile_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSUserLoginProfileConfig(username, "/", testPubKey1),
+				Config: testAccAWSUserLoginProfileConfig_Required(username, "/", testPubKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
 					testDecryptPasswordAndTest("aws_iam_user_login_profile.user", "aws_iam_access_key.user", testPrivKey1),
@@ -51,7 +52,7 @@ func TestAccAWSUserLoginProfile_keybase(t *testing.T) {
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSUserLoginProfileConfig(username, "/", "keybase:terraformacctest"),
+				Config: testAccAWSUserLoginProfileConfig_Required(username, "/", "keybase:terraformacctest"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
 					resource.TestCheckResourceAttrSet("aws_iam_user_login_profile.user", "encrypted_password"),
@@ -72,7 +73,7 @@ func TestAccAWSUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// We own this account but it doesn't have any key associated with it
-				Config:      testAccAWSUserLoginProfileConfig(username, "/", "keybase:terraform_nope"),
+				Config:      testAccAWSUserLoginProfileConfig_Required(username, "/", "keybase:terraform_nope"),
 				ExpectError: regexp.MustCompile(`Error retrieving Public Key`),
 			},
 		},
@@ -89,8 +90,30 @@ func TestAccAWSUserLoginProfile_notAKey(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// We own this account but it doesn't have any key associated with it
-				Config:      testAccAWSUserLoginProfileConfig(username, "/", "lolimnotakey"),
+				Config:      testAccAWSUserLoginProfileConfig_Required(username, "/", "lolimnotakey"),
 				ExpectError: regexp.MustCompile(`Error encrypting Password`),
+			},
+		},
+	})
+}
+
+func TestAccAWSUserLoginProfile_PasswordLength(t *testing.T) {
+	var conf iam.GetLoginProfileOutput
+
+	passwordLength := acctest.RandIntRange(4, 128)
+	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserLoginProfileConfig_PasswordLength(username, "/", testPubKey1, passwordLength),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
+					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "password_length", strconv.Itoa(passwordLength)),
+				),
 			},
 		},
 	})
@@ -206,7 +229,7 @@ func testAccCheckAWSUserLoginProfileExists(n string, res *iam.GetLoginProfileOut
 	}
 }
 
-func testAccAWSUserLoginProfileConfig(r, p, key string) string {
+func testAccAWSUserLoginProfileConfig_base(rName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
 	name = "%s"
@@ -238,13 +261,32 @@ resource "aws_iam_user_policy" "user" {
 resource "aws_iam_access_key" "user" {
 	user = "${aws_iam_user.user.name}"
 }
+`, rName, path)
+}
+
+func testAccAWSUserLoginProfileConfig_PasswordLength(rName, path, pgpKey string, passwordLength int) string {
+	return fmt.Sprintf(`
+%s
 
 resource "aws_iam_user_login_profile" "user" {
-        user = "${aws_iam_user.user.name}"
-        pgp_key = <<EOF
+  user            = "${aws_iam_user.user.name}"
+  password_length = %d
+  pgp_key         = <<EOF
 %sEOF
 }
-`, r, p, key)
+`, testAccAWSUserLoginProfileConfig_base(rName, path), passwordLength, pgpKey)
+}
+
+func testAccAWSUserLoginProfileConfig_Required(rName, path, pgpKey string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_iam_user_login_profile" "user" {
+  user    = "${aws_iam_user.user.name}"
+  pgp_key = <<EOF
+%sEOF
+}
+`, testAccAWSUserLoginProfileConfig_base(rName, path), pgpKey)
 }
 
 const testPubKey1 = `mQENBFXbjPUBCADjNjCUQwfxKL+RR2GA6pv/1K+zJZ8UWIF9S0lk7cVIEfJiprzzwiMwBS5cD0da
