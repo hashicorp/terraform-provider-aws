@@ -257,17 +257,7 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[INFO] Security Group ID: %s", d.Id())
 
 	// Wait for the security group to truly exist
-	log.Printf(
-		"[DEBUG] Waiting for Security Group (%s) to exist",
-		d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{""},
-		Target:  []string{"exists"},
-		Refresh: SGStateRefreshFunc(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
-
-	resp, err := stateConf.WaitForState()
+	resp, err := waitForSgToExist(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf(
 			"Error waiting for Security Group (%s) to become available: %s",
@@ -342,11 +332,20 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	sgRaw, _, err := SGStateRefreshFunc(conn, d.Id())()
+	var sgRaw interface{}
+	var err error
+	if d.IsNewResource() {
+		sgRaw, err = waitForSgToExist(conn, d.Id(), d.Timeout(schema.TimeoutRead))
+	} else {
+		sgRaw, _, err = SGStateRefreshFunc(conn, d.Id())()
+	}
+
 	if err != nil {
 		return err
 	}
+
 	if sgRaw == nil {
+		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -393,11 +392,19 @@ func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	sgRaw, _, err := SGStateRefreshFunc(conn, d.Id())()
+	var sgRaw interface{}
+	var err error
+	if d.IsNewResource() {
+		sgRaw, err = waitForSgToExist(conn, d.Id(), d.Timeout(schema.TimeoutRead))
+	} else {
+		sgRaw, _, err = SGStateRefreshFunc(conn, d.Id())()
+	}
+
 	if err != nil {
 		return err
 	}
 	if sgRaw == nil {
+		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -838,6 +845,18 @@ func SGStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 		group := resp.SecurityGroups[0]
 		return group, "exists", nil
 	}
+}
+
+func waitForSgToExist(conn *ec2.EC2, id string, timeout time.Duration) (interface{}, error) {
+	log.Printf("[DEBUG] Waiting for Security Group (%s) to exist", id)
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{""},
+		Target:  []string{"exists"},
+		Refresh: SGStateRefreshFunc(conn, id),
+		Timeout: timeout,
+	}
+
+	return stateConf.WaitForState()
 }
 
 // matchRules receives the group id, type of rules, and the local / remote maps
