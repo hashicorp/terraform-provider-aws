@@ -300,7 +300,7 @@ resource "aws_cloudformation_stack" "network" {
       "Properties" : {
         "CidrBlock" : "10.0.0.0/16",
         "Tags" : [
-          {"Key": "Name", "Value": "%[1]s"}
+          {"Key": "Name", "Value": "Primary_CF_VPC"}
         ]
       }
     }
@@ -333,7 +333,7 @@ Resources:
       Tags:
         -
           Key: Name
-          Value: %[1]s
+          Value: Primary_CF_VPC
 
 Outputs:
   DefaultSgId:
@@ -379,7 +379,7 @@ resource "aws_cloudformation_stack" "asg-demo" {
                 "Tags": [
                     {
                         "Key": "Name",
-                        "Value": "%[1]s"
+                        "Value": "Primary_CF_VPC"
                     }
                 ]
             }
@@ -535,7 +535,7 @@ resource "aws_cloudformation_stack" "with_params" {
       "Properties" : {
         "CidrBlock" : {"Ref": "VpcCIDR"},
         "Tags" : [
-          {"Key": "Name", "Value": "%[1]s"}
+          {"Key": "Name", "Value": "Primary_CF_VPC"}
         ]
       }
     }
