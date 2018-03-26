@@ -152,7 +152,7 @@ func testAccCheckAWSLBListenerDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if isListenerNotFound(err) {
+		if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
 			return nil
 		} else {
 			return errwrap.Wrapf("Unexpected error checking LB Listener destroyed: {{err}}", err)

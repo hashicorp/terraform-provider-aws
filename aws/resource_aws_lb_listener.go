@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -127,16 +126,12 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 		var err error
 		log.Printf("[DEBUG] Creating LB listener for ARN: %s", d.Get("load_balancer_arn").(string))
 		resp, err = elbconn.CreateListener(params)
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "CertificateNotFound" {
-				log.Printf("[WARN] Got an error while trying to create LB listener for ARN: %s: %s", lbArn, err)
+		if err != nil {
+			if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
-		}
-		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-
 		return nil
 	})
 
@@ -160,7 +155,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		ListenerArns: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if isListenerNotFound(err) {
+		if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
 			log.Printf("[WARN] DescribeListeners - removing %s from state", d.Id())
 			d.SetId("")
 			return nil
@@ -232,7 +227,16 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	_, err := elbconn.ModifyListener(params)
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := elbconn.ModifyListener(params)
+		if err != nil {
+			if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
 		return errwrap.Wrapf("Error modifying LB Listener: {{err}}", err)
 	}
@@ -251,11 +255,6 @@ func resourceAwsLbListenerDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	return nil
-}
-
-func isListenerNotFound(err error) bool {
-	elberr, ok := err.(awserr.Error)
-	return ok && elberr.Code() == "ListenerNotFound"
 }
 
 func validateLbListenerActionType() schema.SchemaValidateFunc {
