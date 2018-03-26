@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -52,7 +51,7 @@ func resourceAwsVpcPeeringConnectionOptionsRead(d *schema.ResourceData, meta int
 
 	pc := pcRaw.(*ec2.VpcPeeringConnection)
 
-	d.Set("vpc_peering_connection_id", aws.StringValue(pc.VpcPeeringConnectionId))
+	d.Set("vpc_peering_connection_id", pc.VpcPeeringConnectionId)
 
 	if pc.AccepterVpcInfo.PeeringOptions != nil {
 		err := d.Set("accepter", flattenVpcPeeringConnectionOptions(pc.AccepterVpcInfo.PeeringOptions))
