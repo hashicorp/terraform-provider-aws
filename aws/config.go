@@ -64,6 +64,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
@@ -214,6 +215,7 @@ type AWSClient struct {
 	dxconn                *directconnect.DirectConnect
 	mediastoreconn        *mediastore.MediaStore
 	appsyncconn           *appsync.AppSync
+	lexmodelconn          *lexmodelbuildingservice.LexModelBuildingService
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -443,6 +445,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.kinesisconn = kinesis.New(awsKinesisSess)
 	client.kmsconn = kms.New(awsKmsSess)
 	client.lambdaconn = lambda.New(awsLambdaSess)
+	client.lexmodelconn = lexmodelbuildingservice.New(sess)
 	client.lightsailconn = lightsail.New(sess)
 	client.mqconn = mq.New(sess)
 	client.opsworksconn = opsworks.New(sess)
