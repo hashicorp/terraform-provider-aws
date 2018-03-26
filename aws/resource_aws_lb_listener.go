@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -156,7 +155,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		ListenerArns: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if isListenerNotFound(err) {
+		if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
 			log.Printf("[WARN] DescribeListeners - removing %s from state", d.Id())
 			d.SetId("")
 			return nil
@@ -256,11 +255,6 @@ func resourceAwsLbListenerDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	return nil
-}
-
-func isListenerNotFound(err error) bool {
-	elberr, ok := err.(awserr.Error)
-	return ok && elberr.Code() == "ListenerNotFound"
 }
 
 func validateLbListenerActionType() schema.SchemaValidateFunc {
