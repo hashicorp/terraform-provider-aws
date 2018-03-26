@@ -151,6 +151,9 @@ type Config struct {
 	// with accelerate.
 	S3UseAccelerate *bool
 
+	// S3DisableContentMD5Validation config option is temporarily disabled,
+	// For S3 GetObject API calls, #1837.
+	//
 	// Set this to `true` to disable the S3 service client from automatically
 	// adding the ContentMD5 to S3 Object Put and Upload API calls. This option
 	// will also disable the SDK from performing object ContentMD5 validation
