@@ -106,3 +106,48 @@ func flattenWafSizeConstraints(sc []*waf.SizeConstraint) []interface{} {
 	}
 	return out
 }
+
+func flattenWafGeoMatchConstraint(ts []*waf.GeoMatchConstraint) []interface{} {
+	out := make([]interface{}, len(ts), len(ts))
+	for i, t := range ts {
+		m := make(map[string]interface{})
+		m["type"] = *t.Type
+		m["value"] = *t.Value
+		out[i] = m
+	}
+	return out
+}
+
+func diffWafGeoMatchSetConstraints(oldT, newT []interface{}) []*waf.GeoMatchSetUpdate {
+	updates := make([]*waf.GeoMatchSetUpdate, 0)
+
+	for _, od := range oldT {
+		constraint := od.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newT, constraint); contains {
+			newT = append(newT[:idx], newT[idx+1:]...)
+			continue
+		}
+
+		updates = append(updates, &waf.GeoMatchSetUpdate{
+			Action: aws.String(waf.ChangeActionDelete),
+			GeoMatchConstraint: &waf.GeoMatchConstraint{
+				Type:  aws.String(constraint["type"].(string)),
+				Value: aws.String(constraint["value"].(string)),
+			},
+		})
+	}
+
+	for _, nd := range newT {
+		constraint := nd.(map[string]interface{})
+
+		updates = append(updates, &waf.GeoMatchSetUpdate{
+			Action: aws.String(waf.ChangeActionInsert),
+			GeoMatchConstraint: &waf.GeoMatchConstraint{
+				Type:  aws.String(constraint["type"].(string)),
+				Value: aws.String(constraint["value"].(string)),
+			},
+		})
+	}
+	return updates
+}
