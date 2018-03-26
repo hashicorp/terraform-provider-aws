@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -52,49 +51,16 @@ func testSweepBatchJobQueues(region string) error {
 		}
 
 		log.Printf("[INFO] Disabling Batch Job Queue: %s", *name)
-
-		updateInput := &batch.UpdateJobQueueInput{
-			JobQueue: name,
-			State:    aws.String(batch.JQStateDisabled),
-		}
-		if _, err := conn.UpdateJobQueue(updateInput); err != nil {
+		err := disableBatchJobQueue(*name, 10*time.Minute, conn)
+		if err != nil {
 			log.Printf("[ERROR] Failed to disable Batch Job Queue %s: %s", *name, err)
 			continue
 		}
 
-		stateConfForDisable := &resource.StateChangeConf{
-			Pending:    []string{batch.JQStatusUpdating},
-			Target:     []string{batch.JQStatusValid},
-			Refresh:    batchJobQueueRefreshStatusFunc(conn, *name),
-			Timeout:    10 * time.Minute,
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-		if _, err := stateConfForDisable.WaitForState(); err != nil {
-			log.Printf("[ERROR] Failed to wait for disable of Batch Job Queue %s: %s", *name, err)
-			continue
-		}
-
 		log.Printf("[INFO] Deleting Batch Job Queue: %s", *name)
-
-		deleteInput := &batch.DeleteJobQueueInput{
-			JobQueue: name,
-		}
-		if _, err := conn.DeleteJobQueue(deleteInput); err != nil {
+		err = deleteBatchJobQueue(*name, 10*time.Minute, conn)
+		if err != nil {
 			log.Printf("[ERROR] Failed to delete Batch Job Queue %s: %s", *name, err)
-			continue
-		}
-
-		stateConfForDelete := &resource.StateChangeConf{
-			Pending:    []string{batch.JQStateDisabled, batch.JQStatusDeleting},
-			Target:     []string{batch.JQStatusDeleted},
-			Refresh:    resourceAwsBatchComputeEnvironmentDeleteRefreshFunc(*name, conn),
-			Timeout:    10 * time.Minute,
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-		if _, err := stateConfForDelete.WaitForState(); err != nil {
-			log.Printf("[ERROR] Failed to wait for deletion of Batch Job Queue %s: %s", *name, err)
 		}
 	}
 

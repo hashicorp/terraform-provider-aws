@@ -55,47 +55,16 @@ func testSweepBatchComputeEnvironments(region string) error {
 		}
 
 		log.Printf("[INFO] Disabling Batch Compute Environment: %s", *name)
-
-		updateInput := &batch.UpdateComputeEnvironmentInput{
-			ComputeEnvironment: name,
-			State:              aws.String(batch.CEStateDisabled),
-		}
-		if _, err := conn.UpdateComputeEnvironment(updateInput); err != nil {
+		err := disableBatchComputeEnvironment(*name, 20*time.Minute, conn)
+		if err != nil {
 			log.Printf("[ERROR] Failed to disable Batch Compute Environment %s: %s", *name, err)
 			continue
 		}
 
-		stateConfForDisable := &resource.StateChangeConf{
-			Pending:    []string{batch.CEStatusUpdating},
-			Target:     []string{batch.CEStatusValid},
-			Refresh:    resourceAwsBatchComputeEnvironmentStatusRefreshFunc(*name, conn),
-			Timeout:    20 * time.Minute,
-			MinTimeout: 5 * time.Second,
-		}
-		if _, err := stateConfForDisable.WaitForState(); err != nil {
-			log.Printf("[ERROR] Failed to wait for disable of Batch Compute Environment %s: %s", *name, err)
-			continue
-		}
-
 		log.Printf("[INFO] Deleting Batch Compute Environment: %s", *name)
-
-		deleteInput := &batch.DeleteComputeEnvironmentInput{
-			ComputeEnvironment: name,
-		}
-		if _, err := conn.DeleteComputeEnvironment(deleteInput); err != nil {
+		err = deleteBatchComputeEnvironment(*name, 20*time.Minute, conn)
+		if err != nil {
 			log.Printf("[ERROR] Failed to delete Batch Compute Environment %s: %s", *name, err)
-			continue
-		}
-
-		stateConfForDelete := &resource.StateChangeConf{
-			Pending:    []string{batch.CEStatusDeleting},
-			Target:     []string{batch.CEStatusDeleted},
-			Refresh:    resourceAwsBatchComputeEnvironmentDeleteRefreshFunc(*name, conn),
-			Timeout:    20 * time.Minute,
-			MinTimeout: 5 * time.Second,
-		}
-		if _, err := stateConfForDelete.WaitForState(); err != nil {
-			log.Printf("[ERROR] Failed to wait for deletion of Batch Compute Environment %s: %s", *name, err)
 		}
 	}
 
