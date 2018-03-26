@@ -743,6 +743,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.EcrEndpoint = endpoints["ecr"].(string)
 		config.EcsEndpoint = endpoints["ecs"].(string)
 		config.ElbEndpoint = endpoints["elb"].(string)
+		config.EsEndpoint = endpoints["es"].(string)
 		config.IamEndpoint = endpoints["iam"].(string)
 		config.KinesisEndpoint = endpoints["kinesis"].(string)
 		config.KmsEndpoint = endpoints["kms"].(string)
@@ -891,6 +892,12 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["elb_endpoint"],
+				},
+				"es": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["es_endpoint"],
 				},
 				"kinesis": {
 					Type:        schema.TypeString,
