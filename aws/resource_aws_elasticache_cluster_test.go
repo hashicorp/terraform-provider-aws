@@ -519,6 +519,165 @@ func TestAccAWSElasticacheCluster_NumCacheNodes_Redis_Ec2Classic(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticacheCluster_ReplicationGroupID_InvalidAttributes(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "availability_zone", "us-east-1a"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with availability_zone`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "availability_zones", "${list(\"us-east-1a\", \"us-east-1c\")}"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with availability_zones`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "az_mode", "single-az"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with az_mode`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "engine_version", "3.2.10"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with engine_version`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "engine", "redis"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with engine`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "maintenance_window", "sun:05:00-sun:09:00"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with maintenance_window`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "node_type", "cache.m3.medium"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with node_type`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "notification_topic_arn", "arn:aws:sns:us-east-1:123456789012:topic/non-existent"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with notification_topic_arn`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "num_cache_nodes", "1"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with num_cache_nodes`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "parameter_group_name", "non-existent"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with parameter_group_name`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "port", "6379"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with port`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "security_group_ids", "${list(\"sg-12345678\", \"sg-87654321\")}"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with security_group_ids`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "security_group_names", "${list(\"group1\", \"group2\")}"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with security_group_names`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "snapshot_arns", "${list(\"arn:aws:s3:::my_bucket/snapshot1.rdb\")}"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with snapshot_arns`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "snapshot_name", "arn:aws:s3:::my_bucket/snapshot1.rdb"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with snapshot_name`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "snapshot_retention_limit", "0"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with snapshot_retention_limit`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "snapshot_window", "05:00-09:00"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with snapshot_window`),
+			},
+			{
+				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "subnet_group_name", "group1"),
+				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with subnet_group_name`),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_ReplicationGroupID_SingleReplica_Ec2Classic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	var cluster elasticache.CacheCluster
+	var replicationGroup elasticache.ReplicationGroup
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(7))
+	clusterResourceName := "aws_elasticache_cluster.replica"
+	replicationGroupResourceName := "aws_elasticache_replication_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheClusterConfig_ReplicationGroupID_Replica_Ec2Classic(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(replicationGroupResourceName, &replicationGroup),
+					testAccCheckAWSElasticacheClusterExists(clusterResourceName, &cluster),
+					testAccCheckAWSElasticacheClusterReplicationGroupIDAttribute(&cluster, &replicationGroup),
+					resource.TestCheckResourceAttr(clusterResourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(clusterResourceName, "node_type", "cache.m3.medium"),
+					resource.TestCheckResourceAttr(clusterResourceName, "parameter_group_name", "default.redis3.2"),
+					resource.TestCheckResourceAttr(clusterResourceName, "port", "6379"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_ReplicationGroupID_MultipleReplica_Ec2Classic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	var cluster1, cluster2 elasticache.CacheCluster
+	var replicationGroup elasticache.ReplicationGroup
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(7))
+	clusterResourceName1 := "aws_elasticache_cluster.replica.0"
+	clusterResourceName2 := "aws_elasticache_cluster.replica.1"
+	replicationGroupResourceName := "aws_elasticache_replication_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheClusterConfig_ReplicationGroupID_Replica_Ec2Classic(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(replicationGroupResourceName, &replicationGroup),
+					testAccCheckAWSElasticacheClusterExists(clusterResourceName1, &cluster1),
+					testAccCheckAWSElasticacheClusterExists(clusterResourceName2, &cluster2),
+					testAccCheckAWSElasticacheClusterReplicationGroupIDAttribute(&cluster1, &replicationGroup),
+					testAccCheckAWSElasticacheClusterReplicationGroupIDAttribute(&cluster2, &replicationGroup),
+					resource.TestCheckResourceAttr(clusterResourceName1, "engine", "redis"),
+					resource.TestCheckResourceAttr(clusterResourceName1, "node_type", "cache.m3.medium"),
+					resource.TestCheckResourceAttr(clusterResourceName1, "parameter_group_name", "default.redis3.2"),
+					resource.TestCheckResourceAttr(clusterResourceName1, "port", "6379"),
+					resource.TestCheckResourceAttr(clusterResourceName2, "engine", "redis"),
+					resource.TestCheckResourceAttr(clusterResourceName2, "node_type", "cache.m3.medium"),
+					resource.TestCheckResourceAttr(clusterResourceName2, "parameter_group_name", "default.redis3.2"),
+					resource.TestCheckResourceAttr(clusterResourceName2, "port", "6379"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSElasticacheClusterAttributes(v *elasticache.CacheCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if v.NotificationConfiguration == nil {
@@ -527,6 +686,20 @@ func testAccCheckAWSElasticacheClusterAttributes(v *elasticache.CacheCluster) re
 
 		if strings.ToLower(*v.NotificationConfiguration.TopicStatus) != "active" {
 			return fmt.Errorf("Expected NotificationConfiguration status to be 'active', got (%s)", *v.NotificationConfiguration.TopicStatus)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSElasticacheClusterReplicationGroupIDAttribute(cluster *elasticache.CacheCluster, replicationGroup *elasticache.ReplicationGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if cluster.ReplicationGroupId == nil {
+			return errors.New("expected cluster ReplicationGroupId to be set")
+		}
+
+		if aws.StringValue(cluster.ReplicationGroupId) != aws.StringValue(replicationGroup.ReplicationGroupId) {
+			return errors.New("expected cluster ReplicationGroupId to equal replication group ID")
 		}
 
 		return nil
@@ -1034,4 +1207,38 @@ resource "aws_elasticache_cluster" "bar" {
   port                 = 6379
 }
 `, rName, numCacheNodes)
+}
+
+func testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, attrName, attrValue string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "replica" {
+  cluster_id           = "%[1]s"
+  replication_group_id = "non-existent-id"
+  %[2]s                = "%[3]s"
+}
+`, rName, attrName, attrValue)
+}
+
+func testAccAWSElasticacheClusterConfig_ReplicationGroupID_Replica_Ec2Classic(rName string, count int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_description  = "Terraform Acceptance Testing"
+  replication_group_id           = "%[1]s"
+  node_type                      = "cache.m3.medium"
+  number_cache_clusters          = 1
+  parameter_group_name           = "default.redis3.2"
+  port                           = 6379
+
+  lifecycle {
+    ignore_changes = ["number_cache_clusters"]
+  }
+}
+
+resource "aws_elasticache_cluster" "replica" {
+  count = %[2]d
+
+  cluster_id           = "%[1]s${count.index}"
+  replication_group_id = "${aws_elasticache_replication_group.test.id}"
+}
+`, rName, count)
 }
