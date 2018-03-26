@@ -266,8 +266,10 @@ func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interfa
 	d.Set("state", computeEnvironment.State)
 	d.Set("type", computeEnvironment.Type)
 
-	if *(computeEnvironment.Type) == "MANAGED" {
-		d.Set("compute_resources", flattenComputeResources(computeEnvironment.ComputeResources))
+	if aws.StringValue(computeEnvironment.Type) == batch.CETypeManaged {
+		if err := d.Set("compute_resources", flattenBatchComputeResources(computeEnvironment.ComputeResources)); err != nil {
+			return fmt.Errorf("error setting compute_resources: %s", err)
+		}
 	}
 
 	d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
@@ -279,23 +281,23 @@ func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func flattenComputeResources(computeResource *batch.ComputeResource) []map[string]interface{} {
+func flattenBatchComputeResources(computeResource *batch.ComputeResource) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	m := make(map[string]interface{})
 
-	m["bid_percentage"] = computeResource.BidPercentage
-	m["desired_vcpus"] = computeResource.DesiredvCpus
-	m["ec2_key_pair"] = computeResource.Ec2KeyPair
-	m["image_id"] = computeResource.ImageId
-	m["instance_role"] = computeResource.InstanceRole
+	m["bid_percentage"] = int(aws.Int64Value(computeResource.BidPercentage))
+	m["desired_vcpus"] = int(aws.Int64Value(computeResource.DesiredvCpus))
+	m["ec2_key_pair"] = aws.StringValue(computeResource.Ec2KeyPair)
+	m["image_id"] = aws.StringValue(computeResource.ImageId)
+	m["instance_role"] = aws.StringValue(computeResource.InstanceRole)
 	m["instance_type"] = schema.NewSet(schema.HashString, flattenStringList(computeResource.InstanceTypes))
-	m["max_vcpus"] = computeResource.MaxvCpus
-	m["min_vcpus"] = computeResource.MinvCpus
+	m["max_vcpus"] = int(aws.Int64Value(computeResource.MaxvCpus))
+	m["min_vcpus"] = int(aws.Int64Value(computeResource.MinvCpus))
 	m["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(computeResource.SecurityGroupIds))
-	m["spot_iam_fleet_role"] = computeResource.SpotIamFleetRole
+	m["spot_iam_fleet_role"] = aws.StringValue(computeResource.SpotIamFleetRole)
 	m["subnets"] = schema.NewSet(schema.HashString, flattenStringList(computeResource.Subnets))
 	m["tags"] = tagsToMapGeneric(computeResource.Tags)
-	m["type"] = computeResource.Type
+	m["type"] = aws.StringValue(computeResource.Type)
 
 	result = append(result, m)
 	return result
