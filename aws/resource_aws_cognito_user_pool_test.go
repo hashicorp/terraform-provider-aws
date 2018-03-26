@@ -404,7 +404,6 @@ func TestAccAWSCognitoUserPool_withSchemaAttributes(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolConfig_withSchemaAttributesUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.#", "2"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.#", "2"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.attribute_data_type", "String"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.developer_only_attribute", "false"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.mutable", "false"),
@@ -424,6 +423,11 @@ func TestAccAWSCognitoUserPool_withSchemaAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.required", "false"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.string_attribute_constraints.#", "0"),
 				),
+			},
+			{
+				ResourceName:      "aws_cognito_user_pool.main",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
