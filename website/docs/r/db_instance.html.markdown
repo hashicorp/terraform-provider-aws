@@ -89,7 +89,9 @@ be created in the VPC associated with the DB subnet group. If unspecified, will
 be created in the `default` VPC, or in EC2 Classic, if available.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
 is provided) The database engine to use.
-* `engine_version` - (Optional) The engine version to use.
+* `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade`
+is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`) and
+this attribute will ignore differences in the patch version automatically (e.g. `5.7.17`).
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
 when this DB instance is deleted. If omitted, no final snapshot will be made.
 * `iam_database_authentication_enabled` - (Optional) Specifies whether or

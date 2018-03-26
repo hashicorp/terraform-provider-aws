@@ -108,9 +108,15 @@ func resourceAwsElastiCacheCommonSchema() map[string]*schema.Schema {
 		},
 		"port": {
 			Type:     schema.TypeInt,
-			ForceNew: true,
 			Optional: true,
-			Computed: true,
+			ForceNew: true,
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				// Supress default memcached/redis ports when not defined
+				if !d.IsNewResource() && new == "0" && (old == "6379" || old == "11211") {
+					return true
+				}
+				return false
+			},
 		},
 		"notification_topic_arn": {
 			Type:     schema.TypeString,

@@ -44,9 +44,10 @@ func defaultInitRequestFn(r *request.Request) {
 		r.Handlers.Unmarshal.PushFront(copyMultipartStatusOKUnmarhsalError)
 	case opPutObject, opUploadPart:
 		r.Handlers.Build.PushBack(computeBodyHashes)
-	case opGetObject:
-		r.Handlers.Build.PushBack(askForTxEncodingAppendMD5)
-		r.Handlers.Unmarshal.PushBack(useMD5ValidationReader)
+		// Disabled until #1837 root issue is resolved.
+		//	case opGetObject:
+		//		r.Handlers.Build.PushBack(askForTxEncodingAppendMD5)
+		//		r.Handlers.Unmarshal.PushBack(useMD5ValidationReader)
 	}
 }
 

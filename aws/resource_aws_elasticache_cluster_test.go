@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -16,7 +17,108 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSElasticacheCluster_basic(t *testing.T) {
+func TestAccAWSElasticacheCluster_Engine_Memcached_Ec2Classic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	var ec elasticache.CacheCluster
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_elasticache_cluster.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheClusterConfig_Engine_Memcached(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration_endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_address"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "memcached"),
+					resource.TestCheckResourceAttr(resourceName, "port", "11211"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_Engine_Redis_Ec2Classic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	var ec elasticache.CacheCluster
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_elasticache_cluster.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheClusterConfig_Engine_Redis(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_Port_Ec2Classic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	var ec elasticache.CacheCluster
+	port := 11212
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_elasticache_cluster.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheClusterConfig_Port(rName, port),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration_endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_address"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "memcached"),
+					resource.TestCheckResourceAttr(resourceName, "port", strconv.Itoa(port)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_SecurityGroup(t *testing.T) {
 	var ec elasticache.CacheCluster
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,7 +126,7 @@ func TestAccAWSElasticacheCluster_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheClusterConfig,
+				Config: testAccAWSElasticacheClusterConfig_SecurityGroup,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheSecurityGroupExists("aws_elasticache_security_group.bar"),
 					testAccCheckAWSElasticacheClusterExists("aws_elasticache_cluster.bar", &ec),
@@ -677,24 +779,44 @@ func testAccCheckAWSElasticacheClusterExists(n string, v *elasticache.CacheClust
 	}
 }
 
-func testAccAWSElasticacheClusterConfigBasic(clusterId string) string {
+func testAccAWSElasticacheClusterConfig_Engine_Memcached(rName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-	region = "us-east-1"
-}
-
 resource "aws_elasticache_cluster" "bar" {
-    cluster_id = "tf-%s"
-    engine = "memcached"
-    node_type = "cache.m1.small"
-    num_cache_nodes = 1
-    port = 11211
-    parameter_group_name = "default.memcached1.4"
+  cluster_id           = "%s"
+  engine               = "memcached"
+  node_type            = "cache.m1.small"
+  num_cache_nodes      = 1
+  parameter_group_name = "default.memcached1.4"
 }
-`, clusterId)
+`, rName)
 }
 
-var testAccAWSElasticacheClusterConfig = fmt.Sprintf(`
+func testAccAWSElasticacheClusterConfig_Engine_Redis(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "bar" {
+  cluster_id           = "%s"
+  engine               = "redis"
+  node_type            = "cache.m1.small"
+  num_cache_nodes      = 1
+  parameter_group_name = "default.redis3.2"
+}
+`, rName)
+}
+
+func testAccAWSElasticacheClusterConfig_Port(rName string, port int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "bar" {
+  cluster_id           = "%s"
+  engine               = "memcached"
+  node_type            = "cache.m1.small"
+  num_cache_nodes      = 1
+  parameter_group_name = "default.memcached1.4"
+  port                 = %d
+}
+`, rName, port)
+}
+
+var testAccAWSElasticacheClusterConfig_SecurityGroup = fmt.Sprintf(`
 provider "aws" {
 	region = "us-east-1"
 }

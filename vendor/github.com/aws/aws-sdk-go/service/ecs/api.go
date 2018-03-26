@@ -3439,8 +3439,17 @@ func (c *ECS) UpdateServiceRequest(input *UpdateServiceInput) (req *request.Requ
 // in a service by specifying the cluster that the service is running in and
 // a new desiredCount parameter.
 //
-// You can use UpdateService to modify your task definition and deploy a new
-// version of your service.
+// If you have updated the Docker image of your application, you can create
+// a new task definition with that image and deploy it to your service. The
+// service scheduler uses the minimum healthy percent and maximum percent parameters
+// (in the service's deployment configuration) to determine the deployment strategy.
+//
+// If your updated Docker image uses the same tag as what is in the existing
+// task definition for your service (for example, my_image:latest), you do not
+// need to create a new revision of your task definition. You can update the
+// service using the forceNewDeployment option. The new tasks launched by the
+// deployment pull the current image/tag combination from your repository when
+// they start.
 //
 // You can also update the deployment configuration of a service. When a deployment
 // is triggered by updating the task definition of a service, the service scheduler
@@ -3754,10 +3763,12 @@ type AwsVpcConfiguration struct {
 	AssignPublicIp *string `locationName:"assignPublicIp" type:"string" enum:"AssignPublicIp"`
 
 	// The security groups associated with the task or service. If you do not specify
-	// a security group, the default security group for the VPC is used.
+	// a security group, the default security group for the VPC is used. There is
+	// a limit of 5 security groups able to be specified per AwsVpcConfiguration.
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 
-	// The subnets associated with the task or service.
+	// The subnets associated with the task or service. There is a limit of 10 subnets
+	// able to be specified per AwsVpcConfiguration.
 	//
 	// Subnets is a required field
 	Subnets []*string `locationName:"subnets" type:"list" required:"true"`
@@ -4686,18 +4697,22 @@ type ContainerInstance struct {
 	// The Unix time stamp for when the container instance was registered.
 	RegisteredAt *time.Time `locationName:"registeredAt" type:"timestamp" timestampFormat:"unix"`
 
-	// For most resource types, this parameter describes the registered resources
-	// on the container instance that are in use by current tasks. For port resource
-	// types, this parameter describes the ports that were reserved by the Amazon
-	// ECS container agent when it registered the container instance with Amazon
-	// ECS.
+	// For CPU and memory resource types, this parameter describes the amount of
+	// each resource that was available on the container instance when the container
+	// agent registered it with Amazon ECS; this value represents the total amount
+	// of CPU and memory that can be allocated on this container instance to tasks.
+	// For port resource types, this parameter describes the ports that were reserved
+	// by the Amazon ECS container agent when it registered the container instance
+	// with Amazon ECS.
 	RegisteredResources []*Resource `locationName:"registeredResources" type:"list"`
 
-	// For most resource types, this parameter describes the remaining resources
-	// of the container instance that are available for new tasks. For port resource
-	// types, this parameter describes the ports that are reserved by the Amazon
-	// ECS container agent and any containers that have reserved port mappings;
-	// any port that is not specified here is available for new tasks.
+	// For CPU and memory resource types, this parameter describes the remaining
+	// CPU and memory on the that has not already been allocated to tasks (and is
+	// therefore available for new tasks). For port resource types, this parameter
+	// describes the ports that were reserved by the Amazon ECS container agent
+	// (at instance registration time) and any task containers that have reserved
+	// port mappings on the host (with the host or bridge network mode). Any port
+	// that is not specified here is available for new tasks.
 	RemainingResources []*Resource `locationName:"remainingResources" type:"list"`
 
 	// The number of tasks on the container instance that are in the RUNNING status.
@@ -5114,6 +5129,10 @@ type CreateServiceInput struct {
 	// ServiceName is a required field
 	ServiceName *string `locationName:"serviceName" type:"string" required:"true"`
 
+	// The details of the service discovery registries you want to assign to this
+	// service. For more information, see Service Discovery (http://docs.aws.amazon.com/AmazonECS/latest/developerguideservice-discovery.html).
+	ServiceRegistries []*ServiceRegistry `locationName:"serviceRegistries" type:"list"`
+
 	// The family and revision (family:revision) or full ARN of the task definition
 	// to run in your service. If a revision is not specified, the latest ACTIVE
 	// revision is used.
@@ -5231,6 +5250,12 @@ func (s *CreateServiceInput) SetRole(v string) *CreateServiceInput {
 // SetServiceName sets the ServiceName field's value.
 func (s *CreateServiceInput) SetServiceName(v string) *CreateServiceInput {
 	s.ServiceName = &v
+	return s
+}
+
+// SetServiceRegistries sets the ServiceRegistries field's value.
+func (s *CreateServiceInput) SetServiceRegistries(v []*ServiceRegistry) *CreateServiceInput {
+	s.ServiceRegistries = v
 	return s
 }
 
@@ -6663,6 +6688,14 @@ type LinuxParameters struct {
 	// container instance, log in to your container instance and run the following
 	// command: sudo docker version | grep "Server API version"
 	InitProcessEnabled *bool `locationName:"initProcessEnabled" type:"boolean"`
+
+	// The value for the size of the /dev/shm volume. This parameter maps to the
+	// --shm-size option to docker run (https://docs.docker.com/engine/reference/run/).
+	SharedMemorySize *int64 `locationName:"sharedMemorySize" type:"integer"`
+
+	// The container path, mount options, and size of the tmpfs mount. This parameter
+	// maps to the --tmpfs option to docker run (https://docs.docker.com/engine/reference/run/).
+	Tmpfs []*Tmpfs `locationName:"tmpfs" type:"list"`
 }
 
 // String returns the string representation
@@ -6688,6 +6721,16 @@ func (s *LinuxParameters) Validate() error {
 			}
 		}
 	}
+	if s.Tmpfs != nil {
+		for i, v := range s.Tmpfs {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tmpfs", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6710,6 +6753,18 @@ func (s *LinuxParameters) SetDevices(v []*Device) *LinuxParameters {
 // SetInitProcessEnabled sets the InitProcessEnabled field's value.
 func (s *LinuxParameters) SetInitProcessEnabled(v bool) *LinuxParameters {
 	s.InitProcessEnabled = &v
+	return s
+}
+
+// SetSharedMemorySize sets the SharedMemorySize field's value.
+func (s *LinuxParameters) SetSharedMemorySize(v int64) *LinuxParameters {
+	s.SharedMemorySize = &v
+	return s
+}
+
+// SetTmpfs sets the Tmpfs field's value.
+func (s *LinuxParameters) SetTmpfs(v []*Tmpfs) *LinuxParameters {
+	s.Tmpfs = v
 	return s
 }
 
@@ -8816,6 +8871,8 @@ type Service struct {
 	// within a region or across multiple regions.
 	ServiceName *string `locationName:"serviceName" type:"string"`
 
+	ServiceRegistries []*ServiceRegistry `locationName:"serviceRegistries" type:"list"`
+
 	// The status of the service. The valid values are ACTIVE, DRAINING, or INACTIVE.
 	Status *string `locationName:"status" type:"string"`
 
@@ -8943,6 +9000,12 @@ func (s *Service) SetServiceName(v string) *Service {
 	return s
 }
 
+// SetServiceRegistries sets the ServiceRegistries field's value.
+func (s *Service) SetServiceRegistries(v []*ServiceRegistry) *Service {
+	s.ServiceRegistries = v
+	return s
+}
+
 // SetStatus sets the Status field's value.
 func (s *Service) SetStatus(v string) *Service {
 	s.Status = &v
@@ -8994,6 +9057,41 @@ func (s *ServiceEvent) SetId(v string) *ServiceEvent {
 // SetMessage sets the Message field's value.
 func (s *ServiceEvent) SetMessage(v string) *ServiceEvent {
 	s.Message = &v
+	return s
+}
+
+// Details of the service registry.
+type ServiceRegistry struct {
+	_ struct{} `type:"structure"`
+
+	// The port value used if your Service Discovery service specified an SRV record.
+	Port *int64 `locationName:"port" type:"integer"`
+
+	// The Amazon Resource Name (ARN) of the Service Registry. The currently supported
+	// service registry is Amazon Route 53 Auto Naming Service. For more information,
+	// see Service (https://docs.aws.amazon.com/Route53/latest/APIReference/API_autonaming_Service.html).
+	RegistryArn *string `locationName:"registryArn" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceRegistry) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceRegistry) GoString() string {
+	return s.String()
+}
+
+// SetPort sets the Port field's value.
+func (s *ServiceRegistry) SetPort(v int64) *ServiceRegistry {
+	s.Port = &v
+	return s
+}
+
+// SetRegistryArn sets the RegistryArn field's value.
+func (s *ServiceRegistry) SetRegistryArn(v string) *ServiceRegistry {
+	s.RegistryArn = &v
 	return s
 }
 
@@ -10145,6 +10243,74 @@ func (s *TaskOverride) SetTaskRoleArn(v string) *TaskOverride {
 	return s
 }
 
+// The container path, mount options, and size of the tmpfs mount.
+type Tmpfs struct {
+	_ struct{} `type:"structure"`
+
+	// The absolute file path where the tmpfs volume will be mounted.
+	//
+	// ContainerPath is a required field
+	ContainerPath *string `locationName:"containerPath" type:"string" required:"true"`
+
+	// The list of tmpfs volume mount options.
+	//
+	// Valid values: "defaults" | "ro" | "rw" | "suid" | "nosuid" | "dev" | "nodev"
+	// | "exec" | "noexec" | "sync" | "async" | "dirsync" | "remount" | "mand" |
+	// "nomand" | "atime" | "noatime" | "diratime" | "nodiratime" | "bind" | "rbind"
+	// | "unbindable" | "runbindable" | "private" | "rprivate" | "shared" | "rshared"
+	// | "slave" | "rslave" | "relatime" | "norelatime" | "strictatime" | "nostrictatime"
+	MountOptions []*string `locationName:"mountOptions" type:"list"`
+
+	// The size of the tmpfs volume.
+	//
+	// Size is a required field
+	Size *int64 `locationName:"size" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s Tmpfs) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Tmpfs) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Tmpfs) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Tmpfs"}
+	if s.ContainerPath == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerPath"))
+	}
+	if s.Size == nil {
+		invalidParams.Add(request.NewErrParamRequired("Size"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerPath sets the ContainerPath field's value.
+func (s *Tmpfs) SetContainerPath(v string) *Tmpfs {
+	s.ContainerPath = &v
+	return s
+}
+
+// SetMountOptions sets the MountOptions field's value.
+func (s *Tmpfs) SetMountOptions(v []*string) *Tmpfs {
+	s.MountOptions = v
+	return s
+}
+
+// SetSize sets the Size field's value.
+func (s *Tmpfs) SetSize(v int64) *Tmpfs {
+	s.Size = &v
+	return s
+}
+
 // The ulimit settings to pass to the container.
 type Ulimit struct {
 	_ struct{} `type:"structure"`
@@ -10396,8 +10562,11 @@ type UpdateServiceInput struct {
 	// service.
 	DesiredCount *int64 `locationName:"desiredCount" type:"integer"`
 
-	// Whether to force a new deployment of the service. By default, --no-force-new-deployment
-	// is assumed unless otherwise specified.
+	// Whether to force a new deployment of the service. Deployments are not forced
+	// by default. You can use this option to trigger a new deployment with no service
+	// definition changes. For example, you can update a service's tasks to use
+	// a newer Docker image with the same image/tag combination (my_image:latest)
+	// or to roll Fargate tasks onto a newer platform version.
 	ForceNewDeployment *bool `locationName:"forceNewDeployment" type:"boolean"`
 
 	// The period of time, in seconds, that the Amazon ECS service scheduler should
