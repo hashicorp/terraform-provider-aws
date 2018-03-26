@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,6 +19,9 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 		Read:   resourceAwsApiGatewayStageRead,
 		Update: resourceAwsApiGatewayStageUpdate,
 		Delete: resourceAwsApiGatewayStageDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsApiGatewayStageImportState,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"cache_cluster_enabled": {
@@ -300,6 +304,12 @@ func diffVariablesOps(prefix string, oldVars, newVars map[string]interface{}) []
 			if oldValue == newValue {
 				continue
 			}
+		} else {
+			ops = append(ops, &apigateway.PatchOperation{
+				Op:    aws.String("add"),
+				Path:  aws.String(prefix + k),
+				Value: aws.String(newValue),
+			})
 		}
 		ops = append(ops, &apigateway.PatchOperation{
 			Op:    aws.String("replace"),
@@ -339,4 +349,45 @@ func resourceAwsApiGatewayStageDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return nil
+}
+
+func resourceAwsApiGatewayStageImportState(
+	d *schema.ResourceData,
+	meta interface{}) ([]*schema.ResourceData, error) {
+	log.Printf("In new import")
+
+	results := make([]*schema.ResourceData, 1, 1)
+	results[0] = d
+	raw := d.Id()
+	split := strings.Split(raw, ".")
+	apiId := split[0]
+	stageName := split[1]
+	log.Printf("found apiId: %s and stageName: %s ", apiId, stageName)
+	conn := meta.(*AWSClient).apigateway
+	input := apigateway.GetStageInput{
+		RestApiId: aws.String(apiId),
+		StageName: aws.String(stageName),
+	}
+	stage, err := conn.GetStage(&input)
+	if err != nil {
+		return nil, err
+	}
+
+	d.Set("client_certificate_id", stage.ClientCertificateId)
+
+	if stage.CacheClusterStatus != nil && *stage.CacheClusterStatus == "DELETE_IN_PROGRESS" {
+		d.Set("cache_cluster_enabled", false)
+		d.Set("cache_cluster_size", nil)
+	} else {
+		d.Set("cache_cluster_enabled", stage.CacheClusterEnabled)
+		d.Set("cache_cluster_size", stage.CacheClusterSize)
+	}
+
+	d.Set("rest_api_id", apiId)
+	d.Set("stage_name", stage.StageName)
+	d.Set("deployment_id", stage.DeploymentId)
+	d.Set("description", stage.Description)
+	d.Set("documentation_version", stage.DocumentationVersion)
+	d.Set("variables", aws.StringValueMap(stage.Variables))
+	return results, nil
 }
