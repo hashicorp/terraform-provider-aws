@@ -136,3 +136,10 @@ Import a rule that has itself and an IPv6 CIDR block as sources:
 ```console
 $ terraform import aws_security_group_rule.rule_name sg-656c65616e6f72_ingress_tcp_80_80_self_2001:db8::/48
 ```
+
+## Timeouts
+
+`aws_security_group_rule` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+configuration options:
+
+- `read` - (Default `5 minutes`) How long to wait for reading a rsecurity group rule.
