@@ -16,10 +16,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_subnet", &resource.Sweeper{
 		Name: "aws_subnet",
+		F:    testSweepSubnets,
 		Dependencies: []string{
 			"aws_batch_compute_environment",
+			"aws_elb",
 		},
-		F: testSweepSubnets,
 	})
 }
 

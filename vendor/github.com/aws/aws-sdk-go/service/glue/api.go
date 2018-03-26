@@ -9893,9 +9893,7 @@ type CreateDevEndpointInput struct {
 	NumberOfNodes *int64 `type:"integer"`
 
 	// The public key to use for authentication.
-	//
-	// PublicKey is a required field
-	PublicKey *string `type:"string" required:"true"`
+	PublicKey *string `type:"string"`
 
 	// The IAM role for the DevEndpoint.
 	//
@@ -9924,9 +9922,6 @@ func (s *CreateDevEndpointInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateDevEndpointInput"}
 	if s.EndpointName == nil {
 		invalidParams.Add(request.NewErrParamRequired("EndpointName"))
-	}
-	if s.PublicKey == nil {
-		invalidParams.Add(request.NewErrParamRequired("PublicKey"))
 	}
 	if s.RoleArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
@@ -12011,7 +12006,10 @@ type DevEndpoint struct {
 	// The number of AWS Glue Data Processing Units (DPUs) allocated to this DevEndpoint.
 	NumberOfNodes *int64 `type:"integer"`
 
-	// The public address used by this DevEndpoint.
+	// The private address used by this DevEndpoint.
+	PrivateAddress *string `type:"string"`
+
+	// The public VPC address used by this DevEndpoint.
 	PublicAddress *string `type:"string"`
 
 	// The public key to be used by this DevEndpoint for authentication.
@@ -12100,6 +12098,12 @@ func (s *DevEndpoint) SetLastUpdateStatus(v string) *DevEndpoint {
 // SetNumberOfNodes sets the NumberOfNodes field's value.
 func (s *DevEndpoint) SetNumberOfNodes(v int64) *DevEndpoint {
 	s.NumberOfNodes = &v
+	return s
+}
+
+// SetPrivateAddress sets the PrivateAddress field's value.
+func (s *DevEndpoint) SetPrivateAddress(v string) *DevEndpoint {
+	s.PrivateAddress = &v
 	return s
 }
 
