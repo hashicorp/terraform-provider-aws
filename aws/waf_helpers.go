@@ -1,8 +1,13 @@
 package aws
 
 import (
+	"bytes"
+	"fmt"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -284,4 +289,76 @@ func expandWafActivatedRule(rule map[string]interface{}) *waf.ActivatedRule {
 		}
 	}
 	return r
+}
+
+func flattenWafRegexMatchTuples(tuples []*waf.RegexMatchTuple) []interface{} {
+	out := make([]interface{}, len(tuples), len(tuples))
+	for i, t := range tuples {
+		m := make(map[string]interface{})
+
+		if t.FieldToMatch != nil {
+			m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
+		}
+		m["regex_pattern_set_id"] = *t.RegexPatternSetId
+		m["text_transformation"] = *t.TextTransformation
+
+		out[i] = m
+	}
+	return out
+}
+
+func diffWafRegexMatchSetTuples(oldT, newT []interface{}) []*waf.RegexMatchSetUpdate {
+	updates := make([]*waf.RegexMatchSetUpdate, 0)
+
+	for _, ot := range oldT {
+		tuple := ot.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newT, tuple); contains {
+			newT = append(newT[:idx], newT[idx+1:]...)
+			continue
+		}
+
+		ftm := tuple["field_to_match"].([]interface{})
+		updates = append(updates, &waf.RegexMatchSetUpdate{
+			Action: aws.String(waf.ChangeActionDelete),
+			RegexMatchTuple: &waf.RegexMatchTuple{
+				FieldToMatch:       expandFieldToMatch(ftm[0].(map[string]interface{})),
+				RegexPatternSetId:  aws.String(tuple["regex_pattern_set_id"].(string)),
+				TextTransformation: aws.String(tuple["text_transformation"].(string)),
+			},
+		})
+	}
+
+	for _, nt := range newT {
+		tuple := nt.(map[string]interface{})
+
+		ftm := tuple["field_to_match"].([]interface{})
+		updates = append(updates, &waf.RegexMatchSetUpdate{
+			Action: aws.String(waf.ChangeActionInsert),
+			RegexMatchTuple: &waf.RegexMatchTuple{
+				FieldToMatch:       expandFieldToMatch(ftm[0].(map[string]interface{})),
+				RegexPatternSetId:  aws.String(tuple["regex_pattern_set_id"].(string)),
+				TextTransformation: aws.String(tuple["text_transformation"].(string)),
+			},
+		})
+	}
+	return updates
+}
+
+func resourceAwsWafRegexMatchSetTupleHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	if v, ok := m["field_to_match"]; ok {
+		ftms := v.([]interface{})
+		ftm := ftms[0].(map[string]interface{})
+
+		if v, ok := ftm["data"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(v.(string))))
+		}
+		buf.WriteString(fmt.Sprintf("%s-", ftm["type"].(string)))
+	}
+	buf.WriteString(fmt.Sprintf("%s-", m["regex_pattern_set_id"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["text_transformation"].(string)))
+
+	return hashcode.String(buf.String())
 }
