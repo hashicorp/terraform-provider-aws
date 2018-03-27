@@ -646,6 +646,8 @@ func init() {
 
 		"elb_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
+		"es_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"rds_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"s3_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
@@ -748,6 +750,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.EcrEndpoint = endpoints["ecr"].(string)
 		config.EcsEndpoint = endpoints["ecs"].(string)
 		config.ElbEndpoint = endpoints["elb"].(string)
+		config.EsEndpoint = endpoints["es"].(string)
 		config.IamEndpoint = endpoints["iam"].(string)
 		config.KinesisEndpoint = endpoints["kinesis"].(string)
 		config.KmsEndpoint = endpoints["kms"].(string)
@@ -896,6 +899,12 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["elb_endpoint"],
+				},
+				"es": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["es_endpoint"],
 				},
 				"kinesis": {
 					Type:        schema.TypeString,

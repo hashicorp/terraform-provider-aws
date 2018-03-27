@@ -120,6 +120,7 @@ type Config struct {
 	Ec2Endpoint              string
 	EcsEndpoint              string
 	EcrEndpoint              string
+	EsEndpoint               string
 	ElbEndpoint              string
 	IamEndpoint              string
 	KinesisEndpoint          string
@@ -349,6 +350,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsEcrSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcrEndpoint)})
 	awsEcsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcsEndpoint)})
 	awsElbSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.ElbEndpoint)})
+	awsEsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EsEndpoint)})
 	awsIamSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.IamEndpoint)})
 	awsLambdaSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.LambdaEndpoint)})
 	awsKinesisSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisEndpoint)})
@@ -435,7 +437,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.elbconn = elb.New(awsElbSess)
 	client.elbv2conn = elbv2.New(awsElbSess)
 	client.emrconn = emr.New(sess)
-	client.esconn = elasticsearch.New(sess)
+	client.esconn = elasticsearch.New(awsEsSess)
 	client.firehoseconn = firehose.New(sess)
 	client.inspectorconn = inspector.New(sess)
 	client.gameliftconn = gamelift.New(sess)
