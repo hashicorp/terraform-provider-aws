@@ -65,10 +65,10 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ
 !@#$%^&*()_+-=[]{}|'`
 
 	result := make([]byte, length)
-	charset_size := big.NewInt(int64(len(charset)))
+	charsetSize := big.NewInt(int64(len(charset)))
 
-	for i, _ := range result {
-		r, err := rand.Int(rand.Reader, charset_size)
+	for i := range result {
+		r, err := rand.Int(rand.Reader, charsetSize)
 		if err != nil {
 			panic(err)
 		}
