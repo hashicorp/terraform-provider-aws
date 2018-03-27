@@ -9,6 +9,8 @@ description: |-
 # aws_elasticache_cluster
 
 Provides an ElastiCache Cluster resource, which manages a Memcached cluster or Redis instance.
+For working with Redis (Cluster Mode Enabled) replication groups, see the
+[`aws_elasticache_replication_group` resource](/docs/providers/aws/r/elasticache_replication_group.html).
 
 ~> **Note:** When you change an attribute, such as `node_type`, by default
 it is applied in the next maintenance window. Because of this, Terraform may report
