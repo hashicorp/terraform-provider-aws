@@ -61,7 +61,7 @@ func resourceAwsIamUserLoginProfile() *schema.Resource {
 func generatePassword(length int) string {
 	charset := `abcdefghijklmnopqrstuvwxyz
 ABCDEFGHIJKLMNOPQRSTUVWXYZ
-012346789
+0123456789
 !@#$%^&*()_+-=[]{}|'`
 
 	result := make([]byte, length)
