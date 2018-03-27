@@ -44,9 +44,9 @@ func TestAccAWSCloudFrontDistribution_S3Origin(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontDistribution_S3OriginNoRestrictions(t *testing.T) {
+func TestAccAWSCloudFrontDistribution_S3Origin_Restrictions(t *testing.T) {
 	ri := acctest.RandInt()
-	testConfig := fmt.Sprintf(testAccAWSCloudFrontDistributionS3ConfigWithNoRestrictions, ri, originBucket, logBucket, testAccAWSCloudFrontDistributionRetainConfig())
+	testConfig := fmt.Sprintf(testAccAWSCloudFrontDistributionS3ConfigRestrictions, ri, originBucket, logBucket, testAccAWSCloudFrontDistributionRetainConfig())
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -369,12 +369,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 		max_ttl = 86400
 	}
 	price_class = "PriceClass_200"
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
 	viewer_certificate {
 		cloudfront_default_certificate = true
 	}
@@ -382,7 +376,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 `
 
-var testAccAWSCloudFrontDistributionS3ConfigWithNoRestrictions = `
+var testAccAWSCloudFrontDistributionS3ConfigRestrictions = `
 variable rand_id {
 	default = %d
 }
@@ -422,6 +416,13 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 		max_ttl = 86400
 	}
 	price_class = "PriceClass_200"
+
+	restrictions {
+		geo_restriction {
+			restriction_type = "whitelist"
+			locations = [ "US", "CA", "GB", "DE" ]
+		}
+	}
 	viewer_certificate {
 		cloudfront_default_certificate = true
 	}
@@ -464,12 +465,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 		max_ttl = 86400
 	}
 	price_class = "PriceClass_200"
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
 	viewer_certificate {
 		cloudfront_default_certificate = true
 	}
@@ -516,12 +511,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 		max_ttl = 86400
 	}
 	price_class = "PriceClass_200"
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
 	viewer_certificate {
 		cloudfront_default_certificate = true
 	}
@@ -579,12 +568,6 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
 		max_ttl = 86400
 	}
 	price_class = "PriceClass_200"
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
 	viewer_certificate {
 		cloudfront_default_certificate = true
 	}
@@ -684,11 +667,6 @@ resource "aws_cloudfront_distribution" "multi_origin_distribution" {
 		response_code = 200
 		error_caching_min_ttl = 30
 	}
-	restrictions {
-		geo_restriction {
-			restriction_type = "none"
-		}
-	}
 	viewer_certificate {
 		cloudfront_default_certificate = true
 	}
@@ -734,12 +712,6 @@ resource "aws_cloudfront_distribution" "no_custom_error_responses" {
 		error_code = 404
 		error_caching_min_ttl = 30
 	}
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
 	viewer_certificate {
 		cloudfront_default_certificate = true
 	}
@@ -780,12 +752,6 @@ resource "aws_cloudfront_distribution" "no_optional_items" {
 		min_ttl = 0
 		default_ttl = 3600
 		max_ttl = 86400
-	}
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
 	}
 	viewer_certificate {
 		cloudfront_default_certificate = true
@@ -829,12 +795,6 @@ resource "aws_cloudfront_distribution" "http_1_1" {
 		max_ttl = 86400
 	}
 	http_version = "http1.1"
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
 	viewer_certificate {
 		cloudfront_default_certificate = true
 	}
@@ -878,12 +838,6 @@ resource "aws_cloudfront_distribution" "is_ipv6_enabled" {
 		max_ttl = 86400
 	}
 	http_version = "http1.1"
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
 	viewer_certificate {
 		cloudfront_default_certificate = true
 	}
