@@ -527,7 +527,22 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 	// But its a slice of pointers so if not set for every update, they get removed.
 	params.Tags = tagsFromMapCodeBuild(d.Get("tags").(map[string]interface{}))
 
-	_, err := conn.UpdateProject(params)
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		var err error
+
+		_, err = conn.UpdateProject(params)
+		if err != nil {
+			// Work around eventual consistency of IAM
+			if isAWSErr(err, "InvalidInputException", "CodeBuild is not authorized to perform") {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+
+	})
 
 	if err != nil {
 		return fmt.Errorf(
