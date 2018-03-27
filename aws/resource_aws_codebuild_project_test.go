@@ -45,25 +45,6 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 	})
 }
 
-/*
-   environment_variable = {
-     "name"  = "SOME_KEY"
-     "value" = "SOME_VALUE"
-   }
-
-   environment_variable = {
-     "name"  = "SOME_OTHER_KEY"
-     "value" = "SOME_OTHER_VALUE"
-     "type"  = "PLAINTEXT"
-   }
-
-   environment_variable = {
-     "name"  = "SOME_PARAMSTORE_KEY"
-     "value" = "SOME_PARAMSTORE_VALUE"
-     "type"  = "PARAMETER_STORE"
-   }
-*/
-
 func TestAccAWSCodeBuildProject_vpc(t *testing.T) {
 	name := acctest.RandString(10)
 
