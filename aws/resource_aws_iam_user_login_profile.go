@@ -65,16 +65,18 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ
 !@#$%^&*()_+-=[]{}|'`
 
 	result := make([]byte, length)
-	for i := 0; i < length; i++ {
-		r, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+	charset_size := big.NewInt(int64(len(charset)))
+
+	for i, _ := range result {
+		r, err := rand.Int(rand.Reader, charset_size)
 		if err != nil {
 			panic(err)
 		}
-		if r.IsInt64() {
-			result[i] = charset[r.Int64()]
-		} else {
+		if !r.IsInt64() {
 			panic("rand.Int() not representable as an Int64")
 		}
+
+		result[i] = charset[r.Int64()]
 	}
 
 	return string(result)
