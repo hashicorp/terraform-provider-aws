@@ -63,7 +63,6 @@ func testSweepElasticacheReplicationGroups(region string) error {
 		}
 		return !isLast
 	})
-	return nil
 }
 
 func TestAccAWSElasticacheReplicationGroup_basic(t *testing.T) {

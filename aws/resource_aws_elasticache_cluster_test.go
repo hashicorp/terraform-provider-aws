@@ -69,7 +69,6 @@ func testSweepElasticacheClusters(region string) error {
 		}
 		return !isLast
 	})
-	return nil
 }
 
 func TestAccAWSElasticacheCluster_Engine_Memcached_Ec2Classic(t *testing.T) {
