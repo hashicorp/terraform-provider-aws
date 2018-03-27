@@ -59,27 +59,14 @@ func resourceAwsIamUserLoginProfile() *schema.Resource {
 // characters that are likely to satisfy any possible AWS password policy
 // (given sufficient length).
 func generatePassword(length int) string {
-	charsets := []string{
-		"abcdefghijklmnopqrstuvwxyz",
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-		"012346789",
-		"!@#$%^&*()_+-=[]{}|'",
-	}
+	charset := `abcdefghijklmnopqrstuvwxyz
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+012346789
+!@#$%^&*()_+-=[]{}|'`
 
-	// Use all character sets
-	components := make(map[int]byte, length)
-	for i := 0; i < length; i++ {
-		charset := charsets[i%len(charsets)]
-		components[i] = charset[rand.Int(len(charset))]
-	}
-
-	// Randomise the ordering so we don't end up with a predictable
-	// lower case, upper case, numeric, symbol pattern
 	result := make([]byte, length)
-	i := 0
-	for _, b := range components {
-		result[i] = b
-		i = i + 1
+	for i := 0; i < length; i++ {
+		result[i] = charset[rand.Int(len(charset))]
 	}
 
 	return string(result)
