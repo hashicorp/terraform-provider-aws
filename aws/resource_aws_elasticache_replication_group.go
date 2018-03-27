@@ -65,6 +65,11 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 	resourceSchema["cluster_mode"] = &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
+		// We allow Computed: true here since using number_cache_clusters
+		// and a cluster mode enabled parameter_group_name will create
+		// a single shard replication group with number_cache_clusters - 1
+		// read replicas. Otherwise, the resource is marked ForceNew.
+		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
