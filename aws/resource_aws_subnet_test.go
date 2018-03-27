@@ -20,6 +20,7 @@ func init() {
 		Dependencies: []string{
 			"aws_batch_compute_environment",
 			"aws_elb",
+			"aws_spot_fleet_request",
 		},
 	})
 }
