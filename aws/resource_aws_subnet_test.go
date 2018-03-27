@@ -19,6 +19,8 @@ func init() {
 		F:    testSweepSubnets,
 		Dependencies: []string{
 			"aws_batch_compute_environment",
+			"aws_elasticache_cluster",
+			"aws_elasticache_replication_group",
 			"aws_elb",
 		},
 	})

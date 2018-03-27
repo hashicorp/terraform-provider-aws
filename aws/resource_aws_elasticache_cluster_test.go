@@ -3,11 +3,13 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -16,6 +18,56 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_elasticache_cluster", &resource.Sweeper{
+		Name: "aws_elasticache_cluster",
+		F:    testSweepElasticacheClusters,
+	})
+}
+
+func testSweepElasticacheClusters(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).elasticacheconn
+
+	prefixes := []string{
+		"tf-",
+		"tf-test-",
+		"tf-acc-test-",
+	}
+
+	return conn.DescribeCacheClustersPages(&elasticache.DescribeCacheClustersInput{}, func(page *elasticache.DescribeCacheClustersOutput, isLast bool) bool {
+		if len(page.CacheClusters) == 0 {
+			log.Print("[DEBUG] No Elasticache Replicaton Groups to sweep")
+			return false
+		}
+
+		for _, cluster := range page.CacheClusters {
+			id := aws.StringValue(cluster.CacheClusterId)
+			skip := true
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(id, prefix) {
+					skip = false
+					break
+				}
+			}
+			if skip {
+				log.Printf("[INFO] Skipping Elasticache Cluster: %s", id)
+				continue
+			}
+			log.Printf("[INFO] Deleting Elasticache Cluster: %s", id)
+			err := deleteElasticacheCluster(id, 40*time.Minute, conn)
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete Elasticache Cluster (%s): %s", id, err)
+			}
+		}
+		return !isLast
+	})
+	return nil
+}
 
 func TestAccAWSElasticacheCluster_Engine_Memcached_Ec2Classic(t *testing.T) {
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")

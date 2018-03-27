@@ -2,8 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -12,6 +15,56 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_elasticache_replication_group", &resource.Sweeper{
+		Name: "aws_elasticache_replication_group",
+		F:    testSweepElasticacheReplicationGroups,
+	})
+}
+
+func testSweepElasticacheReplicationGroups(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).elasticacheconn
+
+	prefixes := []string{
+		"tf-",
+		"tf-test-",
+		"tf-acc-test-",
+	}
+
+	return conn.DescribeReplicationGroupsPages(&elasticache.DescribeReplicationGroupsInput{}, func(page *elasticache.DescribeReplicationGroupsOutput, isLast bool) bool {
+		if len(page.ReplicationGroups) == 0 {
+			log.Print("[DEBUG] No Elasticache Replicaton Groups to sweep")
+			return false
+		}
+
+		for _, replicationGroup := range page.ReplicationGroups {
+			id := aws.StringValue(replicationGroup.ReplicationGroupId)
+			skip := true
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(id, prefix) {
+					skip = false
+					break
+				}
+			}
+			if skip {
+				log.Printf("[INFO] Skipping Elasticache Replication Group: %s", id)
+				continue
+			}
+			log.Printf("[INFO] Deleting Elasticache Replication Group: %s", id)
+			err := deleteElasticacheReplicationGroup(id, 40*time.Minute, conn)
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete Elasticache Replication Group (%s): %s", id, err)
+			}
+		}
+		return !isLast
+	})
+	return nil
+}
 
 func TestAccAWSElasticacheReplicationGroup_basic(t *testing.T) {
 	var rg elasticache.ReplicationGroup
