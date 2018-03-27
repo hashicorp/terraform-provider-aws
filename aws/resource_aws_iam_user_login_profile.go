@@ -1,9 +1,9 @@
 package aws
 
 import (
+	"crypto/rand"
 	"fmt"
 	"log"
-	"math/rand"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -67,11 +67,10 @@ func generatePassword(length int) string {
 	}
 
 	// Use all character sets
-	random := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 	components := make(map[int]byte, length)
 	for i := 0; i < length; i++ {
 		charset := charsets[i%len(charsets)]
-		components[i] = charset[random.Intn(len(charset))]
+		components[i] = charset[rand.Int(len(charset))]
 	}
 
 	// Randomise the ordering so we don't end up with a predictable
