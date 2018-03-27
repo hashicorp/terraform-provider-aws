@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -37,6 +38,16 @@ func dataSourceAwsSsmParameter() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"with_default": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"default": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
 		},
 	}
 }
@@ -55,7 +66,17 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := ssmconn.GetParameter(paramInput)
 
 	if err != nil {
-		return fmt.Errorf("Error describing SSM parameter: %s", err)
+		return errwrap.Wrapf("[ERROR] Error describing SSM parameter: {{err}}", err)
+	}
+
+	if len(resp.InvalidParameters) > 0 && d.Get("with_default").(bool) == true {
+		d.SetId(name)
+		d.Set("arn", "")
+		d.Set("name", d.Get("type").(string))
+		d.Set("value", d.Get("default").(string))
+		return nil
+	} else if len(resp.InvalidParameters) > 0 {
+		return fmt.Errorf("[ERROR] SSM Parameter %s is invalid", name)
 	}
 
 	param := resp.Parameter
