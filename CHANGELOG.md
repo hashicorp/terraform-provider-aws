@@ -1,5 +1,9 @@
 ## 1.13.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_wafregional_geo_match_set` [GH-3915]
+
 ENHANCEMENTS:
 
 * resource/appsync_graphql_api: Support import [GH-3500]
