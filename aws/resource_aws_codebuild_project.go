@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -736,10 +737,10 @@ func resourceAwsCodeBuildProjectSourceHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	if v, ok := m["git_clone_depth"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(int)))
+		buf.WriteString(fmt.Sprintf("%s-", strconv.Itoa(v.(int))))
 	}
 	if v, ok := m["insecure_ssl"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(bool)))
+		buf.WriteString(fmt.Sprintf("%s-", strconv.FormatBool(v.(bool))))
 	}
 
 	return hashcode.String(buf.String())
