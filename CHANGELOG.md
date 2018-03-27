@@ -19,6 +19,8 @@ BUG FIXES:
 * resource/aws_iam_user_login_profile: Fix `password_length` validation function regression from 1.12.0 [GH-3919]
 * resource/aws_lb_listener: Retry CertificateNotFound errors on update for IAM eventual consistency [GH-3901]
 * resource/aws_security_group: Retry read on creation for EC2 eventual consistency [GH-3892]
+* resource/aws_lb: Store correct state for http2 and ensure attributes are set on create [GH-3854]
+
 
 ## 1.12.0 (March 23, 2018)
 
