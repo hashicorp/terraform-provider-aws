@@ -555,6 +555,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_waf_sql_injection_match_set":              resourceAwsWafSqlInjectionMatchSet(),
 			"aws_waf_geo_match_set":                        resourceAwsWafGeoMatchSet(),
 			"aws_wafregional_byte_match_set":               resourceAwsWafRegionalByteMatchSet(),
+			"aws_wafregional_geo_match_set":                resourceAwsWafRegionalGeoMatchSet(),
 			"aws_wafregional_ipset":                        resourceAwsWafRegionalIPSet(),
 			"aws_wafregional_size_constraint_set":          resourceAwsWafRegionalSizeConstraintSet(),
 			"aws_wafregional_sql_injection_match_set":      resourceAwsWafRegionalSqlInjectionMatchSet(),
