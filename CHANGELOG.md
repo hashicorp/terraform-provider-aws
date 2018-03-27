@@ -10,6 +10,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* provider: Support custom Elasticsearch endpoint [GH-3941]
 * resource/appsync_graphql_api: Support import [GH-3500]
 * resource/aws_elasticache_cluster: Allow port to be optional [GH-3835]
 * resource/aws_elasticache_cluster: Add `replication_group_id` argument [GH-3869]
