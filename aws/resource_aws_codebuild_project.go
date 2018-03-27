@@ -106,6 +106,15 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											codebuild.EnvironmentVariableTypePlaintext,
+											codebuild.EnvironmentVariableTypeParameterStore,
+										}, false),
+										Default: codebuild.EnvironmentVariableTypePlaintext,
+									},
 								},
 							},
 						},
@@ -183,6 +192,15 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.SourceTypeBitbucket,
 								codebuild.SourceTypeGithubEnterprise,
 							}, false),
+						},
+						"git_clone_depth": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(0),
+						},
+						"insecure_ssl": {
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 					},
 				},
@@ -373,6 +391,10 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 					projectEnvironmentVar.Value = &v
 				}
 
+				if v := config["type"].(string); v != "" {
+					projectEnvironmentVar.Type = &v
+				}
+
 				projectEnvironmentVariables = append(projectEnvironmentVariables, projectEnvironmentVar)
 			}
 
@@ -408,11 +430,15 @@ func expandProjectSource(d *schema.ResourceData) codebuild.ProjectSource {
 		sourceType := data["type"].(string)
 		location := data["location"].(string)
 		buildspec := data["buildspec"].(string)
+		gitCloneDepth := aws.Int64(int64(data["git_clone_depth"].(int)))
+		insecureSsl := aws.Bool(data["insecure_ssl"].(bool))
 
 		projectSource = codebuild.ProjectSource{
-			Type:      &sourceType,
-			Location:  &location,
-			Buildspec: &buildspec,
+			Type:          &sourceType,
+			Location:      &location,
+			Buildspec:     &buildspec,
+			GitCloneDepth: gitCloneDepth,
+			InsecureSsl:   insecureSsl,
 		}
 
 		if v, ok := data["auth"]; ok {
@@ -638,6 +664,14 @@ func flattenAwsCodeBuildProjectSource(source *codebuild.ProjectSource) []interfa
 		m["location"] = *source.Location
 	}
 
+	if source.GitCloneDepth != nil {
+		m["git_clone_depth"] = *source.GitCloneDepth
+	}
+
+	if source.InsecureSsl != nil {
+		m["insecure_ssl"] = *source.InsecureSsl
+	}
+
 	l[0] = m
 
 	return l
@@ -683,7 +717,7 @@ func resourceAwsCodeBuildProjectEnvironmentHash(v interface{}) int {
 	for _, e := range environmentVariables {
 		if e != nil { // Old statefiles might have nil values in them
 			ev := e.(map[string]interface{})
-			buf.WriteString(fmt.Sprintf("%s:%s-", ev["name"].(string), ev["value"].(string)))
+			buf.WriteString(fmt.Sprintf("%s:%s:%s-", ev["name"].(string), ev["type"].(string), ev["value"].(string)))
 		}
 	}
 
@@ -700,6 +734,12 @@ func resourceAwsCodeBuildProjectSourceHash(v interface{}) int {
 	}
 	if v, ok := m["location"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["git_clone_depth"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(int)))
+	}
+	if v, ok := m["insecure_ssl"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(bool)))
 	}
 
 	return hashcode.String(buf.String())
@@ -726,6 +766,7 @@ func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVari
 			item := map[string]interface{}{}
 			item["name"] = *env.Name
 			item["value"] = *env.Value
+			item["type"] = *env.Type
 			envVariables = append(envVariables, item)
 		}
 	}

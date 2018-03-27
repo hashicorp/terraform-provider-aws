@@ -28,11 +28,41 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
 					resource.TestCheckResourceAttr(
 						"aws_codebuild_project.foo", "build_timeout", "5"),
+					resource.TestCheckResourceAttr(
+						"aws_codebuild_project.foo", "environment.2427541259.environment_variable.0.name", "SOME_KEY"),
+					// default
+					resource.TestCheckResourceAttr(
+						"aws_codebuild_project.foo", "environment.2427541259.environment_variable.0.type", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(
+						"aws_codebuild_project.foo", "environment.2427541259.environment_variable.1.type", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(
+						"aws_codebuild_project.foo", "environment.2427541259.environment_variable.2.type", "PARAMETER_STORE"),
+					//					resource.TestCheckResourceAttr(
+					//						"aws_codebuild_project.foo", "build_timeout", "5"),
 				),
 			},
 		},
 	})
 }
+
+/*
+   environment_variable = {
+     "name"  = "SOME_KEY"
+     "value" = "SOME_VALUE"
+   }
+
+   environment_variable = {
+     "name"  = "SOME_OTHER_KEY"
+     "value" = "SOME_OTHER_VALUE"
+     "type"  = "PLAINTEXT"
+   }
+
+   environment_variable = {
+     "name"  = "SOME_PARAMSTORE_KEY"
+     "value" = "SOME_PARAMSTORE_VALUE"
+     "type"  = "PARAMETER_STORE"
+   }
+*/
 
 func TestAccAWSCodeBuildProject_vpc(t *testing.T) {
 	name := acctest.RandString(10)
@@ -83,6 +113,8 @@ func TestAccAWSCodeBuildProject_sourceAuth(t *testing.T) {
 	authType := "OAUTH"
 	name := acctest.RandString(10)
 	resourceName := "aws_codebuild_project.foo"
+	gitCloneDepth := "5"
+	insecureSsl := "true"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -97,8 +129,10 @@ func TestAccAWSCodeBuildProject_sourceAuth(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_sourceAuth(name, authResource, authType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "source.1060593600.auth.2706882902.resource", authResource),
-					resource.TestCheckResourceAttr(resourceName, "source.1060593600.auth.2706882902.type", authType),
+					resource.TestCheckResourceAttr(resourceName, "source.1493867278.git_clone_depth", gitCloneDepth),
+					resource.TestCheckResourceAttr(resourceName, "source.1493867278.insecure_ssl", insecureSsl),
+					resource.TestCheckResourceAttr(resourceName, "source.1493867278.auth.2706882902.resource", authResource),
+					resource.TestCheckResourceAttr(resourceName, "source.1493867278.auth.2706882902.type", authType),
 				),
 			},
 		},
@@ -313,11 +347,25 @@ resource "aws_codebuild_project" "foo" {
       "name"  = "SOME_KEY"
       "value" = "SOME_VALUE"
     }
+
+    environment_variable = {
+      "name"  = "SOME_OTHER_KEY"
+      "value" = "SOME_OTHER_VALUE"
+      "type"  = "PLAINTEXT"
+    }
+
+    environment_variable = {
+      "name"  = "SOME_PARAMSTORE_KEY"
+      "value" = "SOME_PARAMSTORE_VALUE"
+      "type"  = "PARAMETER_STORE"
+    }
   }
 
   source {
-    type     = "GITHUB"
-    location = "https://github.com/hashicorp/packer.git"
+    type            = "GITHUB"
+    location        = "https://github.com/hashicorp/packer.git"
+    git_clone_depth = 1
+    insecure_ssl    = true
   }
 
   tags {
@@ -398,11 +446,24 @@ resource "aws_codebuild_project" "foo" {
       "name"  = "SOME_OTHERKEY"
       "value" = "SOME_OTHERVALUE"
     }
+
+    environment_variable = {
+      "name"  = "SOME_OTHER_KEY"
+      "value" = "SOME_OTHER_VALUE"
+      "type"  = "PLAINTEXT"
+    }
+
+    environment_variable = {
+      "name"  = "SOME_PARAMSTORE_KEY"
+      "value" = "SOME_PARAMSTORE_VALUE"
+      "type"  = "PARAMETER_STORE"
+    }
   }
 
   source {
-    type     = "GITHUB"
-    location = "https://github.com/hashicorp/packer.git"
+    type            = "GITHUB"
+    location        = "https://github.com/hashicorp/packer.git"
+    git_clone_depth = 5
   }
 
   tags {
@@ -567,8 +628,10 @@ resource "aws_codebuild_project" "foo" {
   }
 
   source {
-    type     = "GITHUB"
-    location = "https://github.com/hashicorp/packer.git"
+    type            = "GITHUB"
+    location        = "https://github.com/hashicorp/packer.git"
+    git_clone_depth = "5"
+    insecure_ssl    = "true"
 
     auth {
       resource = "%[2]s"
