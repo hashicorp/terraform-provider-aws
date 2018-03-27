@@ -185,3 +185,67 @@ func sliceContainsString(slice []interface{}, s string) (int, bool) {
 	}
 	return -1, false
 }
+
+func diffWafRuleGroupActivatedRules(oldRules, newRules []interface{}) []*waf.RuleGroupUpdate {
+	updates := make([]*waf.RuleGroupUpdate, 0)
+
+	for _, op := range oldRules {
+		rule := op.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newRules, rule); contains {
+			newRules = append(newRules[:idx], newRules[idx+1:]...)
+			continue
+		}
+
+		updates = append(updates, &waf.RuleGroupUpdate{
+			Action:        aws.String(waf.ChangeActionDelete),
+			ActivatedRule: expandWafActivatedRule(rule),
+		})
+	}
+
+	for _, np := range newRules {
+		rule := np.(map[string]interface{})
+
+		updates = append(updates, &waf.RuleGroupUpdate{
+			Action:        aws.String(waf.ChangeActionInsert),
+			ActivatedRule: expandWafActivatedRule(rule),
+		})
+	}
+	return updates
+}
+
+func flattenWafActivatedRules(activatedRules []*waf.ActivatedRule) []interface{} {
+	out := make([]interface{}, len(activatedRules), len(activatedRules))
+	for i, ar := range activatedRules {
+		rule := map[string]interface{}{
+			"priority": int(*ar.Priority),
+			"rule_id":  *ar.RuleId,
+			"type":     *ar.Type,
+		}
+		if ar.Action != nil {
+			rule["action"] = []interface{}{
+				map[string]interface{}{
+					"type": *ar.Action.Type,
+				},
+			}
+		}
+		out[i] = rule
+	}
+	return out
+}
+
+func expandWafActivatedRule(rule map[string]interface{}) *waf.ActivatedRule {
+	r := &waf.ActivatedRule{
+		Priority: aws.Int64(int64(rule["priority"].(int))),
+		RuleId:   aws.String(rule["rule_id"].(string)),
+		Type:     aws.String(rule["type"].(string)),
+	}
+
+	if a, ok := rule["action"].([]interface{}); ok && len(a) > 0 {
+		m := a[0].(map[string]interface{})
+		r.Action = &waf.WafAction{
+			Type: aws.String(m["type"].(string)),
+		}
+	}
+	return r
+}
