@@ -151,3 +151,37 @@ func diffWafGeoMatchSetConstraints(oldT, newT []interface{}) []*waf.GeoMatchSetU
 	}
 	return updates
 }
+
+func diffWafRegexPatternSetPatternStrings(oldPatterns, newPatterns []interface{}) []*waf.RegexPatternSetUpdate {
+	updates := make([]*waf.RegexPatternSetUpdate, 0)
+
+	for _, op := range oldPatterns {
+		if idx, contains := sliceContainsString(newPatterns, op.(string)); contains {
+			newPatterns = append(newPatterns[:idx], newPatterns[idx+1:]...)
+			continue
+		}
+
+		updates = append(updates, &waf.RegexPatternSetUpdate{
+			Action:             aws.String(waf.ChangeActionDelete),
+			RegexPatternString: aws.String(op.(string)),
+		})
+	}
+
+	for _, np := range newPatterns {
+		updates = append(updates, &waf.RegexPatternSetUpdate{
+			Action:             aws.String(waf.ChangeActionInsert),
+			RegexPatternString: aws.String(np.(string)),
+		})
+	}
+	return updates
+}
+
+func sliceContainsString(slice []interface{}, s string) (int, bool) {
+	for idx, value := range slice {
+		v := value.(string)
+		if v == s {
+			return idx, true
+		}
+	}
+	return -1, false
+}
