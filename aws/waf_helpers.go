@@ -176,6 +176,42 @@ func diffWafRegexPatternSetPatternStrings(oldPatterns, newPatterns []interface{}
 	return updates
 }
 
+func diffWafRulePredicates(oldP, newP []interface{}) []*waf.RuleUpdate {
+	updates := make([]*waf.RuleUpdate, 0)
+
+	for _, op := range oldP {
+		predicate := op.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newP, predicate); contains {
+			newP = append(newP[:idx], newP[idx+1:]...)
+			continue
+		}
+
+		updates = append(updates, &waf.RuleUpdate{
+			Action: aws.String(waf.ChangeActionDelete),
+			Predicate: &waf.Predicate{
+				Negated: aws.Bool(predicate["negated"].(bool)),
+				Type:    aws.String(predicate["type"].(string)),
+				DataId:  aws.String(predicate["data_id"].(string)),
+			},
+		})
+	}
+
+	for _, np := range newP {
+		predicate := np.(map[string]interface{})
+
+		updates = append(updates, &waf.RuleUpdate{
+			Action: aws.String(waf.ChangeActionInsert),
+			Predicate: &waf.Predicate{
+				Negated: aws.Bool(predicate["negated"].(bool)),
+				Type:    aws.String(predicate["type"].(string)),
+				DataId:  aws.String(predicate["data_id"].(string)),
+			},
+		})
+	}
+	return updates
+}
+
 func sliceContainsString(slice []interface{}, s string) (int, bool) {
 	for idx, value := range slice {
 		v := value.(string)
