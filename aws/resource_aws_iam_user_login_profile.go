@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"log"
-	"time"
+	"math/big"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -66,7 +66,15 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ
 
 	result := make([]byte, length)
 	for i := 0; i < length; i++ {
-		result[i] = charset[rand.Int(len(charset))]
+		r, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			panic(err)
+		}
+		if r.IsInt64() {
+			result[i] = charset[r.Int64()]
+		} else {
+			panic("rand.Int() not representable as an Int64")
+		}
 	}
 
 	return string(result)
