@@ -641,7 +641,7 @@ func init() {
 
 		"elb_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
-		"es_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n"
+		"es_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"rds_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
