@@ -679,7 +679,7 @@ func testAccCheckAWSLBAttribute(n, key, value string) resource.TestCheckFunc {
 				if *attr.Value == value {
 					return nil
 				} else {
-					return fmt.Errorf(`LB attribute %s expected: "%s" actual: "%s"`, key, value, *attr.Value)
+					return fmt.Errorf("LB attribute %s expected: %q actual: %q", key, value, *attr.Value)
 				}
 			}
 		}
