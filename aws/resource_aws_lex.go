@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
@@ -187,4 +188,60 @@ func expandLexIntents(rawValue interface{}) []*lexmodelbuildingservice.Intent {
 	}
 
 	return intents
+}
+
+var lexEnumerationValueResource = &schema.Resource{
+	Schema: map[string]*schema.Schema{
+		"synonyms": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type:         schema.TypeString,
+				ValidateFunc: validation.StringLenBetween(lexEnumerationValueSynonymMinLength, lexEnumerationValueSynonymMaxLength),
+			},
+		},
+		"value": {
+			Type:         schema.TypeString,
+			Required:     true,
+			ValidateFunc: validation.StringLenBetween(lexEnumerationValueMinLength, lexEnumerationValueMaxLength),
+		},
+	},
+}
+
+func flattenLexEnumerationValues(values []*lexmodelbuildingservice.EnumerationValue) []map[string]interface{} {
+	flattenedValues := []map[string]interface{}{}
+
+	for _, value := range values {
+		flattenedValues = append(flattenedValues, map[string]interface{}{
+			"synonyms": aws.StringValueSlice(value.Synonyms),
+			"value":    aws.StringValue(value.Value),
+		})
+	}
+
+	// Prevent inconsistent diffs by sorting the enumeration values by value
+	sort.Slice(flattenedValues, func(i, j int) bool {
+		return flattenedValues[i]["value"].(string) < flattenedValues[j]["value"].(string)
+	})
+
+	return flattenedValues
+}
+
+func expandLexEnumerationValues(rawValue interface{}) []*lexmodelbuildingservice.EnumerationValue {
+	rawValues := rawValue.([]interface{})
+	values := []*lexmodelbuildingservice.EnumerationValue{}
+
+	for _, rawValue := range rawValues {
+		synonyms := []string{}
+		rawSynonyms := rawValue.(map[string]interface{})["synonyms"]
+		for _, rawSynonym := range rawSynonyms.([]interface{}) {
+			synonyms = append(synonyms, rawSynonym.(string))
+		}
+
+		values = append(values, &lexmodelbuildingservice.EnumerationValue{
+			Synonyms: aws.StringSlice(synonyms),
+			Value:    aws.String(rawValue.(map[string]interface{})["value"].(string)),
+		})
+	}
+
+	return values
 }

@@ -48,6 +48,18 @@ const (
 
 	lexPromptMaxAttemptsMin = 1
 	lexPromptMaxAttemptsMax = 5
+
+	// Slot type constants
+
+	lexSlotTypeMinEnumerationValues = 1
+	lexSlotTypeMaxEnumerationValues = 10000
+
+	// Enumeration value constants
+
+	lexEnumerationValueSynonymMinLength = 1
+	lexEnumerationValueSynonymMaxLength = 140
+	lexEnumerationValueMinLength        = 1
+	lexEnumerationValueMaxLength        = 140
 )
 
 func validateLexName(v interface{}, k string) (ws []string, errors []error) {
@@ -73,5 +85,12 @@ func validateLexMessageContentType(v interface{}, k string) (ws []string, errors
 		"PlainText",
 		"SSML",
 		"CustomPayload",
+	}, false)(v, k)
+}
+
+func validateLexSlotSelectionStrategy(v interface{}, k string) (ws []string, errors []error) {
+	return validation.StringInSlice([]string{
+		"ORIGINAL_VALUE",
+		"TOP_RESOLUTION",
 	}, false)(v, k)
 }
