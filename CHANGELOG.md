@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_waf_regex_pattern_set` [GH-3913]
+* **New Resource:** `aws_waf_rule_group` [GH-3898]
 * **New Resource:** `aws_wafregional_geo_match_set` [GH-3915]
 * **New Resource:** `aws_wafregional_regex_pattern_set` [GH-3933]
 
