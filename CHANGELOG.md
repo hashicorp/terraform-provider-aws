@@ -1,5 +1,9 @@
 ## 1.13.0 (Unreleased)
 
+NOTES:
+
+This release is happening outside the normal release schedule to accomodate a crash fix for the `aws_lb_target_group` resource. It appears an ELBv2 service update rolling out currently is the root cause. The potential for this crash has been present since at least the initial version of the AWS provider after the provider split from Terraform core.
+
 FEATURES:
 
 * **New Resource:** `aws_appsync_datasource` [GH-2758]
