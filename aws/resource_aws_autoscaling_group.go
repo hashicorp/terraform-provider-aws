@@ -616,6 +616,10 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
+	if d.HasChange("service_linked_role_arn") {
+		opts.ServiceLinkedRoleARN = aws.String(d.Get("service_linked_role_arn").(string))
+	}
+
 	if err := setAutoscalingTags(conn, d); err != nil {
 		return err
 	}
@@ -723,10 +727,6 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		if err := updateASGSuspendedProcesses(d, conn); err != nil {
 			return errwrap.Wrapf("Error updating AutoScaling Group Suspended Processes: {{err}}", err)
 		}
-	}
-
-	if d.HasChange("service_linked_role_arn") {
-		opts.ServiceLinkedRoleARN = aws.String(d.Get("service_linked_role_arn").(string))
 	}
 
 	return resourceAwsAutoscalingGroupRead(d, meta)
