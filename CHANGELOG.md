@@ -1,4 +1,4 @@
-## 1.13.0 (Unreleased)
+## 1.13.0 (March 28, 2018)
 
 NOTES:
 
@@ -6,37 +6,37 @@ This release is happening outside the normal release schedule to accomodate a cr
 
 FEATURES:
 
-* **New Resource:** `aws_appsync_datasource` [GH-2758]
-* **New Resource:** `aws_waf_regex_match_set` [GH-3947]
-* **New Resource:** `aws_waf_regex_pattern_set` [GH-3913]
-* **New Resource:** `aws_waf_rule_group` [GH-3898]
-* **New Resource:** `aws_wafregional_geo_match_set` [GH-3915]
-* **New Resource:** `aws_wafregional_rate_based_rule` [GH-3871]
-* **New Resource:** `aws_wafregional_regex_match_set` [GH-3950]
-* **New Resource:** `aws_wafregional_regex_pattern_set` [GH-3933]
-* **New Resource:** `aws_wafregional_rule_group` [GH-3948]
+* **New Resource:** `aws_appsync_datasource` ([#2758](https://github.com/terraform-providers/terraform-provider-aws/issues/2758))
+* **New Resource:** `aws_waf_regex_match_set` ([#3947](https://github.com/terraform-providers/terraform-provider-aws/issues/3947))
+* **New Resource:** `aws_waf_regex_pattern_set` ([#3913](https://github.com/terraform-providers/terraform-provider-aws/issues/3913))
+* **New Resource:** `aws_waf_rule_group` ([#3898](https://github.com/terraform-providers/terraform-provider-aws/issues/3898))
+* **New Resource:** `aws_wafregional_geo_match_set` ([#3915](https://github.com/terraform-providers/terraform-provider-aws/issues/3915))
+* **New Resource:** `aws_wafregional_rate_based_rule` ([#3871](https://github.com/terraform-providers/terraform-provider-aws/issues/3871))
+* **New Resource:** `aws_wafregional_regex_match_set` ([#3950](https://github.com/terraform-providers/terraform-provider-aws/issues/3950))
+* **New Resource:** `aws_wafregional_regex_pattern_set` ([#3933](https://github.com/terraform-providers/terraform-provider-aws/issues/3933))
+* **New Resource:** `aws_wafregional_rule_group` ([#3948](https://github.com/terraform-providers/terraform-provider-aws/issues/3948))
 
 ENHANCEMENTS:
 
-* provider: Support custom Elasticsearch endpoint [GH-3941]
-* resource/aws_appsync_graphql_api: Support import [GH-3500]
-* resource/aws_elasticache_cluster: Allow port to be optional [GH-3835]
-* resource/aws_elasticache_cluster: Add `replication_group_id` argument [GH-3869]
-* resource/aws_elasticache_replication_group: Allow port to be optional [GH-3835]
+* provider: Support custom Elasticsearch endpoint ([#3941](https://github.com/terraform-providers/terraform-provider-aws/issues/3941))
+* resource/aws_appsync_graphql_api: Support import ([#3500](https://github.com/terraform-providers/terraform-provider-aws/issues/3500))
+* resource/aws_elasticache_cluster: Allow port to be optional ([#3835](https://github.com/terraform-providers/terraform-provider-aws/issues/3835))
+* resource/aws_elasticache_cluster: Add `replication_group_id` argument ([#3869](https://github.com/terraform-providers/terraform-provider-aws/issues/3869))
+* resource/aws_elasticache_replication_group: Allow port to be optional ([#3835](https://github.com/terraform-providers/terraform-provider-aws/issues/3835))
 
 BUG FIXES:
 
-* resource/aws_autoscaling_group: Fix updating of `service_linked_role` [GH-3942]
-* resource/aws_autoscaling_group: Properly set empty `enabled_metrics` in the state during read [GH-3899]
-* resource/aws_autoscaling_policy: Fix conditional logic based on `policy_type` [GH-3739]
-* resource/aws_batch_compute_environment: Correctly set `compute_resources` in state [GH-3824]
-* resource/aws_cognito_user_pool: Correctly set `schema` in state [GH-3789]
-* resource/aws_iam_user_login_profile: Fix `password_length` validation function regression from 1.12.0 [GH-3919]
-* resource/aws_lb: Store correct state for http2 and ensure attributes are set on create [GH-3854]
-* resource/aws_lb: Correctly set `subnet_mappings` in state [GH-3822]
-* resource/aws_lb_listener: Retry CertificateNotFound errors on update for IAM eventual consistency [GH-3901]
-* resource/aws_lb_target_group: Prevent crash from missing matcher during read [GH-3954]
-* resource/aws_security_group: Retry read on creation for EC2 eventual consistency [GH-3892]
+* resource/aws_autoscaling_group: Fix updating of `service_linked_role` ([#3942](https://github.com/terraform-providers/terraform-provider-aws/issues/3942))
+* resource/aws_autoscaling_group: Properly set empty `enabled_metrics` in the state during read ([#3899](https://github.com/terraform-providers/terraform-provider-aws/issues/3899))
+* resource/aws_autoscaling_policy: Fix conditional logic based on `policy_type` ([#3739](https://github.com/terraform-providers/terraform-provider-aws/issues/3739))
+* resource/aws_batch_compute_environment: Correctly set `compute_resources` in state ([#3824](https://github.com/terraform-providers/terraform-provider-aws/issues/3824))
+* resource/aws_cognito_user_pool: Correctly set `schema` in state ([#3789](https://github.com/terraform-providers/terraform-provider-aws/issues/3789))
+* resource/aws_iam_user_login_profile: Fix `password_length` validation function regression from 1.12.0 ([#3919](https://github.com/terraform-providers/terraform-provider-aws/issues/3919))
+* resource/aws_lb: Store correct state for http2 and ensure attributes are set on create ([#3854](https://github.com/terraform-providers/terraform-provider-aws/issues/3854))
+* resource/aws_lb: Correctly set `subnet_mappings` in state ([#3822](https://github.com/terraform-providers/terraform-provider-aws/issues/3822))
+* resource/aws_lb_listener: Retry CertificateNotFound errors on update for IAM eventual consistency ([#3901](https://github.com/terraform-providers/terraform-provider-aws/issues/3901))
+* resource/aws_lb_target_group: Prevent crash from missing matcher during read ([#3954](https://github.com/terraform-providers/terraform-provider-aws/issues/3954))
+* resource/aws_security_group: Retry read on creation for EC2 eventual consistency ([#3892](https://github.com/terraform-providers/terraform-provider-aws/issues/3892))
 
 
 ## 1.12.0 (March 23, 2018)
