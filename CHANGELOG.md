@@ -8,6 +8,7 @@ FEATURES:
 * **New Resource:** `aws_waf_rule_group` [GH-3898]
 * **New Resource:** `aws_wafregional_geo_match_set` [GH-3915]
 * **New Resource:** `aws_wafregional_rate_based_rule` [GH-3871]
+* **New Resource:** `aws_wafregional_regex_match_set` [GH-3950]
 * **New Resource:** `aws_wafregional_regex_pattern_set` [GH-3933]
 * **New Resource:** `aws_wafregional_rule_group` [GH-3948]
 
