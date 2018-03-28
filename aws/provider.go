@@ -562,6 +562,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafregional_rate_based_rule":              resourceAwsWafRegionalRateBasedRule(),
 			"aws_wafregional_regex_pattern_set":            resourceAwsWafRegionalRegexPatternSet(),
 			"aws_wafregional_rule":                         resourceAwsWafRegionalRule(),
+			"aws_wafregional_rule_group":                   resourceAwsWafRegionalRuleGroup(),
 			"aws_wafregional_size_constraint_set":          resourceAwsWafRegionalSizeConstraintSet(),
 			"aws_wafregional_sql_injection_match_set":      resourceAwsWafRegionalSqlInjectionMatchSet(),
 			"aws_wafregional_xss_match_set":                resourceAwsWafRegionalXssMatchSet(),
