@@ -121,9 +121,9 @@ func processingConfigurationSchema() *schema.Schema {
 											Required: true,
 											ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 												value := v.(string)
-												if value != "LambdaArn" && value != "NumberOfRetries" {
+												if value != "LambdaArn" && value != "NumberOfRetries" && value != "RoleArn" && value != "BufferSizeInMBs" && value != "BufferIntervalInSeconds" {
 													errors = append(errors, fmt.Errorf(
-														"%q must be one of 'LambdaArn', 'NumberOfRetries'", k))
+														"%q must be one of 'LambdaArn', 'NumberOfRetries', 'RoleArn', 'BufferSizeInMBs', 'BufferIntervalInSeconds'", k))
 												}
 												return
 											},
@@ -208,7 +208,7 @@ func flattenFirehoseS3Configuration(s3 firehose.S3DestinationDescription) []inte
 func flattenProcessingConfiguration(pc firehose.ProcessingConfiguration, roleArn string) []map[string]interface{} {
 	processingConfiguration := make([]map[string]interface{}, 1)
 
-	// It is necessary to explicitely filter this out
+	// It is necessary to explicitly filter this out
 	// to prevent diffs during routine use and retain the ability
 	// to show diffs if any field has drifted
 	defaultLambdaParams := map[string]string{
@@ -319,6 +319,10 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 				"hec_token":                  *destination.SplunkDestinationDescription.HECToken,
 				"s3_backup_mode":             *destination.SplunkDestinationDescription.S3BackupMode,
 				"retry_duration":             *destination.SplunkDestinationDescription.RetryOptions.DurationInSeconds,
+			}
+
+			if v := destination.SplunkDestinationDescription.ProcessingConfiguration; v != nil {
+				splunkConfiguration["processing_configuration"] = v
 			}
 
 			if v := destination.SplunkDestinationDescription.CloudWatchLoggingOptions; v != nil {
@@ -1170,6 +1174,10 @@ func createSplunkConfig(d *schema.ResourceData, s3Config *firehose.S3Destination
 		S3Configuration:                   s3Config,
 	}
 
+	if _, ok := splunk["processing_configuration"]; ok {
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(splunk)
+	}
+
 	if _, ok := splunk["cloudwatch_logging_options"]; ok {
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(splunk)
 	}
@@ -1196,6 +1204,10 @@ func updateSplunkConfig(d *schema.ResourceData, s3Update *firehose.S3Destination
 		HECAcknowledgmentTimeoutInSeconds: aws.Int64(int64(splunk["hec_acknowledgment_timeout"].(int))),
 		RetryOptions:                      extractSplunkRetryOptions(splunk),
 		S3Update:                          s3Update,
+	}
+
+	if _, ok := splunk["processing_configuration"]; ok {
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(splunk)
 	}
 
 	if _, ok := splunk["cloudwatch_logging_options"]; ok {
