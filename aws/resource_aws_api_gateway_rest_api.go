@@ -59,6 +59,10 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"execution_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -152,6 +156,16 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("name", api.Name)
 	d.Set("description", api.Description)
 	d.Set("binary_media_types", api.BinaryMediaTypes)
+
+	restApiId := d.Id()
+	region := meta.(*AWSClient).region
+	accountId := meta.(*AWSClient).accountid
+	arn, err := buildApiGatewayExecutionARN(restApiId, region, accountId)
+	if err != nil {
+		return err
+	}
+	d.Set("execution_arn", arn)
+
 	if api.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", -1)
 	} else {
