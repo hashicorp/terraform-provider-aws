@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_appsync_datasource` [GH-2758]
 * **New Resource:** `aws_waf_regex_match_set` [GH-3947]
 * **New Resource:** `aws_waf_regex_pattern_set` [GH-3913]
 * **New Resource:** `aws_waf_rule_group` [GH-3898]
