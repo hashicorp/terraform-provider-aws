@@ -787,6 +787,16 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
+		if d.HasChange("email_verification_message") {
+			config["email_message"] = d.Get("email_verification_message")
+		}
+		if d.HasChange("email_verification_subject") {
+			config["email_subject"] = d.Get("email_verification_subject")
+		}
+		if d.HasChange("sms_verification_message") {
+			config["sms_message"] = d.Get("sms_verification_message")
+		}
+
 		if ok && config != nil {
 			params.VerificationMessageTemplate = expandCognitoUserPoolVerificationMessageTemplate(config)
 		}
