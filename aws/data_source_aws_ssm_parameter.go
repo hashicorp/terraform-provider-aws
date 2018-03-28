@@ -72,7 +72,8 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	if len(resp.InvalidParameters) > 0 && d.Get("with_default").(bool) == true {
 		d.SetId(name)
 		d.Set("arn", "")
-		d.Set("name", d.Get("type").(string))
+		d.Set("name", name)
+		d.Set("type", "String")
 		d.Set("value", d.Get("default").(string))
 		return nil
 	} else if len(resp.InvalidParameters) > 0 {
