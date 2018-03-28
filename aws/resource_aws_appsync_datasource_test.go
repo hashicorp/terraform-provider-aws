@@ -261,7 +261,7 @@ resource "aws_appsync_datasource" "test" {
   type = "AMAZON_ELASTICSEARCH"
   elasticsearch_config {
     region = "${data.aws_region.current.name}"
-    endpoint = "${aws_elasticsearch_domain.test.endpoint}"
+    endpoint = "https://${aws_elasticsearch_domain.test.endpoint}"
   }
   service_role_arn = "${aws_iam_role.test.arn}"
 }
