@@ -29,6 +29,7 @@ BUG FIXES:
 * resource/aws_cognito_user_pool: Correctly set `schema` in state [GH-3789]
 * resource/aws_iam_user_login_profile: Fix `password_length` validation function regression from 1.12.0 [GH-3919]
 * resource/aws_lb: Store correct state for http2 and ensure attributes are set on create [GH-3854]
+* resource/aws_lb: Correctly set `subnet_mappings` in state [GH-3822]
 * resource/aws_lb_listener: Retry CertificateNotFound errors on update for IAM eventual consistency [GH-3901]
 * resource/aws_lb_target_group: Prevent crash from missing matcher during read [GH-3954]
 * resource/aws_security_group: Retry read on creation for EC2 eventual consistency [GH-3892]
