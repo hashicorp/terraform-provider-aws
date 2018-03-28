@@ -547,9 +547,6 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		out, err = conn.DescribeServices(&input)
 		if err != nil {
-			if d.IsNewResource() && isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
 
