@@ -645,7 +645,7 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 
 	for _, record := range resp.ResourceRecordSets {
 		name := cleanRecordName(*record.Name)
-		if FQDN(strings.ToLower(name)) != FQDN(strings.ToLower(*lopts.StartRecordName)) {
+		if FQDN(strings.ToLower(name)) != FQDN(strings.ToLower(cleanRecordName(*lopts.StartRecordName))) {
 			continue
 		}
 		if strings.ToUpper(*record.Type) != strings.ToUpper(*lopts.StartRecordType) {
