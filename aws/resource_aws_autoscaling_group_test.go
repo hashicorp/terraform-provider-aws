@@ -46,7 +46,7 @@ func testSweepAutoscalingGroups(region string) error {
 
 	for _, asg := range resp.AutoScalingGroups {
 		var testOptGroup bool
-		for _, testName := range []string{"foobar", "terraform-", "tf-test"} {
+		for _, testName := range []string{"foobar", "terraform-", "tf-test", "tf-asg-"} {
 			if strings.HasPrefix(*asg.AutoScalingGroupName, testName) {
 				testOptGroup = true
 				break
@@ -164,7 +164,7 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSAutoScalingGroup_namePrefix(t *testing.T) {
-	nameRegexp := regexp.MustCompile("^test-")
+	nameRegexp := regexp.MustCompile("^tf-test-")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -253,7 +253,7 @@ func TestAccAWSAutoScalingGroup_terminationPolicies(t *testing.T) {
 func TestAccAWSAutoScalingGroup_tags(t *testing.T) {
 	var group autoscaling.Group
 
-	randName := fmt.Sprintf("tfautotags-%s", acctest.RandString(5))
+	randName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -362,7 +362,7 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer(t *testing.T) {
 func TestAccAWSAutoScalingGroup_withPlacementGroup(t *testing.T) {
 	var group autoscaling.Group
 
-	randName := fmt.Sprintf("tf_placement_test-%s", acctest.RandString(5))
+	randName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -954,7 +954,7 @@ resource "aws_autoscaling_group" "test" {
   desired_capacity = 0
   max_size = 0
   min_size = 0
-  name_prefix = "test-"
+  name_prefix = "tf-test-"
   launch_configuration = "${aws_launch_configuration.test.name}"
 }
 `
