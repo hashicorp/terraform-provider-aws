@@ -1,10 +1,10 @@
 package aws
 
 import (
+	"crypto/rand"
 	"fmt"
 	"log"
-	"math/rand"
-	"time"
+	"math/big"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -59,28 +59,24 @@ func resourceAwsIamUserLoginProfile() *schema.Resource {
 // characters that are likely to satisfy any possible AWS password policy
 // (given sufficient length).
 func generatePassword(length int) string {
-	charsets := []string{
-		"abcdefghijklmnopqrstuvwxyz",
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-		"012346789",
-		"!@#$%^&*()_+-=[]{}|'",
-	}
+	charset := `abcdefghijklmnopqrstuvwxyz
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+0123456789
+!@#$%^&*()_+-=[]{}|'`
 
-	// Use all character sets
-	random := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
-	components := make(map[int]byte, length)
-	for i := 0; i < length; i++ {
-		charset := charsets[i%len(charsets)]
-		components[i] = charset[random.Intn(len(charset))]
-	}
-
-	// Randomise the ordering so we don't end up with a predictable
-	// lower case, upper case, numeric, symbol pattern
 	result := make([]byte, length)
-	i := 0
-	for _, b := range components {
-		result[i] = b
-		i = i + 1
+	charsetSize := big.NewInt(int64(len(charset)))
+
+	for i := range result {
+		r, err := rand.Int(rand.Reader, charsetSize)
+		if err != nil {
+			panic(err)
+		}
+		if !r.IsInt64() {
+			panic("rand.Int() not representable as an Int64")
+		}
+
+		result[i] = charset[r.Int64()]
 	}
 
 	return string(result)
