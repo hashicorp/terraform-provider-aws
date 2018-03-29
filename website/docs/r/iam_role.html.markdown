@@ -49,6 +49,8 @@ The following arguments are supported:
   See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
 * `description` - (Optional) The description of the role.
 
+* `max_session_duration` - (Optional) Max duration of a federated role 
+
 ## Attributes Reference
 
 The following attributes are exported:
