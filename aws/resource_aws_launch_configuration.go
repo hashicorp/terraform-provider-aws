@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsLaunchConfiguration() *schema.Resource {
@@ -34,14 +35,14 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateMaxLength(255),
+				ValidateFunc:  validation.StringLenBetween(1, 255),
 			},
 
 			"name_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateMaxLength(255 - resource.UniqueIDSuffixLength),
+				ValidateFunc: validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
 			},
 
 			"image_id": {
@@ -82,7 +83,7 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 						return ""
 					}
 				},
-				ValidateFunc: validateMaxLength(16384),
+				ValidateFunc: validation.StringLenBetween(1, 16384),
 			},
 
 			"security_groups": {
