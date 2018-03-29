@@ -6,11 +6,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/hashcode"
@@ -436,27 +434,23 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	}
 	createLaunchConfigurationOpts.LaunchConfigurationName = aws.String(lcName)
 
-	log.Printf(
-		"[DEBUG] autoscaling create launch configuration: %s", createLaunchConfigurationOpts)
+	log.Printf("[DEBUG] autoscaling create launch configuration: %s", createLaunchConfigurationOpts)
 
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 	err = resource.Retry(90*time.Second, func() *resource.RetryError {
 		_, err := autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if strings.Contains(awsErr.Message(), "Invalid IamInstanceProfile") {
-					return resource.RetryableError(err)
-				}
-				if strings.Contains(awsErr.Message(), "You are not authorized to perform this operation") {
-					return resource.RetryableError(err)
-				}
+			if isAWSErr(err, "ValidationError", "Invalid IamInstanceProfile") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "ValidationError", "You are not authorized to perform this operation") {
+				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("Error creating launch configuration: %s", err)
 	}
@@ -533,8 +527,7 @@ func resourceAwsLaunchConfigurationDelete(d *schema.ResourceData, meta interface
 			LaunchConfigurationName: aws.String(d.Id()),
 		})
 	if err != nil {
-		autoscalingerr, ok := err.(awserr.Error)
-		if ok && (autoscalingerr.Code() == "InvalidConfiguration.NotFound" || autoscalingerr.Code() == "ValidationError") {
+		if isAWSErr(err, "InvalidConfiguration.NotFound", "") {
 			log.Printf("[DEBUG] Launch configuration (%s) not found", d.Id())
 			return nil
 		}
