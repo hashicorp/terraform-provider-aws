@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"bytes"
 	"crypto/rand"
 	"fmt"
 	"log"
@@ -40,7 +41,7 @@ func resourceAwsIamUserLoginProfile() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      20,
-				ValidateFunc: validation.IntBetween(4, 128),
+				ValidateFunc: validation.IntBetween(5, 128),
 			},
 
 			"key_fingerprint": {
@@ -55,31 +56,62 @@ func resourceAwsIamUserLoginProfile() *schema.Resource {
 	}
 }
 
-// generatePassword generates a random password of a given length using
-// characters that are likely to satisfy any possible AWS password policy
-// (given sufficient length).
+const (
+	charLower   = "abcdefghijklmnopqrstuvwxyz"
+	charUpper   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	charNumbers = "0123456789"
+	charSymbols = "!@#$%^&*()_+-=[]{}|'"
+)
+
+// generatePassword generates a random password of a given length, matching the
+// most restrictive iam password policy.
 func generatePassword(length int) string {
-	charset := `abcdefghijklmnopqrstuvwxyz
-ABCDEFGHIJKLMNOPQRSTUVWXYZ
-0123456789
-!@#$%^&*()_+-=[]{}|'`
+	const charset = charLower + charUpper + charNumbers + charSymbols
 
 	result := make([]byte, length)
 	charsetSize := big.NewInt(int64(len(charset)))
 
-	for i := range result {
-		r, err := rand.Int(rand.Reader, charsetSize)
-		if err != nil {
-			panic(err)
-		}
-		if !r.IsInt64() {
-			panic("rand.Int() not representable as an Int64")
+	// rather than trying to artifically add specific characters from each
+	// class to the password to match the policy, we generate passwords
+	// randomly and reject those that don't match.
+	//
+	// Even in the worst case, this tends to take less than 10 tries to find a
+	// matching password. Any sufficiently long password is likely to succeed
+	// on the first try
+	for n := 0; n < 100000; n++ {
+		for i := range result {
+			r, err := rand.Int(rand.Reader, charsetSize)
+			if err != nil {
+				panic(err)
+			}
+			if !r.IsInt64() {
+				panic("rand.Int() not representable as an Int64")
+			}
+
+			result[i] = charset[r.Int64()]
 		}
 
-		result[i] = charset[r.Int64()]
+		if !checkPwdPolicy(result) {
+			continue
+		}
+
+		return string(result)
 	}
 
-	return string(result)
+	panic("failed to generate acceptable password")
+}
+
+// Check the generated password contains all character classes listed in the
+// IAM password policy.
+func checkPwdPolicy(pass []byte) bool {
+	if !(bytes.ContainsAny(pass, charLower) &&
+		bytes.ContainsAny(pass, charNumbers) &&
+		bytes.ContainsAny(pass, charSymbols) &&
+		bytes.ContainsAny(pass, charUpper)) {
+		return false
+	}
+
+	return true
 }
 
 func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) error {
@@ -110,6 +142,7 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 	}
 
 	initialPassword := generatePassword(passwordLength)
+
 	fingerprint, encrypted, err := encryption.EncryptValue(encryptionKey, initialPassword, "Password")
 	if err != nil {
 		return err

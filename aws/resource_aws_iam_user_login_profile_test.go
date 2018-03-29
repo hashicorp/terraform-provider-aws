@@ -20,6 +20,18 @@ import (
 	"github.com/hashicorp/vault/helper/pgpkeys"
 )
 
+func TestGenerateIAMPassword(t *testing.T) {
+	p := generatePassword(6)
+	if len(p) != 6 {
+		t.Fatalf("expected a 6 character password, got: %q", p)
+	}
+
+	p = generatePassword(128)
+	if len(p) != 128 {
+		t.Fatalf("expected a 128 character password, got: %q", p)
+	}
+}
+
 func TestAccAWSUserLoginProfile_basic(t *testing.T) {
 	var conf iam.GetLoginProfileOutput
 
