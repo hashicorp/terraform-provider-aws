@@ -483,6 +483,7 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error retrieving launch configuration: %s", err)
 	}
 	if len(describConfs.LaunchConfigurations) == 0 {
+		log.Printf("[WARN] Launch Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
