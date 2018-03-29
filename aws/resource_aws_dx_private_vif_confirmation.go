@@ -2,18 +2,21 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform/helper/schema"
 	"log"
 
+	"github.com/hashicorp/terraform/helper/schema"
+
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 )
 
-func resourceAwsDxPrivateVirtualInterfaceConfirmation() *schema.Resource {
+func resourceAwsDxPrivateVifConfirmation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxPrivateVirtualInterfaceConfirmationCreate,
-		Read:   resourceAwsDxPrivateVirtualInterfaceConfirmationRead,
-		Delete: resourceAwsDxPrivateVirtualInterfaceConfirmationDelete,
+		Create: resourceAwsDxPrivateVifConfirmationCreate,
+		Read:   resourceAwsDxPrivateVifConfirmationRead,
+		Update: resourceAwsDxPrivateVifConfirmationUpdate,
+		Delete: resourceAwsDxPrivateVifConfirmationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -31,16 +34,18 @@ func resourceAwsDxPrivateVirtualInterfaceConfirmation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
 
-func resourceAwsDxPrivateVirtualInterfaceConfirmationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsDxPrivateVifConfirmationCreate(d *schema.ResourceData, meta interface{}) error {
 	dxconn := meta.(*AWSClient).dxconn
 
 	id := d.Get("virtual_interface_id").(string)
 
-	vif, err := resourceAwsDxPrivateVirtualInterfaceGet(dxconn, id)
+	vif, err := resourceAwsDxPrivateVifGet(dxconn, id)
 
 	if err != nil {
 		return err
@@ -52,36 +57,52 @@ func resourceAwsDxPrivateVirtualInterfaceConfirmationCreate(d *schema.ResourceDa
 
 	state := *vif.VirtualInterfaceState
 
-	if state == "available" || state == "down" {
-		return nil
-	} else if state != "confirming" {
+	if state == "confirming" {
+		_, err = dxconn.ConfirmPrivateVirtualInterface(&directconnect.ConfirmPrivateVirtualInterfaceInput{
+			VirtualInterfaceId: aws.String(id),
+			VirtualGatewayId:   aws.String(d.Get("virtual_gateway_id").(string)),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		_, err = waitForAwsDxPrivateVif(dxconn, id, []string{"available", "down"})
+
+		if err != nil {
+			return err
+		}
+	} else if state != "available" && state != "down" {
 		return fmt.Errorf("Invalid virtual interface state %q", *vif.VirtualInterfaceState)
-	}
-
-	_, err = dxconn.ConfirmPrivateVirtualInterface(&directconnect.ConfirmPrivateVirtualInterfaceInput{
-		VirtualInterfaceId: aws.String(id),
-		VirtualGatewayId:   aws.String(d.Get("virtual_gateway_id").(string)),
-	})
-
-	if err != nil {
-		return err
-	}
-
-	_, err = waitForAwsDxPrivateVirtualInterface(dxconn, id, []string{"available", "down"})
-
-	if err != nil {
-		return err
 	}
 
 	d.SetId(id)
 
+	return resourceAwsDxPrivateVifConfirmationUpdate(d, meta)
+}
+
+func resourceAwsDxPrivateVifConfirmationUpdate(d *schema.ResourceData, meta interface{}) error {
+	dxconn := meta.(*AWSClient).dxconn
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "directconnect",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
+	}.String()
+
+	if err := setTagsDX(dxconn, d, arn); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func resourceAwsDxPrivateVirtualInterfaceConfirmationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsDxPrivateVifConfirmationRead(d *schema.ResourceData, meta interface{}) error {
 	dxconn := meta.(*AWSClient).dxconn
 
-	vif, err := resourceAwsDxPrivateVirtualInterfaceGet(dxconn, d.Id())
+	vif, err := resourceAwsDxPrivateVifGet(dxconn, d.Id())
 
 	if err != nil {
 		return err
@@ -98,10 +119,22 @@ func resourceAwsDxPrivateVirtualInterfaceConfirmationRead(d *schema.ResourceData
 		d.Set("virtual_gateway_id", *vif.VirtualGatewayId)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "directconnect",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
+	}.String()
+
+	if err := getTagsDX(dxconn, d, arn); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func resourceAwsDxPrivateVirtualInterfaceConfirmationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsDxPrivateVifConfirmationDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] Will not delete private VIF. Terraform will remove this resource from the state file, however resources may remain.")
 	d.SetId("")
 	return nil

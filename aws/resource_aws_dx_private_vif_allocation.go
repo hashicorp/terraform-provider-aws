@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"net"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -13,12 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 )
 
-func resourceAwsDxPrivateVif() *schema.Resource {
+func resourceAwsDxPrivateVifAllocation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxPrivateVifCreate,
-		Read:   resourceAwsDxPrivateVifRead,
-		Update: resourceAwsDxPrivateVifUpdate,
-		Delete: resourceAwsDxPrivateVifDelete,
+		Create: resourceAwsDxPrivateVifAllocationCreate,
+		Read:   resourceAwsDxPrivateVifAllocationRead,
+		Delete: resourceAwsDxPrivateVifAllocationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -34,6 +32,13 @@ func resourceAwsDxPrivateVif() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+
+			"owner_account": &schema.Schema{
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateAwsAccountId,
 			},
 
 			"address_family": &schema.Schema{
@@ -90,45 +95,11 @@ func resourceAwsDxPrivateVif() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
-			"virtual_gateway_id": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"tags": tagsSchema(),
 		},
 	}
 }
 
-func resourceAwsDxPrivateVifGet(dxconn *directconnect.DirectConnect, id string) (*directconnect.VirtualInterface, error) {
-	res, err := dxconn.DescribeVirtualInterfaces(&directconnect.DescribeVirtualInterfacesInput{
-		VirtualInterfaceId: aws.String(id),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(res.VirtualInterfaces) == 0 {
-		return nil, nil
-	}
-
-	vif := res.VirtualInterfaces[0]
-
-	if *vif.VirtualInterfaceType != "private" {
-		return nil, fmt.Errorf("Virtual interface %q is not private", id)
-	}
-
-	if *vif.VirtualInterfaceState == "deleted" {
-		return nil, nil
-	}
-
-	return vif, nil
-}
-
-func resourceAwsDxPrivateVifCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsDxPrivateVifAllocationCreate(d *schema.ResourceData, meta interface{}) error {
 	var (
 		vif *directconnect.VirtualInterface
 		err error
@@ -136,12 +107,15 @@ func resourceAwsDxPrivateVifCreate(d *schema.ResourceData, meta interface{}) err
 
 	dxconn := meta.(*AWSClient).dxconn
 
-	vifSpec := &directconnect.NewPrivateVirtualInterface{
+	if d.Get("owner_account").(string) == meta.(*AWSClient).accountid {
+		return fmt.Errorf("'owner_account' and connection account cannot be same for vif allocation")
+	}
+
+	vifSpec := &directconnect.NewPrivateVirtualInterfaceAllocation{
 		AddressFamily:        aws.String(d.Get("address_family").(string)),
 		Asn:                  aws.Int64(int64(d.Get("asn").(int))),
 		VirtualInterfaceName: aws.String(d.Get("interface_name").(string)),
 		Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
-		VirtualGatewayId:     aws.String(d.Get("virtual_gateway_id").(string)),
 	}
 
 	if attr, ok := d.GetOk("amazon_address"); ok {
@@ -156,17 +130,18 @@ func resourceAwsDxPrivateVifCreate(d *schema.ResourceData, meta interface{}) err
 		vifSpec.CustomerAddress = aws.String(attr.(string))
 	}
 
-	vif, err = dxconn.CreatePrivateVirtualInterface(&directconnect.CreatePrivateVirtualInterfaceInput{
+	vif, err = dxconn.AllocatePrivateVirtualInterface(&directconnect.AllocatePrivateVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
+		OwnerAccount: aws.String(d.Get("owner_account").(string)),
 
-		NewPrivateVirtualInterface: vifSpec,
+		NewPrivateVirtualInterfaceAllocation: vifSpec,
 	})
 
 	if err != nil {
 		return err
 	}
 
-	vif, err = waitForAwsDxPrivateVif(dxconn, *vif.VirtualInterfaceId, []string{"available", "down"})
+	vif, err = waitForAwsDxPrivateVif(dxconn, *vif.VirtualInterfaceId, []string{"confirming", "available", "down"})
 
 	if err != nil {
 		return err
@@ -174,59 +149,10 @@ func resourceAwsDxPrivateVifCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(*vif.VirtualInterfaceId)
 
-	return resourceAwsDxPrivateVifUpdate(d, meta)
+	return resourceAwsDxPrivateVifAllocationRead(d, meta)
 }
 
-func waitForAwsDxPrivateVif(dxconn *directconnect.DirectConnect, id string, target []string) (*directconnect.VirtualInterface, error) {
-	wait := resource.StateChangeConf{
-		Delay:      15 * time.Second,
-		Pending:    []string{"pending"},
-		Target:     target,
-		Timeout:    30 * time.Minute,
-		MinTimeout: 5 * time.Second,
-		Refresh: func() (result interface{}, state string, err error) {
-			vif, err := resourceAwsDxPrivateVifGet(dxconn, id)
-
-			if err == nil && vif == nil {
-				err = fmt.Errorf("Private virtual interface %q not found", id)
-			}
-
-			if err != nil {
-				return nil, "UNKNOWN", err
-			}
-
-			return vif, *vif.VirtualInterfaceState, nil
-		},
-	}
-
-	vif, err := wait.WaitForState()
-
-	if err != nil {
-		return nil, err
-	}
-
-	return vif.(*directconnect.VirtualInterface), err
-}
-
-func resourceAwsDxPrivateVifUpdate(d *schema.ResourceData, meta interface{}) error {
-	dxconn := meta.(*AWSClient).dxconn
-
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
-	}.String()
-
-	if err := setTagsDX(dxconn, d, arn); err != nil {
-		return err
-	}
-
-	return resourceAwsDxPrivateVifRead(d, meta)
-}
-
-func resourceAwsDxPrivateVifRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsDxPrivateVifAllocationRead(d *schema.ResourceData, meta interface{}) error {
 	dxconn := meta.(*AWSClient).dxconn
 
 	vif, err := resourceAwsDxPrivateVifGet(dxconn, d.Id())
@@ -240,8 +166,8 @@ func resourceAwsDxPrivateVifRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
-	if *vif.OwnerAccount != meta.(*AWSClient).accountid {
-		return fmt.Errorf("Private virtual interface does not belong to current account")
+	if *vif.OwnerAccount == meta.(*AWSClient).accountid {
+		return fmt.Errorf("'owner_account' and connection account cannot be same for vif allocation")
 	}
 
 	d.Set("connection_id", *vif.ConnectionId)
@@ -249,10 +175,7 @@ func resourceAwsDxPrivateVifRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("asn", *vif.Asn)
 	d.Set("interface_name", *vif.VirtualInterfaceName)
 	d.Set("vlan", *vif.Vlan)
-
-	if vif.VirtualGatewayId != nil {
-		d.Set("virtual_gateway_id", *vif.VirtualGatewayId)
-	}
+	d.Set("owner_account", *vif.OwnerAccount)
 
 	if vif.AmazonAddress != nil {
 		d.Set("amazon_address", *vif.AmazonAddress)
@@ -270,20 +193,16 @@ func resourceAwsDxPrivateVifRead(d *schema.ResourceData, meta interface{}) error
 		Partition: meta.(*AWSClient).partition,
 		Region:    meta.(*AWSClient).region,
 		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: *vif.OwnerAccount,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
 
 	d.Set("arn", arn)
 
-	if err := getTagsDX(dxconn, d, arn); err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func resourceAwsDxPrivateVifDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsDxPrivateVifAllocationDelete(d *schema.ResourceData, meta interface{}) error {
 	dxconn := meta.(*AWSClient).dxconn
 
 	id := d.Id()
@@ -326,14 +245,4 @@ func resourceAwsDxPrivateVifDelete(d *schema.ResourceData, meta interface{}) err
 	d.SetId("")
 
 	return nil
-}
-
-func validateCIDRAddress(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	_, _, err := net.ParseCIDR(value)
-	if err != nil {
-		errors = append(errors, fmt.Errorf(
-			"%q must contain a valid CIDR, got error parsing: %s", k, err))
-	}
-	return
 }
