@@ -641,23 +641,23 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 
 	var record *route53.ResourceRecordSet
 	err = conn.ListResourceRecordSetsPages(lopts, func(resp *route53.ListResourceRecordSetsOutput, lastPage bool) bool {
-		for _, record = range resp.ResourceRecordSets {
-			name := cleanRecordName(*record.Name)
+		for _, recordSet := range resp.ResourceRecordSets {
+			name := cleanRecordName(*recordSet.Name)
 			if FQDN(strings.ToLower(name)) != FQDN(strings.ToLower(*lopts.StartRecordName)) {
 				continue
 			}
-			if strings.ToUpper(*record.Type) != strings.ToUpper(*lopts.StartRecordType) {
+			if strings.ToUpper(*recordSet.Type) != strings.ToUpper(*lopts.StartRecordType) {
 				continue
 			}
 
-			if record.SetIdentifier != nil && *record.SetIdentifier != d.Get("set_identifier") {
+			if recordSet.SetIdentifier != nil && *recordSet.SetIdentifier != d.Get("set_identifier") {
 				continue
 			}
+
+			record = recordSet
 			return false
 		}
-
-		record = nil
-		return true
+		return !lastPage
 	})
 
 	if err != nil {
