@@ -158,6 +158,40 @@ func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMRole_testMaxSessionDuration(t *testing.T) {
+	var conf iam.GetRoleOutput
+	rName := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testMaxSessionDuration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists("aws_iam_role.test", &conf),
+					testAccAddAwsIAMRolePolicy("aws_iam_role.test"),
+				),
+			},
+			{
+				Config: testMaxSessionDuration_too_long(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists("aws_iam_role.test", &conf),
+					testAccAddAwsIAMRolePolicy("aws_iam_role.test"),
+				),
+			},
+			{
+				Config: testMaxSessionDuration_too_short(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists("aws_iam_role.test", &conf),
+					testAccAddAwsIAMRolePolicy("aws_iam_role.test"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRoleDestroy(s *terraform.State) error {
 	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
 
@@ -259,6 +293,39 @@ func testAccAddAwsIAMRolePolicy(n string) resource.TestCheckFunc {
 		_, err := iamconn.PutRolePolicy(input)
 		return err
 	}
+}
+
+func testMaxSessionDuration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role" {
+  name   = "test-role-%s"
+	path = "/"
+	max_session_duration = 3700
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+}
+`, rName)
+}
+
+func testMaxSessionDuration_too_long(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role" {
+  name   = "test-role-%s"
+	path = "/"
+	max_session_duration = 46800
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+}
+`, rName)
+}
+
+func testMaxSessionDuration_too_short(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role" {
+  name   = "test-role-%s"
+	path = "/"
+	max_session_duration = 300
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+}
+`, rName)
 }
 
 func testAccAWSIAMRoleConfig(rName string) string {

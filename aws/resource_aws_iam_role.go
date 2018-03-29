@@ -105,6 +105,24 @@ func resourceAwsIamRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"max_session_duration": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  3600,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					value := v.(int64)
+					if value > 43200 {
+						errors = append(errors, fmt.Errorf(
+							"%q cannot be greater than 43200", k))
+					}
+					if value < 3600 {
+						errors = append(errors, fmt.Errorf(
+							"%q cannot be less than than 3600", k))
+					}
+					return
+				},
+			},
 		},
 	}
 }
@@ -135,6 +153,10 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("description"); ok {
 		request.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("max_session_duration"); ok {
+		request.MaxSessionDuration = aws.Int64(v.(int64))
 	}
 
 	var createResp *iam.CreateRoleOutput
@@ -174,6 +196,9 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 	role := getResp.Role
 
 	if err := d.Set("name", role.RoleName); err != nil {
+		return err
+	}
+	if err := d.Set("max_session_duration", role.MaxSessionDuration); err != nil {
 		return err
 	}
 	if err := d.Set("arn", role.Arn); err != nil {
@@ -230,6 +255,21 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 			Description: aws.String(d.Get("description").(string)),
 		}
 		_, err := iamconn.UpdateRoleDescription(roleDescriptionInput)
+		if err != nil {
+			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
+				d.SetId("")
+				return nil
+			}
+			return fmt.Errorf("Error Updating IAM Role (%s) Assume Role Policy: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("max_session_duration") {
+		roleMaxDurationInput := &iam.UpdateRoleInput{
+			RoleName:           aws.String(d.Id()),
+			MaxSessionDuration: aws.Int64(d.Get("assume_role_policy").(int64)),
+		}
+		_, err := iamconn.UpdateRole(roleMaxDurationInput)
 		if err != nil {
 			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
 				d.SetId("")
