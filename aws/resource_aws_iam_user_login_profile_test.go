@@ -32,6 +32,30 @@ func TestGenerateIAMPassword(t *testing.T) {
 	}
 }
 
+func TestIAMPasswordPolicyCheck(t *testing.T) {
+	for _, tc := range []struct {
+		pass  string
+		valid bool
+	}{
+		// no symbol
+		{pass: "abCD12", valid: false},
+		// no number
+		{pass: "abCD%$", valid: false},
+		// no upper
+		{pass: "abcd1#", valid: false},
+		// no lower
+		{pass: "ABCD1#", valid: false},
+		{pass: "abCD11#$", valid: true},
+	} {
+		t.Run(tc.pass, func(t *testing.T) {
+			valid := checkPwdPolicy([]byte(tc.pass))
+			if valid != tc.valid {
+				t.Fatalf("expected %q to be valid==%t, got %t", tc.pass, tc.valid, valid)
+			}
+		})
+	}
+}
+
 func TestAccAWSUserLoginProfile_basic(t *testing.T) {
 	var conf iam.GetLoginProfileOutput
 
