@@ -21,12 +21,12 @@ import (
 )
 
 func TestGenerateIAMPassword(t *testing.T) {
-	p := generatePassword(6)
+	p := generateIAMPassword(6)
 	if len(p) != 6 {
 		t.Fatalf("expected a 6 character password, got: %q", p)
 	}
 
-	p = generatePassword(128)
+	p = generateIAMPassword(128)
 	if len(p) != 128 {
 		t.Fatalf("expected a 128 character password, got: %q", p)
 	}
@@ -48,7 +48,7 @@ func TestIAMPasswordPolicyCheck(t *testing.T) {
 		{pass: "abCD11#$", valid: true},
 	} {
 		t.Run(tc.pass, func(t *testing.T) {
-			valid := checkPwdPolicy([]byte(tc.pass))
+			valid := checkIAMPwdPolicy([]byte(tc.pass))
 			if valid != tc.valid {
 				t.Fatalf("expected %q to be valid==%t, got %t", tc.pass, tc.valid, valid)
 			}
@@ -225,7 +225,7 @@ func testDecryptPasswordAndTest(nProfile, nAccessKey, key string) resource.TestC
 			iamAsCreatedUser := iam.New(iamAsCreatedUserSession)
 			_, err = iamAsCreatedUser.ChangePassword(&iam.ChangePasswordInput{
 				OldPassword: aws.String(decryptedPassword.String()),
-				NewPassword: aws.String(generatePassword(20)),
+				NewPassword: aws.String(generateIAMPassword(20)),
 			})
 			if err != nil {
 				if awserr, ok := err.(awserr.Error); ok && awserr.Code() == "InvalidClientTokenId" {

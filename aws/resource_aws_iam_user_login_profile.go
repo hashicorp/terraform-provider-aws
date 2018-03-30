@@ -63,9 +63,9 @@ const (
 	charSymbols = "!@#$%^&*()_+-=[]{}|'"
 )
 
-// generatePassword generates a random password of a given length, matching the
+// generateIAMPassword generates a random password of a given length, matching the
 // most restrictive iam password policy.
-func generatePassword(length int) string {
+func generateIAMPassword(length int) string {
 	const charset = charLower + charUpper + charNumbers + charSymbols
 
 	result := make([]byte, length)
@@ -91,7 +91,7 @@ func generatePassword(length int) string {
 			result[i] = charset[r.Int64()]
 		}
 
-		if !checkPwdPolicy(result) {
+		if !checkIAMPwdPolicy(result) {
 			continue
 		}
 
@@ -103,7 +103,7 @@ func generatePassword(length int) string {
 
 // Check the generated password contains all character classes listed in the
 // IAM password policy.
-func checkPwdPolicy(pass []byte) bool {
+func checkIAMPwdPolicy(pass []byte) bool {
 	if !(bytes.ContainsAny(pass, charLower) &&
 		bytes.ContainsAny(pass, charNumbers) &&
 		bytes.ContainsAny(pass, charSymbols) &&
@@ -141,7 +141,7 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	initialPassword := generatePassword(passwordLength)
+	initialPassword := generateIAMPassword(passwordLength)
 
 	fingerprint, encrypted, err := encryption.EncryptValue(encryptionKey, initialPassword, "Password")
 	if err != nil {
