@@ -406,6 +406,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_inspector_assessment_template":            resourceAWSInspectorAssessmentTemplate(),
 			"aws_inspector_resource_group":                 resourceAWSInspectorResourceGroup(),
 			"aws_instance":                                 resourceAwsInstance(),
+			"aws_default_internet_gateway":                 resourceAwsDefaultInternetGateway(),
 			"aws_internet_gateway":                         resourceAwsInternetGateway(),
 			"aws_iot_certificate":                          resourceAwsIotCertificate(),
 			"aws_iot_policy":                               resourceAwsIotPolicy(),
