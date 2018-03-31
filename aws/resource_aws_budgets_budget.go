@@ -23,11 +23,13 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 			},
 			"name": {
 				Type:          schema.TypeString,
+				Computed:      true,
 				Optional:      true,
 				ConflictsWith: []string{"name_prefix"},
 			},
 			"name_prefix": {
 				Type:     schema.TypeString,
+				Computed: true,
 				Optional: true,
 				ForceNew: true,
 			},
@@ -174,8 +176,8 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("failed flattening budget output: %v", err)
 	}
 
-	if _, ok := d.GetOk("name"); ok {
-		d.Set("name", flattenedBudget.name)
+	if err := d.Set("name", flattenedBudget.name); err != nil {
+		return err
 	}
 
 	for k, v := range map[string]interface{}{
