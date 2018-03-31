@@ -27,6 +27,7 @@ func resourceAwsSesNotification() *schema.Resource {
 			"notification_type": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: ValidateFunc: validation.StringInSlice([]string{
 					ses.NotificationTypeBounce,
 					ses.NotificationTypeComplaint,
@@ -37,6 +38,7 @@ func resourceAwsSesNotification() *schema.Resource {
 			"identity": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
 		},
