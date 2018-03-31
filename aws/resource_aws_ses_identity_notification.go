@@ -18,22 +18,26 @@ func resourceAwsSesNotification() *schema.Resource {
 		Delete: resourceAwsSesNotificationDelete,
 
 		Schema: map[string]*schema.Schema{
-			"topic_arn": &schema.Schema{
+			"topic_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateArn,
 			},
 
-			"notification_type": &schema.Schema{
+			"notification_type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateNotificationType,
+				ValidateFunc: ValidateFunc: validation.StringInSlice([]string{
+					ses.NotificationTypeBounce,
+					ses.NotificationTypeComplaint,
+					ses.NotificationTypeDelivery,
+				}, false),
 			},
 
-			"identity": &schema.Schema{
+			"identity": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateIdentity,
+				ValidateFunc: validation.NoZeroValues,
 			},
 		},
 	}
@@ -114,24 +118,4 @@ func resourceAwsSesNotificationDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return resourceAwsSesNotificationRead(d, meta)
-}
-
-func validateNotificationType(v interface{}, k string) (ws []string, errors []error) {
-	value := strings.Title(strings.ToLower(v.(string)))
-	if value == "Bounce" || value == "Complaint" || value == "Delivery" {
-		return
-	}
-
-	errors = append(errors, fmt.Errorf("%q must be either %q, %q or %q", k, "Bounce", "Complaint", "Delivery"))
-	return
-}
-
-func validateIdentity(v interface{}, k string) (ws []string, errors []error) {
-	value := strings.ToLower(v.(string))
-	if value != "" {
-		return
-	}
-
-	errors = append(errors, fmt.Errorf("%q must not be empty", k))
-	return
 }
