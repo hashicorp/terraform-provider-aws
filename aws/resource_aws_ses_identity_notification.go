@@ -70,8 +70,11 @@ func resourceAwsSesNotificationSet(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesConn
-	notification := d.Get("notification_type").(string)
-	identity := d.Get("identity").(string)
+
+	identity, notificationType, err := decodeSesIdentityNotificationId(d.Id())
+	if err != nil {
+		return err
+	}
 
 	getOpts := &ses.GetIdentityNotificationAttributesInput{
 		Identities: []*string{aws.String(identity)},
@@ -86,7 +89,7 @@ func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	notificationAttributes := response.NotificationAttributes[identity]
-	switch notification {
+	switch notificationType {
 	case ses.NotificationTypeBounce:
 		if err := d.Set("topic_arn", notificationAttributes.BounceTopic); err != nil {
 			return err
@@ -122,4 +125,12 @@ func resourceAwsSesNotificationDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return resourceAwsSesNotificationRead(d, meta)
+}
+
+func decodeSesIdentityNotificationId(id string) (string, string, error) {
+	parts := strings.Split(id, "|")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected IDENTITY|TYPE", id)
+	}
+	return parts[0], parts[1], nil
 }
