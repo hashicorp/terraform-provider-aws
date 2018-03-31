@@ -31,15 +31,15 @@ func resourceAwsSesNotification() *schema.Resource {
 				ValidateFunc: ValidateFunc: validation.StringInSlice([]string{
 					ses.NotificationTypeBounce,
 					ses.NotificationTypeComplaint,
-					ses.NotificationTypeDelivery,
-				}, false),
+					ses.NotificationTypeDelivery
+				}, false)
 			},
 
 			"identity": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
+				ValidateFunc: validation.NoZeroValues
 			},
 		},
 	}
