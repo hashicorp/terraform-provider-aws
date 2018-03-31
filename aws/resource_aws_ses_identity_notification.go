@@ -57,6 +57,8 @@ func resourceAwsSesNotificationSet(d *schema.ResourceData, meta interface{}) err
 		SnsTopic:         aws.String(topic),
 	}
 
+	d.SetId(fmt.Sprintf("%s|%s", identity, notification))
+
 	log.Printf("[DEBUG] Setting SES Identity Notification: %#v", setOpts)
 
 	if _, err := conn.SetIdentityNotificationTopic(setOpts); err != nil {
