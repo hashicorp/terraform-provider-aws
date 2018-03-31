@@ -163,6 +163,7 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 		AccountId:  aws.String(accountID),
 	})
 	if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] Budget %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
