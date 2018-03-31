@@ -103,8 +103,11 @@ func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsSesNotificationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesConn
-	notification := d.Get("notification_type").(string)
-	identity := d.Get("identity").(string)
+
+	identity, notificationType, err := decodeSesIdentityNotificationId(d.Id())
+	if err != nil {
+		return err
+	}
 
 	setOpts := &ses.SetIdentityNotificationTopicInput{
 		Identity:         aws.String(identity),
