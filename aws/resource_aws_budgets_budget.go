@@ -14,116 +14,112 @@ import (
 
 func resourceAwsBudgetsBudget() *schema.Resource {
 	return &schema.Resource{
-		Schema: resourceAwsBudgetsBudgetSchema(),
+		Schema: map[string]*schema.Schema{
+			"account_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateAwsAccountId,
+			},
+			"name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"name_prefix"},
+			},
+			"name_prefix": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"budget_type": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"limit_amount": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"limit_unit": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"cost_types": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"include_credit": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"include_other_subscription": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"include_recurring": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"include_refund": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"include_subscription": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"include_support": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"include_tax": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"include_upfront": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"use_blended": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
+			"time_period_start": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"time_period_end": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "2087-06-15_00:00",
+			},
+			"time_unit": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"cost_filters": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+			},
+		},
 		Create: resourceAwsBudgetsBudgetCreate,
 		Read:   resourceAwsBudgetsBudgetRead,
 		Update: resourceAwsBudgetsBudgetUpdate,
 		Delete: resourceAwsBudgetsBudgetDelete,
-	}
-}
-
-func resourceAwsBudgetsBudgetSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"account_id": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ForceNew:     true,
-			ValidateFunc: validateAwsAccountId,
-		},
-		"name": {
-			Type:          schema.TypeString,
-			Optional:      true,
-			ConflictsWith: []string{"name_prefix"},
-		},
-		"name_prefix": {
-			Type:     schema.TypeString,
-			Optional: true,
-			ForceNew: true,
-		},
-		"budget_type": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"limit_amount": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"limit_unit": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"cost_types": {
-			Type:     schema.TypeList,
-			Optional: true,
-			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"include_credit": {
-						Type:     schema.TypeBool,
-						Optional: true,
-						Default:  true,
-					},
-					"include_other_subscription": {
-						Type:     schema.TypeBool,
-						Optional: true,
-						Default:  true,
-					},
-					"include_recurring": {
-						Type:     schema.TypeBool,
-						Optional: true,
-						Default:  true,
-					},
-					"include_refund": {
-						Type:     schema.TypeBool,
-						Optional: true,
-						Default:  true,
-					},
-					"include_subscription": {
-						Type:     schema.TypeBool,
-						Optional: true,
-						Default:  true,
-					},
-					"include_support": {
-						Type:     schema.TypeBool,
-						Optional: true,
-						Default:  true,
-					},
-					"include_tax": {
-						Type:     schema.TypeBool,
-						Optional: true,
-						Default:  true,
-					},
-					"include_upfront": {
-						Type:     schema.TypeBool,
-						Optional: true,
-						Default:  true,
-					},
-					"use_blended": {
-						Type:     schema.TypeBool,
-						Optional: true,
-						Default:  false,
-					},
-				},
-			},
-		},
-		"time_period_start": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"time_period_end": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  "2087-06-15_00:00",
-		},
-		"time_unit": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"cost_filters": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
 	}
 }
 
