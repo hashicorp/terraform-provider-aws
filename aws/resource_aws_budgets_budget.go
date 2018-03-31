@@ -148,7 +148,7 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", accountID, *budget.BudgetName))
-	return resourceAwsBudgetsBudgetUpdate(d, meta)
+	return resourceAwsBudgetsBudgetRead(d, meta)
 }
 
 func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) error {
@@ -202,14 +202,12 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).budgetconn
-	var accountID string
-	if v, ok := d.GetOk("account_id"); ok {
-		accountID = v.(string)
-	} else {
-		accountID = meta.(*AWSClient).accountid
+	accountID, _, err := decodeBudgetsBudgetID(d.Id())
+	if err != nil {
+		return err
 	}
 
+	client := meta.(*AWSClient).budgetconn
 	budget, err := expandBudgetsBudgetUnmarshal(d)
 	if err != nil {
 		return fmt.Errorf("could not create budget: %v", err)
