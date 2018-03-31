@@ -91,17 +91,11 @@ func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) er
 	notificationAttributes := response.NotificationAttributes[identity]
 	switch notificationType {
 	case ses.NotificationTypeBounce:
-		if err := d.Set("topic_arn", notificationAttributes.BounceTopic); err != nil {
-			return err
-		}
+		d.Set("topic_arn", notificationAttributes.BounceTopic);
 	case ses.NotificationTypeComplaint:
-		if err := d.Set("topic_arn", notificationAttributes.ComplaintTopic); err != nil {
-			return err
-		}
+		d.Set("topic_arn", notificationAttributes.ComplaintTopic);
 	case ses.NotificationTypeDelivery:
-		if err := d.Set("topic_arn", notificationAttributes.DeliveryTopic); err != nil {
-			return err
-		}
+		d.Set("topic_arn", notificationAttributes.DeliveryTopic);
 	}
 
 	return nil
