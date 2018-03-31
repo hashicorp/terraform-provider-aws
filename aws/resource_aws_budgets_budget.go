@@ -126,17 +126,27 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 }
 
 func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
+	budget, err := expandBudgetsBudgetUnmarshal(d)
+	if err != nil {
+		return fmt.Errorf("failed unmarshalling budget: %v", err)
+	}
+
+	if v, ok := d.GetOk("name"); ok {
+		budget.BudgetName = aws.String(v.(string))
+
+	} else if v, ok := d.GetOk("name_prefix"); ok {
+		budget.BudgetName = aws.String(resource.PrefixedUniqueId(v.(string)))
+
+	} else {
+		budget.BudgetName = aws.String(resource.UniqueId())
+	}
+
 	client := meta.(*AWSClient).budgetconn
 	var accountID string
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	} else {
 		accountID = meta.(*AWSClient).accountid
-	}
-
-	budget, err := expandBudgetsBudgetUnmarshal(d)
-	if err != nil {
-		return fmt.Errorf("failed creating budget: %v", err)
 	}
 
 	_, err = client.CreateBudget(&budgets.CreateBudgetInput{
@@ -328,20 +338,7 @@ func convertCostFiltersToStringMap(costFilters map[string][]*string) map[string]
 }
 
 func expandBudgetsBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
-	var budgetName string
-	if _, id, err := decodeBudgetsBudgetID(d.Id()); err == nil && id != "" {
-		budgetName = id
-
-	} else if v, ok := d.GetOk("name"); ok {
-		budgetName = v.(string)
-
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		budgetName = resource.PrefixedUniqueId(v.(string))
-
-	} else {
-		budgetName = resource.UniqueId()
-	}
-
+	budgetName := d.Get("name").(string)
 	budgetType := d.Get("budget_type").(string)
 	budgetLimitAmount := d.Get("limit_amount").(string)
 	budgetLimitUnit := d.Get("limit_unit").(string)
