@@ -231,20 +231,16 @@ func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	client := meta.(*AWSClient).budgetconn
-	_, err = client.DescribeBudget(&budgets.DescribeBudgetInput{
-		BudgetName: aws.String(budgetName),
-		AccountId:  aws.String(accountID),
-	})
-	if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
-		log.Printf("[INFO] budget %s could not be found. skipping delete.", d.Id())
-		return nil
-	}
-
 	_, err = client.DeleteBudget(&budgets.DeleteBudgetInput{
 		BudgetName: aws.String(budgetName),
 		AccountId:  aws.String(accountID),
 	})
 	if err != nil {
+		if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
+			log.Printf("[INFO] budget %s could not be found. skipping delete.", d.Id())
+			return nil
+		}
+
 		return fmt.Errorf("delete budget failed: %v", err)
 	}
 
