@@ -138,7 +138,7 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	_, err = client.CreateBudget(&budgets.CreateBudgetInput{
-		AccountId: &accountID,
+		AccountId: aws.String(accountID),
 		Budget:    budget,
 	})
 	if err != nil {
@@ -157,8 +157,8 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 
 	client := meta.(*AWSClient).budgetconn
 	describeBudgetOutput, err := client.DescribeBudget(&budgets.DescribeBudgetInput{
-		BudgetName: &budgetName,
-		AccountId:  &accountID,
+		BudgetName: aws.String(budgetName),
+		AccountId:  aws.String(accountID),
 	})
 	if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
 		d.SetId("")
@@ -213,7 +213,7 @@ func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	_, err = client.UpdateBudget(&budgets.UpdateBudgetInput{
-		AccountId: &accountID,
+		AccountId: aws.String(accountID),
 		NewBudget: budget,
 	})
 	if err != nil {
@@ -231,8 +231,8 @@ func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) er
 
 	client := meta.(*AWSClient).budgetconn
 	_, err = client.DescribeBudget(&budgets.DescribeBudgetInput{
-		BudgetName: &budgetName,
-		AccountId:  &accountID,
+		BudgetName: aws.String(budgetName),
+		AccountId:  aws.String(accountID),
 	})
 	if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
 		log.Printf("[INFO] budget %s could not be found. skipping delete.", d.Id())
@@ -240,8 +240,8 @@ func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	_, err = client.DeleteBudget(&budgets.DeleteBudgetInput{
-		BudgetName: &budgetName,
-		AccountId:  &accountID,
+		BudgetName: aws.String(budgetName),
+		AccountId:  aws.String(accountID),
 	})
 	if err != nil {
 		return fmt.Errorf("delete budget failed: %v", err)
@@ -353,7 +353,7 @@ func expandBudgetsBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, erro
 	budgetCostFilters := make(map[string][]*string)
 	for k, v := range d.Get("cost_filters").(map[string]interface{}) {
 		filterValue := v.(string)
-		budgetCostFilters[k] = append(budgetCostFilters[k], &filterValue)
+		budgetCostFilters[k] = append(budgetCostFilters[k], aws.String(filterValue))
 	}
 
 	budgetTimePeriodStart, err := time.Parse("2006-01-02_15:04", d.Get("time_period_start").(string))
@@ -367,18 +367,18 @@ func expandBudgetsBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, erro
 	}
 
 	budget := &budgets.Budget{
-		BudgetName: &budgetName,
-		BudgetType: &budgetType,
+		BudgetName: aws.String(budgetName),
+		BudgetType: aws.String(budgetType),
 		BudgetLimit: &budgets.Spend{
-			Amount: &budgetLimitAmount,
-			Unit:   &budgetLimitUnit,
+			Amount: aws.String(budgetLimitAmount),
+			Unit:   aws.String(budgetLimitUnit),
 		},
 		CostTypes: costTypes,
 		TimePeriod: &budgets.TimePeriod{
 			End:   &budgetTimePeriodEnd,
 			Start: &budgetTimePeriodStart,
 		},
-		TimeUnit:    &budgetTimeUnit,
+		TimeUnit:    aws.String(budgetTimeUnit),
 		CostFilters: budgetCostFilters,
 	}
 	return budget, nil
