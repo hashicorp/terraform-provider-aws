@@ -25,9 +25,9 @@ func resourceAwsSesNotification() *schema.Resource {
 			},
 
 			"notification_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					ses.NotificationTypeBounce,
 					ses.NotificationTypeComplaint,
@@ -91,11 +91,11 @@ func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) er
 	notificationAttributes := response.NotificationAttributes[identity]
 	switch notificationType {
 	case ses.NotificationTypeBounce:
-		d.Set("topic_arn", notificationAttributes.BounceTopic);
+		d.Set("topic_arn", notificationAttributes.BounceTopic)
 	case ses.NotificationTypeComplaint:
-		d.Set("topic_arn", notificationAttributes.ComplaintTopic);
+		d.Set("topic_arn", notificationAttributes.ComplaintTopic)
 	case ses.NotificationTypeDelivery:
-		d.Set("topic_arn", notificationAttributes.DeliveryTopic);
+		d.Set("topic_arn", notificationAttributes.DeliveryTopic)
 	}
 
 	return nil
