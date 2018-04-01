@@ -111,7 +111,7 @@ func resourceAwsSesNotificationDelete(d *schema.ResourceData, meta interface{}) 
 
 	setOpts := &ses.SetIdentityNotificationTopicInput{
 		Identity:         aws.String(identity),
-		NotificationType: aws.String(notification),
+		NotificationType: aws.String(notificationType),
 		SnsTopic:         nil,
 	}
 
