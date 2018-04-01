@@ -23,8 +23,14 @@ func TestAccAwsSESIdentityNotification_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESIdentityNotificationDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationConfig, domain),
+			resource.TestStep{
+				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationConfig_basic, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESIdentityNotificationExists("aws_ses_identity_notification.test"),
+				),
+			},
+			resource.TestStep{
+				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationConfig_update, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESIdentityNotificationExists("aws_ses_identity_notification.test"),
 				),
@@ -67,7 +73,7 @@ func testAccCheckAwsSESIdentityNotificationExists(n string) resource.TestCheckFu
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES Identity Notification name not set")
+			return fmt.Errorf("SES Identity Notification identity not set")
 		}
 
 		identity := rs.Primary.ID
@@ -90,9 +96,28 @@ func testAccCheckAwsSESIdentityNotificationExists(n string) resource.TestCheckFu
 	}
 }
 
-const testAccAwsSESIdentityNotificationConfig = `
+const testAccAwsSESIdentityNotificationConfig_basic = `
 resource "aws_ses_identity_notification" "test" {
-	identity = "%s"
+	identity = "${aws_ses_identity.test.arn}"
 	notification_type = "Complaint"
+}
+
+resource "aws_ses_identity" "test" {
+  domain = "%s"
+}
+`
+const testAccAwsSESIdentityNotificationConfig_update = `
+resource "aws_ses_identity_notification" "test" {
+	topic_arn = "${aws_sns_topic.test.arn}"
+	identity = "${aws_ses_identity.test.arn}"
+	notification_type = "Complaint"
+}
+
+resource "aws_ses_identity" "test" {
+  domain = "%s"
+}
+
+resource "aws_sns_topic" "test" {
+  name = "user-updates-topic"
 }
 `
