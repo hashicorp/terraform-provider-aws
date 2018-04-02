@@ -73,7 +73,25 @@ func testSweepWafRegionalRegexMatchSet(region string) error {
 	return nil
 }
 
-func TestAccAWSWafRegionalRegexMatchSet_basic(t *testing.T) {
+// Serialized acceptance tests due to WAF account limits
+// https://docs.aws.amazon.com/waf/latest/developerguide/limits.html
+func TestAccAWSWafRegionalRegexMatchSet(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"basic":          testAccAWSWafRegionalRegexMatchSet_basic,
+		"changePatterns": testAccAWSWafRegionalRegexMatchSet_changePatterns,
+		"noPatterns":     testAccAWSWafRegionalRegexMatchSet_noPatterns,
+		"disappears":     testAccAWSWafRegionalRegexMatchSet_disappears,
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tc(t)
+		})
+	}
+}
+
+func testAccAWSWafRegionalRegexMatchSet_basic(t *testing.T) {
 	var matchSet waf.RegexMatchSet
 	var patternSet waf.RegexPatternSet
 	var idx int
@@ -109,7 +127,7 @@ func TestAccAWSWafRegionalRegexMatchSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRegexMatchSet_changePatterns(t *testing.T) {
+func testAccAWSWafRegionalRegexMatchSet_changePatterns(t *testing.T) {
 	var before, after waf.RegexMatchSet
 	var patternSet waf.RegexPatternSet
 	var idx1, idx2 int
@@ -154,7 +172,7 @@ func TestAccAWSWafRegionalRegexMatchSet_changePatterns(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRegexMatchSet_noPatterns(t *testing.T) {
+func testAccAWSWafRegionalRegexMatchSet_noPatterns(t *testing.T) {
 	var matchSet waf.RegexMatchSet
 	matchSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
@@ -175,7 +193,7 @@ func TestAccAWSWafRegionalRegexMatchSet_noPatterns(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRegexMatchSet_disappears(t *testing.T) {
+func testAccAWSWafRegionalRegexMatchSet_disappears(t *testing.T) {
 	var matchSet waf.RegexMatchSet
 	matchSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
