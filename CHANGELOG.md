@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * resource/aws_lambda_function: IAM retry for "The role defined for the function cannot be assumed by Lambda" on update [GH-3988]
+* resource/aws_route53_record: Fix ListResourceRecordSet pagination [GH-3900]
 
 ## 1.13.0 (March 28, 2018)
 
