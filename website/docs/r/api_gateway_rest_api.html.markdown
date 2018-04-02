@@ -12,10 +12,27 @@ Provides an API Gateway REST API.
 
 ## Example Usage
 
+### Defining REST API
+
 ```hcl
 resource "aws_api_gateway_rest_api" "MyDemoAPI" {
   name        = "MyDemoAPI"
   description = "This is my API for demonstration purposes"
+}
+```
+
+### Using REST API execution_arn to specify Lambda permissions
+
+```hcl
+resource "aws_lambda_permission" "lambda_permission" {
+  statement_id  = "AllowMyDemoAPIInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = "MyDemoFunction"
+  principal     = "apigateway.amazonaws.com"
+
+  # The /*/*/* part allows invocation from any stage, method and resource path
+  # within API Gateway REST API.
+  source_arn = "${aws_api_gateway_rest_api.MyDemoAPI.execution_arn}/*/*/*"
 }
 ```
 
@@ -47,3 +64,6 @@ The following attributes are exported:
 * `id` - The ID of the REST API
 * `root_resource_id` - The resource ID of the REST API's root
 * `created_date` - The creation date of the REST API
+* `execution_arn` - The execution ARN part to be used in [`lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn`
+  when allowing API Gateway to invoke a Lambda function,
+  e.g. `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j`, which can be concatenated with allowed stage, method and resource path.
