@@ -1,9 +1,9 @@
 ---
 layout: "aws"
-page_title: "AWS: ses_identity_notification"
+page_title: "AWS: aws_ses_identity_notification"
 sidebar_current: "docs-aws-resource-ses-identity-notification"
 description: |-
-  Setting SES Identity Notification
+  Setting AWS SES Identity Notification
 ---
 
 # ses_identity_notification
