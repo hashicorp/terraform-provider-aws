@@ -15,6 +15,7 @@ func TestAccAwsSESIdentityNotification_basic(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	topicName := fmt.Sprintf("test-topic-%d", acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -30,7 +31,7 @@ func TestAccAwsSESIdentityNotification_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationConfig_update, domain),
+				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationConfig_update, domain, topicName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESIdentityNotificationExists("aws_ses_identity_notification.test"),
 				),
@@ -118,6 +119,6 @@ resource "aws_ses_identity" "test" {
 }
 
 resource "aws_sns_topic" "test" {
-  name = "user-updates-topic"
+  name = "%s"
 }
 `
