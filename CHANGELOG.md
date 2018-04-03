@@ -1,7 +1,13 @@
 ## 1.14.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_elasticache_replication_group: Support Cluster Mode Enabled online shard reconfiguration [GH-3932]
+* resource/aws_elasticache_replication_group: Configurable create, update, and delete timeouts [GH-3932]
+
 BUG FIXES:
 
+* resource/aws_elasticache_replication_group: Properly set `cluster_mode` in state [GH-3932]
 * resource/aws_iam_user_login_profile: Changed password generation to use `crypto/rand` [GH-3989]
 * resource/aws_lambda_function: IAM retry for "The role defined for the function cannot be assumed by Lambda" on update [GH-3988]
 * resource/aws_route53_record: Fix ListResourceRecordSet pagination [GH-3900]
