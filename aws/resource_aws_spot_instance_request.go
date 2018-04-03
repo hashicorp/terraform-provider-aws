@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const awsSpotInstanceRequestTimeLayout = "2006-01-02T15:04:05Z"
+
 func resourceAwsSpotInstanceRequest() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSpotInstanceRequestCreate,
@@ -84,6 +86,16 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				Default:  "terminate",
 				ForceNew: true,
 			}
+			s["valid_from"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			}
+			s["valid_until"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			}
 			return s
 		}(),
 	}
@@ -130,6 +142,22 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 
 	if v, ok := d.GetOk("launch_group"); ok {
 		spotOpts.LaunchGroup = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("valid_from"); ok {
+		valid_from, err := time.Parse(awsSpotInstanceRequestTimeLayout, v.(string))
+		if err != nil {
+			return err
+		}
+		spotOpts.ValidFrom = &valid_from
+	}
+
+	if v, ok := d.GetOk("valid_until"); ok {
+		valid_until, err := time.Parse(awsSpotInstanceRequestTimeLayout, v.(string))
+		if err != nil {
+			return err
+		}
+		spotOpts.ValidUntil = &valid_until
 	}
 
 	// Make the spot instance request
@@ -236,6 +264,8 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 	d.Set("block_duration_minutes", request.BlockDurationMinutes)
 	d.Set("tags", tagsToMap(request.Tags))
 	d.Set("instance_interruption_behaviour", request.InstanceInterruptionBehavior)
+	d.Set("valid_from", aws.TimeValue(request.ValidFrom).Format(awsSpotInstanceRequestTimeLayout))
+	d.Set("valid_until", aws.TimeValue(request.ValidUntil).Format(awsSpotInstanceRequestTimeLayout))
 
 	return nil
 }
