@@ -13,10 +13,10 @@ Resource for managing SES Identity Notifications
 ## Example Usage
 
 ```hcl
-resource "ses_identity_notification" "test" {
-  topic_arn = "${aws_sns_topic.example.arn}"
+resource "aws_ses_identity_notification" "test" {
+  topic_arn			= "${aws_sns_topic.example.arn}"
   notification_type = "Bounce"
-  identity = "${aws_ses_domain_identity.example.domain}"
+  identity 			= "${aws_ses_domain_identity.example.domain}"
 }
 ```
 
