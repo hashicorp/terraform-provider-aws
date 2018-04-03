@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * resource/aws_elasticache_replication_group: Support Cluster Mode Enabled online shard reconfiguration [GH-3932]
 * resource/aws_elasticache_replication_group: Configurable create, update, and delete timeouts [GH-3932]
+* resource/aws_lambda_function: Support `nodejs8.10` runtime [GH-4020]
 
 BUG FIXES:
 
