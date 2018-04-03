@@ -48,14 +48,16 @@ func resourceAwsSesNotification() *schema.Resource {
 
 func resourceAwsSesNotificationSet(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesConn
-	topic := d.Get("topic_arn").(string)
 	notification := d.Get("notification_type").(string)
 	identity := d.Get("identity").(string)
 
 	setOpts := &ses.SetIdentityNotificationTopicInput{
 		Identity:         aws.String(identity),
 		NotificationType: aws.String(notification),
-		SnsTopic:         aws.String(topic),
+	}
+
+	if v, ok := d.GetOk("topic_arn"); ok && v.(string) != "" {
+		setOpts.SnsTopic = aws.String(v.(string))
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", identity, notification))
