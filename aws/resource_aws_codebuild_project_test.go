@@ -41,6 +41,34 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildProject_parameter_store_type(t *testing.T) {
+	name := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_environment_variable_plaintext_type(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_codebuild_project.foo", "environment.0.environment_variable.0.type", "PLAINTEXT"),
+				),
+			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_environment_variable_parameter_store_type(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_codebuild_project.foo", "environment.0.environment_variable.0.type", "PARAMETER_STORE"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeBuildProject_default_build_timeout(t *testing.T) {
 	name := acctest.RandString(10)
 
@@ -390,7 +418,6 @@ resource "aws_codebuild_project" "foo" {
     environment_variable = {
       name  = "SOME_KEY"
       value = "SOME_VALUE"
-      type = "PLAINTEXT"
     }
   }
 
@@ -474,7 +501,6 @@ resource "aws_codebuild_project" "foo" {
     environment_variable = {
       name  = "SOME_OTHERKEY"
       value = "SOME_OTHERVALUE"
-      type = "PARAMETER_STORE"
     }
   }
 
@@ -558,6 +584,174 @@ resource "aws_codebuild_project" "foo" {
     environment_variable = {
       "name"  = "SOME_OTHERKEY"
       "value" = "SOME_OTHERVALUE"
+    }
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+
+  tags {
+    "Environment" = "Test"
+  }
+}
+`, rName, rName, rName, rName)
+}
+
+func testAccAWSCodeBuildProjectConfig_environment_variable_plaintext_type(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "codebuild_role" {
+  name = "codebuild-role-%s"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "codebuild.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "codebuild_policy" {
+    name        = "codebuild-policy-%s"
+    path        = "/service-role/"
+    description = "Policy used in trust relationship with CodeBuild"
+    policy      = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Resource": [
+        "*"
+      ],
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_policy_attachment" "codebuild_policy_attachment" {
+  name       = "codebuild-policy-attachment-%s"
+  policy_arn = "${aws_iam_policy.codebuild_policy.arn}"
+  roles      = ["${aws_iam_role.codebuild_role.id}"]
+}
+
+resource "aws_codebuild_project" "foo" {
+  name         = "test-project-%s"
+  description  = "test_codebuild_project"
+  build_timeout      = "5"
+  service_role = "${aws_iam_role.codebuild_role.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+
+    environment_variable = {
+      name  = "SOME_KEY"
+      value = "SOME_VALUE"
+      type = "PLAINTEXT"
+    }
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+
+  tags {
+    "Environment" = "Test"
+  }
+}
+`, rName, rName, rName, rName)
+}
+
+func testAccAWSCodeBuildProjectConfig_environment_variable_parameter_store_type(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "codebuild_role" {
+  name = "codebuild-role-%s"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "codebuild.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "codebuild_policy" {
+    name        = "codebuild-policy-%s"
+    path        = "/service-role/"
+    description = "Policy used in trust relationship with CodeBuild"
+    policy      = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Resource": [
+        "*"
+      ],
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_policy_attachment" "codebuild_policy_attachment" {
+  name       = "codebuild-policy-attachment-%s"
+  policy_arn = "${aws_iam_policy.codebuild_policy.arn}"
+  roles      = ["${aws_iam_role.codebuild_role.id}"]
+}
+
+resource "aws_codebuild_project" "foo" {
+  name         = "test-project-%s"
+  description  = "test_codebuild_project"
+  build_timeout      = "50"
+  service_role = "${aws_iam_role.codebuild_role.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+
+    environment_variable = {
+      name  = "SOME_OTHERKEY"
+      value = "SOME_OTHERVALUE"
+      type = "PARAMETER_STORE"
     }
   }
 
