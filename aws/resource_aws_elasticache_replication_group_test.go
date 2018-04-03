@@ -1075,8 +1075,8 @@ resource "aws_elasticache_replication_group" "bar" {
     parameter_group_name = "default.redis3.2.cluster.on"
     automatic_failover_enabled = true
     cluster_mode {
-      num_node_groups         = %[2]d
-      replicas_per_node_group = %[3]d
+      num_node_groups         = %d
+      replicas_per_node_group = %d
     }
 }`, rName, numNodeGroups, replicasPerNodeGroup)
 }

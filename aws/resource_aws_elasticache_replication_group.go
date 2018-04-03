@@ -315,12 +315,8 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 
 	d.Set("replication_group_description", rgp.Description)
 	d.Set("number_cache_clusters", len(rgp.MemberClusters))
-	if aws.BoolValue(rgp.ClusterEnabled) {
-		if err := d.Set("cluster_mode", flattenElasticacheNodeGroupsToClusterMode(rgp.NodeGroups)); err != nil {
-			return fmt.Errorf("error setting cluster_mode attribute: %s", err)
-		}
-	} else {
-		d.Set("cluster_mode", []interface{}{})
+	if err := d.Set("cluster_mode", flattenElasticacheNodeGroupsToClusterMode(aws.BoolValue(rgp.ClusterEnabled), rgp.NodeGroups)); err != nil {
+		return fmt.Errorf("error setting cluster_mode attribute: %s", err)
 	}
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 
@@ -610,7 +606,11 @@ func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replic
 	}
 }
 
-func flattenElasticacheNodeGroupsToClusterMode(nodeGroups []*elasticache.NodeGroup) []map[string]interface{} {
+func flattenElasticacheNodeGroupsToClusterMode(clusterEnabled bool, nodeGroups []*elasticache.NodeGroup) []map[string]interface{} {
+	if !clusterEnabled {
+		return []map[string]interface{}{}
+	}
+
 	m := map[string]interface{}{
 		"num_node_groups":         0,
 		"replicas_per_node_group": 0,
