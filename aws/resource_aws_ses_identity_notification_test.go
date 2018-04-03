@@ -99,22 +99,22 @@ func testAccCheckAwsSESIdentityNotificationExists(n string) resource.TestCheckFu
 
 const testAccAwsSESIdentityNotificationConfig_basic = `
 resource "aws_ses_identity_notification" "test" {
-	identity = "${aws_ses_identity.test.arn}"
+	identity = "${aws_ses_domain_identity.test.arn}"
 	notification_type = "Complaint"
 }
 
-resource "aws_ses_identity" "test" {
+resource "aws_ses_domain_identity" "test" {
   domain = "%s"
 }
 `
 const testAccAwsSESIdentityNotificationConfig_update = `
 resource "aws_ses_identity_notification" "test" {
 	topic_arn = "${aws_sns_topic.test.arn}"
-	identity = "${aws_ses_identity.test.arn}"
+	identity = "${aws_ses_domain_identity.test.arn}"
 	notification_type = "Complaint"
 }
 
-resource "aws_ses_identity" "test" {
+resource "aws_ses_domain_identity" "test" {
   domain = "%s"
 }
 
