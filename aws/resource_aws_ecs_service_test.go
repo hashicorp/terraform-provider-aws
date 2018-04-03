@@ -574,6 +574,36 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsService_withServiceRegistry(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	sg1Name := fmt.Sprintf("tf-acc-sg-1-svc-w-ltf-%s", rString)
+	sg2Name := fmt.Sprintf("tf-acc-sg-2-svc-w-ltf-%s", rString)
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ltf-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-ltf-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-ltf-%s", rString)
+
+	registryArnRe := regexp.MustCompile("^arn:aws:servicediscovery:us-east-1:")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithServiceDiscovery(sg1Name, sg2Name, clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main", &service),
+					resource.TestMatchResourceAttr("aws_ecs_service.main", "service_registries.0.registry_arn", registryArnRe),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "service_registries.0.port", "0"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "service_registries.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T) {
 	var service ecs.Service
 	rString := acctest.RandString(8)
@@ -973,6 +1003,116 @@ resource "aws_ecs_service" "main" {
   }
 }
 `, sg1Name, sg2Name, clusterName, tdName, svcName, assignPublicIP)
+}
+
+func testAccAWSEcsServiceWithServiceDiscovery(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-east-1"
+}
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.10.0.0/16"
+  tags {
+    Name = "terraform-testacc-ecs-service-with-launch-type-fargate"
+  }
+}
+
+resource "aws_subnet" "main" {
+  count = 2
+  cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  vpc_id = "${aws_vpc.main.id}"
+  tags {
+    Name = "tf-acc-ecs-service-with-launch-type-fargate"
+  }
+}
+
+resource "aws_security_group" "allow_all_a" {
+  name        = "%s"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["${aws_vpc.main.cidr_block}"]
+  }
+}
+
+resource "aws_security_group" "allow_all_b" {
+  name        = "%s"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["${aws_vpc.main.cidr_block}"]
+  }
+}
+
+resource "aws_service_discovery_private_dns_namespace" "dns_namespace" {
+  name        = "mydns.local"
+  vpc         = "${aws_vpc.main.id}"
+}
+resource "aws_service_discovery_service" "service" {
+  name = "blah"
+
+  dns_config {
+    namespace_id = "${aws_service_discovery_private_dns_namespace.dns_namespace.id}"
+
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+
+    routing_policy = "MULTIVALUE"
+  }
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "%s"
+  network_mode = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu = "256"
+  memory = "512"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 512,
+    "name": "mongodb",
+    "networkMode": "awsvpc"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "main" {
+  name = "%s"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count = 1
+  launch_type = "FARGATE"
+  network_configuration {
+    security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
+    subnets = ["${aws_subnet.main.*.id}"]
+    assign_public_ip = false
+  }
+	service_registries = [
+	{
+		registry_arn = "${aws_service_discovery_service.service.arn}"
+	},
+]
+
+}
+`, sg1Name, sg2Name, clusterName, tdName, svcName)
 }
 
 func testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName, roleName, policyName,

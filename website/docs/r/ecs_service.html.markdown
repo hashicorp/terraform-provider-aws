@@ -60,6 +60,7 @@ into consideration during task placement. The maximum number of
 `placement_strategy` blocks is `5`. Defined below.
 * `health_check_grace_period_seconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 1800. Only valid for services configured to use load balancers.
 * `load_balancer` - (Optional) A load balancer block. Load balancers documented below.
+* `service_registries` - (Optional) How to register the servie for Route53 Auto Naming.
 * `placement_constraints` - (Optional) rules that are taken into consideration during task placement. Maximum number of
 `placement_constraints` is `10`. Defined below.
 * `network_configuration` - (Optional) The network configuration for the service. This parameter is required for task definitions that use the awsvpc network mode to receive their own Elastic Network Interface, and it is not supported for other network modes.
