@@ -129,7 +129,7 @@ Please note that setting a `snapshot_retention_limit` is not supported on cache.
 Cluster Mode (`cluster_mode`) supports the following:
 
 * `replicas_per_node_group` - (Required) Specify the number of replica nodes in each node group. Valid values are 0 to 5. Changing this number will force a new resource.
-* `num_node_groups` - (Required) Specify the number of node groups (shards) for this Redis replication group. Changing this number will force a new resource.
+* `num_node_groups` - (Required) Specify the number of node groups (shards) for this Redis replication group. Changing this number will trigger an online resizing operation before other settings modifications.
 
 ## Attributes Reference
 
@@ -138,6 +138,15 @@ The following attributes are exported:
 * `id` - The ID of the ElastiCache Replication Group.
 * `configuration_endpoint_address` - The address of the replication group configuration endpoint when cluster mode is enabled.
 * `primary_endpoint_address` - (Redis only) The address of the endpoint for the primary node in the replication group, if the cluster mode is disabled.
+
+## Timeouts
+
+`aws_elasticache_replication_group` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+configuration options:
+
+* `create` - (Default `50m`) How long to wait for a replication group to be created.
+* `delete` - (Default `40m`) How long to wait for a replication group to be deleted.
+* `update` - (Default `40m`) How long to wait for replication group settings to be updated. This is also separately used for online resize operation completion, if necessary.
 
 ## Import
 
