@@ -60,6 +60,7 @@ The following arguments are supported:
 * `bucket` - (Required) The name of the bucket to read the object from
 * `key` - (Required) The full path to the object inside the bucket
 * `version_id` - (Optional) Specific version ID of the object returned (defaults to latest version)
+* `presign_expires_in` - (Optional) How many seconds in the future the presigned URL will expire. A presigned URL will not be generated if this is unset or 0
 
 ## Attributes Reference
 
@@ -82,4 +83,5 @@ The following attributes are exported:
 * `storage_class` - [Storage class](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html) information of the object. Available for all objects except for `Standard` storage class objects.
 * `version_id` - The latest version ID of the object returned.
 * `website_redirect_location` - If the bucket is configured as a website, redirects requests for this object to another object in the same bucket or to an external URL. Amazon S3 stores the value of this header in the object metadata.
+* `presigned_url` - A URL that is signed with a limited lifetime token. This is only generated if `presign_expires_in` is specified.  
 * `tags`  - A mapping of tags assigned to the object.
