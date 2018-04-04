@@ -1,5 +1,9 @@
 ## 1.14.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_ses_identity_notification_topic` [GH-2640]
+
 ENHANCEMENTS:
 
 * resource/aws_elasticache_replication_group: Support Cluster Mode Enabled online shard reconfiguration [GH-3932]
