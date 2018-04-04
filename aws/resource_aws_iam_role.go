@@ -146,7 +146,7 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("max_session_duration"); ok {
-		request.MaxSessionDuration = aws.Int64(v.(int64))
+		request.MaxSessionDuration = aws.Int64(int64(v.(int)))
 	}
 
 	var createResp *iam.CreateRoleOutput
