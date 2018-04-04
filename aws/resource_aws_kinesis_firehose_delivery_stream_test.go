@@ -390,14 +390,33 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testi
 	var stream firehose.DeliveryStreamDescription
 
 	ri := acctest.RandInt()
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
 	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchBasic,
 		ri, ri, ri, ri, ri, ri)
-	postConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchUpdate,
-		ri, ri, ri, ri, ri, ri)
+	postConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchUpdate,
+			ri, ri, ri, ri, ri, ri)
 
 	updatedElasticSearchConfig := &firehose.ElasticsearchDestinationDescription{
 		BufferingHints: &firehose.ElasticsearchBufferingHints{
 			IntervalInSeconds: aws.Int64(500),
+		},
+		ProcessingConfiguration: &firehose.ProcessingConfiguration{
+			Enabled: aws.Bool(true),
+			Processors: []*firehose.Processor{
+				&firehose.Processor{
+					Type: aws.String("Lambda"),
+					Parameters: []*firehose.ProcessorParameter{
+						&firehose.ProcessorParameter{
+							ParameterName:  aws.String("LambdaArn"),
+							ParameterValue: aws.String("valueNotTested"),
+						},
+					},
+				},
+			},
 		},
 	}
 
@@ -558,14 +577,20 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 			if elasticsearchConfig != nil {
 				es := elasticsearchConfig.(*firehose.ElasticsearchDestinationDescription)
 				// Range over the Stream Destinations, looking for the matching Elasticsearch destination
-				var match bool
+				var match, processingConfigMatch bool
 				for _, d := range stream.Destinations {
 					if d.ElasticsearchDestinationDescription != nil {
 						match = true
+						if es.ProcessingConfiguration != nil && d.ElasticsearchDestinationDescription.ProcessingConfiguration != nil {
+							processingConfigMatch = len(es.ProcessingConfiguration.Processors) == len(d.ElasticsearchDestinationDescription.ProcessingConfiguration.Processors)
+						}
 					}
 				}
 				if !match {
 					return fmt.Errorf("Mismatch Elasticsearch Buffering Interval, expected: %s, got: %s", es, stream.Destinations)
+				}
+				if !processingConfigMatch {
+					return fmt.Errorf("Mismatch Elasticsearch ProcessingConfiguration.Processors count, expected: %s, got: %s", es, stream.Destinations)
 				}
 			}
 
@@ -585,9 +610,9 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 						if *d.SplunkDestinationDescription.S3BackupMode == *s.S3BackupMode {
 							matchS3BackupMode = true
 						}
-
-						processingConfigMatch = len(s.ProcessingConfiguration.Processors) == len(d.SplunkDestinationDescription.ProcessingConfiguration.Processors)
-
+						if s.ProcessingConfiguration != nil && d.SplunkDestinationDescription.ProcessingConfiguration != nil {
+							processingConfigMatch = len(s.ProcessingConfiguration.Processors) == len(d.SplunkDestinationDescription.ProcessingConfiguration.Processors)
+						}
 					}
 				}
 				if !matchHECEndpointType || !matchHECAcknowledgmentTimeoutInSeconds || !matchS3BackupMode {
@@ -1275,6 +1300,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream_es" {
     index_name = "test"
     type_name = "test"
     buffering_interval = 500
+    processing_configuration = [{
+      enabled = "false",
+      processors = [{
+        type = "Lambda"
+        parameters = [{
+          parameter_name = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }]
+      }]
+    }]
   }
 }`
 
