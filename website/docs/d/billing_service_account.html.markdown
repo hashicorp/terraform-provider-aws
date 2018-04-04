@@ -6,7 +6,7 @@ description: |-
   Get AWS Billing Service Account
 ---
 
-# aws_billing_service_account
+# Data Source: aws_billing_service_account
 
 Use this data source to get the Account ID of the [AWS Billing and Cost Management Service Account](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-getting-started.html#step-2) for the purpose of whitelisting in S3 bucket policy.
 
@@ -41,7 +41,7 @@ resource "aws_s3_bucket" "billing_logs" {
         "s3:PutObject"
       ],
       "Effect": "Allow",
-      "Resource": "arn:aws:s3:::my-billing-tf-test-bucket/AWSLogs/*",
+      "Resource": "arn:aws:s3:::my-billing-tf-test-bucket/*",
       "Principal": {
         "AWS": [
           "${data.aws_billing_service_account.main.arn}"

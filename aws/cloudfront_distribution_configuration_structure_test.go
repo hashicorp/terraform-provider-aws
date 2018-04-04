@@ -14,10 +14,10 @@ func defaultCacheBehaviorConf() map[string]interface{} {
 		"viewer_protocol_policy":      "allow-all",
 		"target_origin_id":            "myS3Origin",
 		"forwarded_values":            schema.NewSet(forwardedValuesHash, []interface{}{forwardedValuesConf()}),
-		"min_ttl":                     86400,
+		"min_ttl":                     0,
 		"trusted_signers":             trustedSignersConf(),
 		"lambda_function_association": lambdaFunctionAssociationsConf(),
-		"max_ttl":                     365000000,
+		"max_ttl":                     31536000,
 		"smooth_streaming":            false,
 		"default_ttl":                 86400,
 		"allowed_methods":             allowedMethodsConf(),
@@ -270,14 +270,14 @@ func TestCloudFrontStructure_expandDefaultCacheBehavior(t *testing.T) {
 	if reflect.DeepEqual(dcb.ForwardedValues.Headers.Items, expandStringList(headersConf())) != true {
 		t.Fatalf("Expected Items to be %v, got %v", headersConf(), dcb.ForwardedValues.Headers.Items)
 	}
-	if *dcb.MinTTL != 86400 {
-		t.Fatalf("Expected MinTTL to be 86400, got %v", *dcb.MinTTL)
+	if *dcb.MinTTL != 0 {
+		t.Fatalf("Expected MinTTL to be 0, got %v", *dcb.MinTTL)
 	}
 	if reflect.DeepEqual(dcb.TrustedSigners.Items, expandStringList(trustedSignersConf())) != true {
 		t.Fatalf("Expected TrustedSigners.Items to be %v, got %v", trustedSignersConf(), dcb.TrustedSigners.Items)
 	}
-	if *dcb.MaxTTL != 365000000 {
-		t.Fatalf("Expected MaxTTL to be 365000000, got %v", *dcb.MaxTTL)
+	if *dcb.MaxTTL != 31536000 {
+		t.Fatalf("Expected MaxTTL to be 31536000, got %v", *dcb.MaxTTL)
 	}
 	if *dcb.SmoothStreaming != false {
 		t.Fatalf("Expected SmoothStreaming to be false, got %v", *dcb.SmoothStreaming)
@@ -322,14 +322,14 @@ func TestCloudFrontStructure_expandCacheBehavior(t *testing.T) {
 	if reflect.DeepEqual(cb.ForwardedValues.Headers.Items, expandStringList(headersConf())) != true {
 		t.Fatalf("Expected Items to be %v, got %v", headersConf(), cb.ForwardedValues.Headers.Items)
 	}
-	if *cb.MinTTL != 86400 {
-		t.Fatalf("Expected MinTTL to be 86400, got %v", *cb.MinTTL)
+	if *cb.MinTTL != 0 {
+		t.Fatalf("Expected MinTTL to be 0, got %v", *cb.MinTTL)
 	}
 	if reflect.DeepEqual(cb.TrustedSigners.Items, expandStringList(trustedSignersConf())) != true {
 		t.Fatalf("Expected TrustedSigners.Items to be %v, got %v", trustedSignersConf(), cb.TrustedSigners.Items)
 	}
-	if *cb.MaxTTL != 365000000 {
-		t.Fatalf("Expected MaxTTL to be 365000000, got %v", *cb.MaxTTL)
+	if *cb.MaxTTL != 31536000 {
+		t.Fatalf("Expected MaxTTL to be 31536000, got %v", *cb.MaxTTL)
 	}
 	if *cb.SmoothStreaming != false {
 		t.Fatalf("Expected SmoothStreaming to be false, got %v", *cb.SmoothStreaming)
@@ -384,14 +384,14 @@ func TestCloudFrontStructure_flattenCacheBehavior(t *testing.T) {
 	if len(diff.List()) > 0 {
 		t.Fatalf("Expected out[forwarded_values] to be %v, got %v, diff: %v", out["forwarded_values"], in["forwarded_values"], diff)
 	}
-	if out["min_ttl"] != int(86400) {
-		t.Fatalf("Expected out[min_ttl] to be 86400 (int), got %v", out["forwarded_values"])
+	if out["min_ttl"] != int(0) {
+		t.Fatalf("Expected out[min_ttl] to be 0 (int), got %v", out["min_ttl"])
 	}
 	if reflect.DeepEqual(out["trusted_signers"], in["trusted_signers"]) != true {
 		t.Fatalf("Expected out[trusted_signers] to be %v, got %v", in["trusted_signers"], out["trusted_signers"])
 	}
-	if out["max_ttl"] != int(365000000) {
-		t.Fatalf("Expected out[max_ttl] to be 365000000 (int), got %v", out["max_ttl"])
+	if out["max_ttl"] != int(31536000) {
+		t.Fatalf("Expected out[max_ttl] to be 31536000 (int), got %v", out["max_ttl"])
 	}
 	if out["smooth_streaming"] != false {
 		t.Fatalf("Expected out[smooth_streaming] to be false, got %v", out["smooth_streaming"])

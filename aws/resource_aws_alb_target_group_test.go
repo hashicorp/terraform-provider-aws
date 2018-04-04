@@ -510,7 +510,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -549,7 +549,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -588,7 +588,7 @@ resource "aws_vpc" "test2" {
   cidr_block = "10.10.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic-2"
   }
 }
 
@@ -596,7 +596,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -635,7 +635,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -675,7 +675,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -710,7 +710,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -752,7 +752,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_stickiness"
+    Name = "terraform-testacc-alb-target-group-stickiness"
   }
 }`, targetGroupName, stickinessBlock)
 }
@@ -768,7 +768,7 @@ resource "aws_alb_target_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSALBTargetGroupConfig_namePrefix"
+		Name = "terraform-testacc-alb-target-group-name-prefix"
 	}
 }
 `
@@ -783,7 +783,7 @@ resource "aws_alb_target_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSALBTargetGroupConfig_generatedName"
+		Name = "terraform-testacc-alb-target-group-generated-name"
 	}
 }
 `

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -32,6 +33,11 @@ func dataSourceAwsSsmParameter() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
+			"with_decryption": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 		},
 	}
 }
@@ -45,7 +51,7 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 		Names: []*string{
 			aws.String(name),
 		},
-		WithDecryption: aws.Bool(true),
+		WithDecryption: aws.Bool(d.Get("with_decryption").(bool)),
 	}
 
 	log.Printf("[DEBUG] Reading SSM Parameter: %s", paramInput)
@@ -67,7 +73,7 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 		Region:    meta.(*AWSClient).region,
 		Service:   "ssm",
 		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("parameter/%s", d.Id()),
+		Resource:  fmt.Sprintf("parameter/%s", strings.TrimPrefix(d.Id(), "/")),
 	}
 	d.Set("arn", arn.String())
 

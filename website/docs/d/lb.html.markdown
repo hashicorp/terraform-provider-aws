@@ -6,7 +6,7 @@ description: |-
   Provides a Load Balancer data source.
 ---
 
-# aws_lb
+# Data Source: aws_lb
 
 ~> **Note:** `aws_alb` is known as `aws_lb`. The functionality is identical.
 

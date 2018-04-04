@@ -6,7 +6,7 @@ description: |-
   Get information on a Amazon IAM group
 ---
 
-# aws_iam_group
+# Data Source: aws_iam_group
 
 This data source can be used to fetch information about a specific
 IAM group. By using this data source, you can reference IAM group

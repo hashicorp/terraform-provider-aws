@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
+func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -67,6 +67,9 @@ func testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-service-discovery-private-dns-ns"
+  }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {

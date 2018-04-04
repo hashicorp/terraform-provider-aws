@@ -26,6 +26,8 @@ func TestAccAWSElasticacheReplicationGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.bar", &rg),
 					resource.TestCheckResourceAttr(
+						"aws_elasticache_replication_group.bar", "cluster_mode.#", "0"),
+					resource.TestCheckResourceAttr(
 						"aws_elasticache_replication_group.bar", "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(
 						"aws_elasticache_replication_group.bar", "auto_minor_version_upgrade", "false"),
@@ -260,10 +262,10 @@ func TestAccAWSElasticacheReplicationGroup_redisClusterInVpc2(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheReplicationGroup_nativeRedisCluster(t *testing.T) {
+func TestAccAWSElasticacheReplicationGroup_ClusterMode_Basic(t *testing.T) {
 	var rg elasticache.ReplicationGroup
-	rInt := acctest.RandInt()
 	rName := acctest.RandString(10)
+	resourceName := "aws_elasticache_replication_group.bar"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -271,21 +273,59 @@ func TestAccAWSElasticacheReplicationGroup_nativeRedisCluster(t *testing.T) {
 		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rInt, rName),
+				Config: testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rName, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.bar", &rg),
-					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.bar", "number_cache_clusters", "4"),
-					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.bar", "cluster_mode.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.bar", "cluster_mode.4170186206.num_node_groups", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.bar", "cluster_mode.4170186206.replicas_per_node_group", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.bar", "port", "6379"),
-					resource.TestCheckResourceAttrSet(
-						"aws_elasticache_replication_group.bar", "configuration_endpoint_address"),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
+					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration_endpoint_address"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheReplicationGroup_ClusterMode_NumNodeGroups(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	rName := acctest.RandString(10)
+	resourceName := "aws_elasticache_replication_group.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rName, 3, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "6"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "3"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rName, 1, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rName, 2, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
 				),
 			},
 		},
@@ -738,7 +778,7 @@ var testAccAWSElasticacheReplicationGroupInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-            Name = "tf-test"
+        Name = "terraform-testacc-elasticache-replication-group-in-vpc"
     }
 }
 
@@ -747,7 +787,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
     tags {
-            Name = "tf-test"
+        Name = "tf-acc-elasticache-replication-group-in-vpc"
     }
 }
 
@@ -788,7 +828,7 @@ var testAccAWSElasticacheReplicationGroupMultiAZInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-            Name = "tf-test"
+        Name = "terraform-testacc-elasticache-replication-group-multi-az-in-vpc"
     }
 }
 
@@ -797,7 +837,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
     tags {
-            Name = "tf-test-%03d"
+        Name = "tf-acc-elasticache-replication-group-multi-az-in-vpc-foo"
     }
 }
 
@@ -806,7 +846,7 @@ resource "aws_subnet" "bar" {
     cidr_block = "192.168.16.0/20"
     availability_zone = "us-west-2b"
     tags {
-            Name = "tf-test-%03d"
+        Name = "tf-acc-elasticache-replication-group-multi-az-in-vpc-bar"
     }
 }
 
@@ -845,13 +885,13 @@ resource "aws_elasticache_replication_group" "bar" {
     snapshot_window = "02:00-03:00"
     snapshot_retention_limit = 7
 }
-`, acctest.RandInt(), acctest.RandInt(), acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
+`, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
 var testAccAWSElasticacheReplicationGroupRedisClusterInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-            Name = "tf-test"
+        Name = "terraform-testacc-elasticache-replication-group-redis-cluster-in-vpc"
     }
 }
 
@@ -860,7 +900,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
     tags {
-            Name = "tf-test-%03d"
+        Name = "tf-acc-elasticache-replication-group-redis-cluster-in-vpc-foo"
     }
 }
 
@@ -869,7 +909,7 @@ resource "aws_subnet" "bar" {
     cidr_block = "192.168.16.0/20"
     availability_zone = "us-west-2b"
     tags {
-            Name = "tf-test-%03d"
+        Name = "tf-acc-elasticache-replication-group-redis-cluster-in-vpc-bar"
     }
 }
 
@@ -910,14 +950,14 @@ resource "aws_elasticache_replication_group" "bar" {
     engine_version = "3.2.4"
     maintenance_window = "thu:03:00-thu:04:00"
 }
-`, acctest.RandInt(), acctest.RandInt(), acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
+`, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
 func testAccAWSElasticacheReplicationGroupNativeRedisClusterErrorConfig(rInt int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-        Name = "tf-test"
+        Name = "terraform-testacc-elasticache-replication-group-native-redis-cluster-err"
     }
 }
 
@@ -926,7 +966,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
     tags {
-        Name = "tf-test-%03d"
+        Name = "tf-acc-elasticache-replication-group-native-redis-cluster-err-foo"
     }
 }
 
@@ -935,7 +975,7 @@ resource "aws_subnet" "bar" {
     cidr_block = "192.168.16.0/20"
     availability_zone = "us-west-2b"
     tags {
-        Name = "tf-test-%03d"
+        Name = "tf-acc-elasticache-replication-group-native-redis-cluster-err-bar"
     }
 }
 
@@ -974,15 +1014,15 @@ resource "aws_elasticache_replication_group" "bar" {
       num_node_groups = 2
     }
     number_cache_clusters = 3
-}`, rInt, rInt, rInt, rInt, rName)
+}`, rInt, rInt, rName)
 }
 
-func testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rInt int, rName string) string {
+func testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rName string, numNodeGroups, replicasPerNodeGroup int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
     tags {
-        Name = "tf-test"
+        Name = "terraform-testacc-elasticache-replication-group-native-redis-cluster"
     }
 }
 
@@ -991,7 +1031,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
     tags {
-        Name = "tf-test-%03d"
+        Name = "tf-acc-elasticache-replication-group-native-redis-cluster-foo"
     }
 }
 
@@ -1000,12 +1040,12 @@ resource "aws_subnet" "bar" {
     cidr_block = "192.168.16.0/20"
     availability_zone = "us-west-2b"
     tags {
-        Name = "tf-test-%03d"
+        Name = "tf-acc-elasticache-replication-group-native-redis-cluster-bar"
     }
 }
 
 resource "aws_elasticache_subnet_group" "bar" {
-    name = "tf-test-cache-subnet-%03d"
+    name = "tf-test-%[1]s"
     description = "tf-test-cache-subnet-group-descr"
     subnet_ids = [
         "${aws_subnet.foo.id}",
@@ -1014,7 +1054,7 @@ resource "aws_elasticache_subnet_group" "bar" {
 }
 
 resource "aws_security_group" "bar" {
-    name = "tf-test-security-group-%03d"
+    name = "tf-test-%[1]s"
     description = "tf-test-security-group-descr"
     vpc_id = "${aws_vpc.foo.id}"
     ingress {
@@ -1026,7 +1066,7 @@ resource "aws_security_group" "bar" {
 }
 
 resource "aws_elasticache_replication_group" "bar" {
-    replication_group_id = "tf-%s"
+    replication_group_id = "tf-%[1]s"
     replication_group_description = "test description"
     node_type = "cache.t2.micro"
     port = 6379
@@ -1035,10 +1075,10 @@ resource "aws_elasticache_replication_group" "bar" {
     parameter_group_name = "default.redis3.2.cluster.on"
     automatic_failover_enabled = true
     cluster_mode {
-      replicas_per_node_group = 1
-      num_node_groups = 2
+      num_node_groups         = %d
+      replicas_per_node_group = %d
     }
-}`, rInt, rInt, rInt, rInt, rName)
+}`, rName, numNodeGroups, replicasPerNodeGroup)
 }
 
 func testAccAWSElasticacheReplicationGroup_EnableAtRestEncryptionConfig(rInt int, rString string) string {
@@ -1046,7 +1086,7 @@ func testAccAWSElasticacheReplicationGroup_EnableAtRestEncryptionConfig(rInt int
 resource "aws_vpc" "foo" {
   cidr_block = "192.168.0.0/16"
   tags {
-    Name = "tf-test"
+    Name = "terraform-testacc-elasticache-replication-group-at-rest-encryption"
   }
 }
 
@@ -1055,7 +1095,7 @@ resource "aws_subnet" "foo" {
   cidr_block = "192.168.0.0/20"
   availability_zone = "us-west-2a"
   tags {
-    Name = "tf-test-%03d"
+    Name = "tf-acc-elasticache-replication-group-at-rest-encryption"
   }
 }
 
@@ -1092,7 +1132,7 @@ resource "aws_elasticache_replication_group" "bar" {
   engine_version = "3.2.6"
   at_rest_encryption_enabled = true
 }
-`, rInt, rInt, rInt, rString)
+`, rInt, rInt, rString)
 }
 
 func testAccAWSElasticacheReplicationGroup_EnableAuthTokenTransitEncryptionConfig(rInt int, rString10 string, rString16 string) string {
@@ -1100,7 +1140,7 @@ func testAccAWSElasticacheReplicationGroup_EnableAuthTokenTransitEncryptionConfi
 resource "aws_vpc" "foo" {
   cidr_block = "192.168.0.0/16"
   tags {
-    Name = "tf-test"
+    Name = "terraform-testacc-elasticache-replication-group-auth-token-transit-encryption"
   }
 }
 
@@ -1109,7 +1149,7 @@ resource "aws_subnet" "foo" {
   cidr_block = "192.168.0.0/20"
   availability_zone = "us-west-2a"
   tags {
-    Name = "tf-test-%03d"
+    Name = "tf-acc-elasticache-replication-group-auth-token-transit-encryption"
   }
 }
 
@@ -1147,5 +1187,5 @@ resource "aws_elasticache_replication_group" "bar" {
   transit_encryption_enabled = true
   auth_token = "%s"
 }
-`, rInt, rInt, rInt, rString10, rString16)
+`, rInt, rInt, rString10, rString16)
 }

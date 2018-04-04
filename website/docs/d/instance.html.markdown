@@ -6,7 +6,7 @@ description: |-
   Get information on an Amazon EC2 Instance.
 ---
 
-# aws_instance
+# Data Source: aws_instance
 
 Use this data source to get the ID of an Amazon EC2 Instance for use in other
 resources.
@@ -40,6 +40,8 @@ exactly match a pair on the desired Instance.
 several valid keys, for a full reference, check out
 [describe-instances in the AWS CLI reference][1].
 
+* `get_password_data` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `password_data` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
+
 ~> **NOTE:** At least one of `filter`, `instance_tags`, or `instance_id` must be specified.
 
 ~> **NOTE:** If anything other than a single match is returned by the search,
@@ -54,6 +56,7 @@ are exported:
 ~> **NOTE:** Some values are not always set and may not be available for
 interpolation.
 
+* `ami` - The ID of the AMI used to launch the instance.
 * `associate_public_ip_address` - Whether or not the Instance is associated with a public IP address or not (Boolean).
 * `availability_zone` - The availability zone of the Instance.
 * `ebs_block_device` - The EBS block device mappings of the Instance.
@@ -75,6 +78,10 @@ interpolation.
 * `key_name` - The key name of the Instance.
 * `monitoring` - Whether detailed monitoring is enabled or disabled for the Instance (Boolean).
 * `network_interface_id` - The ID of the network interface that was created with the Instance.
+* `password_data` - Base-64 encoded encrypted password data for the instance.
+  Useful for getting the administrator password for instances running Microsoft Windows.
+  This attribute is only exported if `get_password_data` is true.
+  See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `placement_group` - The placement group of the Instance.
 * `private_dns` - The private DNS name assigned to the Instance. Can only be
   used inside the Amazon EC2, and only available if you've enabled DNS hostnames

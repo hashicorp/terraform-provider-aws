@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -336,7 +337,7 @@ func TestAccAWSDBInstance_enhancedMonitoring(t *testing.T) {
 // Regression test for https://github.com/hashicorp/terraform/issues/3760 .
 // We apply a plan, then change just the iops. If the apply succeeds, we
 // consider this a pass, as before in 3760 the request would fail
-func TestAccAWS_separate_DBInstance_iops_update(t *testing.T) {
+func TestAccAWSDBInstance_separate_iops_update(t *testing.T) {
 	var v rds.DBInstance
 
 	rName := acctest.RandString(5)
@@ -472,6 +473,11 @@ func TestAccAWSDBInstance_diffSuppressInitialState(t *testing.T) {
 
 func TestAccAWSDBInstance_ec2Classic(t *testing.T) {
 	var v rds.DBInstance
+
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -1132,7 +1138,7 @@ func testAccAWSDBInstanceConfigWithSubnetGroup(rName string) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name="testAccAWSDBInstanceConfigWithSubnetGroup"
+		Name = "terraform-testacc-db-instance-with-subnet-group"
 	}
 }
 
@@ -1141,7 +1147,7 @@ resource "aws_subnet" "foo" {
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-1"
+		Name = "tf-acc-db-instance-with-subnet-group-1"
 	}
 }
 
@@ -1150,7 +1156,7 @@ resource "aws_subnet" "bar" {
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-2"
+		Name = "tf-acc-db-instance-with-subnet-group-2"
 	}
 }
 
@@ -1186,14 +1192,14 @@ func testAccAWSDBInstanceConfigWithSubnetGroupUpdated(rName string) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name="testAccAWSDBInstanceConfigWithSubnetGroupUpdated"
+		Name = "terraform-testacc-db-instance-with-subnet-group-updated-foo"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.10.0.0/16"
 	tags {
-		Name="testAccAWSDBInstanceConfigWithSubnetGroupUpdated_other"
+		Name = "terraform-testacc-db-instance-with-subnet-group-updated-bar"
 	}
 }
 
@@ -1202,7 +1208,7 @@ resource "aws_subnet" "foo" {
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-1"
+		Name = "tf-acc-db-instance-with-subnet-group-1"
 	}
 }
 
@@ -1211,7 +1217,7 @@ resource "aws_subnet" "bar" {
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-2"
+		Name = "tf-acc-db-instance-with-subnet-group-2"
 	}
 }
 
@@ -1220,7 +1226,7 @@ resource "aws_subnet" "test" {
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.bar.id}"
 	tags {
-		Name = "tf-dbsubnet-test-3"
+		Name = "tf-acc-db-instance-with-subnet-group-3"
 	}
 }
 
@@ -1229,7 +1235,7 @@ resource "aws_subnet" "another_test" {
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.bar.id}"
 	tags {
-		Name = "tf-dbsubnet-test-4"
+		Name = "tf-acc-db-instance-with-subnet-group-4"
 	}
 }
 
@@ -1274,9 +1280,9 @@ func testAccAWSDBMSSQL_timezone(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-	tags {
-		Name = "tf-rds-mssql-timezone-test"
-	}
+  tags {
+    Name = "terraform-testacc-db-instance-mssql-timezone"
+  }
 }
 
 resource "aws_db_subnet_group" "rds_one" {
@@ -1290,12 +1296,18 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
+  tags {
+    Name = "tf-acc-db-instance-mssql-timezone-main"
+  }
 }
 
 resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
+  tags {
+    Name = "tf-acc-db-instance-mssql-timezone-other"
+  }
 }
 
 resource "aws_db_instance" "mssql" {
@@ -1340,9 +1352,9 @@ func testAccAWSDBMSSQL_timezone_AKST(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-	tags {
-		Name = "tf-rds-mssql-timezone-test"
-	}
+  tags {
+    Name = "terraform-testacc-db-instance-mssql-timezone-akst"
+  }
 }
 
 resource "aws_db_subnet_group" "rds_one" {
@@ -1356,12 +1368,18 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
+  tags {
+    Name = "tf-acc-db-instance-mssql-timezone-akst-main"
+  }
 }
 
 resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
+  tags {
+    Name = "tf-acc-db-instance-mssql-timezone-akst-other"
+  }
 }
 
 resource "aws_db_instance" "mssql" {
@@ -1418,10 +1436,6 @@ resource "aws_db_instance" "bar" {
 
 func testAccAWSDBInstanceConfigEc2Classic(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_db_instance" "bar" {
   identifier = "foobarbaz-test-terraform-%d"
   allocated_storage = 10

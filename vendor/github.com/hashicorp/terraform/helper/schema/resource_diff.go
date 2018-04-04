@@ -223,9 +223,11 @@ func (d *ResourceDiff) Clear(key string) error {
 
 func (d *ResourceDiff) clear(key string) error {
 	// Check the schema to make sure that this key exists first.
-	if _, ok := d.schema[key]; !ok {
+	schemaL := addrToSchema(strings.Split(key, "."), d.schema)
+	if len(schemaL) == 0 {
 		return fmt.Errorf("%s is not a valid key", key)
 	}
+
 	for k := range d.diff.Attributes {
 		if strings.HasPrefix(k, key) {
 			delete(d.diff.Attributes, k)
@@ -234,10 +236,23 @@ func (d *ResourceDiff) clear(key string) error {
 	return nil
 }
 
+// GetChangedKeysPrefix helps to implement Resource.CustomizeDiff
+// where we need to act on all nested fields
+// without calling out each one separately
+func (d *ResourceDiff) GetChangedKeysPrefix(prefix string) []string {
+	keys := make([]string, 0)
+	for k := range d.diff.Attributes {
+		if strings.HasPrefix(k, prefix) {
+			keys = append(keys, k)
+		}
+	}
+	return keys
+}
+
 // diffChange helps to implement resourceDiffer and derives its change values
 // from ResourceDiff's own change data, in addition to existing diff, config, and state.
-func (d *ResourceDiff) diffChange(key string) (interface{}, interface{}, bool, bool) {
-	old, new := d.getChange(key)
+func (d *ResourceDiff) diffChange(key string) (interface{}, interface{}, bool, bool, bool) {
+	old, new, customized := d.getChange(key)
 
 	if !old.Exists {
 		old.Value = nil
@@ -246,7 +261,7 @@ func (d *ResourceDiff) diffChange(key string) (interface{}, interface{}, bool, b
 		new.Value = nil
 	}
 
-	return old.Value, new.Value, !reflect.DeepEqual(old.Value, new.Value), new.Computed
+	return old.Value, new.Value, !reflect.DeepEqual(old.Value, new.Value), new.Computed, customized
 }
 
 // SetNew is used to set a new diff value for the mentioned key. The value must
@@ -309,9 +324,20 @@ func (d *ResourceDiff) ForceNew(key string) error {
 		return fmt.Errorf("ForceNew: No changes for %s", key)
 	}
 
-	_, new := d.GetChange(key)
-	d.schema[key].ForceNew = true
-	return d.setDiff(key, new, false)
+	keyParts := strings.Split(key, ".")
+	var schema *Schema
+	schemaL := addrToSchema(keyParts, d.schema)
+	if len(schemaL) > 0 {
+		schema = schemaL[len(schemaL)-1]
+	} else {
+		return fmt.Errorf("ForceNew: %s is not a valid key", key)
+	}
+
+	schema.ForceNew = true
+
+	// We need to set whole lists/sets/maps here
+	_, new := d.GetChange(keyParts[0])
+	return d.setDiff(keyParts[0], new, false)
 }
 
 // Get hands off to ResourceData.Get.
@@ -327,7 +353,7 @@ func (d *ResourceDiff) Get(key string) interface{} {
 // results from the exact levels for the new diff, then from state and diff as
 // per normal.
 func (d *ResourceDiff) GetChange(key string) (interface{}, interface{}) {
-	old, new := d.getChange(key)
+	old, new, _ := d.getChange(key)
 	return old.Value, new.Value
 }
 
@@ -387,18 +413,17 @@ func (d *ResourceDiff) Id() string {
 // This implementation differs from ResourceData's in the way that we first get
 // results from the exact levels for the new diff, then from state and diff as
 // per normal.
-func (d *ResourceDiff) getChange(key string) (getResult, getResult) {
+func (d *ResourceDiff) getChange(key string) (getResult, getResult, bool) {
 	old := d.get(strings.Split(key, "."), "state")
 	var new getResult
 	for p := range d.updatedKeys {
 		if childAddrOf(key, p) {
 			new = d.getExact(strings.Split(key, "."), "newDiff")
-			goto done
+			return old, new, true
 		}
 	}
 	new = d.get(strings.Split(key, "."), "newDiff")
-done:
-	return old, new
+	return old, new, false
 }
 
 // get performs the appropriate multi-level reader logic for ResourceDiff,

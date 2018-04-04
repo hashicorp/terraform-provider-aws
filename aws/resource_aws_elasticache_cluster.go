@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -10,8 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	gversion "github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsElastiCacheCommonSchema() map[string]*schema.Schema {
@@ -26,11 +30,14 @@ func resourceAwsElastiCacheCommonSchema() map[string]*schema.Schema {
 		},
 		"node_type": {
 			Type:     schema.TypeString,
-			Required: true,
+			Optional: true,
+			Computed: true,
 		},
 		"engine": {
 			Type:     schema.TypeString,
-			Required: true,
+			Optional: true,
+			//Computed: true, Set in resourceAwsElasticacheCluster because this Schema is used in resource_aws_elasticache_replication_group with a default value.
+			ForceNew: true,
 		},
 		"engine_version": {
 			Type:     schema.TypeString,
@@ -101,8 +108,15 @@ func resourceAwsElastiCacheCommonSchema() map[string]*schema.Schema {
 		},
 		"port": {
 			Type:     schema.TypeInt,
-			Required: true,
+			Optional: true,
 			ForceNew: true,
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				// Supress default memcached/redis ports when not defined
+				if !d.IsNewResource() && new == "0" && (old == "6379" || old == "11211") {
+					return true
+				}
+				return false
+			},
 		},
 		"notification_topic_arn": {
 			Type:     schema.TypeString,
@@ -110,16 +124,9 @@ func resourceAwsElastiCacheCommonSchema() map[string]*schema.Schema {
 		},
 
 		"snapshot_retention_limit": {
-			Type:     schema.TypeInt,
-			Optional: true,
-			ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-				value := v.(int)
-				if value > 35 {
-					es = append(es, fmt.Errorf(
-						"snapshot retention limit cannot be more than 35 days"))
-				}
-				return
-			},
+			Type:         schema.TypeInt,
+			Optional:     true,
+			ValidateFunc: validation.IntAtMost(35),
 		},
 
 		"apply_immediately": {
@@ -134,6 +141,8 @@ func resourceAwsElastiCacheCommonSchema() map[string]*schema.Schema {
 
 func resourceAwsElasticacheCluster() *schema.Resource {
 	resourceSchema := resourceAwsElastiCacheCommonSchema()
+
+	resourceSchema["engine"].Computed = true
 
 	resourceSchema["cluster_id"] = &schema.Schema{
 		Type:     schema.TypeString,
@@ -150,13 +159,18 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 
 	resourceSchema["num_cache_nodes"] = &schema.Schema{
 		Type:     schema.TypeInt,
-		Required: true,
+		Optional: true,
+		Computed: true,
 	}
 
 	resourceSchema["az_mode"] = &schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 		Computed: true,
+		ValidateFunc: validation.StringInSlice([]string{
+			elasticache.AZModeCrossAz,
+			elasticache.AZModeSingleAz,
+		}, false),
 	}
 
 	resourceSchema["availability_zone"] = &schema.Schema{
@@ -172,11 +186,6 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 	}
 
 	resourceSchema["cluster_address"] = &schema.Schema{
-		Type:     schema.TypeString,
-		Computed: true,
-	}
-
-	resourceSchema["replication_group_id"] = &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
 	}
@@ -206,6 +215,33 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 		},
 	}
 
+	resourceSchema["replication_group_id"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		ForceNew: true,
+		ConflictsWith: []string{
+			"availability_zone",
+			"availability_zones",
+			"az_mode",
+			"engine_version",
+			"engine",
+			"maintenance_window",
+			"node_type",
+			"notification_topic_arn",
+			"num_cache_nodes",
+			"parameter_group_name",
+			"port",
+			"security_group_ids",
+			"security_group_names",
+			"snapshot_arns",
+			"snapshot_name",
+			"snapshot_retention_limit",
+			"snapshot_window",
+			"subnet_group_name",
+		},
+		Computed: true,
+	}
+
 	return &schema.Resource{
 		Create: resourceAwsElasticacheClusterCreate,
 		Read:   resourceAwsElasticacheClusterRead,
@@ -216,37 +252,133 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 		},
 
 		Schema: resourceSchema,
+
+		CustomizeDiff: customdiff.Sequence(
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for az_mode
+				// InvalidParameterCombination: Must specify at least two cache nodes in order to specify AZ Mode of 'cross-az'.
+				if v, ok := diff.GetOk("az_mode"); !ok || v.(string) != elasticache.AZModeCrossAz {
+					return nil
+				}
+				if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) != 1 {
+					return nil
+				}
+				return errors.New(`az_mode "cross-az" is not supported with num_cache_nodes = 1`)
+			},
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for engine_version
+				// InvalidParameterCombination: Cannot modify memcached from 1.4.33 to 1.4.24
+				// InvalidParameterCombination: Cannot modify redis from 3.2.6 to 3.2.4
+				if diff.Id() == "" || !diff.HasChange("engine_version") {
+					return nil
+				}
+				o, n := diff.GetChange("engine_version")
+				oVersion, err := gversion.NewVersion(o.(string))
+				if err != nil {
+					return err
+				}
+				nVersion, err := gversion.NewVersion(n.(string))
+				if err != nil {
+					return err
+				}
+				if nVersion.GreaterThan(oVersion) {
+					return nil
+				}
+				return diff.ForceNew("engine_version")
+			},
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for node_type
+				// InvalidParameterCombination: Instance type cache.t2.micro can only be created in a VPC.
+				nodeType, nodeTypeOk := diff.GetOk("node_type")
+				if !nodeTypeOk {
+					return nil
+				}
+				vpcOnlyNodeTypes := []string{
+					"cache.t2.micro",
+					"cache.t2.small",
+					"cache.t2.medium",
+				}
+				if _, ok := diff.GetOk("subnet_group_name"); !ok {
+					for _, vpcOnlyNodeType := range vpcOnlyNodeTypes {
+						if nodeType == vpcOnlyNodeType {
+							return fmt.Errorf("node_type %q can only be created in a VPC", nodeType)
+						}
+					}
+				}
+				return nil
+			},
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for num_cache_nodes
+				// InvalidParameterValue: Cannot create a Redis cluster with a NumCacheNodes parameter greater than 1.
+				if v, ok := diff.GetOk("engine"); !ok || v.(string) == "memcached" {
+					return nil
+				}
+				if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) == 1 {
+					return nil
+				}
+				return errors.New(`engine "redis" does not support num_cache_nodes > 1`)
+			},
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				// Engine memcached does not currently support vertical scaling
+				// InvalidParameterCombination: Scaling is not supported for engine memcached
+				// https://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/Scaling.Memcached.html#Scaling.Memcached.Vertically
+				if diff.Id() == "" || !diff.HasChange("node_type") {
+					return nil
+				}
+				if v, ok := diff.GetOk("engine"); !ok || v.(string) == "redis" {
+					return nil
+				}
+				return diff.ForceNew("node_type")
+			},
+		),
 	}
 }
 
 func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	clusterId := d.Get("cluster_id").(string)
-	nodeType := d.Get("node_type").(string)           // e.g) cache.m1.small
-	numNodes := int64(d.Get("num_cache_nodes").(int)) // 2
-	engine := d.Get("engine").(string)                // memcached
-	engineVersion := d.Get("engine_version").(string) // 1.4.14
-	port := int64(d.Get("port").(int))                // e.g) 11211
-	subnetGroupName := d.Get("subnet_group_name").(string)
-	securityNameSet := d.Get("security_group_names").(*schema.Set)
-	securityIdSet := d.Get("security_group_ids").(*schema.Set)
+	req := &elasticache.CreateCacheClusterInput{}
 
-	securityNames := expandStringList(securityNameSet.List())
-	securityIds := expandStringList(securityIdSet.List())
-	tags := tagsFromMapEC(d.Get("tags").(map[string]interface{}))
+	if v, ok := d.GetOk("replication_group_id"); ok {
+		req.ReplicationGroupId = aws.String(v.(string))
+	} else {
+		securityNameSet := d.Get("security_group_names").(*schema.Set)
+		securityIdSet := d.Get("security_group_ids").(*schema.Set)
+		securityNames := expandStringList(securityNameSet.List())
+		securityIds := expandStringList(securityIdSet.List())
+		tags := tagsFromMapEC(d.Get("tags").(map[string]interface{}))
 
-	req := &elasticache.CreateCacheClusterInput{
-		CacheClusterId:          aws.String(clusterId),
-		CacheNodeType:           aws.String(nodeType),
-		NumCacheNodes:           aws.Int64(numNodes),
-		Engine:                  aws.String(engine),
-		EngineVersion:           aws.String(engineVersion),
-		Port:                    aws.Int64(port),
-		CacheSubnetGroupName:    aws.String(subnetGroupName),
-		CacheSecurityGroupNames: securityNames,
-		SecurityGroupIds:        securityIds,
-		Tags:                    tags,
+		req.CacheSecurityGroupNames = securityNames
+		req.SecurityGroupIds = securityIds
+		req.Tags = tags
+	}
+
+	if v, ok := d.GetOk("cluster_id"); ok {
+		req.CacheClusterId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("node_type"); ok {
+		req.CacheNodeType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("num_cache_nodes"); ok {
+		req.NumCacheNodes = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("engine"); ok {
+		req.Engine = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("engine_version"); ok {
+		req.EngineVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("port"); ok {
+		req.Port = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("subnet_group_name"); ok {
+		req.CacheSubnetGroupName = aws.String(v.(string))
 	}
 
 	// parameter groups are optional and can be defaulted by AWS
@@ -293,10 +425,6 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 	if len(preferred_azs) > 0 {
 		azs := expandStringList(preferred_azs)
 		req.PreferredAvailabilityZones = azs
-	}
-
-	if v, ok := d.GetOk("replication_group_id"); ok {
-		req.ReplicationGroupId = aws.String(v.(string))
 	}
 
 	resp, err := conn.CreateCacheCluster(req)
@@ -358,6 +486,8 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 			d.Set("port", c.ConfigurationEndpoint.Port)
 			d.Set("configuration_endpoint", aws.String(fmt.Sprintf("%s:%d", *c.ConfigurationEndpoint.Address, *c.ConfigurationEndpoint.Port)))
 			d.Set("cluster_address", aws.String(fmt.Sprintf("%s", *c.ConfigurationEndpoint.Address)))
+		} else if len(c.CacheNodes) > 0 {
+			d.Set("port", int(aws.Int64Value(c.CacheNodes[0].Endpoint.Port)))
 		}
 
 		if c.ReplicationGroupId != nil {
@@ -486,9 +616,6 @@ func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{
 		oraw, nraw := d.GetChange("num_cache_nodes")
 		o := oraw.(int)
 		n := nraw.(int)
-		if v, ok := d.GetOk("az_mode"); ok && v.(string) == "cross-az" && n == 1 {
-			return fmt.Errorf("[WARN] Error updateing Elasticache cluster (%s), error: Cross-AZ mode is not supported in a single cache node.", d.Id())
-		}
 		if n < o {
 			log.Printf("[INFO] Cluster %s is marked for Decreasing cache nodes from %d to %d", d.Id(), o, n)
 			nodesToRemove := getCacheNodesToRemove(d, o, o-n)
