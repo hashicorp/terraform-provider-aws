@@ -158,6 +158,42 @@ func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMRole_MaxSessionDuration(t *testing.T) {
+	var conf iam.GetRoleOutput
+	rName := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckIAMRoleConfig_MaxSessionDuration(rName, 3700),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists("aws_iam_role.test", &conf),
+					testAccAddAwsIAMRolePolicy("aws_iam_role.test"),
+				),
+			},
+			{
+				Config: testAccCheckIAMRoleConfig_MaxSessionDuration(rName, 43201),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists("aws_iam_role.test", &conf),
+					testAccAddAwsIAMRolePolicy("aws_iam_role.test"),
+				),
+				ExpectError: regexp.MustCompile(`.*Max Session Duration: 43201`),
+			},
+			{
+				Config: testAccCheckIAMRoleConfig_MaxSessionDuration(rName, 3599),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists("aws_iam_role.test", &conf),
+					testAccAddAwsIAMRolePolicy("aws_iam_role.test"),
+				),
+				ExpectError: regexp.MustCompile(`.*Max Session Duration: 3599`),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRoleDestroy(s *terraform.State) error {
 	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
 
@@ -259,6 +295,17 @@ func testAccAddAwsIAMRolePolicy(n string) resource.TestCheckFunc {
 		_, err := iamconn.PutRolePolicy(input)
 		return err
 	}
+}
+
+func testAccCheckIAMRoleConfig_MaxSessionDuration(rName string, maxSessionDuration int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role" {
+  name   = "test-role-%s"
+	path = "/"
+	max_session_duration = 3700
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+}
+`, rName)
 }
 
 func testAccAWSIAMRoleConfig(rName string) string {
