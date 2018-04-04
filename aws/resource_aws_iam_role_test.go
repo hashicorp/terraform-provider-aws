@@ -180,7 +180,7 @@ func TestAccAWSIAMRole_MaxSessionDuration(t *testing.T) {
 					testAccCheckAWSRoleExists("aws_iam_role.test", &conf),
 					testAccAddAwsIAMRolePolicy("aws_iam_role.test"),
 				),
-				ExpectError: regexp.MustCompile(`*.Max Session Duration: 43201`),
+				ExpectError: regexp.MustCompile(`.*Max Session Duration: 43201`),
 			},
 			{
 				Config: testAccCheckIAMRoleConfig_MaxSessionDuration(rName, 3599),
@@ -188,7 +188,7 @@ func TestAccAWSIAMRole_MaxSessionDuration(t *testing.T) {
 					testAccCheckAWSRoleExists("aws_iam_role.test", &conf),
 					testAccAddAwsIAMRolePolicy("aws_iam_role.test"),
 				),
-				ExpectError: regexp.MustCompile(`*.Max Session Duration: 3599`),
+				ExpectError: regexp.MustCompile(`.*Max Session Duration: 3599`),
 			},
 		},
 	})
