@@ -1234,7 +1234,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
               },
               {
                 parameter_name = "BufferIntervalInSeconds"
-                parameter_value = 60
+                parameter_value = 120
               }
             ]
           }
