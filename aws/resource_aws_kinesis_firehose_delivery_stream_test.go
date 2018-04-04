@@ -260,6 +260,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
 				},
 			},
 		},
+		S3BackupMode: aws.String("Enabled"),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -510,11 +511,14 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 				// destination. For simplicity, our test only have a single S3 or
 				// Redshift destination, so at this time it's safe to match on the first
 				// one
-				var match, processingConfigMatch bool
+				var match, processingConfigMatch, matchS3BackupMode bool
 				for _, d := range stream.Destinations {
 					if d.ExtendedS3DestinationDescription != nil {
 						if *d.ExtendedS3DestinationDescription.BufferingHints.SizeInMBs == *es.BufferingHints.SizeInMBs {
 							match = true
+						}
+						if *d.ExtendedS3DestinationDescription.S3BackupMode == *es.S3BackupMode {
+							matchS3BackupMode = true
 						}
 
 						processingConfigMatch = len(es.ProcessingConfiguration.Processors) == len(d.ExtendedS3DestinationDescription.ProcessingConfiguration.Processors)
@@ -525,6 +529,9 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 				}
 				if !processingConfigMatch {
 					return fmt.Errorf("Mismatch extended s3 ProcessingConfiguration.Processors count, expected: %s, got: %s", es, stream.Destinations)
+				}
+				if !matchS3BackupMode {
+					return fmt.Errorf("Mismatch extended s3 S3BackupMode, expected: %s, got: %s", es, stream.Destinations)
 				}
 			}
 
@@ -984,7 +991,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
     		}]
     	}]
-    }]
+    }],
+    s3_backup_mode = "Disabled"
   }
 }
 `
@@ -1081,6 +1089,11 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     buffer_size = 10
     buffer_interval = 400
     compression_format = "GZIP"
+    s3_backup_mode = "Enabled"
+    s3_backup_configuration {
+      role_arn = "${aws_iam_role.firehose.arn}"
+      bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    }
   }
 }
 `

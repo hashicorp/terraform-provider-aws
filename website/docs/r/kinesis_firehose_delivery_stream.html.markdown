@@ -269,6 +269,8 @@ be used.
 The `extended_s3_configuration` object supports the same fields from `s3_configuration` as well as the following:
 
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
+* `s3_backup_mode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
+* `s3_backup_configuration` - (Optional) The configuration for backup in Amazon S3. Required if `s3_backup_mode` is `Enabled`. Supports the same fields as `s3_configuration` object.
 
 The `redshift_configuration` object supports the following:
 
