@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* provider: Fallback to SDK default credential chain if credentials not found using provider credential chain [GH-2883]
 * resource/aws_elasticache_replication_group: Support Cluster Mode Enabled online shard reconfiguration [GH-3932]
 * resource/aws_elasticache_replication_group: Configurable create, update, and delete timeouts [GH-3932]
 * resource/aws_iam_role: Add `max_session_duration` argument [GH-3977]
