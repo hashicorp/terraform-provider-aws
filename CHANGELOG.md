@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * resource/aws_elasticache_replication_group: Support Cluster Mode Enabled online shard reconfiguration [GH-3932]
 * resource/aws_elasticache_replication_group: Configurable create, update, and delete timeouts [GH-3932]
+* resource/aws_kinesis_firehose_delivery_stream: Add Elasticsearch destination processing configuration support [GH-3621]
 * resource/aws_kinesis_firehose_delivery_stream: Add Extended S3 destination backup mode support [GH-2987]
 * resource/aws_kinesis_firehose_delivery_stream: Add Splunk destination processing configuration support [GH-3944]
 * resource/aws_lambda_function: Support `nodejs8.10` runtime [GH-4020]
