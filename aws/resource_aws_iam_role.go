@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsIamRole() *schema.Resource {
@@ -107,21 +108,10 @@ func resourceAwsIamRole() *schema.Resource {
 			},
 
 			"max_session_duration": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  3600,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int64)
-					if value > 43200 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be greater than 43200", k))
-					}
-					if value < 3600 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be less than than 3600", k))
-					}
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      3600,
+				ValidateFunc: validation.IntBetween(3600, 43200),
 			},
 		},
 	}
@@ -267,15 +257,15 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("max_session_duration") {
 		roleMaxDurationInput := &iam.UpdateRoleInput{
 			RoleName:           aws.String(d.Id()),
-			MaxSessionDuration: aws.Int64(d.Get("assume_role_policy").(int64)),
+			MaxSessionDuration: aws.Int64(int64(d.Get("max_session_duration").(int))),
 		}
 		_, err := iamconn.UpdateRole(roleMaxDurationInput)
 		if err != nil {
-			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
+			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("Error Updating IAM Role (%s) Assume Role Policy: %s", d.Id(), err)
+			return fmt.Errorf("Error Updating IAM Role (%s) Max Session Duration: %s", d.Id(), err)
 		}
 	}
 
