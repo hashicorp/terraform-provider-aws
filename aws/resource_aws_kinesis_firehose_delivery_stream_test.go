@@ -329,15 +329,36 @@ func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 
 	ri := acctest.RandInt()
+
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
+
 	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_SplunkBasic,
 		ri, ri, ri, ri)
-	postConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_SplunkUpdates,
-		ri, ri, ri, ri)
+	postConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_SplunkUpdates,
+			ri, ri, ri, ri)
 
 	updatedSplunkConfig := &firehose.SplunkDestinationDescription{
 		HECEndpointType:                   aws.String("Event"),
 		HECAcknowledgmentTimeoutInSeconds: aws.Int64(600),
 		S3BackupMode:                      aws.String("FailedEventsOnly"),
+		ProcessingConfiguration: &firehose.ProcessingConfiguration{
+			Enabled: aws.Bool(true),
+			Processors: []*firehose.Processor{
+				&firehose.Processor{
+					Type: aws.String("Lambda"),
+					Parameters: []*firehose.ProcessorParameter{
+						&firehose.ProcessorParameter{
+							ParameterName:  aws.String("LambdaArn"),
+							ParameterValue: aws.String("valueNotTested"),
+						},
+					},
+				},
+			},
+		},
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -544,9 +565,10 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 			if splunkConfig != nil {
 				s := splunkConfig.(*firehose.SplunkDestinationDescription)
 				// Range over the Stream Destinations, looking for the matching Splunk destination
-				var matchHECEndpointType, matchHECAcknowledgmentTimeoutInSeconds, matchS3BackupMode bool
+				var matchHECEndpointType, matchHECAcknowledgmentTimeoutInSeconds, matchS3BackupMode, processingConfigMatch bool
 				for _, d := range stream.Destinations {
 					if d.SplunkDestinationDescription != nil {
+
 						if *d.SplunkDestinationDescription.HECEndpointType == *s.HECEndpointType {
 							matchHECEndpointType = true
 						}
@@ -556,10 +578,16 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 						if *d.SplunkDestinationDescription.S3BackupMode == *s.S3BackupMode {
 							matchS3BackupMode = true
 						}
+
+						processingConfigMatch = len(s.ProcessingConfiguration.Processors) == len(d.SplunkDestinationDescription.ProcessingConfiguration.Processors)
+
 					}
 				}
 				if !matchHECEndpointType || !matchHECAcknowledgmentTimeoutInSeconds || !matchS3BackupMode {
 					return fmt.Errorf("Mismatch Splunk HECEndpointType or HECAcknowledgmentTimeoutInSeconds or S3BackupMode, expected: %s, got: %s", s, stream.Destinations)
+				}
+				if !processingConfigMatch {
+					return fmt.Errorf("Mismatch extended splunk ProcessingConfiguration.Processors count, expected: %s, got: %s", s, stream.Destinations)
 				}
 			}
 		}
@@ -1147,6 +1175,34 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     hec_acknowledgment_timeout = 600
     hec_endpoint_type = "Event"
     s3_backup_mode = "FailedEventsOnly"
+    processing_configuration = [
+      {
+        enabled = "true"
+        processors = [
+          {
+            type = "Lambda"
+            parameters = [
+              {
+                parameter_name = "LambdaArn"
+                parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+              },
+              {
+                parameter_name = "RoleArn"
+                parameter_value = "${aws_iam_role.firehose.arn}"
+              },
+              {
+                parameter_name = "BufferSizeInMBs"
+                parameter_value = 1
+              },
+              {
+                parameter_name = "BufferIntervalInSeconds"
+                parameter_value = 60
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 }`
 
