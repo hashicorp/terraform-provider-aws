@@ -279,16 +279,27 @@ func (c *Config) Client() (interface{}, error) {
 	cp, err := creds.Get()
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
-			// If a profile wasn't specified then error out
+			// If a profile wasn't specified, the session may still be able to resolve credentials from shared config.
 			if c.Profile == "" {
-				return nil, errors.New(`No valid credential sources found for AWS Provider.
-  Please see https://terraform.io/docs/providers/aws/index.html for more information on
-  providing credentials for the AWS Provider`)
+				sess, err := session.NewSession()
+				if err != nil {
+					return nil, errors.New(`No valid credential sources found for AWS Provider.
+	Please see https://terraform.io/docs/providers/aws/index.html for more information on
+	providing credentials for the AWS Provider`)
+				}
+				_, err = sess.Config.Credentials.Get()
+				if err != nil {
+					return nil, errors.New(`No valid credential sources found for AWS Provider.
+	Please see https://terraform.io/docs/providers/aws/index.html for more information on
+	providing credentials for the AWS Provider`)
+				}
+				log.Printf("[INFO] Using session-derived AWS Auth")
+				opt.Config.Credentials = sess.Config.Credentials
+			} else {
+				log.Printf("[INFO] AWS Auth using Profile: %q", c.Profile)
+				opt.Profile = c.Profile
+				opt.SharedConfigState = session.SharedConfigEnable
 			}
-			// add the profile and enable share config file usage
-			log.Printf("[INFO] AWS Auth using Profile: %q", c.Profile)
-			opt.Profile = c.Profile
-			opt.SharedConfigState = session.SharedConfigEnable
 		} else {
 			return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)
 		}
