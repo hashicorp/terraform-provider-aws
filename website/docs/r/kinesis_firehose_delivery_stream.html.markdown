@@ -203,6 +203,23 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     role_arn   = "${aws_iam_role.firehose_role.arn}"
     index_name = "test"
     type_name  = "test"
+
+    processing_configuration = [
+      {
+        enabled = "true"
+        processors = [
+          {
+            type = "Lambda"
+            parameters = [
+              {
+                parameter_name = "LambdaArn"
+                parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 }
 ```
@@ -298,6 +315,7 @@ The `elasticsearch_configuration` object supports the following:
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
 * `type_name` - (Required) The Elasticsearch type name with maximum length of 100 characters.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
+* `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 
 The `splunk_configuration` objects supports the following:
 
