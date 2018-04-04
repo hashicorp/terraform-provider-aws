@@ -338,8 +338,8 @@ resource "aws_codebuild_project" "foo" {
     type         = "LINUX_CONTAINER"
 
     environment_variable = {
-      name  = "SOME_KEY"
-      value = "SOME_VALUE"
+      "name"  = "SOME_KEY"
+      "value" = "SOME_VALUE"
     }
   }
 
@@ -423,8 +423,8 @@ resource "aws_codebuild_project" "foo" {
     type         = "LINUX_CONTAINER"
 
     environment_variable = {
-      name  = "SOME_OTHERKEY"
-      value = "SOME_OTHERVALUE"
+      "name"  = "SOME_OTHERKEY"
+      "value" = "SOME_OTHERVALUE"
     }
   }
 
@@ -523,7 +523,6 @@ resource "aws_codebuild_project" "foo" {
 `, rName, rName, rName, rName)
 }
 
-
 func testAccAWSCodeBuildProjectConfig_sourceAuth(rName, authResource, authType string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "codebuild_role" {
@@ -598,6 +597,7 @@ resource "aws_codebuild_project" "foo" {
   source {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
+    
     auth {
       resource = "%[2]s"
       type     = "%[3]s"
@@ -720,9 +720,9 @@ resource "aws_codebuild_project" "foo" {
     type         = "LINUX_CONTAINER"
 
     environment_variable = {
-      name  = "SOME_KEY"
-      value = "SOME_VALUE"
-      type = "PLAINTEXT"
+      "name"  = "SOME_KEY"
+      "value" = "SOME_VALUE"
+      "type" = "PLAINTEXT"
     }
   }
 
@@ -804,9 +804,9 @@ resource "aws_codebuild_project" "foo" {
     type         = "LINUX_CONTAINER"
 
     environment_variable = {
-      name  = "SOME_OTHERKEY"
-      value = "SOME_OTHERVALUE"
-      type = "PARAMETER_STORE"
+      "name"  = "SOME_OTHERKEY"
+      "value" = "SOME_OTHERVALUE"
+      "type" = "PARAMETER_STORE"
     }
   }
 
