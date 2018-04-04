@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-func resourceAwsSesNotification() *schema.Resource {
+func resourceAwsSesNotificationTopic() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesNotificationSet,
-		Read:   resourceAwsSesNotificationRead,
-		Update: resourceAwsSesNotificationSet,
-		Delete: resourceAwsSesNotificationDelete,
+		Create: resourceAwsSesNotificationTopicSet,
+		Read:   resourceAwsSesNotificationTopicRead,
+		Update: resourceAwsSesNotificationTopicSet,
+		Delete: resourceAwsSesNotificationTopicDelete,
 
 		Schema: map[string]*schema.Schema{
 			"topic_arn": {
@@ -46,7 +46,7 @@ func resourceAwsSesNotification() *schema.Resource {
 	}
 }
 
-func resourceAwsSesNotificationSet(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSesNotificationTopicSet(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesConn
 	notification := d.Get("notification_type").(string)
 	identity := d.Get("identity").(string)
@@ -62,19 +62,19 @@ func resourceAwsSesNotificationSet(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(fmt.Sprintf("%s|%s", identity, notification))
 
-	log.Printf("[DEBUG] Setting SES Identity Notification: %#v", setOpts)
+	log.Printf("[DEBUG] Setting SES Identity Notification Topic: %#v", setOpts)
 
 	if _, err := conn.SetIdentityNotificationTopic(setOpts); err != nil {
-		return fmt.Errorf("Error setting SES Identity Notification: %s", err)
+		return fmt.Errorf("Error setting SES Identity Notification Topic: %s", err)
 	}
 
-	return resourceAwsSesNotificationRead(d, meta)
+	return resourceAwsSesNotificationTopicRead(d, meta)
 }
 
-func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSesNotificationTopicRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesConn
 
-	identity, notificationType, err := decodeSesIdentityNotificationId(d.Id())
+	identity, notificationType, err := decodeSesIdentityNotificationTopicId(d.Id())
 	if err != nil {
 		return err
 	}
@@ -83,12 +83,12 @@ func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) er
 		Identities: []*string{aws.String(identity)},
 	}
 
-	log.Printf("[DEBUG] Reading SES Identity Notification Attributes: %#v", getOpts)
+	log.Printf("[DEBUG] Reading SES Identity Notification Topic Attributes: %#v", getOpts)
 
 	response, err := conn.GetIdentityNotificationAttributes(getOpts)
 
 	if err != nil {
-		return fmt.Errorf("Error reading SES Identity Notification: %s", err)
+		return fmt.Errorf("Error reading SES Identity Notification Topic: %s", err)
 	}
 
 	notificationAttributes := response.NotificationAttributes[identity]
@@ -104,10 +104,10 @@ func resourceAwsSesNotificationRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsSesNotificationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSesNotificationTopicDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesConn
 
-	identity, notificationType, err := decodeSesIdentityNotificationId(d.Id())
+	identity, notificationType, err := decodeSesIdentityNotificationTopicId(d.Id())
 	if err != nil {
 		return err
 	}
@@ -118,16 +118,16 @@ func resourceAwsSesNotificationDelete(d *schema.ResourceData, meta interface{}) 
 		SnsTopic:         nil,
 	}
 
-	log.Printf("[DEBUG] Deleting SES Identity Notification: %#v", setOpts)
+	log.Printf("[DEBUG] Deleting SES Identity Notification Topic: %#v", setOpts)
 
 	if _, err := conn.SetIdentityNotificationTopic(setOpts); err != nil {
-		return fmt.Errorf("Error deleting SES Identity Notification: %s", err)
+		return fmt.Errorf("Error deleting SES Identity Notification Topic: %s", err)
 	}
 
-	return resourceAwsSesNotificationRead(d, meta)
+	return resourceAwsSesNotificationTopicRead(d, meta)
 }
 
-func decodeSesIdentityNotificationId(id string) (string, string, error) {
+func decodeSesIdentityNotificationTopicId(id string) (string, string, error) {
 	parts := strings.Split(id, "|")
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected IDENTITY|TYPE", id)
