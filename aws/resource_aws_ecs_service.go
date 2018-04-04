@@ -117,6 +117,24 @@ func resourceAwsEcsService() *schema.Resource {
 				},
 				Set: resourceAwsEcsLoadBalancerHash,
 			},
+			"service_registries": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"registry_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"port": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 			"network_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -261,6 +279,12 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 	}
 	if v, ok := d.GetOk("iam_role"); ok {
 		input.Role = aws.String(v.(string))
+	}
+
+	serviceRegistries := expandEcsServiceRegistries(d.Get("service_registries").([]interface{}))
+	if len(serviceRegistries) > 0 {
+		log.Printf("[DEBUG] Adding ECS service registry: %s", serviceRegistries)
+		input.ServiceRegistries = serviceRegistries
 	}
 
 	input.NetworkConfiguration = expandEcsNetworkConfiguration(d.Get("network_configuration").([]interface{}))
@@ -434,6 +458,10 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("load_balancer", flattenEcsLoadBalancers(service.LoadBalancers))
 	}
 
+	if service.ServiceRegistries != nil {
+		d.Set("service_registries", flattenEcsServiceRegistries(service.ServiceRegistries))
+	}
+
 	if err := d.Set("placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
 		log.Printf("[ERR] Error setting placement_strategy for (%s): %s", d.Id(), err)
 	}
@@ -482,6 +510,36 @@ func expandEcsNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
 	}
 
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
+}
+
+func flattenEcsServiceRegistries(list []*ecs.ServiceRegistry) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(list))
+	for _, serviceRegistry := range list {
+		l := map[string]interface{}{
+			"registry_arn": *serviceRegistry.RegistryArn,
+		}
+		if serviceRegistry.Port != nil {
+			l["port"] = *serviceRegistry.Port
+		}
+		result = append(result, l)
+	}
+	return result
+}
+
+func expandEcsServiceRegistries(sr []interface{}) []*ecs.ServiceRegistry {
+	serviceRegistries := make([]*ecs.ServiceRegistry, 0, len(sr))
+
+	for _, raw := range sr {
+		data := raw.(map[string]interface{})
+		r := &ecs.ServiceRegistry{
+			RegistryArn: aws.String(data["registry_arn"].(string)),
+		}
+		if port, ok := data["port"]; ok && port != 0 {
+			r.Port = aws.Int64(int64(port.(int)))
+		}
+		serviceRegistries = append(serviceRegistries, r)
+	}
+	return serviceRegistries
 }
 
 func flattenServicePlacementConstraints(pcs []*ecs.PlacementConstraint) []map[string]interface{} {
