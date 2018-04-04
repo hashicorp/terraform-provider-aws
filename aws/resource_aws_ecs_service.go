@@ -209,6 +209,7 @@ func resourceAwsEcsService() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"port": {
@@ -331,7 +332,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 			sr := &ecs.ServiceRegistry{
 				RegistryArn: aws.String(raw["registry_arn"].(string)),
 			}
-			if port, ok := raw["port"].(int); ok {
+			if port, ok := raw["port"].(int); ok && port != 0 {
 				sr.Port = aws.Int64(int64(port))
 			}
 
