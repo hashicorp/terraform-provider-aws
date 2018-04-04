@@ -403,7 +403,7 @@ func TestAccAWSCognitoUserPool_withSchemaAttributes(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withSchemaAttributesUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.#", "2"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.#", "3"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.attribute_data_type", "String"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.developer_only_attribute", "false"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.mutable", "false"),
@@ -422,6 +422,15 @@ func TestAccAWSCognitoUserPool_withSchemaAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.number_attribute_constraints.0.max_value", "6"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.required", "false"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.string_attribute_constraints.#", "0"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.attribute_data_type", "Number"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.developer_only_attribute", "false"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.mutable", "true"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.name", "mynondevnumber"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.number_attribute_constraints.#", "1"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.number_attribute_constraints.0.min_value", "2"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.number_attribute_constraints.0.max_value", "6"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.required", "false"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.string_attribute_constraints.#", "0"),
 				),
 			},
 			{
@@ -909,6 +918,19 @@ resource "aws_cognito_user_pool" "main" {
     developer_only_attribute = true
     mutable                  = true
     name                     = "mynumber"
+    required                 = false
+
+    number_attribute_constraints {
+      min_value = 2
+      max_value = 6
+    }
+  }
+
+  schema {
+    attribute_data_type      = "Number"
+    developer_only_attribute = false
+    mutable                  = true
+    name                     = "mynondevnumber"
     required                 = false
 
     number_attribute_constraints {
