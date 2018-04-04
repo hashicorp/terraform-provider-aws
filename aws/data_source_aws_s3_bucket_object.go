@@ -26,6 +26,10 @@ func dataSourceAwsS3BucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"presign_expires_in": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"cache_control": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -99,6 +103,10 @@ func dataSourceAwsS3BucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"presigned_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 
 			"tags": tagsSchemaComputed(),
 		},
@@ -159,6 +167,24 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("sse_kms_key_id", out.SSEKMSKeyId)
 	d.Set("version_id", out.VersionId)
 	d.Set("website_redirect_location", out.WebsiteRedirectLocation)
+
+	expire_in := d.Get("presign_expires_in").(int)
+	d.Set("presigned_url", "")
+
+	if expire_in > 0 {
+		log.Printf("[DEBUG] Generating presigned URL for s3://%s/%s to expire in %d seconds", bucket, key, expire_in)
+		input := s3.GetObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+		}
+		req, _ := conn.GetObjectRequest(&input)
+		presigned_url, _, err := req.PresignRequest(time.Duration(expire_in) * time.Second)
+		if err != nil {
+			return fmt.Errorf("Failed generating presigned URL for S3 object: %s", err)
+		}
+		log.Printf("[DEBUG] Received S3 signed URL: %s", presigned_url)
+		d.Set("presigned_url", presigned_url)
+	}
 
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
