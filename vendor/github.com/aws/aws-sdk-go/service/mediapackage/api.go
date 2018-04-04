@@ -12,7 +12,7 @@ const opCreateChannel = "CreateChannel"
 
 // CreateChannelRequest generates a "aws/request.Request" representing the
 // client's request for the CreateChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -100,7 +100,7 @@ const opCreateOriginEndpoint = "CreateOriginEndpoint"
 
 // CreateOriginEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the CreateOriginEndpoint operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -188,7 +188,7 @@ const opDeleteChannel = "DeleteChannel"
 
 // DeleteChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -276,7 +276,7 @@ const opDeleteOriginEndpoint = "DeleteOriginEndpoint"
 
 // DeleteOriginEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteOriginEndpoint operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -364,7 +364,7 @@ const opDescribeChannel = "DescribeChannel"
 
 // DescribeChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -452,7 +452,7 @@ const opDescribeOriginEndpoint = "DescribeOriginEndpoint"
 
 // DescribeOriginEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeOriginEndpoint operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -540,7 +540,7 @@ const opListChannels = "ListChannels"
 
 // ListChannelsRequest generates a "aws/request.Request" representing the
 // client's request for the ListChannels operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -684,7 +684,7 @@ const opListOriginEndpoints = "ListOriginEndpoints"
 
 // ListOriginEndpointsRequest generates a "aws/request.Request" representing the
 // client's request for the ListOriginEndpoints operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -828,7 +828,7 @@ const opRotateChannelCredentials = "RotateChannelCredentials"
 
 // RotateChannelCredentialsRequest generates a "aws/request.Request" representing the
 // client's request for the RotateChannelCredentials operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -916,7 +916,7 @@ const opUpdateChannel = "UpdateChannel"
 
 // UpdateChannelRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1004,7 +1004,7 @@ const opUpdateOriginEndpoint = "UpdateOriginEndpoint"
 
 // UpdateOriginEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateOriginEndpoint operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
