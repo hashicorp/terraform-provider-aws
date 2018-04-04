@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -48,10 +49,12 @@ func testAccCheckAwsSESIdentityNotificationTopicDestroy(s *terraform.State) erro
 			continue
 		}
 
-		identity := rs.Primary.ID
+		identity := rs.Primary.Attributes["identity"]
 		params := &ses.GetIdentityNotificationAttributesInput{
 			Identities: []*string{aws.String(identity)},
 		}
+
+		log.Printf("[DEBUG] Testing SES Identity Notification Topic Destroy: %#v", params)
 
 		response, err := conn.GetIdentityNotificationAttributes(params)
 		if err != nil {
@@ -77,12 +80,14 @@ func testAccCheckAwsSESIdentityNotificationTopicExists(n string) resource.TestCh
 			return fmt.Errorf("SES Identity Notification Topic identity not set")
 		}
 
-		identity := rs.Primary.ID
+		identity := rs.Primary.Attributes["identity"]
 		conn := testAccProvider.Meta().(*AWSClient).sesConn
 
 		params := &ses.GetIdentityNotificationAttributesInput{
 			Identities: []*string{aws.String(identity)},
 		}
+
+		log.Printf("[DEBUG] Testing SES Identity Notification Topic Exists: %#v", params)
 
 		response, err := conn.GetIdentityNotificationAttributes(params)
 		if err != nil {
