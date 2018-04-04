@@ -12,8 +12,8 @@ Provides a resource to manage a [default AWS VPC subnet](http://docs.aws.amazon.
 in the current region.
 
 The `aws_default_subnet` behaves differently from normal resources, in that
-Terraform does not _create_ this resource, but instead "adopts" it
-into management. 
+Terraform does not _create_ this resource, but instead "adopts" it into management.
+If no default subnet for an Availability Zone exits Terraform will [create a new one] (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html#create-default-subnet).
 
 ## Example Usage
 
@@ -23,9 +23,9 @@ Basic usage with tags:
 resource "aws_default_subnet" "default_az1" {
   availability_zone = "us-west-2a"
 
-	tags {
-		Name = "Default subnet for us-west-2a"
-	}
+  tags {
+    Name = "Default subnet for us-west-2a"
+  }
 }
 ```
 
@@ -34,7 +34,7 @@ resource "aws_default_subnet" "default_az1" {
 The arguments of an `aws_default_subnet` differ from `aws_subnet` resources.
 Namely, the `availability_zone` argument is required and the `vpc_id`, `cidr_block`, `ipv6_cidr_block`,
 `map_public_ip_on_launch` and `assign_ipv6_address_on_creation` arguments are computed.
-The following arguments are still supported: 
+The following arguments are still supported:
 
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
