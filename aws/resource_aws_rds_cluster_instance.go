@@ -309,6 +309,10 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 		d.SetId("")
 		return nil
 	}
+	// Database instance is not in RDS Cluster
+	if db.DBClusterIdentifier == nil {
+		return fmt.Errorf("Cluster identifier is missing from instance (%s). The aws_db_instance resource should be used for non-Aurora instances", d.Id())
+	}
 
 	// Retrieve DB Cluster information, to determine if this Instance is a writer
 	conn := meta.(*AWSClient).rdsconn
