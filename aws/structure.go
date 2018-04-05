@@ -2111,15 +2111,6 @@ func buildApiGatewayInvokeURL(restApiId, region, stageName string) string {
 		restApiId, region, stageName)
 }
 
-func buildApiGatewayExecutionARN(restApiId, region, accountId string) (string, error) {
-	if accountId == "" {
-		return "", fmt.Errorf("Unable to build execution ARN for %s as account ID is missing",
-			restApiId)
-	}
-	return fmt.Sprintf("arn:aws:execute-api:%s:%s:%s",
-		region, accountId, restApiId), nil
-}
-
 func expandCognitoSupportedLoginProviders(config map[string]interface{}) map[string]*string {
 	m := map[string]*string{}
 	for k, v := range config {
@@ -3153,12 +3144,6 @@ func flattenCognitoUserPoolVerificationMessageTemplate(s *cognitoidentityprovide
 	}
 
 	return []map[string]interface{}{}
-}
-
-func buildLambdaInvokeArn(lambdaArn, region string) string {
-	apiVersion := "2015-03-31"
-	return fmt.Sprintf("arn:aws:apigateway:%s:lambda:path/%s/functions/%s/invocations",
-		region, apiVersion, lambdaArn)
 }
 
 func sliceContainsMap(l []interface{}, m map[string]interface{}) (int, bool) {

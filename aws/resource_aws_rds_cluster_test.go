@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -366,12 +365,6 @@ func testAccCheckAWSClusterSnapshot(rInt int) resource.TestCheckFunc {
 
 			awsClient := testAccProvider.Meta().(*AWSClient)
 			conn := awsClient.rdsconn
-
-			arn, arnErr := buildRDSClusterARN(snapshot_identifier, awsClient.partition, awsClient.accountid, awsClient.region)
-			tagsARN := strings.Replace(arn, ":cluster:", ":snapshot:", 1)
-			if arnErr != nil {
-				return fmt.Errorf("Error building ARN for tags check with ARN (%s): %s", tagsARN, arnErr)
-			}
 
 			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
 			_, snapDeleteErr := conn.DeleteDBClusterSnapshot(

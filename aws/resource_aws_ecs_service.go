@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -217,13 +218,13 @@ func resourceAwsEcsServiceImport(d *schema.ResourceData, meta interface{}) ([]*s
 	log.Printf("[DEBUG] Importing ECS service %s from cluster %s", name, cluster)
 
 	d.SetId(name)
-	clusterArn := arnString(
-		meta.(*AWSClient).partition,
-		meta.(*AWSClient).region,
-		"ecs",
-		meta.(*AWSClient).accountid,
-		fmt.Sprintf("cluster/%s", cluster),
-	)
+	clusterArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "ecs",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("cluster/%s", cluster),
+	}.String()
 	d.Set("cluster", clusterArn)
 	return []*schema.ResourceData{d}, nil
 }
