@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform/helper/customdiff"
@@ -467,7 +466,7 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 
 	res, err := conn.DescribeCacheClusters(req)
 	if err != nil {
-		if eccErr, ok := err.(awserr.Error); ok && eccErr.Code() == "CacheClusterNotFound" {
+		if isAWSErr(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") {
 			log.Printf("[WARN] ElastiCache Cluster (%s) not found", d.Id())
 			d.SetId("")
 			return nil
@@ -704,41 +703,10 @@ func (b byCacheNodeId) Less(i, j int) bool {
 func resourceAwsElasticacheClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	req := &elasticache.DeleteCacheClusterInput{
-		CacheClusterId: aws.String(d.Id()),
-	}
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteCacheCluster(req)
-		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			// The cluster may be just snapshotting, so we retry until it's ready for deletion
-			if ok && awsErr.Code() == "InvalidCacheClusterState" {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+	err := deleteElasticacheCluster(d.Id(), 40*time.Minute, conn)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Elasticache Cluster (%s): %s", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Waiting for deletion: %v", d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network", "restore-failed", "snapshotting"},
-		Target:     []string{},
-		Refresh:    cacheClusterStateRefreshFunc(conn, d.Id(), "", []string{}),
-		Timeout:    40 * time.Minute,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	_, sterr := stateConf.WaitForState()
-	if sterr != nil {
-		return fmt.Errorf("Error waiting for elasticache (%s) to delete: %s", d.Id(), sterr)
-	}
-
-	d.SetId("")
 
 	return nil
 }
@@ -750,9 +718,7 @@ func cacheClusterStateRefreshFunc(conn *elasticache.ElastiCache, clusterID, give
 			ShowCacheNodeInfo: aws.Bool(true),
 		})
 		if err != nil {
-			apierr := err.(awserr.Error)
-			log.Printf("[DEBUG] message: %v, code: %v", apierr.Message(), apierr.Code())
-			if apierr.Message() == fmt.Sprintf("CacheCluster not found: %v", clusterID) {
+			if isAWSErr(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") {
 				log.Printf("[DEBUG] Detect deletion")
 				return nil, "", nil
 			}
@@ -814,4 +780,37 @@ func cacheClusterStateRefreshFunc(conn *elasticache.ElastiCache, clusterID, give
 		log.Printf("[DEBUG] current status: %v", *c.CacheClusterStatus)
 		return c, *c.CacheClusterStatus, nil
 	}
+}
+
+func deleteElasticacheCluster(clusterID string, timeout time.Duration, conn *elasticache.ElastiCache) error {
+	input := &elasticache.DeleteCacheClusterInput{
+		CacheClusterId: aws.String(clusterID),
+	}
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteCacheCluster(input)
+		if err != nil {
+			// The cluster may be just snapshotting, so we retry until it's ready for deletion
+			if isAWSErr(err, elasticache.ErrCodeInvalidCacheClusterStateFault, "") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[DEBUG] Waiting for deletion: %v", clusterID)
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network", "restore-failed", "snapshotting"},
+		Target:     []string{},
+		Refresh:    cacheClusterStateRefreshFunc(conn, clusterID, "", []string{}),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	_, err = stateConf.WaitForState()
+	return err
 }
