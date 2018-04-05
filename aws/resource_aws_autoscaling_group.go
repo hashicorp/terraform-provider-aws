@@ -545,6 +545,8 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 			log.Printf("[WARN] Error setting metrics for (%s): %s", d.Id(), err)
 		}
 		d.Set("metrics_granularity", g.EnabledMetrics[0].Granularity)
+	} else {
+		d.Set("enabled_metrics", nil)
 	}
 
 	return nil
@@ -614,6 +616,10 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 			log.Printf("[DEBUG] Explicitly setting null termination policy to 'Default'")
 			opts.TerminationPolicies = aws.StringSlice([]string{"Default"})
 		}
+	}
+
+	if d.HasChange("service_linked_role_arn") {
+		opts.ServiceLinkedRoleARN = aws.String(d.Get("service_linked_role_arn").(string))
 	}
 
 	if err := setAutoscalingTags(conn, d); err != nil {
@@ -723,10 +729,6 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		if err := updateASGSuspendedProcesses(d, conn); err != nil {
 			return errwrap.Wrapf("Error updating AutoScaling Group Suspended Processes: {{err}}", err)
 		}
-	}
-
-	if d.HasChange("service_linked_role_arn") {
-		opts.ServiceLinkedRoleARN = aws.String(d.Get("service_linked_role_arn").(string))
 	}
 
 	return resourceAwsAutoscalingGroupRead(d, meta)

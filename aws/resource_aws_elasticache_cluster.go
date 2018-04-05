@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform/helper/customdiff"
@@ -519,24 +520,26 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 		}
 		// list tags for resource
 		// set tags
-		arn, err := buildECARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
+		arn := arn.ARN{
+			Partition: meta.(*AWSClient).partition,
+			Service:   "elasticache",
+			Region:    meta.(*AWSClient).region,
+			AccountID: meta.(*AWSClient).accountid,
+			Resource:  fmt.Sprintf("cluster:%s", d.Id()),
+		}.String()
+		resp, err := conn.ListTagsForResource(&elasticache.ListTagsForResourceInput{
+			ResourceName: aws.String(arn),
+		})
+
 		if err != nil {
-			log.Printf("[DEBUG] Error building ARN for ElastiCache Cluster, not setting Tags for cluster %s", *c.CacheClusterId)
-		} else {
-			resp, err := conn.ListTagsForResource(&elasticache.ListTagsForResourceInput{
-				ResourceName: aws.String(arn),
-			})
-
-			if err != nil {
-				log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
-			}
-
-			var et []*elasticache.Tag
-			if len(resp.TagList) > 0 {
-				et = resp.TagList
-			}
-			d.Set("tags", tagsToMapEC(et))
+			log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
 		}
+
+		var et []*elasticache.Tag
+		if len(resp.TagList) > 0 {
+			et = resp.TagList
+		}
+		d.Set("tags", tagsToMapEC(et))
 	}
 
 	return nil
@@ -544,13 +547,16 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 
 func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
-	arn, err := buildECARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
-	if err != nil {
-		log.Printf("[DEBUG] Error building ARN for ElastiCache Cluster, not updating Tags for cluster %s", d.Id())
-	} else {
-		if err := setTagsEC(conn, d, arn); err != nil {
-			return err
-		}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "elasticache",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
+	}.String()
+	if err := setTagsEC(conn, d, arn); err != nil {
+		return err
 	}
 
 	req := &elasticache.ModifyCacheClusterInput{
@@ -807,16 +813,4 @@ func deleteElasticacheCluster(clusterID string, timeout time.Duration, conn *ela
 
 	_, err = stateConf.WaitForState()
 	return err
-}
-
-func buildECARN(identifier, partition, accountid, region string) (string, error) {
-	if partition == "" {
-		return "", fmt.Errorf("Unable to construct ElastiCache ARN because of missing AWS partition")
-	}
-	if accountid == "" {
-		return "", fmt.Errorf("Unable to construct ElastiCache ARN because of missing AWS Account ID")
-	}
-	arn := fmt.Sprintf("arn:%s:elasticache:%s:%s:cluster:%s", partition, region, accountid, identifier)
-	return arn, nil
-
 }
