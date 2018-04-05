@@ -54,7 +54,7 @@ resource "aws_kinesis_stream" "test_stream" {
 }
 ```
 
-## Example SSM RunCommand Usage
+## Example SSM Document Usage
 
 ```
 data "aws_iam_policy_document" "ssm_lifecycle_trust" {
@@ -76,7 +76,7 @@ data "aws_iam_policy_document" "ssm_lifecycle" {
 
     condition {
       test     = "StringEquals"
-      variable = "ec2:ResourceTag/TerminationSchedule"
+      variable = "ec2:ResourceTag/Terminate"
       values   = ["*"]
     }
   }
@@ -84,7 +84,7 @@ data "aws_iam_policy_document" "ssm_lifecycle" {
   statement {
     effect    = "Allow"
     actions   = ["ssm:SendCommand"]
-    resources = ["arn:aws:ssm:eu-west-1:*:document/AWS-RunShellScript"]
+    resources = ["${aws_ssm_document.stop_instance.arn}"]
   }
 }
 
@@ -98,6 +98,31 @@ resource "aws_iam_policy" "ssm_lifecycle" {
   policy = "${data.aws_iam_policy_document.ssm_lifecycle.json}"
 }
 
+resource "aws_ssm_document" "stop_instance" {
+  name          = "stop_instance"
+  document_type = "Command"
+
+  content = <<DOC
+  {
+    "schemaVersion": "1.2",
+    "description": "Stop an instance",
+    "parameters": {
+
+    },
+    "runtimeConfig": {
+      "aws:runShellScript": {
+        "properties": [
+          {
+            "id": "0.aws:runShellScript",
+            "runCommand": ["halt"]
+          }
+        ]
+      }
+    }
+  }
+DOC
+}
+
 resource "aws_cloudwatch_event_rule" "stop_instances" {
   name                = "StopInstance
   description         = "Stop instances nightly"
@@ -106,12 +131,12 @@ resource "aws_cloudwatch_event_rule" "stop_instances" {
 
 resource "aws_cloudwatch_event_target" "stop_instances" {
   target_id = "StopInstance"
-  arn       = "arn:aws:ssm:eu-west-1::document/AWS-RunShellScript"
+  arn       = "${aws_ssm_document.stop_instance.arn}"
   rule      = "${aws_cloudwatch_event_rule.stop_instances.name}"
   role_arn  = "${aws_iam_role.ssm_lifecycle.arn}"
 
   run_command_targets {
-    key    = "tag:TerminationSchedule"
+    key    = "tag:Terminate"
     values = ["midnight"]
   }
 }
