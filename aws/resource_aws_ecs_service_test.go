@@ -102,6 +102,7 @@ func TestAccAWSEcsService_withARN(t *testing.T) {
 				Config: testAccAWSEcsService(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "service_registries.#", "0"),
 				),
 			},
 
@@ -109,6 +110,7 @@ func TestAccAWSEcsService_withARN(t *testing.T) {
 				Config: testAccAWSEcsServiceModified(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "service_registries.#", "0"),
 				),
 			},
 		},
@@ -1750,7 +1752,7 @@ resource "aws_service_discovery_service" "test" {
   name = "tf-acc-sd-%s"
   dns_config {
     namespace_id = "${aws_service_discovery_private_dns_namespace.test.id}"
-		dns_records {
+    dns_records {
       ttl = 5
       type = "SRV"
     }
@@ -1763,7 +1765,7 @@ resource "aws_ecs_cluster" "test" {
 
 resource "aws_ecs_task_definition" "test" {
   family = "%s"
-	network_mode = "awsvpc"
+  network_mode = "awsvpc"
   container_definitions = <<DEFINITION
 [
   {
@@ -1784,9 +1786,9 @@ resource "aws_ecs_service" "test" {
   desired_count = 1
   service_registries {
     port = 34567
-		registry_arn = "${aws_service_discovery_service.test.arn}"
-	}
-	network_configuration {
+    registry_arn = "${aws_service_discovery_service.test.arn}"
+  }
+  network_configuration {
     security_groups = ["${aws_security_group.test.id}"]
     subnets = ["${aws_subnet.test.*.id}"]
   }

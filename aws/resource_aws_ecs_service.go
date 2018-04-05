@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 var taskDefinitionRE = regexp.MustCompile("^([a-zA-Z0-9_-]+):([0-9]+)$")
@@ -213,12 +214,14 @@ func resourceAwsEcsService() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"port": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 65536),
 						},
 						"registry_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -567,12 +570,11 @@ func flattenServiceRegistries(srs []*ecs.ServiceRegistry) []map[string]interface
 	}
 	results := make([]map[string]interface{}, 0)
 	for _, sr := range srs {
-		c := make(map[string]interface{})
-		if sr.Port != nil {
-			c["port"] = *sr.Port
+		c := map[string]interface{}{
+			"registry_arn": aws.StringValue(sr.RegistryArn),
 		}
-		if sr.RegistryArn != nil {
-			c["registry_arn"] = *sr.RegistryArn
+		if sr.Port != nil {
+			c["port"] = int(aws.Int64Value(sr.Port))
 		}
 		results = append(results, c)
 	}
