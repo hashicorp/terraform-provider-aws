@@ -1397,12 +1397,13 @@ func validateWafMetricName(v interface{}, k string) (ws []string, errors []error
 
 func validateWafPredicatesType() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
-		waf.PredicateTypeIpmatch,
 		waf.PredicateTypeByteMatch,
-		waf.PredicateTypeSqlInjectionMatch,
-		waf.PredicateTypeSizeConstraint,
-		waf.PredicateTypeXssMatch,
 		waf.PredicateTypeGeoMatch,
+		waf.PredicateTypeIpmatch,
+		waf.PredicateTypeRegexMatch,
+		waf.PredicateTypeSizeConstraint,
+		waf.PredicateTypeSqlInjectionMatch,
+		waf.PredicateTypeXssMatch,
 	}, false)
 }
 
