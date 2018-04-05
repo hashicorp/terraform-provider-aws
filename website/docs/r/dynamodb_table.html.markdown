@@ -90,6 +90,7 @@ attributes, etc.
 * `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
 * `server_side_encryption` - (Optional) Encrypt at rest options.
 * `tags` - (Optional) A map of tags to populate on the created table.
+* `point_in_time_backup_enabled` - (Optional) Indicates whether point-in-time recovery is enabled (true) or disabled (false) - note that it can take a while to enable for new tables.
 
 ### Timeouts
 

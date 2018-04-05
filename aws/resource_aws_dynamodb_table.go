@@ -238,6 +238,10 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 				},
 			},
 			"tags": tagsSchema(),
+			"point_in_time_backup_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -448,6 +452,12 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
+	if d.HasChange("point_in_time_backup_enabled") {
+		if err := updateDynamoDbPITR(d, conn); err != nil {
+			return err
+		}
+	}
+
 	return resourceAwsDynamoDbTableRead(d, meta)
 }
 
@@ -490,6 +500,12 @@ func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 	d.Set("tags", tags)
+
+	backupEnabled, err := readDynamoDbPITR(d.Id(), conn)
+	if err != nil {
+		return err
+	}
+	d.Set("point_in_time_backup_enabled", backupEnabled)
 
 	return nil
 }
@@ -608,6 +624,41 @@ func updateDynamoDbTimeToLive(d *schema.ResourceData, conn *dynamodb.DynamoDB) e
 	return nil
 }
 
+func updateDynamoDbPITR(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
+	toEnable := d.Get("point_in_time_backup_enabled").(bool)
+
+	input := &dynamodb.UpdateContinuousBackupsInput{
+		TableName: aws.String(d.Id()),
+		PointInTimeRecoverySpecification: &dynamodb.PointInTimeRecoverySpecification{
+			PointInTimeRecoveryEnabled: aws.Bool(toEnable),
+		},
+	}
+
+	log.Printf("[DEBUG] Updating DynamoDB point in time recovery status to %v", toEnable)
+
+	err := resource.Retry(20*time.Minute, func() *resource.RetryError {
+		_, err := conn.UpdateContinuousBackups(input)
+		if err != nil {
+			// Backups are still being enabled for this newly created table
+			if isAWSErr(err, dynamodb.ErrCodeContinuousBackupsUnavailableException, "Backups are being enabled") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if err := waitForDynamoDbBackupUpdateToBeCompleted(d.Id(), toEnable, conn); err != nil {
+		return fmt.Errorf("Error waiting for DynamoDB PITR update: %s", err)
+	}
+
+	return nil
+}
+
 func readDynamoDbTableTags(arn string, conn *dynamodb.DynamoDB) (map[string]string, error) {
 	output, err := conn.ListTagsOfResource(&dynamodb.ListTagsOfResourceInput{
 		ResourceArn: aws.String(arn),
@@ -621,6 +672,18 @@ func readDynamoDbTableTags(arn string, conn *dynamodb.DynamoDB) (map[string]stri
 	// TODO Read NextToken if available
 
 	return result, nil
+}
+
+func readDynamoDbPITR(table string, conn *dynamodb.DynamoDB) (bool, error) {
+	output, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
+		TableName: aws.String(table),
+	})
+	if err != nil {
+		return false, fmt.Errorf("Error reading backup status from dynamodb resource: %s", err)
+	}
+
+	pitr := output.ContinuousBackupsDescription.PointInTimeRecoveryDescription
+	return *pitr.PointInTimeRecoveryStatus == dynamodb.PointInTimeRecoveryStatusEnabled, nil
 }
 
 // Waiters
@@ -717,6 +780,38 @@ func waitForDynamoDbTableToBeActive(tableName string, timeout time.Duration, con
 	}
 	_, err := stateConf.WaitForState()
 
+	return err
+}
+
+func waitForDynamoDbBackupUpdateToBeCompleted(tableName string, toEnable bool, conn *dynamodb.DynamoDB) error {
+	var pending []string
+	target := []string{dynamodb.TimeToLiveStatusDisabled}
+
+	if toEnable {
+		pending = []string{
+			"ENABLING",
+		}
+		target = []string{dynamodb.PointInTimeRecoveryStatusEnabled}
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending: pending,
+		Target:  target,
+		Timeout: 10 * time.Second,
+		Refresh: func() (interface{}, string, error) {
+			result, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
+				TableName: aws.String(tableName),
+			})
+			if err != nil {
+				return 42, "", err
+			}
+
+			pitr := result.ContinuousBackupsDescription.PointInTimeRecoveryDescription
+
+			return result, *pitr.PointInTimeRecoveryStatus, nil
+		},
+	}
+	_, err := stateConf.WaitForState()
 	return err
 }
 
