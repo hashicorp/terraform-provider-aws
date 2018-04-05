@@ -14,6 +14,7 @@ ENHANCEMENTS:
 * resource/aws_kinesis_firehose_delivery_stream: Add Extended S3 destination backup mode support [GH-2987]
 * resource/aws_kinesis_firehose_delivery_stream: Add Splunk destination processing configuration support [GH-3944]
 * resource/aws_lambda_function: Support `nodejs8.10` runtime [GH-4020]
+* resource/aws_ssm_maintenance_window_target: Make resource updatable [GH-4074]
 * resource/aws_wafregional_rule: Validate all predicate types [GH-4046]
 
 BUG FIXES:
