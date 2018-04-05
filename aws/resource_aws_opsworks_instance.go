@@ -99,7 +99,6 @@ func resourceAwsOpsworksInstance() *schema.Resource {
 
 			"ec2_instance_id": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 

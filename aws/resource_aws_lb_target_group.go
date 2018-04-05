@@ -465,7 +465,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	if targetGroup.HealthCheckPath != nil {
 		healthCheck["path"] = *targetGroup.HealthCheckPath
 	}
-	if targetGroup.Matcher.HttpCode != nil {
+	if targetGroup.Matcher != nil && targetGroup.Matcher.HttpCode != nil {
 		healthCheck["matcher"] = *targetGroup.Matcher.HttpCode
 	}
 
