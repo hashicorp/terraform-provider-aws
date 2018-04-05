@@ -281,7 +281,7 @@ func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.baz", &conf),
 					resource.TestCheckResourceAttr(
-						"aws_launch_configuration.baz", "ebs_block_device.2764618555.volume_size", "9"),
+						"aws_launch_configuration.baz", "ebs_block_device.1393547169.volume_size", "9"),
 				),
 			},
 			{
@@ -289,7 +289,29 @@ func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.baz", &conf),
 					resource.TestCheckResourceAttr(
-						"aws_launch_configuration.baz", "ebs_block_device.3859927736.volume_size", "10"),
+						"aws_launch_configuration.baz", "ebs_block_device.4131155854.volume_size", "10"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchConfigurationConfigEbsNoDevice(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.bar", &conf),
+					resource.TestCheckResourceAttr("aws_launch_configuration.bar", "ebs_block_device.#", "1"),
+					resource.TestCheckResourceAttr("aws_launch_configuration.bar", "ebs_block_device.3099842682.device_name", "/dev/sda2"),
+					resource.TestCheckResourceAttr("aws_launch_configuration.bar", "ebs_block_device.3099842682.no_device", "true"),
 				),
 			},
 		},
@@ -605,6 +627,29 @@ resource "aws_launch_configuration" "bar" {
 	image_id             = "ami-5189a661"
 	instance_type        = "t2.nano"
 	iam_instance_profile = "${aws_iam_instance_profile.profile.name}"
+}
+`, rInt)
+}
+
+func testAccAWSLaunchConfigurationConfigEbsNoDevice(rInt int) string {
+	return fmt.Sprintf(`
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/ebs/ubuntu-precise-12.04-i386-server-*"]
+  }
+  owners = ["099720109477"] # Canonical
+}
+
+resource "aws_launch_configuration" "bar" {
+  name_prefix = "tf-acc-test-%d"
+  image_id = "${data.aws_ami.ubuntu.id}"
+  instance_type = "m1.small"
+  ebs_block_device {
+    device_name = "/dev/sda2"
+    no_device = true
+  }
 }
 `, rInt)
 }
