@@ -64,7 +64,7 @@ func resourceAwsSsmMaintenanceWindowTargetCreate(d *schema.ResourceData, meta in
 	params := &ssm.RegisterTargetWithMaintenanceWindowInput{
 		WindowId:     aws.String(d.Get("window_id").(string)),
 		ResourceType: aws.String(d.Get("resource_type").(string)),
-		Targets:      expandAwsSsmTargets(d),
+		Targets:      expandAwsSsmTargets(d.Get("targets").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("owner_information"); ok {
@@ -129,7 +129,7 @@ func resourceAwsSsmMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta in
 	log.Printf("[INFO] Updating SSM Maintenance Window Target: %s", d.Id())
 
 	params := &ssm.UpdateMaintenanceWindowTargetInput{
-		Targets:        expandAwsSsmTargets(d),
+		Targets:        expandAwsSsmTargets(d.Get("targets").([]interface{})),
 		WindowId:       aws.String(d.Get("window_id").(string)),
 		WindowTargetId: aws.String(d.Id()),
 	}
