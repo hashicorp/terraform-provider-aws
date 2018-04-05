@@ -22,6 +22,7 @@ BUG FIXES:
 * resource/aws_cognito_user_pool: Fix `email_message_by_link` max length validation [GH-4051]
 * resource/aws_elasticache_replication_group: Properly set `cluster_mode` in state [GH-3932]
 * resource/aws_iam_user_login_profile: Changed password generation to use `crypto/rand` [GH-3989]
+* resource/aws_kinesis_firehose_delivery_stream: Prevent additional crash scenarios with optional configurations [GH-4047]
 * resource/aws_lambda_function: IAM retry for "The role defined for the function cannot be assumed by Lambda" on update [GH-3988]
 * resource/aws_lb: Suppress differences for non-applicable attributes [GH-4032]
 * resource/aws_rds_cluster_instance: Prevent crash on importing non-cluster instances [GH-3961]
