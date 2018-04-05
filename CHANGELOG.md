@@ -18,6 +18,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cognito_user_pool: Trim `custom:` prefix of `developer_only_attribute = false` schema attributes [GH-4041]
 * resource/aws_cognito_user_pool: Fix `email_message_by_link` max length validation [GH-4051]
 * resource/aws_elasticache_replication_group: Properly set `cluster_mode` in state [GH-3932]
 * resource/aws_iam_user_login_profile: Changed password generation to use `crypto/rand` [GH-3989]
