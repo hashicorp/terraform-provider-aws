@@ -12,8 +12,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-const awsSpotInstanceRequestTimeLayout = "2006-01-02T15:04:05Z"
-
 func resourceAwsSpotInstanceRequest() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSpotInstanceRequestCreate,
@@ -87,14 +85,16 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				ForceNew: true,
 			}
 			s["valid_from"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateRFC3339TimeString,
 			}
 			s["valid_until"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateRFC3339TimeString,
 			}
 			return s
 		}(),
@@ -145,19 +145,19 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("valid_from"); ok {
-		valid_from, err := time.Parse(awsSpotInstanceRequestTimeLayout, v.(string))
+		valid_from, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return err
 		}
-		spotOpts.ValidFrom = &valid_from
+		spotOpts.ValidFrom = aws.Time(valid_from)
 	}
 
 	if v, ok := d.GetOk("valid_until"); ok {
-		valid_until, err := time.Parse(awsSpotInstanceRequestTimeLayout, v.(string))
+		valid_until, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return err
 		}
-		spotOpts.ValidUntil = &valid_until
+		spotOpts.ValidUntil = aws.Time(valid_until)
 	}
 
 	// Make the spot instance request
@@ -264,8 +264,8 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 	d.Set("block_duration_minutes", request.BlockDurationMinutes)
 	d.Set("tags", tagsToMap(request.Tags))
 	d.Set("instance_interruption_behaviour", request.InstanceInterruptionBehavior)
-	d.Set("valid_from", aws.TimeValue(request.ValidFrom).Format(awsSpotInstanceRequestTimeLayout))
-	d.Set("valid_until", aws.TimeValue(request.ValidUntil).Format(awsSpotInstanceRequestTimeLayout))
+	d.Set("valid_from", aws.TimeValue(request.ValidFrom).Format(time.RFC3339))
+	d.Set("valid_until", aws.TimeValue(request.ValidUntil).Format(time.RFC3339))
 
 	return nil
 }
