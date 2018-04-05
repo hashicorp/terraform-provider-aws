@@ -406,7 +406,11 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("desired_count", service.DesiredCount)
 	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
-	d.Set("launch_type", service.LaunchType)
+	if service.LaunchType != nil {
+		d.Set("launch_type", service.LaunchType)
+	} else {
+		d.Set("launch_type", "EC2")
+	}
 
 	// Save cluster in the same format
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*AWSClient).partition+":ecs:") {
