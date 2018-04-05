@@ -898,9 +898,8 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	log.Printf("[DEBUG] S3 Bucket: %s, lifecycle: %v", d.Id(), lifecycle)
+	rules := make([]map[string]interface{}, 0, len(lifecycle.Rules))
 	if len(lifecycle.Rules) > 0 {
-		rules := make([]map[string]interface{}, 0, len(lifecycle.Rules))
-
 		for _, lifecycleRule := range lifecycle.Rules {
 			rule := make(map[string]interface{})
 
@@ -1005,10 +1004,9 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 
 			rules = append(rules, rule)
 		}
-
-		if err := d.Set("lifecycle_rule", rules); err != nil {
-			return err
-		}
+	}
+	if err := d.Set("lifecycle_rule", rules); err != nil {
+		return err
 	}
 
 	// Read the bucket replication configuration
