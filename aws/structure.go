@@ -3013,7 +3013,7 @@ func flattenCognitoUserPoolSchema(configuredAttributes, inputs []*cognitoidentit
 			"attribute_data_type":      aws.StringValue(input.AttributeDataType),
 			"developer_only_attribute": aws.BoolValue(input.DeveloperOnlyAttribute),
 			"mutable":                  aws.BoolValue(input.Mutable),
-			"name":                     strings.TrimPrefix(aws.StringValue(input.Name), "dev:custom:"),
+			"name":                     strings.TrimPrefix(strings.TrimPrefix(aws.StringValue(input.Name), "dev:"), "custom:"),
 			"required":                 aws.BoolValue(input.Required),
 		}
 
