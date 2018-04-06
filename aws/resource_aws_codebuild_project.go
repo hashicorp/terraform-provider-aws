@@ -73,9 +73,12 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsCodeBuildCacheType,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.CacheTypeNoCache,
+								codebuild.CacheTypeS3,
+							}, false),
 						},
 						"location": {
 							Type:     schema.TypeString,

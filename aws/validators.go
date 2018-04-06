@@ -1606,18 +1606,6 @@ func validateAwsElastiCacheReplicationGroupAuthToken(v interface{}, k string) (w
 	return
 }
 
-func validateAwsCodeBuildCacheType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		"S3": true,
-	}
-
-	if !types[value] {
-		errors = append(errors, fmt.Errorf("CodeBuild: Cache Type can only be S3"))
-	}
-	return
-}
-
 func validateDynamoDbStreamSpec(d *schema.ResourceDiff) error {
 	enabled := d.Get("stream_enabled").(bool)
 	if enabled {
