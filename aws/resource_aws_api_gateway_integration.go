@@ -269,10 +269,12 @@ func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface
 	d.Set("request_parameters", aws.StringValueMap(integration.RequestParameters))
 	d.Set("request_parameters_in_json", aws.StringValueMap(integration.RequestParameters))
 	d.Set("passthrough_behavior", integration.PassthroughBehavior)
-	d.Set("connection_type", integration.ConnectionType)
-	if integration.ConnectionId != nil {
-		d.Set("connection_id", integration.ConnectionId)
+	if integration.ConnectionType != nil {
+		d.Set("connection_type", integration.ConnectionType)
+	} else {
+		d.Set("connection_type", apigateway.ConnectionTypeInternet)
 	}
+	d.Set("connection_id", integration.ConnectionId)
 
 	if integration.Uri != nil {
 		d.Set("uri", integration.Uri)
@@ -428,6 +430,22 @@ func resourceAwsApiGatewayIntegrationUpdate(d *schema.ResourceData, meta interfa
 			Op:    aws.String("replace"),
 			Path:  aws.String("/contentHandling"),
 			Value: aws.String(d.Get("content_handling").(string)),
+		})
+	}
+
+	if d.HasChange("connection_type") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/connectionType"),
+			Value: aws.String(d.Get("connection_type").(string)),
+		})
+	}
+
+	if d.HasChange("connection_id") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/connectionId"),
+			Value: aws.String(d.Get("connection_id").(string)),
 		})
 	}
 
