@@ -23,6 +23,7 @@ func defaultCacheBehaviorConf() map[string]interface{} {
 		"allowed_methods":             allowedMethodsConf(),
 		"cached_methods":              cachedMethodsConf(),
 		"compress":                    true,
+		"field_level_encryption_id":   "",
 	}
 }
 
