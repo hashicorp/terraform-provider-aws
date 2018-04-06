@@ -76,6 +76,49 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     max_ttl                = 86400
   }
 
+  # Cache behavior with precedence 0
+  cache_behavior {
+    path_pattern     = "/content/immutable/*"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD", "OPTIONS"]
+    target_origin_id = "myS3Origin"
+
+    forwarded_values {
+      query_string = false
+      headers = ["Origin"]
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl                = 0
+    default_ttl            = 86400
+    max_ttl                = 31536000
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+  }
+
+  # Cache behavior with precedence 1
+  cache_behavior {
+    path_pattern     = "/content/*"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myS3Origin"
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+  }
+
   price_class = "PriceClass_200"
 
   restrictions {
@@ -106,7 +149,8 @@ of several sub-resources - these resources are laid out below.
     this distribution.
 
   * `cache_behavior` (Optional) - A [cache behavior](#cache-behavior-arguments)
-    resource for this distribution (multiples allowed).
+    resource for this distribution (multiples allowed). List from top to bottom
+    in order of precedence. The topmost cache behavior will have precedence 0.
 
   * `comment` (Optional) - Any comments you want to include about the
     distribution.
