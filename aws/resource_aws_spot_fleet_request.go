@@ -25,6 +25,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		SchemaVersion: 1,
@@ -1118,7 +1119,7 @@ func resourceAwsSpotFleetRequestDelete(d *schema.ResourceData, meta interface{})
 	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)
 
 	log.Printf("[INFO] Cancelling spot fleet request: %s", d.Id())
-	err := deleteSpotFleetRequest(d.Id(), terminateInstances, 5*time.Minute, conn)
+	err := deleteSpotFleetRequest(d.Id(), terminateInstances, d.Timeout(schema.TimeoutDelete), conn)
 	if err != nil {
 		return fmt.Errorf("error deleting spot request (%s): %s", d.Id(), err)
 	}
