@@ -1,7 +1,12 @@
 ## 1.14.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_organizations_account: As noted in the resource documentation, resource deletion from Terraform will _not_ automatically close AWS accounts due to the behavior of the AWS Organizations service. There are also various manual steps required by AWS before the account can be removed from an organization and made into a standalone account, then manually closed if desired.
+
 FEATURES:
 
+* **New Resource:** `aws_organizations_account` [GH-3524]
 * **New Resource:** `aws_ses_identity_notification_topic` [GH-2640]
 
 ENHANCEMENTS:
