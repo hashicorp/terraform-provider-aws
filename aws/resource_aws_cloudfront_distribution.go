@@ -61,6 +61,10 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Optional: true,
 							Default:  86400,
 						},
+						"field_level_encryption_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"forwarded_values": {
 							Type:     schema.TypeSet,
 							Required: true,
@@ -211,6 +215,10 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  86400,
+						},
+						"field_level_encryption_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"forwarded_values": {
 							Type:     schema.TypeSet,

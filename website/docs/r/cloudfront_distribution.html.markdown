@@ -172,6 +172,8 @@ of several sub-resources - these resources are laid out below.
     in the absence of an `Cache-Control max-age` or `Expires` header. Defaults to
     1 day.
 
+  * `field_level_encryption_id` (Optional) - Field level encryption configuration ID
+
   * `forwarded_values` (Required) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront
     handles query strings, cookies and headers (maximum one).
 
