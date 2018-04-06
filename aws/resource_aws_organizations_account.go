@@ -148,11 +148,19 @@ func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	d.Set("arn", resp.Account.Arn)
-	d.Set("joined_method", resp.Account.JoinedMethod)
-	d.Set("joined_timestamp", resp.Account.JoinedTimestamp)
-	d.Set("name", resp.Account.Name)
-	d.Set("status", resp.Account.Status)
+	account := resp.Account
+	if account == nil {
+		log.Printf("[WARN] Account does not exist, removing from state: %s", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("arn", account.Arn)
+	d.Set("email", account.Email)
+	d.Set("joined_method", account.JoinedMethod)
+	d.Set("joined_timestamp", account.JoinedTimestamp)
+	d.Set("name", account.Name)
+	d.Set("status", account.Status)
 	return nil
 }
 
