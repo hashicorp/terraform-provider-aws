@@ -269,6 +269,10 @@ func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface
 	d.Set("request_parameters", aws.StringValueMap(integration.RequestParameters))
 	d.Set("request_parameters_in_json", aws.StringValueMap(integration.RequestParameters))
 	d.Set("passthrough_behavior", integration.PassthroughBehavior)
+	d.Set("connection_type", integration.ConnectionType)
+	if integration.ConnectionId != nil {
+		d.Set("connection_id", integration.ConnectionId)
+	}
 
 	if integration.Uri != nil {
 		d.Set("uri", integration.Uri)
