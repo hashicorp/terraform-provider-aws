@@ -13,6 +13,7 @@ ENHANCEMENTS:
 
 * provider: Fallback to SDK default credential chain if credentials not found using provider credential chain [GH-2883]
 * data-source/aws_iam_role: Add `max_session_duration` attribute [GH-4092]
+* resource/aws_cloudfront_distribution: Add cache_behavior `field_level_encryption_id` attribute [GH-4102]
 * resource/aws_codebuild_project: Support `cache` configuration [GH-2860]
 * resource/aws_elasticache_replication_group: Support Cluster Mode Enabled online shard reconfiguration [GH-3932]
 * resource/aws_elasticache_replication_group: Configurable create, update, and delete timeouts [GH-3932]
