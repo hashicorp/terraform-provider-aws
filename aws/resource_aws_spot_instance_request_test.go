@@ -124,34 +124,6 @@ func TestAccAWSSpotInstanceRequest_vpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_validFrom(t *testing.T) {
-	var sir ec2.SpotInstanceRequest
-	rInt := acctest.RandInt()
-	validFrom := testAccAWSSpotInstanceRequestValidFrom(t)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSpotInstanceRequestConfigValidFrom(rInt, validFrom),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSpotInstanceRequestExists(
-						"aws_spot_instance_request.foo", &sir),
-					testAccCheckAWSSpotInstanceRequestAttributes(&sir),
-					testCheckKeyPair(fmt.Sprintf("tmp-key-%d", rInt), &sir),
-					testAccCheckAWSSpotInstanceRequestAttributesValidFrom(&sir, validFrom),
-					resource.TestCheckResourceAttr(
-						"aws_spot_instance_request.foo", "spot_bid_status", "fulfilled"),
-					resource.TestCheckResourceAttr(
-						"aws_spot_instance_request.foo", "spot_request_state", "active"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSSpotInstanceRequest_validUntil(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	rInt := acctest.RandInt()
@@ -238,10 +210,6 @@ func testCheckKeyPair(keyName string, sir *ec2.SpotInstanceRequest) resource.Tes
 
 		return nil
 	}
-}
-
-func testAccAWSSpotInstanceRequestValidFrom(t *testing.T) string {
-	return testAccAWSSpotInstanceRequestTime(t, "30m")
 }
 
 func testAccAWSSpotInstanceRequestValidUntil(t *testing.T) string {
@@ -375,16 +343,6 @@ func testAccCheckAWSSpotInstanceRequestAttributes(
 	}
 }
 
-func testAccCheckAWSSpotInstanceRequestAttributesValidFrom(
-	sir *ec2.SpotInstanceRequest, validFrom string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if sir.ValidFrom.Format(time.RFC3339) != validFrom {
-			return fmt.Errorf("Unexpected valid_from time: %s", sir.ValidFrom.String())
-		}
-		return nil
-	}
-}
-
 func testAccCheckAWSSpotInstanceRequestAttributesValidUntil(
 	sir *ec2.SpotInstanceRequest, validUntil string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -486,36 +444,6 @@ func testAccAWSSpotInstanceRequestConfig(rInt int) string {
 			Name = "terraform-test"
 		}
 	}`, rInt)
-}
-
-func testAccAWSSpotInstanceRequestConfigValidFrom(rInt int, validFrom string) string {
-	return fmt.Sprintf(`
-	resource "aws_key_pair" "debugging" {
-		key_name = "tmp-key-%d"
-		public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
-	}
-
-	resource "aws_spot_instance_request" "foo" {
-		ami = "ami-4fccb37f"
-		instance_type = "m1.small"
-		key_name = "${aws_key_pair.debugging.key_name}"
-
-		// base price is $0.044 hourly, so bidding above that should theoretically
-		// always fulfill
-		spot_price = "0.05"
-
-		// The start date and time of the request, the default is to start fulfilling the request immediately.
-		// so 30 minutes from the current time will be valid time.
-		valid_from = "%s"
-
-		// we wait for fulfillment because we want to inspect the launched instance
-		// and verify termination behavior
-		wait_for_fulfillment = true
-
-		tags {
-			Name = "terraform-test"
-		}
-	}`, rInt, validFrom)
 }
 
 func testAccAWSSpotInstanceRequestConfigValidUntil(rInt int, validUntil string) string {
