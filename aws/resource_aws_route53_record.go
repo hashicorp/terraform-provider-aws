@@ -638,27 +638,35 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 
 	log.Printf("[DEBUG] List resource records sets for zone: %s, opts: %s",
 		zone, lopts)
-	resp, err := conn.ListResourceRecordSets(lopts)
+
+	var record *route53.ResourceRecordSet
+	err = conn.ListResourceRecordSetsPages(lopts, func(resp *route53.ListResourceRecordSetsOutput, lastPage bool) bool {
+		for _, recordSet := range resp.ResourceRecordSets {
+			name := cleanRecordName(*recordSet.Name)
+			if FQDN(strings.ToLower(name)) != FQDN(strings.ToLower(*lopts.StartRecordName)) {
+				continue
+			}
+			if strings.ToUpper(*recordSet.Type) != strings.ToUpper(*lopts.StartRecordType) {
+				continue
+			}
+
+			if recordSet.SetIdentifier != nil && *recordSet.SetIdentifier != d.Get("set_identifier") {
+				continue
+			}
+
+			record = recordSet
+			return false
+		}
+		return !lastPage
+	})
+
 	if err != nil {
 		return nil, err
 	}
-
-	for _, record := range resp.ResourceRecordSets {
-		name := cleanRecordName(*record.Name)
-		if FQDN(strings.ToLower(name)) != FQDN(strings.ToLower(*lopts.StartRecordName)) {
-			continue
-		}
-		if strings.ToUpper(*record.Type) != strings.ToUpper(*lopts.StartRecordType) {
-			continue
-		}
-
-		if record.SetIdentifier != nil && *record.SetIdentifier != d.Get("set_identifier") {
-			continue
-		}
-		// The only safe return where a record is found
-		return record, nil
+	if record == nil {
+		return nil, r53NoRecordsFound
 	}
-	return nil, r53NoRecordsFound
+	return record, nil
 }
 
 func resourceAwsRoute53RecordDelete(d *schema.ResourceData, meta interface{}) error {

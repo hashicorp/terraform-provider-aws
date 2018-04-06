@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/errwrap"
@@ -220,7 +221,13 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", doc.Name)
 	d.Set("owner", doc.Owner)
 	d.Set("platform_types", flattenStringList(doc.PlatformTypes))
-	if err := d.Set("arn", flattenAwsSsmDocumentArn(meta, doc.Name)); err != nil {
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ssm",
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("document/%s", *doc.Name),
+	}.String()
+	if err := d.Set("arn", arn); err != nil {
 		return fmt.Errorf("[DEBUG] Error setting arn error: %#v", err)
 	}
 
@@ -264,12 +271,6 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	return nil
-}
-
-func flattenAwsSsmDocumentArn(meta interface{}, docName *string) string {
-	region := meta.(*AWSClient).region
-
-	return fmt.Sprintf("arn:aws:ssm:%s::document/%s", region, *docName)
 }
 
 func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) error {

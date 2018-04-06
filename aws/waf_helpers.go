@@ -1,8 +1,13 @@
 package aws
 
 import (
+	"bytes"
+	"fmt"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -176,6 +181,42 @@ func diffWafRegexPatternSetPatternStrings(oldPatterns, newPatterns []interface{}
 	return updates
 }
 
+func diffWafRulePredicates(oldP, newP []interface{}) []*waf.RuleUpdate {
+	updates := make([]*waf.RuleUpdate, 0)
+
+	for _, op := range oldP {
+		predicate := op.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newP, predicate); contains {
+			newP = append(newP[:idx], newP[idx+1:]...)
+			continue
+		}
+
+		updates = append(updates, &waf.RuleUpdate{
+			Action: aws.String(waf.ChangeActionDelete),
+			Predicate: &waf.Predicate{
+				Negated: aws.Bool(predicate["negated"].(bool)),
+				Type:    aws.String(predicate["type"].(string)),
+				DataId:  aws.String(predicate["data_id"].(string)),
+			},
+		})
+	}
+
+	for _, np := range newP {
+		predicate := np.(map[string]interface{})
+
+		updates = append(updates, &waf.RuleUpdate{
+			Action: aws.String(waf.ChangeActionInsert),
+			Predicate: &waf.Predicate{
+				Negated: aws.Bool(predicate["negated"].(bool)),
+				Type:    aws.String(predicate["type"].(string)),
+				DataId:  aws.String(predicate["data_id"].(string)),
+			},
+		})
+	}
+	return updates
+}
+
 func sliceContainsString(slice []interface{}, s string) (int, bool) {
 	for idx, value := range slice {
 		v := value.(string)
@@ -184,4 +225,140 @@ func sliceContainsString(slice []interface{}, s string) (int, bool) {
 		}
 	}
 	return -1, false
+}
+
+func diffWafRuleGroupActivatedRules(oldRules, newRules []interface{}) []*waf.RuleGroupUpdate {
+	updates := make([]*waf.RuleGroupUpdate, 0)
+
+	for _, op := range oldRules {
+		rule := op.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newRules, rule); contains {
+			newRules = append(newRules[:idx], newRules[idx+1:]...)
+			continue
+		}
+
+		updates = append(updates, &waf.RuleGroupUpdate{
+			Action:        aws.String(waf.ChangeActionDelete),
+			ActivatedRule: expandWafActivatedRule(rule),
+		})
+	}
+
+	for _, np := range newRules {
+		rule := np.(map[string]interface{})
+
+		updates = append(updates, &waf.RuleGroupUpdate{
+			Action:        aws.String(waf.ChangeActionInsert),
+			ActivatedRule: expandWafActivatedRule(rule),
+		})
+	}
+	return updates
+}
+
+func flattenWafActivatedRules(activatedRules []*waf.ActivatedRule) []interface{} {
+	out := make([]interface{}, len(activatedRules), len(activatedRules))
+	for i, ar := range activatedRules {
+		rule := map[string]interface{}{
+			"priority": int(*ar.Priority),
+			"rule_id":  *ar.RuleId,
+			"type":     *ar.Type,
+		}
+		if ar.Action != nil {
+			rule["action"] = []interface{}{
+				map[string]interface{}{
+					"type": *ar.Action.Type,
+				},
+			}
+		}
+		out[i] = rule
+	}
+	return out
+}
+
+func expandWafActivatedRule(rule map[string]interface{}) *waf.ActivatedRule {
+	r := &waf.ActivatedRule{
+		Priority: aws.Int64(int64(rule["priority"].(int))),
+		RuleId:   aws.String(rule["rule_id"].(string)),
+		Type:     aws.String(rule["type"].(string)),
+	}
+
+	if a, ok := rule["action"].([]interface{}); ok && len(a) > 0 {
+		m := a[0].(map[string]interface{})
+		r.Action = &waf.WafAction{
+			Type: aws.String(m["type"].(string)),
+		}
+	}
+	return r
+}
+
+func flattenWafRegexMatchTuples(tuples []*waf.RegexMatchTuple) []interface{} {
+	out := make([]interface{}, len(tuples), len(tuples))
+	for i, t := range tuples {
+		m := make(map[string]interface{})
+
+		if t.FieldToMatch != nil {
+			m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
+		}
+		m["regex_pattern_set_id"] = *t.RegexPatternSetId
+		m["text_transformation"] = *t.TextTransformation
+
+		out[i] = m
+	}
+	return out
+}
+
+func diffWafRegexMatchSetTuples(oldT, newT []interface{}) []*waf.RegexMatchSetUpdate {
+	updates := make([]*waf.RegexMatchSetUpdate, 0)
+
+	for _, ot := range oldT {
+		tuple := ot.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newT, tuple); contains {
+			newT = append(newT[:idx], newT[idx+1:]...)
+			continue
+		}
+
+		ftm := tuple["field_to_match"].([]interface{})
+		updates = append(updates, &waf.RegexMatchSetUpdate{
+			Action: aws.String(waf.ChangeActionDelete),
+			RegexMatchTuple: &waf.RegexMatchTuple{
+				FieldToMatch:       expandFieldToMatch(ftm[0].(map[string]interface{})),
+				RegexPatternSetId:  aws.String(tuple["regex_pattern_set_id"].(string)),
+				TextTransformation: aws.String(tuple["text_transformation"].(string)),
+			},
+		})
+	}
+
+	for _, nt := range newT {
+		tuple := nt.(map[string]interface{})
+
+		ftm := tuple["field_to_match"].([]interface{})
+		updates = append(updates, &waf.RegexMatchSetUpdate{
+			Action: aws.String(waf.ChangeActionInsert),
+			RegexMatchTuple: &waf.RegexMatchTuple{
+				FieldToMatch:       expandFieldToMatch(ftm[0].(map[string]interface{})),
+				RegexPatternSetId:  aws.String(tuple["regex_pattern_set_id"].(string)),
+				TextTransformation: aws.String(tuple["text_transformation"].(string)),
+			},
+		})
+	}
+	return updates
+}
+
+func resourceAwsWafRegexMatchSetTupleHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	if v, ok := m["field_to_match"]; ok {
+		ftms := v.([]interface{})
+		ftm := ftms[0].(map[string]interface{})
+
+		if v, ok := ftm["data"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(v.(string))))
+		}
+		buf.WriteString(fmt.Sprintf("%s-", ftm["type"].(string)))
+	}
+	buf.WriteString(fmt.Sprintf("%s-", m["regex_pattern_set_id"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["text_transformation"].(string)))
+
+	return hashcode.String(buf.String())
 }

@@ -63,8 +63,13 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 	}
 
 	resourceSchema["cluster_mode"] = &schema.Schema{
-		Type:     schema.TypeSet,
+		Type:     schema.TypeList,
 		Optional: true,
+		// We allow Computed: true here since using number_cache_clusters
+		// and a cluster mode enabled parameter_group_name will create
+		// a single shard replication group with number_cache_clusters - 1
+		// read replicas. Otherwise, the resource is marked ForceNew.
+		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -76,7 +81,6 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				"num_node_groups": {
 					Type:     schema.TypeInt,
 					Required: true,
-					ForceNew: true,
 				},
 			},
 		},
@@ -118,7 +122,14 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: resourceSchema,
+		Schema:        resourceSchema,
+		SchemaVersion: 1,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(50 * time.Minute),
+			Delete: schema.DefaultTimeout(40 * time.Minute),
+			Update: schema.DefaultTimeout(40 * time.Minute),
+		},
 	}
 }
 
@@ -213,8 +224,8 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 	}
 
 	if clusterModeOk {
-		clusterModeAttributes := clusterMode.(*schema.Set).List()
-		attributes := clusterModeAttributes[0].(map[string]interface{})
+		clusterModeList := clusterMode.([]interface{})
+		attributes := clusterModeList[0].(map[string]interface{})
 
 		if v, ok := attributes["num_node_groups"]; ok {
 			params.NumNodeGroups = aws.Int64(int64(v.(int)))
@@ -241,7 +252,7 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 		Pending:    pending,
 		Target:     []string{"available"},
 		Refresh:    cacheReplicationGroupStateRefreshFunc(conn, d.Id(), "available", pending),
-		Timeout:    50 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -304,6 +315,9 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 
 	d.Set("replication_group_description", rgp.Description)
 	d.Set("number_cache_clusters", len(rgp.MemberClusters))
+	if err := d.Set("cluster_mode", flattenElasticacheNodeGroupsToClusterMode(aws.BoolValue(rgp.ClusterEnabled), rgp.NodeGroups)); err != nil {
+		return fmt.Errorf("error setting cluster_mode attribute: %s", err)
+	}
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 
 	if rgp.NodeGroups != nil {
@@ -363,6 +377,51 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 
 func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
+
+	if d.HasChange("cluster_mode.0.num_node_groups") {
+		o, n := d.GetChange("cluster_mode.0.num_node_groups")
+		oldNumNodeGroups := o.(int)
+		newNumNodeGroups := n.(int)
+
+		input := &elasticache.ModifyReplicationGroupShardConfigurationInput{
+			ApplyImmediately:   aws.Bool(true),
+			NodeGroupCount:     aws.Int64(int64(newNumNodeGroups)),
+			ReplicationGroupId: aws.String(d.Id()),
+		}
+
+		if oldNumNodeGroups > newNumNodeGroups {
+			// Node Group IDs are 1 indexed: 0001 through 0015
+			// Loop from highest old ID until we reach highest new ID
+			nodeGroupsToRemove := []string{}
+			for i := oldNumNodeGroups; i > newNumNodeGroups; i-- {
+				nodeGroupID := fmt.Sprintf("%04d", i)
+				nodeGroupsToRemove = append(nodeGroupsToRemove, nodeGroupID)
+			}
+			input.NodeGroupsToRemove = aws.StringSlice(nodeGroupsToRemove)
+		}
+
+		log.Printf("[DEBUG] Modifying Elasticache Replication Group (%s) shard configuration: %s", d.Id(), input)
+		_, err := conn.ModifyReplicationGroupShardConfiguration(input)
+		if err != nil {
+			return fmt.Errorf("error modifying Elasticache Replication Group shard configuration: %s", err)
+		}
+
+		pending := []string{"creating", "modifying", "snapshotting"}
+		stateConf := &resource.StateChangeConf{
+			Pending:    pending,
+			Target:     []string{"available"},
+			Refresh:    cacheReplicationGroupStateRefreshFunc(conn, d.Id(), "available", pending),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			MinTimeout: 10 * time.Second,
+			Delay:      30 * time.Second,
+		}
+
+		log.Printf("[DEBUG] Waiting for Elasticache Replication Group (%s) shard reconfiguration completion", d.Id())
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("error waiting for Elasticache Replication Group (%s) shard reconfiguration completion: %s", d.Id(), err)
+		}
+	}
 
 	requestUpdate := false
 	params := &elasticache.ModifyReplicationGroupInput{
@@ -451,7 +510,7 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 			Pending:    pending,
 			Target:     []string{"available"},
 			Refresh:    cacheReplicationGroupStateRefreshFunc(conn, d.Id(), "available", pending),
-			Timeout:    40 * time.Minute,
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second,
 		}
@@ -487,7 +546,7 @@ func resourceAwsElasticacheReplicationGroupDelete(d *schema.ResourceData, meta i
 		Pending:    []string{"creating", "available", "deleting"},
 		Target:     []string{},
 		Refresh:    cacheReplicationGroupStateRefreshFunc(conn, d.Id(), "", []string{}),
-		Timeout:    40 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -545,6 +604,25 @@ func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replic
 
 		return rg, *rg.Status, nil
 	}
+}
+
+func flattenElasticacheNodeGroupsToClusterMode(clusterEnabled bool, nodeGroups []*elasticache.NodeGroup) []map[string]interface{} {
+	if !clusterEnabled {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"num_node_groups":         0,
+		"replicas_per_node_group": 0,
+	}
+
+	if len(nodeGroups) == 0 {
+		return []map[string]interface{}{m}
+	}
+
+	m["num_node_groups"] = len(nodeGroups)
+	m["replicas_per_node_group"] = (len(nodeGroups[0].NodeGroupMembers) - 1)
+	return []map[string]interface{}{m}
 }
 
 func validateAwsElastiCacheReplicationGroupEngine(v interface{}, k string) (ws []string, errors []error) {

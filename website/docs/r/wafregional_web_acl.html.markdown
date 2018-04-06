@@ -16,7 +16,7 @@ Provides a WAF Regional Web ACL Resource for use with Application Load Balancer.
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
   
-  ip_set_descriptors {
+  ip_set_descriptor {
     type  = "IPV4"
     value = "192.0.7.0/24"
   }
@@ -26,7 +26,7 @@ resource "aws_wafregional_rule" "wafrule" {
   name        = "tfWAFRule"
   metric_name = "tfWAFRule"
   
-  predicates {
+  predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
     type    = "IPMatch"
@@ -41,7 +41,7 @@ resource "aws_wafregional_web_acl" "wafacl" {
     type = "ALLOW"
   }
   
-  rules {
+  rule {
     action {
        type = "BLOCK"
     }
