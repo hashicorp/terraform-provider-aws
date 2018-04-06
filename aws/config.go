@@ -12,14 +12,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
@@ -34,6 +37,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
@@ -50,17 +54,22 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
+	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glacier"
+	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -111,6 +120,7 @@ type Config struct {
 	Ec2Endpoint              string
 	EcsEndpoint              string
 	EcrEndpoint              string
+	EsEndpoint               string
 	ElbEndpoint              string
 	IamEndpoint              string
 	KinesisEndpoint          string
@@ -134,6 +144,7 @@ type Config struct {
 
 type AWSClient struct {
 	cfconn                *cloudformation.CloudFormation
+	cloud9conn            *cloud9.Cloud9
 	cloudfrontconn        *cloudfront.CloudFront
 	cloudtrailconn        *cloudtrail.CloudTrail
 	cloudwatchconn        *cloudwatch.CloudWatch
@@ -142,6 +153,7 @@ type AWSClient struct {
 	cognitoconn           *cognitoidentity.CognitoIdentity
 	cognitoidpconn        *cognitoidentityprovider.CognitoIdentityProvider
 	configconn            *configservice.ConfigService
+	daxconn               *dax.DAX
 	devicefarmconn        *devicefarm.DeviceFarm
 	dmsconn               *databasemigrationservice.DatabaseMigrationService
 	dsconn                *directoryservice.DirectoryService
@@ -175,6 +187,7 @@ type AWSClient struct {
 	iamconn               *iam.IAM
 	kinesisconn           *kinesis.Kinesis
 	kmsconn               *kms.KMS
+	gameliftconn          *gamelift.GameLift
 	firehoseconn          *firehose.Firehose
 	inspectorconn         *inspector.Inspector
 	elasticacheconn       *elasticache.ElastiCache
@@ -184,7 +197,9 @@ type AWSClient struct {
 	lightsailconn         *lightsail.Lightsail
 	mqconn                *mq.MQ
 	opsworksconn          *opsworks.OpsWorks
+	organizationsconn     *organizations.Organizations
 	glacierconn           *glacier.Glacier
+	guarddutyconn         *guardduty.GuardDuty
 	codebuildconn         *codebuild.CodeBuild
 	codedeployconn        *codedeploy.CodeDeploy
 	codecommitconn        *codecommit.CodeCommit
@@ -196,9 +211,12 @@ type AWSClient struct {
 	wafregionalconn       *wafregional.WAFRegional
 	iotconn               *iot.IoT
 	batchconn             *batch.Batch
+	glueconn              *glue.Glue
 	athenaconn            *athena.Athena
 	dxconn                *directconnect.DirectConnect
 	mediastoreconn        *mediastore.MediaStore
+	appsyncconn           *appsync.AppSync
+	lexmodelconn          *lexmodelbuildingservice.LexModelBuildingService
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -210,17 +228,13 @@ func (c *AWSClient) DynamoDB() *dynamodb.DynamoDB {
 }
 
 func (c *AWSClient) IsGovCloud() bool {
-	if c.region == "us-gov-west-1" {
-		return true
-	}
-	return false
+	_, isGovCloud := endpoints.PartitionForRegion([]endpoints.Partition{endpoints.AwsUsGovPartition()}, c.region)
+	return isGovCloud
 }
 
 func (c *AWSClient) IsChinaCloud() bool {
-	if c.region == "cn-north-1" {
-		return true
-	}
-	return false
+	_, isChinaCloud := endpoints.PartitionForRegion([]endpoints.Partition{endpoints.AwsCnPartition()}, c.region)
+	return isChinaCloud
 }
 
 // Client configures and returns a fully initialized AWSClient
@@ -265,16 +279,27 @@ func (c *Config) Client() (interface{}, error) {
 	cp, err := creds.Get()
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
-			// If a profile wasn't specified then error out
+			// If a profile wasn't specified, the session may still be able to resolve credentials from shared config.
 			if c.Profile == "" {
-				return nil, errors.New(`No valid credential sources found for AWS Provider.
-  Please see https://terraform.io/docs/providers/aws/index.html for more information on
-  providing credentials for the AWS Provider`)
+				sess, err := session.NewSession()
+				if err != nil {
+					return nil, errors.New(`No valid credential sources found for AWS Provider.
+	Please see https://terraform.io/docs/providers/aws/index.html for more information on
+	providing credentials for the AWS Provider`)
+				}
+				_, err = sess.Config.Credentials.Get()
+				if err != nil {
+					return nil, errors.New(`No valid credential sources found for AWS Provider.
+	Please see https://terraform.io/docs/providers/aws/index.html for more information on
+	providing credentials for the AWS Provider`)
+				}
+				log.Printf("[INFO] Using session-derived AWS Auth")
+				opt.Config.Credentials = sess.Config.Credentials
+			} else {
+				log.Printf("[INFO] AWS Auth using Profile: %q", c.Profile)
+				opt.Profile = c.Profile
+				opt.SharedConfigState = session.SharedConfigEnable
 			}
-			// add the profile and enable share config file usage
-			log.Printf("[INFO] AWS Auth using Profile: %q", c.Profile)
-			opt.Profile = c.Profile
-			opt.SharedConfigState = session.SharedConfigEnable
 		} else {
 			return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)
 		}
@@ -336,6 +361,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsEcrSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcrEndpoint)})
 	awsEcsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcsEndpoint)})
 	awsElbSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.ElbEndpoint)})
+	awsEsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EsEndpoint)})
 	awsIamSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.IamEndpoint)})
 	awsLambdaSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.LambdaEndpoint)})
 	awsKinesisSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisEndpoint)})
@@ -361,11 +387,15 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	}
 
+	// Infer AWS partition from configured region
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), client.region); ok {
+		client.partition = partition.ID()
+	}
+
 	if !c.SkipRequestingAccountId {
-		partition, accountId, err := GetAccountInfo(client.iamconn, client.stsconn, cp.ProviderName)
+		accountID, err := GetAccountID(client.iamconn, client.stsconn, cp.ProviderName)
 		if err == nil {
-			client.partition = partition
-			client.accountid = accountId
+			client.accountid = accountID
 		}
 	}
 
@@ -391,6 +421,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.apigateway = apigateway.New(awsApigatewaySess)
 	client.appautoscalingconn = applicationautoscaling.New(sess)
 	client.autoscalingconn = autoscaling.New(sess)
+	client.cloud9conn = cloud9.New(sess)
 	client.cfconn = cloudformation.New(awsCfSess)
 	client.cloudfrontconn = cloudfront.New(sess)
 	client.cloudtrailconn = cloudtrail.New(sess)
@@ -403,8 +434,9 @@ func (c *Config) Client() (interface{}, error) {
 	client.configconn = configservice.New(sess)
 	client.cognitoconn = cognitoidentity.New(sess)
 	client.cognitoidpconn = cognitoidentityprovider.New(sess)
-	client.dmsconn = databasemigrationservice.New(sess)
 	client.codepipelineconn = codepipeline.New(sess)
+	client.daxconn = dax.New(awsDynamoSess)
+	client.dmsconn = databasemigrationservice.New(sess)
 	client.dsconn = directoryservice.New(sess)
 	client.dynamodbconn = dynamodb.New(awsDynamoSess)
 	client.ecrconn = ecr.New(awsEcrSess)
@@ -416,17 +448,21 @@ func (c *Config) Client() (interface{}, error) {
 	client.elbconn = elb.New(awsElbSess)
 	client.elbv2conn = elbv2.New(awsElbSess)
 	client.emrconn = emr.New(sess)
-	client.esconn = elasticsearch.New(sess)
+	client.esconn = elasticsearch.New(awsEsSess)
 	client.firehoseconn = firehose.New(sess)
 	client.inspectorconn = inspector.New(sess)
+	client.gameliftconn = gamelift.New(sess)
 	client.glacierconn = glacier.New(sess)
+	client.guarddutyconn = guardduty.New(sess)
 	client.iotconn = iot.New(sess)
 	client.kinesisconn = kinesis.New(awsKinesisSess)
 	client.kmsconn = kms.New(awsKmsSess)
 	client.lambdaconn = lambda.New(awsLambdaSess)
+	client.lexmodelconn = lexmodelbuildingservice.New(sess)
 	client.lightsailconn = lightsail.New(sess)
 	client.mqconn = mq.New(sess)
 	client.opsworksconn = opsworks.New(sess)
+	client.organizationsconn = organizations.New(sess)
 	client.r53conn = route53.New(r53Sess)
 	client.rdsconn = rds.New(awsRdsSess)
 	client.redshiftconn = redshift.New(sess)
@@ -442,9 +478,11 @@ func (c *Config) Client() (interface{}, error) {
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
 	client.batchconn = batch.New(sess)
+	client.glueconn = glue.New(sess)
 	client.athenaconn = athena.New(sess)
 	client.dxconn = directconnect.New(sess)
 	client.mediastoreconn = mediastore.New(sess)
+	client.appsyncconn = appsync.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
@@ -474,6 +512,29 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	// See https://github.com/aws/aws-sdk-go/pull/1276
+	client.dynamodbconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name != "PutItem" && r.Operation.Name != "UpdateItem" && r.Operation.Name != "DeleteItem" {
+			return
+		}
+		if isAWSErr(r.Error, dynamodb.ErrCodeLimitExceededException, "Subscriber limit exceeded:") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
+	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name == "CreateStream" {
+			if isAWSErr(r.Error, kinesis.ErrCodeLimitExceededException, "simultaneously be in CREATING or DELETING") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+		if r.Operation.Name == "CreateStream" || r.Operation.Name == "DeleteStream" {
+			if isAWSErr(r.Error, kinesis.ErrCodeLimitExceededException, "Rate exceeded for stream") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
 	return &client, nil
 }
 
@@ -489,31 +550,14 @@ func hasEc2Classic(platforms []string) bool {
 // ValidateRegion returns an error if the configured region is not a
 // valid aws region and nil otherwise.
 func (c *Config) ValidateRegion() error {
-	var regions = []string{
-		"ap-northeast-1",
-		"ap-northeast-2",
-		"ap-south-1",
-		"ap-southeast-1",
-		"ap-southeast-2",
-		"ca-central-1",
-		"cn-north-1",
-		"eu-central-1",
-		"eu-west-1",
-		"eu-west-2",
-		"eu-west-3",
-		"sa-east-1",
-		"us-east-1",
-		"us-east-2",
-		"us-gov-west-1",
-		"us-west-1",
-		"us-west-2",
-	}
-
-	for _, valid := range regions {
-		if c.Region == valid {
-			return nil
+	for _, partition := range endpoints.DefaultPartitions() {
+		for _, region := range partition.Regions() {
+			if c.Region == region.ID() {
+				return nil
+			}
 		}
 	}
+
 	return fmt.Errorf("Not a valid region: %s", c.Region)
 }
 

@@ -8,10 +8,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsRedshiftCluster() *schema.Resource {
@@ -112,17 +113,10 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 			},
 
 			"automated_snapshot_retention_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(int)
-					if value > 35 {
-						es = append(es, fmt.Errorf(
-							"backup retention period cannot be more than 35 days"))
-					}
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1,
+				ValidateFunc: validation.IntAtMost(35),
 			},
 
 			"port": {
@@ -484,7 +478,7 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating", "backing-up", "modifying", "restoring"},
 		Target:     []string{"available"},
-		Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(d, meta),
+		Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(d.Id(), conn),
 		Timeout:    75 * time.Minute,
 		MinTimeout: 10 * time.Second,
 	}
@@ -523,12 +517,10 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 	})
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if "ClusterNotFound" == awsErr.Code() {
-				d.SetId("")
-				log.Printf("[DEBUG] Redshift Cluster (%s) not found", d.Id())
-				return nil
-			}
+		if isAWSErr(err, redshift.ErrCodeClusterNotFoundFault, "") {
+			d.SetId("")
+			log.Printf("[DEBUG] Redshift Cluster (%s) not found", d.Id())
+			return nil
 		}
 		log.Printf("[DEBUG] Error describing Redshift Cluster (%s)", d.Id())
 		return err
@@ -631,15 +623,17 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).redshiftconn
 	d.Partial(true)
 
-	arn, tagErr := buildRedshiftARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
-	if tagErr != nil {
-		return fmt.Errorf("Error building ARN for Redshift Cluster, not updating Tags for cluster %s", d.Id())
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "redshift",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
+	}.String()
+	if tagErr := setTagsRedshift(conn, d, arn); tagErr != nil {
+		return tagErr
 	} else {
-		if tagErr := setTagsRedshift(conn, d, arn); tagErr != nil {
-			return tagErr
-		} else {
-			d.SetPartial("tags")
-		}
+		d.SetPartial("tags")
 	}
 
 	requestUpdate := false
@@ -766,7 +760,7 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"creating", "deleting", "rebooting", "resizing", "renaming", "modifying"},
 			Target:     []string{"available"},
-			Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(d, meta),
+			Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(d.Id(), conn),
 			Timeout:    40 * time.Minute,
 			MinTimeout: 10 * time.Second,
 		}
@@ -901,33 +895,10 @@ func resourceAwsRedshiftClusterDelete(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	log.Printf("[DEBUG] Redshift Cluster delete options: %s", deleteOpts)
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteCluster(&deleteOpts)
-		awsErr, ok := err.(awserr.Error)
-		if ok && awsErr.Code() == "InvalidClusterState" {
-			return resource.RetryableError(err)
-		}
-
-		return resource.NonRetryableError(err)
-	})
-
+	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", deleteOpts)
+	_, err := deleteAwsRedshiftCluster(&deleteOpts, conn)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Error deleting Redshift Cluster (%s): %s", d.Id(), err)
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"available", "creating", "deleting", "rebooting", "resizing", "renaming", "final-snapshot"},
-		Target:     []string{"destroyed"},
-		Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(d, meta),
-		Timeout:    40 * time.Minute,
-		MinTimeout: 5 * time.Second,
-	}
-
-	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("[ERROR] Error deleting Redshift Cluster (%s): %s", d.Id(), err)
+		return err
 	}
 
 	log.Printf("[INFO] Redshift Cluster %s successfully deleted", d.Id())
@@ -935,29 +906,52 @@ func resourceAwsRedshiftClusterDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsRedshiftClusterStateRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).redshiftconn
+func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.Redshift) (interface{}, error) {
+	id := *opts.ClusterIdentifier
+	log.Printf("[INFO] Deleting Redshift Cluster %q", id)
+	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteCluster(opts)
+		if isAWSErr(err, redshift.ErrCodeInvalidClusterStateFault, "") {
+			return resource.RetryableError(err)
+		}
 
-		log.Printf("[INFO] Reading Redshift Cluster Information: %s", d.Id())
+		return resource.NonRetryableError(err)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("[ERROR] Error deleting Redshift Cluster (%s): %s",
+			id, err)
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"available", "creating", "deleting", "rebooting", "resizing", "renaming", "final-snapshot"},
+		Target:     []string{"destroyed"},
+		Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(id, conn),
+		Timeout:    40 * time.Minute,
+		MinTimeout: 5 * time.Second,
+	}
+
+	return stateConf.WaitForState()
+}
+
+func resourceAwsRedshiftClusterStateRefreshFunc(id string, conn *redshift.Redshift) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		log.Printf("[INFO] Reading Redshift Cluster Information: %s", id)
 		resp, err := conn.DescribeClusters(&redshift.DescribeClustersInput{
-			ClusterIdentifier: aws.String(d.Id()),
+			ClusterIdentifier: aws.String(id),
 		})
 
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if "ClusterNotFound" == awsErr.Code() {
-					return 42, "destroyed", nil
-				}
+			if isAWSErr(err, redshift.ErrCodeClusterNotFoundFault, "") {
+				return 42, "destroyed", nil
 			}
-			log.Printf("[WARN] Error on retrieving Redshift Cluster (%s) when waiting: %s", d.Id(), err)
+			log.Printf("[WARN] Error on retrieving Redshift Cluster (%s) when waiting: %s", id, err)
 			return nil, "", err
 		}
 
 		var rsc *redshift.Cluster
 
 		for _, c := range resp.Clusters {
-			if *c.ClusterIdentifier == d.Id() {
+			if *c.ClusterIdentifier == id {
 				rsc = c
 			}
 		}
@@ -967,7 +961,7 @@ func resourceAwsRedshiftClusterStateRefreshFunc(d *schema.ResourceData, meta int
 		}
 
 		if rsc.ClusterStatus != nil {
-			log.Printf("[DEBUG] Redshift Cluster status (%s): %s", d.Id(), *rsc.ClusterStatus)
+			log.Printf("[DEBUG] Redshift Cluster status (%s): %s", id, *rsc.ClusterStatus)
 		}
 
 		return rsc, *rsc.ClusterStatus, nil
@@ -1073,16 +1067,4 @@ func validateRedshiftClusterMasterPassword(v interface{}, k string) (ws []string
 		errors = append(errors, fmt.Errorf("%q must be at least 8 characters", k))
 	}
 	return
-}
-
-func buildRedshiftARN(identifier, partition, accountid, region string) (string, error) {
-	if partition == "" {
-		return "", fmt.Errorf("Unable to construct cluster ARN because of missing AWS partition")
-	}
-	if accountid == "" {
-		return "", fmt.Errorf("Unable to construct cluster ARN because of missing AWS Account ID")
-	}
-	arn := fmt.Sprintf("arn:%s:redshift:%s:%s:cluster:%s", partition, region, accountid, identifier)
-	return arn, nil
-
 }

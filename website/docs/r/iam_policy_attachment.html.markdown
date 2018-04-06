@@ -10,7 +10,7 @@ description: |-
 
 Attaches a Managed IAM Policy to user(s), role(s), and/or group(s)
 
-!> **WARNING:** The aws_iam_policy_attachment resource creates **exclusive** attachments of IAM policies. Across the entire AWS account, all of the users/roles/groups to which a single policy is attached must be declared by a single aws_iam_policy_attachment resource. This means that even any users/roles/groups that have the attached policy via some mechanism other than Terraform will have that attached policy revoked by Terraform. Consider `aws_iam_role_policy_attachment`, `iam_user_policy_attachment`, or `iam_group_policy_attachment` instead. These resources do not enforce exclusive attachment of an IAM policy. 
+!> **WARNING:** The aws_iam_policy_attachment resource creates **exclusive** attachments of IAM policies. Across the entire AWS account, all of the users/roles/groups to which a single policy is attached must be declared by a single aws_iam_policy_attachment resource. This means that even any users/roles/groups that have the attached policy via some mechanism other than Terraform will have that attached policy revoked by Terraform. Consider `aws_iam_role_policy_attachment`, `aws_iam_user_policy_attachment`, or `aws_iam_group_policy_attachment` instead. These resources do not enforce exclusive attachment of an IAM policy. 
 
 ```hcl
 resource "aws_iam_user" "user" {

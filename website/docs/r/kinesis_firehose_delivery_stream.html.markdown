@@ -203,10 +203,52 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     role_arn   = "${aws_iam_role.firehose_role.arn}"
     index_name = "test"
     type_name  = "test"
+
+    processing_configuration = [
+      {
+        enabled = "true"
+        processors = [
+          {
+            type = "Lambda"
+            parameters = [
+              {
+                parameter_name = "LambdaArn"
+                parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 }
 ```
 
+
+### Splunk Destination
+
+```hcl
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  name        = "terraform-kinesis-firehose-test-stream"
+  destination = "splunk"
+
+  s3_configuration {
+    role_arn           = "${aws_iam_role.firehose.arn}"
+    bucket_arn         = "${aws_s3_bucket.bucket.arn}"
+    buffer_size        = 10
+    buffer_interval    = 400
+    compression_format = "GZIP"
+  }
+
+  splunk_configuration {
+    hec_endpoint               = "https://http-inputs-mydomain.splunkcloud.com:443"
+    hec_token                  = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
+    hec_acknowledgment_timeout = 600
+    hec_endpoint_type          = "Event"
+    s3_backup_mode             = "FailedEventsOnly"
+  }
+}
+```
 ~> **NOTE:** Kinesis Firehose is currently only supported in us-east-1, us-west-2 and eu-west-1.
 
 ## Argument Reference
@@ -244,6 +286,8 @@ be used.
 The `extended_s3_configuration` object supports the same fields from `s3_configuration` as well as the following:
 
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
+* `s3_backup_mode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
+* `s3_backup_configuration` - (Optional) The configuration for backup in Amazon S3. Required if `s3_backup_mode` is `Enabled`. Supports the same fields as `s3_configuration` object.
 
 The `redshift_configuration` object supports the following:
 
@@ -271,6 +315,17 @@ The `elasticsearch_configuration` object supports the following:
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
 * `type_name` - (Required) The Elasticsearch type name with maximum length of 100 characters.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
+* `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
+
+The `splunk_configuration` objects supports the following:
+
+* `hec_acknowledgment_timeout` - (Optional) The amount of time, in seconds between 180 and 600, that Kinesis Firehose waits to receive an acknowledgment from Splunk after it sends it data.
+* `hec_endpoint` - (Required) The HTTP Event Collector (HEC) endpoint to which Kinesis Firehose sends your data.
+* `hec_endpoint_type` - (Optional) The HEC endpoint type. Valid values are `Raw` or `Event`. The default value is `Raw`.
+* `hec_token` - The GUID that you obtain from your Splunk cluster when you create a new HEC endpoint.
+* `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedEventsOnly` and `AllEvents`.  Default value is `FailedEventsOnly`.
+* `retry_duration` - (Optional) After an initial failure to deliver to Amazon Elasticsearch, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
+* `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below.
 
 The `cloudwatch_logging_options` object supports the following:
 
@@ -290,7 +345,7 @@ The `processors` array objects support the following:
 
 The `parameters` array objects support the following:
 
-* `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`
+* `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`
 * `parameter_value` - (Required) Parameter value. Must be between 1 and 512 length (inclusive). When providing a Lambda ARN, you should specify the resource version as well.
 
 ## Attributes Reference
@@ -298,3 +353,13 @@ The `parameters` array objects support the following:
 * `arn` - The Amazon Resource Name (ARN) specifying the Stream
 
 [1]: https://aws.amazon.com/documentation/firehose/
+
+## Import
+
+Kinesis Firehose Delivery streams can be imported using the stream ARN, e.g.
+
+```
+$ terraform import aws_kinesis_firehose_delivery_stream.foo arn:aws:firehose:us-east-1:XXX:deliverystream/example
+```
+
+Note: Import does not work for stream destination `s3`. Consider using `extended_s3` since `s3` destination is deprecated.

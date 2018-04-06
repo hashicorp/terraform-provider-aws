@@ -497,7 +497,7 @@ resource "aws_vpc" "default" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "default"
+    Name = "terraform-testacc-eip-instance-associated"
   }
 }
 
@@ -517,7 +517,7 @@ resource "aws_subnet" "tf_test_subnet" {
   depends_on = ["aws_internet_gateway.gw"]
 
   tags {
-    Name = "tf_test_subnet"
+    Name = "tf-acc-eip-instance-associated"
   }
 }
 
@@ -562,7 +562,7 @@ resource "aws_vpc" "default" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "default"
+    Name = "terraform-testacc-eip-instance-associated"
   }
 }
 
@@ -582,7 +582,7 @@ resource "aws_subnet" "tf_test_subnet" {
   depends_on = ["aws_internet_gateway.gw"]
 
   tags {
-    Name = "tf_test_subnet"
+    Name = "tf-acc-eip-instance-associated"
   }
 }
 
@@ -638,25 +638,33 @@ const testAccAWSEIPNetworkInterfaceConfig = `
 resource "aws_vpc" "bar" {
 	cidr_block = "10.0.0.0/24"
 	tags {
-		Name = "testAccAWSEIPNetworkInterfaceConfig"
+		Name = "terraform-testacc-eip-network-interface"
 	}
 }
+
 resource "aws_internet_gateway" "bar" {
 	vpc_id = "${aws_vpc.bar.id}"
 }
+
 resource "aws_subnet" "bar" {
   vpc_id = "${aws_vpc.bar.id}"
   availability_zone = "us-west-2a"
   cidr_block = "10.0.0.0/24"
+  tags {
+  	Name = "tf-acc-eip-network-interface"
+  }
 }
+
 resource "aws_network_interface" "bar" {
   subnet_id = "${aws_subnet.bar.id}"
 	private_ips = ["10.0.0.10"]
   security_groups = [ "${aws_vpc.bar.default_security_group_id}" ]
 }
+
 resource "aws_eip" "bar" {
 	vpc = "true"
 	network_interface = "${aws_network_interface.bar.id}"
+	depends_on = ["aws_internet_gateway.bar"]
 }
 `
 
@@ -664,7 +672,7 @@ const testAccAWSEIPMultiNetworkInterfaceConfig = `
 resource "aws_vpc" "bar" {
   cidr_block = "10.0.0.0/24"
 	tags {
-		Name = "testAccAWSEIPMultiNetworkInterfaceConfig"
+		Name = "terraform-testacc-eip-multi-network-interface"
 	}
 }
 
@@ -676,6 +684,9 @@ resource "aws_subnet" "bar" {
   vpc_id            = "${aws_vpc.bar.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.0.0.0/24"
+  tags {
+  	Name = "tf-acc-eip-multi-network-interface"
+  }
 }
 
 resource "aws_network_interface" "bar" {
@@ -736,7 +747,7 @@ resource "aws_instance" "example" {
 resource "aws_vpc" "example" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "TestAccAWSEIP_classic_disassociate"
+		Name = "terraform-testacc-eip-classic-disassociate"
 	}
 }
 
@@ -749,6 +760,9 @@ resource "aws_subnet" "us-east-1b-public" {
 
   cidr_block        = "10.0.0.0/24"
   availability_zone = "us-east-1b"
+  tags {
+    Name = "tf-acc-eip-classic-disassociate"
+  }
 }
 
 resource "aws_route_table" "us-east-1-public" {

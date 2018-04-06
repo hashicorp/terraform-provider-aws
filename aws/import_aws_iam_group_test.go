@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -8,8 +9,10 @@ import (
 )
 
 func TestAccAWSIAMGroup_importBasic(t *testing.T) {
-	rInt := acctest.RandInt()
 	resourceName := "aws_iam_group.group"
+
+	rString := acctest.RandString(8)
+	groupName := fmt.Sprintf("tf-acc-group-import-%s", rString)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -17,7 +20,7 @@ func TestAccAWSIAMGroup_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGroupConfig(rInt),
+				Config: testAccAWSGroupConfig(groupName),
 			},
 
 			{

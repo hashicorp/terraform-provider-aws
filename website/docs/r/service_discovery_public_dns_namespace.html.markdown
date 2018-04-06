@@ -33,3 +33,11 @@ The following attributes are exported:
 * `id` - The ID of a namespace.
 * `arn` - The ARN that Amazon Route 53 assigns to the namespace when you create it.
 * `hosted_zone` - The ID for the hosted zone that Amazon Route 53 creates when you create a namespace.
+
+## Import
+
+Service Discovery Public DNS Namespace can be imported using the namespace ID, e.g.
+
+```
+$ terraform import aws_service_discovery_public_dns_namespace.example 0123456789
+```

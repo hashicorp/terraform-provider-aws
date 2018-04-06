@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -106,6 +107,27 @@ func StringLenBetween(min, max int) schema.SchemaValidateFunc {
 	}
 }
 
+// StringMatch returns a SchemaValidateFunc which tests if the provided value
+// matches a given regexp. Optionally an error message can be provided to
+// return something friendlier than "must match some globby regexp".
+func StringMatch(r *regexp.Regexp, message string) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) ([]string, []error) {
+		v, ok := i.(string)
+		if !ok {
+			return nil, []error{fmt.Errorf("expected type of %s to be string", k)}
+		}
+
+		if ok := r.MatchString(v); !ok {
+			if message != "" {
+				return nil, []error{fmt.Errorf("invalid value for %s (%s)", k, message)}
+
+			}
+			return nil, []error{fmt.Errorf("expected value of %s to match regular expression %q", k, r)}
+		}
+		return nil, nil
+	}
+}
+
 // NoZeroValues is a SchemaValidateFunc which tests if the provided value is
 // not a zero value. It's useful in situations where you want to catch
 // explicit zero values on things like required fields during validation.
@@ -186,6 +208,15 @@ func ValidateListUniqueStrings(v interface{}, k string) (ws []string, errors []e
 func ValidateRegexp(v interface{}, k string) (ws []string, errors []error) {
 	if _, err := regexp.Compile(v.(string)); err != nil {
 		errors = append(errors, fmt.Errorf("%q: %s", k, err))
+	}
+	return
+}
+
+// ValidateRFC3339TimeString is a ValidateFunc that ensures a string parses
+// as time.RFC3339 format
+func ValidateRFC3339TimeString(v interface{}, k string) (ws []string, errors []error) {
+	if _, err := time.Parse(time.RFC3339, v.(string)); err != nil {
+		errors = append(errors, fmt.Errorf("%q: invalid RFC3339 timestamp", k))
 	}
 	return
 }

@@ -48,11 +48,15 @@ The given filters must match exactly one VPC peering connection whose data will 
 
 * `cidr_block` - (Optional) The CIDR block of the requester VPC of the specific VPC Peering Connection to retrieve.
 
+* `region` - (Optional) The region of the requester VPC of the specific VPC Peering Connection to retrieve.
+
 * `peer_vpc_id` - (Optional) The ID of the accepter VPC of the specific VPC Peering Connection to retrieve.
 
 * `peer_owner_id` - (Optional) The AWS account ID of the owner of the accepter VPC of the specific VPC Peering Connection to retrieve.
 
 * `peer_cidr_block` - (Optional) The CIDR block of the accepter VPC of the specific VPC Peering Connection to retrieve.
+
+* `peer_region` - (Optional) The region of the accepter VPC of the specific VPC Peering Connection to retrieve.
 
 * `filter` - (Optional) Custom filter block as described below.
 

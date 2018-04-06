@@ -26,6 +26,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the REST API
 * `description` - (Optional) The description of the REST API
 * `binary_media_types` - (Optional) The list of binary media types supported by the RestApi. By default, the RestApi supports only UTF-8-encoded text payloads.
+* `minimum_compression_size` - (Optional) Minimum response size to compress for the REST API. Integer between -1 and 10485760 (10MB). Setting a value greater than -1 will enable compression, -1 disables compression (default).
 * `body` - (Optional) An OpenAPI specification that defines the set of routes and integrations to create as part of the REST API.
 * `endpoint_type` - (Optional) The type of endpoint to create, either `EDGE` or `REGIONAL`.  If unspecified, defaults to
   `EDGE`.  Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for

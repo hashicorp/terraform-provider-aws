@@ -3,12 +3,12 @@ layout: "aws"
 page_title: "AWS: aws_ssm_association"
 sidebar_current: "docs-aws-resource-ssm-association"
 description: |-
-  Associates an SSM Document to an instance.
+  Associates an SSM Document to an instance or EC2 tag.
 ---
 
 # aws_ssm_association
 
-Associates an SSM Document to an instance.
+Associates an SSM Document to an instance or EC2 tag.
 
 ## Example Usage
 
@@ -70,17 +70,22 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the SSM document to apply.
 * `association_name` - (Optional) The descriptive name for the association.
-* `instance_id` - (Optional) The instance id to apply an SSM document to.
-* `parameters` - (Optional) Additional parameters to pass to the SSM document.
-* `targets` - (Optional) The targets (either instances or tags). Instances are specified using Key=instanceids,Values=instanceid1,instanceid2. Tags are specified using Key=tag name,Values=tag value. Only 1 target is currently supported by AWS.
-* `schedule_expression` - (Optional) A cron expression when the association will be applied to the target(s).
-* `output_location` - (Optional) An output location block. OutputLocation documented below.
 * `document_version` - (Optional) The document version you want to associate with the target(s). Can be a specific version or the default version.
+* `instance_id` - (Optional) The instance ID to apply an SSM document to.
+* `output_location` - (Optional) An output location block. Output Location is documented below.
+* `parameters` - (Optional) A block of arbitrary string parameters to pass to the SSM document.
+* `schedule_expression` - (Optional) A cron expression when the association will be applied to the target(s).
+* `targets` - (Optional) A block containing the targets of the SSM association. Targets are documented below. AWS currently supports a maximum of 5 targets.
 
 Output Location (`output_location`) is an S3 bucket where you want to store the results of this association:
 
 * `s3_bucket_name` - (Required) The S3 bucket name.
 * `s3_key_prefix` - (Optional) The S3 bucket prefix. Results stored in the root if not configured.
+
+Targets specify what instance IDs or tags to apply the document to and has these keys:
+
+* `key` - (Required) Either `InstanceIds` or `tag:Tag Name` to specify an EC2 tag.
+* `values` - (Required) A list of instance IDs or tag values. AWS currently limits this to 1 target value.
 
 ## Attributes Reference
 
