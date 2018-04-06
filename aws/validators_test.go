@@ -81,34 +81,6 @@ func TestValidateRFC3339TimeString(t *testing.T) {
 	}
 }
 
-func TestValidateInstanceUserDataSize(t *testing.T) {
-	validValues := []string{
-		"#!/bin/bash",
-		"#!/bin/bash\n" + strings.Repeat("#", 16372), // = 16384
-	}
-
-	for _, s := range validValues {
-		_, errors := validateInstanceUserDataSize(s, "user_data")
-		if len(errors) > 0 {
-			t.Fatalf("%q should be valid user data with limited size: %v", s, errors)
-		}
-	}
-
-	invalidValues := []string{
-		"#!/bin/bash\n" + strings.Repeat("#", 16373), // = 16385
-	}
-
-	for _, s := range invalidValues {
-		_, errors := validateInstanceUserDataSize(s, "user_data")
-		if len(errors) != 1 {
-			t.Fatalf("%q should not be valid user data with limited size: %v", s, errors)
-		}
-		if !strings.Contains(errors[0].Error(), "16385") {
-			t.Fatalf("%q should trigger error message with actual size: %v", s, errors)
-		}
-	}
-}
-
 func TestValidateEcrRepositoryName(t *testing.T) {
 	validNames := []string{
 		"nginx-web-app",
@@ -1128,50 +1100,6 @@ func TestValidateStepFunctionStateMachineName(t *testing.T) {
 		_, errors := validateSfnStateMachineName(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Step Function State Machine name", v)
-		}
-	}
-}
-
-func TestValidateEmrEbsVolumeType(t *testing.T) {
-	cases := []struct {
-		VolType  string
-		ErrCount int
-	}{
-		{
-			VolType:  "gp2",
-			ErrCount: 0,
-		},
-		{
-			VolType:  "io1",
-			ErrCount: 0,
-		},
-		{
-			VolType:  "standard",
-			ErrCount: 0,
-		},
-		{
-			VolType:  "stand",
-			ErrCount: 1,
-		},
-		{
-			VolType:  "io",
-			ErrCount: 1,
-		},
-		{
-			VolType:  "gp1",
-			ErrCount: 1,
-		},
-		{
-			VolType:  "fast-disk",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateAwsEmrEbsVolumeType(tc.VolType, "volume")
-
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %d errors, got %d: %s", tc.ErrCount, len(errors), errors)
 		}
 	}
 }

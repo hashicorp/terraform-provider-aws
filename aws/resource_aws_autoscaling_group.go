@@ -44,7 +44,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateMaxLength(255 - 26),
+				ValidateFunc: validateMaxLength(255 - resource.UniqueIDSuffixLength),
 			},
 
 			"launch_configuration": {
@@ -242,6 +242,12 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Elem:          &schema.Schema{Type: schema.TypeMap},
 				ConflictsWith: []string{"tag"},
 			},
+
+			"service_linked_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -393,6 +399,10 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 		createOpts.TargetGroupARNs = expandStringList(v.(*schema.Set).List())
 	}
 
+	if v, ok := d.GetOk("service_linked_role_arn"); ok {
+		createOpts.ServiceLinkedRoleARN = aws.String(v.(string))
+	}
+
 	log.Printf("[DEBUG] AutoScaling Group create configuration: %#v", createOpts)
 	_, err := conn.CreateAutoScalingGroup(&createOpts)
 	if err != nil {
@@ -468,6 +478,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("max_size", g.MaxSize)
 	d.Set("placement_group", g.PlacementGroup)
 	d.Set("name", g.AutoScalingGroupName)
+	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
 
 	var tagList, tagsList []*autoscaling.TagDescription
 	var tagOk, tagsOk bool
@@ -534,6 +545,8 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 			log.Printf("[WARN] Error setting metrics for (%s): %s", d.Id(), err)
 		}
 		d.Set("metrics_granularity", g.EnabledMetrics[0].Granularity)
+	} else {
+		d.Set("enabled_metrics", nil)
 	}
 
 	return nil
@@ -603,6 +616,10 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 			log.Printf("[DEBUG] Explicitly setting null termination policy to 'Default'")
 			opts.TerminationPolicies = aws.StringSlice([]string{"Default"})
 		}
+	}
+
+	if d.HasChange("service_linked_role_arn") {
+		opts.ServiceLinkedRoleARN = aws.String(d.Get("service_linked_role_arn").(string))
 	}
 
 	if err := setAutoscalingTags(conn, d); err != nil {

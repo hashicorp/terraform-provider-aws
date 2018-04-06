@@ -19,7 +19,6 @@ resource "aws_placement_group" "test" {
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones        = ["us-east-1a"]
   name                      = "foobar3-terraform-test"
   max_size                  = 5
   min_size                  = 2
@@ -29,6 +28,7 @@ resource "aws_autoscaling_group" "bar" {
   force_delete              = true
   placement_group           = "${aws_placement_group.test.id}"
   launch_configuration      = "${aws_launch_configuration.foobar.name}"
+  vpc_zone_identifier       = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
 
   initial_lifecycle_hook {
     name                 = "foobar"
@@ -83,11 +83,11 @@ variable extra_tags {
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones        = ["us-east-1a"]
   name                      = "foobar3-terraform-test"
   max_size                  = 5
   min_size                  = 2
   launch_configuration      = "${aws_launch_configuration.foobar.name}"
+  vpc_zone_identifier       = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
 
   tags = [
     {
@@ -122,8 +122,7 @@ The following arguments are supported:
 * `max_size` - (Required) The maximum size of the auto scale group.
 * `min_size` - (Required) The minimum size of the auto scale group.
     (See also [Waiting for Capacity](#waiting-for-capacity) below.)
-* `availability_zones` - (Optional) A list of AZs to launch resources in.
-   Required only if you do not specify any `vpc_zone_identifier`
+* `availability_zones` - (Required only for EC2-Classic) A list of one or more availability zones for the group. This parameter should not be specified when using `vpc_zone_identifier`.
 * `default_cooldown` - (Optional) The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `launch_configuration` - (Required) The name of the launch configuration to use.
 * `initial_lifecycle_hook` - (Optional) One or more
@@ -172,6 +171,7 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
 * `protect_from_scale_in` (Optional) Allows setting instance protection. The
    autoscaling group will not select instances with this setting for terminination
    during scale in events.
+*  `service_linked_role_arn` (Optional) The ARN of the service-linked role that the ASG will use to call other AWS services
 
 Tags support the following:
 

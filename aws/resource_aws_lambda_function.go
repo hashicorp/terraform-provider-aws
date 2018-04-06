@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/mitchellh/go-homedir"
@@ -103,6 +104,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 					// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
 					lambda.RuntimeNodejs43,
 					lambda.RuntimeNodejs610,
+					"nodejs8.10",
 					lambda.RuntimeJava8,
 					lambda.RuntimePython27,
 					lambda.RuntimePython36,
@@ -527,7 +529,14 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("version", lastVersion)
 	d.Set("qualified_arn", lastQualifiedArn)
 
-	d.Set("invoke_arn", buildLambdaInvokeArn(*function.FunctionArn, meta.(*AWSClient).region))
+	invokeArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "apigateway",
+		Region:    meta.(*AWSClient).region,
+		AccountID: "lambda",
+		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", *function.FunctionArn),
+	}.String()
+	d.Set("invoke_arn", invokeArn)
 
 	if getFunctionOutput.Concurrency != nil {
 		d.Set("reserved_concurrent_executions", getFunctionOutput.Concurrency.ReservedConcurrentExecutions)
@@ -710,6 +719,10 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			if err != nil {
 				log.Printf("[DEBUG] Received error modifying Lambda Function Configuration %s: %s", d.Id(), err)
 
+				if isAWSErr(err, "InvalidParameterValueException", "The role defined for the function cannot be assumed by Lambda") {
+					log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
+					return resource.RetryableError(err)
+				}
 				if isAWSErr(err, "InvalidParameterValueException", "The provided execution role does not have permissions") {
 					log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
 					return resource.RetryableError(err)

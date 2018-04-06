@@ -37,6 +37,9 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 				return validateDynamoDbStreamSpec(diff)
 			},
 			func(diff *schema.ResourceDiff, v interface{}) error {
+				return validateDynamoDbTableAttributes(diff)
+			},
+			func(diff *schema.ResourceDiff, v interface{}) error {
 				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
 					o, n := diff.GetChange("server_side_encryption")
 					if isDynamoDbTableSSEDisabled(o) && isDynamoDbTableSSEDisabled(n) {
@@ -374,11 +377,10 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange("global_secondary_index") && !d.IsNewResource() {
-		var attributes []*dynamodb.AttributeDefinition
-		if v, ok := d.GetOk("attribute"); ok {
-			attributes = expandDynamoDbAttributes(v.(*schema.Set).List())
-		}
+	// Indexes and attributes are tightly coupled (DynamoDB requires attribute definitions
+	// for all indexed attributes) so it's necessary to update these together.
+	if (d.HasChange("global_secondary_index") || d.HasChange("attribute")) && !d.IsNewResource() {
+		attributes := d.Get("attribute").(*schema.Set).List()
 
 		o, n := d.GetChange("global_secondary_index")
 		ops, err := diffDynamoDbGSI(o.(*schema.Set).List(), n.(*schema.Set).List())
@@ -389,12 +391,13 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 
 		input := &dynamodb.UpdateTableInput{
 			TableName:            aws.String(d.Id()),
-			AttributeDefinitions: attributes,
+			AttributeDefinitions: expandDynamoDbAttributes(attributes),
 		}
 
 		// Only 1 online index can be created or deleted simultaneously per table
 		for _, op := range ops {
 			input.GlobalSecondaryIndexUpdates = []*dynamodb.GlobalSecondaryIndexUpdate{op}
+			log.Printf("[DEBUG] Updating DynamoDB Table: %s", input)
 			_, err := conn.UpdateTable(input)
 			if err != nil {
 				return err
@@ -416,6 +419,14 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 				if err := waitForDynamoDbGSIToBeDeleted(d.Id(), idxName, conn); err != nil {
 					return fmt.Errorf("Error waiting for DynamoDB GSI %q to be deleted: %s", idxName, err)
 				}
+			}
+		}
+
+		// We may only be changing the attribute type
+		if len(ops) == 0 {
+			_, err := conn.UpdateTable(input)
+			if err != nil {
+				return err
 			}
 		}
 

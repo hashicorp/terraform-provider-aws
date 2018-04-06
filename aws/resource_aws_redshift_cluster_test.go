@@ -503,11 +503,6 @@ func testAccCheckAWSRedshiftClusterSnapshot(rInt int) resource.TestCheckFunc {
 			conn := testAccProvider.Meta().(*AWSClient).redshiftconn
 
 			snapshot_identifier := fmt.Sprintf("tf-acctest-snapshot-%d", rInt)
-			arn, err := buildRedshiftARN(snapshot_identifier, testAccProvider.Meta().(*AWSClient).partition, testAccProvider.Meta().(*AWSClient).accountid, testAccProvider.Meta().(*AWSClient).region)
-			tagsARN := strings.Replace(arn, ":cluster:", ":snapshot:", 1)
-			if err != nil {
-				return fmt.Errorf("Error building ARN for tags check with ARN (%s): %s", tagsARN, err)
-			}
 
 			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
 			_, snapDeleteErr := conn.DeleteClusterSnapshot(
@@ -864,6 +859,8 @@ func testAccAWSRedshiftClusterConfig_loggingDisabledDeprecated(rInt int) string 
 
 func testAccAWSRedshiftClusterConfig_loggingEnabledDeprecated(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_redshift_service_account" "main" {}
+
  resource "aws_s3_bucket" "bucket" {
 	 bucket = "tf-redshift-logging-%d"
 	 force_destroy = true
@@ -875,7 +872,7 @@ func testAccAWSRedshiftClusterConfig_loggingEnabledDeprecated(rInt int) string {
 		 "Sid": "Stmt1376526643067",
 		 "Effect": "Allow",
 		 "Principal": {
-			 "AWS": "arn:aws:iam::902366379725:user/logs"
+			 "AWS": "${data.aws_redshift_service_account.main.arn}"
 		 },
 		 "Action": "s3:PutObject",
 		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d/*"
@@ -884,7 +881,7 @@ func testAccAWSRedshiftClusterConfig_loggingEnabledDeprecated(rInt int) string {
 		 "Sid": "Stmt137652664067",
 		 "Effect": "Allow",
 		 "Principal": {
-			 "AWS": "arn:aws:iam::902366379725:user/logs"
+			 "AWS": "${data.aws_redshift_service_account.main.arn}"
 		 },
 		 "Action": "s3:GetBucketAcl",
 		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d"
@@ -930,6 +927,8 @@ func testAccAWSRedshiftClusterConfig_loggingDisabled(rInt int) string {
 
 func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_redshift_service_account" "main" {}
+
  resource "aws_s3_bucket" "bucket" {
 	 bucket = "tf-redshift-logging-%d"
 	 force_destroy = true
@@ -941,7 +940,7 @@ func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
 		 "Sid": "Stmt1376526643067",
 		 "Effect": "Allow",
 		 "Principal": {
-			 "AWS": "arn:aws:iam::902366379725:user/logs"
+			 "AWS": "${data.aws_redshift_service_account.main.arn}"
 		 },
 		 "Action": "s3:PutObject",
 		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d/*"
@@ -950,7 +949,7 @@ func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
 		 "Sid": "Stmt137652664067",
 		 "Effect": "Allow",
 		 "Principal": {
-			 "AWS": "arn:aws:iam::902366379725:user/logs"
+			 "AWS": "${data.aws_redshift_service_account.main.arn}"
 		 },
 		 "Action": "s3:GetBucketAcl",
 		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d"

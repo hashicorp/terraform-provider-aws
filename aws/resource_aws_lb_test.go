@@ -158,7 +158,6 @@ func TestAccAWSLBBackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb.lb_test", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_alb.lb_test", "tags.Name", "TestAccAWSALB_basic"),
 					resource.TestCheckResourceAttr("aws_alb.lb_test", "enable_deletion_protection", "false"),
-					resource.TestCheckResourceAttr("aws_alb.lb_test", "enable_cross_zone_load_balancing", "false"),
 					resource.TestCheckResourceAttr("aws_alb.lb_test", "idle_timeout", "30"),
 					resource.TestCheckResourceAttr("aws_alb.lb_test", "ip_address_type", "ipv4"),
 					resource.TestCheckResourceAttr("aws_alb.lb_test", "load_balancer_type", "application"),
@@ -279,6 +278,7 @@ func TestAccAWSLB_networkLoadbalancer_updateCrossZone(t *testing.T) {
 				Config: testAccAWSLBConfig_networkLoadbalancer(lbName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &pre),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "load_balancing.cross_zone.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_cross_zone_load_balancing", "true"),
 				),
 			},
@@ -286,6 +286,7 @@ func TestAccAWSLB_networkLoadbalancer_updateCrossZone(t *testing.T) {
 				Config: testAccAWSLBConfig_networkLoadbalancer(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &mid),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "load_balancing.cross_zone.enabled", "false"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_cross_zone_load_balancing", "false"),
 					testAccCheckAWSlbARNs(&pre, &mid),
 				),
@@ -294,6 +295,7 @@ func TestAccAWSLB_networkLoadbalancer_updateCrossZone(t *testing.T) {
 				Config: testAccAWSLBConfig_networkLoadbalancer(lbName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &post),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "load_balancing.cross_zone.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_cross_zone_load_balancing", "true"),
 					testAccCheckAWSlbARNs(&mid, &post),
 				),
@@ -313,25 +315,28 @@ func TestAccAWSLB_applicationLoadBalancer_updateHttp2(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBConfig_enableHttp2(lbName, true),
+				Config: testAccAWSLBConfig_enableHttp2(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &pre),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "routing.http2.enabled", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_http2", "false"),
+				),
+			},
+			{
+				Config: testAccAWSLBConfig_enableHttp2(lbName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists("aws_lb.lb_test", &mid),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "routing.http2.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_http2", "true"),
+					testAccCheckAWSlbARNs(&pre, &mid),
 				),
 			},
 			{
 				Config: testAccAWSLBConfig_enableHttp2(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBExists("aws_lb.lb_test", &mid),
-					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_http2", "false"),
-					testAccCheckAWSlbARNs(&pre, &mid),
-				),
-			},
-			{
-				Config: testAccAWSLBConfig_enableHttp2(lbName, true),
-				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &post),
-					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_http2", "true"),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "routing.http2.enabled", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_http2", "false"),
 					testAccCheckAWSlbARNs(&mid, &post),
 				),
 			},
@@ -353,6 +358,7 @@ func TestAccAWSLB_applicationLoadBalancer_updateDeletionProtection(t *testing.T)
 				Config: testAccAWSLBConfig_enableDeletionProtection(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &pre),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "deletion_protection.enabled", "false"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
 				),
 			},
@@ -360,6 +366,7 @@ func TestAccAWSLB_applicationLoadBalancer_updateDeletionProtection(t *testing.T)
 				Config: testAccAWSLBConfig_enableDeletionProtection(lbName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &mid),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "deletion_protection.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "true"),
 					testAccCheckAWSlbARNs(&pre, &mid),
 				),
@@ -368,6 +375,7 @@ func TestAccAWSLB_applicationLoadBalancer_updateDeletionProtection(t *testing.T)
 				Config: testAccAWSLBConfig_enableDeletionProtection(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &post),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "deletion_protection.enabled", "false"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
 					testAccCheckAWSlbARNs(&mid, &post),
 				),
@@ -511,6 +519,9 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 				Config: testAccAWSLBConfig_basic(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.enabled", "false"),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.bucket", ""),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.prefix", ""),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
@@ -529,6 +540,9 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 				Config: testAccAWSLBConfig_accessLogs(true, lbName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.enabled", "true"),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.bucket", bucketName),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.prefix", "testAccAWSALBConfig_accessLogs"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
@@ -551,6 +565,9 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 				Config: testAccAWSLBConfig_accessLogs(false, lbName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.enabled", "false"),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.bucket", bucketName),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.prefix", "testAccAWSALBConfig_accessLogs"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
@@ -634,6 +651,38 @@ func testAccCheckAWSLBExists(n string, res *elbv2.LoadBalancer) resource.TestChe
 
 		*res = *describe.LoadBalancers[0]
 		return nil
+	}
+}
+
+func testAccCheckAWSLBAttribute(n, key, value string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return errors.New("No LB ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+		attributesResp, err := conn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
+			LoadBalancerArn: aws.String(rs.Primary.ID),
+		})
+		if err != nil {
+			return errwrap.Wrapf("Error retrieving LB Attributes: {{err}}", err)
+		}
+
+		for _, attr := range attributesResp.Attributes {
+			if *attr.Key == key {
+				if *attr.Value == value {
+					return nil
+				} else {
+					return fmt.Errorf("LB attribute %s expected: %q actual: %q", key, value, *attr.Value)
+				}
+			}
+		}
+		return fmt.Errorf("LB attribute %s does not exist on LB: %s", key, rs.Primary.ID)
 	}
 }
 

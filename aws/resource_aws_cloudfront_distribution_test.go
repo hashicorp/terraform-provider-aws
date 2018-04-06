@@ -191,6 +191,34 @@ func TestAccAWSCloudFrontDistribution_multiOrigin(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudFrontDistribution_Origin_EmptyDomainName(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSCloudFrontDistributionConfig_Origin_EmptyDomainName,
+				ExpectError: regexp.MustCompile(`domain_name must not be empty`),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudFrontDistribution_Origin_EmptyOriginID(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSCloudFrontDistributionConfig_Origin_EmptyOriginID,
+				ExpectError: regexp.MustCompile(`origin_id must not be empty`),
+			},
+		},
+	})
+}
+
 // TestAccAWSCloudFrontDistribution_noOptionalItemsConfig runs an
 // aws_cloudfront_distribution acceptance test with no optional items set.
 //
@@ -822,6 +850,84 @@ resource "aws_cloudfront_distribution" "no_optional_items" {
 	%s
 }
 `, rand.New(rand.NewSource(time.Now().UnixNano())).Int(), testAccAWSCloudFrontDistributionRetainConfig())
+
+var testAccAWSCloudFrontDistributionConfig_Origin_EmptyDomainName = fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "Origin_EmptyDomainName" {
+  origin {
+    domain_name = ""
+    origin_id   = "myCustomOrigin"
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = [ "SSLv3", "TLSv1" ]
+    }
+  }
+  enabled = true
+  default_cache_behavior {
+    allowed_methods  = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
+    cached_methods   = [ "GET", "HEAD" ]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = false
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "all"
+      }
+    }
+    viewer_protocol_policy = "allow-all"
+  }
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = [ "US", "CA", "GB", "DE" ]
+    }
+  }
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+  %s
+}
+`, testAccAWSCloudFrontDistributionRetainConfig())
+
+var testAccAWSCloudFrontDistributionConfig_Origin_EmptyOriginID = fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "Origin_EmptyOriginID" {
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = ""
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = [ "SSLv3", "TLSv1" ]
+    }
+  }
+  enabled = true
+  default_cache_behavior {
+    allowed_methods  = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
+    cached_methods   = [ "GET", "HEAD" ]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = false
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "all"
+      }
+    }
+    viewer_protocol_policy = "allow-all"
+  }
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = [ "US", "CA", "GB", "DE" ]
+    }
+  }
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+  %s
+}
+`, testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionHTTP11Config = fmt.Sprintf(`
 variable rand_id {
