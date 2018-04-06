@@ -103,10 +103,12 @@ func resourceAwsLb() *schema.Resource {
 						"subnet_id": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"allocation_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
