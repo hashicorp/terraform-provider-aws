@@ -78,6 +78,49 @@ func TestAccAWSCodeBuildProject_vpc(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildProject_cache(t *testing.T) {
+	name := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_cache(name, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
+					resource.TestCheckNoResourceAttr("aws_codebuild_project.foo", "cache"),
+				),
+			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_cache(name, testAccAWSCodeBuildProjectConfig_cacheConfig("S3", "some-bucket")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.0.type", "S3"),
+					resource.TestCheckResourceAttrSet("aws_codebuild_project.foo", "cache.0.location"),
+				),
+			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_cache(name, testAccAWSCodeBuildProjectConfig_cacheConfig("S3", "some-new-bucket")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.0.type", "S3"),
+					resource.TestCheckResourceAttrSet("aws_codebuild_project.foo", "cache.0.location"),
+				),
+			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_cache(name, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.0.type", "S3"),
+					resource.TestCheckResourceAttrSet("aws_codebuild_project.foo", "cache.0.location"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeBuildProject_sourceAuth(t *testing.T) {
 	authResource := "FAKERESOURCE1"
 	authType := "OAUTH"
@@ -233,11 +276,6 @@ func testAccCheckAWSCodeBuildProjectDestroy(s *terraform.State) error {
 
 func testAccAWSCodeBuildProjectConfig_basic(rName, vpcConfig, vpcResources string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "foo" {
-  bucket = "tf-test-codebuild-%s"
-  acl    = "private"
-}
-
 resource "aws_iam_role" "codebuild_role" {
   name = "codebuild-role-%s"
   assume_role_policy = <<EOF
@@ -309,11 +347,6 @@ resource "aws_codebuild_project" "foo" {
     type = "NO_ARTIFACTS"
   }
 
-  cache {
-    type     = "S3"
-    location = "${aws_s3_bucket.foo.bucket}"
-  }
-
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
@@ -336,16 +369,11 @@ resource "aws_codebuild_project" "foo" {
 	%s
 }
 %s
-`, rName, rName, rName, rName, rName, vpcConfig, vpcResources)
+`, rName, rName, rName, rName, vpcConfig, vpcResources)
 }
 
 func testAccAWSCodeBuildProjectConfig_basicUpdated(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "foo" {
-  bucket = "tf-test-codebuild-%s"
-  acl    = "private"
-}
-
 resource "aws_iam_role" "codebuild_role" {
   name = "codebuild-role-%s"
   assume_role_policy = <<EOF
@@ -404,11 +432,6 @@ resource "aws_codebuild_project" "foo" {
     type = "NO_ARTIFACTS"
   }
 
-  cache {
-    type     = "S3"
-    location = "${aws_s3_bucket.foo.bucket}"
-  }
-
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
@@ -429,7 +452,105 @@ resource "aws_codebuild_project" "foo" {
     "Environment" = "Test"
   }
 }
-`, rName, rName, rName, rName, rName)
+`, rName, rName, rName, rName)
+}
+
+func testAccAWSCodeBuildProjectConfig_cache(rName, cacheConfig string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "codebuild_role" {
+  name = "codebuild-role-%s"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "codebuild.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "codebuild_policy" {
+  name        = "codebuild-policy-%s"
+  path        = "/service-role/"
+  description = "Policy used in trust relationship with CodeBuild"
+  policy      = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Resource": [
+        "*"
+      ],
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInterface",
+        "ec2:DescribeDhcpOptions",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DeleteNetworkInterface",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeVpcs"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_policy_attachment" "codebuild_policy_attachment" {
+  name       = "codebuild-policy-attachment-%s"
+  policy_arn = "${aws_iam_policy.codebuild_policy.arn}"
+  roles      = ["${aws_iam_role.codebuild_role.id}"]
+}
+
+resource "aws_codebuild_project" "foo" {
+  name          = "test-project-%s"
+  description   = "test_codebuild_project"
+  build_timeout = "5"
+  service_role  = "${aws_iam_role.codebuild_role.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  %s
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+
+    environment_variable = {
+      "name"  = "SOME_KEY"
+      "value" = "SOME_VALUE"
+    }
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+
+  tags {
+    "Environment" = "Test"
+  }
+}
+`, rName, rName, rName, rName, cacheConfig)
 }
 
 func testAccAWSCodeBuildProjectConfig_default_timeout(rName string) string {
@@ -644,4 +765,13 @@ func testAccAWSCodeBuildProjectConfig_vpcConfig(subnets string) string {
     ]
   }
 `, subnets)
+}
+
+func testAccAWSCodeBuildProjectConfig_cacheConfig(cacheType, cacheLocation string) string {
+	return fmt.Sprintf(`
+  cache {
+    type     = "%s"
+    location = "%s"
+  }
+`, cacheType, cacheLocation)
 }
