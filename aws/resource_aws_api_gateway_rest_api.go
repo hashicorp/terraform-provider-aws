@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsApiGatewayRestApi() *schema.Resource {
@@ -61,10 +62,13 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 			},
 
 			"endpoint_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "EDGE",
-				ValidateFunc: validateAwsApiGatewayEndpointType,
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  apigateway.EndpointTypeEdge,
+				ValidateFunc: validation.StringInSlice([]string{
+					apigateway.EndpointTypeEdge,
+					apigateway.EndpointTypeRegional,
+				}, false),
 			},
 		},
 	}
@@ -293,18 +297,4 @@ func resourceAwsApiGatewayRestApiDelete(d *schema.ResourceData, meta interface{}
 
 		return resource.NonRetryableError(err)
 	})
-}
-
-func validateAwsApiGatewayEndpointType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		apigateway.EndpointTypeRegional: true,
-		apigateway.EndpointTypeEdge:     true,
-	}
-
-	if !types[value] {
-		errors = append(errors, fmt.Errorf("Endpoint type %s is invalid. Valid types are 'EDGE' and 'REGIONAL'", value))
-	}
-
-	return
 }
