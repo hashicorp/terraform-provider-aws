@@ -36,7 +36,7 @@ func resourceAwsSesDomainIdentityVerification() *schema.Resource {
 	}
 }
 
-func getAttributes(conn *ses.SES, domainName string) (*ses.IdentityVerificationAttributes, error) {
+func getAwsSesIdentityVerificationAttributes(conn *ses.SES, domainName string) (*ses.IdentityVerificationAttributes, error) {
 	input := &ses.GetIdentityVerificationAttributesInput{
 		Identities: []*string{
 			aws.String(domainName),
@@ -55,9 +55,9 @@ func resourceAwsSesDomainIdentityVerificationCreate(d *schema.ResourceData, meta
 	conn := meta.(*AWSClient).sesConn
 	domainName := strings.TrimSuffix(d.Get("domain").(string), ".")
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		att, err := getAttributes(conn, domainName)
+		att, err := getAwsSesIdentityVerificationAttributes(conn, domainName)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error getting identity validation attributes: %s", err))
+			return resource.NonRetryableError(fmt.Errorf("Error getting identity verification attributes: %s", err))
 		}
 
 		if att == nil {
@@ -80,7 +80,7 @@ func resourceAwsSesDomainIdentityVerificationRead(d *schema.ResourceData, meta i
 	domainName := d.Id()
 	d.Set("domain", domainName)
 
-	att, err := getAttributes(conn, domainName)
+	att, err := getAwsSesIdentityVerificationAttributes(conn, domainName)
 	if err != nil {
 		log.Printf("[WARN] Error fetching identity verification attrubtes for %s: %s", d.Id(), err)
 		return err
@@ -93,7 +93,7 @@ func resourceAwsSesDomainIdentityVerificationRead(d *schema.ResourceData, meta i
 	}
 
 	if *att.VerificationStatus != "Success" {
-		log.Printf("[WARN] Expected domain verification Success, but was %s, tainting validation", *att.VerificationStatus)
+		log.Printf("[WARN] Expected domain verification Success, but was %s, tainting verification", *att.VerificationStatus)
 		d.SetId("")
 		return nil
 	}
