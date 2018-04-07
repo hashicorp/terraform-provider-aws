@@ -4,7 +4,7 @@ page_title: "AWS: aws_db_event_subscription"
 sidebar_current: "docs-aws-resource-db-event-subscription"
 ---
 
-# aws\_db\_event\_subscription
+# aws_db_event_subscription
 
 Provides a DB event subscription resource.
 
@@ -15,7 +15,7 @@ resource "aws_db_instance" "default" {
   allocated_storage    = 10
   engine               = "mysql"
   engine_version       = "5.6.17"
-  instance_class       = "db.t1.micro"
+  instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
   password             = "bar"

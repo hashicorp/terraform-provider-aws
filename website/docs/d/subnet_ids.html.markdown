@@ -6,7 +6,7 @@ description: |-
     Provides a list of subnet Ids for a VPC
 ---
 
-# aws\_subnet\_ids
+# Data Source: aws_subnet_ids
 
 `aws_subnet_ids` provides a list of ids for a vpc_id
 
@@ -60,4 +60,4 @@ resource "aws_instance" "app" {
 
 ## Attributes Reference
 
-* `ids` - Is a list of all the subnet ids found. If none found. This data source will fail out.
+* `ids` - A list of all the subnet ids found. This data source will fail if none are found.

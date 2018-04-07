@@ -6,9 +6,11 @@ description: |-
   Provides an Elastic IP resource.
 ---
 
-# aws\_eip
+# aws_eip
 
 Provides an Elastic IP resource.
+
+~> **Note:** EIP may require IGW to exist prior to association. Use `depends_on` to set an explicit dependency on the IGW.
 
 ## Example Usage
 
@@ -76,6 +78,7 @@ resource "aws_eip" "bar" {
 
   instance                  = "${aws_instance.foo.id}"
   associate_with_private_ip = "10.0.0.12"
+  depends_on                = ["aws_internet_gateway.gw"]
 }
 ```
 
@@ -89,6 +92,7 @@ The following arguments are supported:
 * `associate_with_private_ip` - (Optional) A user specified primary or secondary private IP address to
   associate with the Elastic IP address. If no private IP address is specified,
   the Elastic IP address is associated with the primary private IP address.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ~> **NOTE:** You can specify either the `instance` ID or the `network_interface` ID,
 but not both. Including both will **not** return an error from the AWS API, but will
@@ -97,7 +101,7 @@ more information.
 
 ## Attributes Reference
 
-The following attributes are exported:
+The following additional attributes are exported:
 
 * `id` - Contains the EIP allocation ID.
 * `private_ip` - Contains the private IP address (if in VPC).
@@ -107,6 +111,12 @@ The following attributes are exported:
 * `instance` - Contains the ID of the attached instance.
 * `network_interface` - Contains the ID of the attached network interface.
 
+## Timeouts
+`aws_eip` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `read` - (Default `15 minutes`) How long to wait querying for information about EIPs.
+- `update` - (Default `5 minutes`) How long to wait for an EIP to be updated.
+- `delete` - (Default `3 minutes`) How long to wait for an EIP to be deleted.
 
 ## Import
 

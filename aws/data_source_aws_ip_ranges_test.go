@@ -89,7 +89,7 @@ func testAccAWSIPRanges(n string) resource.TestCheckFunc {
 
 			if regionMember.MatchString(k) {
 
-				if !(v == "eu-west-1" || v == "EU-central-1") {
+				if !(v == "eu-west-1" || v == "eu-central-1") {
 					return fmt.Errorf("unexpected region %s", v)
 				}
 
@@ -99,7 +99,7 @@ func testAccAWSIPRanges(n string) resource.TestCheckFunc {
 
 			if serviceMember.MatchString(k) {
 
-				if v != "EC2" {
+				if v != "ec2" {
 					return fmt.Errorf("unexpected service %s", v)
 				}
 
@@ -122,7 +122,7 @@ func testAccAWSIPRanges(n string) resource.TestCheckFunc {
 
 const testAccAWSIPRangesConfig = `
 data "aws_ip_ranges" "some" {
-  regions = [ "eu-west-1", "EU-central-1" ]
-  services = [ "EC2" ]
+  regions = [ "eu-west-1", "eu-central-1" ]
+  services = [ "ec2" ]
 }
 `

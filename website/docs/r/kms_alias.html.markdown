@@ -6,7 +6,7 @@ description: |-
   Provides a display name for a customer master key.
 ---
 
-# aws\_kms\_alias
+# aws_kms_alias
 
 Provides an alias for a KMS customer master key. AWS Console enforces 1-to-1 mapping between aliases & keys,
 but API (hence Terraform too) allows you to create as many aliases as
@@ -35,9 +35,10 @@ The name must start with the word "alias" followed by a forward slash (alias/). 
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to the arguments, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the key alias.
+* `target_key_arn` - The Amazon Resource Name (ARN) of the target key identifier.
 
 ## Import
 

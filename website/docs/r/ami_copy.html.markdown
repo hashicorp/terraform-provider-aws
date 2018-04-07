@@ -6,7 +6,7 @@ description: |-
   Duplicates an existing Amazon Machine Image (AMI)
 ---
 
-# aws\_ami\_copy
+# aws_ami_copy
 
 The "AMI copy" resource allows duplication of an Amazon Machine Image (AMI),
 including cross-region copies.
@@ -48,6 +48,14 @@ The following arguments are supported:
 * `kms_key_id` - (Optional) The full ARN of the KMS Key to use when encrypting the snapshots of an image during a copy operation. If not specified, then the default AWS KMS Key will be used
 
 This resource also exposes the full set of arguments from the [`aws_ami`](ami.html) resource.
+
+### Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+
+* `create` - (Defaults to 40 mins) Used when creating the AMI
+* `update` - (Defaults to 40 mins) Used when updating the AMI
+* `delete` - (Defaults to 90 mins) Used when deregistering the AMI
 
 ## Attributes Reference
 

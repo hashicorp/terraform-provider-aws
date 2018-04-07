@@ -6,7 +6,7 @@ description: |-
   Provides a Spot Fleet Request resource.
 ---
 
-# aws\_spot\_fleet\_request
+# aws_spot_fleet_request
 
 Provides an EC2 Spot Fleet Request resource. This allows a fleet of Spot
 instances to be requested on the Spot market.
@@ -41,6 +41,10 @@ resource "aws_spot_fleet_request" "cheap_compute" {
     root_block_device {
       volume_size = "300"
       volume_type = "gp2"
+    }
+
+    tags {
+      Name = "spot-fleet-example"
     }
   }
 }
@@ -90,8 +94,7 @@ across different markets and instance types.
 
     **Note:** This takes in similar but not
     identical inputs as [`aws_instance`](instance.html).  There are limitations on
-    what you can specify (tags, for example, are not supported). See the
-    list of officially supported inputs in the
+    what you can specify. See the list of officially supported inputs in the
     [reference documentation](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetLaunchSpecification.html). Any normal [`aws_instance`](instance.html) parameter that corresponds to those inputs may be used.
 
 * `spot_price` - (Required) The bid price per unit hour.
@@ -115,6 +118,9 @@ lowestPrice.
 * `valid_until` - The end date and time of the request, in UTC ISO8601 format
   (for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance
 requests are placed or enabled to fulfill the request. Defaults to 24 hours.
+* `load_balancers` (Optional) A list of elastic load balancer names to add to the Spot fleet.
+* `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with
+Application Load Balancing.
 
 ### Timeouts
 

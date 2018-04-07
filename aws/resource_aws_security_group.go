@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/hashcode"
@@ -27,6 +28,14 @@ func resourceAwsSecurityGroup() *schema.Resource {
 			State: resourceAwsSecurityGroupImportState,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
+
+		SchemaVersion: 1,
+		MigrateState:  resourceAwsSecurityGroupMigrateState,
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:          schema.TypeString,
@@ -34,43 +43,22 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if len(value) > 255 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 255 characters", k))
-					}
-					return
-				},
+				ValidateFunc:  validateMaxLength(255),
 			},
 
 			"name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if len(value) > 100 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 100 characters, name is limited to 255", k))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateMaxLength(100),
 			},
 
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "Managed by Terraform",
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if len(value) > 255 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 255 characters", k))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "Managed by Terraform",
+				ValidateFunc: validateMaxLength(255),
 			},
 
 			"vpc_id": {
@@ -212,12 +200,23 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Set: resourceAwsSecurityGroupRuleHash,
 			},
 
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
 			"tags": tagsSchema(),
+
+			"revoke_rules_on_delete": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -258,17 +257,7 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[INFO] Security Group ID: %s", d.Id())
 
 	// Wait for the security group to truly exist
-	log.Printf(
-		"[DEBUG] Waiting for Security Group (%s) to exist",
-		d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{""},
-		Target:  []string{"exists"},
-		Refresh: SGStateRefreshFunc(conn, d.Id()),
-		Timeout: 10 * time.Minute,
-	}
-
-	resp, err := stateConf.WaitForState()
+	resp, err := waitForSgToExist(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf(
 			"Error waiting for Security Group (%s) to become available: %s",
@@ -343,11 +332,20 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	sgRaw, _, err := SGStateRefreshFunc(conn, d.Id())()
+	var sgRaw interface{}
+	var err error
+	if d.IsNewResource() {
+		sgRaw, err = waitForSgToExist(conn, d.Id(), d.Timeout(schema.TimeoutRead))
+	} else {
+		sgRaw, _, err = SGStateRefreshFunc(conn, d.Id())()
+	}
+
 	if err != nil {
 		return err
 	}
+
 	if sgRaw == nil {
+		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -365,6 +363,15 @@ func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) erro
 	ingressRules := matchRules("ingress", localIngressRules, remoteIngressRules)
 	egressRules := matchRules("egress", localEgressRules, remoteEgressRules)
 
+	sgArn := arn.ARN{
+		AccountID: aws.StringValue(sg.OwnerId),
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(sg.GroupId)),
+		Service:   ec2.ServiceName,
+	}
+
+	d.Set("arn", sgArn.String())
 	d.Set("description", sg.Description)
 	d.Set("name", sg.GroupName)
 	d.Set("vpc_id", sg.VpcId)
@@ -385,11 +392,19 @@ func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	sgRaw, _, err := SGStateRefreshFunc(conn, d.Id())()
+	var sgRaw interface{}
+	var err error
+	if d.IsNewResource() {
+		sgRaw, err = waitForSgToExist(conn, d.Id(), d.Timeout(schema.TimeoutRead))
+	} else {
+		sgRaw, _, err = SGStateRefreshFunc(conn, d.Id())()
+	}
+
 	if err != nil {
 		return err
 	}
 	if sgRaw == nil {
+		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -427,7 +442,14 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Failed to delete Lambda ENIs: %s", err)
 	}
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	// conditionally revoke rules first before attempting to delete the group
+	if v := d.Get("revoke_rules_on_delete").(bool); v {
+		if err := forceRevokeSecurityGroupRules(conn, d); err != nil {
+			return err
+		}
+	}
+
+	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
 			GroupId: aws.String(d.Id()),
 		})
@@ -451,6 +473,52 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 
 		return nil
 	})
+}
+
+// Revoke all ingress/egress rules that a Security Group has
+func forceRevokeSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData) error {
+	sgRaw, _, err := SGStateRefreshFunc(conn, d.Id())()
+	if err != nil {
+		return err
+	}
+	if sgRaw == nil {
+		return nil
+	}
+
+	group := sgRaw.(*ec2.SecurityGroup)
+	if len(group.IpPermissions) > 0 {
+		req := &ec2.RevokeSecurityGroupIngressInput{
+			GroupId:       group.GroupId,
+			IpPermissions: group.IpPermissions,
+		}
+		if group.VpcId == nil || *group.VpcId == "" {
+			req.GroupId = nil
+			req.GroupName = group.GroupName
+		}
+		_, err = conn.RevokeSecurityGroupIngress(req)
+
+		if err != nil {
+			return fmt.Errorf(
+				"Error revoking security group %s rules: %s",
+				*group.GroupId, err)
+		}
+	}
+
+	if len(group.IpPermissionsEgress) > 0 {
+		req := &ec2.RevokeSecurityGroupEgressInput{
+			GroupId:       group.GroupId,
+			IpPermissions: group.IpPermissionsEgress,
+		}
+		_, err = conn.RevokeSecurityGroupEgress(req)
+
+		if err != nil {
+			return fmt.Errorf(
+				"Error revoking security group %s rules: %s",
+				*group.GroupId, err)
+		}
+	}
+
+	return nil
 }
 
 func resourceAwsSecurityGroupRuleHash(v interface{}) int {
@@ -777,6 +845,18 @@ func SGStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 		group := resp.SecurityGroups[0]
 		return group, "exists", nil
 	}
+}
+
+func waitForSgToExist(conn *ec2.EC2, id string, timeout time.Duration) (interface{}, error) {
+	log.Printf("[DEBUG] Waiting for Security Group (%s) to exist", id)
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{""},
+		Target:  []string{"exists"},
+		Refresh: SGStateRefreshFunc(conn, id),
+		Timeout: timeout,
+	}
+
+	return stateConf.WaitForState()
 }
 
 // matchRules receives the group id, type of rules, and the local / remote maps
@@ -1219,7 +1299,7 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
 				Pending: []string{"true"},
 				Target:  []string{"false"},
 				Refresh: networkInterfaceAttachedRefreshFunc(conn, *eni.NetworkInterfaceId),
-				Timeout: 10 * time.Minute,
+				Timeout: d.Timeout(schema.TimeoutDelete),
 			}
 			if _, err := stateConf.WaitForState(); err != nil {
 				return fmt.Errorf(

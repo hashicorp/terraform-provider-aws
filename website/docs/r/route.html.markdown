@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a routing entry in a VPC routing table.
 ---
 
-# aws\_route
+# aws_route
 
 Provides a resource to create a routing table entry (a route) in a VPC routing table.
 
@@ -81,3 +81,11 @@ will be exported as an attribute once the resource is created.
 * `nat_gateway_id` - An ID of a VPC NAT gateway.
 * `instance_id` - An ID of a NAT instance.
 * `network_interface_id` - An ID of a network interface.
+
+## Timeouts
+
+`aws_route` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `2 minutes`) Used for route creation
+- `delete` - (Default `5 minutes`) Used for route deletion

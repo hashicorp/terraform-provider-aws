@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsApiGatewayApiKey() *schema.Resource {
@@ -76,7 +77,7 @@ func resourceAwsApiGatewayApiKey() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				Sensitive:    true,
-				ValidateFunc: validateApiGatewayApiKeyValue,
+				ValidateFunc: validation.StringLenBetween(30, 128),
 			},
 		},
 	}
@@ -112,6 +113,7 @@ func resourceAwsApiGatewayApiKeyRead(d *schema.ResourceData, meta interface{}) e
 	})
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NotFoundException" {
+			log.Printf("[WARN] API Gateway API Key (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}

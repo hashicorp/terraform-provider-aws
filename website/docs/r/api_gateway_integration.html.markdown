@@ -6,7 +6,7 @@ description: |-
   Provides an HTTP Method Integration for an API Gateway Integration.
 ---
 
-# aws\_api\_gateway\_integration
+# aws_api_gateway_integration
 
 Provides an HTTP Method Integration for an API Gateway Integration.
 
@@ -81,10 +81,10 @@ resource "aws_api_gateway_method" "method" {
 
 resource "aws_api_gateway_integration" "integration" {
   rest_api_id             = "${aws_api_gateway_rest_api.api.id}"
-  resource_id             = "${aws_api_gateway_rest_api.api.root_resource_id}"
+  resource_id             = "${aws_api_gateway_resource.resource.id}"
   http_method             = "${aws_api_gateway_method.method.http_method}"
   integration_http_method = "POST"
-  type                    = "AWS"
+  type                    = "AWS_PROXY"
   uri                     = "arn:aws:apigateway:${var.myregion}:lambda:path/2015-03-31/functions/${aws_lambda_function.lambda.arn}/invocations"
 }
 
@@ -143,7 +143,7 @@ The following arguments are supported:
   **Required** if `type` is `AWS`, `AWS_PROXY`, `HTTP` or `HTTP_PROXY`.
   Not all methods are compatible with all `AWS` integrations.
   e.g. Lambda function [can only be invoked](https://github.com/awslabs/aws-apigateway-importer/issues/9#issuecomment-129651005) via `POST`.
-* `type` - (Required) The integration input's type (HTTP, MOCK, AWS, AWS_PROXY, HTTP_PROXY)
+* `type` - (Required) The integration input's [type](https://docs.aws.amazon.com/apigateway/api-reference/resource/integration/). Valid values are `HTTP` (for HTTP backends), `MOCK` (not calling any real backend), `AWS` (for AWS services), `AWS_PROXY` (for Lambda proxy integration) and `HTTP_PROXY` (for HTTP proxy integration).
 * `uri` - (Optional) The input's URI (HTTP, AWS). **Required** if `type` is `HTTP` or `AWS`.
   For HTTP integrations, the URI must be a fully formed, encoded HTTP(S) URL according to the RFC-3986 specification . For AWS integrations, the URI should be of the form `arn:aws:apigateway:{region}:{subdomain.service|service}:{path|action}/{service_api}`. `region`, `subdomain` and `service` are used to determine the right endpoint.
   e.g. `arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:012345678901:function:my-func/invocations`
@@ -153,6 +153,6 @@ The following arguments are supported:
   For example: `request_parameters = { "integration.request.header.X-Some-Other-Header" = "method.request.header.X-Some-Header" }`
 * `passthrough_behavior` - (Optional) The integration passthrough behavior (`WHEN_NO_MATCH`, `WHEN_NO_TEMPLATES`, `NEVER`).  **Required** if `request_templates` is used.
 * `cache_key_parameters` - (Optional) A list of cache key parameters for the integration.
-* `cache_key_namespace` - (Optional) The integration's cache namespace.
+* `cache_namespace` - (Optional) The integration's cache namespace.
 * `request_parameters_in_json` - **Deprecated**, use `request_parameters` instead.
 * `content_handling` - (Optional) Specifies how to handle request payload content type conversions. Supported values are `CONVERT_TO_BINARY` and `CONVERT_TO_TEXT`. If this property is not defined, the request payload will be passed through from the method request to integration request without modification, provided that the passthroughBehaviors is configured to support payload pass-through.

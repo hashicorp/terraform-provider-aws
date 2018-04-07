@@ -4,7 +4,7 @@ page_title: "AWS: aws_redshift_parameter_group"
 sidebar_current: "docs-aws-resource-redshift-parameter-group"
 ---
 
-# aws\_redshift\_parameter\_group
+# aws_redshift_parameter_group
 
 Provides a Redshift Cluster parameter group resource.
 

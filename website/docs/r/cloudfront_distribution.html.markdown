@@ -6,7 +6,7 @@ description: |-
   Provides a CloudFront web distribution resource.
 ---
 
-# aws\_cloudfront\_distribution
+# aws_cloudfront_distribution
 
 Creates an Amazon CloudFront web distribution.
 
@@ -167,9 +167,12 @@ of several sub-resources - these resources are laid out below.
     compress content for web requests that include `Accept-Encoding: gzip` in
     the request header (default: `false`).
 
-  * `default_ttl` (Required) - The default amount of time (in seconds) that an
+  * `default_ttl` (Optional) - The default amount of time (in seconds) that an
     object is in a CloudFront cache before CloudFront forwards another request
-    in the absence of an `Cache-Control max-age` or `Expires` header.
+    in the absence of an `Cache-Control max-age` or `Expires` header. Defaults to
+    1 day.
+
+  * `field_level_encryption_id` (Optional) - Field level encryption configuration ID
 
   * `forwarded_values` (Required) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront
     handles query strings, cookies and headers (maximum one).
@@ -177,15 +180,15 @@ of several sub-resources - these resources are laid out below.
   * `lambda_function_association` (Optional) - A config block that triggers a lambda function with
   specific actions. Defined below, maximum 4.
 
-  * `max_ttl` (Required) - The maximum amount of time (in seconds) that an
+  * `max_ttl` (Optional) - The maximum amount of time (in seconds) that an
     object is in a CloudFront cache before CloudFront forwards another request
     to your origin to determine whether the object has been updated. Only
     effective in the presence of `Cache-Control max-age`, `Cache-Control
-    s-maxage`, and `Expires` headers.
+    s-maxage`, and `Expires` headers. Defaults to 365 days.
 
-  * `min_ttl` (Required) - The minimum amount of time that you want objects to
+  * `min_ttl` (Optional) - The minimum amount of time that you want objects to
     stay in CloudFront caches before CloudFront queries your origin to see
-    whether the object has been updated.
+    whether the object has been updated. Defaults to 0 seconds.
 
   * `path_pattern` (Required) - The pattern (for example, `images/*.jpg)` that
     specifies which requests you want this cache behavior to apply to.
@@ -355,10 +358,14 @@ The arguments of `geo_restriction` are:
     this, `acm_certificate_arn`, or `cloudfront_default_certificate`.
 
   * `minimum_protocol_version` - The minimum version of the SSL protocol that
-    you want CloudFront to use for HTTPS connections. One of `SSLv3` or `TLSv1`.
-    Default: `SSLv3`. **NOTE**: If you are using a custom certificate (specified
-    with `acm_certificate_arn` or `iam_certificate_id`), and have specified
-    `sni-only` in `ssl_support_method`, `TLSv1` must be specified.
+    you want CloudFront to use for HTTPS connections. One of `SSLv3`, `TLSv1`,
+    `TLSv1_2016`, `TLSv1.1_2016` or `TLSv1.2_2018`. Default: `TLSv1`. **NOTE**:
+    If you are using a custom certificate (specified with `acm_certificate_arn`
+    or `iam_certificate_id`), and have specified `sni-only` in
+    `ssl_support_method`, `TLSv1` or later must be specified. If you have
+    specified `vip` in `ssl_support_method`, only `SSLv3` or `TLSv1` can be
+    specified. If you have specified `cloudfront_default_certificate`, `TLSv1`
+    must be specified.
 
   * `ssl_support_method`: Specifies how you want CloudFront to serve HTTPS
     requests. One of `vip` or `sni-only`. Required if you specify

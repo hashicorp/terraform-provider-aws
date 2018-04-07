@@ -7,7 +7,7 @@
 //
 // You can use ACM to manage SSL/TLS certificates for your AWS-based websites
 // and applications. For general information about using ACM, see the AWS Certificate
-// Manager User Guide (http://docs.aws.amazon.com/acm/latest/userguide/).
+// Manager User Guide (http://docs.aws.amazon.com/http:/docs.aws.amazon.comacm/latest/userguide/).
 //
 // See https://docs.aws.amazon.com/goto/WebAPI/acm-2015-12-08 for more information on this service.
 //
@@ -16,7 +16,7 @@
 //
 // Using the Client
 //
-// To AWS Certificate Manager with the SDK use the New function to create
+// To contact AWS Certificate Manager with the SDK use the New function to create
 // a new service client. With that client you can make API requests to the service.
 // These clients are safe to use concurrently.
 //

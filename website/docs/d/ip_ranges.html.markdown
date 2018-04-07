@@ -6,7 +6,7 @@ description: |-
   Get information on AWS IP ranges.
 ---
 
-# aws\_ip_ranges
+# Data Source: aws_ip_ranges
 
 Use this data source to get the [IP ranges][1] of various AWS products and services.
 
@@ -42,7 +42,7 @@ omitted). Valid items are `global` (for `cloudfront`) as well as all AWS regions
 (e.g. `eu-central-1`)
 
 * `services` - (Required) Filter IP ranges by services. Valid items are `amazon`
-(for amazon.com), `cloudfront`, `ec2`, `route53`, `route53_healthchecks` and `S3`.
+(for amazon.com), `cloudfront`, `codebuild`, `ec2`, `route53`, `route53_healthchecks` and `S3`.
 
 ~> **NOTE:** If the specified combination of regions and services does not yield any
 CIDR blocks, Terraform will fail.

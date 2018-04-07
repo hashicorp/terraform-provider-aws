@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks Java application layer resource.
 ---
 
-# aws\_opsworks\_java\_app\_layer
+# aws_opsworks_java_app_layer
 
 Provides an OpsWorks Java application layer resource.
 
