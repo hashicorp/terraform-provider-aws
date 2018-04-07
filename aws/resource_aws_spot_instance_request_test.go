@@ -32,6 +32,8 @@ func TestAccAWSSpotInstanceRequest_basic(t *testing.T) {
 						"aws_spot_instance_request.foo", "spot_bid_status", "fulfilled"),
 					resource.TestCheckResourceAttr(
 						"aws_spot_instance_request.foo", "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(
+						"aws_spot_instance_request.foo", "instance_interruption_behaviour", "terminate"),
 				),
 			},
 		},
@@ -209,8 +211,9 @@ func testAccCheckAWSSpotInstanceRequestDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		if *s.State == "canceled" {
+		if *s.State == "canceled" || *s.State == "closed" {
 			// Requests stick around for a while, so we make sure it's cancelled
+			// or closed.
 			return nil
 		}
 
@@ -339,9 +342,9 @@ func testAccCheckAWSSpotInstanceRequest_InstanceAttributes(
 func testAccCheckAWSSpotInstanceRequest_NetworkInterfaceAttributes(
 	sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
-		if sir.LaunchSpecification.NetworkInterfaces == nil || len(sir.LaunchSpecification.NetworkInterfaces) != 1 {
-			return fmt.Errorf("Error with Spot Instance Network Interface count")
+		nis := sir.LaunchSpecification.NetworkInterfaces
+		if nis == nil || len(nis) != 1 {
+			return fmt.Errorf("Expected exactly 1 network interface, found %d", len(nis))
 		}
 
 		return nil
@@ -351,8 +354,15 @@ func testAccCheckAWSSpotInstanceRequest_NetworkInterfaceAttributes(
 func testAccCheckAWSSpotInstanceRequestAttributesVPC(
 	sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if sir.LaunchSpecification.SubnetId == nil {
-			return fmt.Errorf("SubnetID was not passed, but should have been for this instance to belong to a VPC")
+		nis := sir.LaunchSpecification.NetworkInterfaces
+		if nis == nil || len(nis) != 1 {
+			return fmt.Errorf("Expected exactly 1 network interface, found %d", len(nis))
+		}
+
+		ni := nis[0]
+
+		if ni.SubnetId == nil {
+			return fmt.Errorf("Expected SubnetId not be non-empty for %s as the instance belongs to a VPC", *sir.InstanceId)
 		}
 		return nil
 	}
@@ -444,11 +454,17 @@ func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "foo_VPC" {
 		cidr_block = "10.1.0.0/16"
+		tags {
+			Name = "terraform-testacc-spot-instance-request-vpc"
+		}
 	}
 
 	resource "aws_subnet" "foo_VPC" {
 		cidr_block = "10.1.1.0/24"
 		vpc_id = "${aws_vpc.foo_VPC.id}"
+		tags {
+			Name = "tf-acc-spot-instance-request-vpc"
+		}
 	}
 
 	resource "aws_key_pair" "debugging" {
@@ -495,7 +511,7 @@ func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int)
 		enable_dns_hostnames = true
 
 		tags {
-			Name = "tf_test_vpc"
+			Name = "terraform-testacc-spot-instance-request-subnet-and-sg-public-ip"
 		}
 	}
 
@@ -505,7 +521,7 @@ func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int)
 		map_public_ip_on_launch = true
 
 		tags {
-			Name = "tf_test_subnet-%d"
+			Name = "tf-acc-spot-instance-request-subnet-and-sg-public-ip"
 		}
 	}
 
@@ -517,5 +533,5 @@ func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int)
 		tags {
 			Name = "tf_test_sg_ssh-%d"
 		}
-	}`, rInt, rInt, rInt)
+	}`, rInt, rInt)
 }

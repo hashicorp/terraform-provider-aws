@@ -6,7 +6,7 @@ description: |-
   Provides a Route53 Hosted Zone resource.
 ---
 
-# aws\_route53\_zone
+# aws_route53_zone
 
 Provides a Route53 Hosted Zone resource.
 

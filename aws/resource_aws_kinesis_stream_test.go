@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"regexp"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -28,6 +30,98 @@ func TestAccAWSKinesisStream_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
 					testAccCheckAWSKinesisStreamAttributes(&stream),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
+	var stream kinesis.StreamDescription
+
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisStreamConfigConcurrent(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.0", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.1", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.2", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.3", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.4", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.5", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.6", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.7", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.8", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.9", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.10", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.11", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.12", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.13", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.14", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.15", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.16", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.17", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.18", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.19", &stream),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisStream_encryptionWithoutKmsKeyThrowsError(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccKinesisStreamConfigWithEncryptionAndNoKmsKey(rInt),
+				ExpectError: regexp.MustCompile("KMS Key Id required when setting encryption_type is not set as NONE"),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisStream_encryption(t *testing.T) {
+	var stream kinesis.StreamDescription
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisStreamConfigWithEncryption(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
+					resource.TestCheckResourceAttr(
+						"aws_kinesis_stream.test_stream", "encryption_type", "KMS"),
+				),
+			},
+			{
+				Config: testAccKinesisStreamConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
+					resource.TestCheckResourceAttr(
+						"aws_kinesis_stream.test_stream", "encryption_type", "NONE"),
+				),
+			},
+			{
+				Config: testAccKinesisStreamConfigWithEncryption(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
+					resource.TestCheckResourceAttr(
+						"aws_kinesis_stream.test_stream", "encryption_type", "KMS"),
 				),
 			},
 		},
@@ -267,6 +361,67 @@ resource "aws_kinesis_stream" "test_stream" {
 		Name = "tf-test"
 	}
 }`, rInt)
+}
+
+func testAccKinesisStreamConfigConcurrent(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test_stream" {
+        count = 20
+	name = "terraform-kinesis-test-%d-${count.index}"
+	shard_count = 2
+	tags {
+		Name = "tf-test"
+	}
+}`, rInt)
+}
+
+func testAccKinesisStreamConfigWithEncryptionAndNoKmsKey(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test_stream" {
+	name = "terraform-kinesis-test-%d"
+	shard_count = 2
+	encryption_type = "KMS"
+	tags {
+		Name = "tf-test"
+	}
+}`, rInt)
+}
+
+func testAccKinesisStreamConfigWithEncryption(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test_stream" {
+	name = "terraform-kinesis-test-%d"
+	shard_count = 2
+	encryption_type = "KMS"
+	kms_key_id = "${aws_kms_key.foo.id}"
+	tags {
+		Name = "tf-test"
+	}
+}
+
+resource "aws_kms_key" "foo" {
+    description = "Kinesis Stream SSE AccTests %d"
+    deletion_window_in_days = 7
+    policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+`, rInt, rInt)
 }
 
 func testAccKinesisStreamConfigUpdateShardCount(rInt int) string {

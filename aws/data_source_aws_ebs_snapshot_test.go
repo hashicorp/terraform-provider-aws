@@ -18,6 +18,7 @@ func TestAccAWSEbsSnapshotDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEbsSnapshotDataSourceID("data.aws_ebs_snapshot.snapshot"),
 					resource.TestCheckResourceAttr("data.aws_ebs_snapshot.snapshot", "volume_size", "40"),
+					resource.TestCheckResourceAttr("data.aws_ebs_snapshot.snapshot", "tags.%", "0"),
 				),
 			},
 		},
@@ -34,6 +35,8 @@ func TestAccAWSEbsSnapshotDataSource_multipleFilters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEbsSnapshotDataSourceID("data.aws_ebs_snapshot.snapshot"),
 					resource.TestCheckResourceAttr("data.aws_ebs_snapshot.snapshot", "volume_size", "10"),
+					resource.TestCheckResourceAttr("data.aws_ebs_snapshot.snapshot", "tags.%", "1"),
+					resource.TestCheckResourceAttr("data.aws_ebs_snapshot.snapshot", "tags.Name", "TF ACC Snapshot"),
 				),
 			},
 		},
@@ -56,44 +59,47 @@ func testAccCheckAwsEbsSnapshotDataSourceID(n string) resource.TestCheckFunc {
 
 const testAccCheckAwsEbsSnapshotDataSourceConfig = `
 resource "aws_ebs_volume" "example" {
-    availability_zone = "us-west-2a"
-    type = "gp2"
-    size = 40
-    tags {
-        Name = "External Volume"
-    }
+  availability_zone = "us-west-2a"
+  type = "gp2"
+  size = 40
+  tags {
+    Name = "External Volume"
+  }
 }
 
 resource "aws_ebs_snapshot" "snapshot" {
-    volume_id = "${aws_ebs_volume.example.id}"
+  volume_id = "${aws_ebs_volume.example.id}"
 }
 
 data "aws_ebs_snapshot" "snapshot" {
-    most_recent = true
-    snapshot_ids = ["${aws_ebs_snapshot.snapshot.id}"]
+  most_recent = true
+  snapshot_ids = ["${aws_ebs_snapshot.snapshot.id}"]
 }
 `
 
 const testAccCheckAwsEbsSnapshotDataSourceConfigWithMultipleFilters = `
 resource "aws_ebs_volume" "external1" {
-    availability_zone = "us-west-2a"
-    type = "gp2"
-    size = 10
-    tags {
-        Name = "External Volume 1"
-    }
+  availability_zone = "us-west-2a"
+  type = "gp2"
+  size = 10
+  tags {
+    Name = "External Volume 1"
+  }
 }
 
 resource "aws_ebs_snapshot" "snapshot" {
-    volume_id = "${aws_ebs_volume.external1.id}"
+  volume_id = "${aws_ebs_volume.external1.id}"
+  tags {
+    Name = "TF ACC Snapshot"
+  }
 }
 
 data "aws_ebs_snapshot" "snapshot" {
-    most_recent = true
-    snapshot_ids = ["${aws_ebs_snapshot.snapshot.id}"]
-    filter {
-	name = "volume-size"
-	values = ["10"]
-    }
+  most_recent = true
+  snapshot_ids = ["${aws_ebs_snapshot.snapshot.id}"]
+  filter {
+    name = "volume-size"
+    values = ["10"]
+  }
 }
 `

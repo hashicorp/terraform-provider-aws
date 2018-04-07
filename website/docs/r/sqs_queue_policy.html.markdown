@@ -6,7 +6,7 @@ description: |-
   Provides a SQS Queue Policy resource.
 ---
 
-# aws\_sqs\_queue\_policy
+# aws_sqs_queue_policy
 
 Allows you to set a policy of an SQS Queue
 while referencing ARN of the queue within the policy.
@@ -50,3 +50,11 @@ The following arguments are supported:
 
 * `queue_url` - (Required) The URL of the SQS Queue to which to attach the policy
 * `policy` - (Required) The JSON policy for the SQS queue
+
+## Import
+
+SQS Queue Policies can be imported using the queue URL, e.g.
+
+```
+$ terraform import aws_sqs_queue_policy.test https://queue.amazonaws.com/0123456789012/myqueue
+```

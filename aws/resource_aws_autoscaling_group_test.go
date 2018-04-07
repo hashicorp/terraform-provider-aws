@@ -46,7 +46,7 @@ func testSweepAutoscalingGroups(region string) error {
 
 	for _, asg := range resp.AutoScalingGroups {
 		var testOptGroup bool
-		for _, testName := range []string{"foobar", "terraform-", "tf-test"} {
+		for _, testName := range []string{"foobar", "terraform-", "tf-test", "tf-asg-"} {
 			if strings.HasPrefix(*asg.AutoScalingGroupName, testName) {
 				testOptGroup = true
 				break
@@ -128,6 +128,8 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 						"aws_autoscaling_group.bar", "termination_policies.1", "ClosestToNextInstanceHour"),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "protect_from_scale_in", "false"),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "enabled_metrics.#", "0"),
 				),
 			},
 
@@ -162,7 +164,7 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSAutoScalingGroup_namePrefix(t *testing.T) {
-	nameRegexp := regexp.MustCompile("^test-")
+	nameRegexp := regexp.MustCompile("^tf-test-")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -251,7 +253,7 @@ func TestAccAWSAutoScalingGroup_terminationPolicies(t *testing.T) {
 func TestAccAWSAutoScalingGroup_tags(t *testing.T) {
 	var group autoscaling.Group
 
-	randName := fmt.Sprintf("tfautotags-%s", acctest.RandString(5))
+	randName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -360,7 +362,7 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer(t *testing.T) {
 func TestAccAWSAutoScalingGroup_withPlacementGroup(t *testing.T) {
 	var group autoscaling.Group
 
-	randName := fmt.Sprintf("tf_placement_test-%s", acctest.RandString(5))
+	randName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -474,6 +476,26 @@ func TestAccAWSAutoScalingGroup_withMetrics(t *testing.T) {
 	})
 }
 
+func TestAccAWSAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
+	var group autoscaling.Group
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSAutoScalingGroupConfig_withServiceLinkedRoleARN,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttrSet(
+						"aws_autoscaling_group.bar", "service_linked_role_arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSAutoScalingGroup_ALB_TargetGroups(t *testing.T) {
 	var group autoscaling.Group
 	var tg elbv2.TargetGroup
@@ -510,7 +532,7 @@ func TestAccAWSAutoScalingGroup_ALB_TargetGroups(t *testing.T) {
 				Config: testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_pre,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &tg),
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &tg),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "target_group_arns.#", "0"),
 				),
@@ -520,8 +542,8 @@ func TestAccAWSAutoScalingGroup_ALB_TargetGroups(t *testing.T) {
 				Config: testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_post_duo,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &tg),
-					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test_more", &tg2),
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &tg),
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test_more", &tg2),
 					testCheck([]*elbv2.TargetGroup{&tg, &tg2}),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "target_group_arns.#", "2"),
@@ -532,7 +554,7 @@ func TestAccAWSAutoScalingGroup_ALB_TargetGroups(t *testing.T) {
 				Config: testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_post,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &tg),
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &tg),
 					testCheck([]*elbv2.TargetGroup{&tg}),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "target_group_arns.#", "1"),
@@ -588,7 +610,7 @@ func TestAccAWSAutoScalingGroup_ALB_TargetGroups_ELBCapacity(t *testing.T) {
 				Config: testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_ELBCapacity(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &tg),
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &tg),
 					testAccCheckAWSALBTargetGroupHealthy(&tg),
 				),
 			},
@@ -879,9 +901,23 @@ func TestAccAWSAutoScalingGroup_emptyAvailabilityZones(t *testing.T) {
 }
 
 const testAccAWSAutoScalingGroupConfig_autoGeneratedName = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
@@ -894,9 +930,23 @@ resource "aws_autoscaling_group" "bar" {
 `
 
 const testAccAWSAutoScalingGroupConfig_namePrefix = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "test" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "test" {
@@ -904,15 +954,29 @@ resource "aws_autoscaling_group" "test" {
   desired_capacity = 0
   max_size = 0
   min_size = 0
-  name_prefix = "test-"
+  name_prefix = "tf-test-"
   launch_configuration = "${aws_launch_configuration.test.name}"
 }
 `
 
 const testAccAWSAutoScalingGroupConfig_terminationPoliciesEmpty = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
@@ -926,9 +990,23 @@ resource "aws_autoscaling_group" "bar" {
 `
 
 const testAccAWSAutoScalingGroupConfig_terminationPoliciesExplicitDefault = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
@@ -943,9 +1021,23 @@ resource "aws_autoscaling_group" "bar" {
 `
 
 const testAccAWSAutoScalingGroupConfig_terminationPoliciesUpdate = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
@@ -961,9 +1053,23 @@ resource "aws_autoscaling_group" "bar" {
 
 func testAccAWSAutoScalingGroupConfig(name string) string {
 	return fmt.Sprintf(`
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_placement_group" "test" {
@@ -1006,14 +1112,28 @@ resource "aws_autoscaling_group" "bar" {
 
 func testAccAWSAutoScalingGroupConfigUpdate(name string) string {
 	return fmt.Sprintf(`
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_launch_configuration" "new" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
@@ -1053,9 +1173,23 @@ resource "aws_autoscaling_group" "bar" {
 
 func testAccAWSAutoScalingGroupImport(name string) string {
 	return fmt.Sprintf(`
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_placement_group" "test" {
@@ -1099,7 +1233,9 @@ resource "aws_autoscaling_group" "bar" {
 const testAccAWSAutoScalingGroupConfigWithLoadBalancer = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-	tags { Name = "tf-asg-test" }
+  tags {
+    Name = "terraform-testacc-autoscaling-group-with-lb"
+  }
 }
 
 resource "aws_internet_gateway" "gw" {
@@ -1109,6 +1245,9 @@ resource "aws_internet_gateway" "gw" {
 resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-autoscaling-group-with-load-balancer"
+	}
 }
 
 resource "aws_security_group" "foo" {
@@ -1161,7 +1300,7 @@ resource "aws_launch_configuration" "foobar" {
 
 resource "aws_autoscaling_group" "bar" {
   availability_zones = ["${aws_subnet.foo.availability_zone}"]
-	vpc_zone_identifier = ["${aws_subnet.foo.id}"]
+  vpc_zone_identifier = ["${aws_subnet.foo.id}"]
   max_size = 2
   min_size = 2
   health_check_grace_period = 300
@@ -1178,7 +1317,7 @@ const testAccAWSAutoScalingGroupConfigWithAZ = `
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
   tags {
-     Name = "terraform-test"
+    Name = "terraform-testacc-autoscaling-group-with-az"
   }
 }
 
@@ -1187,12 +1326,26 @@ resource "aws_subnet" "main" {
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2a"
   tags {
-     Name = "terraform-test"
+    Name = "tf-acc-autoscaling-group-with-az"
+  }
+}
+
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
   }
 }
 
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-b5b3fc85"
+  image_id = "${data.aws_ami.test_ami.id}"
   instance_type = "t2.micro"
 }
 
@@ -1211,7 +1364,7 @@ const testAccAWSAutoScalingGroupConfigWithVPCIdent = `
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
   tags {
-     Name = "terraform-test"
+    Name = "terraform-testacc-autoscaling-group-with-vpc-id"
   }
 }
 
@@ -1220,12 +1373,26 @@ resource "aws_subnet" "main" {
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2a"
   tags {
-     Name = "terraform-test"
+    Name = "tf-acc-autoscaling-group-with-vpc-id"
+  }
+}
+
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
   }
 }
 
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-b5b3fc85"
+  image_id = "${data.aws_ami.test_ami.id}"
   instance_type = "t2.micro"
 }
 
@@ -1242,8 +1409,22 @@ resource "aws_autoscaling_group" "bar" {
 
 func testAccAWSAutoScalingGroupConfig_withPlacementGroup(name string) string {
 	return fmt.Sprintf(`
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-21f78e11"
+  image_id = "${data.aws_ami.test_ami.id}"
   instance_type = "c3.large"
 }
 
@@ -1275,10 +1456,58 @@ resource "aws_autoscaling_group" "bar" {
 `, name, name)
 }
 
-const testAccAWSAutoscalingMetricsCollectionConfig_allMetricsCollected = `
+const testAccAWSAutoScalingGroupConfig_withServiceLinkedRoleARN = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_iam_role" "autoscaling_service_linked_role" {
+  name = "AWSServiceRoleForAutoScaling"
+}
+
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["us-west-2a"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  service_linked_role_arn = "${data.aws_iam_role.autoscaling_service_linked_role.arn}"
+}
+`
+
+const testAccAWSAutoscalingMetricsCollectionConfig_allMetricsCollected = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_configuration" "foobar" {
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
@@ -1304,9 +1533,23 @@ resource "aws_autoscaling_group" "bar" {
 `
 
 const testAccAWSAutoscalingMetricsCollectionConfig_updatingMetricsCollected = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
@@ -1330,19 +1573,15 @@ resource "aws_autoscaling_group" "bar" {
 `
 
 const testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_pre = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "terraform-testacc-autoscaling-group-alb-target-group"
   }
 }
 
-resource "aws_alb_target_group" "test" {
+resource "aws_lb_target_group" "test" {
   name     = "tf-example-alb-tg"
   port     = 80
   protocol = "HTTP"
@@ -1355,7 +1594,7 @@ resource "aws_subnet" "main" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "tf-acc-autoscaling-group-alb-target-group-main"
   }
 }
 
@@ -1365,13 +1604,26 @@ resource "aws_subnet" "alt" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "tf-acc-autoscaling-group-alb-target-group-alt"
+  }
+}
+
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
   }
 }
 
 resource "aws_launch_configuration" "foobar" {
-  # Golang-base from cts-hashi aws account, shared with tf testing account
-  image_id          = "ami-1817d178"
+  image_id          = "${data.aws_ami.test_ami.id}"
   instance_type     = "t2.micro"
   enable_monitoring = false
 }
@@ -1412,19 +1664,15 @@ resource "aws_security_group" "tf_test_self" {
 `
 
 const testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_post = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "terraform-testacc-autoscaling-group-alb-target-group"
   }
 }
 
-resource "aws_alb_target_group" "test" {
+resource "aws_lb_target_group" "test" {
   name     = "tf-example-alb-tg"
   port     = 80
   protocol = "HTTP"
@@ -1437,7 +1685,7 @@ resource "aws_subnet" "main" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "tf-acc-autoscaling-group-alb-target-group-main"
   }
 }
 
@@ -1447,13 +1695,26 @@ resource "aws_subnet" "alt" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "tf-acc-autoscaling-group-alb-target-group-alt"
+  }
+}
+
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
   }
 }
 
 resource "aws_launch_configuration" "foobar" {
-  # Golang-base from cts-hashi aws account, shared with tf testing account
-  image_id          = "ami-1817d178"
+  image_id          = "${data.aws_ami.test_ami.id}"
   instance_type     = "t2.micro"
   enable_monitoring = false
 }
@@ -1464,7 +1725,7 @@ resource "aws_autoscaling_group" "bar" {
     "${aws_subnet.alt.id}",
   ]
 
-	target_group_arns = ["${aws_alb_target_group.test.arn}"]
+	target_group_arns = ["${aws_lb_target_group.test.arn}"]
 
   max_size                  = 2
   min_size                  = 0
@@ -1504,18 +1765,18 @@ resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "terraform-testacc-autoscaling-group-alb-target-group"
   }
 }
 
-resource "aws_alb_target_group" "test" {
+resource "aws_lb_target_group" "test" {
   name     = "tf-example-alb-tg"
   port     = 80
   protocol = "HTTP"
   vpc_id   = "${aws_vpc.default.id}"
 }
 
-resource "aws_alb_target_group" "test_more" {
+resource "aws_lb_target_group" "test_more" {
   name     = "tf-example-alb-tg-more"
   port     = 80
   protocol = "HTTP"
@@ -1528,7 +1789,7 @@ resource "aws_subnet" "main" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "tf-acc-autoscaling-group-alb-target-group-main"
   }
 }
 
@@ -1538,13 +1799,26 @@ resource "aws_subnet" "alt" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "tf-acc-autoscaling-group-alb-target-group-alt"
+  }
+}
+
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
   }
 }
 
 resource "aws_launch_configuration" "foobar" {
-  # Golang-base from cts-hashi aws account, shared with tf testing account
-  image_id          = "ami-1817d178"
+  image_id          = "${data.aws_ami.test_ami.id}"
   instance_type     = "t2.micro"
   enable_monitoring = false
 }
@@ -1556,8 +1830,8 @@ resource "aws_autoscaling_group" "bar" {
   ]
 
 	target_group_arns = [
-		"${aws_alb_target_group.test.arn}",
-		"${aws_alb_target_group.test_more.arn}",
+		"${aws_lb_target_group.test.arn}",
+		"${aws_lb_target_group.test_more.arn}",
 	]
 
   max_size                  = 2
@@ -1591,9 +1865,23 @@ resource "aws_security_group" "tf_test_self" {
 
 func testAccAWSAutoScalingGroupWithHookConfig(name string) string {
 	return fmt.Sprintf(`
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
@@ -1630,11 +1918,11 @@ resource "aws_vpc" "default" {
   enable_dns_support   = "true"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_ELBCapacity"
+    Name = "terraform-testacc-autoscaling-group-alb-target-group-elb-capacity"
   }
 }
 
-resource "aws_alb" "test_lb" {
+resource "aws_lb" "test_lb" {
   subnets = ["${aws_subnet.main.id}", "${aws_subnet.alt.id}"]
 
   tags {
@@ -1642,17 +1930,17 @@ resource "aws_alb" "test_lb" {
   }
 }
 
-resource "aws_alb_listener" "test_listener" {
-  load_balancer_arn = "${aws_alb.test_lb.arn}"
+resource "aws_lb_listener" "test_listener" {
+  load_balancer_arn = "${aws_lb.test_lb.arn}"
   port              = "80"
 
   default_action {
-    target_group_arn = "${aws_alb_target_group.test.arn}"
+    target_group_arn = "${aws_lb_target_group.test.arn}"
     type             = "forward"
   }
 }
 
-resource "aws_alb_target_group" "test" {
+resource "aws_lb_target_group" "test" {
   name     = "tf-alb-test-%d"
   port     = 80
   protocol = "HTTP"
@@ -1663,6 +1951,7 @@ resource "aws_alb_target_group" "test" {
     healthy_threshold = "2"
     timeout           = "2"
     interval          = "5"
+    matcher           = "200"
   }
 
   tags {
@@ -1676,7 +1965,7 @@ resource "aws_subnet" "main" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_ELBCapacity"
+    Name = "tf-acc-autoscaling-group-alb-target-group-elb-capacity-main"
   }
 }
 
@@ -1686,7 +1975,7 @@ resource "aws_subnet" "alt" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_ELBCapacity"
+    Name = "tf-acc-autoscaling-group-alb-target-group-elb-capacity-alt"
   }
 }
 
@@ -1748,7 +2037,7 @@ resource "aws_autoscaling_group" "bar" {
     "${aws_subnet.alt.id}",
   ]
 
-  target_group_arns = ["${aws_alb_target_group.test.arn}"]
+  target_group_arns = ["${aws_lb_target_group.test.arn}"]
 
   max_size                  = 2
   min_size                  = 2
@@ -1764,9 +2053,23 @@ resource "aws_autoscaling_group" "bar" {
 
 func testAccAWSAutoScalingGroupConfigWithSuspendedProcesses(name string) string {
 	return fmt.Sprintf(`
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_placement_group" "test" {
@@ -1799,9 +2102,23 @@ resource "aws_autoscaling_group" "bar" {
 
 func testAccAWSAutoScalingGroupConfigWithSuspendedProcessesUpdated(name string) string {
 	return fmt.Sprintf(`
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 resource "aws_placement_group" "test" {
@@ -1842,8 +2159,22 @@ resource "aws_autoscaling_group" "test" {
   vpc_zone_identifier  = []
 }
 
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "test" {
-  image_id      = "ami-21f78e11"
+  image_id      = "${data.aws_ami.test_ami.id}"
   instance_type = "t1.micro"
 }
 `
@@ -1851,11 +2182,17 @@ resource "aws_launch_configuration" "test" {
 const testAccAWSAutoScalingGroupConfig_emptyAvailabilityZones = `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-autoscaling-group-empty-azs"
+  }
 }
 
 resource "aws_subnet" "test" {
   vpc_id     = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "tf-acc-autoscaling-group-empty-availability-zones"
+  }
 }
 
 resource "aws_autoscaling_group" "test" {
@@ -1867,8 +2204,22 @@ resource "aws_autoscaling_group" "test" {
   vpc_zone_identifier  = ["${aws_subnet.test.id}"]
 }
 
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_configuration" "test" {
-  image_id      = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id      = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 `

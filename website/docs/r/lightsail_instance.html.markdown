@@ -6,7 +6,7 @@ description: |-
   Provides an Lightsail Instance
 ---
 
-# aws\_lightsail\_instance
+# aws_lightsail_instance
 
 Provides a Lightsail Instance. Amazon Lightsail is a service to provide easy virtual private servers
 with custom software already setup. See [What is Amazon Lightsail?](https://lightsail.aws.amazon.com/ls/docs/getting-started/article/what-is-amazon-lightsail)
@@ -33,7 +33,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the Lightsail Instance
 * `availability_zone` - (Required) The Availability Zone in which to create your
-instance. At this time, must be in `us-east-1`, `us-east-2`, `us-west-2`, `eu-west-1`, `eu-west-2`, `eu-central-1` regions
+instance. At this time, must be in `us-east-1`, `us-east-2`, `us-west-2`, `eu-west-1`, `eu-west-2`, `eu-central-1`, `ap-southeast-1`, `ap-southeast-2`, `ap-northeast-1`, `ap-south-1` regions
 * `blueprint_id` - (Required) The ID for a virtual private server image
 (see list below)
 * `bundle_id` - (Required) The bundle of specification information (see list below)
@@ -45,19 +45,21 @@ Lightsail console (cannot use `aws_key_pair` at this time)
 ## Blueprints
 
 Lightsail currently supports the following Blueprint IDs:
-
-- `amazon_linux_2016_09_0`
-- `ubuntu_16_04`
-- `wordpress_4_6_1`
-- `lamp_5_6_27`
-- `nodejs_6_9_1`
-- `joomla_3_6_3`
-- `magento_2_1_2`
-- `mean_3_2_10`
-- `drupal_8_2_1`
-- `gitlab_8_12_6`
-- `redmine_3_3_1`
-- `nginx_1_10_2`
+- `amazon_linux_2017_03_1_1`
+- `ubuntu_16_04_1`
+- `debian_8_7`
+- `freebsd_11`
+- `opensuse_42_2`
+- `wordpress_4_8_0`
+- `lamp_5_6_30_5`
+- `nodejs_7_10_0`
+- `joomla_3_7_3`
+- `magento_2_1_7`
+- `mean_3_4_5`
+- `drupal_8_3_3`
+- `gitlab_9_2_6`
+- `redmine_3_3_3_1`
+- `nginx_1_12_0_2`
 
 ## Bundles
 

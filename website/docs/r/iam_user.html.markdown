@@ -6,7 +6,7 @@ description: |-
   Provides an IAM user.
 ---
 
-# aws\_iam\_user
+# aws_iam_user
 
 Provides an IAM user.
 

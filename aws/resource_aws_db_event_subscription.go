@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -155,23 +157,27 @@ func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}
 	// list tags for resource
 	// set tags
 	conn := meta.(*AWSClient).rdsconn
-	if arn, err := buildRDSEventSubscriptionARN(d.Get("customer_aws_id").(string), d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).region); err != nil {
-		log.Printf("[DEBUG] Error building ARN for RDS Event Subscription, not setting Tags for Event Subscription %s", *sub.CustSubscriptionId)
-	} else {
-		resp, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
-			ResourceName: aws.String(arn),
-		})
 
-		if err != nil {
-			log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
-		}
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "rds",
+		Region:    meta.(*AWSClient).region,
+		AccountID: d.Get("customer_aws_id").(string),
+		Resource:  fmt.Sprintf("subgrp:%s", d.Id()),
+	}.String()
+	resp, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
+		ResourceName: aws.String(arn),
+	})
 
-		var dt []*rds.Tag
-		if len(resp.TagList) > 0 {
-			dt = resp.TagList
-		}
-		d.Set("tags", tagsToMapRDS(dt))
+	if err != nil {
+		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
 	}
+
+	var dt []*rds.Tag
+	if len(resp.TagList) > 0 {
+		dt = resp.TagList
+	}
+	d.Set("tags", tagsToMapRDS(dt))
 
 	return nil
 }
@@ -215,6 +221,7 @@ func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface
 		for i, eventCategory := range eventCategoriesSet.List() {
 			req.EventCategories[i] = aws.String(eventCategory.(string))
 		}
+		req.SourceType = aws.String(d.Get("source_type").(string))
 		requestUpdate = true
 	}
 
@@ -264,12 +271,17 @@ func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface
 		d.SetPartial("source_type")
 	}
 
-	if arn, err := buildRDSEventSubscriptionARN(d.Get("customer_aws_id").(string), d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).region); err == nil {
-		if err := setTagsRDS(rdsconn, d, arn); err != nil {
-			return err
-		} else {
-			d.SetPartial("tags")
-		}
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "rds",
+		Region:    meta.(*AWSClient).region,
+		AccountID: d.Get("customer_aws_id").(string),
+		Resource:  fmt.Sprintf("subgrp:%s", d.Id()),
+	}.String()
+	if err := setTagsRDS(rdsconn, d, arn); err != nil {
+		return err
+	} else {
+		d.SetPartial("tags")
 	}
 
 	if d.HasChange("source_ids") {
@@ -374,12 +386,4 @@ func resourceAwsDbEventSubscriptionRefreshFunc(
 
 		return sub, *sub.Status, nil
 	}
-}
-
-func buildRDSEventSubscriptionARN(customerAwsId, subscriptionId, partition, region string) (string, error) {
-	if partition == "" {
-		return "", fmt.Errorf("Unable to construct RDS ARN because of missing AWS partition")
-	}
-	arn := fmt.Sprintf("arn:%s:rds:%s:%s:es:%s", partition, region, customerAwsId, subscriptionId)
-	return arn, nil
 }

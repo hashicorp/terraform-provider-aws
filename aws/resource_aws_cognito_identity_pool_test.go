@@ -141,7 +141,7 @@ func TestAccAWSCognitoIdentityPool_samlProviderArns(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoIdentityPoolExists("aws_cognito_identity_pool.main"),
 					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckNoResourceAttr("aws_cognito_identity_pool.main", "saml_provider_arns.#"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "saml_provider_arns.#", "0"),
 				),
 			},
 		},

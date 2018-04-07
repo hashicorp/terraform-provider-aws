@@ -1,46 +1,50 @@
 package aws
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccAWSDataSourceIAMInstanceProfile_basic(t *testing.T) {
+	roleName := fmt.Sprintf("test-datasource-user-%d", acctest.RandInt())
+	profileName := fmt.Sprintf("test-datasource-user-%d", acctest.RandInt())
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatasourceAwsIamInstanceProfileConfig,
+				Config: testAccDatasourceAwsIamInstanceProfileConfig(roleName, profileName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_iam_instance_profile.test", "role_id"),
 					resource.TestCheckResourceAttr("data.aws_iam_instance_profile.test", "path", "/testpath/"),
-					resource.TestMatchResourceAttr("data.aws_iam_instance_profile.test", "arn", regexp.MustCompile("^arn:aws:iam::[0-9]{12}:instance-profile/testpath/test-instance-profile$")),
+					resource.TestMatchResourceAttr("data.aws_iam_instance_profile.test", "arn",
+						regexp.MustCompile("^arn:aws:iam::[0-9]{12}:instance-profile/testpath/"+profileName+"$")),
 				),
 			},
 		},
 	})
 }
 
-const testAccDatasourceAwsIamInstanceProfileConfig = `
-provider "aws" {
-	region = "us-east-1"
-}
-
+func testAccDatasourceAwsIamInstanceProfileConfig(roleName, profileName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-	name = "test-role"
+	name = "%s"
 	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 
 resource "aws_iam_instance_profile" "test" {
-	name = "test-instance-profile"
+	name = "%s"
 	role = "${aws_iam_role.test.name}"
-        path = "/testpath/"
+	path = "/testpath/"
 }
 
 data "aws_iam_instance_profile" "test" {
-	  name = "${aws_iam_instance_profile.test.name}"
+	name = "${aws_iam_instance_profile.test.name}"
 }
-`
+`, roleName, profileName)
+}

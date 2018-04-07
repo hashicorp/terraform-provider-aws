@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -25,6 +26,30 @@ func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_elasticache_security_group.bar", "description", "Managed by Terraform"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheSecurityGroup_Import(t *testing.T) {
+	// Use EC2-Classic enabled us-east-1 for testing
+	oldRegion := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldRegion)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSElasticacheSecurityGroupConfig,
+			},
+
+			resource.TestStep{
+				ResourceName:      "aws_elasticache_security_group.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

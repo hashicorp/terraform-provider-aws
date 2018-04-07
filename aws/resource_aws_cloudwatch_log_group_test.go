@@ -50,6 +50,35 @@ func TestAccAWSCloudWatchLogGroup_namePrefix(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchLogGroup_namePrefix_retention(t *testing.T) {
+	var lg cloudwatchlogs.LogGroup
+	rName := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchLogGroup_namePrefix_retention(rName, 365),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogGroupExists("aws_cloudwatch_log_group.test", &lg),
+					resource.TestMatchResourceAttr("aws_cloudwatch_log_group.test", "name", regexp.MustCompile("^tf-test-")),
+					resource.TestCheckResourceAttr("aws_cloudwatch_log_group.test", "retention_in_days", "365"),
+				),
+			},
+			{
+				Config: testAccAWSCloudWatchLogGroup_namePrefix_retention(rName, 7),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogGroupExists("aws_cloudwatch_log_group.test", &lg),
+					resource.TestMatchResourceAttr("aws_cloudwatch_log_group.test", "name", regexp.MustCompile("^tf-test-")),
+					resource.TestCheckResourceAttr("aws_cloudwatch_log_group.test", "retention_in_days", "7"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudWatchLogGroup_generatedName(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 
@@ -189,6 +218,32 @@ func TestAccAWSCloudWatchLogGroup_tagging(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudwatch_log_group.foobar", "tags.Environment", "Production"),
 					resource.TestCheckResourceAttr("aws_cloudwatch_log_group.foobar", "tags.Foo", "Bar"),
 					resource.TestCheckResourceAttr("aws_cloudwatch_log_group.foobar", "tags.Empty", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudWatchLogGroup_kmsKey(t *testing.T) {
+	var lg cloudwatchlogs.LogGroup
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchLogGroupConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogGroupExists("aws_cloudwatch_log_group.foobar", &lg),
+				),
+			},
+			{
+				Config: testAccAWSCloudWatchLogGroupConfigWithKmsKeyId(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogGroupExists("aws_cloudwatch_log_group.foobar", &lg),
+					resource.TestCheckResourceAttrSet("aws_cloudwatch_log_group.foobar", "kms_key_id"),
 				),
 			},
 		},
@@ -350,11 +405,51 @@ resource "aws_cloudwatch_log_group" "charlie" {
 `, rInt, rInt+1, rInt+2)
 }
 
+func testAccAWSCloudWatchLogGroupConfigWithKmsKeyId(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "foo" {
+    description = "Terraform acc test %d"
+    deletion_window_in_days = 7
+    policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_cloudwatch_log_group" "foobar" {
+    name = "foo-bar-%d"
+	kms_key_id = "${aws_kms_key.foo.arn}"
+}
+`, rInt, rInt)
+}
+
 const testAccAWSCloudWatchLogGroup_namePrefix = `
 resource "aws_cloudwatch_log_group" "test" {
     name_prefix = "tf-test-"
 }
 `
+
+func testAccAWSCloudWatchLogGroup_namePrefix_retention(rName string, retention int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name_prefix = "tf-test-%s"
+  retention_in_days = %d
+}
+`, rName, retention)
+}
 
 const testAccAWSCloudWatchLogGroup_generatedName = `
 resource "aws_cloudwatch_log_group" "test" {}

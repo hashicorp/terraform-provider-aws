@@ -4,7 +4,7 @@ page_title: "AWS: aws_db_option_group"
 sidebar_current: "docs-aws-resource-db-option-group"
 ---
 
-# aws\_db\_option\_group
+# aws_db_option_group
 
 Provides an RDS DB option group resource.
 
@@ -63,6 +63,7 @@ Option Settings blocks support the following:
 
 The following attributes are exported:
 
+* `id` - The db option group name.
 * `arn` - The ARN of the db option group.
 
 <a id="timeouts"></a>

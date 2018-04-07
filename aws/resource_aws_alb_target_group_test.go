@@ -38,7 +38,7 @@ func TestALBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := albTargetGroupSuffixFromARN(tc.arn)
+		actual := lbTargetGroupSuffixFromARN(tc.arn)
 		if actual != tc.suffix {
 			t.Fatalf("bad suffix: %q\nExpected: %s\n     Got: %s", tc.name, tc.suffix, actual)
 		}
@@ -65,6 +65,7 @@ func TestAccAWSALBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "target_type", "instance"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.#", "1"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.type", "lb_cookie"),
@@ -509,7 +510,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -548,7 +549,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -587,7 +588,7 @@ resource "aws_vpc" "test2" {
   cidr_block = "10.10.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic-2"
   }
 }
 
@@ -595,7 +596,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -634,7 +635,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -674,7 +675,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -709,7 +710,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -751,7 +752,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_stickiness"
+    Name = "terraform-testacc-alb-target-group-stickiness"
   }
 }`, targetGroupName, stickinessBlock)
 }
@@ -767,7 +768,7 @@ resource "aws_alb_target_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSALBTargetGroupConfig_namePrefix"
+		Name = "terraform-testacc-alb-target-group-name-prefix"
 	}
 }
 `
@@ -782,7 +783,7 @@ resource "aws_alb_target_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSALBTargetGroupConfig_generatedName"
+		Name = "terraform-testacc-alb-target-group-generated-name"
 	}
 }
 `

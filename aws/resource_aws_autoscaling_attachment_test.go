@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsAutoscalingAttachment_elb(t *testing.T) {
+func TestAccAWSAutoscalingAttachment_elb(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
@@ -53,7 +53,7 @@ func TestAccAwsAutoscalingAttachment_elb(t *testing.T) {
 	})
 }
 
-func TestAccAwsAutoscalingAttachment_albTargetGroup(t *testing.T) {
+func TestAccAWSAutoscalingAttachment_albTargetGroup(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
@@ -149,7 +149,7 @@ func testAccCheckAWSAutocalingAlbAttachmentExists(asgname string, targetGroupCou
 
 func testAccAWSAutoscalingAttachment_alb(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_lb_target_group" "test" {
   name = "test-alb-%d"
   port = 443
   protocol = "HTTPS"
@@ -174,11 +174,11 @@ resource "aws_alb_target_group" "test" {
   }
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    TestName = "TestAccAWSLBTargetGroup_basic"
   }
 }
 
-resource "aws_alb_target_group" "another_test" {
+resource "aws_lb_target_group" "another_test" {
   name = "atest-alb-%d"
   port = 443
   protocol = "HTTPS"
@@ -203,7 +203,7 @@ resource "aws_alb_target_group" "another_test" {
   }
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    TestName = "TestAccAWSLBTargetGroup_basic"
   }
 }
 
@@ -234,7 +234,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-autoscaling-attachment-alb"
   }
 }
 `, rInt, rInt, rInt, rInt)
@@ -300,7 +300,7 @@ func testAccAWSAutoscalingAttachment_alb_associated(rInt int) string {
 	return testAccAWSAutoscalingAttachment_alb(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_foo" {
   autoscaling_group_name = "${aws_autoscaling_group.asg.id}"
-  alb_target_group_arn   = "${aws_alb_target_group.test.arn}"
+  alb_target_group_arn   = "${aws_lb_target_group.test.arn}"
 }`
 }
 
@@ -316,6 +316,6 @@ func testAccAWSAutoscalingAttachment_alb_double_associated(rInt int) string {
 	return testAccAWSAutoscalingAttachment_alb_associated(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
   autoscaling_group_name = "${aws_autoscaling_group.asg.id}"
-  alb_target_group_arn   = "${aws_alb_target_group.another_test.arn}"
+  alb_target_group_arn   = "${aws_lb_target_group.another_test.arn}"
 }`
 }

@@ -76,6 +76,66 @@ func (t *ReferenceTransformer) Transform(g *Graph) error {
 	return nil
 }
 
+// DestroyReferenceTransformer is a GraphTransformer that reverses the edges
+// for locals and outputs that depend on other nodes which will be
+// removed during destroy. If a destroy node is evaluated before the local or
+// output value, it will be removed from the state, and the later interpolation
+// will fail.
+type DestroyValueReferenceTransformer struct{}
+
+func (t *DestroyValueReferenceTransformer) Transform(g *Graph) error {
+	vs := g.Vertices()
+	for _, v := range vs {
+		switch v.(type) {
+		case *NodeApplyableOutput, *NodeLocal:
+			// OK
+		default:
+			continue
+		}
+
+		// reverse any outgoing edges so that the value is evaluated first.
+		for _, e := range g.EdgesFrom(v) {
+			target := e.Target()
+
+			// only destroy nodes will be evaluated in reverse
+			if _, ok := target.(GraphNodeDestroyer); !ok {
+				continue
+			}
+
+			log.Printf("[TRACE] output dep: %s", dag.VertexName(target))
+
+			g.RemoveEdge(e)
+			g.Connect(&DestroyEdge{S: target, T: v})
+		}
+	}
+
+	return nil
+}
+
+// PruneUnusedValuesTransformer is s GraphTransformer that removes local and
+// output values which are not referenced in the graph. Since outputs and
+// locals always need to be evaluated, if they reference a resource that is not
+// available in the state the interpolation could fail.
+type PruneUnusedValuesTransformer struct{}
+
+func (t *PruneUnusedValuesTransformer) Transform(g *Graph) error {
+	vs := g.Vertices()
+	for _, v := range vs {
+		switch v.(type) {
+		case *NodeApplyableOutput, *NodeLocal:
+			// OK
+		default:
+			continue
+		}
+
+		if len(g.EdgesTo(v)) == 0 {
+			g.Remove(v)
+		}
+	}
+
+	return nil
+}
+
 // ReferenceMap is a structure that can be used to efficiently check
 // for references on a graph.
 type ReferenceMap struct {
@@ -96,6 +156,7 @@ func (m *ReferenceMap) References(v dag.Vertex) ([]dag.Vertex, []string) {
 	var matches []dag.Vertex
 	var missing []string
 	prefix := m.prefix(v)
+
 	for _, ns := range rn.References() {
 		found := false
 		for _, n := range strings.Split(ns, "/") {
@@ -108,19 +169,14 @@ func (m *ReferenceMap) References(v dag.Vertex) ([]dag.Vertex, []string) {
 			// Mark that we found a match
 			found = true
 
-			// Make sure this isn't a self reference, which isn't included
-			selfRef := false
 			for _, p := range parents {
+				// don't include self-references
 				if p == v {
-					selfRef = true
-					break
+					continue
 				}
-			}
-			if selfRef {
-				continue
+				matches = append(matches, p)
 			}
 
-			matches = append(matches, parents...)
 			break
 		}
 
@@ -296,14 +352,21 @@ func ReferenceFromInterpolatedVar(v config.InterpolatedVariable) []string {
 		return []string{fmt.Sprintf("%s.%d/%s.N", id, idx, id)}
 	case *config.UserVariable:
 		return []string{fmt.Sprintf("var.%s", v.Name)}
+	case *config.LocalVariable:
+		return []string{fmt.Sprintf("local.%s", v.Name)}
 	default:
 		return nil
 	}
 }
 
 func modulePrefixStr(p []string) string {
+	// strip "root"
+	if len(p) > 0 && p[0] == rootModulePath[0] {
+		p = p[1:]
+	}
+
 	parts := make([]string, 0, len(p)*2)
-	for _, p := range p[1:] {
+	for _, p := range p {
 		parts = append(parts, "module", p)
 	}
 

@@ -60,49 +60,6 @@ func TestAccAWSCodeDeployDeploymentConfig_hostCount(t *testing.T) {
 	})
 }
 
-func TestValidateAWSCodeDeployMinimumHealthyHostsType(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "FLEET_PERCENT",
-			ErrCount: 0,
-		},
-		{
-			Value:    "HOST_COUNT",
-			ErrCount: 0,
-		},
-		{
-			Value:    "host_count",
-			ErrCount: 1,
-		},
-		{
-			Value:    "hostcount",
-			ErrCount: 1,
-		},
-		{
-			Value:    "FleetPercent",
-			ErrCount: 1,
-		},
-		{
-			Value:    "Foo",
-			ErrCount: 1,
-		},
-		{
-			Value:    "",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateMinimumHealtyHostsType(tc.Value, "minimum_healthy_hosts_type")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Minimum Healthy Hosts validation failed for type %q: %q", tc.Value, errors)
-		}
-	}
-}
-
 func testAccCheckAWSCodeDeployDeploymentConfigDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).codedeployconn
 
