@@ -961,6 +961,7 @@ resource "aws_codebuild_project" "foo" {
   }
 }
 `, rName, rName, rName, rName)
+}
 
 func testAccAWSCodeBuildProjectConfig_cacheConfig(cacheType, cacheLocation string) string {
 	return fmt.Sprintf(`
