@@ -17,7 +17,7 @@ const opAbortEnvironmentUpdate = "AbortEnvironmentUpdate"
 
 // AbortEnvironmentUpdateRequest generates a "aws/request.Request" representing the
 // client's request for the AbortEnvironmentUpdate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -100,7 +100,7 @@ const opApplyEnvironmentManagedAction = "ApplyEnvironmentManagedAction"
 
 // ApplyEnvironmentManagedActionRequest generates a "aws/request.Request" representing the
 // client's request for the ApplyEnvironmentManagedAction operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -184,7 +184,7 @@ const opCheckDNSAvailability = "CheckDNSAvailability"
 
 // CheckDNSAvailabilityRequest generates a "aws/request.Request" representing the
 // client's request for the CheckDNSAvailability operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -258,7 +258,7 @@ const opComposeEnvironments = "ComposeEnvironments"
 
 // ComposeEnvironmentsRequest generates a "aws/request.Request" representing the
 // client's request for the ComposeEnvironments operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -347,7 +347,7 @@ const opCreateApplication = "CreateApplication"
 
 // CreateApplicationRequest generates a "aws/request.Request" representing the
 // client's request for the CreateApplication operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -427,7 +427,7 @@ const opCreateApplicationVersion = "CreateApplicationVersion"
 
 // CreateApplicationVersionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateApplicationVersion operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -542,7 +542,7 @@ const opCreateConfigurationTemplate = "CreateConfigurationTemplate"
 
 // CreateConfigurationTemplateRequest generates a "aws/request.Request" representing the
 // client's request for the CreateConfigurationTemplate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -638,7 +638,7 @@ const opCreateEnvironment = "CreateEnvironment"
 
 // CreateEnvironmentRequest generates a "aws/request.Request" representing the
 // client's request for the CreateEnvironment operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -722,7 +722,7 @@ const opCreatePlatformVersion = "CreatePlatformVersion"
 
 // CreatePlatformVersionRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePlatformVersion operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -809,7 +809,7 @@ const opCreateStorageLocation = "CreateStorageLocation"
 
 // CreateStorageLocationRequest generates a "aws/request.Request" representing the
 // client's request for the CreateStorageLocation operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -899,7 +899,7 @@ const opDeleteApplication = "DeleteApplication"
 
 // DeleteApplicationRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteApplication operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -985,7 +985,7 @@ const opDeleteApplicationVersion = "DeleteApplicationVersion"
 
 // DeleteApplicationVersionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteApplicationVersion operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1088,7 +1088,7 @@ const opDeleteConfigurationTemplate = "DeleteConfigurationTemplate"
 
 // DeleteConfigurationTemplateRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteConfigurationTemplate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1174,7 +1174,7 @@ const opDeleteEnvironmentConfiguration = "DeleteEnvironmentConfiguration"
 
 // DeleteEnvironmentConfigurationRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteEnvironmentConfiguration operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1257,7 +1257,7 @@ const opDeletePlatformVersion = "DeletePlatformVersion"
 
 // DeletePlatformVersionRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePlatformVersion operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1348,7 +1348,7 @@ const opDescribeAccountAttributes = "DescribeAccountAttributes"
 
 // DescribeAccountAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAccountAttributes operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1431,7 +1431,7 @@ const opDescribeApplicationVersions = "DescribeApplicationVersions"
 
 // DescribeApplicationVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeApplicationVersions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1505,7 +1505,7 @@ const opDescribeApplications = "DescribeApplications"
 
 // DescribeApplicationsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeApplications operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1579,7 +1579,7 @@ const opDescribeConfigurationOptions = "DescribeConfigurationOptions"
 
 // DescribeConfigurationOptionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeConfigurationOptions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1662,7 +1662,7 @@ const opDescribeConfigurationSettings = "DescribeConfigurationSettings"
 
 // DescribeConfigurationSettingsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeConfigurationSettings operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1753,7 +1753,7 @@ const opDescribeEnvironmentHealth = "DescribeEnvironmentHealth"
 
 // DescribeEnvironmentHealthRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEnvironmentHealth operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1838,7 +1838,7 @@ const opDescribeEnvironmentManagedActionHistory = "DescribeEnvironmentManagedAct
 
 // DescribeEnvironmentManagedActionHistoryRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEnvironmentManagedActionHistory operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1917,7 +1917,7 @@ const opDescribeEnvironmentManagedActions = "DescribeEnvironmentManagedActions"
 
 // DescribeEnvironmentManagedActionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEnvironmentManagedActions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1996,7 +1996,7 @@ const opDescribeEnvironmentResources = "DescribeEnvironmentResources"
 
 // DescribeEnvironmentResourcesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEnvironmentResources operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2076,7 +2076,7 @@ const opDescribeEnvironments = "DescribeEnvironments"
 
 // DescribeEnvironmentsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEnvironments operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2150,7 +2150,7 @@ const opDescribeEvents = "DescribeEvents"
 
 // DescribeEventsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEvents operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2282,7 +2282,7 @@ const opDescribeInstancesHealth = "DescribeInstancesHealth"
 
 // DescribeInstancesHealthRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInstancesHealth operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2366,7 +2366,7 @@ const opDescribePlatformVersion = "DescribePlatformVersion"
 
 // DescribePlatformVersionRequest generates a "aws/request.Request" representing the
 // client's request for the DescribePlatformVersion operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2449,7 +2449,7 @@ const opListAvailableSolutionStacks = "ListAvailableSolutionStacks"
 
 // ListAvailableSolutionStacksRequest generates a "aws/request.Request" representing the
 // client's request for the ListAvailableSolutionStacks operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2524,7 +2524,7 @@ const opListPlatformVersions = "ListPlatformVersions"
 
 // ListPlatformVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListPlatformVersions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2607,7 +2607,7 @@ const opListTagsForResource = "ListTagsForResource"
 
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagsForResource operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2699,7 +2699,7 @@ const opRebuildEnvironment = "RebuildEnvironment"
 
 // RebuildEnvironmentRequest generates a "aws/request.Request" representing the
 // client's request for the RebuildEnvironment operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2782,7 +2782,7 @@ const opRequestEnvironmentInfo = "RequestEnvironmentInfo"
 
 // RequestEnvironmentInfoRequest generates a "aws/request.Request" representing the
 // client's request for the RequestEnvironmentInfo operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2872,7 +2872,7 @@ const opRestartAppServer = "RestartAppServer"
 
 // RestartAppServerRequest generates a "aws/request.Request" representing the
 // client's request for the RestartAppServer operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2949,7 +2949,7 @@ const opRetrieveEnvironmentInfo = "RetrieveEnvironmentInfo"
 
 // RetrieveEnvironmentInfoRequest generates a "aws/request.Request" representing the
 // client's request for the RetrieveEnvironmentInfo operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3027,7 +3027,7 @@ const opSwapEnvironmentCNAMEs = "SwapEnvironmentCNAMEs"
 
 // SwapEnvironmentCNAMEsRequest generates a "aws/request.Request" representing the
 // client's request for the SwapEnvironmentCNAMEs operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3103,7 +3103,7 @@ const opTerminateEnvironment = "TerminateEnvironment"
 
 // TerminateEnvironmentRequest generates a "aws/request.Request" representing the
 // client's request for the TerminateEnvironment operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3183,7 +3183,7 @@ const opUpdateApplication = "UpdateApplication"
 
 // UpdateApplicationRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateApplication operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3260,7 +3260,7 @@ const opUpdateApplicationResourceLifecycle = "UpdateApplicationResourceLifecycle
 
 // UpdateApplicationResourceLifecycleRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateApplicationResourceLifecycle operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3340,7 +3340,7 @@ const opUpdateApplicationVersion = "UpdateApplicationVersion"
 
 // UpdateApplicationVersionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateApplicationVersion operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3417,7 +3417,7 @@ const opUpdateConfigurationTemplate = "UpdateConfigurationTemplate"
 
 // UpdateConfigurationTemplateRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateConfigurationTemplate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3508,7 +3508,7 @@ const opUpdateEnvironment = "UpdateEnvironment"
 
 // UpdateEnvironmentRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateEnvironment operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3601,7 +3601,7 @@ const opUpdateTagsForResource = "UpdateTagsForResource"
 
 // UpdateTagsForResourceRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateTagsForResource operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3719,7 +3719,7 @@ const opValidateConfigurationSettings = "ValidateConfigurationSettings"
 
 // ValidateConfigurationSettingsRequest generates a "aws/request.Request" representing the
 // client's request for the ValidateConfigurationSettings operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.

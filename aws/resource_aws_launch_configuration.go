@@ -6,16 +6,15 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsLaunchConfiguration() *schema.Resource {
@@ -34,14 +33,14 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateMaxLength(255),
+				ValidateFunc:  validation.StringLenBetween(1, 255),
 			},
 
 			"name_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateMaxLength(255 - resource.UniqueIDSuffixLength),
+				ValidateFunc: validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
 			},
 
 			"image_id": {
@@ -82,7 +81,7 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 						return ""
 					}
 				},
-				ValidateFunc: validateMaxLength(16384),
+				ValidateFunc: validation.StringLenBetween(1, 16384),
 			},
 
 			"security_groups": {
@@ -156,6 +155,12 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 						"device_name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
+						},
+
+						"no_device": {
+							Type:     schema.TypeBool,
+							Optional: true,
 							ForceNew: true,
 						},
 
@@ -339,8 +344,13 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			ebs := &autoscaling.Ebs{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+			ebs := &autoscaling.Ebs{}
+
+			var noDevice *bool
+			if v, ok := bd["no_device"].(bool); ok && v {
+				noDevice = aws.Bool(v)
+			} else {
+				ebs.DeleteOnTermination = aws.Bool(bd["delete_on_termination"].(bool))
 			}
 
 			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
@@ -370,6 +380,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 			blockDevices = append(blockDevices, &autoscaling.BlockDeviceMapping{
 				DeviceName: aws.String(bd["device_name"].(string)),
 				Ebs:        ebs,
+				NoDevice:   noDevice,
 			})
 		}
 	}
@@ -435,27 +446,23 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	}
 	createLaunchConfigurationOpts.LaunchConfigurationName = aws.String(lcName)
 
-	log.Printf(
-		"[DEBUG] autoscaling create launch configuration: %s", createLaunchConfigurationOpts)
+	log.Printf("[DEBUG] autoscaling create launch configuration: %s", createLaunchConfigurationOpts)
 
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 	err = resource.Retry(90*time.Second, func() *resource.RetryError {
 		_, err := autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if strings.Contains(awsErr.Message(), "Invalid IamInstanceProfile") {
-					return resource.RetryableError(err)
-				}
-				if strings.Contains(awsErr.Message(), "You are not authorized to perform this operation") {
-					return resource.RetryableError(err)
-				}
+			if isAWSErr(err, "ValidationError", "Invalid IamInstanceProfile") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "ValidationError", "You are not authorized to perform this operation") {
+				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("Error creating launch configuration: %s", err)
 	}
@@ -488,6 +495,7 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error retrieving launch configuration: %s", err)
 	}
 	if len(describConfs.LaunchConfigurations) == 0 {
+		log.Printf("[WARN] Launch Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -532,8 +540,7 @@ func resourceAwsLaunchConfigurationDelete(d *schema.ResourceData, meta interface
 			LaunchConfigurationName: aws.String(d.Id()),
 		})
 	if err != nil {
-		autoscalingerr, ok := err.(awserr.Error)
-		if ok && (autoscalingerr.Code() == "InvalidConfiguration.NotFound" || autoscalingerr.Code() == "ValidationError") {
+		if isAWSErr(err, "InvalidConfiguration.NotFound", "") {
 			log.Printf("[DEBUG] Launch configuration (%s) not found", d.Id())
 			return nil
 		}
@@ -585,11 +592,33 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 		var blank string
 		rootDeviceName = &blank
 	}
+
+	// Collect existing configured devices, so we can check
+	// existing value of delete_on_termination below
+	existingEbsBlockDevices := make(map[string]map[string]interface{}, 0)
+	if v, ok := d.GetOk("ebs_block_device"); ok {
+		ebsBlocks := v.(*schema.Set)
+		for _, ebd := range ebsBlocks.List() {
+			m := ebd.(map[string]interface{})
+			deviceName := m["device_name"].(string)
+			existingEbsBlockDevices[deviceName] = m
+		}
+	}
+
 	for _, bdm := range lc.BlockDeviceMappings {
 		bd := make(map[string]interface{})
-		if bdm.Ebs != nil && bdm.Ebs.DeleteOnTermination != nil {
+
+		if bdm.NoDevice != nil {
+			// Keep existing value in place to avoid spurious diff
+			deleteOnTermination := true
+			if device, ok := existingEbsBlockDevices[*bdm.DeviceName]; ok {
+				deleteOnTermination = device["delete_on_termination"].(bool)
+			}
+			bd["delete_on_termination"] = deleteOnTermination
+		} else if bdm.Ebs != nil && bdm.Ebs.DeleteOnTermination != nil {
 			bd["delete_on_termination"] = *bdm.Ebs.DeleteOnTermination
 		}
+
 		if bdm.Ebs != nil && bdm.Ebs.VolumeSize != nil {
 			bd["volume_size"] = *bdm.Ebs.VolumeSize
 		}
@@ -615,6 +644,9 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 			} else {
 				if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
 					bd["snapshot_id"] = *bdm.Ebs.SnapshotId
+				}
+				if bdm.NoDevice != nil {
+					bd["no_device"] = *bdm.NoDevice
 				}
 				blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
 			}

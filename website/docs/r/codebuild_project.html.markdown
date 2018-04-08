@@ -13,6 +13,11 @@ Provides a CodeBuild Project resource.
 ## Example Usage
 
 ```hcl
+resource "aws_s3_bucket" "foo" {
+  bucket = "test-bucket"
+  acl    = "private"
+}
+
 resource "aws_iam_role" "codebuild_role" {
   name = "codebuild-role-"
 
@@ -73,6 +78,11 @@ resource "aws_codebuild_project" "foo" {
     type = "NO_ARTIFACTS"
   }
 
+  cache {
+    type     = "S3"
+    location = "${aws_s3_bucket.foo.bucket}"
+  }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "aws/codebuild/nodejs:6.3.1"
@@ -125,6 +135,7 @@ The following arguments are supported:
 * `build_timeout` - (Optional) How long in minutes, from 5 to 480 (8 hours), for AWS CodeBuild to wait until timing out any related build that does not get marked as completed. The default is 60 minutes.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `artifacts` - (Required) Information about the project's build output artifacts. Artifact blocks are documented below.
+* `cache` - (Optional) Information about the cache storage for the project. Cache blocks are documented below.
 * `environment` - (Required) Information about the project's build environment. Environment blocks are documented below.
 * `source` - (Required) Information about the project's input source code. Source blocks are documented below.
 * `vpc_config` - (Optional) Configuration for the builds to run inside a VPC. VPC config blocks are documented below.
@@ -137,6 +148,11 @@ The following arguments are supported:
 * `namespace_type` - (Optional) The namespace to use in storing build artifacts. If `type` is set to `S3`, then valid values for this parameter are: `BUILD_ID` or `NONE`.
 * `packaging` - (Optional) The type of build output artifact to create. If `type` is set to `S3`, valid values for this parameter are: `NONE` or `ZIP`
 * `path` - (Optional) If `type` is set to `S3`, this is the path to the output artifact
+
+`cache` supports the following:
+
+* `type` - (Required) The type of storage that will be used for the AWS CodeBuild project cache. The only valid value is `S3`.
+* `location` - (Required) The location where the AWS CodeBuild project stores cached resources. Has to be an S3 bucket.
 
 `environment` supports the following:
 
