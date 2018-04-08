@@ -31,13 +31,11 @@ func resourceAwsDirectoryServiceConditionalForwarder() *schema.Resource {
 			},
 
 			"dns_ips": &schema.Schema{
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
-				Set:      schema.HashString,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
-					//ValidateFunc: validation.SingleIP(),
 				},
 			},
 
@@ -54,10 +52,7 @@ func resourceAwsDirectoryServiceConditionalForwarder() *schema.Resource {
 func resourceAwsDirectoryServiceConditionalForwarderCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dsconn
 
-	var dnsIps []*string
-	for _, ip := range d.Get("dns_ips").(*schema.Set).List() {
-		dnsIps = append(dnsIps, aws.String(ip.(string)))
-	}
+	dnsIps := expandStringList(d.Get("dns_ips").([]interface{}))
 
 	directoryId := d.Get("directory_id").(string)
 	domainName := d.Get("domain_name").(string)
@@ -80,13 +75,11 @@ func resourceAwsDirectoryServiceConditionalForwarderCreate(d *schema.ResourceDat
 func resourceAwsDirectoryServiceConditionalForwarderRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dsconn
 
-	parts := strings.SplitN(d.Id(), ":", 2)
+	directoryId, domainName := parseDSConditionalForwarderId(d.Id())
 
-	if len(parts) != 2 {
-		return fmt.Errorf("Incorrect id %q, expecting DIRECTORY_ID:DOMAIN_NAME", d.Id())
+	if directoryId == "" || domainName == "" {
+		return fmt.Errorf("Error importing aws_directory_service_conditional_forwarder. Please make sure ID is in format DIRECTORY_ID:DOMAIN_NAME")
 	}
-
-	directoryId, domainName := parts[0], parts[1]
 
 	res, err := conn.DescribeConditionalForwarders(&directoryservice.DescribeConditionalForwardersInput{
 		DirectoryId:       aws.String(directoryId),
@@ -108,7 +101,7 @@ func resourceAwsDirectoryServiceConditionalForwarderRead(d *schema.ResourceData,
 
 	cfd := res.ConditionalForwarders[0]
 
-	d.Set("dns_ips", schema.NewSet(schema.HashString, flattenStringList(cfd.DnsIpAddrs)))
+	d.Set("dns_ips", flattenStringList(cfd.DnsIpAddrs))
 	d.Set("directory_id", directoryId)
 	d.Set("domain_name", *cfd.RemoteDomainName)
 
@@ -118,10 +111,7 @@ func resourceAwsDirectoryServiceConditionalForwarderRead(d *schema.ResourceData,
 func resourceAwsDirectoryServiceConditionalForwarderUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dsconn
 
-	var dnsIps []*string
-	for _, ip := range d.Get("dns_ips").(*schema.Set).List() {
-		dnsIps = append(dnsIps, aws.String(ip.(string)))
-	}
+	dnsIps := expandStringList(d.Get("dns_ips").([]interface{}))
 
 	_, err := conn.UpdateConditionalForwarder(&directoryservice.UpdateConditionalForwarderInput{
 		DirectoryId:      aws.String(d.Get("directory_id").(string)),
@@ -150,4 +140,15 @@ func resourceAwsDirectoryServiceConditionalForwarderDelete(d *schema.ResourceDat
 
 	d.SetId("")
 	return nil
+}
+
+func parseDSConditionalForwarderId(id string) (directoryId, domainName string) {
+	parts := strings.SplitN(id, ":", 2)
+
+	if len(parts) == 2 {
+		directoryId = parts[0]
+		domainName = parts[1]
+	}
+
+	return
 }
