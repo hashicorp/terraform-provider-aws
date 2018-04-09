@@ -508,6 +508,7 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 	}
 
 	lc := describConfs.LaunchConfigurations[0]
+	log.Printf("[DEBUG] launch configuration output: %s", lc)
 
 	d.Set("key_name", lc.KeyName)
 	d.Set("image_id", lc.ImageId)
@@ -518,11 +519,18 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 	d.Set("ebs_optimized", lc.EbsOptimized)
 	d.Set("spot_price", lc.SpotPrice)
 	d.Set("enable_monitoring", lc.InstanceMonitoring.Enabled)
-	d.Set("security_groups", lc.SecurityGroups)
 	d.Set("associate_public_ip_address", lc.AssociatePublicIpAddress)
+	if err := d.Set("security_groups", flattenStringList(lc.SecurityGroups)); err != nil {
+		return fmt.Errorf("error setting security_groups: %s", err)
+	}
+	if aws.StringValue(lc.UserData) != "" {
+		d.Set("user_data", userDataHashSum(*lc.UserData))
+	}
 
 	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
-	d.Set("vpc_classic_link_security_groups", lc.ClassicLinkVPCSecurityGroups)
+	if err := d.Set("vpc_classic_link_security_groups", flattenStringList(lc.ClassicLinkVPCSecurityGroups)); err != nil {
+		return fmt.Errorf("error setting vpc_classic_link_security_groups: %s", err)
+	}
 
 	if err := readLCBlockDevices(d, lc, ec2conn); err != nil {
 		return err

@@ -200,6 +200,11 @@ func TestAccAWSLaunchConfiguration_withVpcClassicLink(t *testing.T) {
 					testAccCheckAWSSecurityGroupExists("aws_security_group.foo", &group),
 				),
 			},
+			{
+				ResourceName:      "aws_launch_configuration.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
