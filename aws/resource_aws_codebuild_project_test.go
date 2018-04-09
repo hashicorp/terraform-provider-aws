@@ -87,34 +87,49 @@ func TestAccAWSCodeBuildProject_cache(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config:      testAccAWSCodeBuildProjectConfig_cache(name, testAccAWSCodeBuildProjectConfig_cacheConfig("S3", "")),
+				ExpectError: regexp.MustCompile(`cache location is required when cache type is "S3"`),
+			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_cache(name, testAccAWSCodeBuildProjectConfig_cacheConfig("NO_CACHE", "")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.#", "1"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.0.type", "NO_CACHE"),
+				),
+			},
+			{
 				Config: testAccAWSCodeBuildProjectConfig_cache(name, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
-					resource.TestCheckNoResourceAttr("aws_codebuild_project.foo", "cache"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.#", "1"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.0.type", "NO_CACHE"),
 				),
 			},
 			{
 				Config: testAccAWSCodeBuildProjectConfig_cache(name, testAccAWSCodeBuildProjectConfig_cacheConfig("S3", "some-bucket")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.#", "1"),
 					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.0.type", "S3"),
-					resource.TestCheckResourceAttrSet("aws_codebuild_project.foo", "cache.0.location"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.0.location", "some-bucket"),
 				),
 			},
 			{
 				Config: testAccAWSCodeBuildProjectConfig_cache(name, testAccAWSCodeBuildProjectConfig_cacheConfig("S3", "some-new-bucket")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.#", "1"),
 					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.0.type", "S3"),
-					resource.TestCheckResourceAttrSet("aws_codebuild_project.foo", "cache.0.location"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.0.location", "some-new-bucket"),
 				),
 			},
 			{
 				Config: testAccAWSCodeBuildProjectConfig_cache(name, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists("aws_codebuild_project.foo"),
-					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.0.type", "S3"),
-					resource.TestCheckResourceAttrSet("aws_codebuild_project.foo", "cache.0.location"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.#", "1"),
+					resource.TestCheckResourceAttr("aws_codebuild_project.foo", "cache.0.type", "NO_CACHE"),
 				),
 			},
 		},
