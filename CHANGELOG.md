@@ -2,6 +2,7 @@
 
 BUG FIXES:
 
+* resource/aws_lambda_alias: Force new resource on `name` change [GH-4106]
 * resource/aws_network_acl: Prevent error on deletion with already deleted subnets [GH-4119]
 * resource/aws_network_acl: Prevent error on update with removing associations for already deleted subnets [GH-4119]
 
