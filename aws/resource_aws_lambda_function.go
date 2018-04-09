@@ -638,13 +638,14 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("dead_letter_config") {
 		dlcMaps := d.Get("dead_letter_config").([]interface{})
+		configReq.DeadLetterConfig = &lambda.DeadLetterConfig{
+			TargetArn: aws.String(""),
+		}
 		if len(dlcMaps) == 1 { // Schema guarantees either 0 or 1
 			dlcMap := dlcMaps[0].(map[string]interface{})
-			configReq.DeadLetterConfig = &lambda.DeadLetterConfig{
-				TargetArn: aws.String(dlcMap["target_arn"].(string)),
-			}
-			configUpdate = true
+			configReq.DeadLetterConfig.TargetArn = aws.String(dlcMap["target_arn"].(string))
 		}
+		configUpdate = true
 	}
 	if d.HasChange("tracing_config") {
 		tracingConfig := d.Get("tracing_config").([]interface{})
