@@ -30,6 +30,25 @@ func TestAccAWSAthenaDatabase_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
+	rInt := acctest.RandInt()
+	dbName := acctest.RandString(8)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaDatabaseConfigNameStartsWithUnderscore(rInt, dbName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaDatabaseExists("aws_athena_database.hoge"),
+					resource.TestCheckResourceAttr("aws_athena_database.hoge", "name", "_"+dbName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
 	rInt := acctest.RandInt()
 	dbName := acctest.RandString(8)
@@ -248,7 +267,7 @@ func testAccCheckAWSAthenaDatabaseDropFails(dbName string) resource.TestCheckFun
 			QueryExecutionContext: &athena.QueryExecutionContext{
 				Database: aws.String(dbName),
 			},
-			QueryString: aws.String(fmt.Sprintf("drop database %s;", dbName)),
+			QueryString: aws.String(fmt.Sprintf("drop database `%s`;", dbName)),
 			ResultConfiguration: &athena.ResultConfiguration{
 				OutputLocation: aws.String("s3://" + bucketName),
 			},
@@ -292,6 +311,20 @@ func testAccAthenaDatabaseConfig(randInt int, dbName string) string {
 
     resource "aws_athena_database" "hoge" {
       name = "%s"
+      bucket = "${aws_s3_bucket.hoge.bucket}"
+    }
+    `, dbName, randInt, dbName)
+}
+
+func testAccAthenaDatabaseConfigNameStartsWithUnderscore(randInt int, dbName string) string {
+	return fmt.Sprintf(`
+    resource "aws_s3_bucket" "hoge" {
+      bucket = "tf-athena-db-%s-%d"
+      force_destroy = true
+    }
+
+    resource "aws_athena_database" "hoge" {
+      name = "_%s"
       bucket = "${aws_s3_bucket.hoge.bucket}"
     }
     `, dbName, randInt, dbName)
