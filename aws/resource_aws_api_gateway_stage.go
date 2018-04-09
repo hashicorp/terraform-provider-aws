@@ -54,6 +54,10 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
+			},
 			"variables": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -88,6 +92,14 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 	if v, ok := d.GetOk("documentation_version"); ok {
 		input.DocumentationVersion = aws.String(v.(string))
 	}
+	if vars, ok := d.GetOk("tags"); ok {
+		tags := make(map[string]string, 0)
+		for k, v := range vars.(map[string]interface{}) {
+			tags[k] = v.(string)
+		}
+		input.Tags = aws.StringMap(tags)
+	}
+
 	if vars, ok := d.GetOk("variables"); ok {
 		variables := make(map[string]string, 0)
 		for k, v := range vars.(map[string]interface{}) {
@@ -108,6 +120,7 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 	d.SetPartial("deployment_id")
 	d.SetPartial("description")
 	d.SetPartial("variables")
+	d.SetPartial("tags")
 
 	if waitForCache && *out.CacheClusterStatus != "NOT_AVAILABLE" {
 		stateConf := &resource.StateChangeConf{
