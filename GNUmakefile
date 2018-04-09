@@ -1,6 +1,7 @@
 SWEEP?=us-east-1,us-west-2
 TEST?=./...
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
+WEBSITE_REPO="github.com/hashicorp/terraform-website"
 
 default: build
 
@@ -46,5 +47,12 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
-.PHONY: build sweep test testacc vet fmt fmtcheck errcheck vendor-status test-compile
+website:
+ifneq (,$(wildcard "$(GOPATH)/src/$WEBSITE_REPO"))
+	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
+	go get $WEBSITE_REPO
+endif
+	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=aws
+
+.PHONY: build sweep test testacc vet fmt fmtcheck errcheck vendor-status test-compile website
 
