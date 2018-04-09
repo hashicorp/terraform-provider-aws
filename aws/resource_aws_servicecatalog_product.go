@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -23,28 +22,14 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
-		},
-
 		Schema: map[string]*schema.Schema{
-			"created_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"description": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"distributor": {
 				Type:     schema.TypeString,
-				Required: true,
-			},
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -64,17 +49,17 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 			},
 			"support_description": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"support_email": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"support_url": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
-			"artifact": {
+			"provisioning_artifact": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -151,7 +136,7 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 		input.SupportUrl = aws.String(v.(string))
 	}
 
-	artifactSettings := d.Get("artifact").(*schema.Set).List()[0].(map[string]interface{})
+	artifactSettings := d.Get("provisioning_artifact").(*schema.Set).List()[0].(map[string]interface{})
 	artifactProperties := servicecatalog.ProvisioningArtifactProperties{}
 	artifactProperties.Description = aws.String(artifactSettings["description"].(string))
 	artifactProperties.Name = aws.String(artifactSettings["name"].(string))
@@ -164,7 +149,7 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 	artifactProperties.Info = info
 	input.SetProvisioningArtifactParameters(&artifactProperties)
 
-	log.Printf("[DEBUG] Creating Service Catalog Product: %#v %#v", input, artifactProperties)
+	log.Printf("[DEBUG] Creating Service Catalog Product: %s %s", input, artifactProperties)
 	resp, err := conn.CreateProduct(&input)
 	if err != nil {
 		return fmt.Errorf("Creating ServiceCatalog product failed: %s", err.Error())
@@ -179,7 +164,7 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	input := servicecatalog.DescribeProductAsAdminInput{}
 	input.Id = aws.String(d.Id())
 
-	log.Printf("[DEBUG] Reading Service Catalog Product: %#v", input)
+	log.Printf("[DEBUG] Reading Service Catalog Product: %s", input)
 	resp, err := conn.DescribeProductAsAdmin(&input)
 	if err != nil {
 		if scErr, ok := err.(awserr.Error); ok && scErr.Code() == "ResourceNotFoundException" {
@@ -190,9 +175,6 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Reading ServiceCatalog product '%s' failed: %s", *input.Id, err.Error())
 	}
 
-	if err := d.Set("created_time", resp.ProductViewDetail.CreatedTime.Format(time.RFC3339)); err != nil {
-		log.Printf("[DEBUG] Error setting created_time: %s", err)
-	}
 	d.Set("product_arn", resp.ProductViewDetail.ProductARN)
 
 	pvs := resp.ProductViewDetail.ProductViewSummary
@@ -214,7 +196,7 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	artifact["name"] = *provisioningArtifactSummary.Name
 	a = append(a, artifact)
 
-	if err := d.Set("artifact", a); err != nil {
+	if err := d.Set("provisioning_artifact", a); err != nil {
 		return err
 	}
 	return nil
@@ -271,7 +253,7 @@ func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interfa
 		input.SupportUrl = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Update Service Catalog Product: %#v", input)
+	log.Printf("[DEBUG] Update Service Catalog Product: %s", input)
 	_, err := conn.UpdateProduct(&input)
 	if err != nil {
 		return fmt.Errorf("Updating ServiceCatalog product '%s' failed: %s", *input.Id, err.Error())
@@ -284,7 +266,7 @@ func resourceAwsServiceCatalogProductDelete(d *schema.ResourceData, meta interfa
 	input := servicecatalog.DeleteProductInput{}
 	input.Id = aws.String(d.Id())
 
-	log.Printf("[DEBUG] Delete Service Catalog Product: %#v", input)
+	log.Printf("[DEBUG] Delete Service Catalog Product: %s", input)
 	_, err := conn.DeleteProduct(&input)
 	if err != nil {
 		return fmt.Errorf("Deleting ServiceCatalog product '%s' failed: %s", *input.Id, err.Error())
