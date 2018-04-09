@@ -377,5 +377,8 @@ func readCloudHsm2ClusterCertificates(cluster *cloudhsmv2.Cluster) []map[string]
 			certs["cluster_certificate"] = aws.StringValue(cluster.Certificates.ClusterCertificate)
 		}
 	}
-	return []map[string]interface{}{certs}
+	if len(certs) > 0 {
+		return []map[string]interface{}{certs}
+	}
+	return []map[string]interface{}{}
 }
