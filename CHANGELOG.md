@@ -1,4 +1,10 @@
 ## 1.14.1 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_network_acl: Prevent error on deletion with already deleted subnets [GH-4119]
+* resource/aws_network_acl: Prevent error on update with removing associations for already deleted subnets [GH-4119]
+
 ## 1.14.0 (April 06, 2018)
 
 NOTES:
