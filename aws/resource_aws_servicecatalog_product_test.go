@@ -59,8 +59,8 @@ func TestAccAWSServiceCatalogProductBasic(t *testing.T) {
 			resource.TestStep{
 				Config: template3.String(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "artifact.description", "ad"),
-					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "artifact.name", "an"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.description", "ad"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.name", "an"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "description", "dsc2"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "distributor", "dst2"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "name", name3),
@@ -88,13 +88,13 @@ func TestAccAWSServiceCatalogProductDisappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceCatlaogProductDestroy,
+		CheckDestroy: testAccCheckServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: template1.String(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProduct("aws_servicecatalog_product.test", &productViewDetail),
-					testAccCheckServiceCatlaogProductDisappears(&productViewDetail),
+					testAccCheckServiceCatalogProductDisappears(&productViewDetail),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -114,7 +114,7 @@ func TestAccAWSServiceCatalogProductImport(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceCatlaogProductDestroy,
+		CheckDestroy: testAccCheckServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: template1.String(),
@@ -153,7 +153,7 @@ func testAccCheckProduct(pr string, pd *servicecatalog.ProductViewDetail) resour
 	}
 }
 
-func testAccCheckServiceCatlaogProductDisappears(pd *servicecatalog.ProductViewDetail) resource.TestCheckFunc {
+func testAccCheckServiceCatalogProductDisappears(pd *servicecatalog.ProductViewDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).scconn
 
@@ -169,20 +169,24 @@ func testAccCheckServiceCatlaogProductDisappears(pd *servicecatalog.ProductViewD
 	}
 }
 
-func testAccCheckServiceCatlaogProductDestroy(s *terraform.State) error {
+func testAccCheckServiceCatalogProductDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).scconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_servicecatalog_portfolio" {
+		if rs.Type != "aws_servicecatalog_product" {
 			continue
 		}
 		input := servicecatalog.DescribeProductInput{}
 		input.Id = aws.String(rs.Primary.ID)
 
 		_, err := conn.DescribeProduct(&input)
-		if err == nil {
-			return fmt.Errorf("Product still exists")
+		if err != nil {
+			if isAWSErr(err, servicecatalog.ErrCodeResourceNotFoundException, "") {
+				return nil
+			}
+			return err
 		}
+		return fmt.Errorf("Product still exists")
 	}
 
 	return nil
@@ -236,7 +240,7 @@ resource "aws_servicecatalog_product" "test" {
   support_email = "{{.SupportEmail}}"
   support_url = "{{.SupportUrl}}"
 
-  artifact {
+  provisioning_artifact {
     description = "ad"
     name = "an"
     load_template_from_url = "https://s3-${var.region}.amazonaws.com/${aws_s3_bucket.bucket.id}/${aws_s3_bucket_object.template.key}"
