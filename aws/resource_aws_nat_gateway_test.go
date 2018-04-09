@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"testing"
 
@@ -11,6 +12,54 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_nat_gateway", &resource.Sweeper{
+		Name: "aws_nat_gateway",
+		F:    testSweepNatGateways,
+	})
+}
+
+func testSweepNatGateways(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	req := &ec2.DescribeNatGatewaysInput{
+		Filter: []*ec2.Filter{
+			{
+				Name: aws.String("tag-value"),
+				Values: []*string{
+					aws.String("terraform-testacc-*"),
+				},
+			},
+		},
+	}
+	resp, err := conn.DescribeNatGateways(req)
+	if err != nil {
+		return fmt.Errorf("Error describing NAT Gateways: %s", err)
+	}
+
+	if len(resp.NatGateways) == 0 {
+		log.Print("[DEBUG] No AWS NAT Gateways to sweep")
+		return nil
+	}
+
+	for _, natGateway := range resp.NatGateways {
+		_, err := conn.DeleteNatGateway(&ec2.DeleteNatGatewayInput{
+			NatGatewayId: natGateway.NatGatewayId,
+		})
+		if err != nil {
+			return fmt.Errorf(
+				"Error deleting NAT Gateway (%s): %s",
+				*natGateway.NatGatewayId, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSNatGateway_basic(t *testing.T) {
 	var natGateway ec2.NatGateway
@@ -43,6 +92,7 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 				Config: testAccNatGatewayConfigTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
+					testAccCheckTags(&natGateway.Tags, "Name", "terraform-testacc-nat-gw-tags"),
 					testAccCheckTags(&natGateway.Tags, "foo", "bar"),
 				),
 			},
@@ -51,6 +101,7 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 				Config: testAccNatGatewayConfigTagsUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
+					testAccCheckTags(&natGateway.Tags, "Name", "terraform-testacc-nat-gw-tags"),
 					testAccCheckTags(&natGateway.Tags, "foo", ""),
 					testAccCheckTags(&natGateway.Tags, "bar", "baz"),
 				),
@@ -129,7 +180,7 @@ const testAccNatGatewayConfig = `
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
   tags {
-    Name = "testAccNatGatewayConfig"
+    Name = "terraform-testacc-nat-gw-basic"
   }
 }
 
@@ -137,12 +188,18 @@ resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.1.0/24"
   map_public_ip_on_launch = false
+  tags {
+    Name = "tf-acc-nat-gw-basic-private"
+  }
 }
 
 resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.2.0/24"
   map_public_ip_on_launch = true
+  tags {
+    Name = "tf-acc-nat-gw-basic-public"
+  }
 }
 
 resource "aws_internet_gateway" "gw" {
@@ -157,6 +214,10 @@ resource "aws_eip" "nat_gateway" {
 resource "aws_nat_gateway" "gateway" {
   allocation_id = "${aws_eip.nat_gateway.id}"
   subnet_id = "${aws_subnet.public.id}"
+
+  tags {
+    Name = "terraform-testacc-nat-gw-basic"
+  }
 
   depends_on = ["aws_internet_gateway.gw"]
 }
@@ -194,7 +255,7 @@ const testAccNatGatewayConfigTags = `
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
   tags {
-    Name = "testAccNatGatewayConfig"
+    Name = "terraform-testacc-nat-gw-tags"
   }
 }
 
@@ -202,12 +263,18 @@ resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.1.0/24"
   map_public_ip_on_launch = false
+  tags {
+    Name = "tf-acc-nat-gw-tags-private"
+  }
 }
 
 resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.2.0/24"
   map_public_ip_on_launch = true
+  tags {
+    Name = "tf-acc-nat-gw-tags-public"
+  }
 }
 
 resource "aws_internet_gateway" "gw" {
@@ -224,6 +291,7 @@ resource "aws_nat_gateway" "gateway" {
   subnet_id = "${aws_subnet.public.id}"
 
   tags {
+    Name = "terraform-testacc-nat-gw-tags"
     foo = "bar"
   }
 
@@ -263,7 +331,7 @@ const testAccNatGatewayConfigTagsUpdate = `
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
   tags {
-    Name = "testAccNatGatewayConfig"
+    Name = "terraform-testacc-nat-gw-tags"
   }
 }
 
@@ -271,12 +339,18 @@ resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.1.0/24"
   map_public_ip_on_launch = false
+  tags {
+    Name = "tf-acc-nat-gw-tags-private"
+  }
 }
 
 resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.2.0/24"
   map_public_ip_on_launch = true
+  tags {
+    Name = "tf-acc-nat-gw-tags-public"
+  }
 }
 
 resource "aws_internet_gateway" "gw" {
@@ -293,6 +367,7 @@ resource "aws_nat_gateway" "gateway" {
   subnet_id = "${aws_subnet.public.id}"
 
   tags {
+    Name = "terraform-testacc-nat-gw-tags"
     bar = "baz"
   }
 

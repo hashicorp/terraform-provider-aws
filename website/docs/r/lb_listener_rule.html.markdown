@@ -10,7 +10,7 @@ description: |-
 
 Provides a Load Balancer Listener Rule resource.
 
-~> **Note:** `aws_alb_listener_rule` is know as `aws_lb_listener_rule`. The functionality is identical.
+~> **Note:** `aws_alb_listener_rule` is known as `aws_lb_listener_rule`. The functionality is identical.
 
 ## Example Usage
 
@@ -61,7 +61,7 @@ resource "aws_lb_listener_rule" "host_based_routing" {
 The following arguments are supported:
 
 * `listener_arn` - (Required, Forces New Resource) The ARN of the listener to which to attach the rule.
-* `priority` - (Required) The priority for the rule. A listener can't have multiple rules with the same priority.
+* `priority` - (Optional) The priority for the rule between `1` and `50000`. Leaving it unset will automatically set the rule with next available priority after currently existing highest rule. A listener can't have multiple rules with the same priority.
 * `action` - (Required) An Action block. Action blocks are documented below.
 * `condition` - (Required) A Condition block. Condition blocks are documented below.
 

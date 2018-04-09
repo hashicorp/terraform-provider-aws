@@ -6,7 +6,7 @@ description: |-
   Provides a security group resource.
 ---
 
-# aws\_security\_group
+# aws_security_group
 
 Provides a security group resource.
 
@@ -80,6 +80,13 @@ assign a random, unique name
    ingress rule. Each ingress block supports fields documented below.
 * `egress` - (Optional, VPC only) Can be specified multiple times for each
       egress rule. Each egress block supports fields documented below.
+* `revoke_rules_on_delete` - (Optional) Instruct Terraform to revoke all of the
+Security Groups attached ingress and egress rules before deleting the rule
+itself. This is normally not needed, however certain AWS services such as
+Elastic Map Reduce may automatically add required rules to security groups used
+with the service, and those rules may contain a cyclic dependency that prevent
+the security groups from being destroyed without removing the dependency first.
+Default `false`
 * `vpc_id` - (Optional, Forces new resource) The VPC ID.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
@@ -153,6 +160,7 @@ Prefix list IDs are exported on VPC Endpoints, so you can use this format:
 The following attributes are exported:
 
 * `id` - The ID of the security group
+* `arn` - The ARN of the security group
 * `vpc_id` - The VPC ID.
 * `owner_id` - The owner ID.
 * `name` - The name of the security group
@@ -160,6 +168,13 @@ The following attributes are exported:
 * `ingress` - The ingress rules. See above for more.
 * `egress` - The egress rules. See above for more.
 
+## Timeouts
+
+`aws_security_group` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+configuration options:
+
+- `create` - (Default `10 minutes`) How long to wait for a security group to be created.
+- `delete` - (Default `10 minutes`) How long to wait for a security group to be deleted.
 
 ## Import
 

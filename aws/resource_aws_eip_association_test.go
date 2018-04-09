@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -60,6 +61,28 @@ func TestAccAWSEIPAssociation_ec2Classic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_eip_association.test", "public_ip"),
 					resource.TestCheckResourceAttr("aws_eip_association.test", "allocation_id", ""),
 					testAccCheckAWSEIPAssociationHasIpBasedId("aws_eip_association.test", &a),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEIPAssociation_spotInstance(t *testing.T) {
+	var a ec2.Address
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPAssociationConfig_spotInstance(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists("aws_eip.test", &a),
+					testAccCheckAWSEIPAssociationExists("aws_eip_association.test", &a),
+					resource.TestCheckResourceAttrSet("aws_eip_association.test", "allocation_id"),
+					resource.TestCheckResourceAttrSet("aws_eip_association.test", "instance_id"),
 				),
 			},
 		},
@@ -190,13 +213,16 @@ const testAccAWSEIPAssociationConfig = `
 resource "aws_vpc" "main" {
 	cidr_block = "192.168.0.0/24"
 	tags {
-		Name = "testAccAWSEIPAssociationConfig"
+		Name = "terraform-testacc-eip-association"
 	}
 }
 resource "aws_subnet" "sub" {
 	vpc_id = "${aws_vpc.main.id}"
 	cidr_block = "192.168.0.0/25"
 	availability_zone = "us-west-2a"
+	tags {
+		Name = "tf-acc-eip-association"
+	}
 }
 resource "aws_internet_gateway" "igw" {
 	vpc_id = "${aws_vpc.main.id}"
@@ -242,13 +268,16 @@ const testAccAWSEIPAssociationConfigDisappears = `
 resource "aws_vpc" "main" {
 	cidr_block = "192.168.0.0/24"
 	tags {
-		Name = "testAccAWSEIPAssociationConfigDisappears"
+		Name = "terraform-testacc-eip-association-disappears"
 	}
 }
 resource "aws_subnet" "sub" {
 	vpc_id = "${aws_vpc.main.id}"
 	cidr_block = "192.168.0.0/25"
 	availability_zone = "us-west-2a"
+	tags {
+		Name = "tf-acc-eip-association-disappears"
+	}
 }
 resource "aws_internet_gateway" "igw" {
 	vpc_id = "${aws_vpc.main.id}"
@@ -303,3 +332,16 @@ resource "aws_eip_association" "test" {
   instance_id = "${aws_instance.test.id}"
 }
 `
+
+func testAccAWSEIPAssociationConfig_spotInstance(rInt int) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_eip" "test" {}
+
+resource "aws_eip_association" "test" {
+  allocation_id = "${aws_eip.test.id}"
+  instance_id   = "${aws_spot_instance_request.foo.spot_instance_id}"
+}
+`, testAccAWSSpotInstanceRequestConfig(rInt))
+}

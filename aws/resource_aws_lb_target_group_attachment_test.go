@@ -71,6 +71,25 @@ func TestAccAWSLBTargetGroupAttachment_withoutPort(t *testing.T) {
 	})
 }
 
+func TestAccAWSALBTargetGroupAttachment_ipAddress(t *testing.T) {
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupAttachmentConfigWithIpAddress(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLBTargetGroupAttachmentExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -170,14 +189,11 @@ resource "aws_lb_target_group" "test" {
   port = 443
   protocol = "HTTPS"
   vpc_id = "${aws_vpc.test.id}"
-
   deregistration_delay = 200
-
   stickiness {
     type = "lb_cookie"
     cookie_duration = 10000
   }
-
   health_check {
     path = "/health"
     interval = 60
@@ -193,13 +209,15 @@ resource "aws_lb_target_group" "test" {
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
-
+  tags {
+    Name = "tf-acc-lb-target-group-attachment-without-port"
+  }
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSLBTargetGroupAttachmentConfigWithoutPort"
+		Name = "terraform-testacc-lb-target-group-attachment-without-port"
 	}
 }`, targetGroupName)
 }
@@ -223,14 +241,11 @@ resource "aws_lb_target_group" "test" {
   port = 443
   protocol = "HTTPS"
   vpc_id = "${aws_vpc.test.id}"
-
   deregistration_delay = 200
-
   stickiness {
     type = "lb_cookie"
     cookie_duration = 10000
   }
-
   health_check {
     path = "/health"
     interval = 60
@@ -246,13 +261,15 @@ resource "aws_lb_target_group" "test" {
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
-
+  tags {
+    Name = "tf-acc-lb-target-group-attachment-basic"
+  }
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSLBTargetGroupAttachmentConfig_basic"
+		Name = "terraform-testacc-lb-target-group-attachment-basic"
 	}
 }`, targetGroupName)
 }
@@ -276,14 +293,11 @@ resource "aws_alb_target_group" "test" {
   port = 443
   protocol = "HTTPS"
   vpc_id = "${aws_vpc.test.id}"
-
   deregistration_delay = 200
-
   stickiness {
     type = "lb_cookie"
     cookie_duration = 10000
   }
-
   health_check {
     path = "/health"
     interval = 60
@@ -299,13 +313,64 @@ resource "aws_alb_target_group" "test" {
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
-
+  tags {
+    Name = "tf-acc-lb-target-group-attachment-bc"
+  }
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSLBTargetGroupAttachmentConfig_basic"
+		Name = "terraform-testacc-lb-target-group-attachment-bc"
+	}
+}`, targetGroupName)
+}
+
+func testAccAWSLBTargetGroupAttachmentConfigWithIpAddress(targetGroupName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group_attachment" "test" {
+  target_group_arn = "${aws_lb_target_group.test.arn}"
+  target_id = "${aws_instance.test.private_ip}"
+  availability_zone = "${aws_instance.test.availability_zone}"
+}
+resource "aws_instance" "test" {
+  ami = "ami-f701cb97"
+  instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.subnet.id}"
+}
+resource "aws_lb_target_group" "test" {
+  name = "%s"
+  port = 443
+  protocol = "HTTPS"
+  vpc_id = "${aws_vpc.test.id}"
+  target_type = "ip"
+  deregistration_delay = 200
+  stickiness {
+    type = "lb_cookie"
+    cookie_duration = 10000
+  }
+  health_check {
+    path = "/health"
+    interval = 60
+    port = 8081
+    protocol = "HTTP"
+    timeout = 3
+    healthy_threshold = 3
+    unhealthy_threshold = 3
+    matcher = "200-299"
+  }
+}
+resource "aws_subnet" "subnet" {
+  cidr_block = "10.0.1.0/24"
+  vpc_id = "${aws_vpc.test.id}"
+  tags {
+    Name = "tf-acc-lb-target-group-attachment-with-ip-address"
+  }
+}
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+	tags {
+		Name = "terraform-testacc-lb-target-group-attachment-with-ip-address"
 	}
 }`, targetGroupName)
 }

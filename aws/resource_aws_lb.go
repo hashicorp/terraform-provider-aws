@@ -21,9 +21,11 @@ import (
 func resourceAwsLb() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLbCreate,
-		Read:   resoureAwsLbRead,
+		Read:   resourceAwsLbRead,
 		Update: resourceAwsLbUpdate,
 		Delete: resourceAwsLbDelete,
+		// Subnets are ForceNew for Network Load Balancers
+		CustomizeDiff: customizeDiffNLBSubnets,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -94,6 +96,7 @@ func resourceAwsLb() *schema.Resource {
 			"subnet_mapping": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -119,25 +122,29 @@ func resourceAwsLb() *schema.Resource {
 			},
 
 			"access_logs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				Computed:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressIfLBType("network"),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bucket": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:             schema.TypeString,
+							Required:         true,
+							DiffSuppressFunc: suppressIfLBType("network"),
 						},
 						"prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: suppressIfLBType("network"),
 						},
 						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
+							Type:             schema.TypeBool,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: suppressIfLBType("network"),
 						},
 					},
 				},
@@ -150,9 +157,24 @@ func resourceAwsLb() *schema.Resource {
 			},
 
 			"idle_timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  60,
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Default:          60,
+				DiffSuppressFunc: suppressIfLBType("network"),
+			},
+
+			"enable_cross_zone_load_balancing": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBType("application"),
+			},
+
+			"enable_http2": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          true,
+				DiffSuppressFunc: suppressIfLBType("network"),
 			},
 
 			"ip_address_type": {
@@ -178,6 +200,12 @@ func resourceAwsLb() *schema.Resource {
 
 			"tags": tagsSchema(),
 		},
+	}
+}
+
+func suppressIfLBType(t string) schema.SchemaDiffSuppressFunc {
+	return func(k string, old string, new string, d *schema.ResourceData) bool {
+		return d.Get("load_balancer_type").(string) == t
 	}
 }
 
@@ -223,9 +251,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if subnetMap["allocation_id"].(string) != "" {
-				elbOpts.SubnetMappings[i] = &elbv2.SubnetMapping{
-					AllocationId: aws.String(subnetMap["allocation_id"].(string)),
-				}
+				elbOpts.SubnetMappings[i].AllocationId = aws.String(subnetMap["allocation_id"].(string))
 			}
 		}
 	}
@@ -247,7 +273,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 
 	lb := resp.LoadBalancers[0]
 	d.SetId(*lb.LoadBalancerArn)
-	log.Printf("[INFO] ALB ID: %s", d.Id())
+	log.Printf("[INFO] LB ID: %s", d.Id())
 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"provisioning", "failed"},
@@ -265,7 +291,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 			dLb := describeResp.LoadBalancers[0]
 
-			log.Printf("[INFO] ALB state: %s", *dLb.State.Code)
+			log.Printf("[INFO] LB state: %s", *dLb.State.Code)
 
 			return describeResp, *dLb.State.Code, nil
 		},
@@ -281,7 +307,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceAwsLbUpdate(d, meta)
 }
 
-func resoureAwsLbRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 	lbArn := d.Id()
 
@@ -318,47 +344,61 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	attributes := make([]*elbv2.LoadBalancerAttribute, 0)
 
-	if d.HasChange("access_logs") {
-		logs := d.Get("access_logs").([]interface{})
-		if len(logs) == 1 {
-			log := logs[0].(map[string]interface{})
+	switch d.Get("load_balancer_type").(string) {
+	case "application":
+		if d.HasChange("access_logs") || d.IsNewResource() {
+			logs := d.Get("access_logs").([]interface{})
+			if len(logs) == 1 {
+				log := logs[0].(map[string]interface{})
 
-			attributes = append(attributes,
-				&elbv2.LoadBalancerAttribute{
-					Key:   aws.String("access_logs.s3.enabled"),
-					Value: aws.String(strconv.FormatBool(log["enabled"].(bool))),
-				},
-				&elbv2.LoadBalancerAttribute{
-					Key:   aws.String("access_logs.s3.bucket"),
-					Value: aws.String(log["bucket"].(string)),
-				})
+				attributes = append(attributes,
+					&elbv2.LoadBalancerAttribute{
+						Key:   aws.String("access_logs.s3.enabled"),
+						Value: aws.String(strconv.FormatBool(log["enabled"].(bool))),
+					},
+					&elbv2.LoadBalancerAttribute{
+						Key:   aws.String("access_logs.s3.bucket"),
+						Value: aws.String(log["bucket"].(string)),
+					})
 
-			if prefix, ok := log["prefix"]; ok {
+				if prefix, ok := log["prefix"]; ok {
+					attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+						Key:   aws.String("access_logs.s3.prefix"),
+						Value: aws.String(prefix.(string)),
+					})
+				}
+			} else if len(logs) == 0 {
 				attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-					Key:   aws.String("access_logs.s3.prefix"),
-					Value: aws.String(prefix.(string)),
+					Key:   aws.String("access_logs.s3.enabled"),
+					Value: aws.String("false"),
 				})
 			}
-		} else if len(logs) == 0 {
+		}
+		if d.HasChange("idle_timeout") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("access_logs.s3.enabled"),
-				Value: aws.String("false"),
+				Key:   aws.String("idle_timeout.timeout_seconds"),
+				Value: aws.String(fmt.Sprintf("%d", d.Get("idle_timeout").(int))),
+			})
+		}
+		if d.HasChange("enable_http2") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http2.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("enable_http2").(bool))),
+			})
+		}
+	case "network":
+		if d.HasChange("enable_cross_zone_load_balancing") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("load_balancing.cross_zone.enabled"),
+				Value: aws.String(fmt.Sprintf("%t", d.Get("enable_cross_zone_load_balancing").(bool))),
 			})
 		}
 	}
 
-	if d.HasChange("enable_deletion_protection") {
+	if d.HasChange("enable_deletion_protection") || d.IsNewResource() {
 		attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 			Key:   aws.String("deletion_protection.enabled"),
 			Value: aws.String(fmt.Sprintf("%t", d.Get("enable_deletion_protection").(bool))),
-		})
-	}
-
-	// It's important to know that Idle timeout is not supported for Network Loadbalancers
-	if d.Get("load_balancer_type").(string) != "network" && d.HasChange("idle_timeout") {
-		attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-			Key:   aws.String("idle_timeout.timeout_seconds"),
-			Value: aws.String(fmt.Sprintf("%d", d.Get("idle_timeout").(int))),
 		})
 	}
 
@@ -371,7 +411,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] ALB Modify Load Balancer Attributes Request: %#v", input)
 		_, err := elbconn.ModifyLoadBalancerAttributes(input)
 		if err != nil {
-			return fmt.Errorf("Failure configuring ALB attributes: %s", err)
+			return fmt.Errorf("Failure configuring LB attributes: %s", err)
 		}
 	}
 
@@ -384,12 +424,16 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 		_, err := elbconn.SetSecurityGroups(params)
 		if err != nil {
-			return fmt.Errorf("Failure Setting ALB Security Groups: %s", err)
+			return fmt.Errorf("Failure Setting LB Security Groups: %s", err)
 		}
 
 	}
 
-	if d.HasChange("subnets") {
+	// subnets are assigned at Create; the 'change' here is an empty map for old
+	// and current subnets for new, so this change is redundant when the
+	// resource is just created, so we don't attempt if it is a newly created
+	// resource.
+	if d.HasChange("subnets") && !d.IsNewResource() {
 		subnets := expandStringList(d.Get("subnets").(*schema.Set).List())
 
 		params := &elbv2.SetSubnetsInput{
@@ -399,7 +443,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := elbconn.SetSubnets(params)
 		if err != nil {
-			return fmt.Errorf("Failure Setting ALB Subnets: %s", err)
+			return fmt.Errorf("Failure Setting LB Subnets: %s", err)
 		}
 	}
 
@@ -412,7 +456,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := elbconn.SetIpAddressType(params)
 		if err != nil {
-			return fmt.Errorf("Failure Setting ALB IP Address Type: %s", err)
+			return fmt.Errorf("Failure Setting LB IP Address Type: %s", err)
 		}
 
 	}
@@ -433,7 +477,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			dLb := describeResp.LoadBalancers[0]
 
-			log.Printf("[INFO] ALB state: %s", *dLb.State.Code)
+			log.Printf("[INFO] LB state: %s", *dLb.State.Code)
 
 			return describeResp, *dLb.State.Code, nil
 		},
@@ -446,25 +490,32 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return resoureAwsLbRead(d, meta)
+	return resourceAwsLbRead(d, meta)
 }
 
 func resourceAwsLbDelete(d *schema.ResourceData, meta interface{}) error {
 	lbconn := meta.(*AWSClient).elbv2conn
 
-	log.Printf("[INFO] Deleting ALB: %s", d.Id())
+	log.Printf("[INFO] Deleting LB: %s", d.Id())
 
 	// Destroy the load balancer
 	deleteElbOpts := elbv2.DeleteLoadBalancerInput{
 		LoadBalancerArn: aws.String(d.Id()),
 	}
 	if _, err := lbconn.DeleteLoadBalancer(&deleteElbOpts); err != nil {
-		return fmt.Errorf("Error deleting ALB: %s", err)
+		return fmt.Errorf("Error deleting LB: %s", err)
 	}
 
-	err := cleanupLBNetworkInterfaces(meta.(*AWSClient).ec2conn, d.Id())
+	conn := meta.(*AWSClient).ec2conn
+
+	err := cleanupLBNetworkInterfaces(conn, d.Id())
 	if err != nil {
 		log.Printf("[WARN] Failed to cleanup ENIs for ALB %q: %#v", d.Id(), err)
+	}
+
+	err = waitForNLBNetworkInterfacesToDetach(conn, d.Id())
+	if err != nil {
+		log.Printf("[WARN] Failed to wait for ENIs to disappear for NLB %q: %#v", d.Id(), err)
 	}
 
 	return nil
@@ -475,14 +526,10 @@ func resourceAwsLbDelete(d *schema.ResourceData, meta interface{}) error {
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
 func cleanupLBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
-	re := regexp.MustCompile("([^/]+/[^/]+/[^/]+)$")
-	matches := re.FindStringSubmatch(lbArn)
-	if len(matches) != 2 {
-		return fmt.Errorf("Unexpected ARN format: %q", lbArn)
+	name, err := getLbNameFromArn(lbArn)
+	if err != nil {
+		return err
 	}
-
-	// e.g. app/example-alb/b26e625cdde161e6
-	name := matches[1]
 
 	out, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
 		Filters: []*ec2.Filter{
@@ -500,7 +547,7 @@ func cleanupLBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
 		return err
 	}
 
-	log.Printf("[DEBUG] Found %d ENIs to cleanup for ALB %q",
+	log.Printf("[DEBUG] Found %d ENIs to cleanup for LB %q",
 		len(out.NetworkInterfaces), name)
 
 	if len(out.NetworkInterfaces) == 0 {
@@ -521,6 +568,59 @@ func cleanupLBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
 	return nil
 }
 
+func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
+	name, err := getLbNameFromArn(lbArn)
+	if err != nil {
+		return err
+	}
+
+	// We cannot cleanup these ENIs ourselves as that would result in
+	// OperationNotPermitted: You are not allowed to manage 'ela-attach' attachments.
+	// yet presence of these ENIs may prevent us from deleting EIPs associated w/ the NLB
+
+	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+		out, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String("attachment.instance-owner-id"),
+					Values: []*string{aws.String("amazon-aws")},
+				},
+				{
+					Name:   aws.String("attachment.attachment-id"),
+					Values: []*string{aws.String("ela-attach-*")},
+				},
+				{
+					Name:   aws.String("description"),
+					Values: []*string{aws.String("ELB " + name)},
+				},
+			},
+		})
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		niCount := len(out.NetworkInterfaces)
+		if niCount > 0 {
+			log.Printf("[DEBUG] Found %d ENIs to cleanup for NLB %q", niCount, lbArn)
+			return resource.RetryableError(fmt.Errorf("Waiting for %d ENIs of %q to clean up", niCount, lbArn))
+		}
+		log.Printf("[DEBUG] ENIs gone for NLB %q", lbArn)
+
+		return nil
+	})
+}
+
+func getLbNameFromArn(arn string) (string, error) {
+	re := regexp.MustCompile("([^/]+/[^/]+/[^/]+)$")
+	matches := re.FindStringSubmatch(arn)
+	if len(matches) != 2 {
+		return "", fmt.Errorf("Unexpected ARN format: %q", arn)
+	}
+
+	// e.g. app/example-alb/b26e625cdde161e6
+	return matches[1], nil
+}
+
 // flattenSubnetsFromAvailabilityZones creates a slice of strings containing the subnet IDs
 // for the ALB based on the AvailabilityZones structure returned by the API.
 func flattenSubnetsFromAvailabilityZones(availabilityZones []*elbv2.AvailabilityZone) []string {
@@ -529,6 +629,23 @@ func flattenSubnetsFromAvailabilityZones(availabilityZones []*elbv2.Availability
 		result = append(result, *az.SubnetId)
 	}
 	return result
+}
+
+func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.AvailabilityZone) []map[string]interface{} {
+	l := make([]map[string]interface{}, 0)
+	for _, availabilityZone := range availabilityZones {
+		for _, loadBalancerAddress := range availabilityZone.LoadBalancerAddresses {
+			m := make(map[string]interface{}, 0)
+			m["subnet_id"] = *availabilityZone.SubnetId
+
+			if loadBalancerAddress.AllocationId != nil {
+				m["allocation_id"] = *loadBalancerAddress.AllocationId
+			}
+
+			l = append(l, m)
+		}
+	}
+	return l
 }
 
 func lbSuffixFromARN(arn *string) string {
@@ -554,48 +671,41 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 	d.Set("name", lb.LoadBalancerName)
 	d.Set("internal", (lb.Scheme != nil && *lb.Scheme == "internal"))
 	d.Set("security_groups", flattenStringList(lb.SecurityGroups))
-	d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones))
 	d.Set("vpc_id", lb.VpcId)
 	d.Set("zone_id", lb.CanonicalHostedZoneId)
 	d.Set("dns_name", lb.DNSName)
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
 
-	subnetMappings := make([]interface{}, 0)
-	for _, az := range lb.AvailabilityZones {
-		subnetMappingRaw := make([]map[string]interface{}, len(az.LoadBalancerAddresses))
-		for _, subnet := range az.LoadBalancerAddresses {
-			subnetMap := make(map[string]interface{}, 0)
-			subnetMap["subnet_id"] = *az.SubnetId
-
-			if subnet.AllocationId != nil {
-				subnetMap["allocation_id"] = *subnet.AllocationId
-			}
-
-			subnetMappingRaw = append(subnetMappingRaw, subnetMap)
-		}
-		subnetMappings = append(subnetMappings, subnetMappingRaw)
+	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
+		return fmt.Errorf("error setting subnets: %s", err)
 	}
-	d.Set("subnet_mapping", subnetMappings)
+
+	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
+		return fmt.Errorf("error setting subnet_mapping: %s", err)
+	}
 
 	respTags, err := elbconn.DescribeTags(&elbv2.DescribeTagsInput{
 		ResourceArns: []*string{lb.LoadBalancerArn},
 	})
 	if err != nil {
-		return errwrap.Wrapf("Error retrieving ALB Tags: {{err}}", err)
+		return errwrap.Wrapf("Error retrieving LB Tags: {{err}}", err)
 	}
 
 	var et []*elbv2.Tag
 	if len(respTags.TagDescriptions) > 0 {
 		et = respTags.TagDescriptions[0].Tags
 	}
-	d.Set("tags", tagsToMapELBv2(et))
+
+	if err := d.Set("tags", tagsToMapELBv2(et)); err != nil {
+		log.Printf("[WARN] Error setting tags for AWS LB (%s): %s", d.Id(), err)
+	}
 
 	attributesResp, err := elbconn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return errwrap.Wrapf("Error retrieving ALB Attributes: {{err}}", err)
+		return errwrap.Wrapf("Error retrieving LB Attributes: {{err}}", err)
 	}
 
 	accessLogMap := map[string]interface{}{}
@@ -616,8 +726,16 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 			d.Set("idle_timeout", timeout)
 		case "deletion_protection.enabled":
 			protectionEnabled := (*attr.Value) == "true"
-			log.Printf("[DEBUG] Setting ALB Deletion Protection Enabled: %t", protectionEnabled)
+			log.Printf("[DEBUG] Setting LB Deletion Protection Enabled: %t", protectionEnabled)
 			d.Set("enable_deletion_protection", protectionEnabled)
+		case "routing.http2.enabled":
+			http2Enabled := (*attr.Value) == "true"
+			log.Printf("[DEBUG] Setting ALB HTTP/2 Enabled: %t", http2Enabled)
+			d.Set("enable_http2", http2Enabled)
+		case "load_balancing.cross_zone.enabled":
+			crossZoneLbEnabled := (*attr.Value) == "true"
+			log.Printf("[DEBUG] Setting NLB Cross Zone Load Balancing Enabled: %t", crossZoneLbEnabled)
+			d.Set("enable_cross_zone_load_balancing", crossZoneLbEnabled)
 		}
 	}
 
@@ -628,5 +746,52 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		d.Set("access_logs", []interface{}{})
 	}
 
+	return nil
+}
+
+// Load balancers of type 'network' cannot have their subnets updated at
+// this time. If the type is 'network' and subnets have changed, mark the
+// diff as a ForceNew operation
+func customizeDiffNLBSubnets(diff *schema.ResourceDiff, v interface{}) error {
+	// The current criteria for determining if the operation should be ForceNew:
+	// - lb of type "network"
+	// - existing resource (id is not "")
+	// - there are actual changes to be made in the subnets
+	//
+	// Any other combination should be treated as normal. At this time, subnet
+	// handling is the only known difference between Network Load Balancers and
+	// Application Load Balancers, so the logic below is simple individual checks.
+	// If other differences arise we'll want to refactor to check other
+	// conditions in combinations, but for now all we handle is subnets
+	lbType := diff.Get("load_balancer_type").(string)
+	if "network" != lbType {
+		return nil
+	}
+
+	if "" == diff.Id() {
+		return nil
+	}
+
+	o, n := diff.GetChange("subnets")
+	if o == nil {
+		o = new(schema.Set)
+	}
+	if n == nil {
+		n = new(schema.Set)
+	}
+	os := o.(*schema.Set)
+	ns := n.(*schema.Set)
+	remove := os.Difference(ns).List()
+	add := ns.Difference(os).List()
+	delta := len(remove) > 0 || len(add) > 0
+	if delta {
+		if err := diff.SetNew("subnets", n); err != nil {
+			return err
+		}
+
+		if err := diff.ForceNew("subnets"); err != nil {
+			return err
+		}
+	}
 	return nil
 }

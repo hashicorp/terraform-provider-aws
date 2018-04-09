@@ -6,7 +6,7 @@ description: |-
   Provides a resource for managing the main routing table of a VPC.
 ---
 
-# aws\_main\_route\_table\_<wbr>association
+# aws_main_route_table_association
 
 Provides a resource for managing the main routing table of a VPC.
 

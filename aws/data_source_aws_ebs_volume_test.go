@@ -17,6 +17,7 @@ func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
 				Config: testAccCheckAwsEbsVolumeDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEbsVolumeDataSourceID("data.aws_ebs_volume.ebs_volume"),
+					resource.TestCheckResourceAttrSet("data.aws_ebs_volume.ebs_volume", "arn"),
 					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "size", "40"),
 					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "tags.Name", "External Volume"),

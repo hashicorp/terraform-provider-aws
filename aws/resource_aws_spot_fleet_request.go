@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSpotFleetRequest() *schema.Resource {
@@ -31,9 +32,10 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"iam_fleet_role": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 			"replace_unhealthy_instances": {
 				Type:     schema.TypeBool,
@@ -203,7 +205,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							Optional:     true,
 							ForceNew:     true,
 							Computed:     true,
-							ValidateFunc: validateSpotFleetRequestKeyName,
+							ValidateFunc: validation.NoZeroValues,
 						},
 						"monitoring": {
 							Type:     schema.TypeBool,
@@ -254,6 +256,11 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
+						},
+						"tags": {
+							Type:     schema.TypeMap,
+							Optional: true,
 							ForceNew: true,
 						},
 					},
@@ -311,6 +318,22 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 			"client_token": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"load_balancers": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"target_group_arns": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 		},
 	}
@@ -377,6 +400,21 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 		}
 	}
 
+	if m, ok := d["tags"].(map[string]interface{}); ok && len(m) > 0 {
+		tagsSpec := make([]*ec2.SpotFleetTagSpecification, 0)
+
+		tags := tagsFromMap(m)
+
+		spec := &ec2.SpotFleetTagSpecification{
+			ResourceType: aws.String("instance"),
+			Tags:         tags,
+		}
+
+		tagsSpec = append(tagsSpec, spec)
+
+		opts.TagSpecifications = tagsSpec
+	}
+
 	subnetId, hasSubnetId := d["subnet_id"]
 	if hasSubnetId {
 		opts.SubnetId = aws.String(subnetId.(string))
@@ -417,16 +455,6 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 	}
 
 	return opts, nil
-}
-
-func validateSpotFleetRequestKeyName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	if value == "" {
-		errors = append(errors, fmt.Errorf("Key name cannot be empty."))
-	}
-
-	return
 }
 
 func readSpotFleetBlockDeviceMappingsFromConfig(
@@ -590,6 +618,36 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotFleetConfig.ValidUntil = &valid_until
 	}
 
+	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
+		var elbNames []*ec2.ClassicLoadBalancer
+		for _, v := range v.(*schema.Set).List() {
+			elbNames = append(elbNames, &ec2.ClassicLoadBalancer{
+				Name: aws.String(v.(string)),
+			})
+		}
+		if spotFleetConfig.LoadBalancersConfig == nil {
+			spotFleetConfig.LoadBalancersConfig = &ec2.LoadBalancersConfig{}
+		}
+		spotFleetConfig.LoadBalancersConfig.ClassicLoadBalancersConfig = &ec2.ClassicLoadBalancersConfig{
+			ClassicLoadBalancers: elbNames,
+		}
+	}
+
+	if v, ok := d.GetOk("target_group_arns"); ok && v.(*schema.Set).Len() > 0 {
+		var targetGroups []*ec2.TargetGroup
+		for _, v := range v.(*schema.Set).List() {
+			targetGroups = append(targetGroups, &ec2.TargetGroup{
+				Arn: aws.String(v.(string)),
+			})
+		}
+		if spotFleetConfig.LoadBalancersConfig == nil {
+			spotFleetConfig.LoadBalancersConfig = &ec2.LoadBalancersConfig{}
+		}
+		spotFleetConfig.LoadBalancersConfig.TargetGroupsConfig = &ec2.TargetGroupsConfig{
+			TargetGroups: targetGroups,
+		}
+	}
+
 	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-RequestSpotFleetInput
 	spotFleetOpts := &ec2.RequestSpotFleetInput{
 		SpotFleetRequestConfig: spotFleetConfig,
@@ -708,9 +766,44 @@ func resourceAwsSpotFleetRequestFulfillmentRefreshFunc(id string, conn *ec2.EC2)
 			return nil, "", nil
 		}
 
-		spotFleetRequest := resp.SpotFleetRequestConfigs[0]
+		cfg := resp.SpotFleetRequestConfigs[0]
+		status := *cfg.ActivityStatus
 
-		return spotFleetRequest, *spotFleetRequest.ActivityStatus, nil
+		var fleetError error
+		if status == ec2.ActivityStatusError {
+			var events []*ec2.HistoryRecord
+
+			// Query "information" events (e.g. launchSpecUnusable b/c low bid price)
+			out, err := conn.DescribeSpotFleetRequestHistory(&ec2.DescribeSpotFleetRequestHistoryInput{
+				EventType:          aws.String("information"),
+				SpotFleetRequestId: aws.String(id),
+				StartTime:          cfg.CreateTime,
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to get the reason of 'error' state: %s", err)
+			}
+			if len(out.HistoryRecords) > 0 {
+				events = out.HistoryRecords
+			}
+
+			out, err = conn.DescribeSpotFleetRequestHistory(&ec2.DescribeSpotFleetRequestHistoryInput{
+				EventType:          aws.String(ec2.EventTypeError),
+				SpotFleetRequestId: aws.String(id),
+				StartTime:          cfg.CreateTime,
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to get the reason of 'error' state: %s", err)
+			}
+			if len(out.HistoryRecords) > 0 {
+				events = append(events, out.HistoryRecords...)
+			}
+
+			if len(events) > 0 {
+				fleetError = fmt.Errorf("Last events: %v", events)
+			}
+		}
+
+		return cfg, status, fleetError
 	}
 }
 
@@ -878,6 +971,15 @@ func launchSpecToMap(l *ec2.SpotFleetLaunchSpecification, rootDevName *string) m
 
 	if l.WeightedCapacity != nil {
 		m["weighted_capacity"] = strconv.FormatFloat(*l.WeightedCapacity, 'f', 0, 64)
+	}
+
+	if l.TagSpecifications != nil {
+		for _, tagSpecs := range l.TagSpecifications {
+			// only "instance" tags are currently supported: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetTagSpecification.html
+			if *(tagSpecs.ResourceType) == "instance" {
+				m["tags"] = tagsToMap(tagSpecs.Tags)
+			}
+		}
 	}
 
 	return m

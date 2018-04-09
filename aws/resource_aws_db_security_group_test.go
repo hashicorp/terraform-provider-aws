@@ -2,11 +2,13 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -14,18 +16,24 @@ import (
 func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
 	var v rds.DBSecurityGroup
 
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandString(5))
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSDBSecurityGroupConfig,
+				Config: testAccAWSDBSecurityGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBSecurityGroupExists("aws_db_security_group.bar", &v),
 					testAccCheckAWSDBSecurityGroupAttributes(&v),
 					resource.TestCheckResourceAttr(
-						"aws_db_security_group.bar", "name", "secgroup-terraform"),
+						"aws_db_security_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
 						"aws_db_security_group.bar", "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttr(
@@ -93,10 +101,6 @@ func testAccCheckAWSDBSecurityGroupAttributes(group *rds.DBSecurityGroup) resour
 			return fmt.Errorf("bad status: %#v", statuses)
 		}
 
-		if *group.DBSecurityGroupName != "secgroup-terraform" {
-			return fmt.Errorf("bad name: %#v", *group.DBSecurityGroupName)
-		}
-
 		return nil
 	}
 }
@@ -135,13 +139,10 @@ func testAccCheckAWSDBSecurityGroupExists(n string, v *rds.DBSecurityGroup) reso
 	}
 }
 
-const testAccAWSDBSecurityGroupConfig = `
-provider "aws" {
-        region = "us-east-1"
-}
-
+func testAccAWSDBSecurityGroupConfig(name string) string {
+	return fmt.Sprintf(`
 resource "aws_db_security_group" "bar" {
-    name = "secgroup-terraform"
+    name = "%s"
 
     ingress {
         cidr = "10.0.0.1/24"
@@ -151,4 +152,5 @@ resource "aws_db_security_group" "bar" {
 		foo = "bar"
     }
 }
-`
+`, name)
+}
