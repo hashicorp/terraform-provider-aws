@@ -107,6 +107,13 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 		}
 		input.Variables = aws.StringMap(variables)
 	}
+	if vars, ok := d.GetOk("tags"); ok {
+		tags := make(map[string]string, 0)
+		for k, v := range vars.(map[string]interface{}) {
+			tags[k] = v.(string)
+		}
+		input.Tags = aws.StringMap(tags)
+	}
 
 	out, err := conn.CreateStage(&input)
 	if err != nil {
@@ -185,6 +192,8 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("description", stage.Description)
 	d.Set("documentation_version", stage.DocumentationVersion)
 	d.Set("variables", aws.StringValueMap(stage.Variables))
+	d.Set("tags", aws.StringValueMap(stage.Tags))
+	log.Printf("[DEBUG] Received API Gateway Stage -- TAGS: %s", stage.Tags)
 
 	return nil
 }
@@ -193,6 +202,12 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).apigateway
 
 	d.Partial(true)
+
+	if tagErr := updateTagsAPIGatewayStage(d, meta); tagErr != nil {
+		return fmt.Errorf("updating API Gateway Stage failed: %s", tagErr)
+	}
+	d.SetPartial("tags")
+
 	operations := make([]*apigateway.PatchOperation, 0)
 	waitForCache := false
 	if d.HasChange("cache_cluster_enabled") {
@@ -239,6 +254,7 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 			Value: aws.String(d.Get("documentation_version").(string)),
 		})
 	}
+
 	if d.HasChange("variables") {
 		o, n := d.GetChange("variables")
 		oldV := o.(map[string]interface{})
