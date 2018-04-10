@@ -102,16 +102,16 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
-					lambda.RuntimeNodejs43,
-					lambda.RuntimeNodejs610,
-					"nodejs8.10",
-					lambda.RuntimeJava8,
-					lambda.RuntimePython27,
-					lambda.RuntimePython36,
 					lambda.RuntimeDotnetcore10,
 					lambda.RuntimeDotnetcore20,
-					lambda.RuntimeNodejs43Edge,
 					lambda.RuntimeGo1X,
+					lambda.RuntimeJava8,
+					lambda.RuntimeNodejs43,
+					lambda.RuntimeNodejs43Edge,
+					lambda.RuntimeNodejs610,
+					lambda.RuntimeNodejs810,
+					lambda.RuntimePython27,
+					lambda.RuntimePython36,
 				}, false),
 			},
 			"timeout": {
