@@ -272,7 +272,7 @@ func resourceDHCPOptionsStateRefreshFunc(conn *ec2.EC2, id string) resource.Stat
 
 		resp, err := conn.DescribeDhcpOptions(DescribeDhcpOpts)
 		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidDhcpOptionsID.NotFound" {
+			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidDhcpOptionID.NotFound" {
 				resp = nil
 			} else {
 				log.Printf("Error on DHCPOptionsStateRefresh: %s", err)
