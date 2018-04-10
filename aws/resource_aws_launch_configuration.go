@@ -158,6 +158,12 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"no_device": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+
 						"iops": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -338,8 +344,13 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			ebs := &autoscaling.Ebs{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+			ebs := &autoscaling.Ebs{}
+
+			var noDevice *bool
+			if v, ok := bd["no_device"].(bool); ok && v {
+				noDevice = aws.Bool(v)
+			} else {
+				ebs.DeleteOnTermination = aws.Bool(bd["delete_on_termination"].(bool))
 			}
 
 			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
@@ -369,6 +380,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 			blockDevices = append(blockDevices, &autoscaling.BlockDeviceMapping{
 				DeviceName: aws.String(bd["device_name"].(string)),
 				Ebs:        ebs,
+				NoDevice:   noDevice,
 			})
 		}
 	}
@@ -496,6 +508,7 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 	}
 
 	lc := describConfs.LaunchConfigurations[0]
+	log.Printf("[DEBUG] launch configuration output: %s", lc)
 
 	d.Set("key_name", lc.KeyName)
 	d.Set("image_id", lc.ImageId)
@@ -506,11 +519,18 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 	d.Set("ebs_optimized", lc.EbsOptimized)
 	d.Set("spot_price", lc.SpotPrice)
 	d.Set("enable_monitoring", lc.InstanceMonitoring.Enabled)
-	d.Set("security_groups", lc.SecurityGroups)
 	d.Set("associate_public_ip_address", lc.AssociatePublicIpAddress)
+	if err := d.Set("security_groups", flattenStringList(lc.SecurityGroups)); err != nil {
+		return fmt.Errorf("error setting security_groups: %s", err)
+	}
+	if aws.StringValue(lc.UserData) != "" {
+		d.Set("user_data", userDataHashSum(*lc.UserData))
+	}
 
 	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
-	d.Set("vpc_classic_link_security_groups", lc.ClassicLinkVPCSecurityGroups)
+	if err := d.Set("vpc_classic_link_security_groups", flattenStringList(lc.ClassicLinkVPCSecurityGroups)); err != nil {
+		return fmt.Errorf("error setting vpc_classic_link_security_groups: %s", err)
+	}
 
 	if err := readLCBlockDevices(d, lc, ec2conn); err != nil {
 		return err
@@ -580,11 +600,33 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 		var blank string
 		rootDeviceName = &blank
 	}
+
+	// Collect existing configured devices, so we can check
+	// existing value of delete_on_termination below
+	existingEbsBlockDevices := make(map[string]map[string]interface{}, 0)
+	if v, ok := d.GetOk("ebs_block_device"); ok {
+		ebsBlocks := v.(*schema.Set)
+		for _, ebd := range ebsBlocks.List() {
+			m := ebd.(map[string]interface{})
+			deviceName := m["device_name"].(string)
+			existingEbsBlockDevices[deviceName] = m
+		}
+	}
+
 	for _, bdm := range lc.BlockDeviceMappings {
 		bd := make(map[string]interface{})
-		if bdm.Ebs != nil && bdm.Ebs.DeleteOnTermination != nil {
+
+		if bdm.NoDevice != nil {
+			// Keep existing value in place to avoid spurious diff
+			deleteOnTermination := true
+			if device, ok := existingEbsBlockDevices[*bdm.DeviceName]; ok {
+				deleteOnTermination = device["delete_on_termination"].(bool)
+			}
+			bd["delete_on_termination"] = deleteOnTermination
+		} else if bdm.Ebs != nil && bdm.Ebs.DeleteOnTermination != nil {
 			bd["delete_on_termination"] = *bdm.Ebs.DeleteOnTermination
 		}
+
 		if bdm.Ebs != nil && bdm.Ebs.VolumeSize != nil {
 			bd["volume_size"] = *bdm.Ebs.VolumeSize
 		}
@@ -610,6 +652,9 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 			} else {
 				if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
 					bd["snapshot_id"] = *bdm.Ebs.SnapshotId
+				}
+				if bdm.NoDevice != nil {
+					bd["no_device"] = *bdm.NoDevice
 				}
 				blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
 			}

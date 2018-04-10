@@ -17,9 +17,20 @@ func init() {
 	resource.AddTestSweepers("aws_subnet", &resource.Sweeper{
 		Name: "aws_subnet",
 		F:    testSweepSubnets,
+		// When implemented, these should be moved to aws_network_interface
+		// and aws_network_interface set as dependency here.
 		Dependencies: []string{
+			"aws_autoscaling_group",
 			"aws_batch_compute_environment",
+			"aws_beanstalk_environment",
+			"aws_db_instance",
+			"aws_elasticache_cluster",
+			"aws_elasticache_replication_group",
+			"aws_elasticsearch_domain",
 			"aws_elb",
+			"aws_lambda_function",
+			"aws_mq_broker",
+			"aws_redshift_cluster",
 		},
 	})
 }

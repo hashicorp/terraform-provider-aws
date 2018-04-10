@@ -2111,15 +2111,6 @@ func buildApiGatewayInvokeURL(restApiId, region, stageName string) string {
 		restApiId, region, stageName)
 }
 
-func buildApiGatewayExecutionARN(restApiId, region, accountId string) (string, error) {
-	if accountId == "" {
-		return "", fmt.Errorf("Unable to build execution ARN for %s as account ID is missing",
-			restApiId)
-	}
-	return fmt.Sprintf("arn:aws:execute-api:%s:%s:%s",
-		region, accountId, restApiId), nil
-}
-
 func expandCognitoSupportedLoginProviders(config map[string]interface{}) map[string]*string {
 	m := map[string]*string{}
 	for k, v := range config {
@@ -3022,7 +3013,7 @@ func flattenCognitoUserPoolSchema(configuredAttributes, inputs []*cognitoidentit
 			"attribute_data_type":      aws.StringValue(input.AttributeDataType),
 			"developer_only_attribute": aws.BoolValue(input.DeveloperOnlyAttribute),
 			"mutable":                  aws.BoolValue(input.Mutable),
-			"name":                     strings.TrimPrefix(aws.StringValue(input.Name), "dev:custom:"),
+			"name":                     strings.TrimPrefix(strings.TrimPrefix(aws.StringValue(input.Name), "dev:"), "custom:"),
 			"required":                 aws.BoolValue(input.Required),
 		}
 
@@ -3155,12 +3146,6 @@ func flattenCognitoUserPoolVerificationMessageTemplate(s *cognitoidentityprovide
 	return []map[string]interface{}{}
 }
 
-func buildLambdaInvokeArn(lambdaArn, region string) string {
-	apiVersion := "2015-03-31"
-	return fmt.Sprintf("arn:aws:apigateway:%s:lambda:path/%s/functions/%s/invocations",
-		region, apiVersion, lambdaArn)
-}
-
 func sliceContainsMap(l []interface{}, m map[string]interface{}) (int, bool) {
 	for i, t := range l {
 		if reflect.DeepEqual(m, t.(map[string]interface{})) {
@@ -3171,12 +3156,10 @@ func sliceContainsMap(l []interface{}, m map[string]interface{}) (int, bool) {
 	return -1, false
 }
 
-func expandAwsSsmTargets(d *schema.ResourceData) []*ssm.Target {
+func expandAwsSsmTargets(in []interface{}) []*ssm.Target {
 	targets := make([]*ssm.Target, 0)
 
-	targetConfig := d.Get("targets").([]interface{})
-
-	for _, tConfig := range targetConfig {
+	for _, tConfig := range in {
 		config := tConfig.(map[string]interface{})
 
 		target := &ssm.Target{

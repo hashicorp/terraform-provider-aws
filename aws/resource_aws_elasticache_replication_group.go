@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -274,7 +273,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 
 	res, err := conn.DescribeReplicationGroups(req)
 	if err != nil {
-		if eccErr, ok := err.(awserr.Error); ok && eccErr.Code() == "ReplicationGroupNotFoundFault" {
+		if isAWSErr(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
 			log.Printf("[WARN] Elasticache Replication Group (%s) not found", d.Id())
 			d.SetId("")
 			return nil
@@ -527,33 +526,9 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 func resourceAwsElasticacheReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	req := &elasticache.DeleteReplicationGroupInput{
-		ReplicationGroupId: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteReplicationGroup(req)
+	err := deleteElasticacheReplicationGroup(d.Id(), 40*time.Minute, conn)
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "ReplicationGroupNotFoundFault" {
-			d.SetId("")
-			return nil
-		}
-
-		return fmt.Errorf("Error deleting Elasticache replication group: %s", err)
-	}
-
-	log.Printf("[DEBUG] Waiting for deletion: %v", d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "available", "deleting"},
-		Target:     []string{},
-		Refresh:    cacheReplicationGroupStateRefreshFunc(conn, d.Id(), "", []string{}),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	_, sterr := stateConf.WaitForState()
-	if sterr != nil {
-		return fmt.Errorf("Error waiting for replication group (%s) to delete: %s", d.Id(), sterr)
+		return fmt.Errorf("error deleting Elasticache Replication Group (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -565,7 +540,7 @@ func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replic
 			ReplicationGroupId: aws.String(replicationGroupId),
 		})
 		if err != nil {
-			if eccErr, ok := err.(awserr.Error); ok && eccErr.Code() == "ReplicationGroupNotFoundFault" {
+			if isAWSErr(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
 				log.Printf("[DEBUG] Replication Group Not Found")
 				return nil, "", nil
 			}
@@ -604,6 +579,33 @@ func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replic
 
 		return rg, *rg.Status, nil
 	}
+}
+
+func deleteElasticacheReplicationGroup(replicationGroupID string, timeout time.Duration, conn *elasticache.ElastiCache) error {
+	input := &elasticache.DeleteReplicationGroupInput{
+		ReplicationGroupId: aws.String(replicationGroupID),
+	}
+
+	_, err := conn.DeleteReplicationGroup(input)
+	if err != nil {
+		if isAWSErr(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
+			return nil
+		}
+		return err
+	}
+
+	log.Printf("[DEBUG] Waiting for deletion: %s", replicationGroupID)
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"creating", "available", "deleting"},
+		Target:     []string{},
+		Refresh:    cacheReplicationGroupStateRefreshFunc(conn, replicationGroupID, "", []string{}),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	_, err = stateConf.WaitForState()
+	return err
 }
 
 func flattenElasticacheNodeGroupsToClusterMode(clusterEnabled bool, nodeGroups []*elasticache.NodeGroup) []map[string]interface{} {

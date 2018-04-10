@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform/helper/customdiff"
@@ -466,7 +466,7 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 
 	res, err := conn.DescribeCacheClusters(req)
 	if err != nil {
-		if eccErr, ok := err.(awserr.Error); ok && eccErr.Code() == "CacheClusterNotFound" {
+		if isAWSErr(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") {
 			log.Printf("[WARN] ElastiCache Cluster (%s) not found", d.Id())
 			d.SetId("")
 			return nil
@@ -520,24 +520,26 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 		}
 		// list tags for resource
 		// set tags
-		arn, err := buildECARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
+		arn := arn.ARN{
+			Partition: meta.(*AWSClient).partition,
+			Service:   "elasticache",
+			Region:    meta.(*AWSClient).region,
+			AccountID: meta.(*AWSClient).accountid,
+			Resource:  fmt.Sprintf("cluster:%s", d.Id()),
+		}.String()
+		resp, err := conn.ListTagsForResource(&elasticache.ListTagsForResourceInput{
+			ResourceName: aws.String(arn),
+		})
+
 		if err != nil {
-			log.Printf("[DEBUG] Error building ARN for ElastiCache Cluster, not setting Tags for cluster %s", *c.CacheClusterId)
-		} else {
-			resp, err := conn.ListTagsForResource(&elasticache.ListTagsForResourceInput{
-				ResourceName: aws.String(arn),
-			})
-
-			if err != nil {
-				log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
-			}
-
-			var et []*elasticache.Tag
-			if len(resp.TagList) > 0 {
-				et = resp.TagList
-			}
-			d.Set("tags", tagsToMapEC(et))
+			log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
 		}
+
+		var et []*elasticache.Tag
+		if len(resp.TagList) > 0 {
+			et = resp.TagList
+		}
+		d.Set("tags", tagsToMapEC(et))
 	}
 
 	return nil
@@ -545,13 +547,16 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 
 func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
-	arn, err := buildECARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
-	if err != nil {
-		log.Printf("[DEBUG] Error building ARN for ElastiCache Cluster, not updating Tags for cluster %s", d.Id())
-	} else {
-		if err := setTagsEC(conn, d, arn); err != nil {
-			return err
-		}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "elasticache",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
+	}.String()
+	if err := setTagsEC(conn, d, arn); err != nil {
+		return err
 	}
 
 	req := &elasticache.ModifyCacheClusterInput{
@@ -698,41 +703,10 @@ func (b byCacheNodeId) Less(i, j int) bool {
 func resourceAwsElasticacheClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	req := &elasticache.DeleteCacheClusterInput{
-		CacheClusterId: aws.String(d.Id()),
-	}
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteCacheCluster(req)
-		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			// The cluster may be just snapshotting, so we retry until it's ready for deletion
-			if ok && awsErr.Code() == "InvalidCacheClusterState" {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+	err := deleteElasticacheCluster(d.Id(), 40*time.Minute, conn)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Elasticache Cluster (%s): %s", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Waiting for deletion: %v", d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network", "restore-failed", "snapshotting"},
-		Target:     []string{},
-		Refresh:    cacheClusterStateRefreshFunc(conn, d.Id(), "", []string{}),
-		Timeout:    40 * time.Minute,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	_, sterr := stateConf.WaitForState()
-	if sterr != nil {
-		return fmt.Errorf("Error waiting for elasticache (%s) to delete: %s", d.Id(), sterr)
-	}
-
-	d.SetId("")
 
 	return nil
 }
@@ -744,9 +718,7 @@ func cacheClusterStateRefreshFunc(conn *elasticache.ElastiCache, clusterID, give
 			ShowCacheNodeInfo: aws.Bool(true),
 		})
 		if err != nil {
-			apierr := err.(awserr.Error)
-			log.Printf("[DEBUG] message: %v, code: %v", apierr.Message(), apierr.Code())
-			if apierr.Message() == fmt.Sprintf("CacheCluster not found: %v", clusterID) {
+			if isAWSErr(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") {
 				log.Printf("[DEBUG] Detect deletion")
 				return nil, "", nil
 			}
@@ -810,14 +782,35 @@ func cacheClusterStateRefreshFunc(conn *elasticache.ElastiCache, clusterID, give
 	}
 }
 
-func buildECARN(identifier, partition, accountid, region string) (string, error) {
-	if partition == "" {
-		return "", fmt.Errorf("Unable to construct ElastiCache ARN because of missing AWS partition")
+func deleteElasticacheCluster(clusterID string, timeout time.Duration, conn *elasticache.ElastiCache) error {
+	input := &elasticache.DeleteCacheClusterInput{
+		CacheClusterId: aws.String(clusterID),
 	}
-	if accountid == "" {
-		return "", fmt.Errorf("Unable to construct ElastiCache ARN because of missing AWS Account ID")
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteCacheCluster(input)
+		if err != nil {
+			// The cluster may be just snapshotting, so we retry until it's ready for deletion
+			if isAWSErr(err, elasticache.ErrCodeInvalidCacheClusterStateFault, "") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
 	}
-	arn := fmt.Sprintf("arn:%s:elasticache:%s:%s:cluster:%s", partition, region, accountid, identifier)
-	return arn, nil
 
+	log.Printf("[DEBUG] Waiting for deletion: %v", clusterID)
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network", "restore-failed", "snapshotting"},
+		Target:     []string{},
+		Refresh:    cacheClusterStateRefreshFunc(conn, clusterID, "", []string{}),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	_, err = stateConf.WaitForState()
+	return err
 }
