@@ -176,7 +176,7 @@ func cloudwatchLoggingOptionsHash(v interface{}) int {
 
 func flattenCloudwatchLoggingOptions(clo *firehose.CloudWatchLoggingOptions) *schema.Set {
 	if clo == nil {
-		return nil
+		return schema.NewSet(cloudwatchLoggingOptionsHash, []interface{}{})
 	}
 
 	cloudwatchLoggingOptions := map[string]interface{}{
