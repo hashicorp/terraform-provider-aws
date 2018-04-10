@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -12,13 +13,12 @@ import (
 func updateTagsAPIGatewayStage(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigateway
 
-	stageArn := arnString(
-		meta.(*AWSClient).partition,
-		meta.(*AWSClient).region,
-		"apigateway",
-		"",
-		fmt.Sprintf("/restapis/%s/stages/%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)),
-	)
+	stageArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "apigateway",
+		Resource:  fmt.Sprintf("/restapis/%s/stages/%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)),
+	}.String()
 
 	return updateTagsAPIGateway(conn, d, stageArn)
 }
