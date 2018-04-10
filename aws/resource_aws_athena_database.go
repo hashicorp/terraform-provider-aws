@@ -23,11 +23,10 @@ func resourceAwsAthenaDatabase() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				// based on https://docs.aws.amazon.com/athena/latest/ug/tables-databases-columns-names.html
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("[_a-z0-9]+"), "see https://docs.aws.amazon.com/athena/latest/ug/tables-databases-columns-names.html"),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile("^[_a-z0-9]+$"), "see https://docs.aws.amazon.com/athena/latest/ug/tables-databases-columns-names.html"),
 			},
 			"bucket": {
 				Type:     schema.TypeString,
