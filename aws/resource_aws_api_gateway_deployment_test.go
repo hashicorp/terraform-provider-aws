@@ -61,16 +61,6 @@ func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 						"aws_api_gateway_deployment.test", "created_date"),
 				),
 			},
-			{
-				Config: testAccAWSAPIGatewayDeploymentConfig_empty(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayDeploymentExists("aws_api_gateway_deployment.test", &conf),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_deployment.test", "description", "This is a test"),
-					resource.TestCheckResourceAttrSet(
-						"aws_api_gateway_deployment.test", "created_date"),
-				),
-			},
 		},
 	})
 }
@@ -143,7 +133,7 @@ func testAccCheckAWSAPIGatewayDeploymentDestroy(s *terraform.State) error {
 
 const testAccAWSAPIGatewayDeploymentConfig_base = `
 resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
+  name = "tf_acc_deployment_test"
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -225,17 +215,6 @@ resource "aws_api_gateway_deployment" "test" {
     "a" = "2"
     "c" = "4"
   }
-}
-`
-}
-
-func testAccAWSAPIGatewayDeploymentConfig_empty() string {
-	return testAccAWSAPIGatewayDeploymentConfig_base + `
-resource "aws_api_gateway_deployment" "test" {
-  depends_on = ["aws_api_gateway_integration.test"]
-
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  description = "This is a test"
 }
 `
 }

@@ -28,7 +28,7 @@ func resourceAwsApiGatewayDeployment() *schema.Resource {
 
 			"stage_name": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 
@@ -40,17 +40,20 @@ func resourceAwsApiGatewayDeployment() *schema.Resource {
 			"stage_description": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 
 			"tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				ForceNew: true,
 				Elem:     schema.TypeString,
 			},
 
 			"variables": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				ForceNew: true,
 				Elem:     schema.TypeString,
 			},
 
