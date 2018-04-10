@@ -28,7 +28,7 @@ func resourceAwsApiGatewayDeployment() *schema.Resource {
 
 			"stage_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 
@@ -40,13 +40,17 @@ func resourceAwsApiGatewayDeployment() *schema.Resource {
 			"stage_description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+			},
+
+			"tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     schema.TypeString,
 			},
 
 			"variables": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				ForceNew: true,
 				Elem:     schema.TypeString,
 			},
 
@@ -73,6 +77,8 @@ func resourceAwsApiGatewayDeploymentCreate(d *schema.ResourceData, meta interfac
 	// Create the gateway
 	log.Printf("[DEBUG] Creating API Gateway Deployment")
 
+	d.Partial(true)
+
 	variables := make(map[string]string)
 	for k, v := range d.Get("variables").(map[string]interface{}) {
 		variables[k] = v.(string)
@@ -90,8 +96,21 @@ func resourceAwsApiGatewayDeploymentCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error creating API Gateway Deployment: %s", err)
 	}
 
+	d.SetPartial("rest_api_id")
+	d.SetPartial("stage_name")
+	d.SetPartial("description")
+	d.SetPartial("stage_description")
+	d.SetPartial("variables")
+
+	if tagErr := updateTagsAPIGatewayStage(d, meta); tagErr != nil {
+		return fmt.Errorf("Error creating API Gateway Deployment: %s", tagErr)
+	}
+	d.SetPartial("tags")
+
 	d.SetId(*deployment.Id)
 	log.Printf("[DEBUG] API Gateway Deployment ID: %s", d.Id())
+
+	d.Partial(false)
 
 	return resourceAwsApiGatewayDeploymentRead(d, meta)
 }
