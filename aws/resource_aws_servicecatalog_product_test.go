@@ -205,18 +205,18 @@ type Input struct {
 
 const testAccCheckAwsServiceCatalogProductResourceConfigTemplate1 = `
 data "aws_caller_identity" "current" {}
-variable region { default = "us-west-2" }
+data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "bucket" {
-  bucket   = "{{.BucketName}}"
-  region = "${var.region}"
-  acl    = "private"
+  bucket        = "{{.BucketName}}"
+  region        = "${data.aws_region.current.name}"
+  acl           = "private"
   force_destroy = true
 }
 
 resource "aws_s3_bucket_object" "template" {
-  bucket = "${aws_s3_bucket.bucket.id}"
-  key = "test_templates_for_terraform_sc_dev.json"
+  bucket  = "${aws_s3_bucket.bucket.id}"
+  key     = "test_templates_for_terraform_sc_dev.json"
   content = <<EOF
 {
   "AWSTemplateFormatVersion": "2010-09-09",
@@ -231,19 +231,19 @@ EOF
 }
 
 resource "aws_servicecatalog_product" "test" {
-  description = "{{.Description}}"
-  distributor = "{{.Distributor}}"
-  name = "{{.Name}}"
-  owner = "{{.Owner}}"
-  product_type = "CLOUD_FORMATION_TEMPLATE"
+  description         = "{{.Description}}"
+  distributor         = "{{.Distributor}}"
+  name                = "{{.Name}}"
+  owner               = "{{.Owner}}"
+  product_type        = "CLOUD_FORMATION_TEMPLATE"
   support_description = "{{.SupportDescription}}"
-  support_email = "{{.SupportEmail}}"
-  support_url = "{{.SupportUrl}}"
+  support_email       = "{{.SupportEmail}}"
+  support_url         = "{{.SupportUrl}}"
 
   provisioning_artifact {
-    description = "ad"
-    name = "an"
-    load_template_from_url = "https://s3-${var.region}.amazonaws.com/${aws_s3_bucket.bucket.id}/${aws_s3_bucket_object.template.key}"
+    description            = "ad"
+    name                   = "an"
+    load_template_from_url = "https://s3-${data.aws_region.current.name}.amazonaws.com/${aws_s3_bucket.bucket.id}/${aws_s3_bucket_object.template.key}"
   }
 }
 `

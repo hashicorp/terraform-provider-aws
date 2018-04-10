@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -46,6 +45,7 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 			"product_type": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"support_description": {
 				Type:     schema.TypeString,
@@ -161,13 +161,14 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 
 func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
-	input := servicecatalog.DescribeProductAsAdminInput{}
-	input.Id = aws.String(d.Id())
+	input := servicecatalog.DescribeProductAsAdminInput{
+		Id: aws.String(d.Id()),
+	}
 
 	log.Printf("[DEBUG] Reading Service Catalog Product: %s", input)
 	resp, err := conn.DescribeProductAsAdmin(&input)
 	if err != nil {
-		if scErr, ok := err.(awserr.Error); ok && scErr.Code() == "ResourceNotFoundException" {
+		if isAWSErr(err, servicecatalog.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Service Catalog Product %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
