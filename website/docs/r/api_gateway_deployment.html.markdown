@@ -46,6 +46,10 @@ resource "aws_api_gateway_deployment" "MyDemoDeployment" {
 
   rest_api_id = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
   stage_name  = "test"
+  
+  tags = {
+    "contact" = "noone@company.com"
+  }
 
   variables = {
     "answer" = "42"
@@ -61,6 +65,7 @@ The following arguments are supported:
 * `stage_name` - (Required) The name of the stage
 * `description` - (Optional) The description of the deployment
 * `stage_description` - (Optional) The description of the stage
+* `tags` - (Optional) A map that defines the stage tags
 * `variables` - (Optional) A map that defines variables for the stage
 
 ## Attribute Reference
