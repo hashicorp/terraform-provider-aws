@@ -8,6 +8,7 @@ BUG FIXES:
 * resource/aws_launch_configuration: Properly read `security_groups`, `user_data`, and `vpc_classic_link_security_groups` attributes into Terraform state [GH-2800]
 * resource/aws_network_acl: Prevent error on deletion with already deleted subnets [GH-4119]
 * resource/aws_network_acl: Prevent error on update with removing associations for already deleted subnets [GH-4119]
+* resource/aws_route53_zone: Suppress `name` difference with trailing period [GH-3982]
 
 ## 1.14.0 (April 06, 2018)
 
