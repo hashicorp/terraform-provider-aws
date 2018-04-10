@@ -173,6 +173,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 
 			// apply_immediately is used to determine when the update modifications
