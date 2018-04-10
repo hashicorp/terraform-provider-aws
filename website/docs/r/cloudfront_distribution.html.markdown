@@ -408,7 +408,7 @@ The following attributes are exported:
 
 
 [1]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html
-[2]: http://docs.aws.amazon.com/AmazonCloudFront/latest/APIReference/CreateDistribution.html
+[2]: https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateDistribution.html
 [3]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
 [4]: http://www.iso.org/iso/country_codes/iso_3166_code_lists/country_names_and_code_elements.htm
 [5]: /docs/providers/aws/r/cloudfront_origin_access_identity.html
