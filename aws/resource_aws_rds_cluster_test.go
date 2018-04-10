@@ -17,7 +17,9 @@ import (
 )
 
 func TestAccAWSRDSCluster_basic(t *testing.T) {
-	var v rds.DBCluster
+	var dbCluster rds.DBCluster
+	rInt := acctest.RandInt()
+	resourceName := "aws_rds_cluster.default"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,23 +27,16 @@ func TestAccAWSRDSCluster_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterConfig(acctest.RandInt()),
+				Config: testAccAWSClusterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSClusterExists("aws_rds_cluster.default", &v),
-					resource.TestCheckResourceAttr(
-						"aws_rds_cluster.default", "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(
-						"aws_rds_cluster.default", "db_cluster_parameter_group_name", "default.aurora5.6"),
-					resource.TestCheckResourceAttrSet(
-						"aws_rds_cluster.default", "reader_endpoint"),
-					resource.TestCheckResourceAttrSet(
-						"aws_rds_cluster.default", "cluster_resource_id"),
-					resource.TestCheckResourceAttr(
-						"aws_rds_cluster.default", "engine", "aurora"),
-					resource.TestCheckResourceAttrSet(
-						"aws_rds_cluster.default", "engine_version"),
-					resource.TestCheckResourceAttrSet(
-						"aws_rds_cluster.default", "hosted_zone_id"),
+					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora5.6"),
+					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
 				),
 			},
 		},
@@ -308,6 +303,28 @@ func TestAccAWSRDSCluster_iamAuth(t *testing.T) {
 					testAccCheckAWSClusterExists("aws_rds_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_rds_cluster.default", "iam_database_authentication_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_EngineVersion(t *testing.T) {
+	var dbCluster rds.DBCluster
+	rInt := acctest.RandInt()
+	resourceName := "aws_rds_cluster.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfig_EngineVersion(rInt, "aurora-postgresql", "9.6.6"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.6"),
 				),
 			},
 		},
@@ -673,6 +690,23 @@ resource "aws_rds_cluster" "default" {
   iam_database_authentication_enabled = true
   skip_final_snapshot = true
 }`, n)
+}
+
+func testAccAWSClusterConfig_EngineVersion(rInt int, engine, engineVersion string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_rds_cluster" "test" {
+  availability_zones              = ["${data.aws_availability_zones.available.names}"]
+  cluster_identifier              = "tf-acc-test-%d"
+  database_name                   = "mydb"
+  db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
+  engine                          = "%s"
+  engine_version                  = "%s"
+  master_password                 = "mustbeeightcharaters"
+  master_username                 = "foo"
+  skip_final_snapshot             = true
+}`, rInt, engine, engineVersion)
 }
 
 func testAccAWSClusterConfigIncludingIamRoles(n int) string {
