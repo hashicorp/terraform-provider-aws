@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * resource/aws_dynamodb_table_item: Trigger destructive update if range_key has changed [GH-3821]
+* resource/aws_kinesis_firehose_delivery_stream: Prevent crash with missing CloudWatch logging options [GH-4148]
 * resource/aws_lambda_alias: Force new resource on `name` change [GH-4106]
 * resource/aws_lambda_function: Prevent perpetual difference when removing `dead_letter_config` [GH-2684]
 * resource/aws_launch_configuration: Properly read `security_groups`, `user_data`, and `vpc_classic_link_security_groups` attributes into Terraform state [GH-2800]
