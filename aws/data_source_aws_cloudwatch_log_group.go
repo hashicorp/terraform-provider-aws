@@ -15,7 +15,7 @@ func dataSourceAwsCloudwatchLogGroup() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -30,32 +30,35 @@ func dataSourceAwsCloudwatchLogGroup() *schema.Resource {
 }
 
 func dataSourceAwsCloudwatchLogGroupRead(d *schema.ResourceData, meta interface{}) error {
-	name := aws.String(d.Get("name").(string))
+	name := d.Get("name").(string)
 	conn := meta.(*AWSClient).cloudwatchlogsconn
 
 	input := &cloudwatchlogs.DescribeLogGroupsInput{
-		LogGroupNamePrefix: name,
+		LogGroupNamePrefix: aws.String(name),
 	}
 
-	resp, err := conn.DescribeLogGroups(input)
+	var logGroup *cloudwatchlogs.LogGroup
+	// iterate over the pages of log groups until we find the one we are looking for
+	err := conn.DescribeLogGroupsPages(input,
+		func(resp *cloudwatchlogs.DescribeLogGroupsOutput, _ bool) bool {
+			for _, lg := range resp.LogGroups {
+				if aws.StringValue(lg.LogGroupName) == name {
+					logGroup = lg
+					return false
+				}
+			}
+			return true
+		})
+
 	if err != nil {
 		return err
 	}
 
-	var logGroup *cloudwatchlogs.LogGroup
-
-	for _, lg := range resp.LogGroups {
-		if *lg.LogGroupName == *name {
-			logGroup = lg
-			break
-		}
-	}
-
 	if logGroup == nil {
-		return fmt.Errorf("No log group named %s found\n", *name)
+		return fmt.Errorf("No log group named %s found\n", name)
 	}
 
-	d.SetId(*logGroup.LogGroupName)
+	d.SetId(name)
 	d.Set("arn", logGroup.Arn)
 	d.Set("creation_time", logGroup.CreationTime)
 
