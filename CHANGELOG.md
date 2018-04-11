@@ -11,6 +11,7 @@ BUG FIXES:
 * resource/aws_network_acl: Prevent error on update with removing associations for already deleted subnets [GH-4119]
 * resource/aws_rds_cluster: Properly handle `engine_version` during regular creation [GH-4139]
 * resource/aws_route53_zone: Suppress `name` difference with trailing period [GH-3982]
+* resource/aws_vpc_peering_connection: Allow active pending state during deletion for eventual consistency [GH-4140]
 
 ## 1.14.0 (April 06, 2018)
 
