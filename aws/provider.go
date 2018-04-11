@@ -17,8 +17,8 @@ func Provider() terraform.ResourceProvider {
 	// TODO: Move the validation to this, requires conditional schemas
 	// TODO: Move the configuration to this, requires validation
 
-	// The actual provider
-	return &schema.Provider{
+	var p *schema.Provider
+	p = &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"access_key": {
 				Type:        schema.TypeString,
@@ -594,8 +594,11 @@ func Provider() terraform.ResourceProvider {
 			"aws_alb_target_group_attachment": resourceAwsLbTargetGroupAttachment(),
 			"aws_lb_target_group_attachment":  resourceAwsLbTargetGroupAttachment(),
 		},
-		ConfigureFunc: providerConfigure,
 	}
+
+	p.ConfigureFunc = providerConfigure(p)
+
+	return p
 }
 
 var descriptions map[string]string
@@ -698,86 +701,100 @@ func init() {
 			" role that is being assumed.",
 	}
 }
-
-func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	config := Config{
-		AccessKey:               d.Get("access_key").(string),
-		SecretKey:               d.Get("secret_key").(string),
-		Profile:                 d.Get("profile").(string),
-		Token:                   d.Get("token").(string),
-		Region:                  d.Get("region").(string),
-		MaxRetries:              d.Get("max_retries").(int),
-		Insecure:                d.Get("insecure").(bool),
-		SkipCredsValidation:     d.Get("skip_credentials_validation").(bool),
-		SkipGetEC2Platforms:     d.Get("skip_get_ec2_platforms").(bool),
-		SkipRegionValidation:    d.Get("skip_region_validation").(bool),
-		SkipRequestingAccountId: d.Get("skip_requesting_account_id").(bool),
-		SkipMetadataApiCheck:    d.Get("skip_metadata_api_check").(bool),
-		S3ForcePathStyle:        d.Get("s3_force_path_style").(bool),
-	}
-
-	// Set CredsFilename, expanding home directory
-	credsPath, err := homedir.Expand(d.Get("shared_credentials_file").(string))
-	if err != nil {
-		return nil, err
-	}
-	config.CredsFilename = credsPath
-
-	assumeRoleList := d.Get("assume_role").(*schema.Set).List()
-	if len(assumeRoleList) == 1 {
-		assumeRole := assumeRoleList[0].(map[string]interface{})
-		config.AssumeRoleARN = assumeRole["role_arn"].(string)
-		config.AssumeRoleSessionName = assumeRole["session_name"].(string)
-		config.AssumeRoleExternalID = assumeRole["external_id"].(string)
-
-		if v := assumeRole["policy"].(string); v != "" {
-			config.AssumeRolePolicy = v
+func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
+	return func(d *schema.ResourceData) (interface{}, error) {
+		config := Config{
+			AccessKey:               d.Get("access_key").(string),
+			SecretKey:               d.Get("secret_key").(string),
+			Profile:                 d.Get("profile").(string),
+			Token:                   d.Get("token").(string),
+			Region:                  d.Get("region").(string),
+			MaxRetries:              d.Get("max_retries").(int),
+			Insecure:                d.Get("insecure").(bool),
+			SkipCredsValidation:     d.Get("skip_credentials_validation").(bool),
+			SkipGetEC2Platforms:     d.Get("skip_get_ec2_platforms").(bool),
+			SkipRegionValidation:    d.Get("skip_region_validation").(bool),
+			SkipRequestingAccountId: d.Get("skip_requesting_account_id").(bool),
+			SkipMetadataApiCheck:    d.Get("skip_metadata_api_check").(bool),
+			S3ForcePathStyle:        d.Get("s3_force_path_style").(bool),
 		}
 
-		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, Policy: %q)",
-			config.AssumeRoleARN, config.AssumeRoleSessionName, config.AssumeRoleExternalID, config.AssumeRolePolicy)
-	} else {
-		log.Printf("[INFO] No assume_role block read from configuration")
+		// Set CredsFilename, expanding home directory
+		credsPath, err := homedir.Expand(d.Get("shared_credentials_file").(string))
+		if err != nil {
+			return nil, err
+		}
+		config.CredsFilename = credsPath
+
+		assumeRoleList := d.Get("assume_role").(*schema.Set).List()
+		if len(assumeRoleList) == 1 {
+			assumeRole := assumeRoleList[0].(map[string]interface{})
+			config.AssumeRoleARN = assumeRole["role_arn"].(string)
+			config.AssumeRoleSessionName = assumeRole["session_name"].(string)
+			config.AssumeRoleExternalID = assumeRole["external_id"].(string)
+
+			if v := assumeRole["policy"].(string); v != "" {
+				config.AssumeRolePolicy = v
+			}
+
+			log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, Policy: %q)",
+				config.AssumeRoleARN, config.AssumeRoleSessionName, config.AssumeRoleExternalID, config.AssumeRolePolicy)
+		} else {
+			log.Printf("[INFO] No assume_role block read from configuration")
+		}
+
+		endpointsSet := d.Get("endpoints").(*schema.Set)
+
+		for _, endpointsSetI := range endpointsSet.List() {
+			endpoints := endpointsSetI.(map[string]interface{})
+			config.AcmEndpoint = endpoints["acm"].(string)
+			config.ApigatewayEndpoint = endpoints["apigateway"].(string)
+			config.CloudFormationEndpoint = endpoints["cloudformation"].(string)
+			config.CloudWatchEndpoint = endpoints["cloudwatch"].(string)
+			config.CloudWatchEventsEndpoint = endpoints["cloudwatchevents"].(string)
+			config.CloudWatchLogsEndpoint = endpoints["cloudwatchlogs"].(string)
+			config.DeviceFarmEndpoint = endpoints["devicefarm"].(string)
+			config.DynamoDBEndpoint = endpoints["dynamodb"].(string)
+			config.Ec2Endpoint = endpoints["ec2"].(string)
+			config.EcrEndpoint = endpoints["ecr"].(string)
+			config.EcsEndpoint = endpoints["ecs"].(string)
+			config.ElbEndpoint = endpoints["elb"].(string)
+			config.EsEndpoint = endpoints["es"].(string)
+			config.IamEndpoint = endpoints["iam"].(string)
+			config.KinesisEndpoint = endpoints["kinesis"].(string)
+			config.KmsEndpoint = endpoints["kms"].(string)
+			config.LambdaEndpoint = endpoints["lambda"].(string)
+			config.R53Endpoint = endpoints["r53"].(string)
+			config.RdsEndpoint = endpoints["rds"].(string)
+			config.S3Endpoint = endpoints["s3"].(string)
+			config.SnsEndpoint = endpoints["sns"].(string)
+			config.SqsEndpoint = endpoints["sqs"].(string)
+			config.StsEndpoint = endpoints["sts"].(string)
+		}
+
+		if v, ok := d.GetOk("allowed_account_ids"); ok {
+			config.AllowedAccountIds = v.(*schema.Set).List()
+		}
+
+		if v, ok := d.GetOk("forbidden_account_ids"); ok {
+			config.ForbiddenAccountIds = v.(*schema.Set).List()
+		}
+
+		client, err := config.Client()
+		if err != nil {
+			return nil, err
+		}
+
+		client.StopContext = p.StopContext()
+
+		// replaces the context between tests
+		p.MetaReset = func() error {
+			client.StopContext = p.StopContext()
+			return nil
+		}
+
+		return client, nil
 	}
-
-	endpointsSet := d.Get("endpoints").(*schema.Set)
-
-	for _, endpointsSetI := range endpointsSet.List() {
-		endpoints := endpointsSetI.(map[string]interface{})
-		config.AcmEndpoint = endpoints["acm"].(string)
-		config.ApigatewayEndpoint = endpoints["apigateway"].(string)
-		config.CloudFormationEndpoint = endpoints["cloudformation"].(string)
-		config.CloudWatchEndpoint = endpoints["cloudwatch"].(string)
-		config.CloudWatchEventsEndpoint = endpoints["cloudwatchevents"].(string)
-		config.CloudWatchLogsEndpoint = endpoints["cloudwatchlogs"].(string)
-		config.DeviceFarmEndpoint = endpoints["devicefarm"].(string)
-		config.DynamoDBEndpoint = endpoints["dynamodb"].(string)
-		config.Ec2Endpoint = endpoints["ec2"].(string)
-		config.EcrEndpoint = endpoints["ecr"].(string)
-		config.EcsEndpoint = endpoints["ecs"].(string)
-		config.ElbEndpoint = endpoints["elb"].(string)
-		config.EsEndpoint = endpoints["es"].(string)
-		config.IamEndpoint = endpoints["iam"].(string)
-		config.KinesisEndpoint = endpoints["kinesis"].(string)
-		config.KmsEndpoint = endpoints["kms"].(string)
-		config.LambdaEndpoint = endpoints["lambda"].(string)
-		config.R53Endpoint = endpoints["r53"].(string)
-		config.RdsEndpoint = endpoints["rds"].(string)
-		config.S3Endpoint = endpoints["s3"].(string)
-		config.SnsEndpoint = endpoints["sns"].(string)
-		config.SqsEndpoint = endpoints["sqs"].(string)
-		config.StsEndpoint = endpoints["sts"].(string)
-	}
-
-	if v, ok := d.GetOk("allowed_account_ids"); ok {
-		config.AllowedAccountIds = v.(*schema.Set).List()
-	}
-
-	if v, ok := d.GetOk("forbidden_account_ids"); ok {
-		config.ForbiddenAccountIds = v.(*schema.Set).List()
-	}
-
-	return config.Client()
 }
 
 // This is a global MutexKV for use within this plugin.
