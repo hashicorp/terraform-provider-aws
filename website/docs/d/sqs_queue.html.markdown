@@ -6,7 +6,7 @@ description: |-
   Get information on an Amazon Simple Queue Service (SQS) Queue
 ---
 
-# aws\_sqs\_queue
+# Data Source: aws_sqs_queue
 
 Use this data source to get the ARN and URL of queue in AWS Simple Queue Service (SQS).
 By using this data source, you can reference SQS queues without having to hardcode

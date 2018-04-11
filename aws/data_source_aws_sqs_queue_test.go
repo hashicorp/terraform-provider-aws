@@ -4,67 +4,73 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccDataSourceAwsSqsQueue(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf_acc_test_")
+	resourceName := "aws_sqs_queue.test"
+	datasourceName := "data.aws_sqs_queue.by_name"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccDataSourceAwsSqsQueueConfig,
+				Config: testAccDataSourceAwsSqsQueueConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsSqsQueueCheck("data.aws_sqs_queue.by_name"),
+					testAccDataSourceAwsSqsQueueCheck(datasourceName, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsSqsQueueCheck(name string) resource.TestCheckFunc {
+func testAccDataSourceAwsSqsQueueCheck(datasourceName, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[datasourceName]
 		if !ok {
-			return fmt.Errorf("root module has no resource called %s", name)
+			return fmt.Errorf("root module has no resource called %s", datasourceName)
 		}
 
-		sqsQueueRs, ok := s.RootModule().Resources["aws_sqs_queue.tf_test"]
+		sqsQueueRs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("can't find aws_sqs_queue.tf_test in state")
+			return fmt.Errorf("root module has no resource called %s", resourceName)
 		}
 
-		attr := rs.Primary.Attributes
+		attrNames := []string{
+			"arn",
+			"name",
+		}
 
-		if attr["name"] != sqsQueueRs.Primary.Attributes["name"] {
-			return fmt.Errorf(
-				"name is %s; want %s",
-				attr["name"],
-				sqsQueueRs.Primary.Attributes["name"],
-			)
+		for _, attrName := range attrNames {
+			if rs.Primary.Attributes[attrName] != sqsQueueRs.Primary.Attributes[attrName] {
+				return fmt.Errorf(
+					"%s is %s; want %s",
+					attrName,
+					rs.Primary.Attributes[attrName],
+					sqsQueueRs.Primary.Attributes[attrName],
+				)
+			}
 		}
 
 		return nil
 	}
 }
 
-const testAccDataSourceAwsSqsQueueConfig = `
-provider "aws" {
-  region = "us-west-2"
+func testAccDataSourceAwsSqsQueueConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "wrong" {
+  name = "%[1]s_wrong"
 }
-
-resource "aws_sqs_queue" "tf_wrong1" {
-  name = "wrong1"
-}
-resource "aws_sqs_queue" "tf_test" {
-  name = "tf_test"
-}
-resource "aws_sqs_queue" "tf_wrong2" {
-  name = "wrong2"
+resource "aws_sqs_queue" "test" {
+  name = "%[1]s"
 }
 
 data "aws_sqs_queue" "by_name" {
-  name = "${aws_sqs_queue.tf_test.name}"
+  name = "${aws_sqs_queue.test.name}"
 }
-`
+`, rName)
+}

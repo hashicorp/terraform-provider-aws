@@ -1,9 +1,10 @@
 package aws
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -29,26 +30,26 @@ func dataSourceAwsSqsQueue() *schema.Resource {
 
 func dataSourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sqsconn
-	target := d.Get("name").(string)
+	name := d.Get("name").(string)
 
 	urlOutput, err := conn.GetQueueUrl(&sqs.GetQueueUrlInput{
-		QueueName: aws.String(target),
+		QueueName: aws.String(name),
 	})
-	if err != nil {
-		return errwrap.Wrapf("Error getting queue URL: {{err}}", err)
+	if err != nil || urlOutput.QueueUrl == nil {
+		return fmt.Errorf("Error getting queue URL: %s", err)
 	}
 
-	queueURL := *urlOutput.QueueUrl
+	queueURL := aws.StringValue(urlOutput.QueueUrl)
 
 	attributesOutput, err := conn.GetQueueAttributes(&sqs.GetQueueAttributesInput{
-		QueueUrl:       &queueURL,
+		QueueUrl:       aws.String(queueURL),
 		AttributeNames: []*string{aws.String(sqs.QueueAttributeNameQueueArn)},
 	})
 	if err != nil {
-		return errwrap.Wrapf("Error getting queue attributes: {{err}}", err)
+		return fmt.Errorf("Error getting queue attributes: %s", err)
 	}
 
-	d.Set("arn", *attributesOutput.Attributes[sqs.QueueAttributeNameQueueArn])
+	d.Set("arn", aws.StringValue(attributesOutput.Attributes[sqs.QueueAttributeNameQueueArn]))
 	d.Set("url", queueURL)
 	d.SetId(queueURL)
 
