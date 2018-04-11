@@ -6,6 +6,7 @@ BUG FIXES:
 * resource/aws_db_event_subscription: Fix `tag` ARN handling [GH-4151]
 * resource/aws_dynamodb_table_item: Trigger destructive update if range_key has changed [GH-3821]
 * resource/aws_elb: Return any errors when updating listeners [GH-4159]
+* resource/aws_emr_cluster: Prevent crash with missing StateChangeReason [GH-4165]
 * resource/aws_iam_user: Retry user login profile deletion on `EntityTemporarilyUnmodifiable` [GH-4143]
 * resource/aws_kinesis_firehose_delivery_stream: Prevent crash with missing CloudWatch logging options [GH-4148]
 * resource/aws_lambda_alias: Force new resource on `name` change [GH-4106]
