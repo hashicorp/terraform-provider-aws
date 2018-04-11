@@ -232,6 +232,7 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 				if isAWSErr(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
 					return resource.RetryableError(err)
 				}
+				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
