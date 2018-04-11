@@ -228,7 +228,11 @@ func testDecryptPasswordAndTest(nProfile, nAccessKey, key string) resource.TestC
 				NewPassword: aws.String(generateIAMPassword(20)),
 			})
 			if err != nil {
-				if awserr, ok := err.(awserr.Error); ok && awserr.Code() == "InvalidClientTokenId" {
+				// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
+				if isAWSErr(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, "InvalidClientTokenId", "") {
 					return resource.RetryableError(err)
 				}
 
