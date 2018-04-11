@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -69,13 +70,19 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 			"cache": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+							Default:  codebuild.CacheTypeNoCache,
 							ValidateFunc: validation.StringInSlice([]string{
 								codebuild.CacheTypeNoCache,
 								codebuild.CacheTypeS3,
@@ -83,7 +90,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						},
 						"location": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 					},
 				},
@@ -253,6 +260,20 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				},
 			},
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for cache location
+				cacheType, cacheTypeOk := diff.GetOk("cache.0.type")
+				if !cacheTypeOk || cacheType.(string) == codebuild.CacheTypeNoCache {
+					return nil
+				}
+				if v, ok := diff.GetOk("cache.0.location"); ok && v.(string) != "" {
+					return nil
+				}
+				return fmt.Errorf(`cache location is required when cache type is %q`, cacheType.(string))
+			},
+		),
 	}
 }
 
@@ -366,8 +387,11 @@ func expandProjectCache(s []interface{}) *codebuild.ProjectCache {
 	data := s[0].(map[string]interface{})
 
 	projectCache = &codebuild.ProjectCache{
-		Type:     aws.String(data["type"].(string)),
-		Location: aws.String(data["location"].(string)),
+		Type: aws.String(data["type"].(string)),
+	}
+
+	if v, ok := data["location"]; ok {
+		projectCache.Location = aws.String(v.(string))
 	}
 
 	return projectCache
@@ -643,18 +667,13 @@ func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) 
 }
 
 func flattenAwsCodebuildProjectCache(cache *codebuild.ProjectCache) []interface{} {
-	values := map[string]interface{}{}
-
-	if cache.Type != nil {
-		if *cache.Type == "NO_CACHE" {
-			values["type"] = ""
-		} else {
-			values["type"] = *cache.Type
-		}
+	if cache == nil {
+		return []interface{}{}
 	}
 
-	if cache.Location != nil {
-		values["location"] = *cache.Location
+	values := map[string]interface{}{
+		"location": aws.StringValue(cache.Location),
+		"type":     aws.StringValue(cache.Type),
 	}
 
 	return []interface{}{values}
