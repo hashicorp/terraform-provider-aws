@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -331,6 +332,35 @@ func TestAccAWSRDSCluster_EngineVersion(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSCluster_Port(t *testing.T) {
+	var dbCluster1, dbCluster2 rds.DBCluster
+	rInt := acctest.RandInt()
+	resourceName := "aws_rds_cluster.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfig_Port(rInt, 5432),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "port", "5432"),
+				),
+			},
+			{
+				Config: testAccAWSClusterConfig_Port(rInt, 2345),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster2),
+					testAccCheckAWSClusterRecreated(&dbCluster1, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, "port", "2345"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSClusterDestroy(s *terraform.State) error {
 	return testAccCheckAWSClusterDestroyWithProvider(s, testAccProvider)
 }
@@ -453,6 +483,16 @@ func testAccCheckAWSClusterExistsWithProvider(n string, v *rds.DBCluster, provid
 		}
 
 		return fmt.Errorf("DB Cluster (%s) not found", rs.Primary.ID)
+	}
+}
+
+func testAccCheckAWSClusterRecreated(i, j *rds.DBCluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.TimeValue(i.ClusterCreateTime) == aws.TimeValue(j.ClusterCreateTime) {
+			return errors.New("RDS Cluster was not recreated")
+		}
+
+		return nil
 	}
 }
 
@@ -707,6 +747,23 @@ resource "aws_rds_cluster" "test" {
   master_username                 = "foo"
   skip_final_snapshot             = true
 }`, rInt, engine, engineVersion)
+}
+
+func testAccAWSClusterConfig_Port(rInt, port int) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_rds_cluster" "test" {
+  availability_zones              = ["${data.aws_availability_zones.available.names}"]
+  cluster_identifier              = "tf-acc-test-%d"
+  database_name                   = "mydb"
+  db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
+  engine                          = "aurora-postgresql"
+  master_password                 = "mustbeeightcharaters"
+  master_username                 = "foo"
+  port                            = %d
+  skip_final_snapshot             = true
+}`, rInt, port)
 }
 
 func testAccAWSClusterConfigIncludingIamRoles(n int) string {
