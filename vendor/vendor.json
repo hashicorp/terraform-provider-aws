@@ -383,6 +383,14 @@
 			"versionExact": "v1.13.28"
 		},
 		{
+			"checksumSHA1": "8PdtKqSEcLQ1V0Gnl2FAHJoOQy0=",
+			"path": "github.com/aws/aws-sdk-go/service/cloudhsmv2",
+			"revision": "7f68df2a5baf19398d17def23a514a6e617e5937",
+			"revisionTime": "2018-04-04T18:37:54Z",
+			"version": "v1.13.28",
+			"versionExact": "v1.13.28"
+		},
+		{
 			"checksumSHA1": "kM7Fxkb1OdCiOOmTlRIadqnsdt0=",
 			"path": "github.com/aws/aws-sdk-go/service/cloudsearch",
 			"revision": "7f68df2a5baf19398d17def23a514a6e617e5937",
