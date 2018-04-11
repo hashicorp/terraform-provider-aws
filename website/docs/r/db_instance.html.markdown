@@ -86,7 +86,9 @@ for more information.
 Default is `false`.
 * `db_subnet_group_name` - (Optional) Name of DB subnet group. DB instance will
 be created in the VPC associated with the DB subnet group. If unspecified, will
-be created in the `default` VPC, or in EC2 Classic, if available.
+be created in the `default` VPC, or in EC2 Classic, if available. It needs to be
+specified only if the source database specifies an instance in another AWS Region.
+See [DBSubnetGroupName in API action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html) for additonal contraints.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
 is provided) The database engine to use.
 * `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade`
