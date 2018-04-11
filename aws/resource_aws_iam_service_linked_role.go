@@ -81,11 +81,11 @@ func resourceAwsIamServiceLinkedRoleCreate(d *schema.ResourceData, meta interfac
 	resp, err := conn.CreateServiceLinkedRole(params)
 
 	if err != nil {
-		return fmt.Errorf("Error creating service-linked role with name %s", serviceName)
+		return fmt.Errorf("Error creating service-linked role with name %s: %s", serviceName, err)
 	}
 	d.SetId(*resp.Role.Arn)
 
-	return nil
+	return resourceAwsIamServiceLinkedRoleRead(d, meta)
 }
 
 func resourceAwsIamServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) error {
@@ -136,10 +136,13 @@ func resourceAwsIamServiceLinkedRoleDelete(d *schema.ResourceData, meta interfac
 	resp, err := conn.DeleteServiceLinkedRole(params)
 
 	if err != nil {
-		return fmt.Errorf("Error deleting service-linked role %s", d.Id())
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			return nil
+		}
+		return fmt.Errorf("Error deleting service-linked role %s: %s", d.Id(), err)
 	}
 
-	deletionTaskId := *resp.DeletionTaskId
+	deletionTaskId := aws.StringValue(resp.DeletionTaskId)
 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{iam.DeletionTaskStatusTypeInProgress, iam.DeletionTaskStatusTypeNotStarted},
@@ -151,10 +154,11 @@ func resourceAwsIamServiceLinkedRoleDelete(d *schema.ResourceData, meta interfac
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			return nil
+		}
 		return fmt.Errorf("Error waiting for role (%s) to be deleted: %s", d.Id(), err)
 	}
-
-	d.SetId("")
 
 	return nil
 }
@@ -170,6 +174,6 @@ func deletionRefreshFunc(conn *iam.IAM, deletionTaskId string) resource.StateRef
 			return nil, "", err
 		}
 
-		return resp, *resp.Status, nil
+		return resp, aws.StringValue(resp.Status), nil
 	}
 }

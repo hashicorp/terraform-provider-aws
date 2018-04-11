@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -12,6 +13,11 @@ import (
 )
 
 func TestAccAWSIAMServiceLinkedRole_basic(t *testing.T) {
+	resourceName := "aws_iam_service_linked_role.test"
+	awsServiceName := "elasticbeanstalk.amazonaws.com"
+	name := "AWSServiceRoleForElasticBeanstalk"
+	path := fmt.Sprintf("/aws-service-role/%s/", awsServiceName)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -20,12 +26,19 @@ func TestAccAWSIAMServiceLinkedRole_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSIAMServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				ResourceName: "aws_iam_service_linked_role.test",
-				Config:       fmt.Sprintf(testAccAWSIAMServiceLinkedRoleConfig, "elasticbeanstalk.amazonaws.com"),
-				Check:        testAccCheckAWSIAMServiceLinkedRoleExists("aws_iam_service_linked_role.test"),
+				Config: testAccAWSIAMServiceLinkedRoleConfig(awsServiceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIAMServiceLinkedRoleExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:iam::[^:]+:role%s%s$", path, name))),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_name", awsServiceName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "path", path),
+					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
+				),
 			},
 			{
-				ResourceName:      "aws_iam_service_linked_role.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -91,8 +104,10 @@ func testAccCheckAWSIAMServiceLinkedRoleExists(n string) resource.TestCheckFunc 
 	}
 }
 
-const testAccAWSIAMServiceLinkedRoleConfig = `
+func testAccAWSIAMServiceLinkedRoleConfig(awsServiceName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
 	aws_service_name = "%s"
 }
-`
+`, awsServiceName)
+}
