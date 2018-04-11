@@ -1,4 +1,9 @@
 ## 1.15.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_sqs_queue` [GH-2311]
+
 ## 1.14.1 (April 11, 2018)
 
 ENHANCEMENTS:
