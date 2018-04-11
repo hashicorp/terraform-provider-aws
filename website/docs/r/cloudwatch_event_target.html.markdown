@@ -124,7 +124,7 @@ DOC
 }
 
 resource "aws_cloudwatch_event_rule" "stop_instances" {
-  name                = "StopInstance
+  name                = "StopInstance"
   description         = "Stop instances nightly"
   schedule_expression = "cron(0 0 * * ? *)"
 }
@@ -148,7 +148,7 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 ```
 
 resource "aws_cloudwatch_event_rule" "stop_instances" {
-  name                = "StopInstance
+  name                = "StopInstance"
   description         = "Stop instances nightly"
   schedule_expression = "cron(0 0 * * ? *)"
 }
