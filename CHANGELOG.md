@@ -1,5 +1,10 @@
 ## 1.14.1 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_db_event_subscription: Add `arn` attribute [GH-4151]
+* resource/aws_db_event_subscription: Support configurable timeouts [GH-4151]
+
 BUG FIXES:
 
 * resource/aws_codebuild_project: Properly handle setting cache type `NO_CACHE` [GH-4134]
