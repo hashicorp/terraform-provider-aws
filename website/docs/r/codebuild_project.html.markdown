@@ -152,7 +152,7 @@ The following arguments are supported:
 `cache` supports the following:
 
 * `type` - (Optional) The type of storage that will be used for the AWS CodeBuild project cache. Valid values: `NO_CACHE` and `S3`. Defaults to `NO_CACHE`.
-* `location` - (Required when cache type is not `NO_CACHE`) The location where the AWS CodeBuild project stores cached resources. For type `S3` the value must be a valid S3 bucket name/prefix.
+* `location` - (Required when cache type is `S3`) The location where the AWS CodeBuild project stores cached resources. For type `S3` the value must be a valid S3 bucket name/prefix.
 
 `environment` supports the following:
 
