@@ -1,28 +1,28 @@
-## 1.14.1 (Unreleased)
+## 1.14.1 (April 11, 2018)
 
 ENHANCEMENTS:
 
-* resource/aws_db_event_subscription: Add `arn` attribute [GH-4151]
-* resource/aws_db_event_subscription: Support configurable timeouts [GH-4151]
+* resource/aws_db_event_subscription: Add `arn` attribute ([#4151](https://github.com/terraform-providers/terraform-provider-aws/issues/4151))
+* resource/aws_db_event_subscription: Support configurable timeouts ([#4151](https://github.com/terraform-providers/terraform-provider-aws/issues/4151))
 
 BUG FIXES:
 
-* resource/aws_codebuild_project: Properly handle setting cache type `NO_CACHE` [GH-4134]
-* resource/aws_db_event_subscription: Fix `tag` ARN handling [GH-4151]
-* resource/aws_dynamodb_table_item: Trigger destructive update if range_key has changed [GH-3821]
-* resource/aws_elb: Return any errors when updating listeners [GH-4159]
-* resource/aws_emr_cluster: Prevent crash with missing StateChangeReason [GH-4165]
-* resource/aws_iam_user: Retry user login profile deletion on `EntityTemporarilyUnmodifiable` [GH-4143]
-* resource/aws_kinesis_firehose_delivery_stream: Prevent crash with missing CloudWatch logging options [GH-4148]
-* resource/aws_lambda_alias: Force new resource on `name` change [GH-4106]
-* resource/aws_lambda_function: Prevent perpetual difference when removing `dead_letter_config` [GH-2684]
-* resource/aws_launch_configuration: Properly read `security_groups`, `user_data`, and `vpc_classic_link_security_groups` attributes into Terraform state [GH-2800]
-* resource/aws_network_acl: Prevent error on deletion with already deleted subnets [GH-4119]
-* resource/aws_network_acl: Prevent error on update with removing associations for already deleted subnets [GH-4119]
-* resource/aws_rds_cluster: Properly handle `engine_version` during regular creation [GH-4139]
-* resource/aws_rds_cluster: Set `port` updates to force new resource [GH-4144]
-* resource/aws_route53_zone: Suppress `name` difference with trailing period [GH-3982]
-* resource/aws_vpc_peering_connection: Allow active pending state during deletion for eventual consistency [GH-4140]
+* resource/aws_codebuild_project: Properly handle setting cache type `NO_CACHE` ([#4134](https://github.com/terraform-providers/terraform-provider-aws/issues/4134))
+* resource/aws_db_event_subscription: Fix `tag` ARN handling ([#4151](https://github.com/terraform-providers/terraform-provider-aws/issues/4151))
+* resource/aws_dynamodb_table_item: Trigger destructive update if range_key has changed ([#3821](https://github.com/terraform-providers/terraform-provider-aws/issues/3821))
+* resource/aws_elb: Return any errors when updating listeners ([#4159](https://github.com/terraform-providers/terraform-provider-aws/issues/4159))
+* resource/aws_emr_cluster: Prevent crash with missing StateChangeReason ([#4165](https://github.com/terraform-providers/terraform-provider-aws/issues/4165))
+* resource/aws_iam_user: Retry user login profile deletion on `EntityTemporarilyUnmodifiable` ([#4143](https://github.com/terraform-providers/terraform-provider-aws/issues/4143))
+* resource/aws_kinesis_firehose_delivery_stream: Prevent crash with missing CloudWatch logging options ([#4148](https://github.com/terraform-providers/terraform-provider-aws/issues/4148))
+* resource/aws_lambda_alias: Force new resource on `name` change ([#4106](https://github.com/terraform-providers/terraform-provider-aws/issues/4106))
+* resource/aws_lambda_function: Prevent perpetual difference when removing `dead_letter_config` ([#2684](https://github.com/terraform-providers/terraform-provider-aws/issues/2684))
+* resource/aws_launch_configuration: Properly read `security_groups`, `user_data`, and `vpc_classic_link_security_groups` attributes into Terraform state ([#2800](https://github.com/terraform-providers/terraform-provider-aws/issues/2800))
+* resource/aws_network_acl: Prevent error on deletion with already deleted subnets ([#4119](https://github.com/terraform-providers/terraform-provider-aws/issues/4119))
+* resource/aws_network_acl: Prevent error on update with removing associations for already deleted subnets ([#4119](https://github.com/terraform-providers/terraform-provider-aws/issues/4119))
+* resource/aws_rds_cluster: Properly handle `engine_version` during regular creation ([#4139](https://github.com/terraform-providers/terraform-provider-aws/issues/4139))
+* resource/aws_rds_cluster: Set `port` updates to force new resource ([#4144](https://github.com/terraform-providers/terraform-provider-aws/issues/4144))
+* resource/aws_route53_zone: Suppress `name` difference with trailing period ([#3982](https://github.com/terraform-providers/terraform-provider-aws/issues/3982))
+* resource/aws_vpc_peering_connection: Allow active pending state during deletion for eventual consistency ([#4140](https://github.com/terraform-providers/terraform-provider-aws/issues/4140))
 
 ## 1.14.0 (April 06, 2018)
 
