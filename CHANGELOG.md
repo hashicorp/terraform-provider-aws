@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_sqs_queue` [GH-2311]
+* **New Resource:** `aws_iam_service_linked_role` [GH-2985]
 
 ## 1.14.1 (April 11, 2018)
 
