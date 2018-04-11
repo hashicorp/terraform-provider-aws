@@ -1390,7 +1390,7 @@ func resourceAwsEMRClusterStateRefreshFunc(d *schema.ResourceData, meta interfac
 			if reason == nil {
 				return resp.Cluster, state, fmt.Errorf("%s: reason code and message not provided", state)
 			}
-			return resp.Cluster, state, fmt.Errorf("%s: %s", aws.StringValue(reason.Code), aws.StringValue(reason.Message))
+			return resp.Cluster, state, fmt.Errorf("%s: %s: %s", state, aws.StringValue(reason.Code), aws.StringValue(reason.Message))
 		}
 
 		return resp.Cluster, state, nil
