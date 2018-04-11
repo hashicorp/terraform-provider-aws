@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * resource/aws_codebuild_project: Properly handle setting cache type `NO_CACHE` [GH-4134]
+* resource/aws_db_event_subscription: Fix `tag` ARN handling [GH-4151]
 * resource/aws_dynamodb_table_item: Trigger destructive update if range_key has changed [GH-3821]
 * resource/aws_iam_user: Retry user login profile deletion on `EntityTemporarilyUnmodifiable` [GH-4143]
 * resource/aws_kinesis_firehose_delivery_stream: Prevent crash with missing CloudWatch logging options [GH-4148]
