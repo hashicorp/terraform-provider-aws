@@ -13,6 +13,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_athena_database: Handle database names with uppercase and underscores [GH-4133]
 * resource/aws_route53_record: Improved handling of non-alphanumeric record names [GH-4183]
 * resource/aws_vpc_dhcp_options: Handle plural and non-plural `InvalidDhcpOptionsID.NotFound` errors [GH-4136]
 
