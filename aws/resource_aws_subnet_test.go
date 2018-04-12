@@ -31,6 +31,7 @@ func init() {
 			"aws_lambda_function",
 			"aws_mq_broker",
 			"aws_redshift_cluster",
+			"aws_spot_fleet_request",
 		},
 	})
 }
