@@ -632,27 +632,49 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 	log.Printf("[DEBUG] Expanded record name: %s", en)
 	d.Set("fqdn", en)
 
+	recordName := FQDN(strings.ToLower(en))
+	recordType := d.Get("type").(string)
+	recordSetIdentifier := d.Get("set_identifier")
+
+	// If this isn't a Weighted, Latency, Geo, or Failover resource with
+	// a SetIdentifier we only need to look at the first record in the response since there can be
+	// only one
+	maxItems := "1"
+	if recordSetIdentifier != "" {
+		maxItems = "100"
+	}
+
 	lopts := &route53.ListResourceRecordSetsInput{
 		HostedZoneId:    aws.String(cleanZoneID(zone)),
-		StartRecordName: aws.String(en),
-		StartRecordType: aws.String(d.Get("type").(string)),
+		StartRecordName: aws.String(recordName),
+		StartRecordType: aws.String(recordType),
+		MaxItems:        aws.String(maxItems),
 	}
 
 	log.Printf("[DEBUG] List resource records sets for zone: %s, opts: %s",
 		zone, lopts)
 
 	var record *route53.ResourceRecordSet
+
+	// We need to loop over all records starting from the record we are looking for because
+	// Weighted, Latency, Geo, and Failover resource record sets have a special option
+	// called SetIdentifier which allows multiple entries with the same name and type but
+	// a different SetIdentifier
+	// For all other records we are setting the maxItems to 1 so that we don't return extra
+	// unneeded records
 	err = conn.ListResourceRecordSetsPages(lopts, func(resp *route53.ListResourceRecordSetsOutput, lastPage bool) bool {
 		for _, recordSet := range resp.ResourceRecordSets {
-			name := cleanRecordName(*recordSet.Name)
-			if FQDN(strings.ToLower(name)) != FQDN(strings.ToLower(*lopts.StartRecordName)) {
-				continue
-			}
-			if strings.ToUpper(*recordSet.Type) != strings.ToUpper(*lopts.StartRecordType) {
-				continue
-			}
 
-			if recordSet.SetIdentifier != nil && *recordSet.SetIdentifier != d.Get("set_identifier") {
+			responseName := strings.ToLower(cleanRecordName(*recordSet.Name))
+			responseType := strings.ToUpper(*recordSet.Type)
+
+			if recordName != responseName {
+				continue
+			}
+			if recordType != responseType {
+				continue
+			}
+			if recordSet.SetIdentifier != nil && *recordSet.SetIdentifier != recordSetIdentifier {
 				continue
 			}
 
