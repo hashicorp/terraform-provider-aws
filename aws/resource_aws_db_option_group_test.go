@@ -262,6 +262,44 @@ func TestAccAWSDBOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBOptionGroup_OracleOptionsUpdate(t *testing.T) {
+	var v rds.OptionGroup
+	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBOptionGroupOracleEEOptionSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
+					resource.TestCheckResourceAttr(
+						"aws_db_option_group.bar", "name", rName),
+					resource.TestCheckResourceAttr(
+						"aws_db_option_group.bar", "option.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_db_option_group.bar", "option.0.version", "12.1.0.4.v1"),
+				),
+			},
+
+			{
+				Config: testAccAWSDBOptionGroupOracleEEOptionSettings_update(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
+					resource.TestCheckResourceAttr(
+						"aws_db_option_group.bar", "name", rName),
+					resource.TestCheckResourceAttr(
+						"aws_db_option_group.bar", "option.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_db_option_group.bar", "option.0.version", "12.1.0.5.v1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBOptionGroup_multipleOptions(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
@@ -488,6 +526,84 @@ resource "aws_db_option_group" "bar" {
 
   option {
     option_name = "TDE"
+  }
+}
+`, r)
+}
+
+func testAccAWSDBOptionGroupOracleEEOptionSettings(r string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "foo" {
+  name = "terraform-test-issue_748"
+  description = "SG for test of issue 748"
+}
+
+resource "aws_db_option_group" "bar" {
+  name                     = "%s"
+  option_group_description = "Test option group for terraform issue 748"
+  engine_name              = "oracle-ee"
+  major_engine_version     = "12.1"
+
+  option {
+    option_name = "OEM_AGENT"
+    port        = "3872"
+    version     = "12.1.0.4.v1"
+
+    vpc_security_group_memberships = ["${aws_security_group.foo.id}"]
+
+    option_settings {
+      name  = "OMS_PORT"
+      value = "4903"
+    }
+
+    option_settings {
+      name  = "OMS_HOST"
+      value = "oem.host.value"
+    }
+
+    option_settings {
+      name  = "AGENT_REGISTRATION_PASSWORD"
+      value = "password"
+    }
+  }
+}
+`, r)
+}
+
+func testAccAWSDBOptionGroupOracleEEOptionSettings_update(r string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "foo" {
+  name = "terraform-test-issue_748"
+  description = "SG for test of issue 748"
+}
+
+resource "aws_db_option_group" "bar" {
+  name                     = "%s"
+  option_group_description = "Test option group for terraform issue 748"
+  engine_name              = "oracle-ee"
+  major_engine_version     = "12.1"
+
+  option {
+    option_name = "OEM_AGENT"
+    port        = "3872"
+    version     = "12.1.0.5.v1"
+
+    vpc_security_group_memberships = ["${aws_security_group.foo.id}"]
+
+    option_settings {
+      name  = "OMS_PORT"
+      value = "4903"
+    }
+
+    option_settings {
+      name  = "OMS_HOST"
+      value = "oem.host.value"
+    }
+
+    option_settings {
+      name  = "AGENT_REGISTRATION_PASSWORD"
+      value = "password"
+    }
   }
 }
 `, r)
