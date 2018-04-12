@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_integration: Support VPC connection [GH-3428]
 * resource/aws_db_option_group: Support option version argument [GH-2590]
 * resource/aws_ecs_service: Support ServiceRegistries [GH-3906]
+* resource/aws_spot_fleet_request: Support configurable delete timeout [GH-3940]
 * resource/aws_spot_instance_request: Support optionally fetching password data [GH-4189]
 
 BUG FIXES:
