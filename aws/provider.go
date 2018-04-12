@@ -172,6 +172,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_canonical_user_id":                dataSourceAwsCanonicalUserId(),
 			"aws_cloudformation_stack":             dataSourceAwsCloudFormationStack(),
 			"aws_cloudtrail_service_account":       dataSourceAwsCloudTrailServiceAccount(),
+			"aws_cloudwatch_log_group":             dataSourceAwsCloudwatchLogGroup(),
 			"aws_db_instance":                      dataSourceAwsDbInstance(),
 			"aws_db_snapshot":                      dataSourceAwsDbSnapshot(),
 			"aws_dynamodb_table":                   dataSourceAwsDynamoDbTable(),
