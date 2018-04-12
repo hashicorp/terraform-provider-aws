@@ -11,6 +11,10 @@ ENHANCEMENTS:
 
 * resource/aws_api_gateway_integration: Support VPC connection [GH-3428]
 
+BUG FIXES:
+
+* resource/aws_route53_record: Improved handling of non-alphanumeric record names [GH-4183]
+
 ## 1.14.1 (April 11, 2018)
 
 ENHANCEMENTS:
