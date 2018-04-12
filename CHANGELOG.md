@@ -5,6 +5,10 @@ FEATURES:
 * **New Data Source:** `aws_sqs_queue` [GH-2311]
 * **New Resource:** `aws_iam_service_linked_role` [GH-2985]
 
+ENHANCEMENTS:
+
+* resource/aws_api_gateway_integration: Support VPC connection [GH-3428]
+
 ## 1.14.1 (April 11, 2018)
 
 ENHANCEMENTS:
