@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -17,10 +16,6 @@ func dataSourceAwsApiGatewayRestApi() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"root_resource_id": {
 				Type:     schema.TypeString,
@@ -39,14 +34,14 @@ func dataSourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Reading API Gateway REST APIs: %s", params)
 	err := conn.GetRestApisPages(params, func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
 		for _, api := range page.Items {
-			if *api.Name == target {
+			if aws.StringValue(api.Name) == target {
 				matchedApis = append(matchedApis, api)
 			}
 		}
-		return true
+		return !lastPage
 	})
 	if err != nil {
-		return errwrap.Wrapf("error describing API Gateway REST APIs: {{err}}", err)
+		return fmt.Errorf("error describing API Gateway REST APIs: %s", err)
 	}
 
 	if len(matchedApis) == 0 {
@@ -59,16 +54,6 @@ func dataSourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}
 	match := matchedApis[0]
 
 	d.SetId(*match.Id)
-
-	if err = dataSourceAwsApiGatewayRestApiRefreshResources(d, meta); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func dataSourceAwsApiGatewayRestApiRefreshResources(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
 
 	resp, err := conn.GetResources(&apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),

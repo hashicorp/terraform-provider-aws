@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccDataSourceAwsApiGatewayRestApi(t *testing.T) {
+	rName := acctest.RandString(8)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccDataSourceAwsApiGatewayRestApiConfig,
+				Config: testAccDataSourceAwsApiGatewayRestApiConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsApiGatewayRestApiCheck("data.aws_api_gateway_rest_api.by_name"),
 				),
@@ -57,24 +59,22 @@ func testAccDataSourceAwsApiGatewayRestApiCheck(name string) resource.TestCheckF
 	}
 }
 
-const testAccDataSourceAwsApiGatewayRestApiConfig = `
-provider "aws" {
-  region = "us-west-2"
-}
-
+func testAccDataSourceAwsApiGatewayRestApiConfig(r string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "tf_wrong1" {
-  name        = "wrong1"
+name        = "%s_wrong1"
 }
 
 resource "aws_api_gateway_rest_api" "tf_test" {
-  name        = "tf_test"
+name        = "%s_correct"
 }
 
 resource "aws_api_gateway_rest_api" "tf_wrong2" {
-  name        = "wrong2"
+name        = "%s_wrong1"
 }
 
 data "aws_api_gateway_rest_api" "by_name" {
-  name = "${aws_api_gateway_rest_api.tf_test.name}"
+name = "${aws_api_gateway_rest_api.tf_test.name}"
 }
-`
+`, r)
+}
