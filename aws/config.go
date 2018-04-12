@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/appsync"
@@ -54,6 +55,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
+	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -74,6 +76,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -167,10 +170,12 @@ type AWSClient struct {
 	emrconn               *emr.EMR
 	esconn                *elasticsearch.ElasticsearchService
 	acmconn               *acm.ACM
+	acmpcaconn            *acmpca.ACMPCA
 	apigateway            *apigateway.APIGateway
 	appautoscalingconn    *applicationautoscaling.ApplicationAutoScaling
 	autoscalingconn       *autoscaling.AutoScaling
 	s3conn                *s3.S3
+	secretsmanagerconn    *secretsmanager.SecretsManager
 	scconn                *servicecatalog.ServiceCatalog
 	sesConn               *ses.SES
 	simpledbconn          *simpledb.SimpleDB
@@ -189,6 +194,7 @@ type AWSClient struct {
 	kmsconn               *kms.KMS
 	gameliftconn          *gamelift.GameLift
 	firehoseconn          *firehose.Firehose
+	fmsconn               *fms.FMS
 	inspectorconn         *inspector.Inspector
 	elasticacheconn       *elasticache.ElastiCache
 	elasticbeanstalkconn  *elasticbeanstalk.ElasticBeanstalk
@@ -418,6 +424,7 @@ func (c *Config) Client() (interface{}, error) {
 	}
 
 	client.acmconn = acm.New(awsAcmSess)
+	client.acmpcaconn = acmpca.New(sess)
 	client.apigateway = apigateway.New(awsApigatewaySess)
 	client.appautoscalingconn = applicationautoscaling.New(sess)
 	client.autoscalingconn = autoscaling.New(sess)
@@ -450,6 +457,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.emrconn = emr.New(sess)
 	client.esconn = elasticsearch.New(awsEsSess)
 	client.firehoseconn = firehose.New(sess)
+	client.fmsconn = fms.New(sess)
 	client.inspectorconn = inspector.New(sess)
 	client.gameliftconn = gamelift.New(sess)
 	client.glacierconn = glacier.New(sess)
@@ -471,6 +479,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.scconn = servicecatalog.New(sess)
 	client.sdconn = servicediscovery.New(sess)
 	client.sesConn = ses.New(sess)
+	client.secretsmanagerconn = secretsmanager.New(sess)
 	client.sfnconn = sfn.New(sess)
 	client.snsconn = sns.New(awsSnsSess)
 	client.sqsconn = sqs.New(awsSqsSess)
