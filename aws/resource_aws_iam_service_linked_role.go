@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -16,6 +17,7 @@ func resourceAwsIamServiceLinkedRole() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsIamServiceLinkedRoleCreate,
 		Read:   resourceAwsIamServiceLinkedRoleRead,
+		Update: resourceAwsIamServiceLinkedRoleUpdate,
 		Delete: resourceAwsIamServiceLinkedRoleDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -61,9 +63,15 @@ func resourceAwsIamServiceLinkedRole() *schema.Resource {
 				Computed: true,
 			},
 
+			"custom_suffix": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+
 			"description": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 		},
 	}
@@ -76,6 +84,14 @@ func resourceAwsIamServiceLinkedRoleCreate(d *schema.ResourceData, meta interfac
 
 	params := &iam.CreateServiceLinkedRoleInput{
 		AWSServiceName: aws.String(serviceName),
+	}
+
+	if v, ok := d.GetOk("custom_suffix"); ok && v.(string) != "" {
+		params.CustomSuffix = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+		params.Description = aws.String(v.(string))
 	}
 
 	resp, err := conn.CreateServiceLinkedRole(params)
@@ -91,9 +107,10 @@ func resourceAwsIamServiceLinkedRoleCreate(d *schema.ResourceData, meta interfac
 func resourceAwsIamServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
 
-	arnSplit := strings.Split(d.Id(), "/")
-	roleName := arnSplit[len(arnSplit)-1]
-	serviceName := arnSplit[len(arnSplit)-2]
+	serviceName, roleName, customSuffix, err := decodeIamServiceLinkedRoleID(d.Id())
+	if err != nil {
+		return err
+	}
 
 	params := &iam.GetRoleInput{
 		RoleName: aws.String(roleName),
@@ -112,23 +129,87 @@ func resourceAwsIamServiceLinkedRoleRead(d *schema.ResourceData, meta interface{
 
 	role := resp.Role
 
+	d.Set("arn", role.Arn)
+	d.Set("aws_service_name", serviceName)
+	d.Set("create_date", role.CreateDate)
+	d.Set("custom_suffix", customSuffix)
+	d.Set("description", role.Description)
 	d.Set("name", role.RoleName)
 	d.Set("path", role.Path)
-	d.Set("arn", role.Arn)
-	d.Set("create_date", role.CreateDate)
 	d.Set("unique_id", role.RoleId)
-	d.Set("description", role.Description)
-	d.Set("aws_service_name", serviceName)
 
 	return nil
+}
+
+func resourceAwsIamServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).iamconn
+
+	_, roleName, _, err := decodeIamServiceLinkedRoleID(d.Id())
+	if err != nil {
+		return err
+	}
+
+	params := &iam.UpdateRoleInput{
+		Description: aws.String(d.Get("description").(string)),
+		RoleName:    aws.String(roleName),
+	}
+
+	_, err = conn.UpdateRole(params)
+
+	if err != nil {
+		return fmt.Errorf("Error updating service-linked role %s: %s", d.Id(), err)
+	}
+
+	return resourceAwsIamServiceLinkedRoleRead(d, meta)
 }
 
 func resourceAwsIamServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
 
-	arnSplit := strings.Split(d.Id(), "/")
-	roleName := arnSplit[len(arnSplit)-1]
+	_, roleName, _, err := decodeIamServiceLinkedRoleID(d.Id())
+	if err != nil {
+		return err
+	}
 
+	deletionID, err := deleteIamServiceLinkedRole(conn, roleName)
+	if err != nil {
+		return fmt.Errorf("Error deleting service-linked role %s: %s", d.Id(), err)
+	}
+	if deletionID == "" {
+		return nil
+	}
+
+	err = deleteIamServiceLinkedRoleWaiter(conn, deletionID)
+	if err != nil {
+		return fmt.Errorf("Error waiting for role (%s) to be deleted: %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func decodeIamServiceLinkedRoleID(id string) (serviceName, roleName, customSuffix string, err error) {
+	idArn, err := arn.Parse(id)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	resourceParts := strings.Split(idArn.Resource, "/")
+	if len(resourceParts) != 4 {
+		return "", "", "", fmt.Errorf("expected IAM Service Role ARN (arn:PARTITION:iam::ACCOUNTID:role/aws-service-role/SERVICENAME/ROLENAME), received: %s", id)
+	}
+
+	serviceName = resourceParts[2]
+	roleName = resourceParts[3]
+
+	roleNameParts := strings.Split(roleName, "_")
+	if len(roleNameParts) == 2 {
+		customSuffix = roleNameParts[1]
+	}
+
+	return
+}
+
+func deleteIamServiceLinkedRole(conn *iam.IAM, roleName string) (string, error) {
 	params := &iam.DeleteServiceLinkedRoleInput{
 		RoleName: aws.String(roleName),
 	}
@@ -137,33 +218,35 @@ func resourceAwsIamServiceLinkedRoleDelete(d *schema.ResourceData, meta interfac
 
 	if err != nil {
 		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-			return nil
+			return "", nil
 		}
-		return fmt.Errorf("Error deleting service-linked role %s: %s", d.Id(), err)
+		return "", err
 	}
 
-	deletionTaskId := aws.StringValue(resp.DeletionTaskId)
+	return aws.StringValue(resp.DeletionTaskId), nil
+}
 
+func deleteIamServiceLinkedRoleWaiter(conn *iam.IAM, deletionTaskID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{iam.DeletionTaskStatusTypeInProgress, iam.DeletionTaskStatusTypeNotStarted},
 		Target:  []string{iam.DeletionTaskStatusTypeSucceeded},
-		Refresh: deletionRefreshFunc(conn, deletionTaskId),
+		Refresh: deleteIamServiceLinkedRoleRefreshFunc(conn, deletionTaskID),
 		Timeout: 5 * time.Minute,
 		Delay:   10 * time.Second,
 	}
 
-	_, err = stateConf.WaitForState()
+	_, err := stateConf.WaitForState()
 	if err != nil {
 		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 			return nil
 		}
-		return fmt.Errorf("Error waiting for role (%s) to be deleted: %s", d.Id(), err)
+		return err
 	}
 
 	return nil
 }
 
-func deletionRefreshFunc(conn *iam.IAM, deletionTaskId string) resource.StateRefreshFunc {
+func deleteIamServiceLinkedRoleRefreshFunc(conn *iam.IAM, deletionTaskId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		params := &iam.GetServiceLinkedRoleDeletionStatusInput{
 			DeletionTaskId: aws.String(deletionTaskId),
