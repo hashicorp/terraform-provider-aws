@@ -10,6 +10,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_api_gateway_integration: Support VPC connection [GH-3428]
+* resource/aws_spot_instance_request: Support optionally fetching password data [GH-4189]
 
 BUG FIXES:
 
