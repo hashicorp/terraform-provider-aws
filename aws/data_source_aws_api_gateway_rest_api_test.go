@@ -76,5 +76,5 @@ name        = "%s_wrong1"
 data "aws_api_gateway_rest_api" "by_name" {
 name = "${aws_api_gateway_rest_api.tf_test.name}"
 }
-`, r)
+`, r, r, r)
 }
