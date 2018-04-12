@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -42,29 +41,35 @@ func testSweepLaunchConfigurations(region string) error {
 		return nil
 	}
 
+	prefixes := []string{
+		"foobar",
+		"terraform-",
+		"tf-acc-",
+		"TestAcc",
+	}
 	for _, lc := range resp.LaunchConfigurations {
-		var testOptGroup bool
-		for _, testName := range []string{"terraform-", "foobar"} {
-			if strings.HasPrefix(*lc.LaunchConfigurationName, testName) {
-				testOptGroup = true
+		name := *lc.LaunchConfigurationName
+		skip := true
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(name, prefix) {
+				skip = false
 			}
 		}
 
-		if !testOptGroup {
+		if skip {
+			log.Printf("[INFO] Skipping Launch Configuration: %s", name)
 			continue
 		}
 
+		log.Printf("[INFO] Deleting Launch Configuration: %s", name)
 		_, err := autoscalingconn.DeleteLaunchConfiguration(
 			&autoscaling.DeleteLaunchConfigurationInput{
-				LaunchConfigurationName: lc.LaunchConfigurationName,
+				LaunchConfigurationName: aws.String(name),
 			})
 		if err != nil {
-			autoscalingerr, ok := err.(awserr.Error)
-			if ok && (autoscalingerr.Code() == "InvalidConfiguration.NotFound" || autoscalingerr.Code() == "ValidationError") {
-				log.Printf("[DEBUG] Launch configuration (%s) not found", *lc.LaunchConfigurationName)
+			if isAWSErr(err, "InvalidConfiguration.NotFound", "") || isAWSErr(err, "ValidationError", "") {
 				return nil
 			}
-
 			return err
 		}
 	}
@@ -93,7 +98,7 @@ func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.baz", &conf),
 					testAccCheckAWSLaunchConfigurationGeneratedNamePrefix(
-						"aws_launch_configuration.baz", "baz-"),
+						"aws_launch_configuration.baz", "tf-acc-test-"),
 				),
 			},
 		},
@@ -180,6 +185,7 @@ func TestAccAWSLaunchConfiguration_withVpcClassicLink(t *testing.T) {
 	var vpc ec2.Vpc
 	var group ec2.SecurityGroup
 	var conf autoscaling.LaunchConfiguration
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -187,12 +193,17 @@ func TestAccAWSLaunchConfiguration_withVpcClassicLink(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfig_withVpcClassicLink,
+				Config: testAccAWSLaunchConfigurationConfig_withVpcClassicLink(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.foo", &conf),
 					testAccCheckVpcExists("aws_vpc.foo", &vpc),
 					testAccCheckAWSSecurityGroupExists("aws_security_group.foo", &group),
 				),
+			},
+			{
+				ResourceName:      "aws_launch_configuration.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -200,6 +211,7 @@ func TestAccAWSLaunchConfiguration_withVpcClassicLink(t *testing.T) {
 
 func TestAccAWSLaunchConfiguration_withIAMProfile(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -207,7 +219,7 @@ func TestAccAWSLaunchConfiguration_withIAMProfile(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfig_withIAMProfile,
+				Config: testAccAWSLaunchConfigurationConfig_withIAMProfile(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.bar", &conf),
 				),
@@ -274,7 +286,7 @@ func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.baz", &conf),
 					resource.TestCheckResourceAttr(
-						"aws_launch_configuration.baz", "ebs_block_device.2764618555.volume_size", "9"),
+						"aws_launch_configuration.baz", "ebs_block_device.1393547169.volume_size", "9"),
 				),
 			},
 			{
@@ -282,7 +294,29 @@ func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.baz", &conf),
 					resource.TestCheckResourceAttr(
-						"aws_launch_configuration.baz", "ebs_block_device.3859927736.volume_size", "10"),
+						"aws_launch_configuration.baz", "ebs_block_device.4131155854.volume_size", "10"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchConfigurationConfigEbsNoDevice(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.bar", &conf),
+					resource.TestCheckResourceAttr("aws_launch_configuration.bar", "ebs_block_device.#", "1"),
+					resource.TestCheckResourceAttr("aws_launch_configuration.bar", "ebs_block_device.3099842682.device_name", "/dev/sda2"),
+					resource.TestCheckResourceAttr("aws_launch_configuration.bar", "ebs_block_device.3099842682.no_device", "true"),
 				),
 			},
 		},
@@ -328,11 +362,7 @@ func testAccCheckAWSLaunchConfigurationDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		providerErr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if providerErr.Code() != "InvalidLaunchConfiguration.NotFound" {
+		if !isAWSErr(err, "InvalidLaunchConfiguration.NotFound", "") {
 			return err
 		}
 	}
@@ -346,7 +376,7 @@ func testAccCheckAWSLaunchConfigurationAttributes(conf *autoscaling.LaunchConfig
 			return fmt.Errorf("Bad image_id: %s", *conf.ImageId)
 		}
 
-		if !strings.HasPrefix(*conf.LaunchConfigurationName, "terraform-") {
+		if !strings.HasPrefix(*conf.LaunchConfigurationName, "terraform-") && !strings.HasPrefix(*conf.LaunchConfigurationName, "tf-acc-test-") {
 			return fmt.Errorf("Bad name: %s", *conf.LaunchConfigurationName)
 		}
 
@@ -455,7 +485,7 @@ resource "aws_launch_configuration" "bar" {
 
 var testAccAWSLaunchConfigurationConfig = fmt.Sprintf(`
 resource "aws_launch_configuration" "bar" {
-  name = "terraform-test-%d"
+  name = "tf-acc-test-%d"
   image_id = "ami-21f78e11"
   instance_type = "m1.small"
   user_data = "foobar-user-data"
@@ -484,7 +514,7 @@ resource "aws_launch_configuration" "bar" {
 
 var testAccAWSLaunchConfigurationWithSpotPriceConfig = fmt.Sprintf(`
 resource "aws_launch_configuration" "bar" {
-  name = "terraform-test-%d"
+  name = "tf-acc-test-%d"
   image_id = "ami-21f78e11"
   instance_type = "t1.micro"
   spot_price = "0.01"
@@ -502,7 +532,7 @@ resource "aws_launch_configuration" "bar" {
 
 const testAccAWSLaunchConfigurationPrefixNameConfig = `
 resource "aws_launch_configuration" "baz" {
-   name_prefix = "baz-"
+   name_prefix = "tf-acc-test-"
    image_id = "ami-21f78e11"
    instance_type = "t1.micro"
    user_data = "foobar-user-data-change"
@@ -546,7 +576,8 @@ resource "aws_launch_configuration" "baz" {
 }
 `
 
-const testAccAWSLaunchConfigurationConfig_withVpcClassicLink = `
+func testAccAWSLaunchConfigurationConfig_withVpcClassicLink(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "10.0.0.0/16"
     enable_classiclink = true
@@ -556,23 +587,25 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_security_group" "foo" {
-  name = "foo"
+  name = "tf-acc-test-%[1]d"
   vpc_id = "${aws_vpc.foo.id}"
 }
 
 resource "aws_launch_configuration" "foo" {
-   name = "TestAccAWSLaunchConfiguration_withVpcClassicLink"
+   name = "tf-acc-test-%[1]d"
    image_id = "ami-21f78e11"
    instance_type = "t1.micro"
 
    vpc_classic_link_id = "${aws_vpc.foo.id}"
    vpc_classic_link_security_groups = ["${aws_security_group.foo.id}"]
 }
-`
+`, rInt)
+}
 
-const testAccAWSLaunchConfigurationConfig_withIAMProfile = `
+func testAccAWSLaunchConfigurationConfig_withIAMProfile(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
-	name  = "TestAccAWSLaunchConfiguration-withIAMProfile"
+	name  = "tf-acc-test-%[1]d"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -591,7 +624,7 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "profile" {
-	name  = "TestAccAWSLaunchConfiguration-withIAMProfile"
+	name  = "tf-acc-test-%[1]d"
 	roles = ["${aws_iam_role.role.name}"]
 }
 
@@ -600,4 +633,28 @@ resource "aws_launch_configuration" "bar" {
 	instance_type        = "t2.nano"
 	iam_instance_profile = "${aws_iam_instance_profile.profile.name}"
 }
-`
+`, rInt)
+}
+
+func testAccAWSLaunchConfigurationConfigEbsNoDevice(rInt int) string {
+	return fmt.Sprintf(`
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/ebs/ubuntu-precise-12.04-i386-server-*"]
+  }
+  owners = ["099720109477"] # Canonical
+}
+
+resource "aws_launch_configuration" "bar" {
+  name_prefix = "tf-acc-test-%d"
+  image_id = "${data.aws_ami.ubuntu.id}"
+  instance_type = "m1.small"
+  ebs_block_device {
+    device_name = "/dev/sda2"
+    no_device = true
+  }
+}
+`, rInt)
+}

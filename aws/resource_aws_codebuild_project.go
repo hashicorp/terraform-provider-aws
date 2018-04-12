@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsCodeBuildProject() *schema.Resource {
@@ -38,9 +39,12 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Optional: true,
 						},
 						"namespace_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateAwsCodeBuildArifactsNamespaceType,
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ArtifactNamespaceNone,
+								codebuild.ArtifactNamespaceBuildId,
+							}, false),
 						},
 						"packaging": {
 							Type:     schema.TypeString,
@@ -51,19 +55,51 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Optional: true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsCodeBuildArifactsType,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ArtifactsTypeCodepipeline,
+								codebuild.ArtifactsTypeS3,
+								codebuild.ArtifactsTypeNoArtifacts,
+							}, false),
 						},
 					},
 				},
 				Set: resourceAwsCodeBuildProjectArtifactsHash,
 			},
+			"cache": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  codebuild.CacheTypeNoCache,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.CacheTypeNoCache,
+								codebuild.CacheTypeS3,
+							}, false),
+						},
+						"location": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateAwsCodeBuildProjectDescription,
+				ValidateFunc: validateMaxLength(255),
 			},
 			"encryption_key": {
 				Type:     schema.TypeString,
@@ -77,9 +113,13 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"compute_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsCodeBuildEnvironmentComputeType,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ComputeTypeBuildGeneral1Small,
+								codebuild.ComputeTypeBuildGeneral1Medium,
+								codebuild.ComputeTypeBuildGeneral1Large,
+							}, false),
 						},
 						"environment_variable": {
 							Type:     schema.TypeList,
@@ -103,9 +143,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Required: true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsCodeBuildEnvironmentType,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.EnvironmentTypeLinuxContainer,
+							}, false),
 						},
 						"privileged_mode": {
 							Type:     schema.TypeBool,
@@ -140,9 +182,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										Optional: true,
 									},
 									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateAwsCodeBuildSourceAuthType,
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											codebuild.SourceAuthTypeOauth,
+										}, false),
 									},
 								},
 							},
@@ -158,9 +202,16 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Optional: true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsCodeBuildSourceType,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.SourceTypeCodecommit,
+								codebuild.SourceTypeCodepipeline,
+								codebuild.SourceTypeGithub,
+								codebuild.SourceTypeS3,
+								codebuild.SourceTypeBitbucket,
+								codebuild.SourceTypeGithubEnterprise,
+							}, false),
 						},
 					},
 				},
@@ -171,17 +222,58 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 			"timeout": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateAwsCodeBuildTimeout,
+				ValidateFunc: validation.IntBetween(5, 480),
 				Removed:      "This field has been removed. Please use build_timeout instead",
 			},
 			"build_timeout": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      "60",
-				ValidateFunc: validateAwsCodeBuildTimeout,
+				ValidateFunc: validation.IntBetween(5, 480),
 			},
 			"tags": tagsSchema(),
+			"vpc_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"vpc_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"subnets": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							// Set:      schema.HashString,
+							MaxItems: 16,
+						},
+						"security_group_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							// Set:      schema.HashString,
+							MaxItems: 5,
+						},
+					},
+				},
+			},
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for cache location
+				cacheType, cacheTypeOk := diff.GetOk("cache.0.type")
+				if !cacheTypeOk || cacheType.(string) == codebuild.CacheTypeNoCache {
+					return nil
+				}
+				if v, ok := diff.GetOk("cache.0.location"); ok && v.(string) != "" {
+					return nil
+				}
+				return fmt.Errorf(`cache location is required when cache type is %q`, cacheType.(string))
+			},
+		),
 	}
 }
 
@@ -197,6 +289,10 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		Name:        aws.String(d.Get("name").(string)),
 		Source:      &projectSource,
 		Artifacts:   &projectArtifacts,
+	}
+
+	if v, ok := d.GetOk("cache"); ok {
+		params.Cache = expandProjectCache(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -215,6 +311,10 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		params.TimeoutInMinutes = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("vpc_config"); ok {
+		params.VpcConfig = expandCodeBuildVpcConfig(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("tags"); ok {
 		params.Tags = tagsFromMapCodeBuild(v.(map[string]interface{}))
 	}
@@ -227,6 +327,10 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			// Work around eventual consistency of IAM
 			if isAWSErr(err, "InvalidInputException", "CodeBuild is not authorized to perform") {
+				return resource.RetryableError(err)
+			}
+
+			if isAWSErr(err, "InvalidInputException", "Not authorized to perform DescribeSecurityGroups") {
 				return resource.RetryableError(err)
 			}
 
@@ -277,6 +381,22 @@ func expandProjectArtifacts(d *schema.ResourceData) codebuild.ProjectArtifacts {
 	return projectArtifacts
 }
 
+func expandProjectCache(s []interface{}) *codebuild.ProjectCache {
+	var projectCache *codebuild.ProjectCache
+
+	data := s[0].(map[string]interface{})
+
+	projectCache = &codebuild.ProjectCache{
+		Type: aws.String(data["type"].(string)),
+	}
+
+	if v, ok := data["location"]; ok {
+		projectCache.Location = aws.String(v.(string))
+	}
+
+	return projectCache
+}
+
 func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironment {
 	configs := d.Get("environment").(*schema.Set).List()
 
@@ -324,6 +444,21 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 	}
 
 	return projectEnv
+}
+
+func expandCodeBuildVpcConfig(rawVpcConfig []interface{}) *codebuild.VpcConfig {
+	vpcConfig := codebuild.VpcConfig{}
+	if len(rawVpcConfig) == 0 {
+		return &vpcConfig
+	} else {
+
+		data := rawVpcConfig[0].(map[string]interface{})
+		vpcConfig.VpcId = aws.String(data["vpc_id"].(string))
+		vpcConfig.Subnets = expandStringList(data["subnets"].(*schema.Set).List())
+		vpcConfig.SecurityGroupIds = expandStringList(data["security_group_ids"].(*schema.Set).List())
+
+		return &vpcConfig
+	}
 }
 
 func expandProjectSource(d *schema.ResourceData) codebuild.ProjectSource {
@@ -380,15 +515,23 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 
 	project := resp.Projects[0]
 
-	if err := d.Set("artifacts", flattenAwsCodebuildProjectArtifacts(project.Artifacts)); err != nil {
+	if err := d.Set("artifacts", flattenAwsCodeBuildProjectArtifacts(project.Artifacts)); err != nil {
 		return err
 	}
 
-	if err := d.Set("environment", schema.NewSet(resourceAwsCodeBuildProjectEnvironmentHash, flattenAwsCodebuildProjectEnvironment(project.Environment))); err != nil {
+	if err := d.Set("environment", schema.NewSet(resourceAwsCodeBuildProjectEnvironmentHash, flattenAwsCodeBuildProjectEnvironment(project.Environment))); err != nil {
 		return err
 	}
 
-	if err := d.Set("source", flattenAwsCodebuildProjectSource(project.Source)); err != nil {
+	if err := d.Set("cache", flattenAwsCodebuildProjectCache(project.Cache)); err != nil {
+		return err
+	}
+
+	if err := d.Set("source", flattenAwsCodeBuildProjectSource(project.Source)); err != nil {
+		return err
+	}
+
+	if err := d.Set("vpc_config", flattenAwsCodeBuildVpcConfig(project.VpcConfig)); err != nil {
 		return err
 	}
 
@@ -425,6 +568,20 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChange("artifacts") {
 		projectArtifacts := expandProjectArtifacts(d)
 		params.Artifacts = &projectArtifacts
+	}
+
+	if d.HasChange("vpc_config") {
+		params.VpcConfig = expandCodeBuildVpcConfig(d.Get("vpc_config").([]interface{}))
+	}
+
+	if d.HasChange("cache") {
+		if v, ok := d.GetOk("cache"); ok {
+			params.Cache = expandProjectCache(v.([]interface{}))
+		} else {
+			params.Cache = &codebuild.ProjectCache{
+				Type: aws.String("NO_CACHE"),
+			}
+		}
 	}
 
 	if d.HasChange("description") {
@@ -474,7 +631,7 @@ func resourceAwsCodeBuildProjectDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func flattenAwsCodebuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) *schema.Set {
+func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) *schema.Set {
 
 	artifactSet := schema.Set{
 		F: resourceAwsCodeBuildProjectArtifactsHash,
@@ -509,7 +666,20 @@ func flattenAwsCodebuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) 
 	return &artifactSet
 }
 
-func flattenAwsCodebuildProjectEnvironment(environment *codebuild.ProjectEnvironment) []interface{} {
+func flattenAwsCodebuildProjectCache(cache *codebuild.ProjectCache) []interface{} {
+	if cache == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{
+		"location": aws.StringValue(cache.Location),
+		"type":     aws.StringValue(cache.Type),
+	}
+
+	return []interface{}{values}
+}
+
+func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnvironment) []interface{} {
 	envConfig := map[string]interface{}{}
 
 	envConfig["type"] = *environment.Type
@@ -525,7 +695,7 @@ func flattenAwsCodebuildProjectEnvironment(environment *codebuild.ProjectEnviron
 
 }
 
-func flattenAwsCodebuildProjectSource(source *codebuild.ProjectSource) []interface{} {
+func flattenAwsCodeBuildProjectSource(source *codebuild.ProjectSource) []interface{} {
 	l := make([]interface{}, 1)
 	m := map[string]interface{}{}
 
@@ -546,6 +716,19 @@ func flattenAwsCodebuildProjectSource(source *codebuild.ProjectSource) []interfa
 	l[0] = m
 
 	return l
+}
+
+func flattenAwsCodeBuildVpcConfig(vpcConfig *codebuild.VpcConfig) []interface{} {
+	if vpcConfig != nil {
+		values := map[string]interface{}{}
+
+		values["vpc_id"] = *vpcConfig.VpcId
+		values["subnets"] = schema.NewSet(schema.HashString, flattenStringList(vpcConfig.Subnets))
+		values["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SecurityGroupIds))
+
+		return []interface{}{values}
+	}
+	return nil
 }
 
 func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
@@ -637,33 +820,6 @@ func sourceAuthToMap(sourceAuth *codebuild.SourceAuth) map[string]interface{} {
 	return auth
 }
 
-func validateAwsCodeBuildArifactsType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		"CODEPIPELINE": true,
-		"NO_ARTIFACTS": true,
-		"S3":           true,
-	}
-
-	if !types[value] {
-		errors = append(errors, fmt.Errorf("CodeBuild: Arifacts Type can only be CODEPIPELINE / NO_ARTIFACTS / S3"))
-	}
-	return
-}
-
-func validateAwsCodeBuildArifactsNamespaceType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		"NONE":     true,
-		"BUILD_ID": true,
-	}
-
-	if !types[value] {
-		errors = append(errors, fmt.Errorf("CodeBuild: Arifacts Namespace Type can only be NONE / BUILD_ID"))
-	}
-	return
-}
-
 func validateAwsCodeBuildProjectName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[A-Za-z0-9]`).MatchString(value) {
@@ -681,82 +837,5 @@ func validateAwsCodeBuildProjectName(v interface{}, k string) (ws []string, erro
 			"%q cannot be greater than 255 characters", value))
 	}
 
-	return
-}
-
-func validateAwsCodeBuildProjectDescription(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 255 {
-		errors = append(errors, fmt.Errorf("%q cannot be greater than 255 characters", value))
-	}
-	return
-}
-
-func validateAwsCodeBuildEnvironmentComputeType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		"BUILD_GENERAL1_SMALL":  true,
-		"BUILD_GENERAL1_MEDIUM": true,
-		"BUILD_GENERAL1_LARGE":  true,
-	}
-
-	if !types[value] {
-		errors = append(errors, fmt.Errorf("CodeBuild: Environment Compute Type can only be BUILD_GENERAL1_SMALL / BUILD_GENERAL1_MEDIUM / BUILD_GENERAL1_LARGE"))
-	}
-	return
-}
-
-func validateAwsCodeBuildEnvironmentType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		"LINUX_CONTAINER": true,
-	}
-
-	if !types[value] {
-		errors = append(errors, fmt.Errorf("CodeBuild: Environment Type can only be LINUX_CONTAINER"))
-	}
-	return
-}
-
-func validateAwsCodeBuildSourceType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		codebuild.SourceTypeBitbucket:    true,
-		codebuild.SourceTypeCodecommit:   true,
-		codebuild.SourceTypeCodepipeline: true,
-		codebuild.SourceTypeGithub:       true,
-		codebuild.SourceTypeS3:           true,
-	}
-	s := make([]string, 0, len(types))
-
-	for key, _ := range types {
-		s = append(s, key)
-	}
-
-	if !types[value] {
-		strings.Join(s, ", ")
-		errors = append(errors, fmt.Errorf("CodeBuild: Source Type can only be one of: %s", strings.Join(s, ", ")))
-	}
-	return
-}
-
-func validateAwsCodeBuildSourceAuthType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	types := map[string]bool{
-		"OAUTH": true,
-	}
-
-	if !types[value] {
-		errors = append(errors, fmt.Errorf("CodeBuild: Source Auth Type can only be OAUTH"))
-	}
-	return
-}
-
-func validateAwsCodeBuildTimeout(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(int)
-
-	if value < 5 || value > 480 {
-		errors = append(errors, fmt.Errorf("%q must be greater than 5 minutes and less than 480 minutes (8 hours)", value))
-	}
 	return
 }

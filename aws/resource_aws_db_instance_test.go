@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 )
@@ -472,6 +474,11 @@ func TestAccAWSDBInstance_diffSuppressInitialState(t *testing.T) {
 
 func TestAccAWSDBInstance_ec2Classic(t *testing.T) {
 	var v rds.DBInstance
+
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -603,12 +610,13 @@ func testAccCheckAWSDBInstanceSnapshot(rInt int) resource.TestCheckFunc {
 				}
 			} else { // snapshot was found,
 				// verify we have the tags copied to the snapshot
-				instanceARN, err := buildRDSARN(snapshot_identifier, testAccProvider.Meta().(*AWSClient).partition, testAccProvider.Meta().(*AWSClient).accountid, testAccProvider.Meta().(*AWSClient).region)
-				// tags have a different ARN, just swapping :db: for :snapshot:
-				tagsARN := strings.Replace(instanceARN, ":db:", ":snapshot:", 1)
-				if err != nil {
-					return fmt.Errorf("Error building ARN for tags check with ARN (%s): %s", tagsARN, err)
-				}
+				tagsARN := arn.ARN{
+					Partition: testAccProvider.Meta().(*AWSClient).partition,
+					Service:   "rds",
+					Region:    testAccProvider.Meta().(*AWSClient).region,
+					AccountID: testAccProvider.Meta().(*AWSClient).accountid,
+					Resource:  fmt.Sprintf("snapshot:%s", snapshot_identifier),
+				}.String()
 				resp, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
 					ResourceName: aws.String(tagsARN),
 				})
@@ -1141,7 +1149,7 @@ resource "aws_subnet" "foo" {
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-1"
+		Name = "tf-acc-db-instance-with-subnet-group-1"
 	}
 }
 
@@ -1150,7 +1158,7 @@ resource "aws_subnet" "bar" {
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-2"
+		Name = "tf-acc-db-instance-with-subnet-group-2"
 	}
 }
 
@@ -1202,7 +1210,7 @@ resource "aws_subnet" "foo" {
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-1"
+		Name = "tf-acc-db-instance-with-subnet-group-1"
 	}
 }
 
@@ -1211,7 +1219,7 @@ resource "aws_subnet" "bar" {
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-2"
+		Name = "tf-acc-db-instance-with-subnet-group-2"
 	}
 }
 
@@ -1220,7 +1228,7 @@ resource "aws_subnet" "test" {
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.bar.id}"
 	tags {
-		Name = "tf-dbsubnet-test-3"
+		Name = "tf-acc-db-instance-with-subnet-group-3"
 	}
 }
 
@@ -1229,7 +1237,7 @@ resource "aws_subnet" "another_test" {
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.bar.id}"
 	tags {
-		Name = "tf-dbsubnet-test-4"
+		Name = "tf-acc-db-instance-with-subnet-group-4"
 	}
 }
 
@@ -1290,12 +1298,18 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
+  tags {
+    Name = "tf-acc-db-instance-mssql-timezone-main"
+  }
 }
 
 resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
+  tags {
+    Name = "tf-acc-db-instance-mssql-timezone-other"
+  }
 }
 
 resource "aws_db_instance" "mssql" {
@@ -1356,12 +1370,18 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
+  tags {
+    Name = "tf-acc-db-instance-mssql-timezone-akst-main"
+  }
 }
 
 resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
+  tags {
+    Name = "tf-acc-db-instance-mssql-timezone-akst-other"
+  }
 }
 
 resource "aws_db_instance" "mssql" {
@@ -1418,10 +1438,6 @@ resource "aws_db_instance" "bar" {
 
 func testAccAWSDBInstanceConfigEc2Classic(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_db_instance" "bar" {
   identifier = "foobarbaz-test-terraform-%d"
   allocated_storage = 10

@@ -60,9 +60,7 @@ for any `create` or `update` action. Minimum `10s`, maximum `180s`. Omit this to
 use the default behavior, which is an exponential backoff
 * `version_label` - (Optional) The name of the Elastic Beanstalk Application Version
 to use in deployment.
-* `tags` – (Optional) A set of tags to apply to the Environment. **Note:** at
-this time the Elastic Beanstalk API does not provide a programatic way of
-changing these tags after initial application
+* `tags` – (Optional) A set of tags to apply to the Environment.
 
 
 ## Option Settings

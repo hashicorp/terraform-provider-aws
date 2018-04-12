@@ -2,11 +2,14 @@ package aws
 
 import (
 	"errors"
+	"fmt"
 	"log"
+	"time"
+
+	"github.com/hashicorp/terraform/helper/resource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -46,7 +49,7 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Adding certificate: %s of listener: %s", d.Get("certificate_arn").(string), d.Get("listener_arn").(string))
 	resp, err := conn.AddListenerCertificates(params)
 	if err != nil {
-		return errwrap.Wrapf("Error creating LB Listener Certificate: {{err}}", err)
+		return fmt.Errorf("Error creating LB Listener Certificate: %s", err)
 	}
 
 	if len(resp.Certificates) == 0 {
@@ -60,43 +63,37 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 
 func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
-	log.Printf("[DEBUG] Reading certificate: %s of listener: %s", d.Get("certificate_arn").(string), d.Get("listener_arn").(string))
 
-	params := &elbv2.DescribeListenerCertificatesInput{
-		ListenerArn: aws.String(d.Get("listener_arn").(string)),
-		PageSize:    aws.Int64(400),
-	}
+	certificateArn := d.Get("certificate_arn").(string)
+	listenerArn := d.Get("listener_arn").(string)
 
-	morePages := true
-	found := false
-	for morePages && !found {
-		resp, err := conn.DescribeListenerCertificates(params)
+	log.Printf("[DEBUG] Reading certificate: %s of listener: %s", certificateArn, listenerArn)
+
+	var certificate *elbv2.Certificate
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		certificate, err = findAwsLbListenerCertificate(certificateArn, listenerArn, true, nil, conn)
 		if err != nil {
-			return err
+			return resource.NonRetryableError(err)
 		}
 
-		for _, cert := range resp.Certificates {
-			// We don't care about the default certificate.
-			if *cert.IsDefault {
-				continue
+		if certificate == nil {
+			err = fmt.Errorf("certificate not found: %s", certificateArn)
+			if d.IsNewResource() {
+				return resource.RetryableError(err)
 			}
-
-			if *cert.CertificateArn == d.Get("certificate_arn").(string) {
-				found = true
-			}
+			return resource.NonRetryableError(err)
 		}
 
-		if resp.NextMarker != nil {
-			params.Marker = resp.NextMarker
-		} else {
-			morePages = false
-		}
-	}
-
-	if !found {
-		log.Printf("[WARN] DescribeListenerCertificates - removing %s from state", d.Id())
-		d.SetId("")
 		return nil
+	})
+	if err != nil {
+		if certificate == nil {
+			log.Printf("[WARN] %s - removing from state", err)
+			d.SetId("")
+			return nil
+		}
+		return err
 	}
 
 	return nil
@@ -117,8 +114,44 @@ func resourceAwsLbListenerCertificateDelete(d *schema.ResourceData, meta interfa
 
 	_, err := conn.RemoveListenerCertificates(params)
 	if err != nil {
-		return errwrap.Wrapf("Error removing LB Listener Certificate: {{err}}", err)
+		if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+			return nil
+		}
+		if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
+			return nil
+		}
+		return fmt.Errorf("Error removing LB Listener Certificate: %s", err)
 	}
 
 	return nil
+}
+
+func findAwsLbListenerCertificate(certificateArn, listenerArn string, skipDefault bool, nextMarker *string, conn *elbv2.ELBV2) (*elbv2.Certificate, error) {
+	params := &elbv2.DescribeListenerCertificatesInput{
+		ListenerArn: aws.String(listenerArn),
+		PageSize:    aws.Int64(400),
+	}
+	if nextMarker != nil {
+		params.Marker = nextMarker
+	}
+
+	resp, err := conn.DescribeListenerCertificates(params)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, cert := range resp.Certificates {
+		if skipDefault && *cert.IsDefault {
+			continue
+		}
+
+		if *cert.CertificateArn == certificateArn {
+			return cert, nil
+		}
+	}
+
+	if resp.NextMarker != nil {
+		return findAwsLbListenerCertificate(certificateArn, listenerArn, skipDefault, resp.NextMarker, conn)
+	}
+	return nil, nil
 }

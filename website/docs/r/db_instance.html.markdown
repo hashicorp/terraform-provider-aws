@@ -29,6 +29,11 @@ server reboots. See the AWS Docs on [RDS Maintenance][2] for more information.
 the raw state as plain-text. [Read more about sensitive data in
 state](/docs/state/sensitive-data.html).
 
+## RDS Instance Class Types
+Amazon RDS supports three types of instance classes: Standard, Memory Optimized,
+and Burstable Performance. For more information please read the AWS RDS documentation
+about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
+
 ## Example Usage
 
 ```hcl
@@ -36,13 +41,12 @@ resource "aws_db_instance" "default" {
   allocated_storage    = 10
   storage_type         = "gp2"
   engine               = "mysql"
-  engine_version       = "5.6.17"
-  instance_class       = "db.t1.micro"
+  engine_version       = "5.7"
+  instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
-  password             = "bar"
-  db_subnet_group_name = "my_database_subnet_group"
-  parameter_group_name = "default.mysql5.6"
+  password             = "foobarbaz"
+  parameter_group_name = "default.mysql5.7"
 }
 ```
 
@@ -85,7 +89,9 @@ be created in the VPC associated with the DB subnet group. If unspecified, will
 be created in the `default` VPC, or in EC2 Classic, if available.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
 is provided) The database engine to use.
-* `engine_version` - (Optional) The engine version to use.
+* `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade`
+is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`) and
+this attribute will ignore differences in the patch version automatically (e.g. `5.7.17`).
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
 when this DB instance is deleted. If omitted, no final snapshot will be made.
 * `iam_database_authentication_enabled` - (Optional) Specifies whether or
@@ -129,9 +135,10 @@ logs, and it will be stored in the state file.
 accessible. Default is `false`.
 * `replicate_source_db` - (Optional) Specifies that this resource is a Replicate
 database, and to use this value as the source database. This correlates to the
-`identifier` of another Amazon RDS Database to replicate. See [DB Instance
-Replication][1] and [Working with PostgreSQL and MySQL Read
-Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html)
+`identifier` of another Amazon RDS Database to replicate. Note that if you are 
+creating a cross-region replica of an encrypted database you will also need to
+specify a `kms_key_id`. See [DB Instance Replication][1] and [Working with 
+PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html)
 for more information on using Replication.
 * `security_group_names` - (Optional/Deprecated) List of DB Security Groups to
 associate. Only used for [DB Instances on the _EC2-Classic_
@@ -144,8 +151,10 @@ is `false`.
 * `snapshot_identifier` - (Optional) Specifies whether or not to create this
 database from a snapshot. This correlates to the snapshot ID you'd find in the
 RDS console, e.g: rds:production-2015-06-26-06-05.
-* `storage_encrypted` - (Optional) Specifies whether the DB instance is
-encrypted. The default is `false` if not specified.
+* `storage_encrypted` - (Optional) Specifies whether the DB instance is 
+encrypted. Note that if you are creating a cross-region read replica this field 
+is ignored and you should instead declare `kms_key_id` with a valid ARN. The 
+default is `false` if not specified.
 * `storage_type` - (Optional) One of "standard" (magnetic), "gp2" (general
 purpose SSD), or "io1" (provisioned IOPS SSD). The default is "io1" if `iops` is
 specified, "standard" if not. Note that this behaviour is different from the AWS

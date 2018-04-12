@@ -46,7 +46,7 @@ func testSweepAutoscalingGroups(region string) error {
 
 	for _, asg := range resp.AutoScalingGroups {
 		var testOptGroup bool
-		for _, testName := range []string{"foobar", "terraform-", "tf-test"} {
+		for _, testName := range []string{"foobar", "terraform-", "tf-test", "tf-asg-"} {
 			if strings.HasPrefix(*asg.AutoScalingGroupName, testName) {
 				testOptGroup = true
 				break
@@ -128,6 +128,8 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 						"aws_autoscaling_group.bar", "termination_policies.1", "ClosestToNextInstanceHour"),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "protect_from_scale_in", "false"),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "enabled_metrics.#", "0"),
 				),
 			},
 
@@ -162,7 +164,7 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSAutoScalingGroup_namePrefix(t *testing.T) {
-	nameRegexp := regexp.MustCompile("^test-")
+	nameRegexp := regexp.MustCompile("^tf-test-")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -251,7 +253,7 @@ func TestAccAWSAutoScalingGroup_terminationPolicies(t *testing.T) {
 func TestAccAWSAutoScalingGroup_tags(t *testing.T) {
 	var group autoscaling.Group
 
-	randName := fmt.Sprintf("tfautotags-%s", acctest.RandString(5))
+	randName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -360,7 +362,7 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer(t *testing.T) {
 func TestAccAWSAutoScalingGroup_withPlacementGroup(t *testing.T) {
 	var group autoscaling.Group
 
-	randName := fmt.Sprintf("tf_placement_test-%s", acctest.RandString(5))
+	randName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -468,6 +470,26 @@ func TestAccAWSAutoScalingGroup_withMetrics(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "enabled_metrics.#", "5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
+	var group autoscaling.Group
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSAutoScalingGroupConfig_withServiceLinkedRoleARN,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttrSet(
+						"aws_autoscaling_group.bar", "service_linked_role_arn"),
 				),
 			},
 		},
@@ -932,7 +954,7 @@ resource "aws_autoscaling_group" "test" {
   desired_capacity = 0
   max_size = 0
   min_size = 0
-  name_prefix = "test-"
+  name_prefix = "tf-test-"
   launch_configuration = "${aws_launch_configuration.test.name}"
 }
 `
@@ -1223,6 +1245,9 @@ resource "aws_internet_gateway" "gw" {
 resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-autoscaling-group-with-load-balancer"
+	}
 }
 
 resource "aws_security_group" "foo" {
@@ -1275,7 +1300,7 @@ resource "aws_launch_configuration" "foobar" {
 
 resource "aws_autoscaling_group" "bar" {
   availability_zones = ["${aws_subnet.foo.availability_zone}"]
-	vpc_zone_identifier = ["${aws_subnet.foo.id}"]
+  vpc_zone_identifier = ["${aws_subnet.foo.id}"]
   max_size = 2
   min_size = 2
   health_check_grace_period = 300
@@ -1301,7 +1326,7 @@ resource "aws_subnet" "main" {
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2a"
   tags {
-     Name = "terraform-test"
+    Name = "tf-acc-autoscaling-group-with-az"
   }
 }
 
@@ -1348,7 +1373,7 @@ resource "aws_subnet" "main" {
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2a"
   tags {
-     Name = "terraform-test"
+    Name = "tf-acc-autoscaling-group-with-vpc-id"
   }
 }
 
@@ -1430,6 +1455,40 @@ resource "aws_autoscaling_group" "bar" {
 }
 `, name, name)
 }
+
+const testAccAWSAutoScalingGroupConfig_withServiceLinkedRoleARN = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_iam_role" "autoscaling_service_linked_role" {
+  name = "AWSServiceRoleForAutoScaling"
+}
+
+resource "aws_launch_configuration" "foobar" {
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["us-west-2a"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  service_linked_role_arn = "${data.aws_iam_role.autoscaling_service_linked_role.arn}"
+}
+`
 
 const testAccAWSAutoscalingMetricsCollectionConfig_allMetricsCollected = `
 data "aws_ami" "test_ami" {
@@ -1535,7 +1594,7 @@ resource "aws_subnet" "main" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "tf-acc-autoscaling-group-alb-target-group-main"
   }
 }
 
@@ -1545,7 +1604,7 @@ resource "aws_subnet" "alt" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "tf-acc-autoscaling-group-alb-target-group-alt"
   }
 }
 
@@ -1626,7 +1685,7 @@ resource "aws_subnet" "main" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "tf-acc-autoscaling-group-alb-target-group-main"
   }
 }
 
@@ -1636,7 +1695,7 @@ resource "aws_subnet" "alt" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "tf-acc-autoscaling-group-alb-target-group-alt"
   }
 }
 
@@ -1730,7 +1789,7 @@ resource "aws_subnet" "main" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "tf-acc-autoscaling-group-alb-target-group-main"
   }
 }
 
@@ -1740,7 +1799,7 @@ resource "aws_subnet" "alt" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = "tf-acc-autoscaling-group-alb-target-group-alt"
   }
 }
 
@@ -1906,7 +1965,7 @@ resource "aws_subnet" "main" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_ELBCapacity"
+    Name = "tf-acc-autoscaling-group-alb-target-group-elb-capacity-main"
   }
 }
 
@@ -1916,7 +1975,7 @@ resource "aws_subnet" "alt" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_ELBCapacity"
+    Name = "tf-acc-autoscaling-group-alb-target-group-elb-capacity-alt"
   }
 }
 
@@ -2131,6 +2190,9 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   vpc_id     = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "tf-acc-autoscaling-group-empty-availability-zones"
+  }
 }
 
 resource "aws_autoscaling_group" "test" {

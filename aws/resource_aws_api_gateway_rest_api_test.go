@@ -2,13 +2,80 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_api_gateway_rest_api", &resource.Sweeper{
+		Name: "aws_api_gateway_rest_api",
+		F:    testSweepAPIGatewayRestApis,
+	})
+}
+
+func testSweepAPIGatewayRestApis(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).apigateway
+
+	// https://github.com/terraform-providers/terraform-provider-aws/issues/3808
+	prefixes := []string{
+		"test",
+		"tf_acc_",
+		"tf-acc-",
+	}
+
+	err = conn.GetRestApisPages(&apigateway.GetRestApisInput{}, func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
+		for _, item := range page.Items {
+			skip := true
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(*item.Name, prefix) {
+					skip = false
+					break
+				}
+			}
+			if skip {
+				log.Printf("[INFO] Skipping API Gateway REST API: %s", *item.Name)
+				continue
+			}
+
+			input := &apigateway.DeleteRestApiInput{
+				RestApiId: item.Id,
+			}
+			log.Printf("[INFO] Deleting API Gateway REST API: %s", input)
+			// TooManyRequestsException: Too Many Requests can take over a minute to resolve itself
+			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+				_, err := conn.DeleteRestApi(input)
+				if err != nil {
+					if isAWSErr(err, apigateway.ErrCodeTooManyRequestsException, "") {
+						return resource.RetryableError(err)
+					}
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete API Gateway REST API %s: %s", *item.Name, err)
+				continue
+			}
+		}
+		return !lastPage
+	})
+	if err != nil {
+		return fmt.Errorf("Error retrieving API Gateway REST APIs: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 	var conf apigateway.RestApi
@@ -23,8 +90,10 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
 					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "bar"),
+					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 0),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "bar"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", ""),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "0"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
 					resource.TestCheckNoResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types"),
 				),
@@ -36,11 +105,22 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
 					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "test"),
 					testAccCheckAWSAPIGatewayRestAPIDescriptionAttribute(&conf, "test"),
+					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 10485760),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "test"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", "test"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "10485760"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types.0", "application/octet-stream"),
+				),
+			},
+
+			{
+				Config: testAccAWSAPIGatewayRestAPIDisableCompressionConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
+					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttributeIsNil(&conf),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "-1"),
 				),
 			},
 		},
@@ -96,6 +176,29 @@ func testAccCheckAWSAPIGatewayRestAPIDescriptionAttribute(conf *apigateway.RestA
 	return func(s *terraform.State) error {
 		if *conf.Description != description {
 			return fmt.Errorf("Wrong Description: %q", *conf.Description)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(conf *apigateway.RestApi, minimumCompressionSize int64) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if conf.MinimumCompressionSize == nil {
+			return fmt.Errorf("MinimumCompressionSize should not be nil")
+		}
+		if *conf.MinimumCompressionSize != minimumCompressionSize {
+			return fmt.Errorf("Wrong MinimumCompressionSize: %d", *conf.MinimumCompressionSize)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttributeIsNil(conf *apigateway.RestApi) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if conf.MinimumCompressionSize != nil {
+			return fmt.Errorf("MinimumCompressionSize should be nil: %d", *conf.MinimumCompressionSize)
 		}
 
 		return nil
@@ -191,6 +294,7 @@ func testAccCheckAWSAPIGatewayRestAPIDestroy(s *terraform.State) error {
 const testAccAWSAPIGatewayRestAPIConfig = `
 resource "aws_api_gateway_rest_api" "test" {
   name = "bar"
+  minimum_compression_size = 0
 }
 `
 
@@ -199,6 +303,16 @@ resource "aws_api_gateway_rest_api" "test" {
   name = "test"
   description = "test"
   binary_media_types = ["application/octet-stream"]
+  minimum_compression_size = 10485760
+}
+`
+
+const testAccAWSAPIGatewayRestAPIDisableCompressionConfig = `
+resource "aws_api_gateway_rest_api" "test" {
+  name = "test"
+  description = "test"
+  binary_media_types = ["application/octet-stream"]
+  minimum_compression_size = -1
 }
 `
 

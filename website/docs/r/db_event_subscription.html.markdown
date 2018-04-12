@@ -15,7 +15,7 @@ resource "aws_db_instance" "default" {
   allocated_storage    = 10
   engine               = "mysql"
   engine_version       = "5.6.17"
-  instance_class       = "db.t1.micro"
+  instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
   password             = "bar"
@@ -61,6 +61,22 @@ The following arguments are supported:
 * `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to true.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
+## Attributes
+
+The following additional atttributes are provided:
+
+* `id` - The name of the RDS event notification subscription
+* `arn` - The Amazon Resource Name of the RDS event notification subscription
+* `customer_aws_id` - The AWS customer account associated with the RDS event notification subscription
+
+## Timeouts
+
+`aws_db_event_subscription` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+configuration options:
+
+- `create` - (Default `40m`) How long to wait for a RDS event notification subscription to be ready.
+- `delete` - (Default `40m`) How long to wait for a RDS event notification subscription to be deleted.
+- `update` - (Default `40m`) How long to wait for a RDS event notification subscription to be updated.
 
 ## Import
 
