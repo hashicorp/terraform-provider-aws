@@ -362,8 +362,8 @@ func resourceAwsDbOptionHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", sgRaw.(string)))
 	}
 
-	if _, ok := m["version"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", m["version"].(string)))
+	if v, ok := m["version"]; ok && v.(string) != "" {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
 	return hashcode.String(buf.String())
