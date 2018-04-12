@@ -144,7 +144,7 @@ The following attributes are exported:
 `aws_elasticache_replication_group` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
 configuration options:
 
-* `create` - (Default `50m`) How long to wait for a replication group to be created.
+* `create` - (Default `60m`) How long to wait for a replication group to be created.
 * `delete` - (Default `40m`) How long to wait for a replication group to be deleted.
 * `update` - (Default `40m`) How long to wait for replication group settings to be updated. This is also separately used for online resize operation completion, if necessary.
 
