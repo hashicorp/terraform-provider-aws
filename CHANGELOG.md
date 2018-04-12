@@ -14,6 +14,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_route53_record: Improved handling of non-alphanumeric record names [GH-4183]
+* resource/aws_vpc_dhcp_options: Handle plural and non-plural `InvalidDhcpOptionsID.NotFound` errors [GH-4136]
 
 ## 1.14.1 (April 11, 2018)
 
