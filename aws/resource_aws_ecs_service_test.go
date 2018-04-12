@@ -102,6 +102,7 @@ func TestAccAWSEcsService_withARN(t *testing.T) {
 				Config: testAccAWSEcsService(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "service_registries.#", "0"),
 				),
 			},
 
@@ -109,6 +110,7 @@ func TestAccAWSEcsService_withARN(t *testing.T) {
 				Config: testAccAWSEcsServiceModified(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "service_registries.#", "0"),
 				),
 			},
 		},
@@ -605,6 +607,30 @@ func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T)
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.security_groups.#", "1"),
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_withServiceRegistries(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ups-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-ups-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-ups-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsService_withServiceRegistries(rString, clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.test", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.test", "service_registries.#", "1"),
 				),
 			},
 		},
@@ -1687,4 +1713,85 @@ resource "aws_ecs_service" "main" {
   }
 }
 `, sg1Name, sg2Name, clusterName, tdName, svcName, securityGroups)
+}
+
+func testAccAWSEcsService_withServiceRegistries(rName, clusterName, tdName, svcName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "test" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+  cidr_block = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
+  availability_zone = "${data.aws_availability_zones.test.names[count.index]}"
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_security_group" "test" {
+  name        = "tf-acc-sg-%s"
+  vpc_id      = "${aws_vpc.test.id}"
+
+  ingress {
+    protocol = "-1"
+    from_port = 0
+    to_port = 0
+    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+  }
+}
+
+resource "aws_service_discovery_private_dns_namespace" "test" {
+  name = "tf-acc-sd-%s.terraform.local"
+  description = "test"
+  vpc = "${aws_vpc.test.id}"
+}
+
+resource "aws_service_discovery_service" "test" {
+  name = "tf-acc-sd-%s"
+  dns_config {
+    namespace_id = "${aws_service_discovery_private_dns_namespace.test.id}"
+    dns_records {
+      ttl = 5
+      type = "SRV"
+    }
+  }
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = "%s"
+  network_mode = "awsvpc"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name = "%s"
+  cluster = "${aws_ecs_cluster.test.id}"
+  task_definition = "${aws_ecs_task_definition.test.arn}"
+  desired_count = 1
+  service_registries {
+    port = 34567
+    registry_arn = "${aws_service_discovery_service.test.arn}"
+  }
+  network_configuration {
+    security_groups = ["${aws_security_group.test.id}"]
+    subnets = ["${aws_subnet.test.*.id}"]
+  }
+}
+`, rName, rName, rName, clusterName, tdName, svcName)
 }
