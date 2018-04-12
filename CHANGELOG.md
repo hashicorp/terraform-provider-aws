@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_api_gateway_rest_api` [GH-4172]
 * **New Data Source:** `aws_sqs_queue` [GH-2311]
 * **New Resource:** `aws_iam_service_linked_role` [GH-2985]
 
