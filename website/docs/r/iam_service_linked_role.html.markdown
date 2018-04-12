@@ -23,7 +23,7 @@ resource "aws_iam_service_linked_role" "elasticbeanstalk" {
 The following arguments are supported:
 
 * `aws_service_name` - (Required, Forces new resource) The AWS service to which this role is attached. You use a string similar to a URL but without the `http://` in front. For example: `elasticbeanstalk.amazonaws.com`. To find the full list of services that support service-linked roles, check [the docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_aws-services-that-work-with-iam.html).
-* `custom_suffix` - (Optional, forces new resource) Additional string appended to the role name.
+* `custom_suffix` - (Optional, forces new resource) Additional string appended to the role name. Not all AWS services support custom suffixes.
 * `description` - (Optional) The description of the role.
 
 ## Attributes Reference
