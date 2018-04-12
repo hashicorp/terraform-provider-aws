@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -907,16 +908,17 @@ func FQDN(name string) string {
 	}
 }
 
-// Route 53 stores the "*" wildcard indicator as ASCII 42 and returns the
-// octal equivalent, "\\052". Here we look for that, and convert back to "*"
-// as needed.
+// Route 53 stores certain characters with the octal equivalent in ASCII format.
+// This function converts all of these characters back into the original character
+// E.g. "*" is stored as "\\052" and "@" as "\\100"
+
 func cleanRecordName(name string) string {
 	str := name
-	if strings.HasPrefix(name, "\\052") {
-		str = strings.Replace(name, "\\052", "*", 1)
-		log.Printf("[DEBUG] Replacing octal \\052 for * in: %s", name)
+	s, err := strconv.Unquote(`"` + str + `"`)
+	if err != nil {
+		return str
 	}
-	return str
+	return s
 }
 
 // Check if the current record name contains the zone suffix.
