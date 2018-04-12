@@ -14,6 +14,9 @@ ENHANCEMENTS:
 * resource/aws_ecs_service: Support ServiceRegistries [GH-3906]
 * resource/aws_spot_fleet_request: Support configurable delete timeout [GH-3940]
 * resource/aws_spot_instance_request: Support optionally fetching password data [GH-4189]
+* resource/aws_waf_rate_based_rule: Support `RegexMatch` predicate type [GH-4069]
+* resource/aws_waf_rule: Support `RegexMatch` predicate type [GH-4069]
+* resource/aws_wafregional_rate_based_rule: Support `RegexMatch` predicate type [GH-4069]
 
 BUG FIXES:
 
