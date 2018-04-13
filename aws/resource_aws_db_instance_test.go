@@ -515,9 +515,10 @@ func TestAccAWSDBInstance_cloudwatchLogsExportConfiguration(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "aws_db_instance.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "aws_db_instance.bar",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
 			},
 		},
 	})
