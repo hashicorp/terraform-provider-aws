@@ -31,9 +31,9 @@ resource "aws_ecs_service" "mongo" {
   }
 
   load_balancer {
-    elb_name       = "${aws_elb.foo.name}"
-    container_name = "mongo"
-    container_port = 8080
+    target_group_arn = "${aws_lb_target_group.foo.arn}"
+    container_name   = "mongo"
+    container_port   = 8080
   }
 
   placement_constraints {
@@ -70,7 +70,7 @@ into consideration during task placement. The maximum number of
 Load balancers support the following:
 
 * `elb_name` - (Required for ELB Classic) The name of the ELB (Classic) to associate with the service.
-* `target_group_arn` - (Required for ALB) The ARN of the ALB target group to associate with the service.
+* `target_group_arn` - (Required for ALB/NLB) The ARN of the Load Balancer target group to associate with the service.
 * `container_name` - (Required) The name of the container to associate with the load balancer (as it appears in a container definition).
 * `container_port` - (Required) The port on the container to associate with the load balancer.
 
