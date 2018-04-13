@@ -304,20 +304,7 @@ const testAccAWSAPIGatewayRestAPIUpdateConfig = `
 resource "aws_api_gateway_rest_api" "test" {
   name = "test"
   description = "test",
-  policy = = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+  policy = "{}"
   binary_media_types = ["application/octet-stream"]
   minimum_compression_size = 10485760
 }
