@@ -52,7 +52,9 @@ resource "aws_launch_template" "foo" {
 
   key_name = "test"
 
-  monitoring = true
+  monitoring {
+    enabled = true
+  }
 
   network_interfaces {
     associate_public_ip_address = true
@@ -101,7 +103,7 @@ The following arguments are supported:
 * `instance_type` - The type of the instance.
 * `kernel_id` - The kernel ID.
 * `key_name` - The key name to use for the instance.
-* `monitoring` - If `true`, the launched EC2 instance will have detailed monitoring enabled.
+* `monitoring` - The monitoring option for the instance. See [Monitoring](#monitoring) below for more details.
 * `network_interfaces` - Customize network interfaces to be attached at instance boot time. See [Network 
   Interfaces](#network-interfaces) below for more details.
 * `placement` - The placement of the instance. See [Placement](#placement) below for more details.
@@ -185,6 +187,11 @@ The `spot_options` block supports the following:
 * `spot_instance_type` - The Spot Instance request type. Can be `one-time`, or `persistent`.
 * `valid_until` - The end date of the request.
 
+### Monitoring
+
+The `monitoring` block supports the following:
+
+* `enabled` - If `true`, the launched EC2 instance will have detailed monitoring enabled.
 
 ### Network Interfaces
 
