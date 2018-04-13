@@ -40,10 +40,10 @@ resource "aws_launch_template" "foo" {
 
   image_id = "ami-test"
 
-  instance_initiated_shutdown_behavior = "test"
+  instance_initiated_shutdown_behavior = "terminate"
 
   instance_market_options {
-    market_type = "test"
+    market_type = "spot"
   }
 
   instance_type = "t2.micro"
@@ -61,12 +61,12 @@ resource "aws_launch_template" "foo" {
   }
 
   placement {
-    availability_zone = "test"
+    availability_zone = "us-west-2a"
   }
 
   ram_disk_id = "test"
 
-  vpc_security_group_ids = ["test"]
+  vpc_security_group_ids = ["sg-12345678"]
 
   tag_specifications {
     resource_type = "instance"
