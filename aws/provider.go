@@ -332,6 +332,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_db_subnet_group":                          resourceAwsDbSubnetGroup(),
 			"aws_devicefarm_project":                       resourceAwsDevicefarmProject(),
 			"aws_directory_service_directory":              resourceAwsDirectoryServiceDirectory(),
+			"aws_directory_service_conditional_forwarder":  resourceAwsDirectoryServiceConditionalForwarder(),
 			"aws_dms_certificate":                          resourceAwsDmsCertificate(),
 			"aws_dms_endpoint":                             resourceAwsDmsEndpoint(),
 			"aws_dms_replication_instance":                 resourceAwsDmsReplicationInstance(),
