@@ -233,3 +233,11 @@ The following attributes are exported along with all argument references:
 * `id` - The ID of the launch template.
 * `default_version` - The default version of the launch template.
 * `latest_version` - The latest version of the launch template.
+
+## Import
+
+Launch Templates can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_launch_template.web lt-12345678
+```

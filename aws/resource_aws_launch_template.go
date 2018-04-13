@@ -279,7 +279,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Optional: true,
 						},
 						"security_groups": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -288,7 +288,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Computed: true,
 						},
 						"ipv6_addresses": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -301,7 +301,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Optional: true,
 						},
 						"ipv4_addresses": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -362,13 +362,13 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"security_group_names": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"vpc_security_group_ids": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -463,7 +463,6 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("name", lt.LaunchTemplateName)
 	d.Set("latest_version", lt.LatestVersionNumber)
 	d.Set("default_version", lt.DefaultVersionNumber)
-	d.Set("tags", tagsToMap(lt.Tags))
 
 	version := strconv.Itoa(int(*lt.LatestVersionNumber))
 	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
@@ -485,9 +484,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("instance_type", ltData.InstanceType)
 	d.Set("kernel_id", ltData.KernelId)
 	d.Set("key_name", ltData.KeyName)
-	d.Set("monitoring", ltData.Monitoring)
-	d.Set("ram_dist_id", ltData.RamDiskId)
+	d.Set("ram_disk_id", ltData.RamDiskId)
+	d.Set("security_group_names", aws.StringValueSlice(ltData.SecurityGroups))
 	d.Set("user_data", ltData.UserData)
+	d.Set("vpc_security_group_ids", aws.StringValueSlice(ltData.SecurityGroupIds))
 
 	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings)); err != nil {
 		return err
@@ -506,6 +506,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err := d.Set("instance_market_options", getInstanceMarketOptions(ltData.InstanceMarketOptions)); err != nil {
+		return err
+	}
+
+	if err := d.Set("monitoring", getMonitoring(ltData.Monitoring)); err != nil {
 		return err
 	}
 
@@ -580,7 +584,7 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 			ebs := map[string]interface{}{
 				"delete_on_termination": aws.BoolValue(v.Ebs.DeleteOnTermination),
 				"encrypted":             aws.BoolValue(v.Ebs.Encrypted),
-				"volume_size":           aws.Int64Value(v.Ebs.VolumeSize),
+				"volume_size":           int(aws.Int64Value(v.Ebs.VolumeSize)),
 				"volume_type":           aws.StringValue(v.Ebs.VolumeType),
 			}
 			if v.Ebs.Iops != nil {
@@ -654,6 +658,17 @@ func getInstanceMarketOptions(m *ec2.LaunchTemplateInstanceMarketOptions) []inte
 	return s
 }
 
+func getMonitoring(m *ec2.LaunchTemplatesMonitoring) []interface{} {
+	s := []interface{}{}
+	if m != nil {
+		mo := map[string]interface{}{
+			"enabled": aws.BoolValue(m.Enabled),
+		}
+		s = append(s, mo)
+	}
+	return s
+}
+
 func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecification) []interface{} {
 	s := []interface{}{}
 	for _, v := range n {
@@ -665,10 +680,10 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 			"delete_on_termination":       aws.BoolValue(v.DeleteOnTermination),
 			"description":                 aws.StringValue(v.Description),
 			"device_index":                aws.Int64Value(v.DeviceIndex),
+			"ipv4_address_count":          aws.Int64Value(v.SecondaryPrivateIpAddressCount),
 			"ipv6_address_count":          aws.Int64Value(v.Ipv6AddressCount),
 			"network_interface_id":        aws.StringValue(v.NetworkInterfaceId),
 			"private_ip_address":          aws.StringValue(v.PrivateIpAddress),
-			"ipv4_address_count":          aws.Int64Value(v.SecondaryPrivateIpAddressCount),
 			"subnet_id":                   aws.StringValue(v.SubnetId),
 		}
 
@@ -684,6 +699,10 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 		}
 		if len(ipv4Addresses) > 0 {
 			networkInterface["ipv4_addresses"] = ipv4Addresses
+		}
+
+		if len(v.Groups) > 0 {
+			networkInterface["security_groups"] = aws.StringValueSlice(v.Groups)
 		}
 
 		s = append(s, networkInterface)
@@ -752,6 +771,14 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 
 	if v, ok := d.GetOk("ebs_optimized"); ok {
 		opts.EbsOptimized = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("security_group_names"); ok {
+		opts.SecurityGroups = expandStringList(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("vpc_security_group_ids"); ok {
+		opts.SecurityGroupIds = expandStringList(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("block_device_mappings"); ok {
@@ -942,7 +969,7 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		networkInterface.SubnetId = aws.String(v)
 	}
 
-	ipv6AddressList := ni["ipv6_addresses"].([]interface{})
+	ipv6AddressList := ni["ipv6_addresses"].(*schema.Set).List()
 	for _, address := range ipv6AddressList {
 		ipv6Addresses = append(ipv6Addresses, &ec2.InstanceIpv6AddressRequest{
 			Ipv6Address: aws.String(address.(string)),
@@ -951,7 +978,7 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 	networkInterface.Ipv6AddressCount = aws.Int64(int64(len(ipv6AddressList)))
 	networkInterface.Ipv6Addresses = ipv6Addresses
 
-	ipv4AddressList := ni["ipv4_addresses"].([]interface{})
+	ipv4AddressList := ni["ipv4_addresses"].(*schema.Set).List()
 	for _, address := range ipv4AddressList {
 		privateIp := &ec2.PrivateIpAddressSpecification{
 			Primary:          aws.Bool(address.(string) == privateIpAddress),

@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -14,6 +15,7 @@ import (
 func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.foo"
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,7 +23,7 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_basic,
+				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
 					resource.TestCheckResourceAttr(resName, "default_version", "1"),
@@ -35,6 +37,7 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 func TestAccAWSLaunchTemplate_data(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.foo"
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -42,7 +45,7 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_data,
+				Config: testAccAWSLaunchTemplateConfig_data(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
 					resource.TestCheckResourceAttr(resName, "block_device_mappings.#", "1"),
@@ -71,6 +74,7 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 func TestAccAWSLaunchTemplate_update(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.foo"
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -78,7 +82,7 @@ func TestAccAWSLaunchTemplate_update(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_basic,
+				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
 					resource.TestCheckResourceAttr(resName, "default_version", "1"),
@@ -86,7 +90,7 @@ func TestAccAWSLaunchTemplate_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSLaunchTemplateConfig_data,
+				Config: testAccAWSLaunchTemplateConfig_data(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
 					resource.TestCheckResourceAttr(resName, "default_version", "1"),
@@ -156,15 +160,18 @@ func testAccCheckAWSLaunchTemplateDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccAWSLaunchTemplateConfig_basic = `
+func testAccAWSLaunchTemplateConfig_basic(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_launch_template" "foo" {
-  name = "foo"
+  name = "foo_%d"
 }
-`
+`, rInt)
+}
 
-const testAccAWSLaunchTemplateConfig_data = `
+func testAccAWSLaunchTemplateConfig_data(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_launch_template" "foo" {
-  name = "foo"
+  name = "foo_%d"
 
   block_device_mappings {
     device_name = "test"
@@ -215,7 +222,7 @@ resource "aws_launch_template" "foo" {
 
   ram_disk_id = "ari-a12bc3de"
 
-  vpc_security_group_ids = ["test"]
+  vpc_security_group_ids = ["sg-12a3b45c"]
 
   tag_specifications {
     resource_type = "instance"
@@ -224,4 +231,5 @@ resource "aws_launch_template" "foo" {
     }
   }
 }
-`
+`, rInt)
+}
