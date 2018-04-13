@@ -351,6 +351,18 @@ func resourceAwsDbInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"domain": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
+			"domain_iam_role_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -660,6 +672,14 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		}
 
+		if attr, ok := d.GetOk("domain"); ok {
+			opts.Domain = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("domain_iam_role_name"); ok {
+			opts.DomainIAMRoleName = aws.String(attr.(string))
+		}
+
 		log.Printf("[DEBUG] DB Instance create configuration: %#v", opts)
 		var err error
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -773,6 +793,11 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	if v.MonitoringRoleArn != nil {
 		d.Set("monitoring_role_arn", v.MonitoringRoleArn)
+	}
+
+	if v.DomainMemberships != nil {
+		d.Set("domain", v.DomainMemberships[0].Domain)
+		d.Set("domain-iam-role-name", v.DomainMemberships[0].IAMRoleName)
 	}
 
 	// list tags for resource
@@ -1022,6 +1047,18 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("iam_database_authentication_enabled") {
 		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("domain") && !d.IsNewResource() {
+		d.SetPartial("domain")
+		req.Domain = aws.String(d.Get("domain").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("domain_iam_role_name") && !d.IsNewResource() {
+		d.SetPartial("domain_iam_role_name")
+		req.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
 		requestUpdate = true
 	}
 
