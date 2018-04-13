@@ -14,6 +14,7 @@ ENHANCEMENTS:
 
 * data-source/aws_iam_server_certificate: Filter by `path_prefix` [GH-3801]
 * resource/aws_api_gateway_integration: Support VPC connection [GH-3428]
+* resource/aws_db_instance: Support `enabled_cloudwatch_logs_exports` argument [GH-4111]
 * resource/aws_db_option_group: Support option version argument [GH-2590]
 * resource/aws_ecs_service: Support ServiceRegistries [GH-3906]
 * resource/aws_iam_service_linked_role: Support `custom_suffix` and `description` arguments [GH-4188]
