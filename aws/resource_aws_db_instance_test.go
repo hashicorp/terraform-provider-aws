@@ -108,9 +108,7 @@ func TestAccAWSDBInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_db_instance.bar", "parameter_group_name", "default.mysql5.6"),
 					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.0", "audit"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.1", "error"),
+						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.#", "0"),
 					resource.TestCheckResourceAttrSet("aws_db_instance.bar", "hosted_zone_id"),
 					resource.TestCheckResourceAttrSet("aws_db_instance.bar", "ca_cert_identifier"),
 					resource.TestCheckResourceAttrSet(
@@ -516,6 +514,11 @@ func TestAccAWSDBInstance_cloudwatchLogsExportConfiguration(t *testing.T) {
 					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
 				),
 			},
+			{
+				ResourceName:      "aws_db_instance.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -568,8 +571,8 @@ func TestAccAWSDBInstance_cloudwatchLogsExportConfigurationUpdate(t *testing.T) 
 				Config: testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationDelete(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
-					resource.TestCheckNoResourceAttr(
-						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.0"),
+					resource.TestCheckResourceAttr(
+						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.#", "0"),
 				),
 			},
 		},
@@ -857,11 +860,6 @@ resource "aws_db_instance" "bar" {
 	timeouts {
 		create = "30m"
 	}
-
-	enabled_cloudwatch_logs_exports = [
-		"audit",
-		"error",
-	]
 }`
 
 const testAccAWSDBInstanceConfig_namePrefix = `
@@ -1528,7 +1526,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfiguration(rInt int) strin
 		cidr_block           = "10.1.0.0/16"
 		enable_dns_hostnames = true
 		tags {
-		  Name = "terraform-testacc-db-instance-mssql-timezone"
+		  Name = "terraform-testacc-db-instance-enable-cloudwatch"
 		}
 	  }
 
@@ -1544,7 +1542,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfiguration(rInt int) strin
 		availability_zone = "us-west-2a"
 		cidr_block        = "10.1.1.0/24"
 		tags {
-		  Name = "tf-acc-db-instance-mssql-timezone-main"
+		  Name = "tf-acc-db-instance-enable-cloudwatch-main"
 		}
 	  }
 
@@ -1553,7 +1551,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfiguration(rInt int) strin
 		availability_zone = "us-west-2b"
 		cidr_block        = "10.1.2.0/24"
 		tags {
-		  Name = "tf-acc-db-instance-mssql-timezone-other"
+		  Name = "tf-acc-db-instance-enable-cloudwatch-other"
 		}
 	  }
 
@@ -1585,7 +1583,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationAdd(rInt int) st
 			cidr_block           = "10.1.0.0/16"
 			enable_dns_hostnames = true
 			tags {
-			  Name = "terraform-testacc-db-instance-mssql-timezone"
+			  Name = "terraform-testacc-db-instance-enable-cloudwatch"
 			}
 		  }
 
@@ -1601,7 +1599,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationAdd(rInt int) st
 			availability_zone = "us-west-2a"
 			cidr_block        = "10.1.1.0/24"
 			tags {
-			  Name = "tf-acc-db-instance-mssql-timezone-main"
+			  Name = "tf-acc-db-instance-enable-cloudwatch-main"
 			}
 		  }
 
@@ -1610,7 +1608,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationAdd(rInt int) st
 			availability_zone = "us-west-2b"
 			cidr_block        = "10.1.2.0/24"
 			tags {
-			  Name = "tf-acc-db-instance-mssql-timezone-other"
+			  Name = "tf-acc-db-instance-enable-cloudwatch-other"
 			}
 		  }
 
@@ -1645,7 +1643,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationModify(rInt int)
 			cidr_block           = "10.1.0.0/16"
 			enable_dns_hostnames = true
 			tags {
-			  Name = "terraform-testacc-db-instance-mssql-timezone"
+			  Name = "terraform-testacc-db-instance-enable-cloudwatch"
 			}
 		  }
 
@@ -1661,7 +1659,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationModify(rInt int)
 			availability_zone = "us-west-2a"
 			cidr_block        = "10.1.1.0/24"
 			tags {
-			  Name = "tf-acc-db-instance-mssql-timezone-main"
+			  Name = "tf-acc-db-instance-enable-cloudwatch-main"
 			}
 		  }
 
@@ -1670,7 +1668,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationModify(rInt int)
 			availability_zone = "us-west-2b"
 			cidr_block        = "10.1.2.0/24"
 			tags {
-			  Name = "tf-acc-db-instance-mssql-timezone-other"
+			  Name = "tf-acc-db-instance-enable-cloudwatch-other"
 			}
 		  }
 
@@ -1705,7 +1703,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationDelete(rInt int)
 			cidr_block           = "10.1.0.0/16"
 			enable_dns_hostnames = true
 			tags {
-			  Name = "terraform-testacc-db-instance-mssql-timezone"
+			  Name = "terraform-testacc-db-instance-enable-cloudwatch"
 			}
 		  }
 
@@ -1721,7 +1719,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationDelete(rInt int)
 			availability_zone = "us-west-2a"
 			cidr_block        = "10.1.1.0/24"
 			tags {
-			  Name = "tf-acc-db-instance-mssql-timezone-main"
+			  Name = "tf-acc-db-instance-enable-cloudwatch-main"
 			}
 		  }
 
@@ -1730,7 +1728,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationDelete(rInt int)
 			availability_zone = "us-west-2b"
 			cidr_block        = "10.1.2.0/24"
 			tags {
-			  Name = "tf-acc-db-instance-mssql-timezone-other"
+			  Name = "tf-acc-db-instance-enable-cloudwatch-other"
 			}
 		  }
 

@@ -354,7 +354,6 @@ func resourceAwsDbInstance() *schema.Resource {
 
 			"enabled_cloudwatch_logs_exports": {
 				Type:     schema.TypeList,
-				Computed: false,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -803,8 +802,8 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 	}
 
-	if v.EnabledCloudwatchLogsExports != nil {
-		d.Set("enabled_cloudwatch_logs_exports", v.EnabledCloudwatchLogsExports)
+	if err := d.Set("enabled_cloudwatch_logs_exports", flattenStringList(v.EnabledCloudwatchLogsExports)); err != nil {
+		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
 	}
 
 	// list tags for resource
@@ -1187,17 +1186,6 @@ func resourceAwsDbInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.St
 
 		return v, *v.DBInstanceStatus, nil
 	}
-}
-
-func buildRDSARN(identifier, partition, accountid, region string) (string, error) {
-	if partition == "" {
-		return "", fmt.Errorf("Unable to construct RDS ARN because of missing AWS partition")
-	}
-	if accountid == "" {
-		return "", fmt.Errorf("Unable to construct RDS ARN because of missing AWS Account ID")
-	}
-	arn := fmt.Sprintf("arn:%s:rds:%s:%s:db:%s", partition, region, accountid, identifier)
-	return arn, nil
 }
 
 func buildCloudwatchLogsExportConfiguration(d *schema.ResourceData) *rds.CloudwatchLogsExportConfiguration {
