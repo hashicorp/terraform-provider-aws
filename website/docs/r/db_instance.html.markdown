@@ -87,6 +87,8 @@ Default is `false`.
 * `db_subnet_group_name` - (Optional) Name of DB subnet group. DB instance will
 be created in the VPC associated with the DB subnet group. If unspecified, will
 be created in the `default` VPC, or in EC2 Classic, if available.
+* `enabled_cloudwatch_logs_exports` - (Optional) Name list of enable log type for exporting to cloudwatch logs. If omitted, any logs will not be exported to cloudwatch logs.
+   Either of the following is supported: `audit`, `error`, `general`, `slowquery`.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
 is provided) The database engine to use.
 * `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade`
@@ -135,9 +137,9 @@ logs, and it will be stored in the state file.
 accessible. Default is `false`.
 * `replicate_source_db` - (Optional) Specifies that this resource is a Replicate
 database, and to use this value as the source database. This correlates to the
-`identifier` of another Amazon RDS Database to replicate. Note that if you are 
+`identifier` of another Amazon RDS Database to replicate. Note that if you are
 creating a cross-region replica of an encrypted database you will also need to
-specify a `kms_key_id`. See [DB Instance Replication][1] and [Working with 
+specify a `kms_key_id`. See [DB Instance Replication][1] and [Working with
 PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html)
 for more information on using Replication.
 * `security_group_names` - (Optional/Deprecated) List of DB Security Groups to
@@ -151,9 +153,9 @@ is `false`.
 * `snapshot_identifier` - (Optional) Specifies whether or not to create this
 database from a snapshot. This correlates to the snapshot ID you'd find in the
 RDS console, e.g: rds:production-2015-06-26-06-05.
-* `storage_encrypted` - (Optional) Specifies whether the DB instance is 
-encrypted. Note that if you are creating a cross-region read replica this field 
-is ignored and you should instead declare `kms_key_id` with a valid ARN. The 
+* `storage_encrypted` - (Optional) Specifies whether the DB instance is
+encrypted. Note that if you are creating a cross-region read replica this field
+is ignored and you should instead declare `kms_key_id` with a valid ARN. The
 default is `false` if not specified.
 * `storage_type` - (Optional) One of "standard" (magnetic), "gp2" (general
 purpose SSD), or "io1" (provisioned IOPS SSD). The default is "io1" if `iops` is
