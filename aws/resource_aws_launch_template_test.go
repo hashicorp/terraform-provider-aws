@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -57,7 +56,7 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resName, "instance_type"),
 					resource.TestCheckResourceAttrSet(resName, "kernel_id"),
 					resource.TestCheckResourceAttrSet(resName, "key_name"),
-					resource.TestCheckResourceAttrSet(resName, "monitoring"),
+					resource.TestCheckResourceAttr(resName, "monitoring.#", "1"),
 					resource.TestCheckResourceAttr(resName, "network_interfaces.#", "1"),
 					resource.TestCheckResourceAttr(resName, "placement.#", "1"),
 					resource.TestCheckResourceAttrSet(resName, "ram_disk_id"),
@@ -147,14 +146,11 @@ func testAccCheckAWSLaunchTemplateDestroy(s *terraform.State) error {
 			}
 		}
 
-		ae, ok := err.(awserr.Error)
-		if !ok {
-			return err
+		if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
+			log.Printf("[WARN] launch template (%s) not found.", rs.Primary.ID)
+			continue
 		}
-		if ae.Code() != "InvalidLaunchTemplateId.NotFound" {
-			log.Printf("aws error code: %s", ae.Code())
-			return err
-		}
+		return err
 	}
 
 	return nil
@@ -190,31 +186,34 @@ resource "aws_launch_template" "foo" {
     name = "test"
   }
 
-  image_id = "ami-test"
+  image_id = "ami-12a3b456"
 
-  instance_initiated_shutdown_behavior = "test"
+  instance_initiated_shutdown_behavior = "terminate"
 
   instance_market_options {
-    market_type = "test"
+    market_type = "spot"
   }
 
   instance_type = "t2.micro"
 
-  kernel_id = "test"
+  kernel_id = "aki-a12bc3de"
 
   key_name = "test"
 
-  monitoring = true
+  monitoring {
+    enabled = true
+  }
 
   network_interfaces {
     associate_public_ip_address = true
+    network_interface_id = "eni-123456ab"
   }
 
   placement {
-    availability_zone = "test"
+    availability_zone = "us-west-2b"
   }
 
-  ram_disk_id = "test"
+  ram_disk_id = "ari-a12bc3de"
 
   vpc_security_group_ids = ["test"]
 

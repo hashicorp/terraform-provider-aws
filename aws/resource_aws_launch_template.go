@@ -10,9 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
-
-const awsSpotInstanceTimeLayout = "2006-01-02T15:04:05Z"
 
 func resourceAwsLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
@@ -42,21 +41,9 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if len(value) > 255 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 255 characters", k))
-					}
-					return
-				},
-			},
-
-			"client_token": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 
 			"default_version": {
@@ -70,7 +57,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"block_device_mappings": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -87,7 +74,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Optional: true,
 						},
 						"ebs": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -128,7 +115,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"credit_specification": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -152,20 +139,20 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"elastic_gpu_specifications": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 					},
 				},
 			},
 
 			"iam_instance_profile": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -190,20 +177,25 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			"instance_initiated_shutdown_behavior": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.ShutdownBehaviorStop,
+					ec2.ShutdownBehaviorTerminate,
+				}, false),
 			},
 
 			"instance_market_options": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"market_type": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{ec2.MarketTypeSpot}, false),
 						},
 						"spot_options": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -225,8 +217,9 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 										Optional: true,
 									},
 									"valid_until": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.ValidateRFC3339TimeString,
 									},
 								},
 							},
@@ -251,12 +244,21 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"monitoring": {
-				Type:     schema.TypeBool,
+				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
 			},
 
 			"network_interfaces": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -277,34 +279,31 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Optional: true,
 						},
 						"security_groups": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 						"ipv6_address_count": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"ipv6_addresses": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 						"network_interface_id": {
 							Type:     schema.TypeString,
-							Computed: true,
+							Optional: true,
 						},
 						"private_ip_address": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"ipv4_addresses": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 						"ipv4_address_count": {
 							Type:     schema.TypeInt,
@@ -319,7 +318,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"placement": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -347,6 +346,11 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						"tenancy": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ec2.TenancyDedicated,
+								ec2.TenancyDefault,
+								ec2.TenancyHost,
+							}, false),
 						},
 					},
 				},
@@ -358,21 +362,19 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"security_group_names": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 
 			"vpc_security_group_ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 
 			"tag_specifications": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -439,9 +441,15 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		LaunchTemplateIds: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
+		if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
+			log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Error getting launch template: %s", err)
 	}
 	if len(dlt.LaunchTemplates) == 0 {
+		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -548,6 +556,9 @@ func resourceAwsLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) e
 		LaunchTemplateId: aws.String(d.Id()),
 	})
 	if err != nil {
+		if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
+			return nil
+		}
 		return err
 	}
 
@@ -559,27 +570,27 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 	s := []interface{}{}
 	for _, v := range m {
 		mapping := map[string]interface{}{
-			"device_name":  *v.DeviceName,
-			"virtual_name": *v.VirtualName,
+			"device_name":  aws.StringValue(v.DeviceName),
+			"virtual_name": aws.StringValue(v.VirtualName),
 		}
 		if v.NoDevice != nil {
 			mapping["no_device"] = *v.NoDevice
 		}
 		if v.Ebs != nil {
 			ebs := map[string]interface{}{
-				"delete_on_termination": *v.Ebs.DeleteOnTermination,
-				"encrypted":             *v.Ebs.Encrypted,
-				"volume_size":           *v.Ebs.VolumeSize,
-				"volume_type":           *v.Ebs.VolumeType,
+				"delete_on_termination": aws.BoolValue(v.Ebs.DeleteOnTermination),
+				"encrypted":             aws.BoolValue(v.Ebs.Encrypted),
+				"volume_size":           aws.Int64Value(v.Ebs.VolumeSize),
+				"volume_type":           aws.StringValue(v.Ebs.VolumeType),
 			}
 			if v.Ebs.Iops != nil {
-				ebs["iops"] = *v.Ebs.Iops
+				ebs["iops"] = aws.Int64Value(v.Ebs.Iops)
 			}
 			if v.Ebs.KmsKeyId != nil {
-				ebs["kms_key_id"] = *v.Ebs.KmsKeyId
+				ebs["kms_key_id"] = aws.StringValue(v.Ebs.KmsKeyId)
 			}
 			if v.Ebs.SnapshotId != nil {
-				ebs["snapshot_id"] = *v.Ebs.SnapshotId
+				ebs["snapshot_id"] = aws.StringValue(v.Ebs.SnapshotId)
 			}
 
 			mapping["ebs"] = ebs
@@ -593,7 +604,7 @@ func getCreditSpecification(cs *ec2.CreditSpecification) []interface{} {
 	s := []interface{}{}
 	if cs != nil {
 		s = append(s, map[string]interface{}{
-			"cpu_credits": *cs.CpuCredits,
+			"cpu_credits": aws.StringValue(cs.CpuCredits),
 		})
 	}
 	return s
@@ -603,7 +614,7 @@ func getElasticGpuSpecifications(e []*ec2.ElasticGpuSpecificationResponse) []int
 	s := []interface{}{}
 	for _, v := range e {
 		s = append(s, map[string]interface{}{
-			"type": *v.Type,
+			"type": aws.StringValue(v.Type),
 		})
 	}
 	return s
@@ -613,8 +624,8 @@ func getIamInstanceProfile(i *ec2.LaunchTemplateIamInstanceProfileSpecification)
 	s := []interface{}{}
 	if i != nil {
 		s = append(s, map[string]interface{}{
-			"arn":  *i.Arn,
-			"name": *i.Name,
+			"arn":  aws.StringValue(i.Arn),
+			"name": aws.StringValue(i.Name),
 		})
 	}
 	return s
@@ -624,17 +635,17 @@ func getInstanceMarketOptions(m *ec2.LaunchTemplateInstanceMarketOptions) []inte
 	s := []interface{}{}
 	if m != nil {
 		mo := map[string]interface{}{
-			"market_type": *m.MarketType,
+			"market_type": aws.StringValue(m.MarketType),
 		}
 		spot := []interface{}{}
 		so := m.SpotOptions
 		if so != nil {
 			spot = append(spot, map[string]interface{}{
-				"block_duration_minutes":         *so.BlockDurationMinutes,
-				"instance_interruption_behavior": *so.InstanceInterruptionBehavior,
-				"max_price":                      *so.MaxPrice,
-				"spot_instance_type":             *so.SpotInstanceType,
-				"valid_until":                    *so.ValidUntil,
+				"block_duration_minutes":         aws.Int64Value(so.BlockDurationMinutes),
+				"instance_interruption_behavior": aws.StringValue(so.InstanceInterruptionBehavior),
+				"max_price":                      aws.StringValue(so.MaxPrice),
+				"spot_instance_type":             aws.StringValue(so.SpotInstanceType),
+				"valid_until":                    aws.TimeValue(so.ValidUntil),
 			})
 			mo["spot_options"] = spot
 		}
@@ -650,26 +661,26 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 		var ipv4Addresses []string
 
 		networkInterface := map[string]interface{}{
-			"associate_public_ip_address": *v.AssociatePublicIpAddress,
-			"delete_on_termination":       *v.DeleteOnTermination,
-			"description":                 *v.Description,
-			"device_index":                int(*v.DeviceIndex),
-			"ipv6_address_count":          int(*v.Ipv6AddressCount),
-			"network_interface_id":        *v.NetworkInterfaceId,
-			"private_ip_address":          *v.PrivateIpAddress,
-			"ipv4_address_count":          int(*v.SecondaryPrivateIpAddressCount),
-			"subnet_id":                   *v.SubnetId,
+			"associate_public_ip_address": aws.BoolValue(v.AssociatePublicIpAddress),
+			"delete_on_termination":       aws.BoolValue(v.DeleteOnTermination),
+			"description":                 aws.StringValue(v.Description),
+			"device_index":                aws.Int64Value(v.DeviceIndex),
+			"ipv6_address_count":          aws.Int64Value(v.Ipv6AddressCount),
+			"network_interface_id":        aws.StringValue(v.NetworkInterfaceId),
+			"private_ip_address":          aws.StringValue(v.PrivateIpAddress),
+			"ipv4_address_count":          aws.Int64Value(v.SecondaryPrivateIpAddressCount),
+			"subnet_id":                   aws.StringValue(v.SubnetId),
 		}
 
 		for _, address := range v.Ipv6Addresses {
-			ipv6Addresses = append(ipv6Addresses, *address.Ipv6Address)
+			ipv6Addresses = append(ipv6Addresses, aws.StringValue(address.Ipv6Address))
 		}
 		if len(ipv6Addresses) > 0 {
 			networkInterface["ipv6_addresses"] = ipv6Addresses
 		}
 
 		for _, address := range v.PrivateIpAddresses {
-			ipv4Addresses = append(ipv4Addresses, *address.PrivateIpAddress)
+			ipv4Addresses = append(ipv4Addresses, aws.StringValue(address.PrivateIpAddress))
 		}
 		if len(ipv4Addresses) > 0 {
 			networkInterface["ipv4_addresses"] = ipv4Addresses
@@ -684,12 +695,12 @@ func getPlacement(p *ec2.LaunchTemplatePlacement) []interface{} {
 	s := []interface{}{}
 	if p != nil {
 		s = append(s, map[string]interface{}{
-			"affinity":          *p.Affinity,
-			"availability_zone": *p.AvailabilityZone,
-			"group_name":        *p.GroupName,
-			"host_id":           *p.HostId,
-			"spread_domain":     *p.SpreadDomain,
-			"tenancy":           *p.Tenancy,
+			"affinity":          aws.StringValue(p.Affinity),
+			"availability_zone": aws.StringValue(p.AvailabilityZone),
+			"group_name":        aws.StringValue(p.GroupName),
+			"host_id":           aws.StringValue(p.HostId),
+			"spread_domain":     aws.StringValue(p.SpreadDomain),
+			"tenancy":           aws.StringValue(p.Tenancy),
 		})
 	}
 	return s
@@ -699,7 +710,7 @@ func getTagSpecifications(t []*ec2.LaunchTemplateTagSpecification) []interface{}
 	s := []interface{}{}
 	for _, v := range t {
 		s = append(s, map[string]interface{}{
-			"resource_type": *v.ResourceType,
+			"resource_type": aws.StringValue(v.ResourceType),
 			"tags":          tagsToMap(v.Tags),
 		})
 	}
@@ -745,158 +756,86 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 
 	if v, ok := d.GetOk("block_device_mappings"); ok {
 		var blockDeviceMappings []*ec2.LaunchTemplateBlockDeviceMappingRequest
-		bdms := v.(*schema.Set).List()
+		bdms := v.([]interface{})
 
 		for _, bdm := range bdms {
-			blockDeviceMap := bdm.(map[string]interface{})
-			blockDeviceMappings = append(blockDeviceMappings, readBlockDeviceMappingFromConfig(blockDeviceMap))
+			blockDeviceMappings = append(blockDeviceMappings, readBlockDeviceMappingFromConfig(bdm.(map[string]interface{})))
 		}
 		opts.BlockDeviceMappings = blockDeviceMappings
 	}
 
 	if v, ok := d.GetOk("credit_specification"); ok {
-		cs := v.(*schema.Set).List()
+		cs := v.([]interface{})
 
 		if len(cs) > 0 {
-			csData := cs[0].(map[string]interface{})
-			csr := &ec2.CreditSpecificationRequest{
-				CpuCredits: aws.String(csData["cpu_credits"].(string)),
-			}
-			opts.CreditSpecification = csr
+			opts.CreditSpecification = readCreditSpecificationFromConfig(cs[0].(map[string]interface{}))
 		}
 	}
 
 	if v, ok := d.GetOk("elastic_gpu_specifications"); ok {
 		var elasticGpuSpecifications []*ec2.ElasticGpuSpecification
-		egsList := v.(*schema.Set).List()
+		egsList := v.([]interface{})
 
 		for _, egs := range egsList {
-			elasticGpuSpecification := egs.(map[string]interface{})
-			elasticGpuSpecifications = append(elasticGpuSpecifications, &ec2.ElasticGpuSpecification{
-				Type: aws.String(elasticGpuSpecification["type"].(string)),
-			})
+			elasticGpuSpecifications = append(elasticGpuSpecifications, readElasticGpuSpecificationsFromConfig(egs.(map[string]interface{})))
 		}
 		opts.ElasticGpuSpecifications = elasticGpuSpecifications
 	}
 
 	if v, ok := d.GetOk("iam_instance_profile"); ok {
-		iip := v.(*schema.Set).List()
+		iip := v.([]interface{})
 
 		if len(iip) > 0 {
-			iipData := iip[0].(map[string]interface{})
-			iamInstanceProfile := &ec2.LaunchTemplateIamInstanceProfileSpecificationRequest{
-				Arn:  aws.String(iipData["arn"].(string)),
-				Name: aws.String(iipData["name"].(string)),
-			}
-			opts.IamInstanceProfile = iamInstanceProfile
+			opts.IamInstanceProfile = readIamInstanceProfileFromConfig(iip[0].(map[string]interface{}))
 		}
 	}
 
 	if v, ok := d.GetOk("instance_market_options"); ok {
-		imo := v.(*schema.Set).List()
+		imo := v.([]interface{})
 
 		if len(imo) > 0 {
-			imoData := imo[0].(map[string]interface{})
-			spotOptions := &ec2.LaunchTemplateSpotMarketOptionsRequest{}
-
-			if v, ok := imoData["spot_options"]; ok {
-				vL := v.(*schema.Set).List()
-				for _, v := range vL {
-					so := v.(map[string]interface{})
-					spotOptions.BlockDurationMinutes = aws.Int64(int64(so["block_duration_minutes"].(int)))
-					spotOptions.InstanceInterruptionBehavior = aws.String(so["instance_interruption_behavior"].(string))
-					spotOptions.MaxPrice = aws.String(so["max_price"].(string))
-					spotOptions.SpotInstanceType = aws.String(so["spot_instance_type"].(string))
-
-					t, err := time.Parse(awsSpotInstanceTimeLayout, so["valid_until"].(string))
-					if err != nil {
-						return nil, fmt.Errorf("Error Parsing Launch Template Spot Options valid until: %s", err.Error())
-					}
-					spotOptions.ValidUntil = aws.Time(t)
-				}
+			instanceMarketOptions, err := readInstanceMarketOptionsFromConfig(imo[0].(map[string]interface{}))
+			if err != nil {
+				return nil, err
 			}
-
-			instanceMarketOptions := &ec2.LaunchTemplateInstanceMarketOptionsRequest{
-				MarketType:  aws.String(imoData["market_type"].(string)),
-				SpotOptions: spotOptions,
-			}
-
 			opts.InstanceMarketOptions = instanceMarketOptions
 		}
 	}
 
 	if v, ok := d.GetOk("monitoring"); ok {
-		monitoring := &ec2.LaunchTemplatesMonitoringRequest{
-			Enabled: aws.Bool(v.(bool)),
+		m := v.([]interface{})
+		if len(m) > 0 {
+			mData := m[0].(map[string]interface{})
+			monitoring := &ec2.LaunchTemplatesMonitoringRequest{
+				Enabled: aws.Bool(mData["enabled"].(bool)),
+			}
+			opts.Monitoring = monitoring
 		}
-		opts.Monitoring = monitoring
 	}
 
 	if v, ok := d.GetOk("network_interfaces"); ok {
 		var networkInterfaces []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest
-		niList := v.(*schema.Set).List()
+		niList := v.([]interface{})
 
 		for _, ni := range niList {
-			var ipv4Addresses []*ec2.PrivateIpAddressSpecification
-			var ipv6Addresses []*ec2.InstanceIpv6AddressRequest
-			ni := ni.(map[string]interface{})
-
-			privateIpAddress := ni["private_ip_address"].(string)
-			networkInterface := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{
-				AssociatePublicIpAddress: aws.Bool(ni["associate_public_ip_address"].(bool)),
-				DeleteOnTermination:      aws.Bool(ni["delete_on_termination"].(bool)),
-				Description:              aws.String(ni["description"].(string)),
-				DeviceIndex:              aws.Int64(int64(ni["device_index"].(int))),
-				NetworkInterfaceId:       aws.String(ni["network_interface_id"].(string)),
-				PrivateIpAddress:         aws.String(privateIpAddress),
-				SubnetId:                 aws.String(ni["subnet_id"].(string)),
-			}
-
-			ipv6AddressList := ni["ipv6_addresses"].(*schema.Set).List()
-			for _, address := range ipv6AddressList {
-				ipv6Addresses = append(ipv6Addresses, &ec2.InstanceIpv6AddressRequest{
-					Ipv6Address: aws.String(address.(string)),
-				})
-			}
-			networkInterface.Ipv6AddressCount = aws.Int64(int64(len(ipv6AddressList)))
-			networkInterface.Ipv6Addresses = ipv6Addresses
-
-			ipv4AddressList := ni["ipv4_addresses"].(*schema.Set).List()
-			for _, address := range ipv4AddressList {
-				privateIp := &ec2.PrivateIpAddressSpecification{
-					Primary:          aws.Bool(address.(string) == privateIpAddress),
-					PrivateIpAddress: aws.String(address.(string)),
-				}
-				ipv4Addresses = append(ipv4Addresses, privateIp)
-			}
-			networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(len(ipv4AddressList)))
-			networkInterface.PrivateIpAddresses = ipv4Addresses
-
+			niData := ni.(map[string]interface{})
+			networkInterface := readNetworkInterfacesFromConfig(niData)
 			networkInterfaces = append(networkInterfaces, networkInterface)
 		}
 		opts.NetworkInterfaces = networkInterfaces
 	}
 
 	if v, ok := d.GetOk("placement"); ok {
-		p := v.(*schema.Set).List()
+		p := v.([]interface{})
 
 		if len(p) > 0 {
-			pData := p[0].(map[string]interface{})
-			placement := &ec2.LaunchTemplatePlacementRequest{
-				Affinity:         aws.String(pData["affinity"].(string)),
-				AvailabilityZone: aws.String(pData["availability_zone"].(string)),
-				GroupName:        aws.String(pData["group_name"].(string)),
-				HostId:           aws.String(pData["host_id"].(string)),
-				SpreadDomain:     aws.String(pData["spread_domain"].(string)),
-				Tenancy:          aws.String(pData["tenancy"].(string)),
-			}
-			opts.Placement = placement
+			opts.Placement = readPlacementFromConfig(p[0].(map[string]interface{}))
 		}
 	}
 
 	if v, ok := d.GetOk("tag_specifications"); ok {
 		var tagSpecifications []*ec2.LaunchTemplateTagSpecificationRequest
-		t := v.(*schema.Set).List()
+		t := v.([]interface{})
 
 		for _, ts := range t {
 			tsData := ts.(map[string]interface{})
@@ -928,16 +867,14 @@ func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) *ec2.LaunchTem
 		blockDeviceMapping.VirtualName = aws.String(v.(string))
 	}
 
-	if v := bdm["ebs"]; v.(*schema.Set).Len() > 0 {
-		ebs := v.(*schema.Set).List()
+	if v := bdm["ebs"]; len(v.([]interface{})) > 0 {
+		ebs := v.([]interface{})
 		if len(ebs) > 0 {
 			ebsData := ebs[0]
-			//log.Printf("ebsData: %+v\n", ebsData)
 			blockDeviceMapping.Ebs = readEbsBlockDeviceFromConfig(ebsData.(map[string]interface{}))
 		}
 	}
 
-	//log.Printf("block device mapping: %+v\n", *blockDeviceMapping)
 	return blockDeviceMapping
 }
 
@@ -973,4 +910,162 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplat
 	}
 
 	return ebsDevice
+}
+
+func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest {
+	var ipv4Addresses []*ec2.PrivateIpAddressSpecification
+	var ipv6Addresses []*ec2.InstanceIpv6AddressRequest
+	var privateIpAddress string
+	networkInterface := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{
+		AssociatePublicIpAddress: aws.Bool(ni["associate_public_ip_address"].(bool)),
+		DeleteOnTermination:      aws.Bool(ni["delete_on_termination"].(bool)),
+	}
+
+	if v, ok := ni["description"].(string); ok && v != "" {
+		networkInterface.Description = aws.String(v)
+	}
+
+	if v, ok := ni["device_index"].(int); ok && v != 0 {
+		networkInterface.DeviceIndex = aws.Int64(int64(v))
+	}
+
+	if v, ok := ni["network_interface_id"].(string); ok && v != "" {
+		networkInterface.NetworkInterfaceId = aws.String(v)
+	}
+
+	if v, ok := ni["private_ip_address"].(string); ok && v != "" {
+		privateIpAddress = v
+		networkInterface.PrivateIpAddress = aws.String(v)
+	}
+
+	if v, ok := ni["subnet_id"].(string); ok && v != "" {
+		networkInterface.SubnetId = aws.String(v)
+	}
+
+	ipv6AddressList := ni["ipv6_addresses"].([]interface{})
+	for _, address := range ipv6AddressList {
+		ipv6Addresses = append(ipv6Addresses, &ec2.InstanceIpv6AddressRequest{
+			Ipv6Address: aws.String(address.(string)),
+		})
+	}
+	networkInterface.Ipv6AddressCount = aws.Int64(int64(len(ipv6AddressList)))
+	networkInterface.Ipv6Addresses = ipv6Addresses
+
+	ipv4AddressList := ni["ipv4_addresses"].([]interface{})
+	for _, address := range ipv4AddressList {
+		privateIp := &ec2.PrivateIpAddressSpecification{
+			Primary:          aws.Bool(address.(string) == privateIpAddress),
+			PrivateIpAddress: aws.String(address.(string)),
+		}
+		ipv4Addresses = append(ipv4Addresses, privateIp)
+	}
+	networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(len(ipv4AddressList)))
+	networkInterface.PrivateIpAddresses = ipv4Addresses
+
+	return networkInterface
+}
+
+func readIamInstanceProfileFromConfig(iip map[string]interface{}) *ec2.LaunchTemplateIamInstanceProfileSpecificationRequest {
+	iamInstanceProfile := &ec2.LaunchTemplateIamInstanceProfileSpecificationRequest{}
+
+	if v, ok := iip["arn"].(string); ok && v != "" {
+		iamInstanceProfile.Arn = aws.String(v)
+	}
+
+	if v, ok := iip["name"].(string); ok && v != "" {
+		iamInstanceProfile.Name = aws.String(v)
+	}
+
+	return iamInstanceProfile
+}
+
+func readCreditSpecificationFromConfig(cs map[string]interface{}) *ec2.CreditSpecificationRequest {
+	creditSpecification := &ec2.CreditSpecificationRequest{}
+
+	if v, ok := cs["cpu_credits"].(string); ok && v != "" {
+		creditSpecification.CpuCredits = aws.String(v)
+	}
+
+	return creditSpecification
+}
+
+func readElasticGpuSpecificationsFromConfig(egs map[string]interface{}) *ec2.ElasticGpuSpecification {
+	elasticGpuSpecification := &ec2.ElasticGpuSpecification{}
+
+	if v, ok := egs["type"].(string); ok && v != "" {
+		elasticGpuSpecification.Type = aws.String(v)
+	}
+
+	return elasticGpuSpecification
+}
+
+func readInstanceMarketOptionsFromConfig(imo map[string]interface{}) (*ec2.LaunchTemplateInstanceMarketOptionsRequest, error) {
+	instanceMarketOptions := &ec2.LaunchTemplateInstanceMarketOptionsRequest{}
+	spotOptions := &ec2.LaunchTemplateSpotMarketOptionsRequest{}
+
+	if v, ok := imo["market_type"].(string); ok && v != "" {
+		instanceMarketOptions.MarketType = aws.String(v)
+	}
+
+	if v, ok := imo["spot_options"]; ok {
+		vL := v.([]interface{})
+		for _, v := range vL {
+			so := v.(map[string]interface{})
+
+			if v, ok := so["block_duration_minutes"].(int); ok && v != 0 {
+				spotOptions.BlockDurationMinutes = aws.Int64(int64(v))
+			}
+
+			if v, ok := so["instance_interruption_behavior"].(string); ok && v != "" {
+				spotOptions.InstanceInterruptionBehavior = aws.String(v)
+			}
+
+			if v, ok := so["max_price"].(string); ok && v != "" {
+				spotOptions.MaxPrice = aws.String(v)
+			}
+
+			if v, ok := so["spot_instance_type"].(string); ok && v != "" {
+				spotOptions.SpotInstanceType = aws.String(v)
+			}
+
+			t, err := time.Parse(time.RFC3339, so["valid_until"].(string))
+			if err != nil {
+				return nil, fmt.Errorf("Error Parsing Launch Template Spot Options valid until: %s", err.Error())
+			}
+			spotOptions.ValidUntil = aws.Time(t)
+		}
+		instanceMarketOptions.SpotOptions = spotOptions
+	}
+
+	return instanceMarketOptions, nil
+}
+
+func readPlacementFromConfig(p map[string]interface{}) *ec2.LaunchTemplatePlacementRequest {
+	placement := &ec2.LaunchTemplatePlacementRequest{}
+
+	if v, ok := p["affinity"].(string); ok && v != "" {
+		placement.Affinity = aws.String(v)
+	}
+
+	if v, ok := p["availability_zone"].(string); ok && v != "" {
+		placement.AvailabilityZone = aws.String(v)
+	}
+
+	if v, ok := p["group_name"].(string); ok && v != "" {
+		placement.GroupName = aws.String(v)
+	}
+
+	if v, ok := p["host_id"].(string); ok && v != "" {
+		placement.HostId = aws.String(v)
+	}
+
+	if v, ok := p["spread_domain"].(string); ok && v != "" {
+		placement.SpreadDomain = aws.String(v)
+	}
+
+	if v, ok := p["tenancy"].(string); ok && v != "" {
+		placement.Tenancy = aws.String(v)
+	}
+
+	return placement
 }
