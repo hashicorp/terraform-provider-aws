@@ -51,6 +51,18 @@ resource "aws_appautoscaling_target" "ecs_target" {
 }
 ```
 
+### Aurora Read Replica Autoscaling
+
+```hcl
+resource "aws_appautoscaling_target" "replicas" {
+  service_namespace  = "rds"
+  scalable_dimension = "rds:cluster:ReadReplicaCount"
+  resource_id        = "cluster:aurora-cluster-id"
+  min_capacity       = 1
+  max_capacity       = 15
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
