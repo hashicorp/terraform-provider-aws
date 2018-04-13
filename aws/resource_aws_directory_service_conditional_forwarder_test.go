@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestACCAwsDirectoryServiceConditionForwarder_basic(t *testing.T) {
+func TestAccAWSDirectoryServiceConditionForwarder_basic(t *testing.T) {
 	resourceName := "aws_directory_service_conditional_forwarder.fwd"
 
 	ip1, ip2, ip3 := "8.8.8.8", "1.1.1.1", "8.8.4.4"
@@ -59,10 +59,9 @@ func testAccCheckAwsDirectoryServiceConditionalForwarderDestroy(s *terraform.Sta
 			continue
 		}
 
-		directoryId, domainName := parseDSConditionalForwarderId(rs.Primary.ID)
-
-		if directoryId == "" || domainName == "" {
-			return fmt.Errorf("Invalid ID '%s' for conditional forwarder", rs.Primary.ID)
+		directoryId, domainName, err := parseDSConditionalForwarderId(rs.Primary.ID)
+		if err != nil {
+			return err
 		}
 
 		res, err := dsconn.DescribeConditionalForwarders(&directoryservice.DescribeConditionalForwardersInput{
@@ -98,10 +97,9 @@ func testAccCheckAwsDirectoryServiceConditionalForwarderExists(name string, dnsI
 			return fmt.Errorf("No ID is set")
 		}
 
-		directoryId, domainName := parseDSConditionalForwarderId(rs.Primary.ID)
-
-		if directoryId == "" || domainName == "" {
-			return fmt.Errorf("Invalid ID '%s' for conditional forwarder", rs.Primary.ID)
+		directoryId, domainName, err := parseDSConditionalForwarderId(rs.Primary.ID)
+		if err != nil {
+			return err
 		}
 
 		dsconn := testAccProvider.Meta().(*AWSClient).dsconn
@@ -183,7 +181,7 @@ resource "aws_subnet" "bar" {
 resource "aws_directory_service_conditional_forwarder" "fwd" {
   directory_id = "${aws_directory_service_directory.bar.id}"
 
-  domain_name = "test.example.com"
+  remote_domain_name = "test.example.com"
 
   dns_ips = [
     "%s",
