@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_integration: Support VPC connection [GH-3428]
 * resource/aws_db_option_group: Support option version argument [GH-2590]
 * resource/aws_ecs_service: Support ServiceRegistries [GH-3906]
+* resource/aws_iam_service_linked_role: Support `custom_suffix` and `description` arguments [GH-4188]
 * resource/aws_spot_fleet_request: Support configurable delete timeout [GH-3940]
 * resource/aws_spot_instance_request: Support optionally fetching password data [GH-4189]
 * resource/aws_waf_rate_based_rule: Support `RegexMatch` predicate type [GH-4069]
