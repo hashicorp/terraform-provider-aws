@@ -52,7 +52,7 @@ resource "aws_service_discovery_service" "example" {
     }
   }
   health_check_config {
-    failure_threshold = 100
+    failure_threshold = 10
     resource_path = "path"
     type = "HTTP"
   }
@@ -88,8 +88,8 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `failure_threshold` - (Optional) The number of consecutive health checks. Maximum value of 10.
-* `resource_path` - (Optional) An array that contains one DnsRecord object for each resource record set.
-* `type` - (Optional, ForceNew) An array that contains one DnsRecord object for each resource record set.
+* `resource_path` - (Optional) The path that you want Route 53 to request when performing health checks. Route 53 automatically adds the DNS name for the service. If you don't specify a value, the default value is /.
+* `type` - (Optional, ForceNew) The type of health check that you want to create, which indicates how Route 53 determines whether an endpoint is healthy. Valid Values: HTTP, HTTPS, TCP
 
 ## Attributes Reference
 
