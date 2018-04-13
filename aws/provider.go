@@ -381,6 +381,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_gamelift_fleet":                           resourceAwsGameliftFleet(),
 			"aws_glacier_vault":                            resourceAwsGlacierVault(),
 			"aws_glue_catalog_database":                    resourceAwsGlueCatalogDatabase(),
+			"aws_glue_connection":                          resourceAwsGlueConnection(),
 			"aws_guardduty_detector":                       resourceAwsGuardDutyDetector(),
 			"aws_guardduty_ipset":                          resourceAwsGuardDutyIpset(),
 			"aws_guardduty_member":                         resourceAwsGuardDutyMember(),
