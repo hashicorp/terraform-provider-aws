@@ -1,0 +1,70 @@
+---
+layout: "aws"
+page_title: "AWS: aws_iam_user_group_membership"
+sidebar_current: "docs-aws-resource-iam-user-group-membership"
+description: |-
+  Provides a resource for adding an IAM User to IAM Groups without conflicting
+  with itself.
+---
+
+# aws_iam_user_group_membership
+
+Provides a resource for adding an [IAM User][2] to [IAM Groups][1].  This
+resource will not conflict with itself when used multiple times for the same
+user.
+
+## Example usage
+
+```hcl
+resource "aws_iam_user_group_membership" {
+	name = "user-group-membership-1"
+	user = "${aws_iam_user.user1.name}"
+
+	groups = [
+		"${aws_iam_group.group1.name}",
+		"${aws_iam_group.group2.name}",
+	]
+}
+
+resource "aws_iam_user_group_membership" {
+	name = "user-group-membership-2"
+	user = "${aws_iam_user.user1.name}"
+
+	groups = [
+		"${aws_iam_group.group3.name}",
+	]
+}
+
+resource "aws_iam_user" "user1" {
+	name = "user1"
+}
+
+resource "aws_iam_group" "group1" {
+	name = "group1"
+}
+
+resource "aws_iam_group" "group2" {
+	name = "group2"
+}
+
+resource "aws_iam_group" "group3" {
+	name = "group3"
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `name` - (Required) The name to identify the user group Membership
+* `user` - (Required) The name of the [IAM User][2] to add to groups
+* `groups` - (Required) A list of [IAM Groups][1] to add the user to
+
+## Attributes Reference
+
+* `name` - The name to identify the user group membership
+* `user` - The name of the IAM User
+* `groups` - The list of IAM Groups
+
+[1]: /docs/providers/aws/r/iam_group.html
+[2]: /docs/providers/aws/r/iam_user.html

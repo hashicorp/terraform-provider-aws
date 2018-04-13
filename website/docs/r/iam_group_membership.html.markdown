@@ -12,6 +12,8 @@ Provides a top level resource to manage IAM Group membership for IAM Users. For
 more information on managing IAM Groups or IAM Users, see [IAM Groups][1] or
 [IAM Users][2]
 
+~> **Note:** `aws_iam_group_membership` will conflict with itself if used more than once with the same group.
+
 ## Example Usage
 
 ```hcl
@@ -49,7 +51,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-* `name` - The name to identifing the Group Membership
+* `name` - The name to identify the Group Membership
 * `users` - list of IAM User names
 * `group` – IAM Group name
 
