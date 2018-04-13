@@ -1245,8 +1245,8 @@ func validateCognitoUserPoolTemplateEmailMessageByLink(v interface{}, k string) 
 		es = append(es, fmt.Errorf("%q cannot be less than 1 character", k))
 	}
 
-	if len(value) > 140 {
-		es = append(es, fmt.Errorf("%q cannot be longer than 140 characters", k))
+	if len(value) > 20000 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 20000 characters", k))
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{##[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*##\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`).MatchString(value) {
@@ -1397,12 +1397,13 @@ func validateWafMetricName(v interface{}, k string) (ws []string, errors []error
 
 func validateWafPredicatesType() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
-		waf.PredicateTypeIpmatch,
 		waf.PredicateTypeByteMatch,
-		waf.PredicateTypeSqlInjectionMatch,
-		waf.PredicateTypeSizeConstraint,
-		waf.PredicateTypeXssMatch,
 		waf.PredicateTypeGeoMatch,
+		waf.PredicateTypeIpmatch,
+		waf.PredicateTypeRegexMatch,
+		waf.PredicateTypeSizeConstraint,
+		waf.PredicateTypeSqlInjectionMatch,
+		waf.PredicateTypeXssMatch,
 	}, false)
 }
 

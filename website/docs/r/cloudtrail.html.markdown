@@ -127,7 +127,9 @@ resource "aws_cloudtrail" "example" {
 
     data_resource {
       type   = "AWS::S3::Object"
-      values = ["${data.aws_s3_bucket.important-bucket.arn}"]
+      # Make sure to append a trailing '/' to your ARN if you want
+      # to monitor all objects in a bucket.
+      values = ["${data.aws_s3_bucket.important-bucket.arn}/"]
     }
   }
 }

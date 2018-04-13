@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -65,6 +66,34 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 					},
 				},
 				Set: resourceAwsCodeBuildProjectArtifactsHash,
+			},
+			"cache": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  codebuild.CacheTypeNoCache,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.CacheTypeNoCache,
+								codebuild.CacheTypeS3,
+							}, false),
+						},
+						"location": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -231,6 +260,20 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				},
 			},
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for cache location
+				cacheType, cacheTypeOk := diff.GetOk("cache.0.type")
+				if !cacheTypeOk || cacheType.(string) == codebuild.CacheTypeNoCache {
+					return nil
+				}
+				if v, ok := diff.GetOk("cache.0.location"); ok && v.(string) != "" {
+					return nil
+				}
+				return fmt.Errorf(`cache location is required when cache type is %q`, cacheType.(string))
+			},
+		),
 	}
 }
 
@@ -246,6 +289,10 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		Name:        aws.String(d.Get("name").(string)),
 		Source:      &projectSource,
 		Artifacts:   &projectArtifacts,
+	}
+
+	if v, ok := d.GetOk("cache"); ok {
+		params.Cache = expandProjectCache(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -332,6 +379,22 @@ func expandProjectArtifacts(d *schema.ResourceData) codebuild.ProjectArtifacts {
 	}
 
 	return projectArtifacts
+}
+
+func expandProjectCache(s []interface{}) *codebuild.ProjectCache {
+	var projectCache *codebuild.ProjectCache
+
+	data := s[0].(map[string]interface{})
+
+	projectCache = &codebuild.ProjectCache{
+		Type: aws.String(data["type"].(string)),
+	}
+
+	if v, ok := data["location"]; ok {
+		projectCache.Location = aws.String(v.(string))
+	}
+
+	return projectCache
 }
 
 func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironment {
@@ -460,6 +523,10 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	if err := d.Set("cache", flattenAwsCodebuildProjectCache(project.Cache)); err != nil {
+		return err
+	}
+
 	if err := d.Set("source", flattenAwsCodeBuildProjectSource(project.Source)); err != nil {
 		return err
 	}
@@ -505,6 +572,16 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("vpc_config") {
 		params.VpcConfig = expandCodeBuildVpcConfig(d.Get("vpc_config").([]interface{}))
+	}
+
+	if d.HasChange("cache") {
+		if v, ok := d.GetOk("cache"); ok {
+			params.Cache = expandProjectCache(v.([]interface{}))
+		} else {
+			params.Cache = &codebuild.ProjectCache{
+				Type: aws.String("NO_CACHE"),
+			}
+		}
 	}
 
 	if d.HasChange("description") {
@@ -587,6 +664,19 @@ func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) 
 	artifactSet.Add(values)
 
 	return &artifactSet
+}
+
+func flattenAwsCodebuildProjectCache(cache *codebuild.ProjectCache) []interface{} {
+	if cache == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{
+		"location": aws.StringValue(cache.Location),
+		"type":     aws.StringValue(cache.Type),
+	}
+
+	return []interface{}{values}
 }
 
 func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnvironment) []interface{} {

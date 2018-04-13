@@ -14,7 +14,7 @@ const opCreateChannel = "CreateChannel"
 
 // CreateChannelRequest generates a "aws/request.Request" representing the
 // client's request for the CreateChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -106,7 +106,7 @@ const opCreateInput = "CreateInput"
 
 // CreateInputRequest generates a "aws/request.Request" representing the
 // client's request for the CreateInput operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -194,7 +194,7 @@ const opCreateInputSecurityGroup = "CreateInputSecurityGroup"
 
 // CreateInputSecurityGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateInputSecurityGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -282,7 +282,7 @@ const opDeleteChannel = "DeleteChannel"
 
 // DeleteChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -374,7 +374,7 @@ const opDeleteInput = "DeleteInput"
 
 // DeleteInputRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteInput operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -466,7 +466,7 @@ const opDeleteInputSecurityGroup = "DeleteInputSecurityGroup"
 
 // DeleteInputSecurityGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteInputSecurityGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -556,7 +556,7 @@ const opDescribeChannel = "DescribeChannel"
 
 // DescribeChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -646,7 +646,7 @@ const opDescribeInput = "DescribeInput"
 
 // DescribeInputRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInput operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -736,7 +736,7 @@ const opDescribeInputSecurityGroup = "DescribeInputSecurityGroup"
 
 // DescribeInputSecurityGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInputSecurityGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -826,7 +826,7 @@ const opListChannels = "ListChannels"
 
 // ListChannelsRequest generates a "aws/request.Request" representing the
 // client's request for the ListChannels operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -970,7 +970,7 @@ const opListInputSecurityGroups = "ListInputSecurityGroups"
 
 // ListInputSecurityGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the ListInputSecurityGroups operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1114,7 +1114,7 @@ const opListInputs = "ListInputs"
 
 // ListInputsRequest generates a "aws/request.Request" representing the
 // client's request for the ListInputs operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1258,7 +1258,7 @@ const opStartChannel = "StartChannel"
 
 // StartChannelRequest generates a "aws/request.Request" representing the
 // client's request for the StartChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1350,7 +1350,7 @@ const opStopChannel = "StopChannel"
 
 // StopChannelRequest generates a "aws/request.Request" representing the
 // client's request for the StopChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1442,7 +1442,7 @@ const opUpdateChannel = "UpdateChannel"
 
 // UpdateChannelRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1532,7 +1532,7 @@ const opUpdateInput = "UpdateInput"
 
 // UpdateInputRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateInput operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1622,7 +1622,7 @@ const opUpdateInputSecurityGroup = "UpdateInputSecurityGroup"
 
 // UpdateInputSecurityGroupRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateInputSecurityGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.

@@ -14,6 +14,39 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func init() {
+	resource.AddTestSweepers("aws_spot_fleet_request", &resource.Sweeper{
+		Name: "aws_spot_fleet_request",
+		F:    testSweepSpotFleetRequests,
+	})
+}
+
+func testSweepSpotFleetRequests(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	return conn.DescribeSpotFleetRequestsPages(&ec2.DescribeSpotFleetRequestsInput{}, func(page *ec2.DescribeSpotFleetRequestsOutput, isLast bool) bool {
+		if len(page.SpotFleetRequestConfigs) == 0 {
+			log.Print("[DEBUG] No Spot Fleet Requests to sweep")
+			return false
+		}
+
+		for _, config := range page.SpotFleetRequestConfigs {
+			id := aws.StringValue(config.SpotFleetRequestId)
+
+			log.Printf("[INFO] Deleting Spot Fleet Request: %s", id)
+			err := deleteSpotFleetRequest(id, true, 5*time.Minute, conn)
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete Spot Fleet Request (%s): %s", id, err)
+			}
+		}
+		return !isLast
+	})
+}
+
 func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := acctest.RandString(10)

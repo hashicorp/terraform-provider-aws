@@ -170,6 +170,27 @@ func TestAccAWSSpotInstanceRequest_NetworkInterfaceAttributes(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotInstanceRequest_getPasswordData(t *testing.T) {
+	var sir ec2.SpotInstanceRequest
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotInstanceRequestConfig_getPasswordData(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSpotInstanceRequestExists(
+						"aws_spot_instance_request.foo", &sir),
+					resource.TestCheckResourceAttrSet("aws_spot_instance_request.foo", "password_data"),
+				),
+			},
+		},
+	})
+}
+
 func testCheckKeyPair(keyName string, sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
 	return func(*terraform.State) error {
 		if sir.LaunchSpecification.KeyName == nil {
@@ -534,4 +555,37 @@ func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int)
 			Name = "tf_test_sg_ssh-%d"
 		}
 	}`, rInt, rInt)
+}
+
+func testAccAWSSpotInstanceRequestConfig_getPasswordData(rInt int) string {
+	return fmt.Sprintf(`
+	# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
+	data "aws_ami" "win2016core" {
+		most_recent = true
+
+		filter {
+			name = "owner-alias"
+			values = ["amazon"]
+		}
+
+		filter {
+			name = "name"
+			values = ["Windows_Server-2016-English-Core-Base-*"]
+		}
+	}
+
+	resource "aws_key_pair" "foo" {
+		key_name = "tf-acctest-%d"
+		public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAq6U3HQYC4g8WzU147gZZ7CKQH8TgYn3chZGRPxaGmHW1RUwsyEs0nmombmIhwxudhJ4ehjqXsDLoQpd6+c7BuLgTMvbv8LgE9LX53vnljFe1dsObsr/fYLvpU9LTlo8HgHAqO5ibNdrAUvV31ronzCZhms/Gyfdaue88Fd0/YnsZVGeOZPayRkdOHSpqme2CBrpa8myBeL1CWl0LkDG4+YCURjbaelfyZlIApLYKy3FcCan9XQFKaL32MJZwCgzfOvWIMtYcU8QtXMgnA3/I3gXk8YDUJv5P4lj0s/PJXuTM8DygVAUtebNwPuinS7wwonm5FXcWMuVGsVpG5K7FGQ== tf-acc-winpasswordtest"
+	}
+
+	resource "aws_spot_instance_request" "foo" {
+		ami                  = "${data.aws_ami.win2016core.id}"
+		instance_type        = "m1.small"
+		spot_price           = "0.05"
+		key_name             = "${aws_key_pair.foo.key_name}"
+		wait_for_fulfillment = true
+		get_password_data    = true
+	}
+	`, rInt)
 }

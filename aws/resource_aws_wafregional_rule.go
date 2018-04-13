@@ -45,15 +45,9 @@ func resourceAwsWafRegionalRule() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
 						"type": &schema.Schema{
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"IPMatch",
-								"ByteMatch",
-								"SqlInjectionMatch",
-								"SizeConstraint",
-								"XssMatch",
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateWafPredicatesType(),
 						},
 					},
 				},

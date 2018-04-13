@@ -15,7 +15,7 @@ const opCreateTags = "CreateTags"
 
 // CreateTagsRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTags operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -100,7 +100,7 @@ const opCreateWorkspaces = "CreateWorkspaces"
 
 // CreateWorkspacesRequest generates a "aws/request.Request" representing the
 // client's request for the CreateWorkspaces operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -184,7 +184,7 @@ const opDeleteTags = "DeleteTags"
 
 // DeleteTagsRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTags operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -266,7 +266,7 @@ const opDescribeTags = "DescribeTags"
 
 // DescribeTagsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTags operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -345,7 +345,7 @@ const opDescribeWorkspaceBundles = "DescribeWorkspaceBundles"
 
 // DescribeWorkspaceBundlesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeWorkspaceBundles operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -482,7 +482,7 @@ const opDescribeWorkspaceDirectories = "DescribeWorkspaceDirectories"
 
 // DescribeWorkspaceDirectoriesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeWorkspaceDirectories operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -618,7 +618,7 @@ const opDescribeWorkspaces = "DescribeWorkspaces"
 
 // DescribeWorkspacesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeWorkspaces operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -759,7 +759,7 @@ const opDescribeWorkspacesConnectionStatus = "DescribeWorkspacesConnectionStatus
 
 // DescribeWorkspacesConnectionStatusRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeWorkspacesConnectionStatus operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -838,7 +838,7 @@ const opModifyWorkspaceProperties = "ModifyWorkspaceProperties"
 
 // ModifyWorkspacePropertiesRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyWorkspaceProperties operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -937,7 +937,7 @@ const opRebootWorkspaces = "RebootWorkspaces"
 
 // RebootWorkspacesRequest generates a "aws/request.Request" representing the
 // client's request for the RebootWorkspaces operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1016,7 +1016,7 @@ const opRebuildWorkspaces = "RebuildWorkspaces"
 
 // RebuildWorkspacesRequest generates a "aws/request.Request" representing the
 // client's request for the RebuildWorkspaces operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1098,7 +1098,7 @@ const opStartWorkspaces = "StartWorkspaces"
 
 // StartWorkspacesRequest generates a "aws/request.Request" representing the
 // client's request for the StartWorkspaces operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1175,7 +1175,7 @@ const opStopWorkspaces = "StopWorkspaces"
 
 // StopWorkspacesRequest generates a "aws/request.Request" representing the
 // client's request for the StopWorkspaces operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1252,7 +1252,7 @@ const opTerminateWorkspaces = "TerminateWorkspaces"
 
 // TerminateWorkspacesRequest generates a "aws/request.Request" representing the
 // client's request for the TerminateWorkspaces operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.

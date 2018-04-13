@@ -92,7 +92,7 @@ The following arguments are supported:
 * `number_cache_clusters` - (Required) The number of cache clusters this replication group will have.
  If Multi-AZ is enabled , the value of this parameter must be at least 2. Changing this number will force a new resource
 * `node_type` - (Required) The compute and memory capacity of the nodes in the node group.
-* `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. Defaults to `false`.
+* `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If true, Multi-AZ is enabled for this replication group. If false, Multi-AZ is disabled for this replication group. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether a minor engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window. Defaults to `true`.
 * `availability_zones` - (Optional) A list of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is not important.
 * `engine` - (Optional) The name of the cache engine to be used for the clusters in this replication group. e.g. `redis`
@@ -144,7 +144,7 @@ The following attributes are exported:
 `aws_elasticache_replication_group` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
 configuration options:
 
-* `create` - (Default `50m`) How long to wait for a replication group to be created.
+* `create` - (Default `60m`) How long to wait for a replication group to be created.
 * `delete` - (Default `40m`) How long to wait for a replication group to be deleted.
 * `update` - (Default `40m`) How long to wait for replication group settings to be updated. This is also separately used for online resize operation completion, if necessary.
 

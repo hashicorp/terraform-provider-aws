@@ -309,6 +309,17 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
 			log.Printf("[WARN] Error setting ipv6_addresses for AWS Spot Instance (%s): %s", d.Id(), err)
 		}
+
+		if d.Get("get_password_data").(bool) {
+			passwordData, err := getAwsEc2InstancePasswordData(*instance.InstanceId, conn)
+			if err != nil {
+				return err
+			}
+			d.Set("password_data", passwordData)
+		} else {
+			d.Set("get_password_data", false)
+			d.Set("password_data", nil)
+		}
 	}
 
 	return nil
