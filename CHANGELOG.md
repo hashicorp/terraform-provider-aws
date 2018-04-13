@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * resource/aws_db_option_group: Support option version argument [GH-2590]
 * resource/aws_ecs_service: Support ServiceRegistries [GH-3906]
 * resource/aws_iam_service_linked_role: Support `custom_suffix` and `description` arguments [GH-4188]
+* resource/aws_service_discovery_service: Support `health_check_custom_config` argument [GH-4083]
 * resource/aws_spot_fleet_request: Support configurable delete timeout [GH-3940]
 * resource/aws_spot_instance_request: Support optionally fetching password data [GH-4189]
 * resource/aws_waf_rate_based_rule: Support `RegexMatch` predicate type [GH-4069]
