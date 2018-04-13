@@ -32,6 +32,7 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 			{
 				Config: testBudgetHCLBasicUseDefaults(configBasicDefaults),
 				Check: resource.ComposeTestCheckFunc(
+					testBudgetExists(configBasicDefaults, testAccProvider),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name", regexp.MustCompile(configBasicDefaults.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", configBasicDefaults.BudgetType),
@@ -40,7 +41,6 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", configBasicDefaults.TimePeriodStart),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", configBasicDefaults.TimePeriodEnd),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", configBasicDefaults.TimeUnit),
-					testBudgetExists(configBasicDefaults, testAccProvider),
 				),
 			},
 			{
@@ -51,6 +51,7 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 			{
 				Config: testBudgetHCLBasic(configBasicUpdate),
 				Check: resource.ComposeTestCheckFunc(
+					testBudgetExists(configBasicUpdate, testAccProvider),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name", regexp.MustCompile(configBasicUpdate.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", configBasicUpdate.BudgetType),
@@ -59,7 +60,6 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", configBasicUpdate.TimePeriodStart),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", configBasicUpdate.TimePeriodEnd),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", configBasicUpdate.TimeUnit),
-					testBudgetExists(configBasicUpdate, testAccProvider),
 				),
 			},
 		},
@@ -81,6 +81,7 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 			{
 				Config: testBudgetHCLPrefixUseDefaults(configBasicDefaults),
 				Check: resource.ComposeTestCheckFunc(
+					testBudgetExists(configBasicDefaults, testAccProvider),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name_prefix", regexp.MustCompile(configBasicDefaults.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", configBasicDefaults.BudgetType),
@@ -89,13 +90,13 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", configBasicDefaults.TimePeriodStart),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", configBasicDefaults.TimePeriodEnd),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", configBasicDefaults.TimeUnit),
-					testBudgetExists(configBasicDefaults, testAccProvider),
 				),
 			},
 
 			{
 				Config: testBudgetHCLPrefix(configBasicUpdate),
 				Check: resource.ComposeTestCheckFunc(
+					testBudgetExists(configBasicUpdate, testAccProvider),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name_prefix", regexp.MustCompile(configBasicUpdate.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", configBasicUpdate.BudgetType),
@@ -104,7 +105,6 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", configBasicUpdate.TimePeriodStart),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", configBasicUpdate.TimePeriodEnd),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", configBasicUpdate.TimeUnit),
-					testBudgetExists(configBasicUpdate, testAccProvider),
 				),
 			},
 		},
