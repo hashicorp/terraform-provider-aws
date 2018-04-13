@@ -8,6 +8,7 @@ FEATURES:
 * **New Resource:** `aws_directory_service_conditional_forwarder` [GH-4071]
 * **New Resource:** `aws_glue_connection` [GH-4016]
 * **New Resource:** `aws_iam_service_linked_role` [GH-2985]
+* **New Resource:** `aws_launch_template` [GH-2927]
 
 ENHANCEMENTS:
 
