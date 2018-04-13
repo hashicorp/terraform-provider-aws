@@ -32,6 +32,14 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Optional: true,
 			},
 
+			"policy": {
+				Type:             schema.TypeString,
+				Computed:         true,
+				Optional:         true,
+				ValidateFunc:     validateIAMPolicyJson,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+			},
+
 			"binary_media_types": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -72,9 +80,15 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 		description = aws.String(d.Get("description").(string))
 	}
 
+	var policy *string
+	if d.Get("policy").(string) != "" {
+		policy = aws.String(d.Get("policy").(string))
+	}
+
 	params := &apigateway.CreateRestApiInput{
 		Name:        aws.String(d.Get("name").(string)),
 		Description: description,
+		Policy:      policy,
 	}
 
 	binaryMediaTypes, binaryMediaTypesOk := d.GetOk("binary_media_types")
@@ -151,6 +165,7 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("name", api.Name)
 	d.Set("description", api.Description)
+	d.Set("policy", api.Policy)
 	d.Set("binary_media_types", api.BinaryMediaTypes)
 	if api.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", -1)
@@ -180,6 +195,14 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 			Op:    aws.String("replace"),
 			Path:  aws.String("/description"),
 			Value: aws.String(d.Get("description").(string)),
+		})
+	}
+
+	if d.HasChange("policy") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/policy"),
+			Value: aws.String(d.Get("policy").(string)),
 		})
 	}
 

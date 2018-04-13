@@ -93,6 +93,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 0),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "bar"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", ""),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "0"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
 					resource.TestCheckNoResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types"),
@@ -108,6 +109,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 10485760),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "test"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", "test"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", "test"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "10485760"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types.#", "1"),
@@ -301,7 +303,21 @@ resource "aws_api_gateway_rest_api" "test" {
 const testAccAWSAPIGatewayRestAPIUpdateConfig = `
 resource "aws_api_gateway_rest_api" "test" {
   name = "test"
-  description = "test"
+  description = "test",
+  policy = = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
   binary_media_types = ["application/octet-stream"]
   minimum_compression_size = 10485760
 }
