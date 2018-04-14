@@ -92,8 +92,8 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "bar"),
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 0),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "bar"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", "{\\\"Version\\\":\\\"2012-10-17\\\",\\\"Statement\\\":[{\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"arn:aws:iam::717754130149:user\\/dev-encryption-service-emr-user\\\"},\\\"Action\\\":\\\"execute-api:Invoke\\\",\\\"Resource\\\":\\\"arn:aws:execute-api:us-west-2:717754130149:wwo2hqsydh\\/*\\/POST\\/v1\\/encryption-service\\/password\\/change\\\"}]}"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", ""),
-					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "0"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
 					resource.TestCheckNoResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types"),
@@ -109,7 +109,6 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 10485760),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "test"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", "test"),
-					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", "test"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "10485760"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types.#", "1"),
@@ -168,6 +167,16 @@ func testAccCheckAWSAPIGatewayRestAPINameAttribute(conf *apigateway.RestApi, nam
 	return func(s *terraform.State) error {
 		if *conf.Name != name {
 			return fmt.Errorf("Wrong Name: %q", *conf.Name)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSAPIGatewayRestAPIPolicyAttribute(conf *apigateway.RestApi, policy string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *conf.Policy != policy {
+			return fmt.Errorf("Wrong Policy: %q", *conf.Policy)
 		}
 
 		return nil
@@ -297,6 +306,21 @@ const testAccAWSAPIGatewayRestAPIConfig = `
 resource "aws_api_gateway_rest_api" "test" {
   name = "bar"
   minimum_compression_size = 0
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::717754130149:user/dev-encryption-service-emr-user"
+            },
+            "Action": "execute-api:Invoke",
+            "Resource": "arn:aws:execute-api:us-west-2:717754130149:wwo2hqsydh/*/POST/v1/encryption-service/password/change"
+        }
+    ]
+}
+EOF
 }
 `
 
@@ -304,7 +328,6 @@ const testAccAWSAPIGatewayRestAPIUpdateConfig = `
 resource "aws_api_gateway_rest_api" "test" {
   name = "test"
   description = "test",
-  policy = "{}"
   binary_media_types = ["application/octet-stream"]
   minimum_compression_size = 10485760
 }
