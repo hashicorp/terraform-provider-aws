@@ -87,6 +87,7 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					ec2.InstanceInterruptionBehaviorTerminate,
 					ec2.InstanceInterruptionBehaviorStop,
+					ec2.InstanceInterruptionBehaviorHibernate,
 				}, false),
 			}
 			return s
@@ -136,7 +137,7 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 		spotOpts.LaunchGroup = aws.String(v.(string))
 	}
 
-	// Placement GroupName can only be specified when instanceInterruptionBehavior is not set to 'stop'
+	// Placement GroupName can only be specified when instanceInterruptionBehavior is not set or set to 'terminate'
 	if v, exists := d.GetOkExists("instance_interruption_behaviour"); v.(string) == ec2.InstanceInterruptionBehaviorTerminate || !exists {
 		spotOpts.LaunchSpecification.Placement = instanceOpts.SpotPlacement
 	}
