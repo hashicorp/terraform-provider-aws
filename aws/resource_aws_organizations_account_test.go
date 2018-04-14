@@ -21,7 +21,7 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 	}
 
 	rInt := acctest.RandInt()
-	name := fmt.Sprintf("tf_acctest_%s", rInt)
+	name := fmt.Sprintf("tf_acctest_%d", rInt)
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
