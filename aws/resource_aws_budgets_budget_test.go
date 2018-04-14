@@ -30,7 +30,7 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testBudgetHCLBasicUseDefaults(configBasicDefaults),
+				Config: testAccAWSBudgetsBudgetConfig_BasicDefaults(configBasicDefaults),
 				Check: resource.ComposeTestCheckFunc(
 					testBudgetExists(configBasicDefaults, testAccProvider),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
@@ -45,11 +45,11 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 			},
 			{
 				PlanOnly:    true,
-				Config:      testBudgetHCLWithAccountID(configBasicDefaults),
+				Config:      testAccAWSBudgetsBudgetConfig_WithAccountID(configBasicDefaults),
 				ExpectError: regexp.MustCompile("account_id.*" + configBasicDefaults.AccountID),
 			},
 			{
-				Config: testBudgetHCLBasic(configBasicUpdate),
+				Config: testAccAWSBudgetsBudgetConfig_Basic(configBasicUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testBudgetExists(configBasicUpdate, testAccProvider),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
@@ -79,7 +79,7 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testBudgetHCLPrefixUseDefaults(configBasicDefaults),
+				Config: testAccAWSBudgetsBudgetConfig_PrefixDefaults(configBasicDefaults),
 				Check: resource.ComposeTestCheckFunc(
 					testBudgetExists(configBasicDefaults, testAccProvider),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
@@ -94,7 +94,7 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 			},
 
 			{
-				Config: testBudgetHCLPrefix(configBasicUpdate),
+				Config: testAccAWSBudgetsBudgetConfig_Prefix(configBasicUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testBudgetExists(configBasicUpdate, testAccProvider),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
@@ -294,7 +294,7 @@ func newBudgetTestConfigDefaults(name string) budgetTestConfig {
 	}
 }
 
-func testBudgetHCLWithAccountID(budgetConfig budgetTestConfig) string {
+func testAccAWSBudgetsBudgetConfig_WithAccountID(budgetConfig budgetTestConfig) string {
 	t := template.Must(template.New("t1").
 		Parse(`
 resource "aws_budgets_budget" "foo" {
@@ -315,7 +315,7 @@ resource "aws_budgets_budget" "foo" {
 	return doc.String()
 }
 
-func testBudgetHCLPrefixUseDefaults(budgetConfig budgetTestConfig) string {
+func testAccAWSBudgetsBudgetConfig_PrefixDefaults(budgetConfig budgetTestConfig) string {
 	t := template.Must(template.New("t1").
 		Parse(`
 resource "aws_budgets_budget" "foo" {
@@ -335,7 +335,7 @@ resource "aws_budgets_budget" "foo" {
 	return doc.String()
 }
 
-func testBudgetHCLPrefix(budgetConfig budgetTestConfig) string {
+func testAccAWSBudgetsBudgetConfig_Prefix(budgetConfig budgetTestConfig) string {
 	t := template.Must(template.New("t1").
 		Parse(`
 resource "aws_budgets_budget" "foo" {
@@ -361,7 +361,7 @@ resource "aws_budgets_budget" "foo" {
 	return doc.String()
 }
 
-func testBudgetHCLBasicUseDefaults(budgetConfig budgetTestConfig) string {
+func testAccAWSBudgetsBudgetConfig_BasicDefaults(budgetConfig budgetTestConfig) string {
 	t := template.Must(template.New("t1").
 		Parse(`
 resource "aws_budgets_budget" "foo" {
@@ -381,7 +381,7 @@ resource "aws_budgets_budget" "foo" {
 	return doc.String()
 }
 
-func testBudgetHCLBasic(budgetConfig budgetTestConfig) string {
+func testAccAWSBudgetsBudgetConfig_Basic(budgetConfig budgetTestConfig) string {
 	t := template.Must(template.New("t1").
 		Parse(`
 resource "aws_budgets_budget" "foo" {
