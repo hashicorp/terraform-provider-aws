@@ -14,6 +14,9 @@ func TestAccAWSOrganizations(t *testing.T) {
 		"Account": {
 			"basic": testAccAwsOrganizationsAccount_basic,
 		},
+		"Unit": {
+			"basic": testAccAwsOrganizationsUnit_basic,
+		},
 	}
 
 	for group, m := range testCases {
