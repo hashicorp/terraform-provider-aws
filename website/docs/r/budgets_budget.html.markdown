@@ -50,23 +50,6 @@ resource "aws_budgets_budget" "s3" {
 }
 ```
 
-## Attributes Reference
-
-The following attributes are exported:
-
-* `id` - id of resource.
-* `account_id` - target account id for budget
-* `name` - name of resource
-* `name_prefix` - prefix for name of resource
-* `budget_type` - The type of the budget.
-* `cost_filters` - Map of cost filters applied to the budget. See [CostFilters](#CostFilters) for possible options.
-* `cost_types` - Object containing the types of cost included in a budget. See [CostTypes](#CostTypes) for possible options.
-* `limit_amount` - The amount of cost or usage being measured
-* `limit_unit` - The unit of measurement used, such as dollars or GB.
-* `time_period_end` - The end of the time period covered by the budget
-* `time_period_start` - The start of the time period covered by the budget
-* `time_unit` - The length of time until the budget resets the actual and forecasted spend.
-
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to the [AWS official
@@ -85,6 +68,13 @@ The following arguments are supported:
 * `time_period_end` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
 * `time_period_start` - (Required) The start of the time period covered by the budget. The start date must come before the end date. Format: `2017-01-01_12:00`.
 * `time_unit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - id of resource.
+
 
 ### CostTypes
 
