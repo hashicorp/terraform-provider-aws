@@ -190,16 +190,6 @@ func testAccCheckAWSAPIGatewayRestAPINameAttribute(conf *apigateway.RestApi, nam
 	}
 }
 
-func testAccCheckAWSAPIGatewayRestAPIPolicyAttribute(conf *apigateway.RestApi, policy string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *conf.Policy != policy {
-			return fmt.Errorf("Wrong Policy: %q", *conf.Policy)
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckAWSAPIGatewayRestAPIDescriptionAttribute(conf *apigateway.RestApi, description string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.Description != description {
