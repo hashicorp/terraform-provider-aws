@@ -92,7 +92,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "bar"),
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 0),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "bar"),
-					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", "{\\\"Version\\\":\\\"2012-10-17\\\",\\\"Statement\\\":[{\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Action\\\":\\\"execute-api:Invoke\\\",\\\"Resource\\\":\\\"*\\\"}]}"),
+					// resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", "{\\\"Version\\\":\\\"2012-10-17\\\",\\\"Statement\\\":[{\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Action\\\":\\\"execute-api:Invoke\\\",\\\"Resource\\\":\\\"*\\\"}]}"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "0"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
@@ -122,6 +122,24 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttributeIsNil(&conf),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "-1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayRestApi_policy(t *testing.T) {
+	expectedPolicyText := fmt.Sprintf(`{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*"}]}`)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigWithPolicy,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", expectedPolicyText),
 				),
 			},
 		},
@@ -306,6 +324,13 @@ const testAccAWSAPIGatewayRestAPIConfig = `
 resource "aws_api_gateway_rest_api" "test" {
   name = "bar"
   minimum_compression_size = 0
+}
+`
+
+const testAccAWSAPIGatewayRestAPIConfigWithPolicy = `
+resource "aws_api_gateway_rest_api" "test" {
+  name = "bar"
+  minimum_compression_size = 0
   policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -327,7 +352,7 @@ EOF
 const testAccAWSAPIGatewayRestAPIUpdateConfig = `
 resource "aws_api_gateway_rest_api" "test" {
   name = "test"
-  description = "test",
+  description = "test"
   binary_media_types = ["application/octet-stream"]
   minimum_compression_size = 10485760
 }

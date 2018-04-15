@@ -36,7 +36,7 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Type:             schema.TypeString,
 				Computed:         true,
 				Optional:         true,
-				ValidateFunc:     validateIAMPolicyJson,
+				ValidateFunc:     validateJsonString,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 
@@ -166,6 +166,7 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("name", api.Name)
 	d.Set("description", api.Description)
 	d.Set("policy", api.Policy)
+
 	d.Set("binary_media_types", api.BinaryMediaTypes)
 	if api.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", -1)
