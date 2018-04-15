@@ -92,7 +92,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "bar"),
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 0),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "bar"),
-					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", "{\\\"Version\\\":\\\"2012-10-17\\\",\\\"Statement\\\":[{\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"arn:aws:iam::717754130149:user\\/dev-encryption-service-emr-user\\\"},\\\"Action\\\":\\\"execute-api:Invoke\\\",\\\"Resource\\\":\\\"arn:aws:execute-api:us-west-2:717754130149:wwo2hqsydh\\/*\\/POST\\/v1\\/encryption-service\\/password\\/change\\\"}]}"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", "{\\\"Version\\\":\\\"2012-10-17\\\",\\\"Statement\\\":[{\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Action\\\":\\\"execute-api:Invoke\\\",\\\"Resource\\\":\\\"*\\\"}]}"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "0"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
@@ -313,10 +313,10 @@ resource "aws_api_gateway_rest_api" "test" {
         {
             "Effect": "Allow",
             "Principal": {
-                "AWS": "arn:aws:iam::717754130149:user/dev-encryption-service-emr-user"
+                "AWS": "*"
             },
             "Action": "execute-api:Invoke",
-            "Resource": "arn:aws:execute-api:us-west-2:717754130149:wwo2hqsydh/*/POST/v1/encryption-service/password/change"
+            "Resource": "*"
         }
     ]
 }
