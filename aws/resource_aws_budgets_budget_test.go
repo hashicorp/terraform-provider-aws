@@ -20,21 +20,21 @@ import (
 func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 	costFilterKey := "AZ"
 	name := fmt.Sprintf("test-budget-%d", acctest.RandInt())
-	configBasicDefaults := newBudgetTestConfigDefaults(name)
+	configBasicDefaults := testAccAWSBudgetsBudgetConfigDefaults(name)
 	accountID := "012345678910"
-	configBasicUpdate := newBudgetTestConfigUpdate(name)
+	configBasicUpdate := testAccAWSBudgetsBudgetConfigUpdate(name)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		CheckDestroy: func(s *terraform.State) error {
-			return testCheckBudgetDestroy(name, testAccProvider)
+			return testAccAWSBudgetsBudgetDestroy(name, testAccProvider)
 		},
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBudgetsBudgetConfig_BasicDefaults(configBasicDefaults, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
-					testBudgetExists(configBasicDefaults, testAccProvider),
+					testAccAWSBudgetsBudgetExists(configBasicDefaults, testAccProvider),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name", regexp.MustCompile(*configBasicDefaults.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicDefaults.BudgetType),
@@ -53,7 +53,7 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 			{
 				Config: testAccAWSBudgetsBudgetConfig_Basic(configBasicUpdate, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
-					testBudgetExists(configBasicUpdate, testAccProvider),
+					testAccAWSBudgetsBudgetExists(configBasicUpdate, testAccProvider),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name", regexp.MustCompile(*configBasicUpdate.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicUpdate.BudgetType),
@@ -71,20 +71,20 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 	costFilterKey := "AZ"
 	name := "test-budget-"
-	configBasicDefaults := newBudgetTestConfigDefaults(name)
-	configBasicUpdate := newBudgetTestConfigUpdate(name)
+	configBasicDefaults := testAccAWSBudgetsBudgetConfigDefaults(name)
+	configBasicUpdate := testAccAWSBudgetsBudgetConfigUpdate(name)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		CheckDestroy: func(s *terraform.State) error {
-			return testCheckBudgetDestroy(name, testAccProvider)
+			return testAccAWSBudgetsBudgetDestroy(name, testAccProvider)
 		},
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBudgetsBudgetConfig_PrefixDefaults(configBasicDefaults, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
-					testBudgetExists(configBasicDefaults, testAccProvider),
+					testAccAWSBudgetsBudgetExists(configBasicDefaults, testAccProvider),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name_prefix", regexp.MustCompile(*configBasicDefaults.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicDefaults.BudgetType),
@@ -99,7 +99,7 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 			{
 				Config: testAccAWSBudgetsBudgetConfig_Prefix(configBasicUpdate, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
-					testBudgetExists(configBasicUpdate, testAccProvider),
+					testAccAWSBudgetsBudgetExists(configBasicUpdate, testAccProvider),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name_prefix", regexp.MustCompile(*configBasicUpdate.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicUpdate.BudgetType),
@@ -114,7 +114,7 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 	})
 }
 
-func testBudgetExists(config budgets.Budget, provider *schema.Provider) resource.TestCheckFunc {
+func testAccAWSBudgetsBudgetExists(config budgets.Budget, provider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources["aws_budgets_budget.foo"]
 		if !ok {
@@ -144,11 +144,11 @@ func testBudgetExists(config budgets.Budget, provider *schema.Provider) resource
 			return fmt.Errorf("budget limit incorrectly set %v != %v", *config.BudgetLimit.Amount, *b.Budget.BudgetLimit.Amount)
 		}
 
-		if err := checkBudgetCostTypes(config, *b.Budget.CostTypes); err != nil {
+		if err := testAccAWSBudgetsBudgetCheckCostTypes(config, *b.Budget.CostTypes); err != nil {
 			return err
 		}
 
-		if err := checkBudgetTimePeriod(*config.TimePeriod, *b.Budget.TimePeriod); err != nil {
+		if err := testAccAWSBudgetsBudgetCheckTimePeriod(*config.TimePeriod, *b.Budget.TimePeriod); err != nil {
 			return err
 		}
 
@@ -160,7 +160,7 @@ func testBudgetExists(config budgets.Budget, provider *schema.Provider) resource
 	}
 }
 
-func checkBudgetTimePeriod(configTimePeriod, timePeriod budgets.TimePeriod) error {
+func testAccAWSBudgetsBudgetCheckTimePeriod(configTimePeriod, timePeriod budgets.TimePeriod) error {
 	if configTimePeriod.End.Format("2006-01-02_15:04") != timePeriod.End.Format("2006-01-02_15:04") {
 		return fmt.Errorf("TimePeriodEnd not set properly '%v' should be '%v'", *timePeriod.End, *configTimePeriod.End)
 	}
@@ -172,7 +172,7 @@ func checkBudgetTimePeriod(configTimePeriod, timePeriod budgets.TimePeriod) erro
 	return nil
 }
 
-func checkBudgetCostTypes(config budgets.Budget, costTypes budgets.CostTypes) error {
+func testAccAWSBudgetsBudgetCheckCostTypes(config budgets.Budget, costTypes budgets.CostTypes) error {
 	if *costTypes.IncludeCredit != *config.CostTypes.IncludeCredit {
 		return fmt.Errorf("IncludeCredit not set properly '%v' should be '%v'", *costTypes.IncludeCredit, *config.CostTypes.IncludeCredit)
 	}
@@ -212,7 +212,7 @@ func checkBudgetCostTypes(config budgets.Budget, costTypes budgets.CostTypes) er
 	return nil
 }
 
-func testCheckBudgetDestroy(budgetName string, provider *schema.Provider) error {
+func testAccAWSBudgetsBudgetDestroy(budgetName string, provider *schema.Provider) error {
 	meta := provider.Meta()
 	client := meta.(*AWSClient).budgetconn
 	accountID := meta.(*AWSClient).accountid
@@ -227,7 +227,7 @@ func testCheckBudgetDestroy(budgetName string, provider *schema.Provider) error 
 	return nil
 }
 
-func newBudgetTestConfigUpdate(name string) budgets.Budget {
+func testAccAWSBudgetsBudgetConfigUpdate(name string) budgets.Budget {
 	dateNow := time.Now().UTC()
 	futureDate := dateNow.AddDate(0, 0, 14)
 	startDate := dateNow.AddDate(0, 0, -14)
@@ -262,7 +262,7 @@ func newBudgetTestConfigUpdate(name string) budgets.Budget {
 	}
 }
 
-func newBudgetTestConfigDefaults(name string) budgets.Budget {
+func testAccAWSBudgetsBudgetConfigDefaults(name string) budgets.Budget {
 	dateNow := time.Now().UTC()
 	futureDate := time.Date(2087, 6, 15, 00, 0, 0, 0, time.UTC)
 	startDate := dateNow.AddDate(0, 0, -14)
