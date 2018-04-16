@@ -100,34 +100,42 @@ func resourceAwsEMRCluster() *schema.Resource {
 						"key_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"subnet_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"additional_master_security_groups": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"additional_slave_security_groups": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"emr_managed_master_security_group": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"emr_managed_slave_security_group": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"instance_profile": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"service_access_security_group": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
