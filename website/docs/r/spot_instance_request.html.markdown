@@ -60,7 +60,7 @@ Spot Instance Requests support all the same arguments as
 * `block_duration_minutes` - (Optional) The required duration for the Spot instances, in minutes. This value must be a multiple of 60 (60, 120, 180, 240, 300, or 360).
   The duration period starts as soon as your Spot instance receives its instance ID. At the end of the duration period, Amazon EC2 marks the Spot instance for termination and provides a Spot instance termination notice, which gives the instance a two-minute warning before it terminates.
   Note that you can't specify an Availability Zone group or a launch group if you specify a duration.
-* `instance_interruption_behavior` - (Optional) Indicates whether a Spot instance stops or terminates when it is interrupted. Default is `terminate` as this is the current AWS behaviour.
+* `instance_interruption_behaviour` - (Optional) Indicates whether a Spot instance stops or terminates when it is interrupted. Default is `terminate` as this is the current AWS behaviour.
 
 ### Timeouts
 

@@ -51,6 +51,7 @@ Option blocks support the following:
 * `option_name` - (Required) The Name of the Option (e.g. MEMCACHED).
 * `option_settings` - (Optional) A list of option settings to apply.
 * `port` - (Optional) The Port number when connecting to the Option (e.g. 11211).
+* `version` - (Optional) The version of the option (e.g. 13.1.0.0).
 * `db_security_group_memberships` - (Optional) A list of DB Security Groups for which the option is enabled.
 * `vpc_security_group_memberships` - (Optional) A list of VPC Security Groups for which the option is enabled.
 

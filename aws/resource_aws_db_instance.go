@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsDbInstance() *schema.Resource {
@@ -351,6 +352,20 @@ func resourceAwsDbInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"enabled_cloudwatch_logs_exports": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						"audit",
+						"error",
+						"general",
+						"slowquery",
+					}, false),
+				},
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -408,6 +423,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		}
+
 		if attr, ok := d.GetOk("kms_key_id"); ok {
 			opts.KmsKeyId = aws.String(attr.(string))
 			if arnParts := strings.Split(v.(string), ":"); len(arnParts) >= 4 {
@@ -460,6 +479,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
 			opts.DBSubnetGroupName = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
 		}
 
 		if attr, ok := d.GetOk("engine"); ok {
@@ -628,6 +651,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		}
+
 		if attr, ok := d.GetOk("iops"); ok {
 			opts.Iops = aws.Int64(int64(attr.(int)))
 		}
@@ -773,6 +800,10 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	if v.MonitoringRoleArn != nil {
 		d.Set("monitoring_role_arn", v.MonitoringRoleArn)
+	}
+
+	if err := d.Set("enabled_cloudwatch_logs_exports", flattenStringList(v.EnabledCloudwatchLogsExports)); err != nil {
+		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
 	}
 
 	// list tags for resource
@@ -1020,6 +1051,12 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
+	if d.HasChange("enabled_cloudwatch_logs_exports") && !d.IsNewResource() {
+		d.SetPartial("enabled_cloudwatch_logs_exports")
+		req.CloudwatchLogsExportConfiguration = buildCloudwatchLogsExportConfiguration(d)
+		requestUpdate = true
+	}
+
 	if d.HasChange("iam_database_authentication_enabled") {
 		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		requestUpdate = true
@@ -1151,10 +1188,44 @@ func resourceAwsDbInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.St
 	}
 }
 
+func buildCloudwatchLogsExportConfiguration(d *schema.ResourceData) *rds.CloudwatchLogsExportConfiguration {
+
+	oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
+	o := oraw.([]interface{})
+	n := nraw.([]interface{})
+
+	create, disable := diffCloudwatchLogsExportConfiguration(o, n)
+
+	return &rds.CloudwatchLogsExportConfiguration{
+		EnableLogTypes:  expandStringList(create),
+		DisableLogTypes: expandStringList(disable),
+	}
+}
+
+func diffCloudwatchLogsExportConfiguration(old, new []interface{}) ([]interface{}, []interface{}) {
+	create := make([]interface{}, 0)
+	disable := make([]interface{}, 0)
+
+	for _, n := range new {
+		if _, contains := sliceContainsString(old, n.(string)); !contains {
+			create = append(create, n)
+		}
+	}
+
+	for _, o := range old {
+		if _, contains := sliceContainsString(new, o.(string)); !contains {
+			disable = append(disable, o)
+		}
+	}
+
+	return create, disable
+}
+
 // Database instance status: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Status.html
 var resourceAwsDbInstanceCreatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
+	"configuring-log-exports",
 	"creating",
 	"maintenance",
 	"modifying",
@@ -1170,6 +1241,7 @@ var resourceAwsDbInstanceDeletePendingStates = []string{
 	"available",
 	"backing-up",
 	"configuring-enhanced-monitoring",
+	"configuring-log-exports",
 	"creating",
 	"deleting",
 	"incompatible-parameters",
@@ -1183,6 +1255,7 @@ var resourceAwsDbInstanceDeletePendingStates = []string{
 var resourceAwsDbInstanceUpdatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
+	"configuring-log-exports",
 	"creating",
 	"maintenance",
 	"modifying",

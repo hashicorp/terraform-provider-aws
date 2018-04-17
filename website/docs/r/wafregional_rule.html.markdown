@@ -46,7 +46,7 @@ The following arguments are supported:
 
 ### `predicate`
 
-See [docs](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-wafregional-rule-predicates.html)
+See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_Predicate.html) for more information.
 
 #### Arguments
 
