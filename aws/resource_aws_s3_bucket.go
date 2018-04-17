@@ -246,7 +246,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 									"days": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+										ValidateFunc: validation.IntAtLeast(0),
 									},
 									"expired_object_delete_marker": {
 										Type:     schema.TypeBool,

@@ -715,6 +715,39 @@ func TestAccAWSS3Bucket_Lifecycle(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3Bucket_LifecycleExpireMarkerOnly(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigWithLifecycleExpireMarker(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.0.id", "id1"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.0.prefix", "path1/"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.0.expiration.3591068768.days", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.0.expiration.3591068768.date", ""),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.0.expiration.3591068768.expired_object_delete_marker", "true"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSS3Bucket_Replication(t *testing.T) {
 	rInt := acctest.RandInt()
 
@@ -1706,6 +1739,24 @@ resource "aws_s3_bucket" "bucket" {
 
 		expiration {
 			date = "2016-01-12"
+		}
+	}
+}
+`, randInt)
+}
+
+func testAccAWSS3BucketConfigWithLifecycleExpireMarker(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+	bucket = "tf-test-bucket-%d"
+	acl = "private"
+	lifecycle_rule {
+		id = "id1"
+		prefix = "path1/"
+		enabled = true
+
+		expiration {
+			expired_object_delete_marker = "true"
 		}
 	}
 }
