@@ -86,7 +86,11 @@ for more information.
 Default is `false`.
 * `db_subnet_group_name` - (Optional) Name of DB subnet group. DB instance will
 be created in the VPC associated with the DB subnet group. If unspecified, will
-be created in the `default` VPC, or in EC2 Classic, if available.
+be created in the `default` VPC, or in EC2 Classic, if available. When working
+with read replicas, it needs to be specified only if the source database
+specifies an instance in another AWS Region. See [DBSubnetGroupName in API
+action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
+for additonal read replica contraints.
 * `enabled_cloudwatch_logs_exports` - (Optional) Name list of enable log type for exporting to cloudwatch logs. If omitted, any logs will not be exported to cloudwatch logs.
    Either of the following is supported: `audit`, `error`, `general`, `slowquery`.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
