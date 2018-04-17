@@ -30,6 +30,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_athena_database: Handle database names with uppercase and underscores [GH-4133]
+* resource/aws_codebuild_project: Retry UpdateProject for IAM eventual consistency [GH-4238]
 * resource/aws_codedeploy_deployment_config: Force new resource for `minimum_healthy_hosts` updates [GH-4194]
 * resource/aws_elasticache_replication_group: Increase default create timeout to 60 minutes [GH-4093]
 * resource/aws_emr_cluster: Force new resource if any of the `ec2_attributes` change [GH-4218]
