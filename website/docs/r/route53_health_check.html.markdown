@@ -39,23 +39,25 @@ resource "aws_route53_health_check" "foo" {
 ## CloudWatch Alarm Example
 
 ```hcl
-resource "aws_cloudwatch_metric_alarm" "foobar" {
-  alarm_name          = "terraform-test-foobar5"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
-  period              = "120"
-  statistic           = "Average"
-  threshold           = "80"
-  alarm_description   = "This metric monitors ec2 cpu utilization"
+resource "aws_cloudwatch_metric_alarm" "foo" {
+  provider            = "aws.virginia"
+  alarm_name          = "foo health check"
+  alarm_description   = "foo health check"
+  namespace           = "AWS/Route53"
+  metric_name         = "HealthCheckStatus"
+  evaluation_periods  = "1"
+  comparison_operator = "LessThanThreshold"
+  period              = "60"
+  threshold           = "1.0"
+  statistic           = "Minimum"
+
+  dimensions {
+    HealthCheckId = "${aws_route53_health_check.foo.id}"
+  }
 }
 
 resource "aws_route53_health_check" "foo" {
-  type                            = "CLOUDWATCH_METRIC"
-  cloudwatch_alarm_name           = "${aws_cloudwatch_metric_alarm.foobar.alarm_name}"
-  cloudwatch_alarm_region         = "us-west-2"
-  insufficient_data_health_status = "Healthy"
+  // nothing to add or change
 }
 ```
 
