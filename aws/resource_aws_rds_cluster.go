@@ -295,6 +295,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			Tags:                tags,
 		}
 
+		if attr, ok := d.GetOk("engine_version"); ok {
+			opts.EngineVersion = aws.String(attr.(string))
+		}
+
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
 			opts.AvailabilityZones = expandStringList(attr.List())
 		}
