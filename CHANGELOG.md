@@ -33,6 +33,7 @@ BUG FIXES:
 * resource/aws_elasticache_replication_group: Increase default create timeout to 60 minutes [GH-4093]
 * resource/aws_iam_role: Suppress `NoSuchEntity` errors while detaching policies from role during deletion [GH-4209]
 * resource/aws_route53_record: Improved handling of non-alphanumeric record names [GH-4183]
+* resource/aws_spot_instance_request: Fix `instance_interuption_behaviour` hibernate and stop handling with placement [GH-1986]
 * resource/aws_vpc_dhcp_options: Handle plural and non-plural `InvalidDhcpOptionsID.NotFound` errors [GH-4136]
 
 ## 1.14.1 (April 11, 2018)
