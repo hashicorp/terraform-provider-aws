@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSpotInstanceRequest() *schema.Resource {
@@ -81,8 +82,13 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 			s["instance_interruption_behaviour"] = &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "terminate",
+				Default:  ec2.InstanceInterruptionBehaviorTerminate,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.InstanceInterruptionBehaviorTerminate,
+					ec2.InstanceInterruptionBehaviorStop,
+					ec2.InstanceInterruptionBehaviorHibernate,
+				}, false),
 			}
 			return s
 		}(),
@@ -115,7 +121,6 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 			ImageId:             instanceOpts.ImageID,
 			InstanceType:        instanceOpts.InstanceType,
 			KeyName:             instanceOpts.KeyName,
-			Placement:           instanceOpts.SpotPlacement,
 			SecurityGroupIds:    instanceOpts.SecurityGroupIDs,
 			SecurityGroups:      instanceOpts.SecurityGroups,
 			SubnetId:            instanceOpts.SubnetID,
@@ -130,6 +135,11 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 
 	if v, ok := d.GetOk("launch_group"); ok {
 		spotOpts.LaunchGroup = aws.String(v.(string))
+	}
+
+	// Placement GroupName can only be specified when instanceInterruptionBehavior is not set or set to 'terminate'
+	if v, exists := d.GetOkExists("instance_interruption_behaviour"); v.(string) == ec2.InstanceInterruptionBehaviorTerminate || !exists {
+		spotOpts.LaunchSpecification.Placement = instanceOpts.SpotPlacement
 	}
 
 	// Make the spot instance request
