@@ -44,7 +44,7 @@ resource "aws_iam_policy_attachment" "test-attach" {
 
 The following arguments are supported:
 
-* `name` 		(Required) - The name of the policy. This cannot be an empty string.
+* `name` 		(Required) - The name of the attachment. This cannot be an empty string.
 * `users`		(Optional) - The user(s) the policy should be applied to
 * `roles`		(Optional) - The role(s) the policy should be applied to
 * `groups`		(Optional) - The group(s) the policy should be applied to
