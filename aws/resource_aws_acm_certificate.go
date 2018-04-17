@@ -54,6 +54,21 @@ func resourceAwsAcmCertificate() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"resource_record_name": {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use `certificate_details[0].resource_record_name` instead",
+						},
+						"resource_record_type": {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use `certificate_details[0].resource_record_type` instead",
+						},
+						"resource_record_value": {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use `certificate_details[0].resource_record_value` instead",
+						},
 					},
 				},
 			},
@@ -99,6 +114,12 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				},
 			},
 			"tags": tagsSchema(),
+			"validation_emails": {
+				Type:       schema.TypeList,
+				Computed:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: "Use `certificate_details[0].validation_emails` instead",
+			},
 		},
 	}
 }
