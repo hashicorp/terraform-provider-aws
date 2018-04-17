@@ -105,14 +105,14 @@ The following arguments are supported:
 * `subnet_group_name` - (Optional) The name of the cache subnet group to be used for the replication group.
 * `security_group_names` - (Optional) A list of cache security group names to associate with this replication group.
 * `security_group_ids` - (Optional) One or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud
-* `snapshot_arns` – (Optional) A single-element string list containing an
+* `snapshot_arns` – (Optional) A single-element string list containing an
 Amazon Resource Name (ARN) of a Redis RDB snapshot file stored in Amazon S3.
 Example: `arn:aws:s3:::my_bucket/snapshot1.rdb`
 * `snapshot_name` - (Optional) The name of a snapshot from which to restore data into the new node group. Changing the `snapshot_name` forces a new resource.
-* `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
+* `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
 on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC).
 The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09:00`
-* `notification_topic_arn` – (Optional) An Amazon Resource Name (ARN) of an
+* `notification_topic_arn` – (Optional) An Amazon Resource Name (ARN) of an
 SNS topic to send ElastiCache notifications to. Example:
 `arn:aws:sns:us-east-1:012345678999:my_sns_topic`
 * `snapshot_window` - (Optional, Redis only) The daily time range (in UTC) during which ElastiCache will
