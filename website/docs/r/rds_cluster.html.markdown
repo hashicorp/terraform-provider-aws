@@ -104,6 +104,7 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
   with the Cluster
 * `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot.
 * `storage_encrypted` - (Optional) Specifies whether the DB cluster is encrypted. The default is `false` if not specified.
+* `replication_source_identifier` - (Optional) ARN of a source DB cluster or DB instance if this DB cluster is to be created as a Read Replica.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications
      are applied immediately, or during the next maintenance window. Default is
      `false`. See [Amazon RDS Documentation for more information.](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html)
@@ -140,7 +141,7 @@ load-balanced across replicas
 * `status` - The RDS instance status
 * `master_username` - The master username for the database
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted
-* `replication_source_identifier` - ARN  of the source DB cluster if this DB cluster is created as a Read Replica.
+* `replication_source_identifier` - ARN of the source DB cluster or DB instance if this DB cluster is created as a Read Replica.
 * `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
