@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -79,15 +80,13 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 		description = aws.String(d.Get("description").(string))
 	}
 
-	var policy *string
-	if d.Get("policy").(string) != "" {
-		policy = aws.String(d.Get("policy").(string))
-	}
-
 	params := &apigateway.CreateRestApiInput{
 		Name:        aws.String(d.Get("name").(string)),
 		Description: description,
-		Policy:      policy,
+	}
+
+	if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
+		params.Policy = aws.String(v.(string))
 	}
 
 	binaryMediaTypes, binaryMediaTypesOk := d.GetOk("binary_media_types")
@@ -164,8 +163,18 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("name", api.Name)
 	d.Set("description", api.Description)
-	d.Set("policy", api.Policy)
 
+	if api.Policy != nil {
+		policy, err := url.QueryUnescape(*api.Policy)
+		log.Printf("[DEBUG] Decoded Policy: %s", policy)
+		if err != nil {
+			return err
+		}
+		if err := d.Set("policy", policy); err != nil {
+			return err
+		}
+	}
+	log.Printf("[DEBUG] Api Policy %s", d.Get("policy"))
 	d.Set("binary_media_types", api.BinaryMediaTypes)
 	if api.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", -1)
