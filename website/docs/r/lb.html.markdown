@@ -14,8 +14,9 @@ Provides a Load Balancer resource.
 
 ## Example Usage
 
+### Application Load Balancer
+
 ```hcl
-# Create a new application load balancer
 resource "aws_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
@@ -37,8 +38,9 @@ resource "aws_lb" "test" {
 }
 ```
 
+### Network Load Balancer
+
 ```hcl
-# Create a new network load balancer
 resource "aws_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
@@ -49,6 +51,25 @@ resource "aws_lb" "test" {
 
   tags {
     Environment = "production"
+  }
+}
+```
+
+### Specifying Elastic IPs
+
+```hcl
+resource "aws_lb" "example" {
+  name               = "example"
+  load_balancer_type = "network"
+
+  subnet_mapping {
+    subnet_id    = "${aws_subnet.example1.id}"
+    allocation_id = "${aws_eip.example1.id}"
+  }
+
+  subnet_mapping {
+    subnet_id    = "${aws_subnet.example2.id}"
+    allocation_id = "${aws_eip.example2.id}"
   }
 }
 ```
