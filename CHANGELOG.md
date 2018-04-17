@@ -31,6 +31,7 @@ BUG FIXES:
 * resource/aws_athena_database: Handle database names with uppercase and underscores [GH-4133]
 * resource/aws_codedeploy_deployment_config: Force new resource for `minimum_healthy_hosts` updates [GH-4194]
 * resource/aws_elasticache_replication_group: Increase default create timeout to 60 minutes [GH-4093]
+* resource/aws_iam_role: Suppress `NoSuchEntity` errors while detaching policies from role during deletion [GH-4209]
 * resource/aws_route53_record: Improved handling of non-alphanumeric record names [GH-4183]
 * resource/aws_vpc_dhcp_options: Handle plural and non-plural `InvalidDhcpOptionsID.NotFound` errors [GH-4136]
 
