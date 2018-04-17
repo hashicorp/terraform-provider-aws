@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_api_gateway_rest_api` [GH-4172]
 * **New Data Source:** `aws_cloudwatch_log_group` [GH-4167]
+* **New Data Source:** `aws_cognito_user_pools` [GH-4212]
 * **New Data Source:** `aws_sqs_queue` [GH-2311]
 * **New Resource:** `aws_directory_service_conditional_forwarder` [GH-4071]
 * **New Resource:** `aws_glue_connection` [GH-4016]
