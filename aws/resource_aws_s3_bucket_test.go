@@ -1189,6 +1189,10 @@ func testAccCheckAWSS3BucketLogging(n, b, p string) resource.TestCheckFunc {
 			return fmt.Errorf("GetBucketLogging error: %v", err)
 		}
 
+		if out.LoggingEnabled == nil {
+			return fmt.Errorf("logging not enabled for bucket: %s", rs.Primary.ID)
+		}
+
 		tb, _ := s.RootModule().Resources[b]
 
 		if v := out.LoggingEnabled.TargetBucket; v == nil {
