@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"regexp"
 	"time"
@@ -317,7 +318,11 @@ func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
 					RoleName:  aws.String(d.Id()),
 				})
 				if err != nil {
-					return fmt.Errorf("Error deleting IAM Role %s: %s", d.Id(), err)
+					if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+						log.Printf("[WARN] Role policy attachment (%s) was already removed from role (%s)", aws.StringValue(parn), d.Id())
+					} else {
+						return fmt.Errorf("Error deleting IAM Role %s: %s", d.Id(), err)
+					}
 				}
 			}
 		}
@@ -342,7 +347,11 @@ func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
 					RoleName:   aws.String(d.Id()),
 				})
 				if err != nil {
-					return fmt.Errorf("Error deleting inline policy of IAM Role %s: %s", d.Id(), err)
+					if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+						log.Printf("[WARN] Inline role policy (%s) was already removed from role (%s)", aws.StringValue(pname), d.Id())
+					} else {
+						return fmt.Errorf("Error deleting inline policy of IAM Role %s: %s", d.Id(), err)
+					}
 				}
 			}
 		}
