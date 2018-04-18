@@ -1,5 +1,9 @@
 ## 1.15.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_cloudfront_distribution: Please note the `cache_behavior` argument (an unordered list) has been marked deprecated in favor of the `ordered_cache_behavior` argument (an ordered list based on the Terraform configuration ordering). This is to support proper cache behavior precedence within a CloudFront distribution.
+
 FEATURES:
 
 * **New Data Source:** `aws_api_gateway_rest_api` [GH-4172]
@@ -17,6 +21,7 @@ ENHANCEMENTS:
 
 * data-source/aws_iam_server_certificate: Filter by `path_prefix` [GH-3801]
 * resource/aws_api_gateway_integration: Support VPC connection [GH-3428]
+* resource/aws_cloudfront_distribution: Added `ordered_cache_behavior` argument, deprecate `cache_behavior` [GH-4117]
 * resource/aws_db_instance: Support `enabled_cloudwatch_logs_exports` argument [GH-4111]
 * resource/aws_db_option_group: Support option version argument [GH-2590]
 * resource/aws_ecs_service: Support ServiceRegistries [GH-3906]
