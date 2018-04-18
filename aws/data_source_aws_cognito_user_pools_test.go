@@ -18,7 +18,8 @@ func TestAccDataSourceAwsCognitoUserPools_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsCognitoUserPoolsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.selected", "ids.#", "3"),
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.selected", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.selected", "arns.#", "2"),
 				),
 			},
 			{
@@ -32,7 +33,7 @@ func TestAccDataSourceAwsCognitoUserPools_basic(t *testing.T) {
 func testAccDataSourceAwsCognitoUserPoolsConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "main" {
-	count = 3
+	count = 2
 	name  = "%s"
 }
 
