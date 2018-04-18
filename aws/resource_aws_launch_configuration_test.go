@@ -87,14 +87,14 @@ func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationNoNameConfig,
+				Config: testAccAWSLaunchConfigurationNoNameConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.bar", &conf),
 					testAccCheckAWSLaunchConfigurationGeneratedNamePrefix("aws_launch_configuration.bar", "terraform-"),
 				),
 			},
 			{
-				Config: testAccAWSLaunchConfigurationPrefixNameConfig,
+				Config: testAccAWSLaunchConfigurationPrefixNameConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.baz", &conf),
 					testAccCheckAWSLaunchConfigurationGeneratedNamePrefix("aws_launch_configuration.baz", "tf-acc-test-"),
@@ -113,7 +113,7 @@ func TestAccAWSLaunchConfiguration_withBlockDevices(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfig,
+				Config: testAccAWSLaunchConfigurationConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.bar", &conf),
 					testAccCheckAWSLaunchConfigurationAttributes(&conf),
@@ -163,7 +163,7 @@ func TestAccAWSLaunchConfiguration_withSpotPrice(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationWithSpotPriceConfig,
+				Config: testAccAWSLaunchConfigurationWithSpotPriceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.bar", &conf),
 					resource.TestCheckResourceAttr("aws_launch_configuration.bar", "spot_price", "0.01"),
@@ -255,7 +255,7 @@ func TestAccAWSLaunchConfiguration_withEncryption(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationWithEncryption,
+				Config: testAccAWSLaunchConfigurationWithEncryption(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.baz", &conf),
 					testAccCheckAWSLaunchConfigurationWithEncryption(&conf),
@@ -274,14 +274,14 @@ func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationWithEncryption,
+				Config: testAccAWSLaunchConfigurationWithEncryption(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.baz", &conf),
 					resource.TestCheckResourceAttr("aws_launch_configuration.baz", "ebs_block_device.1393547169.volume_size", "9"),
 				),
 			},
 			{
-				Config: testAccAWSLaunchConfigurationWithEncryptionUpdated,
+				Config: testAccAWSLaunchConfigurationWithEncryptionUpdated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.baz", &conf),
 					resource.TestCheckResourceAttr("aws_launch_configuration.baz", "ebs_block_device.4131155854.volume_size", "10"),
@@ -307,6 +307,31 @@ func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_launch_configuration.bar", "ebs_block_device.#", "1"),
 					resource.TestCheckResourceAttr("aws_launch_configuration.bar", "ebs_block_device.3099842682.device_name", "/dev/sda2"),
 					resource.TestCheckResourceAttr("aws_launch_configuration.bar", "ebs_block_device.3099842682.no_device", "true"),
+				),
+			},
+		},
+	})
+}
+func TestAccAWSLaunchConfiguration_userData(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchConfigurationConfig_userData(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.bar", &conf),
+					resource.TestCheckResourceAttr("aws_launch_configuration.bar", "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchConfigurationConfig_userDataBase64(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.bar", &conf),
+					resource.TestCheckResourceAttr("aws_launch_configuration.bar", "user_data_base64", "aGVsbG8gd29ybGQ="),
 				),
 			},
 		},
@@ -435,17 +460,23 @@ func testAccCheckAWSLaunchConfigurationExists(n string, res *autoscaling.LaunchC
 
 func testAccAWSLaunchConfigurationConfig_ami() string {
 	return fmt.Sprintf(`
-data "aws_ami" "amazon_ami" {
+data "aws_ami" "ubuntu" {
   most_recent = true
-  owners = ["amazon"]
+  owners = ["099720109477"] # Canonical
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/ebs/ubuntu-precise-12.04-i386-server-2017*"]
+  }
 }
 `)
 }
+
 func testAccAWSLaunchConfigurationConfigWithRootBlockDevice(rInt int) string {
 	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
 resource "aws_launch_configuration" "bar" {
   name_prefix = "tf-acc-test-%d"
-  image_id = "${data.aws_ami.amazon_ami.id}"
+  image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "m1.small"
   user_data = "foobar-user-data"
   associate_public_ip_address = true
@@ -462,7 +493,7 @@ func testAccAWSLaunchConfigurationConfigWithRootBlockDeviceUpdated(rInt int) str
 	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
 resource "aws_launch_configuration" "bar" {
   name_prefix = "tf-acc-test-%d"
-  image_id = "${data.aws_ami.amazon_ami.id}"
+  image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "m1.small"
   user_data = "foobar-user-data"
   associate_public_ip_address = true
@@ -475,10 +506,11 @@ resource "aws_launch_configuration" "bar" {
 `, rInt)
 }
 
-var testAccAWSLaunchConfigurationConfig = fmt.Sprintf(`
+func testAccAWSLaunchConfigurationConfig() string {
+	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
 resource "aws_launch_configuration" "bar" {
   name = "tf-acc-test-%d"
-  image_id = "${data.aws_ami.amazon_ami.id}"
+  image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "m1.small"
   user_data = "foobar-user-data"
   associate_public_ip_address = true
@@ -502,59 +534,47 @@ resource "aws_launch_configuration" "bar" {
     virtual_name = "ephemeral0"
   }
 }
-
-data "aws_ami" "amazon_ami" {
-  most_recent = true
-  owners = ["amazon"]
-}
 `, rand.New(rand.NewSource(time.Now().UnixNano())).Int())
+}
 
-var testAccAWSLaunchConfigurationWithSpotPriceConfig = fmt.Sprintf(`
+func testAccAWSLaunchConfigurationWithSpotPriceConfig() string {
+	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
 resource "aws_launch_configuration" "bar" {
   name = "tf-acc-test-%d"
-  image_id = "${data.aws_ami.amazon_ami.id}"
+  image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
   spot_price = "0.01"
 }
-
-data "aws_ami" "amazon_ami" {
-  most_recent = true
-  owners = ["amazon"]
-}
 `, rand.New(rand.NewSource(time.Now().UnixNano())).Int())
+}
 
-const testAccAWSLaunchConfigurationNoNameConfig = `
+func testAccAWSLaunchConfigurationNoNameConfig() string {
+	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
 resource "aws_launch_configuration" "bar" {
-  image_id = "${data.aws_ami.amazon_ami.id}"
+  image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
   user_data = "foobar-user-data-change"
   associate_public_ip_address = false
 }
-
-data "aws_ami" "amazon_ami" {
-  most_recent = true
-  owners = ["amazon"]
+`)
 }
-`
 
-const testAccAWSLaunchConfigurationPrefixNameConfig = `
+func testAccAWSLaunchConfigurationPrefixNameConfig() string {
+	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
 resource "aws_launch_configuration" "baz" {
   name_prefix = "tf-acc-test-"
-  image_id = "${data.aws_ami.amazon_ami.id}"
+  image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
   user_data = "foobar-user-data-change"
   associate_public_ip_address = false
 }
-
-data "aws_ami" "amazon_ami" {
-  most_recent = true
-  owners = ["amazon"]
+`)
 }
-`
 
-const testAccAWSLaunchConfigurationWithEncryption = `
+func testAccAWSLaunchConfigurationWithEncryption() string {
+	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
 resource "aws_launch_configuration" "baz" {
-  image_id = "${data.aws_ami.amazon_ami.id}"
+  image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
   associate_public_ip_address = false
 
@@ -568,16 +588,13 @@ resource "aws_launch_configuration" "baz" {
     encrypted = true
   }
 }
-
-data "aws_ami" "amazon_ami" {
-  most_recent = true
-  owners = ["amazon"]
+`)
 }
-`
 
-const testAccAWSLaunchConfigurationWithEncryptionUpdated = `
+func testAccAWSLaunchConfigurationWithEncryptionUpdated() string {
+	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
 resource "aws_launch_configuration" "baz" {
-  image_id = "${data.aws_ami.amazon_ami.id}"
+  image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
   associate_public_ip_address = false
 
@@ -591,12 +608,8 @@ resource "aws_launch_configuration" "baz" {
     encrypted = true
   }
 }
-
-data "aws_ami" "amazon_ami" {
-  most_recent = true
-  owners = ["amazon"]
+`)
 }
-`
 
 func testAccAWSLaunchConfigurationConfig_withVpcClassicLink(rInt int) string {
 	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
@@ -615,7 +628,7 @@ resource "aws_security_group" "foo" {
 
 resource "aws_launch_configuration" "foo" {
   name = "tf-acc-test-%[1]d"
-  image_id = "${data.aws_ami.amazon_ami.id}"
+  image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
 
   vpc_classic_link_id = "${aws_vpc.foo.id}"
@@ -651,7 +664,7 @@ resource "aws_iam_instance_profile" "profile" {
 }
 
 resource "aws_launch_configuration" "bar" {
-  image_id             = "${data.aws_ami.amazon_ami.id}"
+  image_id             = "${data.aws_ami.ubuntu.id}"
   instance_type        = "t2.nano"
   iam_instance_profile = "${aws_iam_instance_profile.profile.name}"
 }
@@ -659,16 +672,7 @@ resource "aws_launch_configuration" "bar" {
 }
 
 func testAccAWSLaunchConfigurationConfigEbsNoDevice(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/ebs/ubuntu-precise-12.04-i386-server-*"]
-  }
-  owners = ["099720109477"] # Canonical
-}
-
+	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
 resource "aws_launch_configuration" "bar" {
   name_prefix = "tf-acc-test-%d"
   image_id = "${data.aws_ami.ubuntu.id}"
@@ -679,4 +683,26 @@ resource "aws_launch_configuration" "bar" {
   }
 }
 `, rInt)
+}
+
+func testAccAWSLaunchConfigurationConfig_userData() string {
+	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+resource "aws_launch_configuration" "bar" {
+  image_id = "${data.aws_ami.ubuntu.id}"
+  instance_type = "t2.micro"
+  user_data = "foo:-with-character's"
+  associate_public_ip_address = false
+}
+`)
+}
+
+func testAccAWSLaunchConfigurationConfig_userDataBase64() string {
+	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+resource "aws_launch_configuration" "bar" {
+  image_id = "${data.aws_ami.ubuntu.id}"
+  instance_type = "t2.micro"
+  user_data_base64 = "${base64encode("hello world")}"
+  associate_public_ip_address = false
+}
+`)
 }

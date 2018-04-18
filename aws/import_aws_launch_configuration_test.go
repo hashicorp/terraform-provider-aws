@@ -15,7 +15,7 @@ func TestAccAWSLaunchConfiguration_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSLaunchConfigurationNoNameConfig,
+				Config: testAccAWSLaunchConfigurationNoNameConfig(),
 			},
 
 			resource.TestStep{
