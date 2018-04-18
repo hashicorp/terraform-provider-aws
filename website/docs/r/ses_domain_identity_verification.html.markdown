@@ -16,6 +16,28 @@ deploy the required DNS verification records, and wait for verification to compl
 
 ~> **WARNING:** This resource implements a part of the verification workflow. It does not represent a real-world entity in AWS, therefore changing or deleting this resource on its own has no immediate effect.
 
+## Example Usage
+
+```hcl
+resource "aws_ses_domain_identity" "example" {
+  domain = "example.com"
+}
+
+resource "aws_route53_record" "example_amazonses_verification_record" {
+  zone_id = "${aws_route53_zone.example.id}"
+  name    = "_amazonses.${aws_route53_zone.example.name}"
+  type    = "TXT"
+  ttl     = "600"
+  records = ["${aws_ses_domain_identity.example.verification_token}"]
+}
+
+resource "aws_ses_domain_identity_verification" "example_verification" {
+  domain = "${aws_ses_domain_identity.example.id}"
+
+  depends_on = ["aws_route53_record.example_amazonses_verification_record"]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -35,23 +57,3 @@ The following attributes are exported:
 configuration options:
 
 - `create` - (Default `45m`) How long to wait for a domain identity to be verified.
-
-## Example Usage
-
-```hcl
-resource "aws_ses_domain_identity" "example" {
-  domain = "example.com"
-}
-
-resource "aws_route53_record" "example_amazonses_verification_record" {
-  zone_id = "ABCDEFGHIJ123"
-  name    = "_amazonses.example.com"
-  type    = "TXT"
-  ttl     = "600"
-  records = ["${aws_ses_domain_identity.example.verification_token}"]
-}
-
-resource "aws_ses_domain_identity_verification" "example_verification" {
-  domain = "${aws_ses_domain_identity.example.id}"
-}
-```

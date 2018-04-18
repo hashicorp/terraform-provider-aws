@@ -108,7 +108,7 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 			return fmt.Errorf("SES Domain Identity %s not found in AWS", domain)
 		}
 
-		if *response.VerificationAttributes[domain].VerificationStatus != "Success" {
+		if aws.StringValue(response.VerificationAttributes[domain].VerificationStatus) != ses.VerificationStatusSuccess {
 			return fmt.Errorf("SES Domain Identity %s not successfully verified.", domain)
 		}
 
@@ -130,8 +130,9 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 
 func testAccAwsSesDomainIdentityVerification_basic(rootDomain string, domain string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_zone" "zone" {
+data "aws_route53_zone" "test" {
 	name = "%s."
+	private_zone = false
 }
 
 resource "aws_ses_domain_identity" "test" {
@@ -139,7 +140,7 @@ resource "aws_ses_domain_identity" "test" {
 }
 
 resource "aws_route53_record" "domain_identity_verification" {
-	zone_id = "${aws_route53_zone.zone.zone_id}"
+	zone_id = "${data.aws_route53_zone.test.id}"
 	name = "_amazonses.${aws_ses_domain_identity.test.id}"
 	type = "TXT"
 	ttl = "600"
@@ -148,6 +149,8 @@ resource "aws_route53_record" "domain_identity_verification" {
 
 resource "aws_ses_domain_identity_verification" "test" {
 	domain = "${aws_ses_domain_identity.test.id}"
+
+	depends_on = ["aws_route53_record.domain_identity_verification"]
 }
 `, rootDomain, domain)
 }
