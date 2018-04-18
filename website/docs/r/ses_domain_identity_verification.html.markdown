@@ -25,7 +25,7 @@ resource "aws_ses_domain_identity" "example" {
 
 resource "aws_route53_record" "example_amazonses_verification_record" {
   zone_id = "${aws_route53_zone.example.id}"
-  name    = "_amazonses.${aws_route53_zone.example.name}"
+  name    = "_amazonses.${aws_ses_domain_identity.example.id}"
   type    = "TXT"
   ttl     = "600"
   records = ["${aws_ses_domain_identity.example.verification_token}"]
