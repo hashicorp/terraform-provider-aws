@@ -470,6 +470,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_opsworks_rds_db_instance":                 resourceAwsOpsworksRdsDbInstance(),
 			"aws_organizations_organization":               resourceAwsOrganizationsOrganization(),
 			"aws_organizations_account":                    resourceAwsOrganizationsAccount(),
+			"aws_organizations_policy":                     resourceAwsOrganizationsPolicy(),
 			"aws_placement_group":                          resourceAwsPlacementGroup(),
 			"aws_proxy_protocol_policy":                    resourceAwsProxyProtocolPolicy(),
 			"aws_rds_cluster":                              resourceAwsRDSCluster(),
