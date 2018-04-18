@@ -13,16 +13,19 @@ Provides a resource to manage an [AWS Organizations policy](https://docs.aws.ama
 ## Example Usage
 
 ```hcl
-data "aws_iam_policy_document" "example" {
-  statement {
-    actions   = ["*"]
-    resources = ["*"]
+resource "aws_organizations_policy" "example" {
+  name    = "example"
+
+  content = <<CONTENT
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
   }
 }
-
-resource "aws_organizations_policy" "example" {
-  content = "${data.aws_iam_policy_document.example.json}"
-  name    = "example"
+CONTENT
 }
 ```
 
