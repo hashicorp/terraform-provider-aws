@@ -239,7 +239,9 @@ var testAccAWSIAMPolicyDocumentExpectedJSON = `{
       "Sid": "",
       "Effect": "Allow",
       "Action": "kinesis:*",
-      "Principal": "*"
+      "Principal": {
+        "AWS": "*"
+      }
     },
     {
       "Sid": "",
@@ -389,7 +391,9 @@ var testAccAWSIAMPolicyDocumentSourceExpectedJSON = `{
       "Sid": "",
       "Effect": "Allow",
       "Action": "kinesis:*",
-      "Principal": "*"
+      "Principal": {
+        "AWS": "*"
+      }
     },
     {
       "Sid": "",
