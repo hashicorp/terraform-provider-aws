@@ -11,6 +11,7 @@ FEATURES:
 * **New Resource:** `aws_glue_job` [GH-4028]
 * **New Resource:** `aws_iam_service_linked_role` [GH-2985]
 * **New Resource:** `aws_launch_template` [GH-2927]
+* **New Resource:** `aws_ses_domain_identity_verification` [GH-4108]
 
 ENHANCEMENTS:
 
