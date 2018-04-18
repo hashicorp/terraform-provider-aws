@@ -1,4 +1,4 @@
-## 1.15.0 (Unreleased)
+## 1.15.0 (April 18, 2018)
 
 NOTES:
 
@@ -6,47 +6,47 @@ NOTES:
 
 FEATURES:
 
-* **New Data Source:** `aws_api_gateway_rest_api` [GH-4172]
-* **New Data Source:** `aws_cloudwatch_log_group` [GH-4167]
-* **New Data Source:** `aws_cognito_user_pools` [GH-4212]
-* **New Data Source:** `aws_sqs_queue` [GH-2311]
-* **New Resource:** `aws_directory_service_conditional_forwarder` [GH-4071]
-* **New Resource:** `aws_glue_connection` [GH-4016]
-* **New Resource:** `aws_glue_job` [GH-4028]
-* **New Resource:** `aws_iam_service_linked_role` [GH-2985]
-* **New Resource:** `aws_launch_template` [GH-2927]
-* **New Resource:** `aws_ses_domain_identity_verification` [GH-4108]
+* **New Data Source:** `aws_api_gateway_rest_api` ([#4172](https://github.com/terraform-providers/terraform-provider-aws/issues/4172))
+* **New Data Source:** `aws_cloudwatch_log_group` ([#4167](https://github.com/terraform-providers/terraform-provider-aws/issues/4167))
+* **New Data Source:** `aws_cognito_user_pools` ([#4212](https://github.com/terraform-providers/terraform-provider-aws/issues/4212))
+* **New Data Source:** `aws_sqs_queue` ([#2311](https://github.com/terraform-providers/terraform-provider-aws/issues/2311))
+* **New Resource:** `aws_directory_service_conditional_forwarder` ([#4071](https://github.com/terraform-providers/terraform-provider-aws/issues/4071))
+* **New Resource:** `aws_glue_connection` ([#4016](https://github.com/terraform-providers/terraform-provider-aws/issues/4016))
+* **New Resource:** `aws_glue_job` ([#4028](https://github.com/terraform-providers/terraform-provider-aws/issues/4028))
+* **New Resource:** `aws_iam_service_linked_role` ([#2985](https://github.com/terraform-providers/terraform-provider-aws/issues/2985))
+* **New Resource:** `aws_launch_template` ([#2927](https://github.com/terraform-providers/terraform-provider-aws/issues/2927))
+* **New Resource:** `aws_ses_domain_identity_verification` ([#4108](https://github.com/terraform-providers/terraform-provider-aws/issues/4108))
 
 ENHANCEMENTS:
 
-* data-source/aws_iam_server_certificate: Filter by `path_prefix` [GH-3801]
-* resource/aws_api_gateway_integration: Support VPC connection [GH-3428]
-* resource/aws_cloudfront_distribution: Added `ordered_cache_behavior` argument, deprecate `cache_behavior` [GH-4117]
-* resource/aws_db_instance: Support `enabled_cloudwatch_logs_exports` argument [GH-4111]
-* resource/aws_db_option_group: Support option version argument [GH-2590]
-* resource/aws_ecs_service: Support ServiceRegistries [GH-3906]
-* resource/aws_iam_service_linked_role: Support `custom_suffix` and `description` arguments [GH-4188]
-* resource/aws_service_discovery_service: Support `health_check_custom_config` argument [GH-4083]
-* resource/aws_spot_fleet_request: Support configurable delete timeout [GH-3940]
-* resource/aws_spot_instance_request: Support optionally fetching password data [GH-4189]
-* resource/aws_waf_rate_based_rule: Support `RegexMatch` predicate type [GH-4069]
-* resource/aws_waf_rule: Support `RegexMatch` predicate type [GH-4069]
-* resource/aws_wafregional_rate_based_rule: Support `RegexMatch` predicate type [GH-4069]
+* data-source/aws_iam_server_certificate: Filter by `path_prefix` ([#3801](https://github.com/terraform-providers/terraform-provider-aws/issues/3801))
+* resource/aws_api_gateway_integration: Support VPC connection ([#3428](https://github.com/terraform-providers/terraform-provider-aws/issues/3428))
+* resource/aws_cloudfront_distribution: Added `ordered_cache_behavior` argument, deprecate `cache_behavior` ([#4117](https://github.com/terraform-providers/terraform-provider-aws/issues/4117))
+* resource/aws_db_instance: Support `enabled_cloudwatch_logs_exports` argument ([#4111](https://github.com/terraform-providers/terraform-provider-aws/issues/4111))
+* resource/aws_db_option_group: Support option version argument ([#2590](https://github.com/terraform-providers/terraform-provider-aws/issues/2590))
+* resource/aws_ecs_service: Support ServiceRegistries ([#3906](https://github.com/terraform-providers/terraform-provider-aws/issues/3906))
+* resource/aws_iam_service_linked_role: Support `custom_suffix` and `description` arguments ([#4188](https://github.com/terraform-providers/terraform-provider-aws/issues/4188))
+* resource/aws_service_discovery_service: Support `health_check_custom_config` argument ([#4083](https://github.com/terraform-providers/terraform-provider-aws/issues/4083))
+* resource/aws_spot_fleet_request: Support configurable delete timeout ([#3940](https://github.com/terraform-providers/terraform-provider-aws/issues/3940))
+* resource/aws_spot_instance_request: Support optionally fetching password data ([#4189](https://github.com/terraform-providers/terraform-provider-aws/issues/4189))
+* resource/aws_waf_rate_based_rule: Support `RegexMatch` predicate type ([#4069](https://github.com/terraform-providers/terraform-provider-aws/issues/4069))
+* resource/aws_waf_rule: Support `RegexMatch` predicate type ([#4069](https://github.com/terraform-providers/terraform-provider-aws/issues/4069))
+* resource/aws_wafregional_rate_based_rule: Support `RegexMatch` predicate type ([#4069](https://github.com/terraform-providers/terraform-provider-aws/issues/4069))
 
 BUG FIXES:
 
-* resource/aws_athena_database: Handle database names with uppercase and underscores [GH-4133]
-* resource/aws_codebuild_project: Retry UpdateProject for IAM eventual consistency [GH-4238]
-* resource/aws_codedeploy_deployment_config: Force new resource for `minimum_healthy_hosts` updates [GH-4194]
-* resource/aws_cognito_user_group: Fix `role_arn` updates [GH-4237]
-* resource/aws_elasticache_replication_group: Increase default create timeout to 60 minutes [GH-4093]
-* resource/aws_emr_cluster: Force new resource if any of the `ec2_attributes` change [GH-4218]
-* resource/aws_iam_role: Suppress `NoSuchEntity` errors while detaching policies from role during deletion [GH-4209]
-* resource/aws_lb: Force new resource if any of the `subnet_mapping` attributes change [GH-4086]
-* resource/aws_rds_cluster: Properly handle `engine_version` with `snapshot_identifier` [GH-4215]
-* resource/aws_route53_record: Improved handling of non-alphanumeric record names [GH-4183]
-* resource/aws_spot_instance_request: Fix `instance_interuption_behaviour` hibernate and stop handling with placement [GH-1986]
-* resource/aws_vpc_dhcp_options: Handle plural and non-plural `InvalidDhcpOptionsID.NotFound` errors [GH-4136]
+* resource/aws_athena_database: Handle database names with uppercase and underscores ([#4133](https://github.com/terraform-providers/terraform-provider-aws/issues/4133))
+* resource/aws_codebuild_project: Retry UpdateProject for IAM eventual consistency ([#4238](https://github.com/terraform-providers/terraform-provider-aws/issues/4238))
+* resource/aws_codedeploy_deployment_config: Force new resource for `minimum_healthy_hosts` updates ([#4194](https://github.com/terraform-providers/terraform-provider-aws/issues/4194))
+* resource/aws_cognito_user_group: Fix `role_arn` updates ([#4237](https://github.com/terraform-providers/terraform-provider-aws/issues/4237))
+* resource/aws_elasticache_replication_group: Increase default create timeout to 60 minutes ([#4093](https://github.com/terraform-providers/terraform-provider-aws/issues/4093))
+* resource/aws_emr_cluster: Force new resource if any of the `ec2_attributes` change ([#4218](https://github.com/terraform-providers/terraform-provider-aws/issues/4218))
+* resource/aws_iam_role: Suppress `NoSuchEntity` errors while detaching policies from role during deletion ([#4209](https://github.com/terraform-providers/terraform-provider-aws/issues/4209))
+* resource/aws_lb: Force new resource if any of the `subnet_mapping` attributes change ([#4086](https://github.com/terraform-providers/terraform-provider-aws/issues/4086))
+* resource/aws_rds_cluster: Properly handle `engine_version` with `snapshot_identifier` ([#4215](https://github.com/terraform-providers/terraform-provider-aws/issues/4215))
+* resource/aws_route53_record: Improved handling of non-alphanumeric record names ([#4183](https://github.com/terraform-providers/terraform-provider-aws/issues/4183))
+* resource/aws_spot_instance_request: Fix `instance_interuption_behaviour` hibernate and stop handling with placement ([#1986](https://github.com/terraform-providers/terraform-provider-aws/issues/1986))
+* resource/aws_vpc_dhcp_options: Handle plural and non-plural `InvalidDhcpOptionsID.NotFound` errors ([#4136](https://github.com/terraform-providers/terraform-provider-aws/issues/4136))
 
 ## 1.14.1 (April 11, 2018)
 
