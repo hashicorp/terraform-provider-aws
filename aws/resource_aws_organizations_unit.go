@@ -17,6 +17,7 @@ func resourceAwsOrganizationsUnit() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsOrganizationsUnitCreate,
 		Read:   resourceAwsOrganizationsUnitRead,
+		Update: resourceAwsOrganizationsUnitUpdate,
 		Delete: resourceAwsOrganizationsUnitDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -28,14 +29,11 @@ func resourceAwsOrganizationsUnit() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				// TODO remove
-				ForceNew:     true,
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"parent_id": {
-				// TODO remove
 				ForceNew:     true,
 				Type:         schema.TypeString,
 				Required:     true,
@@ -117,6 +115,26 @@ func resourceAwsOrganizationsUnitRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("arn", ou.Arn)
 	d.Set("name", ou.Name)
 	d.Set("parent_id", parentId)
+	return nil
+}
+
+func resourceAwsOrganizationsUnitUpdate(d *schema.ResourceData, meta interface{}) error {
+	if d.HasChange("name") {
+		conn := meta.(*AWSClient).organizationsconn
+
+		updateOpts := &organizations.UpdateOrganizationalUnitInput{
+			Name:                 aws.String(d.Get("name").(string)),
+			OrganizationalUnitId: aws.String(d.Id()),
+		}
+
+		log.Printf("[DEBUG] Organizational Unit update config: %#v", updateOpts)
+		resp, err := conn.UpdateOrganizationalUnit(updateOpts)
+		if err != nil {
+			return fmt.Errorf("Error creating organizational unit: %s", err)
+		}
+		log.Printf("[DEBUG] Organizational Unit update response: %#v", resp)
+	}
+
 	return nil
 }
 

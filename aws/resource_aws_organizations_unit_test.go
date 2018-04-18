@@ -39,6 +39,37 @@ func testAccAwsOrganizationsUnit_basic(t *testing.T) {
 	})
 }
 
+func testAccAwsOrganizationsUnitUpdate(t *testing.T) {
+	var unit organizations.OrganizationalUnit
+
+	rInt := acctest.RandInt()
+	name1 := fmt.Sprintf("tf_outest_%d", rInt)
+	name2 := fmt.Sprintf("tf_outest_%d", rInt+1)
+	resourceName := "aws_organizations_unit.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsUnitDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsUnitConfig(name1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsUnitExists(resourceName, &unit),
+					resource.TestCheckResourceAttr(resourceName, "name", name1),
+				),
+			},
+			{
+				Config: testAccAwsOrganizationsUnitConfig(name2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsUnitExists(resourceName, &unit),
+					resource.TestCheckResourceAttr(resourceName, "name", name2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsOrganizationsUnitDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
 

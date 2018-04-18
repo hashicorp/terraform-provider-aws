@@ -15,7 +15,8 @@ func TestAccAWSOrganizations(t *testing.T) {
 			"basic": testAccAwsOrganizationsAccount_basic,
 		},
 		"Unit": {
-			"basic": testAccAwsOrganizationsUnit_basic,
+			"basic":  testAccAwsOrganizationsUnit_basic,
+			"update": testAccAwsOrganizationsUnitUpdate,
 		},
 	}
 
