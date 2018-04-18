@@ -7,20 +7,25 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSourceAwsOrganizationRoot() *schema.Resource {
+func dataSourceAwsOrganizationUnit() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsOrganizationRootRead,
+		Read: dataSourceAwsOrganizationUnitRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"root": {
+				Type:     schema.TypeBool,
+				Default:  true,
+				Optional: true,
+			},
 		},
 	}
 }
 
-func dataSourceAwsOrganizationRootRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsOrganizationUnitRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).organizationsconn
 
 	input := &organizations.ListRootsInput{}
