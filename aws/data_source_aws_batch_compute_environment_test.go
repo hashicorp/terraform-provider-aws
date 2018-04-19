@@ -16,7 +16,6 @@ func TestAccAWSBatchDataSource_ecsCluster(t *testing.T) {
 			{
 				Config: testAccCheckAwsBatchComputeEnvironmentDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_batch_compute_environment.default", "ecs_cluster_arn", "VALID"),
 					resource.TestCheckResourceAttr("data.aws_batch_compute_environment.default", "type", "MANAGED"),
 					resource.TestCheckResourceAttr("data.aws_batch_compute_environment.default", "status", "VALID"),
 					resource.TestCheckResourceAttr("data.aws_batch_compute_environment.default", "state", "ENABLED"),
