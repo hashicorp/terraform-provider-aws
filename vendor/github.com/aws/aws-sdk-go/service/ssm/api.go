@@ -99,6 +99,10 @@ func (c *SSM) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *requ
 //   The Targets parameter includes too many tags. Remove one or more tags and
 //   try the command again.
 //
+//   * ErrCodeTooManyUpdates "TooManyUpdates"
+//   There are concurrent updates for a resource that supports one update at a
+//   time.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AddTagsToResource
 func (c *SSM) AddTagsToResource(input *AddTagsToResourceInput) (*AddTagsToResourceOutput, error) {
 	req, out := c.AddTagsToResourceRequest(input)
@@ -8279,6 +8283,10 @@ func (c *SSM) RemoveTagsFromResourceRequest(input *RemoveTagsFromResourceInput) 
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
+//
+//   * ErrCodeTooManyUpdates "TooManyUpdates"
+//   There are concurrent updates for a resource that supports one update at a
+//   time.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RemoveTagsFromResource
 func (c *SSM) RemoveTagsFromResource(input *RemoveTagsFromResourceInput) (*RemoveTagsFromResourceOutput, error) {
