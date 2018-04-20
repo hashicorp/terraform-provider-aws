@@ -12,7 +12,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
-	"github.com/mitchellh/go-homedir"
+	homedir "github.com/mitchellh/go-homedir"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -326,9 +326,10 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 				Key:    aws.String(key),
 			})
 		if err != nil {
-			return fmt.Errorf("Failed to get object tags (bucket: %s, key: %s): %s", bucket, key, err)
+			log.Printf("[DEBUG] Failed to get object tags (bucket: %s, key: %s): %s", bucket, key, err)
+		} else {
+			d.Set("tags", tagsToMapS3(tagResp.TagSet))
 		}
-		d.Set("tags", tagsToMapS3(tagResp.TagSet))
 	}
 
 	return nil
