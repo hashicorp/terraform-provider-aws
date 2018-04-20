@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/mitchellh/go-homedir"
@@ -101,15 +102,16 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
-					lambda.RuntimeNodejs43,
-					lambda.RuntimeNodejs610,
-					lambda.RuntimeJava8,
-					lambda.RuntimePython27,
-					lambda.RuntimePython36,
 					lambda.RuntimeDotnetcore10,
 					lambda.RuntimeDotnetcore20,
-					lambda.RuntimeNodejs43Edge,
 					lambda.RuntimeGo1X,
+					lambda.RuntimeJava8,
+					lambda.RuntimeNodejs43,
+					lambda.RuntimeNodejs43Edge,
+					lambda.RuntimeNodejs610,
+					lambda.RuntimeNodejs810,
+					lambda.RuntimePython27,
+					lambda.RuntimePython36,
 				}, false),
 			},
 			"timeout": {
@@ -527,7 +529,14 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("version", lastVersion)
 	d.Set("qualified_arn", lastQualifiedArn)
 
-	d.Set("invoke_arn", buildLambdaInvokeArn(*function.FunctionArn, meta.(*AWSClient).region))
+	invokeArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "apigateway",
+		Region:    meta.(*AWSClient).region,
+		AccountID: "lambda",
+		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", *function.FunctionArn),
+	}.String()
+	d.Set("invoke_arn", invokeArn)
 
 	if getFunctionOutput.Concurrency != nil {
 		d.Set("reserved_concurrent_executions", getFunctionOutput.Concurrency.ReservedConcurrentExecutions)
@@ -629,13 +638,14 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("dead_letter_config") {
 		dlcMaps := d.Get("dead_letter_config").([]interface{})
+		configReq.DeadLetterConfig = &lambda.DeadLetterConfig{
+			TargetArn: aws.String(""),
+		}
 		if len(dlcMaps) == 1 { // Schema guarantees either 0 or 1
 			dlcMap := dlcMaps[0].(map[string]interface{})
-			configReq.DeadLetterConfig = &lambda.DeadLetterConfig{
-				TargetArn: aws.String(dlcMap["target_arn"].(string)),
-			}
-			configUpdate = true
+			configReq.DeadLetterConfig.TargetArn = aws.String(dlcMap["target_arn"].(string))
 		}
+		configUpdate = true
 	}
 	if d.HasChange("tracing_config") {
 		tracingConfig := d.Get("tracing_config").([]interface{})

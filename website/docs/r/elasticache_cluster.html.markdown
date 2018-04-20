@@ -74,7 +74,7 @@ The following arguments are supported:
 See [Selecting a Cache Engine and Version](https://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/SelectEngine.html)
 in the AWS Documentation center for supported versions
 
-* `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
+* `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
 on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC).
 The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09:00`
 
@@ -106,7 +106,7 @@ names to associate with this cache cluster
      `false`. See [Amazon ElastiCache Documentation for more information.][1]
      (Available since v0.6.0)
 
-* `snapshot_arns` – (Optional) A single-element string list containing an
+* `snapshot_arns` – (Optional) A single-element string list containing an
 Amazon Resource Name (ARN) of a Redis RDB snapshot file stored in Amazon S3.
 Example: `arn:aws:s3:::my_bucket/snapshot1.rdb`
 
@@ -121,7 +121,7 @@ SnapshotRetentionLimit to 5, then a snapshot that was taken today will be retain
 before being deleted. If the value of SnapshotRetentionLimit is set to zero (0), backups are turned off.
 Please note that setting a `snapshot_retention_limit` is not supported on cache.t1.micro or cache.t2.* cache nodes
 
-* `notification_topic_arn` – (Optional) An Amazon Resource Name (ARN) of an
+* `notification_topic_arn` – (Optional) An Amazon Resource Name (ARN) of an
 SNS topic to send ElastiCache notifications to. Example:
 `arn:aws:sns:us-east-1:012345678999:my_sns_topic`
 

@@ -102,5 +102,6 @@ interpolation.
 * `tags` - A mapping of tags assigned to the Instance.
 * `tenancy` - The tenancy of the instance: `dedicated`, `default`, `host`.
 * `vpc_security_group_ids` - The associated security groups in a non-default VPC.
+* `credit_specification` - The credit specification of the Instance.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html

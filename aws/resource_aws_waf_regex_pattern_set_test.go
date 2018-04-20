@@ -11,7 +11,25 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSWafRegexPatternSet_basic(t *testing.T) {
+// Serialized acceptance tests due to WAF account limits
+// https://docs.aws.amazon.com/waf/latest/developerguide/limits.html
+func TestAccAWSWafRegexPatternSet(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"basic":          testAccAWSWafRegexPatternSet_basic,
+		"changePatterns": testAccAWSWafRegexPatternSet_changePatterns,
+		"noPatterns":     testAccAWSWafRegexPatternSet_noPatterns,
+		"disappears":     testAccAWSWafRegexPatternSet_disappears,
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tc(t)
+		})
+	}
+}
+
+func testAccAWSWafRegexPatternSet_basic(t *testing.T) {
 	var v waf.RegexPatternSet
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
@@ -34,7 +52,7 @@ func TestAccAWSWafRegexPatternSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegexPatternSet_changePatterns(t *testing.T) {
+func testAccAWSWafRegexPatternSet_changePatterns(t *testing.T) {
 	var before, after waf.RegexPatternSet
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
@@ -68,7 +86,7 @@ func TestAccAWSWafRegexPatternSet_changePatterns(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegexPatternSet_noPatterns(t *testing.T) {
+func testAccAWSWafRegexPatternSet_noPatterns(t *testing.T) {
 	var patternSet waf.RegexPatternSet
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
@@ -89,7 +107,7 @@ func TestAccAWSWafRegexPatternSet_noPatterns(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegexPatternSet_disappears(t *testing.T) {
+func testAccAWSWafRegexPatternSet_disappears(t *testing.T) {
 	var v waf.RegexPatternSet
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 

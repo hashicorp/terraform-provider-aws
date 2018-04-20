@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -172,6 +173,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 
 			// apply_immediately is used to determine when the update modifications
@@ -291,6 +293,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			Tags:                tags,
+		}
+
+		if attr, ok := d.GetOk("engine_version"); ok {
+			opts.EngineVersion = aws.String(attr.(string))
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
@@ -460,6 +466,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.DBClusterParameterGroupName = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("engine_version"); ok {
+			createOpts.EngineVersion = aws.String(attr.(string))
+		}
+
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
 			createOpts.VpcSecurityGroupIds = expandStringList(attr.List())
 		}
@@ -627,13 +637,15 @@ func flattenAwsRdsClusterResource(d *schema.ResourceData, meta interface{}, dbc 
 	}
 
 	// Fetch and save tags
-	arn, err := buildRDSClusterARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
-	if err != nil {
-		log.Printf("[DEBUG] Error building ARN for RDS Cluster (%s), not setting Tags", *dbc.DBClusterIdentifier)
-	} else {
-		if err := saveTagsRDS(conn, d, arn); err != nil {
-			log.Printf("[WARN] Failed to save tags for RDS Cluster (%s): %s", *dbc.DBClusterIdentifier, err)
-		}
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "rds",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
+	}.String()
+	if err := saveTagsRDS(conn, d, arn); err != nil {
+		log.Printf("[WARN] Failed to save tags for RDS Cluster (%s): %s", *dbc.DBClusterIdentifier, err)
 	}
 
 	return nil
@@ -734,12 +746,17 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if arn, err := buildRDSClusterARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region); err == nil {
-		if err := setTagsRDS(conn, d, arn); err != nil {
-			return err
-		} else {
-			d.SetPartial("tags")
-		}
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "rds",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
+	}.String()
+	if err := setTagsRDS(conn, d, arn); err != nil {
+		return err
+	} else {
+		d.SetPartial("tags")
 	}
 
 	return resourceAwsRDSClusterRead(d, meta)
@@ -838,19 +855,6 @@ func resourceAwsRDSClusterStateRefreshFunc(
 
 		return dbc, *dbc.Status, nil
 	}
-}
-
-func buildRDSClusterARN(identifier, partition, accountid, region string) (string, error) {
-	if partition == "" {
-		return "", fmt.Errorf("Unable to construct RDS Cluster ARN because of missing AWS partition")
-	}
-	if accountid == "" {
-		return "", fmt.Errorf("Unable to construct RDS Cluster ARN because of missing AWS Account ID")
-	}
-
-	arn := fmt.Sprintf("arn:%s:rds:%s:%s:cluster:%s", partition, region, accountid, identifier)
-	return arn, nil
-
 }
 
 func setIamRoleToRdsCluster(clusterIdentifier string, roleArn string, conn *rds.RDS) error {

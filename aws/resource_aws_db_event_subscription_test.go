@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,6 +16,7 @@ import (
 func TestAccAWSDBEventSubscription_basicUpdate(t *testing.T) {
 	var v rds.EventSubscription
 	rInt := acctest.RandInt()
+	rName := fmt.Sprintf("tf-acc-test-rds-event-subs-%d", rInt)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,26 +27,22 @@ func TestAccAWSDBEventSubscription_basicUpdate(t *testing.T) {
 				Config: testAccAWSDBEventSubscriptionConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBEventSubscriptionExists("aws_db_event_subscription.bar", &v),
-					resource.TestCheckResourceAttr(
-						"aws_db_event_subscription.bar", "enabled", "true"),
-					resource.TestCheckResourceAttr(
-						"aws_db_event_subscription.bar", "source_type", "db-instance"),
-					resource.TestCheckResourceAttr(
-						"aws_db_event_subscription.bar", "name", fmt.Sprintf("tf-acc-test-rds-event-subs-%d", rInt)),
-					resource.TestCheckResourceAttr(
-						"aws_db_event_subscription.bar", "tags.Name", "name"),
+					resource.TestMatchResourceAttr("aws_db_event_subscription.bar", "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:[^:]+:es:%s$", rName))),
+					resource.TestCheckResourceAttr("aws_db_event_subscription.bar", "enabled", "true"),
+					resource.TestCheckResourceAttr("aws_db_event_subscription.bar", "source_type", "db-instance"),
+					resource.TestCheckResourceAttr("aws_db_event_subscription.bar", "name", rName),
+					resource.TestCheckResourceAttr("aws_db_event_subscription.bar", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_db_event_subscription.bar", "tags.Name", "name"),
 				),
 			},
 			{
 				Config: testAccAWSDBEventSubscriptionConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBEventSubscriptionExists("aws_db_event_subscription.bar", &v),
-					resource.TestCheckResourceAttr(
-						"aws_db_event_subscription.bar", "enabled", "false"),
-					resource.TestCheckResourceAttr(
-						"aws_db_event_subscription.bar", "source_type", "db-parameter-group"),
-					resource.TestCheckResourceAttr(
-						"aws_db_event_subscription.bar", "tags.Name", "new-name"),
+					resource.TestCheckResourceAttr("aws_db_event_subscription.bar", "enabled", "false"),
+					resource.TestCheckResourceAttr("aws_db_event_subscription.bar", "source_type", "db-parameter-group"),
+					resource.TestCheckResourceAttr("aws_db_event_subscription.bar", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_db_event_subscription.bar", "tags.Name", "new-name"),
 				),
 			},
 		},

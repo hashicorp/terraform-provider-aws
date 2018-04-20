@@ -503,7 +503,7 @@ resource "aws_lambda_function" "example" {
 
   # The bucket name as created earlier with "aws s3api create-bucket"
   s3_bucket = "terraform-serverless-example"
-  s3_key    = "v${var.version}/example.zip"
+  s3_key    = "v${var.app_version}/example.zip"
 
   # (leave the remainder unchanged)
 }
