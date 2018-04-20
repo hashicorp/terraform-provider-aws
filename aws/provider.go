@@ -167,6 +167,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_autoscaling_groups":               dataSourceAwsAutoscalingGroups(),
 			"aws_availability_zone":                dataSourceAwsAvailabilityZone(),
 			"aws_availability_zones":               dataSourceAwsAvailabilityZones(),
+			"aws_batch_job_queue":                  dataSourceAwsBatchJobQueue(),
 			"aws_billing_service_account":          dataSourceAwsBillingServiceAccount(),
 			"aws_caller_identity":                  dataSourceAwsCallerIdentity(),
 			"aws_canonical_user_id":                dataSourceAwsCanonicalUserId(),
