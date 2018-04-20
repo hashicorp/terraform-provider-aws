@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
 
@@ -32,7 +31,7 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 			{
 				Config: testAccAWSBudgetsBudgetConfig_BasicDefaults(configBasicDefaults, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(configBasicDefaults, testAccProvider),
+					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name", regexp.MustCompile(*configBasicDefaults.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicDefaults.BudgetType),
@@ -51,7 +50,7 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 			{
 				Config: testAccAWSBudgetsBudgetConfig_Basic(configBasicUpdate, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(configBasicUpdate, testAccProvider),
+					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicUpdate),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name", regexp.MustCompile(*configBasicUpdate.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicUpdate.BudgetType),
@@ -80,7 +79,7 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 			{
 				Config: testAccAWSBudgetsBudgetConfig_PrefixDefaults(configBasicDefaults, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(configBasicDefaults, testAccProvider),
+					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name_prefix", regexp.MustCompile(*configBasicDefaults.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicDefaults.BudgetType),
@@ -95,7 +94,7 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 			{
 				Config: testAccAWSBudgetsBudgetConfig_Prefix(configBasicUpdate, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(configBasicUpdate, testAccProvider),
+					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicUpdate),
 					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name_prefix", regexp.MustCompile(*configBasicUpdate.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicUpdate.BudgetType),
@@ -110,11 +109,11 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 	})
 }
 
-func testAccAWSBudgetsBudgetExists(config budgets.Budget, provider *schema.Provider) resource.TestCheckFunc {
+func testAccAWSBudgetsBudgetExists(resourceName string, config budgets.Budget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources["aws_budgets_budget.foo"]
+		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", "aws_budgets_budget.foo")
+			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
 		accountID, budgetName, err := decodeBudgetsBudgetID(rs.Primary.ID)
@@ -122,7 +121,7 @@ func testAccAWSBudgetsBudgetExists(config budgets.Budget, provider *schema.Provi
 			return fmt.Errorf("failed decoding ID: %v", err)
 		}
 
-		client := provider.Meta().(*AWSClient).budgetconn
+		client := testAccProvider.Meta().(*AWSClient).budgetconn
 		b, err := client.DescribeBudget(&budgets.DescribeBudgetInput{
 			BudgetName: &budgetName,
 			AccountId:  &accountID,
