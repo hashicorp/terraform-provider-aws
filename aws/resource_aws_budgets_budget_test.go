@@ -28,7 +28,7 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		CheckDestroy: func(s *terraform.State) error {
-			return testAccAWSBudgetsBudgetDestroy(name, testAccProvider)
+			return testAccAWSBudgetsBudgetDestroy(testAccProvider, s)
 		},
 		Steps: []resource.TestStep{
 			{
@@ -78,7 +78,7 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		CheckDestroy: func(s *terraform.State) error {
-			return testAccAWSBudgetsBudgetDestroy(name, testAccProvider)
+			return testAccAWSBudgetsBudgetDestroy(testAccProvider, s)
 		},
 		Steps: []resource.TestStep{
 			{
@@ -212,16 +212,26 @@ func testAccAWSBudgetsBudgetCheckCostTypes(config budgets.Budget, costTypes budg
 	return nil
 }
 
-func testAccAWSBudgetsBudgetDestroy(budgetName string, provider *schema.Provider) error {
+func testAccAWSBudgetsBudgetDestroy(provider *schema.Provider, s *terraform.State) error {
 	meta := provider.Meta()
 	client := meta.(*AWSClient).budgetconn
-	accountID := meta.(*AWSClient).accountid
-	_, err := client.DescribeBudget(&budgets.DescribeBudgetInput{
-		BudgetName: &budgetName,
-		AccountId:  &accountID,
-	})
-	if !isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
-		return fmt.Errorf("Budget '%s' was not deleted properly", budgetName)
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_budgets_budget" {
+			continue
+		}
+
+		accountID, budgetName, err := decodeBudgetsBudgetID(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("Budget '%s': id could not be decoded and could not be deleted properly", rs.Primary.ID)
+		}
+
+		_, err = client.DescribeBudget(&budgets.DescribeBudgetInput{
+			BudgetName: aws.String(budgetName),
+			AccountId:  aws.String(accountID),
+		})
+		if !isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
+			return fmt.Errorf("Budget '%s' was not deleted properly", rs.Primary.ID)
+		}
 	}
 
 	return nil
