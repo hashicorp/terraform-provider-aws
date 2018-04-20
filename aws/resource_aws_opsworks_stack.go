@@ -77,6 +77,7 @@ func resourceAwsOpsworksStack() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "11.10",
+				ForceNew: true
 			},
 
 			"manage_berkshelf": {
