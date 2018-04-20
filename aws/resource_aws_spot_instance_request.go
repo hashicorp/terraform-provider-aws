@@ -165,7 +165,7 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 			return err
 		}
 		spotOpts.ValidUntil = aws.Time(valid_until)
-  }
+	}
 
 	// Placement GroupName can only be specified when instanceInterruptionBehavior is not set or set to 'terminate'
 	if v, exists := d.GetOkExists("instance_interruption_behaviour"); v.(string) == ec2.InstanceInterruptionBehaviorTerminate || !exists {
