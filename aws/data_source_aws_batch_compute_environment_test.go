@@ -63,7 +63,7 @@ func testAccDataSourceAwsBatchComputeEnvironmentCheck(datasourceName, resourceNa
 func testAccDataSourceAwsBatchComputeEnvironmentConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "ecs_instance_role" {
-  name = "ecs_instance_role"
+  name = "ecs_%[1]s"
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -86,12 +86,12 @@ resource "aws_iam_role_policy_attachment" "ecs_instance_role" {
 }
 
 resource "aws_iam_instance_profile" "ecs_instance_role" {
-  name  = "ecs_instance_role"
+  name  = "ecs_%[1]s"
   role = "${aws_iam_role.ecs_instance_role.name}"
 }
 
 resource "aws_iam_role" "aws_batch_service_role" {
-  name = "aws_batch_service_role"
+  name = "batch_%[1]s"
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -114,7 +114,7 @@ resource "aws_iam_role_policy_attachment" "aws_batch_service_role" {
 }
 
 resource "aws_security_group" "sample" {
-  name = "aws_batch_compute_environment_security_group"
+  name = "%[1]s"
 }
 
 resource "aws_vpc" "sample" {
