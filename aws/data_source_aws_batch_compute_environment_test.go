@@ -171,7 +171,7 @@ resource "aws_batch_compute_environment" "wrong" {
 }
 
 data "aws_batch_compute_environment" "by_name" {
-  compute_environment_name = "${aws_batch_compute_environment.test.name}"
+  compute_environment_name = "${aws_batch_compute_environment.test.compute_environment_name}"
 }
 `, rName)
 }
