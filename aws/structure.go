@@ -3946,3 +3946,54 @@ func flattenIotThingTypeProperties(s *iot.ThingTypeProperties) []map[string]inte
 
 	return []map[string]interface{}{m}
 }
+
+func expandLaunchTemplateSpecification(specs []interface{}) (*autoscaling.LaunchTemplateSpecification, error) {
+	if len(specs) < 1 {
+		return nil, nil
+	}
+
+	spec := specs[0].(map[string]interface{})
+
+	idValue, idOk := spec["id"]
+	nameValue, nameOk := spec["name"]
+
+	if idValue == "" && nameValue == "" {
+		return nil, fmt.Errorf("One of `id` or `name` must be set for `launch_template`")
+	}
+
+	result := &autoscaling.LaunchTemplateSpecification{}
+
+	// DescribeAutoScalingGroups returns both name and id but LaunchTemplateSpecification
+	// allows only one of them to be set
+	if idOk && idValue != "" {
+		result.LaunchTemplateId = aws.String(idValue.(string))
+	} else if nameOk && nameValue != "" {
+		result.LaunchTemplateName = aws.String(nameValue.(string))
+	}
+
+	if v, ok := spec["version"]; ok && v != "" {
+		result.Version = aws.String(v.(string))
+	}
+
+	return result, nil
+}
+
+func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
+	attrs := map[string]interface{}{}
+	result := make([]map[string]interface{}, 0)
+
+	// id and name are always returned by DescribeAutoscalingGroups
+	attrs["id"] = *lt.LaunchTemplateId
+	attrs["name"] = *lt.LaunchTemplateName
+
+	// version is returned only if it was previosly set
+	if lt.Version != nil {
+		attrs["version"] = *lt.Version
+	} else {
+		attrs["version"] = nil
+	}
+
+	result = append(result, attrs)
+
+	return result
+}

@@ -2563,3 +2563,27 @@ func TestValidateLaunchTemplateName(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateLaunchTemplateId(t *testing.T) {
+	validIds := []string{
+		"lt-foobar123456",
+	}
+	for _, v := range validIds {
+		_, errors := validateLaunchTemplateId(v, "id")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Launch Template id: %q", v, errors)
+		}
+	}
+
+	invalidIds := []string{
+		strings.Repeat("W", 256),
+		"invalid-foobar123456",
+		"lt_foobar123456",
+	}
+	for _, v := range invalidIds {
+		_, errors := validateLaunchTemplateId(v, "id")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Launch Template id: %q", v, errors)
+		}
+	}
+}

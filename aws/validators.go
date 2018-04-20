@@ -1755,3 +1755,16 @@ func validateLaunchTemplateName(v interface{}, k string) (ws []string, errors []
 	}
 	return
 }
+
+func validateLaunchTemplateId(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) < 1 {
+		errors = append(errors, fmt.Errorf("%q cannot be shorter than 1 character", k))
+	} else if len(value) > 255 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 255 characters", k))
+	} else if !regexp.MustCompile(`^lt\-[a-z0-9]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must begin with 'lt-' and be comprised of only alphanumeric characters: %v", k, value))
+	}
+	return
+}
