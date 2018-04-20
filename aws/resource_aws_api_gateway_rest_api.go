@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"net/url"
 	"strconv"
 	"time"
 
@@ -164,17 +163,14 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("name", api.Name)
 	d.Set("description", api.Description)
 
-	if api.Policy != nil {
-		policy, err := url.QueryUnescape(*api.Policy)
-		log.Printf("[DEBUG] Decoded Policy: %s", policy)
-		if err != nil {
-			return err
-		}
-		if err := d.Set("policy", policy); err != nil {
-			return err
-		}
+	// The API returns policy as an escaped JSON string
+	// {\\\"Version\\\":\\\"2012-10-17\\\",...}
+	policy, err := strconv.Unquote(`"` + aws.StringValue(api.Policy) + `"`)
+	if err != nil {
+		return fmt.Errorf("error unescaping policy: %s", err)
 	}
-	log.Printf("[DEBUG] Api Policy %s", d.Get("policy"))
+	d.Set("policy", policy)
+
 	d.Set("binary_media_types", api.BinaryMediaTypes)
 	if api.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", -1)
