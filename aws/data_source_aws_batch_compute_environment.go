@@ -82,6 +82,7 @@ func dataSourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta inter
 	computeEnvironment := desc.ComputeEnvironments[0]
 	d.SetId(aws.StringValue(computeEnvironment.ComputeEnvironmentArn))
 	d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
+	d.Set("compute_environment_name", computeEnvironment.ComputeEnvironmentName)
 	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
 	d.Set("service_role", computeEnvironment.ServiceRole)
 	d.Set("type", computeEnvironment.Type)
