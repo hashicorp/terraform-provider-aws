@@ -14,6 +14,8 @@ import (
 
 func TestAccAWSGlueCatalogTable_full(t *testing.T) {
 	rInt := acctest.RandInt()
+	description := "A test table from terraform"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -31,18 +33,25 @@ func TestAccAWSGlueCatalogTable_full(t *testing.T) {
 					),
 					resource.TestCheckResourceAttr(
 						"aws_glue_catalog_table.test",
-						"database",
+						"database_name",
 						fmt.Sprintf("my_test_catalog_database_%d", rInt),
 					),
+				),
+			},
+			{
+				Config:  testAccGlueCatalogTable_full(rInt, description),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogTableExists("aws_glue_catalog_table.test"),
 					resource.TestCheckResourceAttr(
 						"aws_glue_catalog_table.test",
-						"description",
-						"",
+						"name",
+						fmt.Sprintf("my_test_catalog_table_%d", rInt),
 					),
 					resource.TestCheckResourceAttr(
 						"aws_glue_catalog_table.test",
-						"owner",
-						"",
+						"database_name",
+						fmt.Sprintf("my_test_catalog_database_%d", rInt),
 					),
 				),
 			},
@@ -57,8 +66,8 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_catalog_table" "test" {
-  name     = "my_test_table_%d"
-  database = "${aws_glue_catalog_database.test.name}"
+  name     = "my_test_catalog_table_%d"
+  database_name = "${aws_glue_catalog_database.test.name}"
 }
 `, rInt, rInt)
 }
@@ -68,34 +77,83 @@ func testAccGlueCatalogTable_full(rInt int, desc string) string {
 resource "aws_glue_catalog_database" "test" {
   name = "my_test_catalog_database_%d"
 }
-# @TODO Fill out parameters from https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-StorageDescriptor
+
 resource "aws_glue_catalog_table" "test" {
   name = "my_test_table_%d"
-  database = "${aws_glue_catalog_database.test.name}"
+  database_name = "${aws_glue_catalog_database.test.name}"
   description = "%s"
   owner = "my_owner"
-  retetention = "%s",
-  storage {
-    location = "my_location"
-    columns = [{
+  retention = 1
+  storage_descriptor {
+    /* columns = [
+      {
+        name = "my_column_1"
+        type = "int"
+        comment = "my_column1_comment"
+      },
+      {
+        name = "my_column_2"
+        type = "string"
+        comment = "my_column2_comment"
+      }
+    ] */
+	location = "my_location"
+	input_format = "SequenceFileInputFormat"
+	output_format = "SequenceFileInputFormat"
+	compressed = false
+	number_of_buckets = 1
+	/* ser_de_info {
+      name = "ser_de_name"
+      parameters {
+        param1 = "param_val_1"
+      }
+      serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"
+	} */
+	bucket_columns = [
+      "bucket_column_1",
+	]
+	/* sort_columns = [
+      {
+        column = "my_column_1"
+        sort_order = 1
+      }
+	] */
+	parameters {
+      param1 = "param1_val"
+	}
+	/* skewed_info {
+      skewed_column_names = [
+        "my_column_1"
+      ]
+      skewed_column_value_location_maps {
+        my_column_1 = "my_column_1_val_loc_map"
+      }
+      skewed_column_values = [
+        "skewed_val_1"
+      ]
+	} */
+	stored_as_sub_directories = false
+  }
+  partition_keys = [
+    {
       name = "my_column_1"
       type = "int"
-      comment = "my_column_comment"
-    },{
-      name = "my_column_1"
+      comment = "my_column1_comment"
+    },
+    {
+      name = "my_column_2"
       type = "string"
-      comment = "my_column_comment"
-    }]
-    ...
+      comment = "my_column2_comment"
+    }
+  ]
+  view_original_text = "view_original_text_1"
+  view_expanded_text = "view_expanded_text_1"
+  table_type = "VIRTUAL_VIEW"
+  parameters {
+  	param1 = "param1_val"
   }
-  partition_keys = [{
-    name = "my_column_1"
-    type = "int"
-    comment = "my_column_comment"
-  }]
-  ...
 }
-`, rInt, rInt, rInt, desc)
+`, rInt, rInt, desc)
 }
 
 func testAccCheckGlueTableDestroy(s *terraform.State) error {
@@ -151,11 +209,11 @@ func testAccCheckGlueCatalogTableExists(name string) resource.TestCheckFunc {
 		}
 
 		if out.Table == nil {
-			return fmt.Errorf("No Glue Database Found")
+			return fmt.Errorf("No Glue Table Found")
 		}
 
-		if *out.Table.Name != dbName {
-			return fmt.Errorf("Glue Database Mismatch - existing: %q, state: %q",
+		if *out.Table.Name != tableName {
+			return fmt.Errorf("Glue Table Mismatch - existing: %q, state: %q",
 				*out.Table.Name, tableName)
 		}
 
