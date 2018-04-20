@@ -406,7 +406,9 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		if err != nil {
 			return err
 		}
-		d.Set("credit_specification", creditSpecifications)
+		if err := d.Set("credit_specification", creditSpecifications); err != nil {
+			return fmt.Errorf("error setting credit_specification: %s", err)
+		}
 	}
 
 	return nil

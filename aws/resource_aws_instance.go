@@ -437,14 +437,19 @@ func resourceAwsInstance() *schema.Resource {
 			"credit_specification": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cpu_credits": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
+							Default:  "standard",
 						},
 					},
 				},
@@ -805,7 +810,9 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		d.Set("credit_specification", creditSpecifications)
+		if err := d.Set("credit_specification", creditSpecifications); err != nil {
+			return fmt.Errorf("error setting credit_specification: %s", err)
+		}
 	}
 
 	if d.Get("get_password_data").(bool) {
@@ -1104,11 +1111,9 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("credit_specification") {
-		creditSpecifications := d.Get("credit_specification").([]interface{})
-		if len(creditSpecifications) == 1 {
-			creditSpecification := creditSpecifications[0].(map[string]interface{})
+		if v, ok := d.GetOk("credit_specification"); ok {
+			creditSpecification := v.([]interface{})[0].(map[string]interface{})
 			log.Printf("[DEBUG] Modifying credit specification for Instance (%s)", d.Id())
-
 			_, err := conn.ModifyInstanceCreditSpecification(&ec2.ModifyInstanceCreditSpecificationInput{
 				InstanceCreditSpecifications: []*ec2.InstanceCreditSpecificationRequest{
 					{
@@ -1690,14 +1695,9 @@ func buildAwsInstanceOpts(
 	}
 
 	if v, ok := d.GetOk("credit_specification"); ok {
-		cs := v.([]interface{})
-		for _, csValue := range cs {
-			creditSpecification := csValue.(map[string]interface{})
-			if cpuCredits, ok := creditSpecification["cpu_credits"].(string); ok {
-				opts.CreditSpecification = &ec2.CreditSpecificationRequest{
-					CpuCredits: aws.String(cpuCredits),
-				}
-			}
+		cs := v.([]interface{})[0].(map[string]interface{})
+		opts.CreditSpecification = &ec2.CreditSpecificationRequest{
+			CpuCredits: aws.String(cs["cpu_credits"].(string)),
 		}
 	}
 
