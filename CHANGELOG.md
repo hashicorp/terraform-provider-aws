@@ -1,5 +1,9 @@
 ## 1.16.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_batch_compute_environment` [GH-4270]
+
 ENHANCEMENTS:
 
 * data-source/aws_cognito_user_pools: Add `arns` attribute [GH-4256]
