@@ -178,8 +178,9 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"resource": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:      schema.TypeString,
+										Sensitive: true,
+										Optional:  true,
 									},
 									"type": {
 										Type:     schema.TypeString,
