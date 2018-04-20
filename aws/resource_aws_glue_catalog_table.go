@@ -24,7 +24,8 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 			"catalog_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -50,7 +51,62 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 			"storage_descriptor": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem:     schema.TypeString,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						//"columns": {
+						//	Type:     schema.TypeString,
+						//	Required: true,
+						//},
+						//"location": {
+						//	Type:     schema.TypeString,
+						//	Optional: true,
+						//},
+						//"input_format": {
+						//	Type:     schema.TypeString,
+						//	Optional: true,
+						//},
+						//"output_format": {
+						//	Type:     schema.TypeString,
+						//	Optional: true,
+						//},
+						//"compressed": {
+						//	Type:     schema.TypeBool,
+						//	Optional: true,
+						//},
+						//"number_of_buckets": {
+						//	Type:     schema.TypeInt,
+						//	Optional: true,
+						//},
+						//"ser_de_info": {
+						//	Type:     schema.TypeString,
+						//	Optional: true,
+						//},
+						"bucket_columns": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						//"sort_columns": {
+						//	Type:     schema.TypeString,
+						//	Optional: true,
+						//},
+						//"parameters": {
+						//	Type:     schema.TypeMap,
+						//	Optional: true,
+						//	Elem:     schema.TypeString,
+						//},
+						//"skewed_info": {
+						//	Type:     schema.TypeString,
+						//	Optional: true,
+						//},
+						//"stored_as_sub_directories": {
+						//	Type:     schema.TypeBool,
+						//	Optional: true,
+						//},
+					},
+				},
 			},
 			"partition_keys": {
 				Type:     schema.TypeList,
@@ -163,7 +219,16 @@ func resourceAwsGlueCatalogTableRead(t *schema.ResourceData, meta interface{}) e
 
 	t.Set("name", out.Table.Name)
 	t.Set("catalog_id", catalogID)
+	t.Set("database_name", dbName)
 	t.Set("description", out.Table.Description)
+	t.Set("owner", out.Table.Owner)
+	t.Set("retention", out.Table.Retention)
+	t.Set("storage_descriptor", out.Table.StorageDescriptor)
+	t.Set("partition_keys", out.Table.PartitionKeys)
+	t.Set("view_original_text", out.Table.ViewOriginalText)
+	t.Set("view_expanded_text", out.Table.ViewExpandedText)
+	t.Set("table_type", out.Table.TableType)
+	t.Set("parameters", out.Table.Parameters)
 
 	return nil
 }
@@ -202,11 +267,11 @@ func expandGlueTableInput(t *schema.ResourceData) *glue.TableInput {
 	}
 
 	if v, ok := t.GetOk("storage_descriptor"); ok {
-		tableInput.StorageDescriptor = expandGlueStorageDescriptor(v.(map[string]interface{}))
+		tableInput.StorageDescriptor = expandGlueStorageDescriptor(v.(*schema.ResourceData))
 	}
 
 	if v, ok := t.GetOk("partition_keys"); ok {
-		columns := expandGlueColumns(v.(map[string]schema.ResourceData))
+		columns := expandGlueColumns(v.([]*schema.ResourceData))
 		tableInput.PartitionKeys = columns
 	}
 
@@ -229,13 +294,60 @@ func expandGlueTableInput(t *schema.ResourceData) *glue.TableInput {
 	return tableInput
 }
 
-func expandGlueStorageDescriptor(s map[string]interface{}) *glue.StorageDescriptor {
+func expandGlueStorageDescriptor(s *schema.ResourceData) *glue.StorageDescriptor {
 	storageDescriptor := &glue.StorageDescriptor{}
+
+	if v, ok := s.GetOk("columns"); ok {
+		columns := expandGlueColumns(v.([]*schema.ResourceData))
+		storageDescriptor.Columns = columns
+	}
+
+	if v, ok := s.GetOk("location"); ok {
+		storageDescriptor.Location = aws.String(v.(string))
+	}
+
+	if v, ok := s.GetOk("input_format"); ok {
+		storageDescriptor.InputFormat = aws.String(v.(string))
+	}
+
+	if v, ok := s.GetOk("output_format"); ok {
+		storageDescriptor.OutputFormat = aws.String(v.(string))
+	}
+
+	if v, ok := s.GetOk("compressed"); ok {
+		storageDescriptor.Compressed = aws.Bool(v.(bool))
+	}
+
+	if v, ok := s.GetOk("number_of_buckets"); ok {
+		storageDescriptor.NumberOfBuckets = aws.Int64(v.(int64))
+	}
+
+	if _, ok := s.GetOk("ser_de_info"); ok { // todo
+		ser_de_info := &glue.SerDeInfo{}
+		storageDescriptor.SerdeInfo = ser_de_info
+	}
+
+	if v, ok := s.GetOk("bucket_columns"); ok {
+		storageDescriptor.BucketColumns = aws.StringSlice(v.([]string))
+	}
+
+	if _, ok := s.GetOk("sort_colums"); ok { // todo
+		sort_columns := []*glue.Order{}
+		storageDescriptor.SortColumns = sort_columns
+	}
+
+	if v, ok := s.GetOk("parameters"); ok {
+		storageDescriptor.Parameters = aws.StringMap(v.(map[string]string))
+	}
+
+	if v, ok := s.GetOk("stored_as_sub_directories"); ok {
+		storageDescriptor.StoredAsSubDirectories = aws.Bool(v.(bool))
+	}
 
 	return storageDescriptor
 }
 
-func expandGlueColumns(columns map[string]schema.ResourceData) []*glue.Column {
+func expandGlueColumns(columns []*schema.ResourceData) []*glue.Column {
 	columnSlice := []*glue.Column{}
 	for _, element := range columns {
 		column := &glue.Column{
