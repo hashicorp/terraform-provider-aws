@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_cognito_user_pools: Add `arns` attribute [GH-4256]
 * resource/aws_instance: Add `credit_specification` argument (e.g. t2.unlimited support) [GH-2619]
 * resource/aws_ssm_patch_baseline: Support `CENTOS` `operating_system` argument [GH-4268]
 
