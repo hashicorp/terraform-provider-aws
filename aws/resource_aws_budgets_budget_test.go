@@ -25,11 +25,9 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 	configBasicUpdate := testAccAWSBudgetsBudgetConfigUpdate(name)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		CheckDestroy: func(s *terraform.State) error {
-			return testAccAWSBudgetsBudgetDestroy(testAccProvider, s)
-		},
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBudgetsBudgetConfig_BasicDefaults(configBasicDefaults, costFilterKey),
@@ -75,11 +73,9 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 	configBasicUpdate := testAccAWSBudgetsBudgetConfigUpdate(name)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		CheckDestroy: func(s *terraform.State) error {
-			return testAccAWSBudgetsBudgetDestroy(testAccProvider, s)
-		},
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBudgetsBudgetConfig_PrefixDefaults(configBasicDefaults, costFilterKey),
@@ -212,8 +208,8 @@ func testAccAWSBudgetsBudgetCheckCostTypes(config budgets.Budget, costTypes budg
 	return nil
 }
 
-func testAccAWSBudgetsBudgetDestroy(provider *schema.Provider, s *terraform.State) error {
-	meta := provider.Meta()
+func testAccAWSBudgetsBudgetDestroy(s *terraform.State) error {
+	meta := testAccProvider.Meta()
 	client := meta.(*AWSClient).budgetconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_budgets_budget" {
