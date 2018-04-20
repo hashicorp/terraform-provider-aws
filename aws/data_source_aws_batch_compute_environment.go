@@ -71,23 +71,22 @@ func dataSourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta inter
 		return err
 	}
 
-	for _, computeEnvironment := range desc.ComputeEnvironments {
-		if aws.StringValue(computeEnvironment.ComputeEnvironmentName) != d.Get("compute_environment_name").(string) {
-			continue
-		}
-		d.SetId(aws.StringValue(computeEnvironment.ComputeEnvironmentArn))
-		d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
-		d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
-		d.Set("service_role", computeEnvironment.ServiceRole)
-		d.Set("type", computeEnvironment.Type)
-		d.Set("status", computeEnvironment.Status)
-		d.Set("status_reason", computeEnvironment.StatusReason)
-		d.Set("state", computeEnvironment.State)
+	if len(desc.ComputeEnvironments) == 0 {
+		return fmt.Errorf("no matches found for name: %s", d.Get("compute_environment_name").(string))
 	}
 
-	if d.Id() == "" {
-		return fmt.Errorf("compute environment with name %q not found", d.Get("compute_environment_name").(string))
+	if len(desc.ComputeEnvironments) > 1 {
+		return fmt.Errorf("multiple matches found for name: %s", d.Get("compute_environment_name").(string))
 	}
 
+	computeEnvironment := desc.ComputeEnvironments[0]
+	d.SetId(aws.StringValue(computeEnvironment.ComputeEnvironmentArn))
+	d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
+	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
+	d.Set("service_role", computeEnvironment.ServiceRole)
+	d.Set("type", computeEnvironment.Type)
+	d.Set("status", computeEnvironment.Status)
+	d.Set("status_reason", computeEnvironment.StatusReason)
+	d.Set("state", computeEnvironment.State)
 	return nil
 }

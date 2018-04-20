@@ -6,27 +6,62 @@ import (
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSBatchDataSource_ecsCluster(t *testing.T) {
+func TestAccDataSourceAwsBatchComputeEnvironment(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf_acc_test_")
+	resourceName := "aws_batch_compute_environment.test"
+	datasourceName := "data.aws_batch_compute_environment.by_name"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccCheckAwsBatchComputeEnvironmentDataSourceConfig,
+			resource.TestStep{
+				Config: testAccDataSourceAwsBatchComputeEnvironmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_batch_compute_environment.default", "type", "MANAGED"),
-					resource.TestCheckResourceAttr("data.aws_batch_compute_environment.default", "status", "VALID"),
-					resource.TestCheckResourceAttr("data.aws_batch_compute_environment.default", "state", "ENABLED"),
-					resource.TestCheckResourceAttrSet("data.aws_batch_compute_environment.default", "arn"),
+					testAccDataSourceAwsBatchComputeEnvironmentCheck(datasourceName, resourceName),
 				),
 			},
 		},
 	})
 }
 
-var testAccCheckAwsBatchComputeEnvironmentDataSourceConfig = fmt.Sprintf(`
+func testAccDataSourceAwsBatchComputeEnvironmentCheck(datasourceName, resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		ds, ok := s.RootModule().Resources[datasourceName]
+		if !ok {
+			return fmt.Errorf("root module has no data source called %s", datasourceName)
+		}
+
+		batchCeRs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("root module has no resource called %s", resourceName)
+		}
+
+		attrNames := []string{
+			"arn",
+			"compute_environment_name",
+		}
+
+		for _, attrName := range attrNames {
+			if ds.Primary.Attributes[attrName] != batchCeRs.Primary.Attributes[attrName] {
+				return fmt.Errorf(
+					"%s is %s; want %s",
+					attrName,
+					ds.Primary.Attributes[attrName],
+					batchCeRs.Primary.Attributes[attrName],
+				)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccDataSourceAwsBatchComputeEnvironmentConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_role" "ecs_instance_role" {
   name = "ecs_instance_role"
   assume_role_policy = <<EOF
@@ -91,8 +126,8 @@ resource "aws_subnet" "sample" {
   cidr_block = "10.1.1.0/24"
 }
 
-resource "aws_batch_compute_environment" "sample" {
-  compute_environment_name = "default-%d"
+resource "aws_batch_compute_environment" "test" {
+  compute_environment_name = "%[1]s"
   compute_resources {
     instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
     instance_type = [
@@ -113,7 +148,30 @@ resource "aws_batch_compute_environment" "sample" {
   depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 
-data "aws_batch_compute_environment" "default" {
-  compute_environment_name = "${aws_batch_compute_environment.sample.name}"
+resource "aws_batch_compute_environment" "wrong" {
+  compute_environment_name = "%[1]s_wrong"
+  compute_resources {
+    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_type = [
+      "c4.large",
+    ]
+    max_vcpus = 16
+    min_vcpus = 0
+    security_group_ids = [
+      "${aws_security_group.sample.id}"
+    ]
+    subnets = [
+      "${aws_subnet.sample.id}"
+    ]
+    type = "EC2"
+  }
+  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
+  type = "MANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
-`, acctest.RandInt())
+
+data "aws_batch_compute_environment" "by_name" {
+  compute_environment_name = "${aws_batch_compute_environment.test.name}"
+}
+`, rName)
+}
