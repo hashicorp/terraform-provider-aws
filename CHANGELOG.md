@@ -1,4 +1,9 @@
 ## 1.16.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_ssm_patch_baseline: Support `CENTOS` `operating_system` argument [GH-4268]
+
 ## 1.15.0 (April 18, 2018)
 
 NOTES:
