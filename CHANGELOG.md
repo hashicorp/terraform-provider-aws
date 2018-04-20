@@ -6,6 +6,10 @@ ENHANCEMENTS:
 * resource/aws_instance: Add `credit_specification` argument (e.g. t2.unlimited support) [GH-2619]
 * resource/aws_ssm_patch_baseline: Support `CENTOS` `operating_system` argument [GH-4268]
 
+BUG FIXES:
+
+* data-source/aws_iam_policy_document: Prevent crash with multiple value principal identifiers [GH-4277]
+
 ## 1.15.0 (April 18, 2018)
 
 NOTES:
