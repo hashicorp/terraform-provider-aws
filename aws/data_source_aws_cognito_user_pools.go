@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -21,6 +22,11 @@ func dataSourceAwsCognitoUserPools() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"arns": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -29,6 +35,7 @@ func dataSourceAwsCognitoUserPoolsRead(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).cognitoidpconn
 	name := d.Get("name").(string)
 	var ids []string
+	var arns []string
 
 	pools, err := getAllCognitoUserPools(conn)
 	if err != nil {
@@ -36,7 +43,17 @@ func dataSourceAwsCognitoUserPoolsRead(d *schema.ResourceData, meta interface{})
 	}
 	for _, pool := range pools {
 		if name == aws.StringValue(pool.Name) {
-			ids = append(ids, aws.StringValue(pool.Id))
+			id := aws.StringValue(pool.Id)
+			arn := arn.ARN{
+				Partition: meta.(*AWSClient).partition,
+				Service:   "cognito-idp",
+				Region:    meta.(*AWSClient).region,
+				AccountID: meta.(*AWSClient).accountid,
+				Resource:  fmt.Sprintf("userpool/%s", id),
+			}.String()
+
+			ids = append(ids, id)
+			arns = append(arns, arn)
 		}
 	}
 
@@ -46,6 +63,8 @@ func dataSourceAwsCognitoUserPoolsRead(d *schema.ResourceData, meta interface{})
 
 	d.SetId(name)
 	d.Set("ids", ids)
+	d.Set("arns", arns)
+
 	return nil
 }
 
