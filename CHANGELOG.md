@@ -8,6 +8,7 @@ ENHANCEMENTS:
 * resource/aws_instance: Add `credit_specification` argument (e.g. t2.unlimited support) [GH-2619]
 * resource/aws_s3_bucket: Add support for `ONEZONE_IA` storage class [GH-4287]
 * resource/aws_s3_bucket_object: Add support for `ONEZONE_IA` storage class [GH-4287]
+* resource/aws_spot_instance_request: Add `valid_from` and `valid_until` arguments [GH-4018]
 * resource/aws_ssm_patch_baseline: Support `CENTOS` `operating_system` argument [GH-4268]
 
 BUG FIXES:
