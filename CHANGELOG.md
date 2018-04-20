@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * data-source/aws_cognito_user_pools: Add `arns` attribute [GH-4256]
+* data-source/aws_ecs_cluster Return error on multiple clusters [GH-4286]
 * resource/aws_api_gateway_rest_api: Add `policy` argument [GH-4211]
 * resource/aws_instance: Add `credit_specification` argument (e.g. t2.unlimited support) [GH-2619]
 * resource/aws_ssm_patch_baseline: Support `CENTOS` `operating_system` argument [GH-4268]
