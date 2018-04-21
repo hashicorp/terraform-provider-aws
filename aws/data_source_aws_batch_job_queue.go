@@ -98,11 +98,13 @@ func dataSourceAwsBatchJobQueueRead(d *schema.ResourceData, meta interface{}) er
 	ceos := make([]map[string]interface{}, 0)
 	for _, v := range jobQueue.ComputeEnvironmentOrder {
 		ceo := map[string]interface{}{}
-		ceo["compute_environment"] = *v.ComputeEnvironment
-		ceo["order"] = *v.Order
+		ceo["compute_environment"] = aws.StringValue(v.ComputeEnvironment)
+		ceo["order"] = int(aws.Int64Value(v.Order))
 		ceos = append(ceos, ceo)
 	}
-	d.Set("compute_environment_order", ceos)
+	if err := d.Set("compute_environment_order", ceos); err != nil {
+		return fmt.Errorf("error setting compute_environment_order: %s", err)
+	}
 
 	return nil
 }
