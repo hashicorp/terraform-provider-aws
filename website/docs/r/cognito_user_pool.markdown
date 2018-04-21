@@ -75,6 +75,7 @@ The following arguments are supported:
   * `pre_authentication` (Optional) - A pre-authentication AWS Lambda trigger.
   * `pre_sign_up` (Optional) - A pre-registration AWS Lambda trigger.
   * `pre_token_generation` (Optional) - Allow to customize identity token claims before token generation.
+  * `user_migration` (Optional) - The user migration Lambda config type.
   * `verify_auth_challenge_response` (Optional) - Verifies the authentication challenge response.
 
 #### Password Policy
