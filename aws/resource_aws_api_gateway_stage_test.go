@@ -24,12 +24,49 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayStageExists("aws_api_gateway_stage.test", &conf),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "stage_name", "prod"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.a", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.b", "2"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "variables.one", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "variables.two", "2"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccAWSAPIGatewayStageConfig_basicupdated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayStageExists("aws_api_gateway_stage.test", &conf),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "stage_name", "prod"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.a", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.c", "3"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "variables.one", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "variables.three", "3"),
+
+					resource.TestCheckNoResourceAttr("aws_api_gateway_stage.test", "tags.b"),
+					resource.TestCheckNoResourceAttr("aws_api_gateway_stage.test", "variables.two"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayStage_cache(t *testing.T) {
+	var conf apigateway.Stage
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSAPIGatewayStageConfig_cache(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayStageExists("aws_api_gateway_stage.test", &conf),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "stage_name", "prod"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_enabled", "true"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_size", "0.5"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccAWSAPIGatewayStageConfig_updated(),
+				Config: testAccAWSAPIGatewayStageConfig_cacheupdated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayStageExists("aws_api_gateway_stage.test", &conf),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "stage_name", "prod"),
@@ -37,7 +74,7 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccAWSAPIGatewayStageConfig_basic(),
+				Config: testAccAWSAPIGatewayStageConfig_cache(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayStageExists("aws_api_gateway_stage.test", &conf),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "stage_name", "prod"),
@@ -169,6 +206,43 @@ resource "aws_api_gateway_stage" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name = "prod"
   deployment_id = "${aws_api_gateway_deployment.dev.id}"
+  tags {
+    "a" = "1"
+    "b" = "2"
+  }
+  variables {
+    one = "1"
+    two = "2"
+  }
+}
+`
+}
+
+func testAccAWSAPIGatewayStageConfig_basicupdated() string {
+	return testAccAWSAPIGatewayStageConfig_base + `
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  stage_name = "prod"
+  deployment_id = "${aws_api_gateway_deployment.dev.id}"
+  description = "Hello world"
+  tags {
+    "a" = "1"
+    "c" = "3"
+  }
+  variables {
+    one = "1"
+    three = "3"
+  }
+}
+`
+}
+
+func testAccAWSAPIGatewayStageConfig_cache() string {
+	return testAccAWSAPIGatewayStageConfig_base + `
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  stage_name = "prod"
+  deployment_id = "${aws_api_gateway_deployment.dev.id}"
   cache_cluster_enabled = true
   cache_cluster_size = "0.5"
   variables {
@@ -179,7 +253,7 @@ resource "aws_api_gateway_stage" "test" {
 `
 }
 
-func testAccAWSAPIGatewayStageConfig_updated() string {
+func testAccAWSAPIGatewayStageConfig_cacheupdated() string {
 	return testAccAWSAPIGatewayStageConfig_base + `
 resource "aws_api_gateway_stage" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"

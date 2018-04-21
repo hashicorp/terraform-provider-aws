@@ -28,6 +28,14 @@ resource "aws_api_gateway_deployment" "test" {
   depends_on = ["aws_api_gateway_integration.test"]
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name = "dev"
+  
+  tags = {
+    "contact" = "noone@company.com"
+  }
+
+  variables = {
+    "answer" = "42"
+  }  
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -50,7 +58,7 @@ resource "aws_api_gateway_method_settings" "s" {
 
   settings {
     metrics_enabled = true
-  logging_level = "INFO"
+    logging_level = "INFO"
   }
 }
 
@@ -75,4 +83,5 @@ The following arguments are supported:
 * `client_certificate_id` - (Optional) The identifier of a client certificate for the stage.
 * `description` - (Optional) The description of the stage
 * `documentation_version` - (Optional) The version of the associated API documentation
+* `tags` - (Optional) A map that defines the stage tags
 * `variables` - (Optional) A map that defines the stage variables

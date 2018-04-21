@@ -20,7 +20,7 @@ func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayDeploymentConfig,
+				Config: testAccAWSAPIGatewayDeploymentConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDeploymentExists("aws_api_gateway_deployment.test", &conf),
 					resource.TestCheckResourceAttr(
@@ -28,7 +28,35 @@ func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_api_gateway_deployment.test", "description", "This is a test"),
 					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "tags.b", "z"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "tags.c", "3"),
+					resource.TestCheckResourceAttr(
 						"aws_api_gateway_deployment.test", "variables.a", "2"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "variables.b", "3"),
+					resource.TestCheckResourceAttrSet(
+						"aws_api_gateway_deployment.test", "created_date"),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayDeploymentConfig_updated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayDeploymentExists("aws_api_gateway_deployment.test", &conf),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "stage_name", "test"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "description", "This is a test"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "stage_description", "test stage description"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "tags.b", "z"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "tags.d", "4"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "variables.a", "2"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "variables.c", "4"),
 					resource.TestCheckResourceAttrSet(
 						"aws_api_gateway_deployment.test", "created_date"),
 				),
@@ -103,9 +131,9 @@ func testAccCheckAWSAPIGatewayDeploymentDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccAWSAPIGatewayDeploymentConfig = `
+const testAccAWSAPIGatewayDeploymentConfig_base = `
 resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
+  name = "tf_acc_deployment_test"
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -144,7 +172,10 @@ resource "aws_api_gateway_integration_response" "test" {
   http_method = "${aws_api_gateway_integration.test.http_method}"
   status_code = "${aws_api_gateway_method_response.error.status_code}"
 }
+`
 
+func testAccAWSAPIGatewayDeploymentConfig_basic() string {
+	return testAccAWSAPIGatewayDeploymentConfig_base + `
 resource "aws_api_gateway_deployment" "test" {
   depends_on = ["aws_api_gateway_integration.test"]
 
@@ -152,8 +183,38 @@ resource "aws_api_gateway_deployment" "test" {
   stage_name = "test"
   description = "This is a test"
 
+  tags = {
+    "b" = "z"
+    "c" = "3"
+  }
+
   variables = {
     "a" = "2"
+    "b" = "3"
   }
 }
 `
+}
+
+func testAccAWSAPIGatewayDeploymentConfig_updated() string {
+	return testAccAWSAPIGatewayDeploymentConfig_base + `
+resource "aws_api_gateway_deployment" "test" {
+  depends_on = ["aws_api_gateway_integration.test"]
+
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  stage_name = "test"
+  description = "This is a test"
+  stage_description = "test stage description"
+
+  tags = {
+    "b" = "z"
+    "d" = "4"
+  }
+
+  variables = {
+    "a" = "2"
+    "c" = "4"
+  }
+}
+`
+}
