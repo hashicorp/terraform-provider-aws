@@ -176,7 +176,6 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			},
 			"source_code_size": {
 				Type:     schema.TypeInt,
-				Optional: true,
 				Computed: true,
 			},
 			"environment": {
@@ -498,20 +497,16 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
 
-	vpcConfig := flattenLambdaVpcConfigResponse(function.VpcConfig)
-	if vpcConfig != nil {
-		log.Printf("[INFO] Setting Lambda %s VPC config %#v from API", d.Id(), vpcConfig)
-		if err := d.Set("vpc_config", vpcConfig); err != nil {
-			return fmt.Errorf("Failed setting vpc_config: %s", err)
-		}
+	config := flattenLambdaVpcConfigResponse(function.VpcConfig)
+	log.Printf("[INFO] Setting Lambda %s VPC config %#v from API", d.Id(), config)
+	if err := d.Set("vpc_config", config); err != nil {
+		return fmt.Errorf("[ERR] Error setting vpc_config for Lambda Function (%s): %s", d.Id(), err)
 	}
 
 	environment := flattenLambdaEnvironment(function.Environment)
-	if environment != nil {
-		log.Printf("[INFO] Setting Lambda %s environment %#v from API", d.Id(), environment)
-		if err := d.Set("environment", environment); err != nil {
-			log.Printf("[ERR] Error setting environment for Lambda Function (%s): %s", d.Id(), err)
-		}
+	log.Printf("[INFO] Setting Lambda %s environment %#v from API", d.Id(), environment)
+	if err := d.Set("environment", environment); err != nil {
+		log.Printf("[ERR] Error setting environment for Lambda Function (%s): %s", d.Id(), err)
 	}
 
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
