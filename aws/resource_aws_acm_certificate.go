@@ -138,11 +138,11 @@ func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) e
 		params.SubjectAlternativeNames = expandStringList(sanStrings)
 	}
 
-	domainValidationOptionsInput, ok := d.GetOk("domain_validation_options")
+	value, ok := d.GetOk("domain_validation_options")
 
 	if ok {
 		var domainValidationOptions []*acm.DomainValidationOption
-		for _, o := range domainValidationOptionsInput.([]interface{}) {
+		for _, o := range value.([]interface{}) {
 			x := o.(map[string]interface{})
 			dn := x["domain_name"].(string)
 			vd := x["validation_domain"].(string)
@@ -196,8 +196,13 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 			return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %s", err))
 		}
 
-		d.Set("domain_name", resp.Certificate.DomainName)
-		d.Set("arn", resp.Certificate.CertificateArn)
+		if err := d.Set("domain_name", resp.Certificate.DomainName); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		if err := d.Set("arn", resp.Certificate.CertificateArn); err != nil {
+			return resource.NonRetryableError(err)
+		}
 
 		if err := d.Set("subject_alternative_names", cleanUpSubjectAlternativeNames(resp.Certificate)); err != nil {
 			return resource.NonRetryableError(err)
@@ -205,12 +210,12 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 
 		certificateDetails, err := convertCertificateDetails(resp.Certificate)
 
-		if len(certificateDetails) < 1 {
-			return resource.NonRetryableError(fmt.Errorf("Error getting certificate details"))
-		}
-
 		if err != nil {
 			return resource.RetryableError(err)
+		}
+
+		if len(certificateDetails) < 1 {
+			return resource.NonRetryableError(fmt.Errorf("Error getting certificate details"))
 		}
 
 		if err := d.Set("certificate_details", certificateDetails); err != nil {
@@ -225,6 +230,34 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 
 		tagResp, err := acmconn.ListTagsForCertificate(params)
 		if err := d.Set("tags", tagsToMapACM(tagResp.Tags)); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		//support for deprecated attributes
+		d.Set("validation_emails", certificateDetails[0]["validation_emails"])
+
+		value, ok := d.GetOk("domain_validation_options")
+		var domainValidationOptionsInput []interface{}
+		if ok {
+			domainValidationOptionsInput = value.([]interface{})
+			//pad until it is the same size as certificate details
+			for len(domainValidationOptionsInput) < len(certificateDetails) {
+				domainValidationOptionsInput = append(domainValidationOptionsInput, make(map[string]interface{}, 1))
+			}
+		} else {
+			for i := 0; i < len(certificateDetails); i++ {
+				domainValidationOptionsInput = append(domainValidationOptionsInput, make(map[string]interface{}, 1))
+			}
+		}
+		for i, v := range domainValidationOptionsInput {
+			validationOption := v.(map[string]interface{})
+			validationOption["domain_name"] = certificateDetails[i]["domain_name"]
+			validationOption["resource_record_name"] = certificateDetails[i]["resource_record_name"]
+			validationOption["resource_record_type"] = certificateDetails[i]["resource_record_type"]
+			validationOption["resource_record_value"] = certificateDetails[i]["resource_record_value"]
+		}
+
+		if err := d.Set("domain_validation_options", domainValidationOptionsInput); err != nil {
 			return resource.NonRetryableError(err)
 		}
 
@@ -260,31 +293,32 @@ func convertCertificateDetails(certificate *acm.CertificateDetail) ([]map[string
 
 	if *certificate.Type == acm.CertificateTypeAmazonIssued {
 		for _, o := range certificate.DomainValidationOptions {
-			var resourceRecordName interface{}
-			var resourceRecordType interface{}
-			var resourceRecordValue interface{}
-			var validationMethod interface{}
+			var validationOption map[string]interface{}
 			if o.ResourceRecord != nil {
-				resourceRecordName = *o.ResourceRecord.Name
-				resourceRecordType = *o.ResourceRecord.Type
-				resourceRecordValue = *o.ResourceRecord.Value
-			}
-			if o.ValidationMethod != nil {
-				validationMethod = *o.ValidationMethod
+				validationOption = map[string]interface{}{
+					"domain_name":           *o.DomainName,
+					"resource_record_name":  *o.ResourceRecord.Name,
+					"resource_record_type":  *o.ResourceRecord.Type,
+					"resource_record_value": *o.ResourceRecord.Value,
+					"validation_method":     *o.ValidationMethod,
+				}
+
+			} else if o.ValidationEmails != nil && len(o.ValidationEmails) > 0 {
+				var validationEmails []string
+				for _, email := range o.ValidationEmails {
+					validationEmails = append(validationEmails, *email)
+				}
+				validationOption = map[string]interface{}{
+					"domain_name":       *o.DomainName,
+					"validation_emails": validationEmails,
+					"validation_method": "EMAIL",
+				}
+			} else {
+				return nil, fmt.Errorf("Validation options not yet updated. Need to retry: %#v", o)
 			}
 
-			var validationEmails []string
-			for _, email := range o.ValidationEmails {
-				validationEmails = append(validationEmails, *email)
-			}
-			validationOption := map[string]interface{}{
-				"domain_name":           *o.DomainName,
-				"validation_domain":     *o.ValidationDomain,
-				"resource_record_name":  resourceRecordName,
-				"resource_record_type":  resourceRecordType,
-				"resource_record_value": resourceRecordValue,
-				"validation_emails":     validationEmails,
-				"validation_method":     validationMethod,
+			if o.ValidationDomain != nil {
+				validationOption["validation_domain"] = *o.ValidationDomain
 			}
 			certificateDetails = append(certificateDetails, validationOption)
 		}
@@ -295,11 +329,23 @@ func convertCertificateDetails(certificate *acm.CertificateDetail) ([]map[string
 func resourceAwsAcmCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	acmconn := meta.(*AWSClient).acmconn
 
+	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
+
 	params := &acm.DeleteCertificateInput{
 		CertificateArn: aws.String(d.Id()),
 	}
 
-	_, err := acmconn.DeleteCertificate(params)
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+		_, err := acmconn.DeleteCertificate(params)
+		if err != nil {
+			if isAWSErr(err, acm.ErrCodeResourceInUseException, "") {
+				log.Printf("[WARN] Conflict deleting certificate in use: %s, retrying", err.Error())
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 
 	if err != nil && !isAWSErr(err, acm.ErrCodeResourceNotFoundException, "") {
 		return fmt.Errorf("Error deleting certificate: %s", err)
