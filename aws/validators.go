@@ -543,6 +543,7 @@ func validateS3BucketLifecycleTimestamp(v interface{}, k string) (ws []string, e
 
 func validateS3BucketLifecycleStorageClass() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
+		s3.TransitionStorageClassOnezoneIa,
 		s3.TransitionStorageClassStandardIa,
 		s3.TransitionStorageClassGlacier,
 	}, false)

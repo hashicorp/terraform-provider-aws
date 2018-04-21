@@ -1,13 +1,25 @@
 ## 1.16.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_batch_compute_environment` [GH-4270]
+
 ENHANCEMENTS:
 
 * data-source/aws_cognito_user_pools: Add `arns` attribute [GH-4256]
+* data-source/aws_ecs_cluster Return error on multiple clusters [GH-4286]
+* resource/aws_api_gateway_rest_api: Add `policy` argument [GH-4211]
+* resource/aws_api_gateway_stage: Add `tags` argument [GH-2858]
 * resource/aws_instance: Add `credit_specification` argument (e.g. t2.unlimited support) [GH-2619]
+* resource/aws_launch_configuration: Add `user_data_base64` argument [GH-4257]
+* resource/aws_s3_bucket: Add support for `ONEZONE_IA` storage class [GH-4287]
+* resource/aws_s3_bucket_object: Add support for `ONEZONE_IA` storage class [GH-4287]
+* resource/aws_spot_instance_request: Add `valid_from` and `valid_until` arguments [GH-4018]
 * resource/aws_ssm_patch_baseline: Support `CENTOS` `operating_system` argument [GH-4268]
 
 BUG FIXES:
 
+* resource/aws_codebuild_project: Mark auth resource attribute as sensitive [GH-4284]
 * data-source/aws_iam_policy_document: Prevent crash with multiple value principal identifiers [GH-4277]
 
 ## 1.15.0 (April 18, 2018)

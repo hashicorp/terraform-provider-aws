@@ -148,7 +148,8 @@ The following arguments are supported:
 * `associate_public_ip_address` - (Optional) Associate a public ip address with an instance in a VPC.
 * `vpc_classic_link_id` - (Optional) The ID of a ClassicLink-enabled VPC. Only applies to EC2-Classic instances. (eg. `vpc-2730681a`)
 * `vpc_classic_link_security_groups` - (Optional) The IDs of one or more security groups for the specified ClassicLink-enabled VPC (eg. `sg-46ae3d11`).
-* `user_data` - (Optional) The user data to provide when launching the instance.
+* `user_data` - (Optional) The user data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
+* `user_data_base64` - (Optional) Can be used instead of `user_data` to pass base64-encoded binary data directly. Use this instead of `user_data` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption.
 * `enable_monitoring` - (Optional) Enables/disables detailed monitoring. This is enabled by default.
 * `ebs_optimized` - (Optional) If true, the launched EC2 instance will be EBS-optimized.
 * `root_block_device` - (Optional) Customize details about the root block

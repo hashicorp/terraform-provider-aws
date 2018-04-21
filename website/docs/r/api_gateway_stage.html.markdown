@@ -76,3 +76,4 @@ The following arguments are supported:
 * `description` - (Optional) The description of the stage
 * `documentation_version` - (Optional) The version of the associated API documentation
 * `variables` - (Optional) A map that defines the stage variables
+* `tags` - (Optional) A mapping of tags to assign to the resource.
