@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -190,13 +191,12 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 
 	d.Partial(true)
 
-	stageArn := arnString(
-		meta.(*AWSClient).partition,
-		meta.(*AWSClient).region,
-		"apigateway",
-		"",
-		fmt.Sprintf("/restapis/%s/stages/%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)),
-	)
+	stageArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "apigateway",
+		Resource:  fmt.Sprintf("/restapis/%s/stages/%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)),
+	}.String()
 	if tagErr := setTagsAPIGatewayStage(conn, d, stageArn); tagErr != nil {
 		return tagErr
 	}
