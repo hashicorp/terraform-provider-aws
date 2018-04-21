@@ -9,6 +9,7 @@ ENHANCEMENTS:
 * data-source/aws_cognito_user_pools: Add `arns` attribute [GH-4256]
 * data-source/aws_ecs_cluster Return error on multiple clusters [GH-4286]
 * resource/aws_api_gateway_rest_api: Add `policy` argument [GH-4211]
+* resource/aws_api_gateway_stage: Add `tags` argument [GH-2858]
 * resource/aws_instance: Add `credit_specification` argument (e.g. t2.unlimited support) [GH-2619]
 * resource/aws_launch_configuration: Add `user_data_base64` argument [GH-4257]
 * resource/aws_s3_bucket: Add support for `ONEZONE_IA` storage class [GH-4287]
