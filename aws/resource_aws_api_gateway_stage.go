@@ -58,6 +58,7 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -94,6 +95,13 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 			variables[k] = v.(string)
 		}
 		input.Variables = aws.StringMap(variables)
+	}
+	if vars, ok := d.GetOk("tags"); ok {
+		newMap := make(map[string]string, len(vars.(map[string]interface{})))
+		for k, v := range vars.(map[string]interface{}) {
+			newMap[k] = v.(string)
+		}
+		input.Tags = aws.StringMap(newMap)
 	}
 
 	out, err := conn.CreateStage(&input)
@@ -172,6 +180,7 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("description", stage.Description)
 	d.Set("documentation_version", stage.DocumentationVersion)
 	d.Set("variables", aws.StringValueMap(stage.Variables))
+	d.Set("tags", aws.StringValueMap(stage.Tags))
 
 	return nil
 }
@@ -180,6 +189,19 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).apigateway
 
 	d.Partial(true)
+
+	stageArn := arnString(
+		meta.(*AWSClient).partition,
+		meta.(*AWSClient).region,
+		"apigateway",
+		"",
+		fmt.Sprintf("/restapis/%s/stages/%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)),
+	)
+	if tagErr := setTagsAPIGatewayStage(conn, d, stageArn); tagErr != nil {
+		return tagErr
+	}
+	d.SetPartial("tags")
+
 	operations := make([]*apigateway.PatchOperation, 0)
 	waitForCache := false
 	if d.HasChange("cache_cluster_enabled") {
