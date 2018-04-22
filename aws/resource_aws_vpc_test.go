@@ -89,6 +89,7 @@ func TestAccAWSVpc_basic(t *testing.T) {
 						"aws_vpc.foo", "default_route_table_id"),
 					resource.TestCheckResourceAttr(
 						"aws_vpc.foo", "enable_dns_support", "true"),
+					testAccCheckVpcIpv6(&vpc, false),
 				),
 			},
 		},
@@ -116,6 +117,7 @@ func TestAccAWSVpc_enableIpv6(t *testing.T) {
 						"aws_vpc.foo", "ipv6_cidr_block"),
 					resource.TestCheckResourceAttr(
 						"aws_vpc.foo", "assign_generated_ipv6_cidr_block", "true"),
+					testAccCheckVpcIpv6(&vpc, true),
 				),
 			},
 			{
@@ -127,6 +129,7 @@ func TestAccAWSVpc_enableIpv6(t *testing.T) {
 						"aws_vpc.foo", "cidr_block", "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(
 						"aws_vpc.foo", "assign_generated_ipv6_cidr_block", "false"),
+					testAccCheckVpcIpv6(&vpc, false),
 				),
 			},
 			{
@@ -142,6 +145,7 @@ func TestAccAWSVpc_enableIpv6(t *testing.T) {
 						"aws_vpc.foo", "ipv6_cidr_block"),
 					resource.TestCheckResourceAttr(
 						"aws_vpc.foo", "assign_generated_ipv6_cidr_block", "true"),
+					testAccCheckVpcIpv6(&vpc, true),
 				),
 			},
 		},
@@ -302,6 +306,25 @@ func testAccCheckVpcExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckVpcIpv6(vpc *ec2.Vpc, expected bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, a := range vpc.Ipv6CidrBlockAssociationSet {
+			if *a.Ipv6CidrBlockState.State == ec2.VpcCidrBlockStateCodeAssociated {
+				if !expected {
+					return fmt.Errorf("Unexpected IPv6 CIDR block: %s", *a.Ipv6CidrBlock)
+				}
+				return nil
+			}
+		}
+
+		if expected {
+			return fmt.Errorf("IPv6 CIDR block not found")
+		}
+
+		return nil
+	}
+}
+
 // https://github.com/hashicorp/terraform/issues/1301
 func TestAccAWSVpc_bothDnsOptionsSet(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -376,115 +399,113 @@ func TestAccAWSVpc_classiclinkDnsSupportOptionSet(t *testing.T) {
 
 const testAccVpcConfig = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpc"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpc"
+  }
 }
 `
 
 const testAccVpcConfigIpv6Enabled = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	assign_generated_ipv6_cidr_block = true
-	tags {
-		Name = "terraform-testacc-vpc-ipv6"
-	}
+  cidr_block = "10.1.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+  tags {
+    Name = "terraform-testacc-vpc-ipv6"
+  }
 }
 `
 
 const testAccVpcConfigIpv6Disabled = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpc-ipv6"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpc-ipv6"
+  }
 }
 `
 
 const testAccVpcConfigUpdate = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	enable_dns_hostnames = true
-	tags {
-		Name = "terraform-testacc-vpc"
-	}
+  cidr_block = "10.1.0.0/16"
+  enable_dns_hostnames = true
+  tags {
+    Name = "terraform-testacc-vpc"
+  }
 }
 `
 
 const testAccVpcConfigTags = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-
-	tags {
-		foo = "bar"
-		Name = "terraform-testacc-vpc-tags"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    foo = "bar"
+    Name = "terraform-testacc-vpc-tags"
+  }
 }
 `
 
 const testAccVpcConfigTagsUpdate = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-
-	tags {
-		bar = "baz"
-		Name = "terraform-testacc-vpc-tags"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    bar = "baz"
+    Name = "terraform-testacc-vpc-tags"
+  }
 }
 `
 const testAccVpcDedicatedConfig = `
 resource "aws_vpc" "bar" {
-	instance_tenancy = "dedicated"
-	cidr_block = "10.2.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpc-dedicated"
-	}
+  instance_tenancy = "dedicated"
+  cidr_block = "10.2.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpc-dedicated"
+  }
 }
 `
 
 const testAccVpcConfig_BothDnsOptions = `
 provider "aws" {
-	region = "eu-central-1"
+  region = "eu-central-1"
 }
 
 resource "aws_vpc" "bar" {
-	cidr_block = "10.2.0.0/16"
-	enable_dns_hostnames = true
-	enable_dns_support = true
-	tags {
-		Name = "terraform-testacc-vpc-both-dns-opts"
-	}
+  cidr_block = "10.2.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support = true
+  tags {
+    Name = "terraform-testacc-vpc-both-dns-opts"
+  }
 }
 `
 
 const testAccVpcConfig_DisabledDnsSupport = `
 resource "aws_vpc" "bar" {
-	cidr_block = "10.2.0.0/16"
-	enable_dns_support = false
-	tags {
-		Name = "terraform-testacc-vpc-disabled-dns-support"
-	}
+  cidr_block = "10.2.0.0/16"
+  enable_dns_support = false
+  tags {
+    Name = "terraform-testacc-vpc-disabled-dns-support"
+  }
 }
 `
 
 const testAccVpcConfig_ClassiclinkOption = `
 resource "aws_vpc" "bar" {
-	cidr_block = "172.2.0.0/16"
-	enable_classiclink = true
-	tags {
-		Name = "terraform-testacc-vpc-classic-link"
-	}
+  cidr_block = "172.2.0.0/16"
+  enable_classiclink = true
+  tags {
+    Name = "terraform-testacc-vpc-classic-link"
+  }
 }
 `
 
 const testAccVpcConfig_ClassiclinkDnsSupportOption = `
 resource "aws_vpc" "bar" {
-	cidr_block = "172.2.0.0/16"
-	enable_classiclink = true
-	enable_classiclink_dns_support = true
-	tags {
-		Name = "terraform-testacc-vpc-classic-link-support"
-	}
+  cidr_block = "172.2.0.0/16"
+  enable_classiclink = true
+  enable_classiclink_dns_support = true
+  tags {
+    Name = "terraform-testacc-vpc-classic-link-support"
+  }
 }
 `

@@ -28,6 +28,7 @@ func resourceAwsDefaultVpc() *schema.Resource {
 	// assign_generated_ipv6_cidr_block is a computed value for Default VPCs
 	dvpc.Schema["assign_generated_ipv6_cidr_block"] = &schema.Schema{
 		Type:     schema.TypeBool,
+		Optional: true,
 		Computed: true,
 	}
 
@@ -36,26 +37,24 @@ func resourceAwsDefaultVpc() *schema.Resource {
 
 func resourceAwsDefaultVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	req := &ec2.DescribeVpcsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("isDefault"),
-				Values: aws.StringSlice([]string{"true"}),
-			},
-		},
-	}
 
+	req := &ec2.DescribeVpcsInput{}
+	req.Filters = buildEC2AttributeFilterList(
+		map[string]string{
+			"isDefault": "true",
+		},
+	)
+
+	log.Printf("[DEBUG] Reading Default VPC: %s", req)
 	resp, err := conn.DescribeVpcs(req)
 	if err != nil {
 		return err
 	}
-
 	if resp.Vpcs == nil || len(resp.Vpcs) == 0 {
 		return fmt.Errorf("No default VPC found in this region.")
 	}
 
 	d.SetId(aws.StringValue(resp.Vpcs[0].VpcId))
-
 	return resourceAwsVpcUpdate(d, meta)
 }
 
