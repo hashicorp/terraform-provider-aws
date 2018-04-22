@@ -45,6 +45,10 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"invoke_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"rest_api_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -152,9 +156,11 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*AWSClient).apigateway
 
 	log.Printf("[DEBUG] Reading API Gateway Stage %s", d.Id())
+	restApiId := d.Get("rest_api_id").(string)
+	stageName := d.Get("stage_name").(string)
 	input := apigateway.GetStageInput{
-		RestApiId: aws.String(d.Get("rest_api_id").(string)),
-		StageName: aws.String(d.Get("stage_name").(string)),
+		RestApiId: aws.String(restApiId),
+		StageName: aws.String(stageName),
 	}
 	stage, err := conn.GetStage(&input)
 	if err != nil {
@@ -182,6 +188,9 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("documentation_version", stage.DocumentationVersion)
 	d.Set("variables", aws.StringValueMap(stage.Variables))
 	d.Set("tags", aws.StringValueMap(stage.Tags))
+
+	region := meta.(*AWSClient).region
+	d.Set("invoke_url", buildApiGatewayInvokeURL(restApiId, region, stageName))
 
 	return nil
 }
