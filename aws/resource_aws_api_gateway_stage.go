@@ -45,6 +45,10 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"execution_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"invoke_url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -191,6 +195,13 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 
 	region := meta.(*AWSClient).region
 	d.Set("invoke_url", buildApiGatewayInvokeURL(restApiId, region, stageName))
+
+	accountId := meta.(*AWSClient).accountid
+	arn, err := buildApiGatewayExecutionARN(restApiId, region, accountId)
+	if err != nil {
+		return err
+	}
+	d.Set("execution_arn", arn+"/"+stageName)
 
 	return nil
 }
