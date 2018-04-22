@@ -196,12 +196,14 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	region := meta.(*AWSClient).region
 	d.Set("invoke_url", buildApiGatewayInvokeURL(restApiId, region, stageName))
 
-	accountId := meta.(*AWSClient).accountid
-	arn, err := buildApiGatewayExecutionARN(restApiId, region, accountId)
-	if err != nil {
-		return err
-	}
-	d.Set("execution_arn", arn+"/"+stageName)
+	executionArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "execute-api",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("%s/%s", restApiId, stageName),
+	}.String()
+	d.Set("execution_arn", executionArn)
 
 	return nil
 }
