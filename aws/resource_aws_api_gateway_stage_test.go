@@ -29,6 +29,8 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_enabled", "true"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_size", "0.5"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.%", "1"),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_stage.test", "execution_arn"),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_stage.test", "invoke_url"),
 				),
 			},
 			resource.TestStep{
@@ -48,6 +50,8 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_enabled", "true"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_size", "0.5"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.%", "1"),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_stage.test", "execution_arn"),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_stage.test", "invoke_url"),
 				),
 			},
 		},
