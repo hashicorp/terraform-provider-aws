@@ -377,6 +377,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_emr_instance_group":                       resourceAwsEMRInstanceGroup(),
 			"aws_emr_security_configuration":               resourceAwsEMRSecurityConfiguration(),
 			"aws_flow_log":                                 resourceAwsFlowLog(),
+			"aws_fms_admin_account":                        resourceAwsFmsAdminAccount(),
 			"aws_gamelift_alias":                           resourceAwsGameliftAlias(),
 			"aws_gamelift_build":                           resourceAwsGameliftBuild(),
 			"aws_gamelift_fleet":                           resourceAwsGameliftFleet(),
