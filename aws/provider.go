@@ -386,6 +386,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_glue_connection":                          resourceAwsGlueConnection(),
 			"aws_glue_job":                                 resourceAwsGlueJob(),
 			"aws_guardduty_detector":                       resourceAwsGuardDutyDetector(),
+			"aws_guardduty_invite":                         resourceAwsGuardDutyInvite(),
 			"aws_guardduty_ipset":                          resourceAwsGuardDutyIpset(),
 			"aws_guardduty_member":                         resourceAwsGuardDutyMember(),
 			"aws_guardduty_threatintelset":                 resourceAwsGuardDutyThreatintelset(),
