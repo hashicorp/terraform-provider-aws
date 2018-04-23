@@ -23,13 +23,13 @@ func TestAccAWSDataSourceIAMInstanceProfile_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(
 						"data.aws_iam_instance_profile.test",
 						"arn",
-						regexp.MustCompile("^arn:aws:iam::[0-9]{12}:instance-profile/testpath/"+profileName+"$"),
+						regexp.MustCompile("^arn:[^:]+:iam::[0-9]{12}:instance-profile/testpath/"+profileName+"$"),
 					),
 					resource.TestCheckResourceAttr("data.aws_iam_instance_profile.test", "path", "/testpath/"),
 					resource.TestMatchResourceAttr(
 						"data.aws_iam_instance_profile.test",
 						"role_arn",
-						regexp.MustCompile("^arn:aws:iam::[0-9]{12}:role/"+roleName+"$"),
+						regexp.MustCompile("^arn:[^:]+:iam::[0-9]{12}:role/"+roleName+"$"),
 					),
 					resource.TestCheckResourceAttrSet("data.aws_iam_instance_profile.test", "role_id"),
 					resource.TestCheckResourceAttr("data.aws_iam_instance_profile.test", "role_name", roleName),

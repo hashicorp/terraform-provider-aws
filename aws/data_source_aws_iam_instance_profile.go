@@ -72,11 +72,12 @@ func dataSourceAwsIAMInstanceProfileRead(d *schema.ResourceData, meta interface{
 	d.Set("create_date", fmt.Sprintf("%v", instanceProfile.CreateDate))
 	d.Set("path", instanceProfile.Path)
 
-	// it's guaranteed that instanceProfile.Roles exists and has one element
-	role := instanceProfile.Roles[0]
-	d.Set("role_arn", role.Arn)
-	d.Set("role_id", role.RoleId)
-	d.Set("role_name", role.RoleName)
+	if len(instanceProfile.Roles) > 0 {
+		role := instanceProfile.Roles[0]
+		d.Set("role_arn", role.Arn)
+		d.Set("role_id", role.RoleId)
+		d.Set("role_name", role.RoleName)
+	}
 
 	return nil
 }
