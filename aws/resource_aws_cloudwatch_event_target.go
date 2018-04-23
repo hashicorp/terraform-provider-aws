@@ -123,7 +123,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 						},
 						"job_attempts": {
 							Type:         schema.TypeInt,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validation.IntBetween(1, 10),
 						},
 					},
