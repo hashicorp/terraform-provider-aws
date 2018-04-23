@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * data-source/aws_iam_instance_profile: Add `role_arn` and `role_name` attributes [GH-4300]
 * resource/aws_api_gateway_rest_api: Add `policy` argument [GH-4211]
 * resource/aws_api_gateway_stage: Add `tags` argument [GH-2858]
+* resource/aws_api_gateway_vpc_link: Support import [GH-4306]
 * resource/aws_cognito_user_pool: Support `user_migration` in `lambda_config` [GH-4301]
 * resource/aws_instance: Add `credit_specification` argument (e.g. t2.unlimited support) [GH-2619]
 * resource/aws_launch_configuration: Add `user_data_base64` argument [GH-4257]
