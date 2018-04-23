@@ -29,9 +29,10 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_iam_policy_document: Prevent crash with multiple value principal identifiers [GH-4277]
+* data-source/aws_lb_listener: Ensure attributes are properly set when not used as arguments [GH-4317]
 * resource/aws_codebuild_project: Mark auth resource attribute as sensitive [GH-4284]
 * resource/aws_s3_bucket: Prevent panic on lifecycle rule reading errors [GH-4282]
-* data-source/aws_iam_policy_document: Prevent crash with multiple value principal identifiers [GH-4277]
 
 ## 1.15.0 (April 18, 2018)
 
