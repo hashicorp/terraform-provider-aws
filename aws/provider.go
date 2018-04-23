@@ -327,6 +327,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_codepipeline":                             resourceAwsCodePipeline(),
 			"aws_customer_gateway":                         resourceAwsCustomerGateway(),
 			"aws_dax_cluster":                              resourceAwsDaxCluster(),
+			"aws_dax_parameter_group":                      resourceAwsDaxParameterGroup(),
 			"aws_dax_subnet_group":                         resourceAwsDaxSubnetGroup(),
 			"aws_db_event_subscription":                    resourceAwsDbEventSubscription(),
 			"aws_db_instance":                              resourceAwsDbInstance(),
