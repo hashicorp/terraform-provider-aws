@@ -70,10 +70,18 @@ Basic usage with region:
 
 ```hcl
 resource "aws_vpc_peering_connection" "foo" {
+  provider      = "aws.us-west-2"
   peer_owner_id = "${var.peer_owner_id}"
   peer_vpc_id   = "${aws_vpc.bar.id}"
   vpc_id        = "${aws_vpc.foo.id}"
   peer_region   = "us-east-1"
+  auto_accept   = false
+}
+
+resource "aws_vpc_peering_connection_accepter" "foo" {
+  provider                  = "aws.us-east-1"
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.foo.id}"
+  auto_accept               = true
 }
 
 resource "aws_vpc" "foo" {
@@ -102,7 +110,7 @@ The following arguments are supported:
 * `vpc_id` - (Required) The ID of the requester VPC.
 * `auto_accept` - (Optional) Accept the peering (both VPCs need to be in the same AWS account).
 * `peer_region` - (Optional) The region of the accepter VPC of the [VPC Peering Connection]. `auto_accept` must be `false`,
-and use the `aws_vpc_peering_connection_accepter` to manage the accepter side.
+and use the `aws_vpc_peering_connection_accepter` to manage the accepter side. Conflicts with `accepter` and `requester`.
 * `accepter` (Optional) - An optional configuration block that allows for [VPC Peering Connection]
 (http://docs.aws.amazon.com/AmazonVPC/latest/PeeringGuide) options to be set for the VPC that accepts
 the peering connection (a maximum of one).
