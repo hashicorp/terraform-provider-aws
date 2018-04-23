@@ -2353,6 +2353,10 @@ func expandCognitoUserPoolLambdaConfig(config map[string]interface{}) *cognitoid
 		configs.PreTokenGeneration = aws.String(v.(string))
 	}
 
+	if v, ok := config["user_migration"]; ok && v.(string) != "" {
+		configs.UserMigration = aws.String(v.(string))
+	}
+
 	if v, ok := config["verify_auth_challenge_response"]; ok && v.(string) != "" {
 		configs.VerifyAuthChallengeResponse = aws.String(v.(string))
 	}
@@ -2397,6 +2401,10 @@ func flattenCognitoUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigT
 
 	if s.PreTokenGeneration != nil {
 		m["pre_token_generation"] = *s.PreTokenGeneration
+	}
+
+	if s.UserMigration != nil {
+		m["user_migration"] = *s.UserMigration
 	}
 
 	if s.VerifyAuthChallengeResponse != nil {
