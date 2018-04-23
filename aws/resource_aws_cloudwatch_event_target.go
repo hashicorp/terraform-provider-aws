@@ -102,6 +102,34 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 				},
 			},
 
+			"batch_target": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"job_definition": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"job_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"array_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(2, 10000),
+						},
+						"job_attempts": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 10),
+						},
+					},
+				},
+			},
+
 			"input_transformer": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -209,6 +237,12 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if t.BatchParameters != nil {
+		if err := d.Set("batch_target", flattenAwsCloudWatchEventTargetBatchParameters(t.BatchParameters)); err != nil {
+			return fmt.Errorf("[DEBUG] Error setting batch_target error: %#v", err)
+		}
+	}
+
 	if t.InputTransformer != nil {
 		if err := d.Set("input_transformer", flattenAwsCloudWatchInputTransformer(t.InputTransformer)); err != nil {
 			return fmt.Errorf("[DEBUG] Error setting input_transformer error: %#v", err)
@@ -299,6 +333,9 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 	if v, ok := d.GetOk("ecs_target"); ok {
 		e.EcsParameters = expandAwsCloudWatchEventTargetEcsParameters(v.([]interface{}))
 	}
+	if v, ok := d.GetOk("batch_target"); ok {
+		e.BatchParameters = expandAwsCloudWatchEventTargetBatchParameters(v.([]interface{}))
+	}
 
 	if v, ok := d.GetOk("input_transformer"); ok {
 		e.InputTransformer = expandAwsCloudWatchEventTransformerParameters(v.([]interface{}))
@@ -344,6 +381,27 @@ func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}) *events.E
 	return ecsParameters
 }
 
+func expandAwsCloudWatchEventTargetBatchParameters(config []interface{}) *events.BatchParameters {
+	batchParameters := &events.BatchParameters{}
+	for _, c := range config {
+		param := c.(map[string]interface{})
+		batchParameters.JobDefinition = aws.String(param["job_definition"].(string))
+		batchParameters.JobName = aws.String(param["job_name"].(string))
+		if v := param["array_size"]; v != nil {
+			arrayProperties := &events.BatchArrayProperties{}
+			arrayProperties.Size = aws.Int64(int64(v.(int)))
+			batchParameters.ArrayProperties = arrayProperties
+		}
+		if v := param["job_attempts"]; v != nil {
+			retryStrategy := &events.BatchRetryStrategy{}
+			retryStrategy.Attempts = aws.Int64(int64(v.(int)))
+			batchParameters.RetryStrategy = retryStrategy
+		}
+	}
+
+	return batchParameters
+}
+
 func expandAwsCloudWatchEventTransformerParameters(config []interface{}) *events.InputTransformer {
 	transformerParameters := &events.InputTransformer{}
 
@@ -381,6 +439,20 @@ func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParam
 	config := make(map[string]interface{})
 	config["task_count"] = *ecsParameters.TaskCount
 	config["task_definition_arn"] = *ecsParameters.TaskDefinitionArn
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenAwsCloudWatchEventTargetBatchParameters(batchParameters *events.BatchParameters) []map[string]interface{} {
+	config := make(map[string]interface{})
+	config["job_definition"] = aws.StringValue(batchParameters.JobDefinition)
+	config["job_name"] = aws.StringValue(batchParameters.JobName)
+	if batchParameters.ArrayProperties != nil {
+		config["array_size"] = int(aws.Int64Value(batchParameters.ArrayProperties.Size))
+	}
+	if batchParameters.RetryStrategy != nil {
+		config["job_attempts"] = int(aws.Int64Value(batchParameters.RetryStrategy.Attempts))
+	}
 	result := []map[string]interface{}{config}
 	return result
 }
