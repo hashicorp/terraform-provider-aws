@@ -9,6 +9,7 @@ ENHANCEMENTS:
 
 * data-source/aws_cognito_user_pools: Add `arns` attribute [GH-4256]
 * data-source/aws_ecs_cluster Return error on multiple clusters [GH-4286]
+* data-source/aws_iam_instance_profile: Add `role_arn` and `role_name` attributes [GH-4300]
 * resource/aws_api_gateway_rest_api: Add `policy` argument [GH-4211]
 * resource/aws_api_gateway_stage: Add `tags` argument [GH-2858]
 * resource/aws_instance: Add `credit_specification` argument (e.g. t2.unlimited support) [GH-2619]
