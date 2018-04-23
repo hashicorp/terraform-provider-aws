@@ -16,6 +16,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_rest_api: Add `policy` argument [GH-4211]
 * resource/aws_api_gateway_stage: Add `tags` argument [GH-2858]
 * resource/aws_api_gateway_vpc_link: Support import [GH-4306]
+* resource/aws_cloudwatch_event_target: Add `batch_target` argument [GH-4312]
 * resource/aws_cognito_user_pool: Support `user_migration` in `lambda_config` [GH-4301]
 * resource/aws_instance: Add `credit_specification` argument (e.g. t2.unlimited support) [GH-2619]
 * resource/aws_kinesis_firehose_delivery_stream: Support Redshift `processing_configuration` [GH-4251]
