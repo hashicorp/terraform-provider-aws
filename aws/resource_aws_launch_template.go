@@ -597,7 +597,7 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 				ebs["snapshot_id"] = aws.StringValue(v.Ebs.SnapshotId)
 			}
 
-			mapping["ebs"] = ebs
+			mapping["ebs"] = []interface{}{ebs}
 		}
 		s = append(s, mapping)
 	}
