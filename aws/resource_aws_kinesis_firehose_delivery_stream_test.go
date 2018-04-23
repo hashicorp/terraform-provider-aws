@@ -1203,7 +1203,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     copy_options = "GZIP"
     data_table_columns = "test-col"
     processing_configuration = [{
-      enabled = "false",
+      enabled = false,
       processors = [{
         type = "Lambda"
         parameters = [{
