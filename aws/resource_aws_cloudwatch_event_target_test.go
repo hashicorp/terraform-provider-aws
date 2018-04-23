@@ -507,9 +507,15 @@ resource "aws_cloudwatch_event_target" "test" {
   role_arn = "${aws_iam_role.event_iam_role.arn}"
 
   batch_target {
-    job_definition = "${aws_batch_job_definition.batch_job_definition}"
+    job_definition = "${aws_batch_job_definition.batch_job_definition.arn}"
     job_name = "%[1]s"
   }
+
+  depends_on = [
+    "aws_batch_job_queue.batch_job_queue",
+    "aws_batch_job_definition.batch_job_definition",
+    "aws_iam_role.event_iam_role",
+  ]
 }
 
 resource "aws_iam_role" "event_iam_role" {
@@ -613,14 +619,14 @@ resource "aws_batch_compute_environment" "batch_compute_environment" {
   }
   service_role = "${aws_iam_role.batch_iam_role.arn}"
   type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+  depends_on = ["aws_iam_role_policy_attachment.batch_policy_attachment"]
 }
 
 resource "aws_batch_job_queue" "batch_job_queue" {
   name = "%[1]s"
   state = "ENABLED"
   priority = 1
-  compute_environments = ["${aws_batch_compute_environment.batch_compute_environment}"]
+  compute_environments = ["${aws_batch_compute_environment.batch_compute_environment.arn}"]
 }
 
 resource "aws_batch_job_definition" "batch_job_definition" {
