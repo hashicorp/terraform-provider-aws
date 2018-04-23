@@ -154,14 +154,14 @@ resource "aws_batch_job_queue" "test" {
   name = "%[1]s"
   state = "ENABLED"
   priority = 1
-  compute_environments = ["${aws_batch_compute_environment.sample}"]
+  compute_environments = ["${aws_batch_compute_environment.sample.arn}"]
 }
 
 resource "aws_batch_job_queue" "wrong" {
   name = "%[1]s_wrong"
   state = "ENABLED"
   priority = 2
-  compute_environments = ["${aws_batch_compute_environment.sample}"]
+  compute_environments = ["${aws_batch_compute_environment.sample.arn}"]
 }
 
 data "aws_batch_job_queue" "by_name" {
