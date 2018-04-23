@@ -16,6 +16,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_vpc_link: Support import [GH-4306]
 * resource/aws_cognito_user_pool: Support `user_migration` in `lambda_config` [GH-4301]
 * resource/aws_instance: Add `credit_specification` argument (e.g. t2.unlimited support) [GH-2619]
+* resource/aws_kinesis_firehose_delivery_stream: Support Redshift `processing_configuration` [GH-4251]
 * resource/aws_launch_configuration: Add `user_data_base64` argument [GH-4257]
 * resource/aws_s3_bucket: Add support for `ONEZONE_IA` storage class [GH-4287]
 * resource/aws_s3_bucket_object: Add support for `ONEZONE_IA` storage class [GH-4287]
