@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_batch_compute_environment` [GH-4270]
+* **New Resource:** `aws_dax_subnet_group` [GH-4302]
 
 ENHANCEMENTS:
 
