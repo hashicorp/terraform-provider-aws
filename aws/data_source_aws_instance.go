@@ -234,6 +234,10 @@ func dataSourceAwsInstance() *schema.Resource {
 					},
 				},
 			},
+			"disable_api_termination": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
