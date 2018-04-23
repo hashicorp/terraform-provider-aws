@@ -3,14 +3,22 @@
 FEATURES:
 
 * **New Data Source:** `aws_batch_compute_environment` [GH-4270]
+* **New Data Source:** `aws_batch_job_queue` [GH-4288]
+* **New Data Source:** `aws_lambda_function` [GH-2984]
+* **New Resource:** `aws_dax_parameter_group` [GH-4299]
+* **New Resource:** `aws_dax_subnet_group` [GH-4302]
 
 ENHANCEMENTS:
 
 * data-source/aws_cognito_user_pools: Add `arns` attribute [GH-4256]
 * data-source/aws_ecs_cluster Return error on multiple clusters [GH-4286]
+* data-source/aws_iam_instance_profile: Add `role_arn` and `role_name` attributes [GH-4300]
 * resource/aws_api_gateway_rest_api: Add `policy` argument [GH-4211]
 * resource/aws_api_gateway_stage: Add `tags` argument [GH-2858]
+* resource/aws_api_gateway_vpc_link: Support import [GH-4306]
+* resource/aws_cognito_user_pool: Support `user_migration` in `lambda_config` [GH-4301]
 * resource/aws_instance: Add `credit_specification` argument (e.g. t2.unlimited support) [GH-2619]
+* resource/aws_kinesis_firehose_delivery_stream: Support Redshift `processing_configuration` [GH-4251]
 * resource/aws_launch_configuration: Add `user_data_base64` argument [GH-4257]
 * resource/aws_s3_bucket: Add support for `ONEZONE_IA` storage class [GH-4287]
 * resource/aws_s3_bucket_object: Add support for `ONEZONE_IA` storage class [GH-4287]
@@ -20,6 +28,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_codebuild_project: Mark auth resource attribute as sensitive [GH-4284]
+* resource/aws_s3_bucket: Prevent panic on lifecycle rule reading errors [GH-4282]
 * data-source/aws_iam_policy_document: Prevent crash with multiple value principal identifiers [GH-4277]
 
 ## 1.15.0 (April 18, 2018)

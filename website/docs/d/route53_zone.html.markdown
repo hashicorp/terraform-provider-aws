@@ -14,7 +14,7 @@ This data source allows to find a Hosted Zone ID given Hosted Zone name and cert
 
 ## Example Usage
 
-The following example shows how to get a Hosted Zone from it's name and from this data how to create a Record Set.
+The following example shows how to get a Hosted Zone from its name and from this data how to create a Record Set.
 
 
 ```hcl
