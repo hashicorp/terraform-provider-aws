@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAWSIotEndpoint(t *testing.T) {
+func TestAccAWSIotEndpointDataSource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -14,8 +14,8 @@ func TestAccAWSIotEndpoint(t *testing.T) {
 			resource.TestStep{
 				Config: testAccAWSIotEndpointConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("aws_iot_endpoint.example", "id"),
-					resource.TestCheckResourceAttrSet("aws_iot_endpoint.example", "endpoint_address"),
+					resource.TestCheckResourceAttrSet("data.aws_iot_endpoint.example", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_iot_endpoint.example", "endpoint_address"),
 				),
 			},
 		},
