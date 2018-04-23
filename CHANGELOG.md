@@ -8,6 +8,7 @@ FEATURES:
 * **New Resource:** `aws_dax_parameter_group` [GH-4299]
 * **New Resource:** `aws_dax_subnet_group` [GH-4302]
 * **New Resource:** `aws_organizations_policy` [GH-4249]
+* **New Resource:** `aws_organizations_policy_attachment` [GH-4253]
 
 ENHANCEMENTS:
 
