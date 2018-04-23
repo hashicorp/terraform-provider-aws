@@ -45,6 +45,7 @@ resource "aws_vpc_endpoint" "ec2" {
 ```
 
 Custom Service Usage:
+
 ```hcl
 resource "aws_vpc_endpoint" "ptfe_service" {
   vpc_id            = "${var.vpc_id}"
