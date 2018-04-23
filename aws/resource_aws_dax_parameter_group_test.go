@@ -37,6 +37,7 @@ func TestAccAwsDaxParameterGroup_basic(t *testing.T) {
 }
 
 func TestAccAwsDaxParameterGroup_import(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dax_parameter_group.test"
 
 	resource.Test(t, resource.TestCase{
@@ -45,7 +46,7 @@ func TestAccAwsDaxParameterGroup_import(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDaxParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccDaxParameterGroupConfig(acctest.RandString(5)),
+				Config: testAccDaxParameterGroupConfig(rName),
 			},
 
 			resource.TestStep{

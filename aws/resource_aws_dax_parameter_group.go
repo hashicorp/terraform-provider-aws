@@ -88,6 +88,13 @@ func resourceAwsDaxParameterGroupRead(d *schema.ResourceData, meta interface{}) 
 		}
 		return err
 	}
+
+	if len(resp.ParameterGroups) == 0 {
+		log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	pg := resp.ParameterGroups[0]
 
 	paramresp, err := conn.DescribeParameters(&dax.DescribeParametersInput{
