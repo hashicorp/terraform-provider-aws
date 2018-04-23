@@ -5,6 +5,7 @@ FEATURES:
 * **New Data Source:** `aws_batch_compute_environment` [GH-4270]
 * **New Data Source:** `aws_batch_job_queue` [GH-4288]
 * **New Data Source:** `aws_lambda_function` [GH-2984]
+* **New Resource:** `aws_dax_parameter_group` [GH-4299]
 * **New Resource:** `aws_dax_subnet_group` [GH-4302]
 
 ENHANCEMENTS:
