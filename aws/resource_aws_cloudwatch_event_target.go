@@ -387,14 +387,14 @@ func expandAwsCloudWatchEventTargetBatchParameters(config []interface{}) *events
 		param := c.(map[string]interface{})
 		batchParameters.JobDefinition = aws.String(param["job_definition"].(string))
 		batchParameters.JobName = aws.String(param["job_name"].(string))
-		if v := param["array_size"]; v != nil {
+		if v, ok := param["array_size"].(int); ok && v > 1 && v <= 10000 {
 			arrayProperties := &events.BatchArrayProperties{}
-			arrayProperties.Size = aws.Int64(int64(v.(int)))
+			arrayProperties.Size = aws.Int64(int64(v))
 			batchParameters.ArrayProperties = arrayProperties
 		}
-		if v := param["job_attempts"]; v != nil {
+		if v, ok := param["job_attempts"].(int); ok && v > 0 && v <= 10 {
 			retryStrategy := &events.BatchRetryStrategy{}
-			retryStrategy.Attempts = aws.Int64(int64(v.(int)))
+			retryStrategy.Attempts = aws.Int64(int64(v))
 			batchParameters.RetryStrategy = retryStrategy
 		}
 	}
