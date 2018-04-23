@@ -10,8 +10,6 @@ description: |-
 
 Provides an EC2 launch template resource. Can be used to create instances or auto scaling groups.
 
--> **Note:** All arguments are optional except for either `name`, or `name_prefix`.
-
 ## Example Usage
 
 ```hcl
