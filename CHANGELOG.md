@@ -37,6 +37,9 @@ BUG FIXES:
 * data-source/aws_lb_listener: Ensure attributes are properly set when not used as arguments [GH-4317]
 * resource/aws_codebuild_project: Mark auth resource attribute as sensitive [GH-4284]
 * resource/aws_cognito_user_pool_client: Fix import to include user pool ID [GH-3762]
+* resource/aws_launch_template: Allow dashes in `name` and `name_prefix` arguments [GH-4321]
+* resource/aws_launch_template: Properly set `block_device_mappings` EBS information into Terraform state [GH-4321]
+* resource/aws_launch_template: Properly pass `block_device_mappings` information to EC2 API [GH-4321]
 * resource/aws_s3_bucket: Prevent panic on lifecycle rule reading errors [GH-4282]
 
 ## 1.15.0 (April 18, 2018)
