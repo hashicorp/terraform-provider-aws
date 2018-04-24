@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific Route 53 Hosted Zone
 ---
 
-# aws\_route53\_zone
+# Data Source: aws_route53_zone
 
 `aws_route53_zone` provides details about a specific Route 53 Hosted Zone.
 
@@ -14,7 +14,7 @@ This data source allows to find a Hosted Zone ID given Hosted Zone name and cert
 
 ## Example Usage
 
-The following example shows how to get a Hosted Zone from it's name and from this data how to create a Record Set.
+The following example shows how to get a Hosted Zone from its name and from this data how to create a Record Set.
 
 
 ```hcl

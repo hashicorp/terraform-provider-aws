@@ -146,8 +146,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  master_instance_type = "m3.xlarge"
-  core_instance_type   = "m3.xlarge"
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
   core_instance_count  = 2
 
   tags {
@@ -200,7 +200,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
 	tags {
-		Name = "tf_acc_emr_tests"
+		Name = "terraform-testacc-emr-instance-group"
 	}
 }
 
@@ -208,7 +208,9 @@ resource "aws_subnet" "main" {
   vpc_id     = "${aws_vpc.main.id}"
   cidr_block = "168.31.0.0/20"
 
-  #  map_public_ip_on_launch = true
+  tags {
+    Name = "tf-acc-emr-instance-group"
+  }
 }
 
 resource "aws_internet_gateway" "gw" {
@@ -401,7 +403,7 @@ func testAccAWSEmrInstanceGroupConfig(r int) string {
 	resource "aws_emr_instance_group" "task" {
     cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
     instance_count = 1
-    instance_type  = "m1.small"
+    instance_type  = "c4.large"
   }
 	`, r, r, r, r, r, r)
 }
@@ -411,7 +413,7 @@ func testAccAWSEmrInstanceGroupConfig_zero_count(r int) string {
 	resource "aws_emr_instance_group" "task" {
     cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
     instance_count = 0
-    instance_type  = "m1.small"
+    instance_type  = "c4.large"
   }
 	`, r, r, r, r, r, r)
 }
@@ -421,7 +423,7 @@ func testAccAWSEmrInstanceGroupConfig_ebsBasic(r int) string {
 		resource "aws_emr_instance_group" "task" {
     cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
     instance_count = 1
-    instance_type  = "m3.xlarge"
+    instance_type  = "c4.large"
     ebs_optimized = true
     ebs_config {
       "size" = 10,

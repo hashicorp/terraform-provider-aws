@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsNetworkInterfaceSGAttachment(t *testing.T) {
+func TestAccAWSNetworkInterfaceSGAttachment(t *testing.T) {
 	cases := []struct {
 		Name         string
 		ResourceAttr string
@@ -151,7 +151,7 @@ resource "aws_network_interface_sg_attachment" "sg_attachment" {
 `, attachmentEnabled)
 }
 
-func TestAccAwsNetworkInterfaceSGAttachmentRaceCheck(t *testing.T) {
+func TestAccAWSNetworkInterfaceSGAttachmentRaceCheck(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,

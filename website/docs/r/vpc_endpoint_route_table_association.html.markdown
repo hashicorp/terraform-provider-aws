@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create an association between a VPC endpoint and routing table.
 ---
 
-# aws\_vpc\_endpoint\_route\_table\_association
+# aws_vpc_endpoint_route_table_association
 
 Provides a resource to create an association between a VPC endpoint and routing table.
 

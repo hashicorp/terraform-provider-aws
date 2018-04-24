@@ -5,7 +5,7 @@ sidebar_current: "docs-aws-resource-route53-health-check"
 description: |-
   Provides a Route53 health check.
 ---
-# aws\_route53\_health\_check
+# aws_route53_health_check
 
 Provides a Route53 health check.
 

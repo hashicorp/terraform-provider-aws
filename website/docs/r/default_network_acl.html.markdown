@@ -6,7 +6,7 @@ description: |-
   Manage the default Network ACL resource.
 ---
 
-# aws\_default\_network\_acl
+# aws_default_network_acl
 
 Provides a resource to manage the default AWS Network ACL. VPC Only.
 
@@ -177,6 +177,6 @@ The following attributes are exported:
 * `vpc_id` -  The ID of the associated VPC
 * `ingress` - Set of ingress rules
 * `egress` - Set of egress rules
-* `subnet_ids` – IDs of associated Subnets
+* `subnet_ids` – IDs of associated Subnets
 
 [aws-network-acls]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html

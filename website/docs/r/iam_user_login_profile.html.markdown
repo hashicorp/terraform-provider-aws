@@ -6,7 +6,7 @@ description: |-
   Provides an IAM user login profile and encrypts the password.
 ---
 
-# aws\_iam\_user\_login\_profile
+# aws_iam_user_login_profile
 
 Provides one-time creation of a IAM user login profile, and uses PGP to
 encrypt the password for safe transport to the user. PGP keys can be

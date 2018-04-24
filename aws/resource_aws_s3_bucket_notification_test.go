@@ -16,15 +16,22 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func TestAccAWSS3Bucket_Notification(t *testing.T) {
-	rInt := acctest.RandInt()
+func TestAccAWSS3BucketNotification_basic(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	topicName := fmt.Sprintf("tf-acc-topic-s3-b-notification-%s", rString)
+	bucketName := fmt.Sprintf("tf-acc-bucket-notification-%s", rString)
+	queueName := fmt.Sprintf("tf-acc-queue-s3-b-notification-%s", rString)
+	roleName := fmt.Sprintf("tf-acc-role-s3-b-notification-%s", rString)
+	lambdaFuncName := fmt.Sprintf("tf-acc-lambda-func-s3-b-notification-%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSS3BucketConfigWithTopicNotification(rInt),
+				Config: testAccAWSS3BucketConfigWithTopicNotification(topicName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketTopicNotification(
 						"aws_s3_bucket.bucket",
@@ -35,7 +42,7 @@ func TestAccAWSS3Bucket_Notification(t *testing.T) {
 							FilterRules: []*s3.FilterRule{
 								&s3.FilterRule{
 									Name:  aws.String("Prefix"),
-									Value: aws.String(fmt.Sprintf("%d/", rInt)),
+									Value: aws.String("tf-acc-test/"),
 								},
 								&s3.FilterRule{
 									Name:  aws.String("Suffix"),
@@ -61,7 +68,7 @@ func TestAccAWSS3Bucket_Notification(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccAWSS3BucketConfigWithQueueNotification(rInt),
+				Config: testAccAWSS3BucketConfigWithQueueNotification(queueName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketQueueNotification(
 						"aws_s3_bucket.bucket",
@@ -72,7 +79,7 @@ func TestAccAWSS3Bucket_Notification(t *testing.T) {
 							FilterRules: []*s3.FilterRule{
 								&s3.FilterRule{
 									Name:  aws.String("Prefix"),
-									Value: aws.String(fmt.Sprintf("%d/", rInt)),
+									Value: aws.String("tf-acc-test/"),
 								},
 								&s3.FilterRule{
 									Name:  aws.String("Suffix"),
@@ -84,7 +91,7 @@ func TestAccAWSS3Bucket_Notification(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccAWSS3BucketConfigWithLambdaNotification(rInt),
+				Config: testAccAWSS3BucketConfigWithLambdaNotification(roleName, lambdaFuncName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketLambdaFunctionConfiguration(
 						"aws_s3_bucket.bucket",
@@ -95,7 +102,7 @@ func TestAccAWSS3Bucket_Notification(t *testing.T) {
 							FilterRules: []*s3.FilterRule{
 								&s3.FilterRule{
 									Name:  aws.String("Prefix"),
-									Value: aws.String(fmt.Sprintf("%d/", rInt)),
+									Value: aws.String("tf-acc-test/"),
 								},
 								&s3.FilterRule{
 									Name:  aws.String("Suffix"),
@@ -110,15 +117,19 @@ func TestAccAWSS3Bucket_Notification(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_NotificationWithoutFilter(t *testing.T) {
-	rInt := acctest.RandInt()
+func TestAccAWSS3BucketNotification_withoutFilter(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	topicName := fmt.Sprintf("tf-acc-topic-s3-b-notification-wo-f-%s", rString)
+	bucketName := fmt.Sprintf("tf-acc-bucket-notification-wo-f-%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSS3BucketConfigWithTopicNotificationWithoutFilter(rInt),
+				Config: testAccAWSS3BucketConfigWithTopicNotificationWithoutFilter(topicName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketTopicNotification(
 						"aws_s3_bucket.bucket",
@@ -341,10 +352,10 @@ func testAccCheckAWSS3BucketLambdaFunctionConfiguration(n, i, t string, events [
 	}
 }
 
-func testAccAWSS3BucketConfigWithTopicNotification(randInt int) string {
+func testAccAWSS3BucketConfigWithTopicNotification(topicName, bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "topic" {
-    name = "terraform-test-topic-%d"
+    name = "%s"
 	policy = <<POLICY
 {
 	"Version":"2012-10-17",
@@ -353,7 +364,7 @@ resource "aws_sns_topic" "topic" {
 		"Effect": "Allow",
 		"Principal": {"AWS":"*"},
 		"Action": "SNS:Publish",
-		"Resource": "arn:aws:sns:*:*:terraform-test-topic-%d",
+		"Resource": "arn:aws:sns:*:*:%s",
 		"Condition":{
 			"ArnLike":{"aws:SourceArn":"${aws_s3_bucket.bucket.arn}"}
 		}
@@ -363,7 +374,7 @@ POLICY
 }
 
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
+	bucket = "%s"
 	acl = "public-read"
 }
 
@@ -376,7 +387,7 @@ resource "aws_s3_bucket_notification" "notification" {
 		  "s3:ObjectCreated:*",
 		  "s3:ObjectRemoved:Delete",
 		]
-		filter_prefix = "%d/"
+		filter_prefix = "tf-acc-test/"
 		filter_suffix = ".txt"
 	}
 	topic {
@@ -389,18 +400,33 @@ resource "aws_s3_bucket_notification" "notification" {
 		filter_suffix = ".log"
 	}
 }
-`, randInt, randInt, randInt, randInt)
+`, topicName, topicName, bucketName)
 }
 
-func testAccAWSS3BucketConfigWithQueueNotification(randInt int) string {
+func testAccAWSS3BucketConfigWithQueueNotification(queueName, bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "queue" {
-    name = "terraform-test-queue-%d"
-	policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"sqs:SendMessage\",\"Resource\":\"arn:aws:sqs:*:*:terraform-test-queue-%d\",\"Condition\":{\"ArnEquals\":{\"aws:SourceArn\":\"${aws_s3_bucket.bucket.arn}\"}}}]}"
+    name = "%s"
+	policy = <<POLICY
+{
+	"Version":"2012-10-17",
+	"Statement": [{
+		"Effect":"Allow",
+		"Principal":"*",
+		"Action":"sqs:SendMessage",
+		"Resource":"arn:aws:sqs:*:*:%s",
+		"Condition":{
+			"ArnEquals":{
+				"aws:SourceArn":"${aws_s3_bucket.bucket.arn}"
+			}
+		}
+	}]
+}
+POLICY
 }
 
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
+	bucket = "%s"
 	acl = "public-read"
 }
 
@@ -413,18 +439,17 @@ resource "aws_s3_bucket_notification" "notification" {
 		  "s3:ObjectCreated:*",
 		  "s3:ObjectRemoved:Delete",
 		]
-		filter_prefix = "%d/"
+		filter_prefix = "tf-acc-test/"
 		filter_suffix = ".mp4"
 	}
 }
-`, randInt, randInt, randInt, randInt)
+`, queueName, queueName, bucketName)
 }
 
-func testAccAWSS3BucketConfigWithLambdaNotification(randInt int) string {
+func testAccAWSS3BucketConfigWithLambdaNotification(roleName, lambdaFuncName, bucketName string) string {
 	return fmt.Sprintf(`
-
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "iam_for_lambda"
+    name = "%s"
     assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -452,14 +477,14 @@ resource "aws_lambda_permission" "allow_bucket" {
 
 resource "aws_lambda_function" "func" {
     filename = "test-fixtures/lambdatest.zip"
-    function_name = "example_lambda_name_%d"
+    function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
 		runtime = "nodejs4.3"
 }
 
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
+	bucket = "%s"
 	acl = "public-read"
 }
 
@@ -472,17 +497,17 @@ resource "aws_s3_bucket_notification" "notification" {
 		  "s3:ObjectCreated:*",
 		  "s3:ObjectRemoved:Delete",
 		]
-		filter_prefix = "%d/"
+		filter_prefix = "tf-acc-test/"
 		filter_suffix = ".png"
 	}
 }
-`, randInt, randInt, randInt)
+`, roleName, lambdaFuncName, bucketName)
 }
 
-func testAccAWSS3BucketConfigWithTopicNotificationWithoutFilter(randInt int) string {
+func testAccAWSS3BucketConfigWithTopicNotificationWithoutFilter(topicName, bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "topic" {
-    name = "terraform-test-topic-%d"
+    name = "%s"
 	policy = <<POLICY
 {
 	"Version":"2012-10-17",
@@ -491,7 +516,7 @@ resource "aws_sns_topic" "topic" {
 		"Effect": "Allow",
 		"Principal": {"AWS":"*"},
 		"Action": "SNS:Publish",
-		"Resource": "arn:aws:sns:*:*:terraform-test-topic-%d",
+		"Resource": "arn:aws:sns:*:*:%s",
 		"Condition":{
 			"ArnLike":{"aws:SourceArn":"${aws_s3_bucket.bucket.arn}"}
 		}
@@ -501,7 +526,7 @@ POLICY
 }
 
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
+	bucket = "%s"
 	acl = "public-read"
 }
 
@@ -516,5 +541,5 @@ resource "aws_s3_bucket_notification" "notification" {
 		]
 	}
 }
-`, randInt, randInt, randInt)
+`, topicName, topicName, bucketName)
 }

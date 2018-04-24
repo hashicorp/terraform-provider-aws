@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Group resource.
 ---
 
-# aws\_autoscaling\_group
+# aws_autoscaling_group
 
 Provides an AutoScaling Group resource.
 
@@ -19,7 +19,6 @@ resource "aws_placement_group" "test" {
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones        = ["us-east-1a"]
   name                      = "foobar3-terraform-test"
   max_size                  = 5
   min_size                  = 2
@@ -29,6 +28,7 @@ resource "aws_autoscaling_group" "bar" {
   force_delete              = true
   placement_group           = "${aws_placement_group.test.id}"
   launch_configuration      = "${aws_launch_configuration.foobar.name}"
+  vpc_zone_identifier       = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
 
   initial_lifecycle_hook {
     name                 = "foobar"
@@ -66,7 +66,7 @@ EOF
 
 ## Interpolated tags
 
-```
+```hcl
 variable extra_tags {
   default = [
     {
@@ -83,11 +83,11 @@ variable extra_tags {
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones        = ["us-east-1a"]
   name                      = "foobar3-terraform-test"
   max_size                  = 5
   min_size                  = 2
   launch_configuration      = "${aws_launch_configuration.foobar.name}"
+  vpc_zone_identifier       = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
 
   tags = [
     {
@@ -122,8 +122,7 @@ The following arguments are supported:
 * `max_size` - (Required) The maximum size of the auto scale group.
 * `min_size` - (Required) The minimum size of the auto scale group.
     (See also [Waiting for Capacity](#waiting-for-capacity) below.)
-* `availability_zones` - (Optional) A list of AZs to launch resources in.
-   Required only if you do not specify any `vpc_zone_identifier`
+* `availability_zones` - (Required only for EC2-Classic) A list of one or more availability zones for the group. This parameter should not be specified when using `vpc_zone_identifier`.
 * `default_cooldown` - (Optional) The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `launch_configuration` - (Required) The name of the launch configuration to use.
 * `initial_lifecycle_hook` - (Optional) One or more
@@ -144,10 +143,9 @@ The following arguments are supported:
    drains all the instances before deleting the group.  This bypasses that
    behavior and potentially leaves resources dangling.
 * `load_balancers` (Optional) A list of elastic load balancer names to add to the autoscaling
-   group names.
+   group names. Only valid for classic load balancers. For ALBs, use `target_group_arns` instead.
 * `vpc_zone_identifier` (Optional) A list of subnet IDs to launch resources in.
-* `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with
-Application Load Balancing
+* `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with Application Load Balancing.
 * `termination_policies` (Optional) A list of policies to decide how the instances in the auto scale group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `Default`.
 * `suspended_processes` - (Optional) A list of processes to suspend for the AutoScaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`.
 Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your autoscaling group from functioning properly.
@@ -173,6 +171,7 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
 * `protect_from_scale_in` (Optional) Allows setting instance protection. The
    autoscaling group will not select instances with this setting for terminination
    during scale in events.
+*  `service_linked_role_arn` (Optional) The ARN of the service-linked role that the ASG will use to call other AWS services
 
 Tags support the following:
 
@@ -228,7 +227,7 @@ care to not duplicate these hooks in `aws_autoscaling_lifecycle_hook`.
 `autoscaling_group` provides the following
 [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
 
-- `delete` - (Default `5 minutes`) Used for destroying ASG.
+- `delete` - (Default `10 minutes`) Used for destroying ASG.
 
 
 ## Waiting for Capacity

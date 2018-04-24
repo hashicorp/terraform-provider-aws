@@ -15,7 +15,7 @@ const opAddTagsToResource = "AddTagsToResource"
 
 // AddTagsToResourceRequest generates a "aws/request.Request" representing the
 // client's request for the AddTagsToResource operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -36,7 +36,7 @@ const opAddTagsToResource = "AddTagsToResource"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AddTagsToResource
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AddTagsToResource
 func (c *SSM) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *request.Request, output *AddTagsToResourceOutput) {
 	op := &request.Operation{
 		Name:       opAddTagsToResource,
@@ -65,7 +65,7 @@ func (c *SSM) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *requ
 // and stack level. For example: Key=Owner and Value=DbAdmin, SysAdmin, or Dev.
 // Or Key=Stack and Value=Production, Pre-Production, or Test.
 //
-// Each resource can have a maximum of 10 tags.
+// Each resource can have a maximum of 50 tags.
 //
 // We recommend that you devise a set of tag keys that meets your needs for
 // each resource type. Using a consistent set of tag keys makes it easier for
@@ -99,7 +99,11 @@ func (c *SSM) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *requ
 //   The Targets parameter includes too many tags. Remove one or more tags and
 //   try the command again.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AddTagsToResource
+//   * ErrCodeTooManyUpdates "TooManyUpdates"
+//   There are concurrent updates for a resource that supports one update at a
+//   time.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AddTagsToResource
 func (c *SSM) AddTagsToResource(input *AddTagsToResourceInput) (*AddTagsToResourceOutput, error) {
 	req, out := c.AddTagsToResourceRequest(input)
 	return out, req.Send()
@@ -125,7 +129,7 @@ const opCancelCommand = "CancelCommand"
 
 // CancelCommandRequest generates a "aws/request.Request" representing the
 // client's request for the CancelCommand operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -146,7 +150,7 @@ const opCancelCommand = "CancelCommand"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelCommand
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelCommand
 func (c *SSM) CancelCommandRequest(input *CancelCommandInput) (req *request.Request, output *CancelCommandOutput) {
 	op := &request.Operation{
 		Name:       opCancelCommand,
@@ -199,7 +203,7 @@ func (c *SSM) CancelCommandRequest(input *CancelCommandInput) (req *request.Requ
 //   * ErrCodeDuplicateInstanceId "DuplicateInstanceId"
 //   You cannot specify an instance ID in more than one association.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelCommand
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelCommand
 func (c *SSM) CancelCommand(input *CancelCommandInput) (*CancelCommandOutput, error) {
 	req, out := c.CancelCommandRequest(input)
 	return out, req.Send()
@@ -225,7 +229,7 @@ const opCreateActivation = "CreateActivation"
 
 // CreateActivationRequest generates a "aws/request.Request" representing the
 // client's request for the CreateActivation operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -246,7 +250,7 @@ const opCreateActivation = "CreateActivation"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateActivation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateActivation
 func (c *SSM) CreateActivationRequest(input *CreateActivationInput) (req *request.Request, output *CreateActivationOutput) {
 	op := &request.Operation{
 		Name:       opCreateActivation,
@@ -282,7 +286,7 @@ func (c *SSM) CreateActivationRequest(input *CreateActivationInput) (req *reques
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateActivation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateActivation
 func (c *SSM) CreateActivation(input *CreateActivationInput) (*CreateActivationOutput, error) {
 	req, out := c.CreateActivationRequest(input)
 	return out, req.Send()
@@ -308,7 +312,7 @@ const opCreateAssociation = "CreateAssociation"
 
 // CreateAssociationRequest generates a "aws/request.Request" representing the
 // client's request for the CreateAssociation operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -329,7 +333,7 @@ const opCreateAssociation = "CreateAssociation"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociation
 func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *request.Request, output *CreateAssociationOutput) {
 	op := &request.Operation{
 		Name:       opCreateAssociation,
@@ -415,7 +419,7 @@ func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *requ
 //   * ErrCodeInvalidSchedule "InvalidSchedule"
 //   The schedule is invalid. Verify your cron or rate expression and try again.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociation
 func (c *SSM) CreateAssociation(input *CreateAssociationInput) (*CreateAssociationOutput, error) {
 	req, out := c.CreateAssociationRequest(input)
 	return out, req.Send()
@@ -441,7 +445,7 @@ const opCreateAssociationBatch = "CreateAssociationBatch"
 
 // CreateAssociationBatchRequest generates a "aws/request.Request" representing the
 // client's request for the CreateAssociationBatch operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -462,7 +466,7 @@ const opCreateAssociationBatch = "CreateAssociationBatch"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociationBatch
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociationBatch
 func (c *SSM) CreateAssociationBatchRequest(input *CreateAssociationBatchInput) (req *request.Request, output *CreateAssociationBatchOutput) {
 	op := &request.Operation{
 		Name:       opCreateAssociationBatch,
@@ -548,7 +552,7 @@ func (c *SSM) CreateAssociationBatchRequest(input *CreateAssociationBatchInput) 
 //   * ErrCodeInvalidSchedule "InvalidSchedule"
 //   The schedule is invalid. Verify your cron or rate expression and try again.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociationBatch
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociationBatch
 func (c *SSM) CreateAssociationBatch(input *CreateAssociationBatchInput) (*CreateAssociationBatchOutput, error) {
 	req, out := c.CreateAssociationBatchRequest(input)
 	return out, req.Send()
@@ -574,7 +578,7 @@ const opCreateDocument = "CreateDocument"
 
 // CreateDocumentRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDocument operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -595,7 +599,7 @@ const opCreateDocument = "CreateDocument"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateDocument
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateDocument
 func (c *SSM) CreateDocumentRequest(input *CreateDocumentInput) (req *request.Request, output *CreateDocumentOutput) {
 	op := &request.Operation{
 		Name:       opCreateDocument,
@@ -645,7 +649,7 @@ func (c *SSM) CreateDocumentRequest(input *CreateDocumentInput) (req *request.Re
 //   * ErrCodeInvalidDocumentSchemaVersion "InvalidDocumentSchemaVersion"
 //   The version of the document schema is not supported.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateDocument
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateDocument
 func (c *SSM) CreateDocument(input *CreateDocumentInput) (*CreateDocumentOutput, error) {
 	req, out := c.CreateDocumentRequest(input)
 	return out, req.Send()
@@ -671,7 +675,7 @@ const opCreateMaintenanceWindow = "CreateMaintenanceWindow"
 
 // CreateMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the CreateMaintenanceWindow operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -692,7 +696,7 @@ const opCreateMaintenanceWindow = "CreateMaintenanceWindow"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateMaintenanceWindow
 func (c *SSM) CreateMaintenanceWindowRequest(input *CreateMaintenanceWindowInput) (req *request.Request, output *CreateMaintenanceWindowOutput) {
 	op := &request.Operation{
 		Name:       opCreateMaintenanceWindow,
@@ -726,13 +730,16 @@ func (c *SSM) CreateMaintenanceWindowRequest(input *CreateMaintenanceWindowInput
 //   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits (e.g.
-//   too many Maintenance Windows have been created).
+//   Error returned when the caller has exceeded the default resource limits.
+//   For example, too many Maintenance Windows or Patch baselines have been created.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateMaintenanceWindow
 func (c *SSM) CreateMaintenanceWindow(input *CreateMaintenanceWindowInput) (*CreateMaintenanceWindowOutput, error) {
 	req, out := c.CreateMaintenanceWindowRequest(input)
 	return out, req.Send()
@@ -758,7 +765,7 @@ const opCreatePatchBaseline = "CreatePatchBaseline"
 
 // CreatePatchBaselineRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePatchBaseline operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -779,7 +786,7 @@ const opCreatePatchBaseline = "CreatePatchBaseline"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreatePatchBaseline
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreatePatchBaseline
 func (c *SSM) CreatePatchBaselineRequest(input *CreatePatchBaselineInput) (req *request.Request, output *CreatePatchBaselineOutput) {
 	op := &request.Operation{
 		Name:       opCreatePatchBaseline,
@@ -800,6 +807,9 @@ func (c *SSM) CreatePatchBaselineRequest(input *CreatePatchBaselineInput) (req *
 //
 // Creates a patch baseline.
 //
+// For information about valid key and value pairs in PatchFilters for each
+// supported operating system type, see PatchFilter (http://docs.aws.amazon.com/systems-manager/latest/APIReference/API_PatchFilter.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -813,13 +823,16 @@ func (c *SSM) CreatePatchBaselineRequest(input *CreatePatchBaselineInput) (req *
 //   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits (e.g.
-//   too many Maintenance Windows have been created).
+//   Error returned when the caller has exceeded the default resource limits.
+//   For example, too many Maintenance Windows or Patch baselines have been created.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreatePatchBaseline
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreatePatchBaseline
 func (c *SSM) CreatePatchBaseline(input *CreatePatchBaselineInput) (*CreatePatchBaselineOutput, error) {
 	req, out := c.CreatePatchBaselineRequest(input)
 	return out, req.Send()
@@ -845,7 +858,7 @@ const opCreateResourceDataSync = "CreateResourceDataSync"
 
 // CreateResourceDataSyncRequest generates a "aws/request.Request" representing the
 // client's request for the CreateResourceDataSync operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -866,7 +879,7 @@ const opCreateResourceDataSync = "CreateResourceDataSync"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateResourceDataSync
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateResourceDataSync
 func (c *SSM) CreateResourceDataSyncRequest(input *CreateResourceDataSyncInput) (req *request.Request, output *CreateResourceDataSyncOutput) {
 	op := &request.Operation{
 		Name:       opCreateResourceDataSync,
@@ -917,7 +930,7 @@ func (c *SSM) CreateResourceDataSyncRequest(input *CreateResourceDataSyncInput) 
 //   * ErrCodeResourceDataSyncInvalidConfigurationException "ResourceDataSyncInvalidConfigurationException"
 //   The specified sync configuration is invalid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateResourceDataSync
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateResourceDataSync
 func (c *SSM) CreateResourceDataSync(input *CreateResourceDataSyncInput) (*CreateResourceDataSyncOutput, error) {
 	req, out := c.CreateResourceDataSyncRequest(input)
 	return out, req.Send()
@@ -943,7 +956,7 @@ const opDeleteActivation = "DeleteActivation"
 
 // DeleteActivationRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteActivation operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -964,7 +977,7 @@ const opDeleteActivation = "DeleteActivation"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteActivation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteActivation
 func (c *SSM) DeleteActivationRequest(input *DeleteActivationInput) (req *request.Request, output *DeleteActivationOutput) {
 	op := &request.Operation{
 		Name:       opDeleteActivation,
@@ -1011,7 +1024,7 @@ func (c *SSM) DeleteActivationRequest(input *DeleteActivationInput) (req *reques
 //   There are concurrent updates for a resource that supports one update at a
 //   time.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteActivation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteActivation
 func (c *SSM) DeleteActivation(input *DeleteActivationInput) (*DeleteActivationOutput, error) {
 	req, out := c.DeleteActivationRequest(input)
 	return out, req.Send()
@@ -1037,7 +1050,7 @@ const opDeleteAssociation = "DeleteAssociation"
 
 // DeleteAssociationRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteAssociation operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1058,7 +1071,7 @@ const opDeleteAssociation = "DeleteAssociation"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteAssociation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteAssociation
 func (c *SSM) DeleteAssociationRequest(input *DeleteAssociationInput) (req *request.Request, output *DeleteAssociationOutput) {
 	op := &request.Operation{
 		Name:       opDeleteAssociation,
@@ -1120,7 +1133,7 @@ func (c *SSM) DeleteAssociationRequest(input *DeleteAssociationInput) (req *requ
 //   There are concurrent updates for a resource that supports one update at a
 //   time.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteAssociation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteAssociation
 func (c *SSM) DeleteAssociation(input *DeleteAssociationInput) (*DeleteAssociationOutput, error) {
 	req, out := c.DeleteAssociationRequest(input)
 	return out, req.Send()
@@ -1146,7 +1159,7 @@ const opDeleteDocument = "DeleteDocument"
 
 // DeleteDocumentRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDocument operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1167,7 +1180,7 @@ const opDeleteDocument = "DeleteDocument"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteDocument
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteDocument
 func (c *SSM) DeleteDocumentRequest(input *DeleteDocumentInput) (req *request.Request, output *DeleteDocumentOutput) {
 	op := &request.Operation{
 		Name:       opDeleteDocument,
@@ -1214,7 +1227,7 @@ func (c *SSM) DeleteDocumentRequest(input *DeleteDocumentInput) (req *request.Re
 //   You must disassociate a document from all instances before you can delete
 //   it.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteDocument
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteDocument
 func (c *SSM) DeleteDocument(input *DeleteDocumentInput) (*DeleteDocumentOutput, error) {
 	req, out := c.DeleteDocumentRequest(input)
 	return out, req.Send()
@@ -1240,7 +1253,7 @@ const opDeleteMaintenanceWindow = "DeleteMaintenanceWindow"
 
 // DeleteMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteMaintenanceWindow operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1261,7 +1274,7 @@ const opDeleteMaintenanceWindow = "DeleteMaintenanceWindow"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteMaintenanceWindow
 func (c *SSM) DeleteMaintenanceWindowRequest(input *DeleteMaintenanceWindowInput) (req *request.Request, output *DeleteMaintenanceWindowOutput) {
 	op := &request.Operation{
 		Name:       opDeleteMaintenanceWindow,
@@ -1293,7 +1306,7 @@ func (c *SSM) DeleteMaintenanceWindowRequest(input *DeleteMaintenanceWindowInput
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteMaintenanceWindow
 func (c *SSM) DeleteMaintenanceWindow(input *DeleteMaintenanceWindowInput) (*DeleteMaintenanceWindowOutput, error) {
 	req, out := c.DeleteMaintenanceWindowRequest(input)
 	return out, req.Send()
@@ -1319,7 +1332,7 @@ const opDeleteParameter = "DeleteParameter"
 
 // DeleteParameterRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteParameter operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1340,7 +1353,7 @@ const opDeleteParameter = "DeleteParameter"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParameter
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParameter
 func (c *SSM) DeleteParameterRequest(input *DeleteParameterInput) (req *request.Request, output *DeleteParameterOutput) {
 	op := &request.Operation{
 		Name:       opDeleteParameter,
@@ -1375,7 +1388,7 @@ func (c *SSM) DeleteParameterRequest(input *DeleteParameterInput) (req *request.
 //   * ErrCodeParameterNotFound "ParameterNotFound"
 //   The parameter could not be found. Verify the name and try again.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParameter
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParameter
 func (c *SSM) DeleteParameter(input *DeleteParameterInput) (*DeleteParameterOutput, error) {
 	req, out := c.DeleteParameterRequest(input)
 	return out, req.Send()
@@ -1401,7 +1414,7 @@ const opDeleteParameters = "DeleteParameters"
 
 // DeleteParametersRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteParameters operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1422,7 +1435,7 @@ const opDeleteParameters = "DeleteParameters"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParameters
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParameters
 func (c *SSM) DeleteParametersRequest(input *DeleteParametersInput) (req *request.Request, output *DeleteParametersOutput) {
 	op := &request.Operation{
 		Name:       opDeleteParameters,
@@ -1455,7 +1468,7 @@ func (c *SSM) DeleteParametersRequest(input *DeleteParametersInput) (req *reques
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParameters
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParameters
 func (c *SSM) DeleteParameters(input *DeleteParametersInput) (*DeleteParametersOutput, error) {
 	req, out := c.DeleteParametersRequest(input)
 	return out, req.Send()
@@ -1481,7 +1494,7 @@ const opDeletePatchBaseline = "DeletePatchBaseline"
 
 // DeletePatchBaselineRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePatchBaseline operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1502,7 +1515,7 @@ const opDeletePatchBaseline = "DeletePatchBaseline"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeletePatchBaseline
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeletePatchBaseline
 func (c *SSM) DeletePatchBaselineRequest(input *DeletePatchBaselineInput) (req *request.Request, output *DeletePatchBaselineOutput) {
 	op := &request.Operation{
 		Name:       opDeletePatchBaseline,
@@ -1538,7 +1551,7 @@ func (c *SSM) DeletePatchBaselineRequest(input *DeletePatchBaselineInput) (req *
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeletePatchBaseline
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeletePatchBaseline
 func (c *SSM) DeletePatchBaseline(input *DeletePatchBaselineInput) (*DeletePatchBaselineOutput, error) {
 	req, out := c.DeletePatchBaselineRequest(input)
 	return out, req.Send()
@@ -1564,7 +1577,7 @@ const opDeleteResourceDataSync = "DeleteResourceDataSync"
 
 // DeleteResourceDataSyncRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteResourceDataSync operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1585,7 +1598,7 @@ const opDeleteResourceDataSync = "DeleteResourceDataSync"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteResourceDataSync
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteResourceDataSync
 func (c *SSM) DeleteResourceDataSyncRequest(input *DeleteResourceDataSyncInput) (req *request.Request, output *DeleteResourceDataSyncOutput) {
 	op := &request.Operation{
 		Name:       opDeleteResourceDataSync,
@@ -1623,7 +1636,7 @@ func (c *SSM) DeleteResourceDataSyncRequest(input *DeleteResourceDataSyncInput) 
 //   * ErrCodeResourceDataSyncNotFoundException "ResourceDataSyncNotFoundException"
 //   The specified sync name was not found.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteResourceDataSync
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteResourceDataSync
 func (c *SSM) DeleteResourceDataSync(input *DeleteResourceDataSyncInput) (*DeleteResourceDataSyncOutput, error) {
 	req, out := c.DeleteResourceDataSyncRequest(input)
 	return out, req.Send()
@@ -1649,7 +1662,7 @@ const opDeregisterManagedInstance = "DeregisterManagedInstance"
 
 // DeregisterManagedInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterManagedInstance operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1670,7 +1683,7 @@ const opDeregisterManagedInstance = "DeregisterManagedInstance"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterManagedInstance
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterManagedInstance
 func (c *SSM) DeregisterManagedInstanceRequest(input *DeregisterManagedInstanceInput) (req *request.Request, output *DeregisterManagedInstanceOutput) {
 	op := &request.Operation{
 		Name:       opDeregisterManagedInstance,
@@ -1719,7 +1732,7 @@ func (c *SSM) DeregisterManagedInstanceRequest(input *DeregisterManagedInstanceI
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterManagedInstance
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterManagedInstance
 func (c *SSM) DeregisterManagedInstance(input *DeregisterManagedInstanceInput) (*DeregisterManagedInstanceOutput, error) {
 	req, out := c.DeregisterManagedInstanceRequest(input)
 	return out, req.Send()
@@ -1745,7 +1758,7 @@ const opDeregisterPatchBaselineForPatchGroup = "DeregisterPatchBaselineForPatchG
 
 // DeregisterPatchBaselineForPatchGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterPatchBaselineForPatchGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1766,7 +1779,7 @@ const opDeregisterPatchBaselineForPatchGroup = "DeregisterPatchBaselineForPatchG
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterPatchBaselineForPatchGroup
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterPatchBaselineForPatchGroup
 func (c *SSM) DeregisterPatchBaselineForPatchGroupRequest(input *DeregisterPatchBaselineForPatchGroupInput) (req *request.Request, output *DeregisterPatchBaselineForPatchGroupOutput) {
 	op := &request.Operation{
 		Name:       opDeregisterPatchBaselineForPatchGroup,
@@ -1802,7 +1815,7 @@ func (c *SSM) DeregisterPatchBaselineForPatchGroupRequest(input *DeregisterPatch
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterPatchBaselineForPatchGroup
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterPatchBaselineForPatchGroup
 func (c *SSM) DeregisterPatchBaselineForPatchGroup(input *DeregisterPatchBaselineForPatchGroupInput) (*DeregisterPatchBaselineForPatchGroupOutput, error) {
 	req, out := c.DeregisterPatchBaselineForPatchGroupRequest(input)
 	return out, req.Send()
@@ -1828,7 +1841,7 @@ const opDeregisterTargetFromMaintenanceWindow = "DeregisterTargetFromMaintenance
 
 // DeregisterTargetFromMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterTargetFromMaintenanceWindow operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1849,7 +1862,7 @@ const opDeregisterTargetFromMaintenanceWindow = "DeregisterTargetFromMaintenance
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTargetFromMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTargetFromMaintenanceWindow
 func (c *SSM) DeregisterTargetFromMaintenanceWindowRequest(input *DeregisterTargetFromMaintenanceWindowInput) (req *request.Request, output *DeregisterTargetFromMaintenanceWindowOutput) {
 	op := &request.Operation{
 		Name:       opDeregisterTargetFromMaintenanceWindow,
@@ -1879,8 +1892,11 @@ func (c *SSM) DeregisterTargetFromMaintenanceWindowRequest(input *DeregisterTarg
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -1889,7 +1905,7 @@ func (c *SSM) DeregisterTargetFromMaintenanceWindowRequest(input *DeregisterTarg
 //   You specified the Safe option for the DeregisterTargetFromMaintenanceWindow
 //   operation, but the target is still referenced in a task.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTargetFromMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTargetFromMaintenanceWindow
 func (c *SSM) DeregisterTargetFromMaintenanceWindow(input *DeregisterTargetFromMaintenanceWindowInput) (*DeregisterTargetFromMaintenanceWindowOutput, error) {
 	req, out := c.DeregisterTargetFromMaintenanceWindowRequest(input)
 	return out, req.Send()
@@ -1915,7 +1931,7 @@ const opDeregisterTaskFromMaintenanceWindow = "DeregisterTaskFromMaintenanceWind
 
 // DeregisterTaskFromMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterTaskFromMaintenanceWindow operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1936,7 +1952,7 @@ const opDeregisterTaskFromMaintenanceWindow = "DeregisterTaskFromMaintenanceWind
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTaskFromMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTaskFromMaintenanceWindow
 func (c *SSM) DeregisterTaskFromMaintenanceWindowRequest(input *DeregisterTaskFromMaintenanceWindowInput) (req *request.Request, output *DeregisterTaskFromMaintenanceWindowOutput) {
 	op := &request.Operation{
 		Name:       opDeregisterTaskFromMaintenanceWindow,
@@ -1966,13 +1982,16 @@ func (c *SSM) DeregisterTaskFromMaintenanceWindowRequest(input *DeregisterTaskFr
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTaskFromMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTaskFromMaintenanceWindow
 func (c *SSM) DeregisterTaskFromMaintenanceWindow(input *DeregisterTaskFromMaintenanceWindowInput) (*DeregisterTaskFromMaintenanceWindowOutput, error) {
 	req, out := c.DeregisterTaskFromMaintenanceWindowRequest(input)
 	return out, req.Send()
@@ -1998,7 +2017,7 @@ const opDescribeActivations = "DescribeActivations"
 
 // DescribeActivationsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeActivations operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2019,7 +2038,7 @@ const opDescribeActivations = "DescribeActivations"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeActivations
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeActivations
 func (c *SSM) DescribeActivationsRequest(input *DescribeActivationsInput) (req *request.Request, output *DescribeActivationsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeActivations,
@@ -2066,7 +2085,7 @@ func (c *SSM) DescribeActivationsRequest(input *DescribeActivationsInput) (req *
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeActivations
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeActivations
 func (c *SSM) DescribeActivations(input *DescribeActivationsInput) (*DescribeActivationsOutput, error) {
 	req, out := c.DescribeActivationsRequest(input)
 	return out, req.Send()
@@ -2142,7 +2161,7 @@ const opDescribeAssociation = "DescribeAssociation"
 
 // DescribeAssociationRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAssociation operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2163,7 +2182,7 @@ const opDescribeAssociation = "DescribeAssociation"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAssociation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAssociation
 func (c *SSM) DescribeAssociationRequest(input *DescribeAssociationInput) (req *request.Request, output *DescribeAssociationOutput) {
 	op := &request.Operation{
 		Name:       opDescribeAssociation,
@@ -2225,7 +2244,7 @@ func (c *SSM) DescribeAssociationRequest(input *DescribeAssociationInput) (req *
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAssociation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAssociation
 func (c *SSM) DescribeAssociation(input *DescribeAssociationInput) (*DescribeAssociationOutput, error) {
 	req, out := c.DescribeAssociationRequest(input)
 	return out, req.Send()
@@ -2251,7 +2270,7 @@ const opDescribeAutomationExecutions = "DescribeAutomationExecutions"
 
 // DescribeAutomationExecutionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAutomationExecutions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2272,7 +2291,7 @@ const opDescribeAutomationExecutions = "DescribeAutomationExecutions"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationExecutions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationExecutions
 func (c *SSM) DescribeAutomationExecutionsRequest(input *DescribeAutomationExecutionsInput) (req *request.Request, output *DescribeAutomationExecutionsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeAutomationExecutions,
@@ -2313,7 +2332,7 @@ func (c *SSM) DescribeAutomationExecutionsRequest(input *DescribeAutomationExecu
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationExecutions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationExecutions
 func (c *SSM) DescribeAutomationExecutions(input *DescribeAutomationExecutionsInput) (*DescribeAutomationExecutionsOutput, error) {
 	req, out := c.DescribeAutomationExecutionsRequest(input)
 	return out, req.Send()
@@ -2339,7 +2358,7 @@ const opDescribeAutomationStepExecutions = "DescribeAutomationStepExecutions"
 
 // DescribeAutomationStepExecutionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAutomationStepExecutions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2360,7 +2379,7 @@ const opDescribeAutomationStepExecutions = "DescribeAutomationStepExecutions"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationStepExecutions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationStepExecutions
 func (c *SSM) DescribeAutomationStepExecutionsRequest(input *DescribeAutomationStepExecutionsInput) (req *request.Request, output *DescribeAutomationStepExecutionsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeAutomationStepExecutions,
@@ -2406,7 +2425,7 @@ func (c *SSM) DescribeAutomationStepExecutionsRequest(input *DescribeAutomationS
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationStepExecutions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationStepExecutions
 func (c *SSM) DescribeAutomationStepExecutions(input *DescribeAutomationStepExecutionsInput) (*DescribeAutomationStepExecutionsOutput, error) {
 	req, out := c.DescribeAutomationStepExecutionsRequest(input)
 	return out, req.Send()
@@ -2432,7 +2451,7 @@ const opDescribeAvailablePatches = "DescribeAvailablePatches"
 
 // DescribeAvailablePatchesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAvailablePatches operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2453,7 +2472,7 @@ const opDescribeAvailablePatches = "DescribeAvailablePatches"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAvailablePatches
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAvailablePatches
 func (c *SSM) DescribeAvailablePatchesRequest(input *DescribeAvailablePatchesInput) (req *request.Request, output *DescribeAvailablePatchesOutput) {
 	op := &request.Operation{
 		Name:       opDescribeAvailablePatches,
@@ -2485,7 +2504,7 @@ func (c *SSM) DescribeAvailablePatchesRequest(input *DescribeAvailablePatchesInp
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAvailablePatches
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAvailablePatches
 func (c *SSM) DescribeAvailablePatches(input *DescribeAvailablePatchesInput) (*DescribeAvailablePatchesOutput, error) {
 	req, out := c.DescribeAvailablePatchesRequest(input)
 	return out, req.Send()
@@ -2511,7 +2530,7 @@ const opDescribeDocument = "DescribeDocument"
 
 // DescribeDocumentRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDocument operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2532,7 +2551,7 @@ const opDescribeDocument = "DescribeDocument"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocument
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocument
 func (c *SSM) DescribeDocumentRequest(input *DescribeDocumentInput) (req *request.Request, output *DescribeDocumentOutput) {
 	op := &request.Operation{
 		Name:       opDescribeDocument,
@@ -2570,7 +2589,7 @@ func (c *SSM) DescribeDocumentRequest(input *DescribeDocumentInput) (req *reques
 //   * ErrCodeInvalidDocumentVersion "InvalidDocumentVersion"
 //   The document version is not valid or does not exist.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocument
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocument
 func (c *SSM) DescribeDocument(input *DescribeDocumentInput) (*DescribeDocumentOutput, error) {
 	req, out := c.DescribeDocumentRequest(input)
 	return out, req.Send()
@@ -2596,7 +2615,7 @@ const opDescribeDocumentPermission = "DescribeDocumentPermission"
 
 // DescribeDocumentPermissionRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDocumentPermission operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2617,7 +2636,7 @@ const opDescribeDocumentPermission = "DescribeDocumentPermission"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocumentPermission
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocumentPermission
 func (c *SSM) DescribeDocumentPermissionRequest(input *DescribeDocumentPermissionInput) (req *request.Request, output *DescribeDocumentPermissionOutput) {
 	op := &request.Operation{
 		Name:       opDescribeDocumentPermission,
@@ -2658,7 +2677,7 @@ func (c *SSM) DescribeDocumentPermissionRequest(input *DescribeDocumentPermissio
 //   The permission type is not supported. Share is the only supported permission
 //   type.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocumentPermission
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocumentPermission
 func (c *SSM) DescribeDocumentPermission(input *DescribeDocumentPermissionInput) (*DescribeDocumentPermissionOutput, error) {
 	req, out := c.DescribeDocumentPermissionRequest(input)
 	return out, req.Send()
@@ -2684,7 +2703,7 @@ const opDescribeEffectiveInstanceAssociations = "DescribeEffectiveInstanceAssoci
 
 // DescribeEffectiveInstanceAssociationsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEffectiveInstanceAssociations operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2705,7 +2724,7 @@ const opDescribeEffectiveInstanceAssociations = "DescribeEffectiveInstanceAssoci
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectiveInstanceAssociations
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectiveInstanceAssociations
 func (c *SSM) DescribeEffectiveInstanceAssociationsRequest(input *DescribeEffectiveInstanceAssociationsInput) (req *request.Request, output *DescribeEffectiveInstanceAssociationsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeEffectiveInstanceAssociations,
@@ -2755,7 +2774,7 @@ func (c *SSM) DescribeEffectiveInstanceAssociationsRequest(input *DescribeEffect
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectiveInstanceAssociations
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectiveInstanceAssociations
 func (c *SSM) DescribeEffectiveInstanceAssociations(input *DescribeEffectiveInstanceAssociationsInput) (*DescribeEffectiveInstanceAssociationsOutput, error) {
 	req, out := c.DescribeEffectiveInstanceAssociationsRequest(input)
 	return out, req.Send()
@@ -2781,7 +2800,7 @@ const opDescribeEffectivePatchesForPatchBaseline = "DescribeEffectivePatchesForP
 
 // DescribeEffectivePatchesForPatchBaselineRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEffectivePatchesForPatchBaseline operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2802,7 +2821,7 @@ const opDescribeEffectivePatchesForPatchBaseline = "DescribeEffectivePatchesForP
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectivePatchesForPatchBaseline
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectivePatchesForPatchBaseline
 func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEffectivePatchesForPatchBaselineInput) (req *request.Request, output *DescribeEffectivePatchesForPatchBaselineOutput) {
 	op := &request.Operation{
 		Name:       opDescribeEffectivePatchesForPatchBaseline,
@@ -2838,8 +2857,11 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEff
 //   try again.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeUnsupportedOperatingSystem "UnsupportedOperatingSystem"
 //   The operating systems you specified is not supported, or the operation is
@@ -2849,7 +2871,7 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEff
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectivePatchesForPatchBaseline
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectivePatchesForPatchBaseline
 func (c *SSM) DescribeEffectivePatchesForPatchBaseline(input *DescribeEffectivePatchesForPatchBaselineInput) (*DescribeEffectivePatchesForPatchBaselineOutput, error) {
 	req, out := c.DescribeEffectivePatchesForPatchBaselineRequest(input)
 	return out, req.Send()
@@ -2875,7 +2897,7 @@ const opDescribeInstanceAssociationsStatus = "DescribeInstanceAssociationsStatus
 
 // DescribeInstanceAssociationsStatusRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInstanceAssociationsStatus operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2896,7 +2918,7 @@ const opDescribeInstanceAssociationsStatus = "DescribeInstanceAssociationsStatus
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceAssociationsStatus
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceAssociationsStatus
 func (c *SSM) DescribeInstanceAssociationsStatusRequest(input *DescribeInstanceAssociationsStatusInput) (req *request.Request, output *DescribeInstanceAssociationsStatusOutput) {
 	op := &request.Operation{
 		Name:       opDescribeInstanceAssociationsStatus,
@@ -2946,7 +2968,7 @@ func (c *SSM) DescribeInstanceAssociationsStatusRequest(input *DescribeInstanceA
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceAssociationsStatus
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceAssociationsStatus
 func (c *SSM) DescribeInstanceAssociationsStatus(input *DescribeInstanceAssociationsStatusInput) (*DescribeInstanceAssociationsStatusOutput, error) {
 	req, out := c.DescribeInstanceAssociationsStatusRequest(input)
 	return out, req.Send()
@@ -2972,7 +2994,7 @@ const opDescribeInstanceInformation = "DescribeInstanceInformation"
 
 // DescribeInstanceInformationRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInstanceInformation operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2993,7 +3015,7 @@ const opDescribeInstanceInformation = "DescribeInstanceInformation"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceInformation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceInformation
 func (c *SSM) DescribeInstanceInformationRequest(input *DescribeInstanceInformationInput) (req *request.Request, output *DescribeInstanceInformationOutput) {
 	op := &request.Operation{
 		Name:       opDescribeInstanceInformation,
@@ -3060,7 +3082,7 @@ func (c *SSM) DescribeInstanceInformationRequest(input *DescribeInstanceInformat
 //   * ErrCodeInvalidFilterKey "InvalidFilterKey"
 //   The specified key is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceInformation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceInformation
 func (c *SSM) DescribeInstanceInformation(input *DescribeInstanceInformationInput) (*DescribeInstanceInformationOutput, error) {
 	req, out := c.DescribeInstanceInformationRequest(input)
 	return out, req.Send()
@@ -3136,7 +3158,7 @@ const opDescribeInstancePatchStates = "DescribeInstancePatchStates"
 
 // DescribeInstancePatchStatesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInstancePatchStates operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3157,7 +3179,7 @@ const opDescribeInstancePatchStates = "DescribeInstancePatchStates"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStates
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStates
 func (c *SSM) DescribeInstancePatchStatesRequest(input *DescribeInstancePatchStatesInput) (req *request.Request, output *DescribeInstancePatchStatesOutput) {
 	op := &request.Operation{
 		Name:       opDescribeInstancePatchStates,
@@ -3192,7 +3214,7 @@ func (c *SSM) DescribeInstancePatchStatesRequest(input *DescribeInstancePatchSta
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStates
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStates
 func (c *SSM) DescribeInstancePatchStates(input *DescribeInstancePatchStatesInput) (*DescribeInstancePatchStatesOutput, error) {
 	req, out := c.DescribeInstancePatchStatesRequest(input)
 	return out, req.Send()
@@ -3218,7 +3240,7 @@ const opDescribeInstancePatchStatesForPatchGroup = "DescribeInstancePatchStatesF
 
 // DescribeInstancePatchStatesForPatchGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInstancePatchStatesForPatchGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3239,7 +3261,7 @@ const opDescribeInstancePatchStatesForPatchGroup = "DescribeInstancePatchStatesF
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStatesForPatchGroup
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStatesForPatchGroup
 func (c *SSM) DescribeInstancePatchStatesForPatchGroupRequest(input *DescribeInstancePatchStatesForPatchGroupInput) (req *request.Request, output *DescribeInstancePatchStatesForPatchGroupOutput) {
 	op := &request.Operation{
 		Name:       opDescribeInstancePatchStatesForPatchGroup,
@@ -3279,7 +3301,7 @@ func (c *SSM) DescribeInstancePatchStatesForPatchGroupRequest(input *DescribeIns
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStatesForPatchGroup
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStatesForPatchGroup
 func (c *SSM) DescribeInstancePatchStatesForPatchGroup(input *DescribeInstancePatchStatesForPatchGroupInput) (*DescribeInstancePatchStatesForPatchGroupOutput, error) {
 	req, out := c.DescribeInstancePatchStatesForPatchGroupRequest(input)
 	return out, req.Send()
@@ -3305,7 +3327,7 @@ const opDescribeInstancePatches = "DescribeInstancePatches"
 
 // DescribeInstancePatchesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInstancePatches operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3326,7 +3348,7 @@ const opDescribeInstancePatches = "DescribeInstancePatches"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatches
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatches
 func (c *SSM) DescribeInstancePatchesRequest(input *DescribeInstancePatchesInput) (req *request.Request, output *DescribeInstancePatchesOutput) {
 	op := &request.Operation{
 		Name:       opDescribeInstancePatches,
@@ -3381,7 +3403,7 @@ func (c *SSM) DescribeInstancePatchesRequest(input *DescribeInstancePatchesInput
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatches
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatches
 func (c *SSM) DescribeInstancePatches(input *DescribeInstancePatchesInput) (*DescribeInstancePatchesOutput, error) {
 	req, out := c.DescribeInstancePatchesRequest(input)
 	return out, req.Send()
@@ -3407,7 +3429,7 @@ const opDescribeMaintenanceWindowExecutionTaskInvocations = "DescribeMaintenance
 
 // DescribeMaintenanceWindowExecutionTaskInvocationsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeMaintenanceWindowExecutionTaskInvocations operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3428,7 +3450,7 @@ const opDescribeMaintenanceWindowExecutionTaskInvocations = "DescribeMaintenance
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTaskInvocations
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTaskInvocations
 func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsRequest(input *DescribeMaintenanceWindowExecutionTaskInvocationsInput) (req *request.Request, output *DescribeMaintenanceWindowExecutionTaskInvocationsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeMaintenanceWindowExecutionTaskInvocations,
@@ -3459,13 +3481,16 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsRequest(input *De
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTaskInvocations
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTaskInvocations
 func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocations(input *DescribeMaintenanceWindowExecutionTaskInvocationsInput) (*DescribeMaintenanceWindowExecutionTaskInvocationsOutput, error) {
 	req, out := c.DescribeMaintenanceWindowExecutionTaskInvocationsRequest(input)
 	return out, req.Send()
@@ -3491,7 +3516,7 @@ const opDescribeMaintenanceWindowExecutionTasks = "DescribeMaintenanceWindowExec
 
 // DescribeMaintenanceWindowExecutionTasksRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeMaintenanceWindowExecutionTasks operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3512,7 +3537,7 @@ const opDescribeMaintenanceWindowExecutionTasks = "DescribeMaintenanceWindowExec
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTasks
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTasks
 func (c *SSM) DescribeMaintenanceWindowExecutionTasksRequest(input *DescribeMaintenanceWindowExecutionTasksInput) (req *request.Request, output *DescribeMaintenanceWindowExecutionTasksOutput) {
 	op := &request.Operation{
 		Name:       opDescribeMaintenanceWindowExecutionTasks,
@@ -3542,13 +3567,16 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTasksRequest(input *DescribeMain
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTasks
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTasks
 func (c *SSM) DescribeMaintenanceWindowExecutionTasks(input *DescribeMaintenanceWindowExecutionTasksInput) (*DescribeMaintenanceWindowExecutionTasksOutput, error) {
 	req, out := c.DescribeMaintenanceWindowExecutionTasksRequest(input)
 	return out, req.Send()
@@ -3574,7 +3602,7 @@ const opDescribeMaintenanceWindowExecutions = "DescribeMaintenanceWindowExecutio
 
 // DescribeMaintenanceWindowExecutionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeMaintenanceWindowExecutions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3595,7 +3623,7 @@ const opDescribeMaintenanceWindowExecutions = "DescribeMaintenanceWindowExecutio
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutions
 func (c *SSM) DescribeMaintenanceWindowExecutionsRequest(input *DescribeMaintenanceWindowExecutionsInput) (req *request.Request, output *DescribeMaintenanceWindowExecutionsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeMaintenanceWindowExecutions,
@@ -3629,7 +3657,7 @@ func (c *SSM) DescribeMaintenanceWindowExecutionsRequest(input *DescribeMaintena
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutions
 func (c *SSM) DescribeMaintenanceWindowExecutions(input *DescribeMaintenanceWindowExecutionsInput) (*DescribeMaintenanceWindowExecutionsOutput, error) {
 	req, out := c.DescribeMaintenanceWindowExecutionsRequest(input)
 	return out, req.Send()
@@ -3655,7 +3683,7 @@ const opDescribeMaintenanceWindowTargets = "DescribeMaintenanceWindowTargets"
 
 // DescribeMaintenanceWindowTargetsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeMaintenanceWindowTargets operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3676,7 +3704,7 @@ const opDescribeMaintenanceWindowTargets = "DescribeMaintenanceWindowTargets"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTargets
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTargets
 func (c *SSM) DescribeMaintenanceWindowTargetsRequest(input *DescribeMaintenanceWindowTargetsInput) (req *request.Request, output *DescribeMaintenanceWindowTargetsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeMaintenanceWindowTargets,
@@ -3706,13 +3734,16 @@ func (c *SSM) DescribeMaintenanceWindowTargetsRequest(input *DescribeMaintenance
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTargets
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTargets
 func (c *SSM) DescribeMaintenanceWindowTargets(input *DescribeMaintenanceWindowTargetsInput) (*DescribeMaintenanceWindowTargetsOutput, error) {
 	req, out := c.DescribeMaintenanceWindowTargetsRequest(input)
 	return out, req.Send()
@@ -3738,7 +3769,7 @@ const opDescribeMaintenanceWindowTasks = "DescribeMaintenanceWindowTasks"
 
 // DescribeMaintenanceWindowTasksRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeMaintenanceWindowTasks operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3759,7 +3790,7 @@ const opDescribeMaintenanceWindowTasks = "DescribeMaintenanceWindowTasks"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTasks
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTasks
 func (c *SSM) DescribeMaintenanceWindowTasksRequest(input *DescribeMaintenanceWindowTasksInput) (req *request.Request, output *DescribeMaintenanceWindowTasksOutput) {
 	op := &request.Operation{
 		Name:       opDescribeMaintenanceWindowTasks,
@@ -3789,13 +3820,16 @@ func (c *SSM) DescribeMaintenanceWindowTasksRequest(input *DescribeMaintenanceWi
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTasks
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTasks
 func (c *SSM) DescribeMaintenanceWindowTasks(input *DescribeMaintenanceWindowTasksInput) (*DescribeMaintenanceWindowTasksOutput, error) {
 	req, out := c.DescribeMaintenanceWindowTasksRequest(input)
 	return out, req.Send()
@@ -3821,7 +3855,7 @@ const opDescribeMaintenanceWindows = "DescribeMaintenanceWindows"
 
 // DescribeMaintenanceWindowsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeMaintenanceWindows operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3842,7 +3876,7 @@ const opDescribeMaintenanceWindows = "DescribeMaintenanceWindows"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindows
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindows
 func (c *SSM) DescribeMaintenanceWindowsRequest(input *DescribeMaintenanceWindowsInput) (req *request.Request, output *DescribeMaintenanceWindowsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeMaintenanceWindows,
@@ -3874,7 +3908,7 @@ func (c *SSM) DescribeMaintenanceWindowsRequest(input *DescribeMaintenanceWindow
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindows
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindows
 func (c *SSM) DescribeMaintenanceWindows(input *DescribeMaintenanceWindowsInput) (*DescribeMaintenanceWindowsOutput, error) {
 	req, out := c.DescribeMaintenanceWindowsRequest(input)
 	return out, req.Send()
@@ -3900,7 +3934,7 @@ const opDescribeParameters = "DescribeParameters"
 
 // DescribeParametersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeParameters operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3921,7 +3955,7 @@ const opDescribeParameters = "DescribeParameters"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeParameters
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeParameters
 func (c *SSM) DescribeParametersRequest(input *DescribeParametersInput) (req *request.Request, output *DescribeParametersOutput) {
 	op := &request.Operation{
 		Name:       opDescribeParameters,
@@ -3980,7 +4014,7 @@ func (c *SSM) DescribeParametersRequest(input *DescribeParametersInput) (req *re
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeParameters
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeParameters
 func (c *SSM) DescribeParameters(input *DescribeParametersInput) (*DescribeParametersOutput, error) {
 	req, out := c.DescribeParametersRequest(input)
 	return out, req.Send()
@@ -4056,7 +4090,7 @@ const opDescribePatchBaselines = "DescribePatchBaselines"
 
 // DescribePatchBaselinesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribePatchBaselines operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4077,7 +4111,7 @@ const opDescribePatchBaselines = "DescribePatchBaselines"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchBaselines
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchBaselines
 func (c *SSM) DescribePatchBaselinesRequest(input *DescribePatchBaselinesInput) (req *request.Request, output *DescribePatchBaselinesOutput) {
 	op := &request.Operation{
 		Name:       opDescribePatchBaselines,
@@ -4109,7 +4143,7 @@ func (c *SSM) DescribePatchBaselinesRequest(input *DescribePatchBaselinesInput) 
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchBaselines
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchBaselines
 func (c *SSM) DescribePatchBaselines(input *DescribePatchBaselinesInput) (*DescribePatchBaselinesOutput, error) {
 	req, out := c.DescribePatchBaselinesRequest(input)
 	return out, req.Send()
@@ -4135,7 +4169,7 @@ const opDescribePatchGroupState = "DescribePatchGroupState"
 
 // DescribePatchGroupStateRequest generates a "aws/request.Request" representing the
 // client's request for the DescribePatchGroupState operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4156,7 +4190,7 @@ const opDescribePatchGroupState = "DescribePatchGroupState"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroupState
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroupState
 func (c *SSM) DescribePatchGroupStateRequest(input *DescribePatchGroupStateInput) (req *request.Request, output *DescribePatchGroupStateOutput) {
 	op := &request.Operation{
 		Name:       opDescribePatchGroupState,
@@ -4191,7 +4225,7 @@ func (c *SSM) DescribePatchGroupStateRequest(input *DescribePatchGroupStateInput
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroupState
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroupState
 func (c *SSM) DescribePatchGroupState(input *DescribePatchGroupStateInput) (*DescribePatchGroupStateOutput, error) {
 	req, out := c.DescribePatchGroupStateRequest(input)
 	return out, req.Send()
@@ -4217,7 +4251,7 @@ const opDescribePatchGroups = "DescribePatchGroups"
 
 // DescribePatchGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribePatchGroups operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4238,7 +4272,7 @@ const opDescribePatchGroups = "DescribePatchGroups"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroups
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroups
 func (c *SSM) DescribePatchGroupsRequest(input *DescribePatchGroupsInput) (req *request.Request, output *DescribePatchGroupsOutput) {
 	op := &request.Operation{
 		Name:       opDescribePatchGroups,
@@ -4270,7 +4304,7 @@ func (c *SSM) DescribePatchGroupsRequest(input *DescribePatchGroupsInput) (req *
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroups
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroups
 func (c *SSM) DescribePatchGroups(input *DescribePatchGroupsInput) (*DescribePatchGroupsOutput, error) {
 	req, out := c.DescribePatchGroupsRequest(input)
 	return out, req.Send()
@@ -4296,7 +4330,7 @@ const opGetAutomationExecution = "GetAutomationExecution"
 
 // GetAutomationExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the GetAutomationExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4317,7 +4351,7 @@ const opGetAutomationExecution = "GetAutomationExecution"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetAutomationExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetAutomationExecution
 func (c *SSM) GetAutomationExecutionRequest(input *GetAutomationExecutionInput) (req *request.Request, output *GetAutomationExecutionOutput) {
 	op := &request.Operation{
 		Name:       opGetAutomationExecution,
@@ -4353,7 +4387,7 @@ func (c *SSM) GetAutomationExecutionRequest(input *GetAutomationExecutionInput) 
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetAutomationExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetAutomationExecution
 func (c *SSM) GetAutomationExecution(input *GetAutomationExecutionInput) (*GetAutomationExecutionOutput, error) {
 	req, out := c.GetAutomationExecutionRequest(input)
 	return out, req.Send()
@@ -4379,7 +4413,7 @@ const opGetCommandInvocation = "GetCommandInvocation"
 
 // GetCommandInvocationRequest generates a "aws/request.Request" representing the
 // client's request for the GetCommandInvocation operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4400,7 +4434,7 @@ const opGetCommandInvocation = "GetCommandInvocation"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCommandInvocation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCommandInvocation
 func (c *SSM) GetCommandInvocationRequest(input *GetCommandInvocationInput) (req *request.Request, output *GetCommandInvocationOutput) {
 	op := &request.Operation{
 		Name:       opGetCommandInvocation,
@@ -4457,7 +4491,7 @@ func (c *SSM) GetCommandInvocationRequest(input *GetCommandInvocationInput) (req
 //   The command ID and instance ID you specified did not match any invocations.
 //   Verify the command ID adn the instance ID and try again.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCommandInvocation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCommandInvocation
 func (c *SSM) GetCommandInvocation(input *GetCommandInvocationInput) (*GetCommandInvocationOutput, error) {
 	req, out := c.GetCommandInvocationRequest(input)
 	return out, req.Send()
@@ -4483,7 +4517,7 @@ const opGetDefaultPatchBaseline = "GetDefaultPatchBaseline"
 
 // GetDefaultPatchBaselineRequest generates a "aws/request.Request" representing the
 // client's request for the GetDefaultPatchBaseline operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4504,7 +4538,7 @@ const opGetDefaultPatchBaseline = "GetDefaultPatchBaseline"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDefaultPatchBaseline
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDefaultPatchBaseline
 func (c *SSM) GetDefaultPatchBaselineRequest(input *GetDefaultPatchBaselineInput) (req *request.Request, output *GetDefaultPatchBaselineOutput) {
 	op := &request.Operation{
 		Name:       opGetDefaultPatchBaseline,
@@ -4538,7 +4572,7 @@ func (c *SSM) GetDefaultPatchBaselineRequest(input *GetDefaultPatchBaselineInput
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDefaultPatchBaseline
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDefaultPatchBaseline
 func (c *SSM) GetDefaultPatchBaseline(input *GetDefaultPatchBaselineInput) (*GetDefaultPatchBaselineOutput, error) {
 	req, out := c.GetDefaultPatchBaselineRequest(input)
 	return out, req.Send()
@@ -4564,7 +4598,7 @@ const opGetDeployablePatchSnapshotForInstance = "GetDeployablePatchSnapshotForIn
 
 // GetDeployablePatchSnapshotForInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the GetDeployablePatchSnapshotForInstance operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4585,7 +4619,7 @@ const opGetDeployablePatchSnapshotForInstance = "GetDeployablePatchSnapshotForIn
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDeployablePatchSnapshotForInstance
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDeployablePatchSnapshotForInstance
 func (c *SSM) GetDeployablePatchSnapshotForInstanceRequest(input *GetDeployablePatchSnapshotForInstanceInput) (req *request.Request, output *GetDeployablePatchSnapshotForInstanceOutput) {
 	op := &request.Operation{
 		Name:       opGetDeployablePatchSnapshotForInstance,
@@ -4623,7 +4657,7 @@ func (c *SSM) GetDeployablePatchSnapshotForInstanceRequest(input *GetDeployableP
 //   not supported for the operating system. Valid operating systems include:
 //   Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDeployablePatchSnapshotForInstance
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDeployablePatchSnapshotForInstance
 func (c *SSM) GetDeployablePatchSnapshotForInstance(input *GetDeployablePatchSnapshotForInstanceInput) (*GetDeployablePatchSnapshotForInstanceOutput, error) {
 	req, out := c.GetDeployablePatchSnapshotForInstanceRequest(input)
 	return out, req.Send()
@@ -4649,7 +4683,7 @@ const opGetDocument = "GetDocument"
 
 // GetDocumentRequest generates a "aws/request.Request" representing the
 // client's request for the GetDocument operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4670,7 +4704,7 @@ const opGetDocument = "GetDocument"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDocument
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDocument
 func (c *SSM) GetDocumentRequest(input *GetDocumentInput) (req *request.Request, output *GetDocumentOutput) {
 	op := &request.Operation{
 		Name:       opGetDocument,
@@ -4708,7 +4742,7 @@ func (c *SSM) GetDocumentRequest(input *GetDocumentInput) (req *request.Request,
 //   * ErrCodeInvalidDocumentVersion "InvalidDocumentVersion"
 //   The document version is not valid or does not exist.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDocument
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDocument
 func (c *SSM) GetDocument(input *GetDocumentInput) (*GetDocumentOutput, error) {
 	req, out := c.GetDocumentRequest(input)
 	return out, req.Send()
@@ -4734,7 +4768,7 @@ const opGetInventory = "GetInventory"
 
 // GetInventoryRequest generates a "aws/request.Request" representing the
 // client's request for the GetInventory operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4755,7 +4789,7 @@ const opGetInventory = "GetInventory"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventory
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventory
 func (c *SSM) GetInventoryRequest(input *GetInventoryInput) (req *request.Request, output *GetInventoryOutput) {
 	op := &request.Operation{
 		Name:       opGetInventory,
@@ -4800,7 +4834,7 @@ func (c *SSM) GetInventoryRequest(input *GetInventoryInput) (req *request.Reques
 //   * ErrCodeInvalidResultAttributeException "InvalidResultAttributeException"
 //   The specified inventory item result attribute is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventory
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventory
 func (c *SSM) GetInventory(input *GetInventoryInput) (*GetInventoryOutput, error) {
 	req, out := c.GetInventoryRequest(input)
 	return out, req.Send()
@@ -4826,7 +4860,7 @@ const opGetInventorySchema = "GetInventorySchema"
 
 // GetInventorySchemaRequest generates a "aws/request.Request" representing the
 // client's request for the GetInventorySchema operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4847,7 +4881,7 @@ const opGetInventorySchema = "GetInventorySchema"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventorySchema
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventorySchema
 func (c *SSM) GetInventorySchemaRequest(input *GetInventorySchemaInput) (req *request.Request, output *GetInventorySchemaOutput) {
 	op := &request.Operation{
 		Name:       opGetInventorySchema,
@@ -4886,7 +4920,7 @@ func (c *SSM) GetInventorySchemaRequest(input *GetInventorySchemaInput) (req *re
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventorySchema
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventorySchema
 func (c *SSM) GetInventorySchema(input *GetInventorySchemaInput) (*GetInventorySchemaOutput, error) {
 	req, out := c.GetInventorySchemaRequest(input)
 	return out, req.Send()
@@ -4912,7 +4946,7 @@ const opGetMaintenanceWindow = "GetMaintenanceWindow"
 
 // GetMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the GetMaintenanceWindow operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4933,7 +4967,7 @@ const opGetMaintenanceWindow = "GetMaintenanceWindow"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindow
 func (c *SSM) GetMaintenanceWindowRequest(input *GetMaintenanceWindowInput) (req *request.Request, output *GetMaintenanceWindowOutput) {
 	op := &request.Operation{
 		Name:       opGetMaintenanceWindow,
@@ -4963,13 +4997,16 @@ func (c *SSM) GetMaintenanceWindowRequest(input *GetMaintenanceWindowInput) (req
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindow
 func (c *SSM) GetMaintenanceWindow(input *GetMaintenanceWindowInput) (*GetMaintenanceWindowOutput, error) {
 	req, out := c.GetMaintenanceWindowRequest(input)
 	return out, req.Send()
@@ -4995,7 +5032,7 @@ const opGetMaintenanceWindowExecution = "GetMaintenanceWindowExecution"
 
 // GetMaintenanceWindowExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the GetMaintenanceWindowExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5016,7 +5053,7 @@ const opGetMaintenanceWindowExecution = "GetMaintenanceWindowExecution"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecution
 func (c *SSM) GetMaintenanceWindowExecutionRequest(input *GetMaintenanceWindowExecutionInput) (req *request.Request, output *GetMaintenanceWindowExecutionOutput) {
 	op := &request.Operation{
 		Name:       opGetMaintenanceWindowExecution,
@@ -5047,13 +5084,16 @@ func (c *SSM) GetMaintenanceWindowExecutionRequest(input *GetMaintenanceWindowEx
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecution
 func (c *SSM) GetMaintenanceWindowExecution(input *GetMaintenanceWindowExecutionInput) (*GetMaintenanceWindowExecutionOutput, error) {
 	req, out := c.GetMaintenanceWindowExecutionRequest(input)
 	return out, req.Send()
@@ -5079,7 +5119,7 @@ const opGetMaintenanceWindowExecutionTask = "GetMaintenanceWindowExecutionTask"
 
 // GetMaintenanceWindowExecutionTaskRequest generates a "aws/request.Request" representing the
 // client's request for the GetMaintenanceWindowExecutionTask operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5100,7 +5140,7 @@ const opGetMaintenanceWindowExecutionTask = "GetMaintenanceWindowExecutionTask"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTask
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTask
 func (c *SSM) GetMaintenanceWindowExecutionTaskRequest(input *GetMaintenanceWindowExecutionTaskInput) (req *request.Request, output *GetMaintenanceWindowExecutionTaskOutput) {
 	op := &request.Operation{
 		Name:       opGetMaintenanceWindowExecutionTask,
@@ -5131,13 +5171,16 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskRequest(input *GetMaintenanceWind
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTask
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTask
 func (c *SSM) GetMaintenanceWindowExecutionTask(input *GetMaintenanceWindowExecutionTaskInput) (*GetMaintenanceWindowExecutionTaskOutput, error) {
 	req, out := c.GetMaintenanceWindowExecutionTaskRequest(input)
 	return out, req.Send()
@@ -5163,7 +5206,7 @@ const opGetMaintenanceWindowExecutionTaskInvocation = "GetMaintenanceWindowExecu
 
 // GetMaintenanceWindowExecutionTaskInvocationRequest generates a "aws/request.Request" representing the
 // client's request for the GetMaintenanceWindowExecutionTaskInvocation operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5184,7 +5227,7 @@ const opGetMaintenanceWindowExecutionTaskInvocation = "GetMaintenanceWindowExecu
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTaskInvocation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTaskInvocation
 func (c *SSM) GetMaintenanceWindowExecutionTaskInvocationRequest(input *GetMaintenanceWindowExecutionTaskInvocationInput) (req *request.Request, output *GetMaintenanceWindowExecutionTaskInvocationOutput) {
 	op := &request.Operation{
 		Name:       opGetMaintenanceWindowExecutionTaskInvocation,
@@ -5215,13 +5258,16 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskInvocationRequest(input *GetMaint
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTaskInvocation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTaskInvocation
 func (c *SSM) GetMaintenanceWindowExecutionTaskInvocation(input *GetMaintenanceWindowExecutionTaskInvocationInput) (*GetMaintenanceWindowExecutionTaskInvocationOutput, error) {
 	req, out := c.GetMaintenanceWindowExecutionTaskInvocationRequest(input)
 	return out, req.Send()
@@ -5247,7 +5293,7 @@ const opGetMaintenanceWindowTask = "GetMaintenanceWindowTask"
 
 // GetMaintenanceWindowTaskRequest generates a "aws/request.Request" representing the
 // client's request for the GetMaintenanceWindowTask operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5268,7 +5314,7 @@ const opGetMaintenanceWindowTask = "GetMaintenanceWindowTask"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowTask
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowTask
 func (c *SSM) GetMaintenanceWindowTaskRequest(input *GetMaintenanceWindowTaskInput) (req *request.Request, output *GetMaintenanceWindowTaskOutput) {
 	op := &request.Operation{
 		Name:       opGetMaintenanceWindowTask,
@@ -5298,13 +5344,16 @@ func (c *SSM) GetMaintenanceWindowTaskRequest(input *GetMaintenanceWindowTaskInp
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowTask
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowTask
 func (c *SSM) GetMaintenanceWindowTask(input *GetMaintenanceWindowTaskInput) (*GetMaintenanceWindowTaskOutput, error) {
 	req, out := c.GetMaintenanceWindowTaskRequest(input)
 	return out, req.Send()
@@ -5330,7 +5379,7 @@ const opGetParameter = "GetParameter"
 
 // GetParameterRequest generates a "aws/request.Request" representing the
 // client's request for the GetParameter operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5351,7 +5400,7 @@ const opGetParameter = "GetParameter"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameter
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameter
 func (c *SSM) GetParameterRequest(input *GetParameterInput) (req *request.Request, output *GetParameterOutput) {
 	op := &request.Operation{
 		Name:       opGetParameter,
@@ -5393,7 +5442,7 @@ func (c *SSM) GetParameterRequest(input *GetParameterInput) (req *request.Reques
 //   The specified parameter version was not found. Verify the parameter name
 //   and version, and try again.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameter
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameter
 func (c *SSM) GetParameter(input *GetParameterInput) (*GetParameterOutput, error) {
 	req, out := c.GetParameterRequest(input)
 	return out, req.Send()
@@ -5419,7 +5468,7 @@ const opGetParameterHistory = "GetParameterHistory"
 
 // GetParameterHistoryRequest generates a "aws/request.Request" representing the
 // client's request for the GetParameterHistory operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5440,7 +5489,7 @@ const opGetParameterHistory = "GetParameterHistory"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameterHistory
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameterHistory
 func (c *SSM) GetParameterHistoryRequest(input *GetParameterHistoryInput) (req *request.Request, output *GetParameterHistoryOutput) {
 	op := &request.Operation{
 		Name:       opGetParameterHistory,
@@ -5487,7 +5536,7 @@ func (c *SSM) GetParameterHistoryRequest(input *GetParameterHistoryInput) (req *
 //   * ErrCodeInvalidKeyId "InvalidKeyId"
 //   The query key ID is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameterHistory
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameterHistory
 func (c *SSM) GetParameterHistory(input *GetParameterHistoryInput) (*GetParameterHistoryOutput, error) {
 	req, out := c.GetParameterHistoryRequest(input)
 	return out, req.Send()
@@ -5563,7 +5612,7 @@ const opGetParameters = "GetParameters"
 
 // GetParametersRequest generates a "aws/request.Request" representing the
 // client's request for the GetParameters operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5584,7 +5633,7 @@ const opGetParameters = "GetParameters"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameters
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameters
 func (c *SSM) GetParametersRequest(input *GetParametersInput) (req *request.Request, output *GetParametersOutput) {
 	op := &request.Operation{
 		Name:       opGetParameters,
@@ -5619,7 +5668,7 @@ func (c *SSM) GetParametersRequest(input *GetParametersInput) (req *request.Requ
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameters
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameters
 func (c *SSM) GetParameters(input *GetParametersInput) (*GetParametersOutput, error) {
 	req, out := c.GetParametersRequest(input)
 	return out, req.Send()
@@ -5645,7 +5694,7 @@ const opGetParametersByPath = "GetParametersByPath"
 
 // GetParametersByPathRequest generates a "aws/request.Request" representing the
 // client's request for the GetParametersByPath operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5666,7 +5715,7 @@ const opGetParametersByPath = "GetParametersByPath"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParametersByPath
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParametersByPath
 func (c *SSM) GetParametersByPathRequest(input *GetParametersByPathInput) (req *request.Request, output *GetParametersByPathOutput) {
 	op := &request.Operation{
 		Name:       opGetParametersByPath,
@@ -5702,6 +5751,8 @@ func (c *SSM) GetParametersByPathRequest(input *GetParametersByPathInput) (req *
 // that point and a NextToken. You can specify the NextToken in a subsequent
 // call to get the next set of results.
 //
+// This API action doesn't support filtering by tags.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -5729,7 +5780,7 @@ func (c *SSM) GetParametersByPathRequest(input *GetParametersByPathInput) (req *
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParametersByPath
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParametersByPath
 func (c *SSM) GetParametersByPath(input *GetParametersByPathInput) (*GetParametersByPathOutput, error) {
 	req, out := c.GetParametersByPathRequest(input)
 	return out, req.Send()
@@ -5805,7 +5856,7 @@ const opGetPatchBaseline = "GetPatchBaseline"
 
 // GetPatchBaselineRequest generates a "aws/request.Request" representing the
 // client's request for the GetPatchBaseline operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5826,7 +5877,7 @@ const opGetPatchBaseline = "GetPatchBaseline"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaseline
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaseline
 func (c *SSM) GetPatchBaselineRequest(input *GetPatchBaselineInput) (req *request.Request, output *GetPatchBaselineOutput) {
 	op := &request.Operation{
 		Name:       opGetPatchBaseline,
@@ -5856,8 +5907,11 @@ func (c *SSM) GetPatchBaselineRequest(input *GetPatchBaselineInput) (req *reques
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
@@ -5866,7 +5920,7 @@ func (c *SSM) GetPatchBaselineRequest(input *GetPatchBaselineInput) (req *reques
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaseline
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaseline
 func (c *SSM) GetPatchBaseline(input *GetPatchBaselineInput) (*GetPatchBaselineOutput, error) {
 	req, out := c.GetPatchBaselineRequest(input)
 	return out, req.Send()
@@ -5892,7 +5946,7 @@ const opGetPatchBaselineForPatchGroup = "GetPatchBaselineForPatchGroup"
 
 // GetPatchBaselineForPatchGroupRequest generates a "aws/request.Request" representing the
 // client's request for the GetPatchBaselineForPatchGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5913,7 +5967,7 @@ const opGetPatchBaselineForPatchGroup = "GetPatchBaselineForPatchGroup"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaselineForPatchGroup
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaselineForPatchGroup
 func (c *SSM) GetPatchBaselineForPatchGroupRequest(input *GetPatchBaselineForPatchGroupInput) (req *request.Request, output *GetPatchBaselineForPatchGroupOutput) {
 	op := &request.Operation{
 		Name:       opGetPatchBaselineForPatchGroup,
@@ -5946,7 +6000,7 @@ func (c *SSM) GetPatchBaselineForPatchGroupRequest(input *GetPatchBaselineForPat
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaselineForPatchGroup
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaselineForPatchGroup
 func (c *SSM) GetPatchBaselineForPatchGroup(input *GetPatchBaselineForPatchGroupInput) (*GetPatchBaselineForPatchGroupOutput, error) {
 	req, out := c.GetPatchBaselineForPatchGroupRequest(input)
 	return out, req.Send()
@@ -5972,7 +6026,7 @@ const opListAssociationVersions = "ListAssociationVersions"
 
 // ListAssociationVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListAssociationVersions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5993,7 +6047,7 @@ const opListAssociationVersions = "ListAssociationVersions"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationVersions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationVersions
 func (c *SSM) ListAssociationVersionsRequest(input *ListAssociationVersionsInput) (req *request.Request, output *ListAssociationVersionsOutput) {
 	op := &request.Operation{
 		Name:       opListAssociationVersions,
@@ -6031,7 +6085,7 @@ func (c *SSM) ListAssociationVersionsRequest(input *ListAssociationVersionsInput
 //   * ErrCodeAssociationDoesNotExist "AssociationDoesNotExist"
 //   The specified association does not exist.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationVersions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationVersions
 func (c *SSM) ListAssociationVersions(input *ListAssociationVersionsInput) (*ListAssociationVersionsOutput, error) {
 	req, out := c.ListAssociationVersionsRequest(input)
 	return out, req.Send()
@@ -6057,7 +6111,7 @@ const opListAssociations = "ListAssociations"
 
 // ListAssociationsRequest generates a "aws/request.Request" representing the
 // client's request for the ListAssociations operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6078,7 +6132,7 @@ const opListAssociations = "ListAssociations"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociations
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociations
 func (c *SSM) ListAssociationsRequest(input *ListAssociationsInput) (req *request.Request, output *ListAssociationsOutput) {
 	op := &request.Operation{
 		Name:       opListAssociations,
@@ -6119,7 +6173,7 @@ func (c *SSM) ListAssociationsRequest(input *ListAssociationsInput) (req *reques
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociations
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociations
 func (c *SSM) ListAssociations(input *ListAssociationsInput) (*ListAssociationsOutput, error) {
 	req, out := c.ListAssociationsRequest(input)
 	return out, req.Send()
@@ -6195,7 +6249,7 @@ const opListCommandInvocations = "ListCommandInvocations"
 
 // ListCommandInvocationsRequest generates a "aws/request.Request" representing the
 // client's request for the ListCommandInvocations operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6216,7 +6270,7 @@ const opListCommandInvocations = "ListCommandInvocations"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommandInvocations
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommandInvocations
 func (c *SSM) ListCommandInvocationsRequest(input *ListCommandInvocationsInput) (req *request.Request, output *ListCommandInvocationsOutput) {
 	op := &request.Operation{
 		Name:       opListCommandInvocations,
@@ -6281,7 +6335,7 @@ func (c *SSM) ListCommandInvocationsRequest(input *ListCommandInvocationsInput) 
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommandInvocations
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommandInvocations
 func (c *SSM) ListCommandInvocations(input *ListCommandInvocationsInput) (*ListCommandInvocationsOutput, error) {
 	req, out := c.ListCommandInvocationsRequest(input)
 	return out, req.Send()
@@ -6357,7 +6411,7 @@ const opListCommands = "ListCommands"
 
 // ListCommandsRequest generates a "aws/request.Request" representing the
 // client's request for the ListCommands operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6378,7 +6432,7 @@ const opListCommands = "ListCommands"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommands
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommands
 func (c *SSM) ListCommandsRequest(input *ListCommandsInput) (req *request.Request, output *ListCommandsOutput) {
 	op := &request.Operation{
 		Name:       opListCommands,
@@ -6439,7 +6493,7 @@ func (c *SSM) ListCommandsRequest(input *ListCommandsInput) (req *request.Reques
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommands
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommands
 func (c *SSM) ListCommands(input *ListCommandsInput) (*ListCommandsOutput, error) {
 	req, out := c.ListCommandsRequest(input)
 	return out, req.Send()
@@ -6515,7 +6569,7 @@ const opListComplianceItems = "ListComplianceItems"
 
 // ListComplianceItemsRequest generates a "aws/request.Request" representing the
 // client's request for the ListComplianceItems operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6536,7 +6590,7 @@ const opListComplianceItems = "ListComplianceItems"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceItems
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceItems
 func (c *SSM) ListComplianceItemsRequest(input *ListComplianceItemsInput) (req *request.Request, output *ListComplianceItemsOutput) {
 	op := &request.Operation{
 		Name:       opListComplianceItems,
@@ -6586,7 +6640,7 @@ func (c *SSM) ListComplianceItemsRequest(input *ListComplianceItemsInput) (req *
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceItems
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceItems
 func (c *SSM) ListComplianceItems(input *ListComplianceItemsInput) (*ListComplianceItemsOutput, error) {
 	req, out := c.ListComplianceItemsRequest(input)
 	return out, req.Send()
@@ -6612,7 +6666,7 @@ const opListComplianceSummaries = "ListComplianceSummaries"
 
 // ListComplianceSummariesRequest generates a "aws/request.Request" representing the
 // client's request for the ListComplianceSummaries operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6633,7 +6687,7 @@ const opListComplianceSummaries = "ListComplianceSummaries"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceSummaries
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceSummaries
 func (c *SSM) ListComplianceSummariesRequest(input *ListComplianceSummariesInput) (req *request.Request, output *ListComplianceSummariesOutput) {
 	op := &request.Operation{
 		Name:       opListComplianceSummaries,
@@ -6674,7 +6728,7 @@ func (c *SSM) ListComplianceSummariesRequest(input *ListComplianceSummariesInput
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceSummaries
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceSummaries
 func (c *SSM) ListComplianceSummaries(input *ListComplianceSummariesInput) (*ListComplianceSummariesOutput, error) {
 	req, out := c.ListComplianceSummariesRequest(input)
 	return out, req.Send()
@@ -6700,7 +6754,7 @@ const opListDocumentVersions = "ListDocumentVersions"
 
 // ListDocumentVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListDocumentVersions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6721,7 +6775,7 @@ const opListDocumentVersions = "ListDocumentVersions"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocumentVersions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocumentVersions
 func (c *SSM) ListDocumentVersionsRequest(input *ListDocumentVersionsInput) (req *request.Request, output *ListDocumentVersionsOutput) {
 	op := &request.Operation{
 		Name:       opListDocumentVersions,
@@ -6759,7 +6813,7 @@ func (c *SSM) ListDocumentVersionsRequest(input *ListDocumentVersionsInput) (req
 //   * ErrCodeInvalidDocument "InvalidDocument"
 //   The specified document does not exist.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocumentVersions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocumentVersions
 func (c *SSM) ListDocumentVersions(input *ListDocumentVersionsInput) (*ListDocumentVersionsOutput, error) {
 	req, out := c.ListDocumentVersionsRequest(input)
 	return out, req.Send()
@@ -6785,7 +6839,7 @@ const opListDocuments = "ListDocuments"
 
 // ListDocumentsRequest generates a "aws/request.Request" representing the
 // client's request for the ListDocuments operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6806,7 +6860,7 @@ const opListDocuments = "ListDocuments"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocuments
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocuments
 func (c *SSM) ListDocumentsRequest(input *ListDocumentsInput) (req *request.Request, output *ListDocumentsOutput) {
 	op := &request.Operation{
 		Name:       opListDocuments,
@@ -6850,7 +6904,7 @@ func (c *SSM) ListDocumentsRequest(input *ListDocumentsInput) (req *request.Requ
 //   * ErrCodeInvalidFilterKey "InvalidFilterKey"
 //   The specified key is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocuments
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocuments
 func (c *SSM) ListDocuments(input *ListDocumentsInput) (*ListDocumentsOutput, error) {
 	req, out := c.ListDocumentsRequest(input)
 	return out, req.Send()
@@ -6926,7 +6980,7 @@ const opListInventoryEntries = "ListInventoryEntries"
 
 // ListInventoryEntriesRequest generates a "aws/request.Request" representing the
 // client's request for the ListInventoryEntries operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6947,7 +7001,7 @@ const opListInventoryEntries = "ListInventoryEntries"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListInventoryEntries
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListInventoryEntries
 func (c *SSM) ListInventoryEntriesRequest(input *ListInventoryEntriesInput) (req *request.Request, output *ListInventoryEntriesOutput) {
 	op := &request.Operation{
 		Name:       opListInventoryEntries,
@@ -7004,7 +7058,7 @@ func (c *SSM) ListInventoryEntriesRequest(input *ListInventoryEntriesInput) (req
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListInventoryEntries
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListInventoryEntries
 func (c *SSM) ListInventoryEntries(input *ListInventoryEntriesInput) (*ListInventoryEntriesOutput, error) {
 	req, out := c.ListInventoryEntriesRequest(input)
 	return out, req.Send()
@@ -7030,7 +7084,7 @@ const opListResourceComplianceSummaries = "ListResourceComplianceSummaries"
 
 // ListResourceComplianceSummariesRequest generates a "aws/request.Request" representing the
 // client's request for the ListResourceComplianceSummaries operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7051,7 +7105,7 @@ const opListResourceComplianceSummaries = "ListResourceComplianceSummaries"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceComplianceSummaries
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceComplianceSummaries
 func (c *SSM) ListResourceComplianceSummariesRequest(input *ListResourceComplianceSummariesInput) (req *request.Request, output *ListResourceComplianceSummariesOutput) {
 	op := &request.Operation{
 		Name:       opListResourceComplianceSummaries,
@@ -7092,7 +7146,7 @@ func (c *SSM) ListResourceComplianceSummariesRequest(input *ListResourceComplian
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceComplianceSummaries
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceComplianceSummaries
 func (c *SSM) ListResourceComplianceSummaries(input *ListResourceComplianceSummariesInput) (*ListResourceComplianceSummariesOutput, error) {
 	req, out := c.ListResourceComplianceSummariesRequest(input)
 	return out, req.Send()
@@ -7118,7 +7172,7 @@ const opListResourceDataSync = "ListResourceDataSync"
 
 // ListResourceDataSyncRequest generates a "aws/request.Request" representing the
 // client's request for the ListResourceDataSync operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7139,7 +7193,7 @@ const opListResourceDataSync = "ListResourceDataSync"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceDataSync
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceDataSync
 func (c *SSM) ListResourceDataSyncRequest(input *ListResourceDataSyncInput) (req *request.Request, output *ListResourceDataSyncOutput) {
 	op := &request.Operation{
 		Name:       opListResourceDataSync,
@@ -7183,7 +7237,7 @@ func (c *SSM) ListResourceDataSyncRequest(input *ListResourceDataSyncInput) (req
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceDataSync
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceDataSync
 func (c *SSM) ListResourceDataSync(input *ListResourceDataSyncInput) (*ListResourceDataSyncOutput, error) {
 	req, out := c.ListResourceDataSyncRequest(input)
 	return out, req.Send()
@@ -7209,7 +7263,7 @@ const opListTagsForResource = "ListTagsForResource"
 
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagsForResource operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7230,7 +7284,7 @@ const opListTagsForResource = "ListTagsForResource"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListTagsForResource
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListTagsForResource
 func (c *SSM) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
 	op := &request.Operation{
 		Name:       opListTagsForResource,
@@ -7270,7 +7324,7 @@ func (c *SSM) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListTagsForResource
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListTagsForResource
 func (c *SSM) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
 	req, out := c.ListTagsForResourceRequest(input)
 	return out, req.Send()
@@ -7296,7 +7350,7 @@ const opModifyDocumentPermission = "ModifyDocumentPermission"
 
 // ModifyDocumentPermissionRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDocumentPermission operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7317,7 +7371,7 @@ const opModifyDocumentPermission = "ModifyDocumentPermission"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ModifyDocumentPermission
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ModifyDocumentPermission
 func (c *SSM) ModifyDocumentPermissionRequest(input *ModifyDocumentPermissionInput) (req *request.Request, output *ModifyDocumentPermissionOutput) {
 	op := &request.Operation{
 		Name:       opModifyDocumentPermission,
@@ -7367,7 +7421,7 @@ func (c *SSM) ModifyDocumentPermissionRequest(input *ModifyDocumentPermissionInp
 //   * ErrCodeDocumentLimitExceeded "DocumentLimitExceeded"
 //   You can have at most 200 active Systems Manager documents.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ModifyDocumentPermission
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ModifyDocumentPermission
 func (c *SSM) ModifyDocumentPermission(input *ModifyDocumentPermissionInput) (*ModifyDocumentPermissionOutput, error) {
 	req, out := c.ModifyDocumentPermissionRequest(input)
 	return out, req.Send()
@@ -7393,7 +7447,7 @@ const opPutComplianceItems = "PutComplianceItems"
 
 // PutComplianceItemsRequest generates a "aws/request.Request" representing the
 // client's request for the PutComplianceItems operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7414,7 +7468,7 @@ const opPutComplianceItems = "PutComplianceItems"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutComplianceItems
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutComplianceItems
 func (c *SSM) PutComplianceItemsRequest(input *PutComplianceItemsInput) (req *request.Request, output *PutComplianceItemsOutput) {
 	op := &request.Operation{
 		Name:       opPutComplianceItems,
@@ -7438,6 +7492,43 @@ func (c *SSM) PutComplianceItemsRequest(input *PutComplianceItemsInput) (req *re
 // resource. This call overwrites existing compliance information on the resource,
 // so you must provide a full list of compliance items each time that you send
 // the request.
+//
+// ComplianceType can be one of the following:
+//
+//    * ExecutionId: The execution ID when the patch, association, or custom
+//    compliance item was applied.
+//
+//    * ExecutionType: Specify patch, association, or Custom:string.
+//
+//    * ExecutionTime. The time the patch, association, or custom compliance
+//    item was applied to the instance.
+//
+//    * Id: The patch, association, or custom compliance ID.
+//
+//    * Title: A title.
+//
+//    * Status: The status of the compliance item. For example, approved for
+//    patches, or Failed for associations.
+//
+//    * Severity: A patch severity. For example, critical.
+//
+//    * DocumentName: A SSM document name. For example, AWS-RunPatchBaseline.
+//
+//    * DocumentVersion: An SSM document version number. For example, 4.
+//
+//    * Classification: A patch classification. For example, security updates.
+//
+//    * PatchBaselineId: A patch baseline ID.
+//
+//    * PatchSeverity: A patch severity. For example, Critical.
+//
+//    * PatchState: A patch state. For example, InstancesWithFailedPatches.
+//
+//    * PatchGroup: The name of a patch group.
+//
+//    * InstalledTime: The time the association, patch, or custom compliance
+//    item was applied to the resource. Specify the time by using the following
+//    format: yyyy-MM-dd'T'HH:mm:ss'Z'
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7471,7 +7562,7 @@ func (c *SSM) PutComplianceItemsRequest(input *PutComplianceItemsInput) (req *re
 //   The resource ID is not valid. Verify that you entered the correct ID and
 //   try again.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutComplianceItems
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutComplianceItems
 func (c *SSM) PutComplianceItems(input *PutComplianceItemsInput) (*PutComplianceItemsOutput, error) {
 	req, out := c.PutComplianceItemsRequest(input)
 	return out, req.Send()
@@ -7497,7 +7588,7 @@ const opPutInventory = "PutInventory"
 
 // PutInventoryRequest generates a "aws/request.Request" representing the
 // client's request for the PutInventory operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7518,7 +7609,7 @@ const opPutInventory = "PutInventory"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutInventory
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutInventory
 func (c *SSM) PutInventoryRequest(input *PutInventoryInput) (req *request.Request, output *PutInventoryOutput) {
 	op := &request.Operation{
 		Name:       opPutInventory,
@@ -7603,7 +7694,7 @@ func (c *SSM) PutInventoryRequest(input *PutInventoryInput) (req *request.Reques
 //   * ErrCodeSubTypeCountLimitExceededException "SubTypeCountLimitExceededException"
 //   The sub-type count exceeded the limit for the inventory type.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutInventory
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutInventory
 func (c *SSM) PutInventory(input *PutInventoryInput) (*PutInventoryOutput, error) {
 	req, out := c.PutInventoryRequest(input)
 	return out, req.Send()
@@ -7629,7 +7720,7 @@ const opPutParameter = "PutParameter"
 
 // PutParameterRequest generates a "aws/request.Request" representing the
 // client's request for the PutParameter operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7650,7 +7741,7 @@ const opPutParameter = "PutParameter"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutParameter
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutParameter
 func (c *SSM) PutParameterRequest(input *PutParameterInput) (req *request.Request, output *PutParameterOutput) {
 	op := &request.Operation{
 		Name:       opPutParameter,
@@ -7697,11 +7788,8 @@ func (c *SSM) PutParameterRequest(input *PutParameterInput) (req *request.Reques
 //   The parameter already exists. You can't create duplicate parameters.
 //
 //   * ErrCodeHierarchyLevelLimitExceededException "HierarchyLevelLimitExceededException"
-//   A hierarchy can have a maximum of five levels. For example:
-//
-//   /Finance/Prod/IAD/OS/WinServ2016/license15
-//
-//   For more information, see Working with Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working.html).
+//   A hierarchy can have a maximum of 15 levels. For more information, see Working
+//   with Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working.html).
 //
 //   * ErrCodeHierarchyTypeMismatchException "HierarchyTypeMismatchException"
 //   Parameter Store does not support changing a parameter type in a hierarchy.
@@ -7720,7 +7808,7 @@ func (c *SSM) PutParameterRequest(input *PutParameterInput) (req *request.Reques
 //   * ErrCodeUnsupportedParameterType "UnsupportedParameterType"
 //   The parameter type is not supported.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutParameter
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutParameter
 func (c *SSM) PutParameter(input *PutParameterInput) (*PutParameterOutput, error) {
 	req, out := c.PutParameterRequest(input)
 	return out, req.Send()
@@ -7746,7 +7834,7 @@ const opRegisterDefaultPatchBaseline = "RegisterDefaultPatchBaseline"
 
 // RegisterDefaultPatchBaselineRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterDefaultPatchBaseline operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7767,7 +7855,7 @@ const opRegisterDefaultPatchBaseline = "RegisterDefaultPatchBaseline"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterDefaultPatchBaseline
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterDefaultPatchBaseline
 func (c *SSM) RegisterDefaultPatchBaselineRequest(input *RegisterDefaultPatchBaselineInput) (req *request.Request, output *RegisterDefaultPatchBaselineOutput) {
 	op := &request.Operation{
 		Name:       opRegisterDefaultPatchBaseline,
@@ -7801,13 +7889,16 @@ func (c *SSM) RegisterDefaultPatchBaselineRequest(input *RegisterDefaultPatchBas
 //   try again.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterDefaultPatchBaseline
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterDefaultPatchBaseline
 func (c *SSM) RegisterDefaultPatchBaseline(input *RegisterDefaultPatchBaselineInput) (*RegisterDefaultPatchBaselineOutput, error) {
 	req, out := c.RegisterDefaultPatchBaselineRequest(input)
 	return out, req.Send()
@@ -7833,7 +7924,7 @@ const opRegisterPatchBaselineForPatchGroup = "RegisterPatchBaselineForPatchGroup
 
 // RegisterPatchBaselineForPatchGroupRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterPatchBaselineForPatchGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7854,7 +7945,7 @@ const opRegisterPatchBaselineForPatchGroup = "RegisterPatchBaselineForPatchGroup
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterPatchBaselineForPatchGroup
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterPatchBaselineForPatchGroup
 func (c *SSM) RegisterPatchBaselineForPatchGroupRequest(input *RegisterPatchBaselineForPatchGroupInput) (req *request.Request, output *RegisterPatchBaselineForPatchGroupOutput) {
 	op := &request.Operation{
 		Name:       opRegisterPatchBaselineForPatchGroup,
@@ -7888,21 +7979,27 @@ func (c *SSM) RegisterPatchBaselineForPatchGroupRequest(input *RegisterPatchBase
 //   baseline that is already registered with a different patch baseline.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
 //   try again.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits (e.g.
-//   too many Maintenance Windows have been created).
+//   Error returned when the caller has exceeded the default resource limits.
+//   For example, too many Maintenance Windows or Patch baselines have been created.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterPatchBaselineForPatchGroup
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterPatchBaselineForPatchGroup
 func (c *SSM) RegisterPatchBaselineForPatchGroup(input *RegisterPatchBaselineForPatchGroupInput) (*RegisterPatchBaselineForPatchGroupOutput, error) {
 	req, out := c.RegisterPatchBaselineForPatchGroupRequest(input)
 	return out, req.Send()
@@ -7928,7 +8025,7 @@ const opRegisterTargetWithMaintenanceWindow = "RegisterTargetWithMaintenanceWind
 
 // RegisterTargetWithMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterTargetWithMaintenanceWindow operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7949,7 +8046,7 @@ const opRegisterTargetWithMaintenanceWindow = "RegisterTargetWithMaintenanceWind
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTargetWithMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTargetWithMaintenanceWindow
 func (c *SSM) RegisterTargetWithMaintenanceWindowRequest(input *RegisterTargetWithMaintenanceWindowInput) (req *request.Request, output *RegisterTargetWithMaintenanceWindowOutput) {
 	op := &request.Operation{
 		Name:       opRegisterTargetWithMaintenanceWindow,
@@ -7983,17 +8080,23 @@ func (c *SSM) RegisterTargetWithMaintenanceWindowRequest(input *RegisterTargetWi
 //   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits (e.g.
-//   too many Maintenance Windows have been created).
+//   Error returned when the caller has exceeded the default resource limits.
+//   For example, too many Maintenance Windows or Patch baselines have been created.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTargetWithMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTargetWithMaintenanceWindow
 func (c *SSM) RegisterTargetWithMaintenanceWindow(input *RegisterTargetWithMaintenanceWindowInput) (*RegisterTargetWithMaintenanceWindowOutput, error) {
 	req, out := c.RegisterTargetWithMaintenanceWindowRequest(input)
 	return out, req.Send()
@@ -8019,7 +8122,7 @@ const opRegisterTaskWithMaintenanceWindow = "RegisterTaskWithMaintenanceWindow"
 
 // RegisterTaskWithMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterTaskWithMaintenanceWindow operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8040,7 +8143,7 @@ const opRegisterTaskWithMaintenanceWindow = "RegisterTaskWithMaintenanceWindow"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTaskWithMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTaskWithMaintenanceWindow
 func (c *SSM) RegisterTaskWithMaintenanceWindowRequest(input *RegisterTaskWithMaintenanceWindowInput) (req *request.Request, output *RegisterTaskWithMaintenanceWindowOutput) {
 	op := &request.Operation{
 		Name:       opRegisterTaskWithMaintenanceWindow,
@@ -8074,12 +8177,18 @@ func (c *SSM) RegisterTaskWithMaintenanceWindowRequest(input *RegisterTaskWithMa
 //   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits (e.g.
-//   too many Maintenance Windows have been created).
+//   Error returned when the caller has exceeded the default resource limits.
+//   For example, too many Maintenance Windows or Patch baselines have been created.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeFeatureNotAvailableException "FeatureNotAvailableException"
 //   You attempted to register a LAMBDA or STEP_FUNCTION task in a region where
@@ -8088,7 +8197,7 @@ func (c *SSM) RegisterTaskWithMaintenanceWindowRequest(input *RegisterTaskWithMa
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTaskWithMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTaskWithMaintenanceWindow
 func (c *SSM) RegisterTaskWithMaintenanceWindow(input *RegisterTaskWithMaintenanceWindowInput) (*RegisterTaskWithMaintenanceWindowOutput, error) {
 	req, out := c.RegisterTaskWithMaintenanceWindowRequest(input)
 	return out, req.Send()
@@ -8114,7 +8223,7 @@ const opRemoveTagsFromResource = "RemoveTagsFromResource"
 
 // RemoveTagsFromResourceRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveTagsFromResource operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8135,7 +8244,7 @@ const opRemoveTagsFromResource = "RemoveTagsFromResource"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RemoveTagsFromResource
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RemoveTagsFromResource
 func (c *SSM) RemoveTagsFromResourceRequest(input *RemoveTagsFromResourceInput) (req *request.Request, output *RemoveTagsFromResourceOutput) {
 	op := &request.Operation{
 		Name:       opRemoveTagsFromResource,
@@ -8175,7 +8284,11 @@ func (c *SSM) RemoveTagsFromResourceRequest(input *RemoveTagsFromResourceInput) 
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RemoveTagsFromResource
+//   * ErrCodeTooManyUpdates "TooManyUpdates"
+//   There are concurrent updates for a resource that supports one update at a
+//   time.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RemoveTagsFromResource
 func (c *SSM) RemoveTagsFromResource(input *RemoveTagsFromResourceInput) (*RemoveTagsFromResourceOutput, error) {
 	req, out := c.RemoveTagsFromResourceRequest(input)
 	return out, req.Send()
@@ -8201,7 +8314,7 @@ const opSendAutomationSignal = "SendAutomationSignal"
 
 // SendAutomationSignalRequest generates a "aws/request.Request" representing the
 // client's request for the SendAutomationSignal operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8222,7 +8335,7 @@ const opSendAutomationSignal = "SendAutomationSignal"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendAutomationSignal
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendAutomationSignal
 func (c *SSM) SendAutomationSignalRequest(input *SendAutomationSignalInput) (req *request.Request, output *SendAutomationSignalOutput) {
 	op := &request.Operation{
 		Name:       opSendAutomationSignal,
@@ -8266,7 +8379,7 @@ func (c *SSM) SendAutomationSignalRequest(input *SendAutomationSignalInput) (req
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendAutomationSignal
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendAutomationSignal
 func (c *SSM) SendAutomationSignal(input *SendAutomationSignalInput) (*SendAutomationSignalOutput, error) {
 	req, out := c.SendAutomationSignalRequest(input)
 	return out, req.Send()
@@ -8292,7 +8405,7 @@ const opSendCommand = "SendCommand"
 
 // SendCommandRequest generates a "aws/request.Request" representing the
 // client's request for the SendCommand operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8313,7 +8426,7 @@ const opSendCommand = "SendCommand"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendCommand
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendCommand
 func (c *SSM) SendCommandRequest(input *SendCommandInput) (req *request.Request, output *SendCommandOutput) {
 	op := &request.Operation{
 		Name:       opSendCommand,
@@ -8392,7 +8505,7 @@ func (c *SSM) SendCommandRequest(input *SendCommandInput) (req *request.Request,
 //   One or more configuration items is not valid. Verify that a valid Amazon
 //   Resource Name (ARN) was provided for an Amazon SNS topic.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendCommand
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendCommand
 func (c *SSM) SendCommand(input *SendCommandInput) (*SendCommandOutput, error) {
 	req, out := c.SendCommandRequest(input)
 	return out, req.Send()
@@ -8418,7 +8531,7 @@ const opStartAutomationExecution = "StartAutomationExecution"
 
 // StartAutomationExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the StartAutomationExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8439,7 +8552,7 @@ const opStartAutomationExecution = "StartAutomationExecution"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartAutomationExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartAutomationExecution
 func (c *SSM) StartAutomationExecutionRequest(input *StartAutomationExecutionInput) (req *request.Request, output *StartAutomationExecutionOutput) {
 	op := &request.Operation{
 		Name:       opStartAutomationExecution,
@@ -8494,7 +8607,7 @@ func (c *SSM) StartAutomationExecutionRequest(input *StartAutomationExecutionInp
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartAutomationExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartAutomationExecution
 func (c *SSM) StartAutomationExecution(input *StartAutomationExecutionInput) (*StartAutomationExecutionOutput, error) {
 	req, out := c.StartAutomationExecutionRequest(input)
 	return out, req.Send()
@@ -8520,7 +8633,7 @@ const opStopAutomationExecution = "StopAutomationExecution"
 
 // StopAutomationExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the StopAutomationExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8541,7 +8654,7 @@ const opStopAutomationExecution = "StopAutomationExecution"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StopAutomationExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StopAutomationExecution
 func (c *SSM) StopAutomationExecutionRequest(input *StopAutomationExecutionInput) (req *request.Request, output *StopAutomationExecutionOutput) {
 	op := &request.Operation{
 		Name:       opStopAutomationExecution,
@@ -8580,7 +8693,7 @@ func (c *SSM) StopAutomationExecutionRequest(input *StopAutomationExecutionInput
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StopAutomationExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StopAutomationExecution
 func (c *SSM) StopAutomationExecution(input *StopAutomationExecutionInput) (*StopAutomationExecutionOutput, error) {
 	req, out := c.StopAutomationExecutionRequest(input)
 	return out, req.Send()
@@ -8606,7 +8719,7 @@ const opUpdateAssociation = "UpdateAssociation"
 
 // UpdateAssociationRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateAssociation operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8627,7 +8740,7 @@ const opUpdateAssociation = "UpdateAssociation"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociation
 func (c *SSM) UpdateAssociationRequest(input *UpdateAssociationInput) (req *request.Request, output *UpdateAssociationOutput) {
 	op := &request.Operation{
 		Name:       opUpdateAssociation,
@@ -8700,7 +8813,7 @@ func (c *SSM) UpdateAssociationRequest(input *UpdateAssociationInput) (req *requ
 //   You have reached the maximum number versions allowed for an association.
 //   Each association has a limit of 1,000 versions.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociation
 func (c *SSM) UpdateAssociation(input *UpdateAssociationInput) (*UpdateAssociationOutput, error) {
 	req, out := c.UpdateAssociationRequest(input)
 	return out, req.Send()
@@ -8726,7 +8839,7 @@ const opUpdateAssociationStatus = "UpdateAssociationStatus"
 
 // UpdateAssociationStatusRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateAssociationStatus operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8747,7 +8860,7 @@ const opUpdateAssociationStatus = "UpdateAssociationStatus"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociationStatus
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociationStatus
 func (c *SSM) UpdateAssociationStatusRequest(input *UpdateAssociationStatusInput) (req *request.Request, output *UpdateAssociationStatusOutput) {
 	op := &request.Operation{
 		Name:       opUpdateAssociationStatus,
@@ -8808,7 +8921,7 @@ func (c *SSM) UpdateAssociationStatusRequest(input *UpdateAssociationStatusInput
 //   There are concurrent updates for a resource that supports one update at a
 //   time.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociationStatus
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociationStatus
 func (c *SSM) UpdateAssociationStatus(input *UpdateAssociationStatusInput) (*UpdateAssociationStatusOutput, error) {
 	req, out := c.UpdateAssociationStatusRequest(input)
 	return out, req.Send()
@@ -8834,7 +8947,7 @@ const opUpdateDocument = "UpdateDocument"
 
 // UpdateDocumentRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateDocument operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8855,7 +8968,7 @@ const opUpdateDocument = "UpdateDocument"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocument
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocument
 func (c *SSM) UpdateDocumentRequest(input *UpdateDocumentInput) (req *request.Request, output *UpdateDocumentOutput) {
 	op := &request.Operation{
 		Name:       opUpdateDocument,
@@ -8910,7 +9023,7 @@ func (c *SSM) UpdateDocumentRequest(input *UpdateDocumentInput) (req *request.Re
 //   * ErrCodeInvalidDocument "InvalidDocument"
 //   The specified document does not exist.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocument
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocument
 func (c *SSM) UpdateDocument(input *UpdateDocumentInput) (*UpdateDocumentOutput, error) {
 	req, out := c.UpdateDocumentRequest(input)
 	return out, req.Send()
@@ -8936,7 +9049,7 @@ const opUpdateDocumentDefaultVersion = "UpdateDocumentDefaultVersion"
 
 // UpdateDocumentDefaultVersionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateDocumentDefaultVersion operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8957,7 +9070,7 @@ const opUpdateDocumentDefaultVersion = "UpdateDocumentDefaultVersion"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocumentDefaultVersion
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocumentDefaultVersion
 func (c *SSM) UpdateDocumentDefaultVersionRequest(input *UpdateDocumentDefaultVersionInput) (req *request.Request, output *UpdateDocumentDefaultVersionOutput) {
 	op := &request.Operation{
 		Name:       opUpdateDocumentDefaultVersion,
@@ -8998,7 +9111,7 @@ func (c *SSM) UpdateDocumentDefaultVersionRequest(input *UpdateDocumentDefaultVe
 //   * ErrCodeInvalidDocumentSchemaVersion "InvalidDocumentSchemaVersion"
 //   The version of the document schema is not supported.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocumentDefaultVersion
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocumentDefaultVersion
 func (c *SSM) UpdateDocumentDefaultVersion(input *UpdateDocumentDefaultVersionInput) (*UpdateDocumentDefaultVersionOutput, error) {
 	req, out := c.UpdateDocumentDefaultVersionRequest(input)
 	return out, req.Send()
@@ -9024,7 +9137,7 @@ const opUpdateMaintenanceWindow = "UpdateMaintenanceWindow"
 
 // UpdateMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateMaintenanceWindow operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9045,7 +9158,7 @@ const opUpdateMaintenanceWindow = "UpdateMaintenanceWindow"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindow
 func (c *SSM) UpdateMaintenanceWindowRequest(input *UpdateMaintenanceWindowInput) (req *request.Request, output *UpdateMaintenanceWindowOutput) {
 	op := &request.Operation{
 		Name:       opUpdateMaintenanceWindow,
@@ -9075,13 +9188,16 @@ func (c *SSM) UpdateMaintenanceWindowRequest(input *UpdateMaintenanceWindowInput
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindow
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindow
 func (c *SSM) UpdateMaintenanceWindow(input *UpdateMaintenanceWindowInput) (*UpdateMaintenanceWindowOutput, error) {
 	req, out := c.UpdateMaintenanceWindowRequest(input)
 	return out, req.Send()
@@ -9107,7 +9223,7 @@ const opUpdateMaintenanceWindowTarget = "UpdateMaintenanceWindowTarget"
 
 // UpdateMaintenanceWindowTargetRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateMaintenanceWindowTarget operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9128,7 +9244,7 @@ const opUpdateMaintenanceWindowTarget = "UpdateMaintenanceWindowTarget"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTarget
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTarget
 func (c *SSM) UpdateMaintenanceWindowTargetRequest(input *UpdateMaintenanceWindowTargetInput) (req *request.Request, output *UpdateMaintenanceWindowTargetOutput) {
 	op := &request.Operation{
 		Name:       opUpdateMaintenanceWindowTarget,
@@ -9174,13 +9290,16 @@ func (c *SSM) UpdateMaintenanceWindowTargetRequest(input *UpdateMaintenanceWindo
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTarget
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTarget
 func (c *SSM) UpdateMaintenanceWindowTarget(input *UpdateMaintenanceWindowTargetInput) (*UpdateMaintenanceWindowTargetOutput, error) {
 	req, out := c.UpdateMaintenanceWindowTargetRequest(input)
 	return out, req.Send()
@@ -9206,7 +9325,7 @@ const opUpdateMaintenanceWindowTask = "UpdateMaintenanceWindowTask"
 
 // UpdateMaintenanceWindowTaskRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateMaintenanceWindowTask operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9227,7 +9346,7 @@ const opUpdateMaintenanceWindowTask = "UpdateMaintenanceWindowTask"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTask
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTask
 func (c *SSM) UpdateMaintenanceWindowTaskRequest(input *UpdateMaintenanceWindowTaskInput) (req *request.Request, output *UpdateMaintenanceWindowTaskOutput) {
 	op := &request.Operation{
 		Name:       opUpdateMaintenanceWindowTask,
@@ -9276,13 +9395,16 @@ func (c *SSM) UpdateMaintenanceWindowTaskRequest(input *UpdateMaintenanceWindowT
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTask
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTask
 func (c *SSM) UpdateMaintenanceWindowTask(input *UpdateMaintenanceWindowTaskInput) (*UpdateMaintenanceWindowTaskOutput, error) {
 	req, out := c.UpdateMaintenanceWindowTaskRequest(input)
 	return out, req.Send()
@@ -9308,7 +9430,7 @@ const opUpdateManagedInstanceRole = "UpdateManagedInstanceRole"
 
 // UpdateManagedInstanceRoleRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateManagedInstanceRole operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9329,7 +9451,7 @@ const opUpdateManagedInstanceRole = "UpdateManagedInstanceRole"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateManagedInstanceRole
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateManagedInstanceRole
 func (c *SSM) UpdateManagedInstanceRoleRequest(input *UpdateManagedInstanceRoleInput) (req *request.Request, output *UpdateManagedInstanceRoleOutput) {
 	op := &request.Operation{
 		Name:       opUpdateManagedInstanceRole,
@@ -9377,7 +9499,7 @@ func (c *SSM) UpdateManagedInstanceRoleRequest(input *UpdateManagedInstanceRoleI
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateManagedInstanceRole
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateManagedInstanceRole
 func (c *SSM) UpdateManagedInstanceRole(input *UpdateManagedInstanceRoleInput) (*UpdateManagedInstanceRoleOutput, error) {
 	req, out := c.UpdateManagedInstanceRoleRequest(input)
 	return out, req.Send()
@@ -9403,7 +9525,7 @@ const opUpdatePatchBaseline = "UpdatePatchBaseline"
 
 // UpdatePatchBaselineRequest generates a "aws/request.Request" representing the
 // client's request for the UpdatePatchBaseline operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9424,7 +9546,7 @@ const opUpdatePatchBaseline = "UpdatePatchBaseline"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdatePatchBaseline
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdatePatchBaseline
 func (c *SSM) UpdatePatchBaselineRequest(input *UpdatePatchBaselineInput) (req *request.Request, output *UpdatePatchBaselineOutput) {
 	op := &request.Operation{
 		Name:       opUpdatePatchBaseline,
@@ -9446,6 +9568,9 @@ func (c *SSM) UpdatePatchBaselineRequest(input *UpdatePatchBaselineInput) (req *
 // Modifies an existing patch baseline. Fields not specified in the request
 // are left unchanged.
 //
+// For information about valid key and value pairs in PatchFilters for each
+// supported operating system type, see PatchFilter (http://docs.aws.amazon.com/systems-manager/latest/APIReference/API_PatchFilter.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -9455,13 +9580,16 @@ func (c *SSM) UpdatePatchBaselineRequest(input *UpdatePatchBaselineInput) (req *
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource (e.g. a Maintenance Window)
-//   doesn't exist.
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdatePatchBaseline
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdatePatchBaseline
 func (c *SSM) UpdatePatchBaseline(input *UpdatePatchBaselineInput) (*UpdatePatchBaselineOutput, error) {
 	req, out := c.UpdatePatchBaselineRequest(input)
 	return out, req.Send()
@@ -9486,7 +9614,6 @@ func (c *SSM) UpdatePatchBaselineWithContext(ctx aws.Context, input *UpdatePatch
 // An activation registers one or more on-premises servers or virtual machines
 // (VMs) with AWS so that you can configure those servers or VMs using Run Command.
 // A server or VM that has been registered with AWS is called a managed instance.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/Activation
 type Activation struct {
 	_ struct{} `type:"structure"`
 
@@ -9584,7 +9711,6 @@ func (s *Activation) SetRegistrationsCount(v int64) *Activation {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AddTagsToResourceRequest
 type AddTagsToResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9668,7 +9794,6 @@ func (s *AddTagsToResourceInput) SetTags(v []*Tag) *AddTagsToResourceInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AddTagsToResourceResult
 type AddTagsToResourceOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -9684,7 +9809,6 @@ func (s AddTagsToResourceOutput) GoString() string {
 }
 
 // Describes an association of a Systems Manager document and an instance.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/Association
 type Association struct {
 	_ struct{} `type:"structure"`
 
@@ -9791,7 +9915,6 @@ func (s *Association) SetTargets(v []*Target) *Association {
 }
 
 // Describes the parameters for a document.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AssociationDescription
 type AssociationDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -9951,7 +10074,6 @@ func (s *AssociationDescription) SetTargets(v []*Target) *AssociationDescription
 }
 
 // Describes a filter.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AssociationFilter
 type AssociationFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -10008,7 +10130,6 @@ func (s *AssociationFilter) SetValue(v string) *AssociationFilter {
 }
 
 // Information about the association.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AssociationOverview
 type AssociationOverview struct {
 	_ struct{} `type:"structure"`
 
@@ -10053,7 +10174,6 @@ func (s *AssociationOverview) SetStatus(v string) *AssociationOverview {
 }
 
 // Describes an association status.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AssociationStatus
 type AssociationStatus struct {
 	_ struct{} `type:"structure"`
 
@@ -10133,7 +10253,6 @@ func (s *AssociationStatus) SetName(v string) *AssociationStatus {
 }
 
 // Information about the association version.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AssociationVersionInfo
 type AssociationVersionInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -10245,7 +10364,6 @@ func (s *AssociationVersionInfo) SetTargets(v []*Target) *AssociationVersionInfo
 
 // Detailed information about the current state of an individual Automation
 // execution.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AutomationExecution
 type AutomationExecution struct {
 	_ struct{} `type:"structure"`
 
@@ -10465,7 +10583,6 @@ func (s *AutomationExecution) SetTargets(v []*Target) *AutomationExecution {
 
 // A filter used to match specific automation executions. This is used to limit
 // the scope of Automation execution information returned.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AutomationExecutionFilter
 type AutomationExecutionFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -10525,7 +10642,6 @@ func (s *AutomationExecutionFilter) SetValues(v []*string) *AutomationExecutionF
 }
 
 // Details about a specific Automation execution.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AutomationExecutionMetadata
 type AutomationExecutionMetadata struct {
 	_ struct{} `type:"structure"`
 
@@ -10722,7 +10838,6 @@ func (s *AutomationExecutionMetadata) SetTargets(v []*Target) *AutomationExecuti
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelCommandRequest
 type CancelCommandInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10777,7 +10892,6 @@ func (s *CancelCommandInput) SetInstanceIds(v []*string) *CancelCommandInput {
 
 // Whether or not the command was successfully canceled. There is no guarantee
 // that a request can be canceled.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelCommandResult
 type CancelCommandOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10793,7 +10907,6 @@ func (s CancelCommandOutput) GoString() string {
 }
 
 // Describes a command request.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/Command
 type Command struct {
 	_ struct{} `type:"structure"`
 
@@ -10832,9 +10945,9 @@ type Command struct {
 
 	// The maximum number of errors allowed before the system stops sending the
 	// command to additional targets. You can specify a number of errors, such as
-	// 10, or a percentage or errors, such as 10%. The default value is 50. For
-	// more information about how to use MaxErrors, see Executing a Command Using
-	// Systems Manager Run Command (http://docs.aws.amazon.com/systems-manager/latest/userguide/run-command.html).
+	// 10, or a percentage or errors, such as 10%. The default value is 0. For more
+	// information about how to use MaxErrors, see Executing a Command Using Systems
+	// Manager Run Command (http://docs.aws.amazon.com/systems-manager/latest/userguide/run-command.html).
 	MaxErrors *string `min:"1" type:"string"`
 
 	// Configurations for sending notifications about command status changes.
@@ -11041,7 +11154,6 @@ func (s *Command) SetTargets(v []*Target) *Command {
 }
 
 // Describes a command filter.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CommandFilter
 type CommandFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -11102,7 +11214,6 @@ func (s *CommandFilter) SetValue(v string) *CommandFilter {
 // For example, if a user executes SendCommand against three instances, then
 // a command invocation is created for each requested instance ID. A command
 // invocation returns status and detail information about a command you executed.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CommandInvocation
 type CommandInvocation struct {
 	_ struct{} `type:"structure"`
 
@@ -11295,7 +11406,6 @@ func (s *CommandInvocation) SetTraceOutput(v string) *CommandInvocation {
 }
 
 // Describes plugin details.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CommandPlugin
 type CommandPlugin struct {
 	_ struct{} `type:"structure"`
 
@@ -11493,7 +11603,6 @@ func (s *CommandPlugin) SetStatusDetails(v string) *CommandPlugin {
 // A summary of the call execution that includes an execution ID, the type of
 // execution (for example, Command), and the date/time of the execution using
 // a datetime object that is saved in the following format: yyyy-MM-dd'T'HH:mm:ss'Z'.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ComplianceExecutionSummary
 type ComplianceExecutionSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -11555,7 +11664,6 @@ func (s *ComplianceExecutionSummary) SetExecutionType(v string) *ComplianceExecu
 // Information about the compliance as defined by the resource type. For example,
 // for a patch resource type, Items includes information about the PatchSeverity,
 // Classification, etc.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ComplianceItem
 type ComplianceItem struct {
 	_ struct{} `type:"structure"`
 
@@ -11659,7 +11767,6 @@ func (s *ComplianceItem) SetTitle(v string) *ComplianceItem {
 }
 
 // Information about a compliance item.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ComplianceItemEntry
 type ComplianceItemEntry struct {
 	_ struct{} `type:"structure"`
 
@@ -11747,7 +11854,6 @@ func (s *ComplianceItemEntry) SetTitle(v string) *ComplianceItemEntry {
 }
 
 // One or more filters. Use a filter to return a more specific list of results.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ComplianceStringFilter
 type ComplianceStringFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -11807,7 +11913,6 @@ func (s *ComplianceStringFilter) SetValues(v []*string) *ComplianceStringFilter 
 }
 
 // A summary of compliance information by compliance type.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ComplianceSummaryItem
 type ComplianceSummaryItem struct {
 	_ struct{} `type:"structure"`
 
@@ -11852,7 +11957,6 @@ func (s *ComplianceSummaryItem) SetNonCompliantSummary(v *NonCompliantSummary) *
 
 // A summary of resources that are compliant. The summary is organized according
 // to the resource count for each compliance type.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CompliantSummary
 type CompliantSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -11885,7 +11989,6 @@ func (s *CompliantSummary) SetSeveritySummary(v *SeveritySummary) *CompliantSumm
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateActivationRequest
 type CreateActivationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11968,7 +12071,6 @@ func (s *CreateActivationInput) SetRegistrationLimit(v int64) *CreateActivationI
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateActivationResult
 type CreateActivationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12003,7 +12105,6 @@ func (s *CreateActivationOutput) SetActivationId(v string) *CreateActivationOutp
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociationBatchRequest
 type CreateAssociationBatchInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12055,7 +12156,6 @@ func (s *CreateAssociationBatchInput) SetEntries(v []*CreateAssociationBatchRequ
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociationBatchResult
 type CreateAssociationBatchOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12089,7 +12189,6 @@ func (s *CreateAssociationBatchOutput) SetSuccessful(v []*AssociationDescription
 }
 
 // Describes the association of a Systems Manager document and an instance.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociationBatchRequestEntry
 type CreateAssociationBatchRequestEntry struct {
 	_ struct{} `type:"structure"`
 
@@ -12209,7 +12308,6 @@ func (s *CreateAssociationBatchRequestEntry) SetTargets(v []*Target) *CreateAsso
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociationRequest
 type CreateAssociationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12330,7 +12428,6 @@ func (s *CreateAssociationInput) SetTargets(v []*Target) *CreateAssociationInput
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociationResult
 type CreateAssociationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12354,7 +12451,6 @@ func (s *CreateAssociationOutput) SetAssociationDescription(v *AssociationDescri
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateDocumentRequest
 type CreateDocumentInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12372,6 +12468,15 @@ type CreateDocumentInput struct {
 	DocumentType *string `type:"string" enum:"DocumentType"`
 
 	// A name for the Systems Manager document.
+	//
+	// Do not use the following to begin the names of documents you create. They
+	// are reserved by AWS for use as document prefixes:
+	//
+	// aws
+	//
+	// amazon
+	//
+	// amzn
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
@@ -12445,7 +12550,6 @@ func (s *CreateDocumentInput) SetTargetType(v string) *CreateDocumentInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateDocumentResult
 type CreateDocumentOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12469,7 +12573,6 @@ func (s *CreateDocumentOutput) SetDocumentDescription(v *DocumentDescription) *C
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateMaintenanceWindowRequest
 type CreateMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12605,7 +12708,6 @@ func (s *CreateMaintenanceWindowInput) SetSchedule(v string) *CreateMaintenanceW
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateMaintenanceWindowResult
 type CreateMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12629,7 +12731,6 @@ func (s *CreateMaintenanceWindowOutput) SetWindowId(v string) *CreateMaintenance
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreatePatchBaselineRequest
 type CreatePatchBaselineInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12644,6 +12745,11 @@ type CreatePatchBaselineInput struct {
 	// violation. Valid compliance severity levels include the following: CRITICAL,
 	// HIGH, MEDIUM, LOW, INFORMATIONAL, UNSPECIFIED. The default value is UNSPECIFIED.
 	ApprovedPatchesComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
+
+	// Indicates whether the list of approved patches includes non-security updates
+	// that should be applied to the instances. The default value is 'false'. Applies
+	// to Linux instances only.
+	ApprovedPatchesEnableNonSecurity *bool `type:"boolean"`
 
 	// User-provided idempotency token.
 	ClientToken *string `min:"1" type:"string" idempotencyToken:"true"`
@@ -12665,6 +12771,10 @@ type CreatePatchBaselineInput struct {
 
 	// A list of explicitly rejected patches for the baseline.
 	RejectedPatches []*string `type:"list"`
+
+	// Information about the patches to use to update the instances, including target
+	// operating systems and source repositories. Applies to Linux instances only.
+	Sources []*PatchSource `type:"list"`
 }
 
 // String returns the string representation
@@ -12702,6 +12812,16 @@ func (s *CreatePatchBaselineInput) Validate() error {
 			invalidParams.AddNested("GlobalFilters", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Sources != nil {
+		for i, v := range s.Sources {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Sources", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -12724,6 +12844,12 @@ func (s *CreatePatchBaselineInput) SetApprovedPatches(v []*string) *CreatePatchB
 // SetApprovedPatchesComplianceLevel sets the ApprovedPatchesComplianceLevel field's value.
 func (s *CreatePatchBaselineInput) SetApprovedPatchesComplianceLevel(v string) *CreatePatchBaselineInput {
 	s.ApprovedPatchesComplianceLevel = &v
+	return s
+}
+
+// SetApprovedPatchesEnableNonSecurity sets the ApprovedPatchesEnableNonSecurity field's value.
+func (s *CreatePatchBaselineInput) SetApprovedPatchesEnableNonSecurity(v bool) *CreatePatchBaselineInput {
+	s.ApprovedPatchesEnableNonSecurity = &v
 	return s
 }
 
@@ -12763,7 +12889,12 @@ func (s *CreatePatchBaselineInput) SetRejectedPatches(v []*string) *CreatePatchB
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreatePatchBaselineResult
+// SetSources sets the Sources field's value.
+func (s *CreatePatchBaselineInput) SetSources(v []*PatchSource) *CreatePatchBaselineInput {
+	s.Sources = v
+	return s
+}
+
 type CreatePatchBaselineOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12787,7 +12918,6 @@ func (s *CreatePatchBaselineOutput) SetBaselineId(v string) *CreatePatchBaseline
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateResourceDataSyncRequest
 type CreateResourceDataSyncInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12848,7 +12978,6 @@ func (s *CreateResourceDataSyncInput) SetSyncName(v string) *CreateResourceDataS
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateResourceDataSyncResult
 type CreateResourceDataSyncOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -12863,7 +12992,6 @@ func (s CreateResourceDataSyncOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteActivationRequest
 type DeleteActivationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12902,7 +13030,6 @@ func (s *DeleteActivationInput) SetActivationId(v string) *DeleteActivationInput
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteActivationResult
 type DeleteActivationOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -12917,7 +13044,6 @@ func (s DeleteActivationOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteAssociationRequest
 type DeleteAssociationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12959,7 +13085,6 @@ func (s *DeleteAssociationInput) SetName(v string) *DeleteAssociationInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteAssociationResult
 type DeleteAssociationOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -12974,7 +13099,6 @@ func (s DeleteAssociationOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteDocumentRequest
 type DeleteDocumentInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13013,7 +13137,6 @@ func (s *DeleteDocumentInput) SetName(v string) *DeleteDocumentInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteDocumentResult
 type DeleteDocumentOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -13028,7 +13151,6 @@ func (s DeleteDocumentOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteMaintenanceWindowRequest
 type DeleteMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13070,7 +13192,6 @@ func (s *DeleteMaintenanceWindowInput) SetWindowId(v string) *DeleteMaintenanceW
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteMaintenanceWindowResult
 type DeleteMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13094,7 +13215,6 @@ func (s *DeleteMaintenanceWindowOutput) SetWindowId(v string) *DeleteMaintenance
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParameterRequest
 type DeleteParameterInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13136,7 +13256,6 @@ func (s *DeleteParameterInput) SetName(v string) *DeleteParameterInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParameterResult
 type DeleteParameterOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -13151,7 +13270,6 @@ func (s DeleteParameterOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParametersRequest
 type DeleteParametersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13193,7 +13311,6 @@ func (s *DeleteParametersInput) SetNames(v []*string) *DeleteParametersInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParametersResult
 type DeleteParametersOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13227,7 +13344,6 @@ func (s *DeleteParametersOutput) SetInvalidParameters(v []*string) *DeleteParame
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeletePatchBaselineRequest
 type DeletePatchBaselineInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13269,7 +13385,6 @@ func (s *DeletePatchBaselineInput) SetBaselineId(v string) *DeletePatchBaselineI
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeletePatchBaselineResult
 type DeletePatchBaselineOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13293,7 +13408,6 @@ func (s *DeletePatchBaselineOutput) SetBaselineId(v string) *DeletePatchBaseline
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteResourceDataSyncRequest
 type DeleteResourceDataSyncInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13335,7 +13449,6 @@ func (s *DeleteResourceDataSyncInput) SetSyncName(v string) *DeleteResourceDataS
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteResourceDataSyncResult
 type DeleteResourceDataSyncOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -13350,7 +13463,6 @@ func (s DeleteResourceDataSyncOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterManagedInstanceRequest
 type DeregisterManagedInstanceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13390,7 +13502,6 @@ func (s *DeregisterManagedInstanceInput) SetInstanceId(v string) *DeregisterMana
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterManagedInstanceResult
 type DeregisterManagedInstanceOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -13405,7 +13516,6 @@ func (s DeregisterManagedInstanceOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterPatchBaselineForPatchGroupRequest
 type DeregisterPatchBaselineForPatchGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13464,7 +13574,6 @@ func (s *DeregisterPatchBaselineForPatchGroupInput) SetPatchGroup(v string) *Der
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterPatchBaselineForPatchGroupResult
 type DeregisterPatchBaselineForPatchGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13497,7 +13606,6 @@ func (s *DeregisterPatchBaselineForPatchGroupOutput) SetPatchGroup(v string) *De
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTargetFromMaintenanceWindowRequest
 type DeregisterTargetFromMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13567,7 +13675,6 @@ func (s *DeregisterTargetFromMaintenanceWindowInput) SetWindowTargetId(v string)
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTargetFromMaintenanceWindowResult
 type DeregisterTargetFromMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13600,7 +13707,6 @@ func (s *DeregisterTargetFromMaintenanceWindowOutput) SetWindowTargetId(v string
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTaskFromMaintenanceWindowRequest
 type DeregisterTaskFromMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13659,7 +13765,6 @@ func (s *DeregisterTaskFromMaintenanceWindowInput) SetWindowTaskId(v string) *De
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTaskFromMaintenanceWindowResult
 type DeregisterTaskFromMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13693,7 +13798,6 @@ func (s *DeregisterTaskFromMaintenanceWindowOutput) SetWindowTaskId(v string) *D
 }
 
 // Filter for the DescribeActivation API.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeActivationsFilter
 type DescribeActivationsFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -13726,7 +13830,6 @@ func (s *DescribeActivationsFilter) SetFilterValues(v []*string) *DescribeActiva
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeActivationsRequest
 type DescribeActivationsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13783,7 +13886,6 @@ func (s *DescribeActivationsInput) SetNextToken(v string) *DescribeActivationsIn
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeActivationsResult
 type DescribeActivationsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13817,7 +13919,6 @@ func (s *DescribeActivationsOutput) SetNextToken(v string) *DescribeActivationsO
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAssociationRequest
 type DescribeAssociationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13871,7 +13972,6 @@ func (s *DescribeAssociationInput) SetName(v string) *DescribeAssociationInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAssociationResult
 type DescribeAssociationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13895,7 +13995,6 @@ func (s *DescribeAssociationOutput) SetAssociationDescription(v *AssociationDesc
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationExecutionsRequest
 type DescribeAutomationExecutionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13966,7 +14065,6 @@ func (s *DescribeAutomationExecutionsInput) SetNextToken(v string) *DescribeAuto
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationExecutionsResult
 type DescribeAutomationExecutionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14001,7 +14099,6 @@ func (s *DescribeAutomationExecutionsOutput) SetNextToken(v string) *DescribeAut
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationStepExecutionsRequest
 type DescribeAutomationStepExecutionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14100,7 +14197,6 @@ func (s *DescribeAutomationStepExecutionsInput) SetReverseOrder(v bool) *Describ
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationStepExecutionsResult
 type DescribeAutomationStepExecutionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14134,7 +14230,6 @@ func (s *DescribeAutomationStepExecutionsOutput) SetStepExecutions(v []*StepExec
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAvailablePatchesRequest
 type DescribeAvailablePatchesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14200,7 +14295,6 @@ func (s *DescribeAvailablePatchesInput) SetNextToken(v string) *DescribeAvailabl
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAvailablePatchesResult
 type DescribeAvailablePatchesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14234,7 +14328,6 @@ func (s *DescribeAvailablePatchesOutput) SetPatches(v []*Patch) *DescribeAvailab
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocumentRequest
 type DescribeDocumentInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14283,7 +14376,6 @@ func (s *DescribeDocumentInput) SetName(v string) *DescribeDocumentInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocumentResult
 type DescribeDocumentOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14307,7 +14399,6 @@ func (s *DescribeDocumentOutput) SetDocument(v *DocumentDescription) *DescribeDo
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocumentPermissionRequest
 type DescribeDocumentPermissionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14360,7 +14451,6 @@ func (s *DescribeDocumentPermissionInput) SetPermissionType(v string) *DescribeD
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocumentPermissionResponse
 type DescribeDocumentPermissionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14385,7 +14475,6 @@ func (s *DescribeDocumentPermissionOutput) SetAccountIds(v []*string) *DescribeD
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectiveInstanceAssociationsRequest
 type DescribeEffectiveInstanceAssociationsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14448,7 +14537,6 @@ func (s *DescribeEffectiveInstanceAssociationsInput) SetNextToken(v string) *Des
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectiveInstanceAssociationsResult
 type DescribeEffectiveInstanceAssociationsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14482,7 +14570,6 @@ func (s *DescribeEffectiveInstanceAssociationsOutput) SetNextToken(v string) *De
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectivePatchesForPatchBaselineRequest
 type DescribeEffectivePatchesForPatchBaselineInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14546,7 +14633,6 @@ func (s *DescribeEffectivePatchesForPatchBaselineInput) SetNextToken(v string) *
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectivePatchesForPatchBaselineResult
 type DescribeEffectivePatchesForPatchBaselineOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14580,7 +14666,6 @@ func (s *DescribeEffectivePatchesForPatchBaselineOutput) SetNextToken(v string) 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceAssociationsStatusRequest
 type DescribeInstanceAssociationsStatusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14643,7 +14728,6 @@ func (s *DescribeInstanceAssociationsStatusInput) SetNextToken(v string) *Descri
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceAssociationsStatusResult
 type DescribeInstanceAssociationsStatusOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14677,7 +14761,6 @@ func (s *DescribeInstanceAssociationsStatusOutput) SetNextToken(v string) *Descr
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceInformationRequest
 type DescribeInstanceInformationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14764,7 +14847,6 @@ func (s *DescribeInstanceInformationInput) SetNextToken(v string) *DescribeInsta
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceInformationResult
 type DescribeInstanceInformationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14798,7 +14880,6 @@ func (s *DescribeInstanceInformationOutput) SetNextToken(v string) *DescribeInst
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStatesForPatchGroupRequest
 type DescribeInstancePatchStatesForPatchGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14888,7 +14969,6 @@ func (s *DescribeInstancePatchStatesForPatchGroupInput) SetPatchGroup(v string) 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStatesForPatchGroupResult
 type DescribeInstancePatchStatesForPatchGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14922,7 +15002,6 @@ func (s *DescribeInstancePatchStatesForPatchGroupOutput) SetNextToken(v string) 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStatesRequest
 type DescribeInstancePatchStatesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14983,7 +15062,6 @@ func (s *DescribeInstancePatchStatesInput) SetNextToken(v string) *DescribeInsta
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStatesResult
 type DescribeInstancePatchStatesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -15017,7 +15095,6 @@ func (s *DescribeInstancePatchStatesOutput) SetNextToken(v string) *DescribeInst
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchesRequest
 type DescribeInstancePatchesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15101,7 +15178,6 @@ func (s *DescribeInstancePatchesInput) SetNextToken(v string) *DescribeInstanceP
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchesResult
 type DescribeInstancePatchesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -15150,7 +15226,6 @@ func (s *DescribeInstancePatchesOutput) SetPatches(v []*PatchComplianceData) *De
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTaskInvocationsRequest
 type DescribeMaintenanceWindowExecutionTaskInvocationsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15255,7 +15330,6 @@ func (s *DescribeMaintenanceWindowExecutionTaskInvocationsInput) SetWindowExecut
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTaskInvocationsResult
 type DescribeMaintenanceWindowExecutionTaskInvocationsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -15289,7 +15363,6 @@ func (s *DescribeMaintenanceWindowExecutionTaskInvocationsOutput) SetWindowExecu
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTasksRequest
 type DescribeMaintenanceWindowExecutionTasksInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15377,7 +15450,6 @@ func (s *DescribeMaintenanceWindowExecutionTasksInput) SetWindowExecutionId(v st
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTasksResult
 type DescribeMaintenanceWindowExecutionTasksOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -15411,7 +15483,6 @@ func (s *DescribeMaintenanceWindowExecutionTasksOutput) SetWindowExecutionTaskId
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionsRequest
 type DescribeMaintenanceWindowExecutionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15503,7 +15574,6 @@ func (s *DescribeMaintenanceWindowExecutionsInput) SetWindowId(v string) *Descri
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionsResult
 type DescribeMaintenanceWindowExecutionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -15537,7 +15607,6 @@ func (s *DescribeMaintenanceWindowExecutionsOutput) SetWindowExecutions(v []*Mai
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTargetsRequest
 type DescribeMaintenanceWindowTargetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15623,7 +15692,6 @@ func (s *DescribeMaintenanceWindowTargetsInput) SetWindowId(v string) *DescribeM
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTargetsResult
 type DescribeMaintenanceWindowTargetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -15657,7 +15725,6 @@ func (s *DescribeMaintenanceWindowTargetsOutput) SetTargets(v []*MaintenanceWind
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTasksRequest
 type DescribeMaintenanceWindowTasksInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15743,7 +15810,6 @@ func (s *DescribeMaintenanceWindowTasksInput) SetWindowId(v string) *DescribeMai
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTasksResult
 type DescribeMaintenanceWindowTasksOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -15777,7 +15843,6 @@ func (s *DescribeMaintenanceWindowTasksOutput) SetTasks(v []*MaintenanceWindowTa
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowsRequest
 type DescribeMaintenanceWindowsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15846,7 +15911,6 @@ func (s *DescribeMaintenanceWindowsInput) SetNextToken(v string) *DescribeMainte
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowsResult
 type DescribeMaintenanceWindowsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -15880,7 +15944,6 @@ func (s *DescribeMaintenanceWindowsOutput) SetWindowIdentities(v []*MaintenanceW
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeParametersRequest
 type DescribeParametersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15967,7 +16030,6 @@ func (s *DescribeParametersInput) SetParameterFilters(v []*ParameterStringFilter
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeParametersResult
 type DescribeParametersOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16001,7 +16063,6 @@ func (s *DescribeParametersOutput) SetParameters(v []*ParameterMetadata) *Descri
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchBaselinesRequest
 type DescribePatchBaselinesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16071,7 +16132,6 @@ func (s *DescribePatchBaselinesInput) SetNextToken(v string) *DescribePatchBasel
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchBaselinesResult
 type DescribePatchBaselinesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16105,7 +16165,6 @@ func (s *DescribePatchBaselinesOutput) SetNextToken(v string) *DescribePatchBase
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroupStateRequest
 type DescribePatchGroupStateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16147,7 +16206,6 @@ func (s *DescribePatchGroupStateInput) SetPatchGroup(v string) *DescribePatchGro
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroupStateResult
 type DescribePatchGroupStateOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16218,7 +16276,6 @@ func (s *DescribePatchGroupStateOutput) SetInstancesWithNotApplicablePatches(v i
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroupsRequest
 type DescribePatchGroupsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16284,7 +16341,6 @@ func (s *DescribePatchGroupsInput) SetNextToken(v string) *DescribePatchGroupsIn
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroupsResult
 type DescribePatchGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16323,7 +16379,6 @@ func (s *DescribePatchGroupsOutput) SetNextToken(v string) *DescribePatchGroupsO
 }
 
 // A default version of a document.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentDefaultVersionDescription
 type DocumentDefaultVersionDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -16357,7 +16412,6 @@ func (s *DocumentDefaultVersionDescription) SetName(v string) *DocumentDefaultVe
 }
 
 // Describes a Systems Manager document.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentDescription
 type DocumentDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -16542,7 +16596,6 @@ func (s *DocumentDescription) SetTargetType(v string) *DocumentDescription {
 }
 
 // Describes a filter.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentFilter
 type DocumentFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -16599,7 +16652,6 @@ func (s *DocumentFilter) SetValue(v string) *DocumentFilter {
 }
 
 // Describes the name of a Systems Manager document.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentIdentifier
 type DocumentIdentifier struct {
 	_ struct{} `type:"structure"`
 
@@ -16723,7 +16775,6 @@ func (s *DocumentIdentifier) SetTargetType(v string) *DocumentIdentifier {
 // to call the list-documents command:
 //
 // aws ssm list-documents --filters Key=tag:region,Values=east,west Key=Owner,Values=Self
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentKeyValuesFilter
 type DocumentKeyValuesFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -16771,7 +16822,6 @@ func (s *DocumentKeyValuesFilter) SetValues(v []*string) *DocumentKeyValuesFilte
 
 // Parameters specified in a System Manager document that execute on the server
 // when the command is run.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentParameter
 type DocumentParameter struct {
 	_ struct{} `type:"structure"`
 
@@ -16825,7 +16875,6 @@ func (s *DocumentParameter) SetType(v string) *DocumentParameter {
 }
 
 // Version information about the document.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DocumentVersionInfo
 type DocumentVersionInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -16890,7 +16939,6 @@ func (s *DocumentVersionInfo) SetName(v string) *DocumentVersionInfo {
 // state includes information about whether the patch is currently approved,
 // due to be approved by a rule, explicitly approved, or explicitly rejected
 // and the date the patch was or will be approved.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/EffectivePatch
 type EffectivePatch struct {
 	_ struct{} `type:"structure"`
 
@@ -16928,7 +16976,6 @@ func (s *EffectivePatch) SetPatchStatus(v *PatchStatus) *EffectivePatch {
 }
 
 // Describes a failed association.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/FailedCreateAssociation
 type FailedCreateAssociation struct {
 	_ struct{} `type:"structure"`
 
@@ -16971,7 +17018,6 @@ func (s *FailedCreateAssociation) SetMessage(v string) *FailedCreateAssociation 
 }
 
 // Information about an Automation failure.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/FailureDetails
 type FailureDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -17015,7 +17061,6 @@ func (s *FailureDetails) SetFailureType(v string) *FailureDetails {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetAutomationExecutionRequest
 type GetAutomationExecutionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17059,7 +17104,6 @@ func (s *GetAutomationExecutionInput) SetAutomationExecutionId(v string) *GetAut
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetAutomationExecutionResult
 type GetAutomationExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17083,7 +17127,6 @@ func (s *GetAutomationExecutionOutput) SetAutomationExecution(v *AutomationExecu
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCommandInvocationRequest
 type GetCommandInvocationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17155,7 +17198,6 @@ func (s *GetCommandInvocationInput) SetPluginName(v string) *GetCommandInvocatio
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCommandInvocationResult
 type GetCommandInvocationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17374,7 +17416,6 @@ func (s *GetCommandInvocationOutput) SetStatusDetails(v string) *GetCommandInvoc
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDefaultPatchBaselineRequest
 type GetDefaultPatchBaselineInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17398,7 +17439,6 @@ func (s *GetDefaultPatchBaselineInput) SetOperatingSystem(v string) *GetDefaultP
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDefaultPatchBaselineResult
 type GetDefaultPatchBaselineOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17431,7 +17471,6 @@ func (s *GetDefaultPatchBaselineOutput) SetOperatingSystem(v string) *GetDefault
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDeployablePatchSnapshotForInstanceRequest
 type GetDeployablePatchSnapshotForInstanceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17488,7 +17527,6 @@ func (s *GetDeployablePatchSnapshotForInstanceInput) SetSnapshotId(v string) *Ge
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDeployablePatchSnapshotForInstanceResult
 type GetDeployablePatchSnapshotForInstanceOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17540,7 +17578,6 @@ func (s *GetDeployablePatchSnapshotForInstanceOutput) SetSnapshotId(v string) *G
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDocumentRequest
 type GetDocumentInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17598,7 +17635,6 @@ func (s *GetDocumentInput) SetName(v string) *GetDocumentInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDocumentResult
 type GetDocumentOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17658,7 +17694,6 @@ func (s *GetDocumentOutput) SetName(v string) *GetDocumentOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventoryRequest
 type GetInventoryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17776,7 +17811,6 @@ func (s *GetInventoryInput) SetResultAttributes(v []*ResultAttribute) *GetInvent
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventoryResult
 type GetInventoryOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17810,7 +17844,6 @@ func (s *GetInventoryOutput) SetNextToken(v string) *GetInventoryOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventorySchemaRequest
 type GetInventorySchemaInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17888,7 +17921,6 @@ func (s *GetInventorySchemaInput) SetTypeName(v string) *GetInventorySchemaInput
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventorySchemaResult
 type GetInventorySchemaOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17922,7 +17954,6 @@ func (s *GetInventorySchemaOutput) SetSchemas(v []*InventoryItemSchema) *GetInve
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionRequest
 type GetMaintenanceWindowExecutionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17964,7 +17995,6 @@ func (s *GetMaintenanceWindowExecutionInput) SetWindowExecutionId(v string) *Get
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionResult
 type GetMaintenanceWindowExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -18033,7 +18063,6 @@ func (s *GetMaintenanceWindowExecutionOutput) SetWindowExecutionId(v string) *Ge
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTaskRequest
 type GetMaintenanceWindowExecutionTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18093,7 +18122,6 @@ func (s *GetMaintenanceWindowExecutionTaskInput) SetWindowExecutionId(v string) 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTaskInvocationRequest
 type GetMaintenanceWindowExecutionTaskInvocationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18170,7 +18198,6 @@ func (s *GetMaintenanceWindowExecutionTaskInvocationInput) SetWindowExecutionId(
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTaskInvocationResult
 type GetMaintenanceWindowExecutionTaskInvocationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -18296,7 +18323,6 @@ func (s *GetMaintenanceWindowExecutionTaskInvocationOutput) SetWindowTargetId(v 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTaskResult
 type GetMaintenanceWindowExecutionTaskOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -18435,7 +18461,6 @@ func (s *GetMaintenanceWindowExecutionTaskOutput) SetWindowExecutionId(v string)
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowRequest
 type GetMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18477,7 +18502,6 @@ func (s *GetMaintenanceWindowInput) SetWindowId(v string) *GetMaintenanceWindowI
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowResult
 type GetMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -18584,7 +18608,6 @@ func (s *GetMaintenanceWindowOutput) SetWindowId(v string) *GetMaintenanceWindow
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowTaskRequest
 type GetMaintenanceWindowTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18643,7 +18666,6 @@ func (s *GetMaintenanceWindowTaskInput) SetWindowTaskId(v string) *GetMaintenanc
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowTaskResult
 type GetMaintenanceWindowTaskOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -18788,7 +18810,6 @@ func (s *GetMaintenanceWindowTaskOutput) SetWindowTaskId(v string) *GetMaintenan
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameterHistoryRequest
 type GetParameterHistoryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18864,7 +18885,6 @@ func (s *GetParameterHistoryInput) SetWithDecryption(v bool) *GetParameterHistor
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameterHistoryResult
 type GetParameterHistoryOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -18898,7 +18918,6 @@ func (s *GetParameterHistoryOutput) SetParameters(v []*ParameterHistory) *GetPar
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameterRequest
 type GetParameterInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18950,7 +18969,6 @@ func (s *GetParameterInput) SetWithDecryption(v bool) *GetParameterInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameterResult
 type GetParameterOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -18974,7 +18992,6 @@ func (s *GetParameterOutput) SetParameter(v *Parameter) *GetParameterOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParametersByPathRequest
 type GetParametersByPathInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18990,8 +19007,8 @@ type GetParametersByPathInput struct {
 	ParameterFilters []*ParameterStringFilter `type:"list"`
 
 	// The hierarchy for the parameter. Hierarchies start with a forward slash (/)
-	// and end with the parameter name. A hierarchy can have a maximum of five levels.
-	// For example: /Finance/Prod/IAD/WinServ2016/license15
+	// and end with the parameter name. A hierarchy can have a maximum of 15 levels.
+	// Here is an example of a hierarchy: /Finance/Prod/IAD/WinServ2016/license33
 	//
 	// Path is a required field
 	Path *string `min:"1" type:"string" required:"true"`
@@ -19078,7 +19095,6 @@ func (s *GetParametersByPathInput) SetWithDecryption(v bool) *GetParametersByPat
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParametersByPathResult
 type GetParametersByPathOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -19112,7 +19128,6 @@ func (s *GetParametersByPathOutput) SetParameters(v []*Parameter) *GetParameters
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParametersRequest
 type GetParametersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -19165,7 +19180,6 @@ func (s *GetParametersInput) SetWithDecryption(v bool) *GetParametersInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParametersResult
 type GetParametersOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -19199,7 +19213,6 @@ func (s *GetParametersOutput) SetParameters(v []*Parameter) *GetParametersOutput
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaselineForPatchGroupRequest
 type GetPatchBaselineForPatchGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -19251,7 +19264,6 @@ func (s *GetPatchBaselineForPatchGroupInput) SetPatchGroup(v string) *GetPatchBa
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaselineForPatchGroupResult
 type GetPatchBaselineForPatchGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -19293,7 +19305,6 @@ func (s *GetPatchBaselineForPatchGroupOutput) SetPatchGroup(v string) *GetPatchB
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaselineRequest
 type GetPatchBaselineInput struct {
 	_ struct{} `type:"structure"`
 
@@ -19335,7 +19346,6 @@ func (s *GetPatchBaselineInput) SetBaselineId(v string) *GetPatchBaselineInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaselineResult
 type GetPatchBaselineOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -19348,6 +19358,11 @@ type GetPatchBaselineOutput struct {
 	// Returns the specified compliance severity level for approved patches in the
 	// patch baseline.
 	ApprovedPatchesComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
+
+	// Indicates whether the list of approved patches includes non-security updates
+	// that should be applied to the instances. The default value is 'false'. Applies
+	// to Linux instances only.
+	ApprovedPatchesEnableNonSecurity *bool `type:"boolean"`
 
 	// The ID of the retrieved patch baseline.
 	BaselineId *string `min:"20" type:"string"`
@@ -19375,6 +19390,10 @@ type GetPatchBaselineOutput struct {
 
 	// A list of explicitly rejected patches for the baseline.
 	RejectedPatches []*string `type:"list"`
+
+	// Information about the patches to use to update the instances, including target
+	// operating systems and source repositories. Applies to Linux instances only.
+	Sources []*PatchSource `type:"list"`
 }
 
 // String returns the string representation
@@ -19402,6 +19421,12 @@ func (s *GetPatchBaselineOutput) SetApprovedPatches(v []*string) *GetPatchBaseli
 // SetApprovedPatchesComplianceLevel sets the ApprovedPatchesComplianceLevel field's value.
 func (s *GetPatchBaselineOutput) SetApprovedPatchesComplianceLevel(v string) *GetPatchBaselineOutput {
 	s.ApprovedPatchesComplianceLevel = &v
+	return s
+}
+
+// SetApprovedPatchesEnableNonSecurity sets the ApprovedPatchesEnableNonSecurity field's value.
+func (s *GetPatchBaselineOutput) SetApprovedPatchesEnableNonSecurity(v bool) *GetPatchBaselineOutput {
+	s.ApprovedPatchesEnableNonSecurity = &v
 	return s
 }
 
@@ -19459,8 +19484,13 @@ func (s *GetPatchBaselineOutput) SetRejectedPatches(v []*string) *GetPatchBaseli
 	return s
 }
 
+// SetSources sets the Sources field's value.
+func (s *GetPatchBaselineOutput) SetSources(v []*PatchSource) *GetPatchBaselineOutput {
+	s.Sources = v
+	return s
+}
+
 // Status information about the aggregated associations.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InstanceAggregatedAssociationOverview
 type InstanceAggregatedAssociationOverview struct {
 	_ struct{} `type:"structure"`
 
@@ -19494,7 +19524,6 @@ func (s *InstanceAggregatedAssociationOverview) SetInstanceAssociationStatusAggr
 }
 
 // One or more association documents on the instance.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InstanceAssociation
 type InstanceAssociation struct {
 	_ struct{} `type:"structure"`
 
@@ -19546,7 +19575,6 @@ func (s *InstanceAssociation) SetInstanceId(v string) *InstanceAssociation {
 }
 
 // An Amazon S3 bucket where you want to store the results of this request.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InstanceAssociationOutputLocation
 type InstanceAssociationOutputLocation struct {
 	_ struct{} `type:"structure"`
 
@@ -19586,7 +19614,6 @@ func (s *InstanceAssociationOutputLocation) SetS3Location(v *S3OutputLocation) *
 }
 
 // The URL of Amazon S3 bucket where you want to store the results of this request.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InstanceAssociationOutputUrl
 type InstanceAssociationOutputUrl struct {
 	_ struct{} `type:"structure"`
 
@@ -19611,7 +19638,6 @@ func (s *InstanceAssociationOutputUrl) SetS3OutputUrl(v *S3OutputUrl) *InstanceA
 }
 
 // Status information about the instance association.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InstanceAssociationStatusInfo
 type InstanceAssociationStatusInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -19736,7 +19762,6 @@ func (s *InstanceAssociationStatusInfo) SetStatus(v string) *InstanceAssociation
 }
 
 // Describes a filter for a specific list of instances.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InstanceInformation
 type InstanceInformation struct {
 	_ struct{} `type:"structure"`
 
@@ -19766,6 +19791,9 @@ type InstanceInformation struct {
 	InstanceId *string `type:"string"`
 
 	// Indicates whether latest version of the SSM Agent is running on your instance.
+	// Some older versions of Windows Server use the EC2Config service to process
+	// SSM requests. For this reason, this field does not indicate whether or not
+	// the latest version is installed on Windows managed instances.
 	IsLatestVersion *bool `type:"boolean"`
 
 	// The date the association was last executed.
@@ -19924,7 +19952,6 @@ func (s *InstanceInformation) SetResourceType(v string) *InstanceInformation {
 }
 
 // Describes a filter for a specific list of instances.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InstanceInformationFilter
 type InstanceInformationFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -19981,7 +20008,6 @@ func (s *InstanceInformationFilter) SetValueSet(v []*string) *InstanceInformatio
 }
 
 // The filters to describe or get information about your managed instances.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InstanceInformationStringFilter
 type InstanceInformationStringFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -20047,7 +20073,6 @@ func (s *InstanceInformationStringFilter) SetValues(v []*string) *InstanceInform
 // information about the number of installed, missing, not applicable, and failed
 // patches along with metadata about the operation when this information was
 // gathered for the instance.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InstancePatchState
 type InstancePatchState struct {
 	_ struct{} `type:"structure"`
 
@@ -20201,7 +20226,6 @@ func (s *InstancePatchState) SetSnapshotId(v string) *InstancePatchState {
 
 // Defines a filter used in DescribeInstancePatchStatesForPatchGroup used to
 // scope down the information returned by the API.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InstancePatchStateFilter
 type InstancePatchStateFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -20277,7 +20301,6 @@ func (s *InstancePatchStateFilter) SetValues(v []*string) *InstancePatchStateFil
 }
 
 // Specifies the inventory type and attribute for the aggregation execution.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InventoryAggregator
 type InventoryAggregator struct {
 	_ struct{} `type:"structure"`
 
@@ -20337,7 +20360,6 @@ func (s *InventoryAggregator) SetExpression(v string) *InventoryAggregator {
 }
 
 // One or more filters. Use a filter to return a more specific list of results.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InventoryFilter
 type InventoryFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -20409,7 +20431,6 @@ func (s *InventoryFilter) SetValues(v []*string) *InventoryFilter {
 
 // Information collected from managed instances based on your inventory policy
 // document
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InventoryItem
 type InventoryItem struct {
 	_ struct{} `type:"structure"`
 
@@ -20516,7 +20537,6 @@ func (s *InventoryItem) SetTypeName(v string) *InventoryItem {
 
 // Attributes are the entries within the inventory item content. It contains
 // name and value.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InventoryItemAttribute
 type InventoryItemAttribute struct {
 	_ struct{} `type:"structure"`
 
@@ -20555,7 +20575,6 @@ func (s *InventoryItemAttribute) SetName(v string) *InventoryItemAttribute {
 
 // The inventory item schema definition. Users can use this to compose inventory
 // query filters.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InventoryItemSchema
 type InventoryItemSchema struct {
 	_ struct{} `type:"structure"`
 
@@ -20616,7 +20635,6 @@ func (s *InventoryItemSchema) SetVersion(v string) *InventoryItemSchema {
 }
 
 // Inventory query results.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InventoryResultEntity
 type InventoryResultEntity struct {
 	_ struct{} `type:"structure"`
 
@@ -20652,7 +20670,6 @@ func (s *InventoryResultEntity) SetId(v string) *InventoryResultEntity {
 }
 
 // The inventory result item.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/InventoryResultItem
 type InventoryResultItem struct {
 	_ struct{} `type:"structure"`
 
@@ -20722,7 +20739,6 @@ func (s *InventoryResultItem) SetTypeName(v string) *InventoryResultItem {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationVersionsRequest
 type ListAssociationVersionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -20784,7 +20800,6 @@ func (s *ListAssociationVersionsInput) SetNextToken(v string) *ListAssociationVe
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationVersionsResult
 type ListAssociationVersionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -20819,7 +20834,6 @@ func (s *ListAssociationVersionsOutput) SetNextToken(v string) *ListAssociationV
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationsRequest
 type ListAssociationsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -20890,7 +20904,6 @@ func (s *ListAssociationsInput) SetNextToken(v string) *ListAssociationsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationsResult
 type ListAssociationsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -20924,7 +20937,6 @@ func (s *ListAssociationsOutput) SetNextToken(v string) *ListAssociationsOutput 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommandInvocationsRequest
 type ListCommandInvocationsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -21027,7 +21039,6 @@ func (s *ListCommandInvocationsInput) SetNextToken(v string) *ListCommandInvocat
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommandInvocationsResult
 type ListCommandInvocationsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -21061,7 +21072,6 @@ func (s *ListCommandInvocationsOutput) SetNextToken(v string) *ListCommandInvoca
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommandsRequest
 type ListCommandsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -21154,7 +21164,6 @@ func (s *ListCommandsInput) SetNextToken(v string) *ListCommandsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommandsResult
 type ListCommandsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -21188,7 +21197,6 @@ func (s *ListCommandsOutput) SetNextToken(v string) *ListCommandsOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceItemsRequest
 type ListComplianceItemsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -21282,7 +21290,6 @@ func (s *ListComplianceItemsInput) SetResourceTypes(v []*string) *ListCompliance
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceItemsResult
 type ListComplianceItemsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -21316,7 +21323,6 @@ func (s *ListComplianceItemsOutput) SetNextToken(v string) *ListComplianceItemsO
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceSummariesRequest
 type ListComplianceSummariesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -21384,7 +21390,6 @@ func (s *ListComplianceSummariesInput) SetNextToken(v string) *ListComplianceSum
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceSummariesResult
 type ListComplianceSummariesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -21420,7 +21425,6 @@ func (s *ListComplianceSummariesOutput) SetNextToken(v string) *ListComplianceSu
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocumentVersionsRequest
 type ListDocumentVersionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -21483,7 +21487,6 @@ func (s *ListDocumentVersionsInput) SetNextToken(v string) *ListDocumentVersions
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocumentVersionsResult
 type ListDocumentVersionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -21517,7 +21520,6 @@ func (s *ListDocumentVersionsOutput) SetNextToken(v string) *ListDocumentVersion
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocumentsRequest
 type ListDocumentsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -21607,7 +21609,6 @@ func (s *ListDocumentsInput) SetNextToken(v string) *ListDocumentsInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocumentsResult
 type ListDocumentsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -21641,7 +21642,6 @@ func (s *ListDocumentsOutput) SetNextToken(v string) *ListDocumentsOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListInventoryEntriesRequest
 type ListInventoryEntriesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -21743,7 +21743,6 @@ func (s *ListInventoryEntriesInput) SetTypeName(v string) *ListInventoryEntriesI
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListInventoryEntriesResult
 type ListInventoryEntriesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -21813,7 +21812,6 @@ func (s *ListInventoryEntriesOutput) SetTypeName(v string) *ListInventoryEntries
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceComplianceSummariesRequest
 type ListResourceComplianceSummariesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -21880,7 +21878,6 @@ func (s *ListResourceComplianceSummariesInput) SetNextToken(v string) *ListResou
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceComplianceSummariesResult
 type ListResourceComplianceSummariesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -21916,7 +21913,6 @@ func (s *ListResourceComplianceSummariesOutput) SetResourceComplianceSummaryItem
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceDataSyncRequest
 type ListResourceDataSyncInput struct {
 	_ struct{} `type:"structure"`
 
@@ -21964,7 +21960,6 @@ func (s *ListResourceDataSyncInput) SetNextToken(v string) *ListResourceDataSync
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceDataSyncResult
 type ListResourceDataSyncOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -21998,7 +21993,6 @@ func (s *ListResourceDataSyncOutput) SetResourceDataSyncItems(v []*ResourceDataS
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListTagsForResourceRequest
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -22051,7 +22045,6 @@ func (s *ListTagsForResourceInput) SetResourceType(v string) *ListTagsForResourc
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListTagsForResourceResult
 type ListTagsForResourceOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -22076,7 +22069,6 @@ func (s *ListTagsForResourceOutput) SetTagList(v []*Tag) *ListTagsForResourceOut
 }
 
 // Information about an Amazon S3 bucket to write instance-level logs to.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/LoggingInfo
 type LoggingInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -22145,7 +22137,6 @@ func (s *LoggingInfo) SetS3Region(v string) *LoggingInfo {
 }
 
 // The parameters for an AUTOMATION task type.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowAutomationParameters
 type MaintenanceWindowAutomationParameters struct {
 	_ struct{} `type:"structure"`
 
@@ -22192,7 +22183,6 @@ func (s *MaintenanceWindowAutomationParameters) SetParameters(v map[string][]*st
 }
 
 // Describes the information about an execution of a Maintenance Window.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowExecution
 type MaintenanceWindowExecution struct {
 	_ struct{} `type:"structure"`
 
@@ -22263,7 +22253,6 @@ func (s *MaintenanceWindowExecution) SetWindowId(v string) *MaintenanceWindowExe
 
 // Information about a task execution performed as part of a Maintenance Window
 // execution.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowExecutionTaskIdentity
 type MaintenanceWindowExecutionTaskIdentity struct {
 	_ struct{} `type:"structure"`
 
@@ -22353,7 +22342,6 @@ func (s *MaintenanceWindowExecutionTaskIdentity) SetWindowExecutionId(v string) 
 
 // Describes the information about a task invocation for a particular target
 // as part of a task execution performed as part of a Maintenance Window execution.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowExecutionTaskInvocationIdentity
 type MaintenanceWindowExecutionTaskInvocationIdentity struct {
 	_ struct{} `type:"structure"`
 
@@ -22482,7 +22470,6 @@ func (s *MaintenanceWindowExecutionTaskInvocationIdentity) SetWindowTargetId(v s
 }
 
 // Filter used in the request.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowFilter
 type MaintenanceWindowFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -22529,7 +22516,6 @@ func (s *MaintenanceWindowFilter) SetValues(v []*string) *MaintenanceWindowFilte
 }
 
 // Information about the Maintenance Window.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowIdentity
 type MaintenanceWindowIdentity struct {
 	_ struct{} `type:"structure"`
 
@@ -22600,7 +22586,6 @@ func (s *MaintenanceWindowIdentity) SetWindowId(v string) *MaintenanceWindowIden
 }
 
 // The parameters for a LAMBDA task type.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowLambdaParameters
 type MaintenanceWindowLambdaParameters struct {
 	_ struct{} `type:"structure"`
 
@@ -22666,7 +22651,6 @@ func (s *MaintenanceWindowLambdaParameters) SetQualifier(v string) *MaintenanceW
 }
 
 // The parameters for a RUN_COMMAND task type.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowRunCommandParameters
 type MaintenanceWindowRunCommandParameters struct {
 	_ struct{} `type:"structure"`
 
@@ -22782,7 +22766,6 @@ func (s *MaintenanceWindowRunCommandParameters) SetTimeoutSeconds(v int64) *Main
 }
 
 // The parameters for the STEP_FUNCTION execution.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowStepFunctionsParameters
 type MaintenanceWindowStepFunctionsParameters struct {
 	_ struct{} `type:"structure"`
 
@@ -22829,7 +22812,6 @@ func (s *MaintenanceWindowStepFunctionsParameters) SetName(v string) *Maintenanc
 }
 
 // The target registered with the Maintenance Window.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowTarget
 type MaintenanceWindowTarget struct {
 	_ struct{} `type:"structure"`
 
@@ -22910,7 +22892,6 @@ func (s *MaintenanceWindowTarget) SetWindowTargetId(v string) *MaintenanceWindow
 }
 
 // Information about a task defined for a Maintenance Window.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowTask
 type MaintenanceWindowTask struct {
 	_ struct{} `type:"structure"`
 
@@ -23050,7 +23031,6 @@ func (s *MaintenanceWindowTask) SetWindowTaskId(v string) *MaintenanceWindowTask
 }
 
 // The parameters for task execution.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowTaskInvocationParameters
 type MaintenanceWindowTaskInvocationParameters struct {
 	_ struct{} `type:"structure"`
 
@@ -23132,7 +23112,6 @@ func (s *MaintenanceWindowTaskInvocationParameters) SetStepFunctions(v *Maintena
 }
 
 // Defines the values for a task parameter.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/MaintenanceWindowTaskParameterValueExpression
 type MaintenanceWindowTaskParameterValueExpression struct {
 	_ struct{} `type:"structure"`
 
@@ -23157,7 +23136,6 @@ func (s *MaintenanceWindowTaskParameterValueExpression) SetValues(v []*string) *
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ModifyDocumentPermissionRequest
 type ModifyDocumentPermissionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -23232,7 +23210,6 @@ func (s *ModifyDocumentPermissionInput) SetPermissionType(v string) *ModifyDocum
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ModifyDocumentPermissionResponse
 type ModifyDocumentPermissionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -23249,7 +23226,6 @@ func (s ModifyDocumentPermissionOutput) GoString() string {
 
 // A summary of resources that are not compliant. The summary is organized according
 // to resource type.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/NonCompliantSummary
 type NonCompliantSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -23283,7 +23259,6 @@ func (s *NonCompliantSummary) SetSeveritySummary(v *SeveritySummary) *NonComplia
 }
 
 // Configurations for sending notifications.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/NotificationConfig
 type NotificationConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -23333,7 +23308,6 @@ func (s *NotificationConfig) SetNotificationType(v string) *NotificationConfig {
 }
 
 // An Amazon EC2 Systems Manager parameter in Parameter Store.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/Parameter
 type Parameter struct {
 	_ struct{} `type:"structure"`
 
@@ -23386,7 +23360,6 @@ func (s *Parameter) SetVersion(v int64) *Parameter {
 }
 
 // Information about parameter usage.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ParameterHistory
 type ParameterHistory struct {
 	_ struct{} `type:"structure"`
 
@@ -23486,7 +23459,6 @@ func (s *ParameterHistory) SetVersion(v int64) *ParameterHistory {
 
 // Metada includes information like the ARN of the last user and the date/time
 // the parameter was last used.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ParameterMetadata
 type ParameterMetadata struct {
 	_ struct{} `type:"structure"`
 
@@ -23577,7 +23549,6 @@ func (s *ParameterMetadata) SetVersion(v int64) *ParameterMetadata {
 }
 
 // One or more filters. Use a filter to return a more specific list of results.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ParameterStringFilter
 type ParameterStringFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -23644,8 +23615,7 @@ func (s *ParameterStringFilter) SetValues(v []*string) *ParameterStringFilter {
 	return s
 }
 
-// One or more filters. Use a filter to return a more specific list of results.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ParametersFilter
+// This data type is deprecated. Instead, use ParameterStringFilter.
 type ParametersFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -23702,7 +23672,6 @@ func (s *ParametersFilter) SetValues(v []*string) *ParametersFilter {
 }
 
 // Represents metadata about a patch.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/Patch
 type Patch struct {
 	_ struct{} `type:"structure"`
 
@@ -23836,7 +23805,6 @@ func (s *Patch) SetVendor(v string) *Patch {
 }
 
 // Defines the basic information about a patch baseline.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PatchBaselineIdentity
 type PatchBaselineIdentity struct {
 	_ struct{} `type:"structure"`
 
@@ -23901,7 +23869,6 @@ func (s *PatchBaselineIdentity) SetOperatingSystem(v string) *PatchBaselineIdent
 
 // Information about the state of a patch on a particular instance as it relates
 // to the patch baseline used to patch the instance.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PatchComplianceData
 type PatchComplianceData struct {
 	_ struct{} `type:"structure"`
 
@@ -23985,16 +23952,305 @@ func (s *PatchComplianceData) SetTitle(v string) *PatchComplianceData {
 }
 
 // Defines a patch filter.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PatchFilter
+//
+// A patch filter consists of key/value pairs, but not all keys are valid for
+// all operating system types. For example, the key PRODUCT is valid for all
+// supported operating system types. The key MSRC_SEVERITY, however, is valid
+// only for Windows operating systems, and the key SECTION is valid only for
+// Ubuntu operating systems.
+//
+// Refer to the following sections for information about which keys may be used
+// with each major operating system, and which values are valid for each key.
+//
+// Windows Operating Systems
+//
+// The supported keys for Windows operating systems are PRODUCT, CLASSIFICATION,
+// and MSRC_SEVERITY. See the following lists for valid values for each of these
+// keys.
+//
+// Supported key:PRODUCT
+//
+// Supported values:
+//
+//    * Windows7
+//
+//    * Windows8
+//
+//    * Windows8.1
+//
+//    * Windows8Embedded
+//
+//    * Windows10
+//
+//    * Windows10LTSB
+//
+//    * WindowsServer2008
+//
+//    * WindowsServer2008R2
+//
+//    * WindowsServer2012
+//
+//    * WindowsServer2012R2
+//
+//    * WindowsServer2016
+//
+// Supported key:CLASSIFICATION
+//
+// Supported values:
+//
+//    * CriticalUpdates
+//
+//    * DefinitionUpdates
+//
+//    * Drivers
+//
+//    * FeaturePacks
+//
+//    * SecurityUpdates
+//
+//    * ServicePacks
+//
+//    * Tools
+//
+//    * UpdateRollups
+//
+//    * Updates
+//
+//    * Upgrades
+//
+// Supported key:MSRC_SEVERITY
+//
+// Supported values:
+//
+//    * Critical
+//
+//    * Important
+//
+//    * Moderate
+//
+//    * Low
+//
+//    * Unspecified
+//
+// Ubuntu Operating Systems
+//
+// The supported keys for Ubuntu operating systems are PRODUCT, PRIORITY, and
+// SECTION. See the following lists for valid values for each of these keys.
+//
+// Supported key:PRODUCT
+//
+// Supported values:
+//
+//    * Ubuntu14.04
+//
+//    * Ubuntu16.04
+//
+// Supported key:PRIORITY
+//
+// Supported values:
+//
+//    * Required
+//
+//    * Important
+//
+//    * Standard
+//
+//    * Optional
+//
+//    * Extra
+//
+// Supported key:SECTION
+//
+// Only the length of the key value is validated. Minimum length is 1. Maximum
+// length is 64.
+//
+// Amazon Linux Operating Systems
+//
+// The supported keys for Amazon Linux operating systems are PRODUCT, CLASSIFICATION,
+// and SEVERITY. See the following lists for valid values for each of these
+// keys.
+//
+// Supported key:PRODUCT
+//
+// Supported values:
+//
+//    * AmazonLinux2012.03
+//
+//    * AmazonLinux2012.09
+//
+//    * AmazonLinux2013.03
+//
+//    * AmazonLinux2013.09
+//
+//    * AmazonLinux2014.03
+//
+//    * AmazonLinux2014.09
+//
+//    * AmazonLinux2015.03
+//
+//    * AmazonLinux2015.09
+//
+//    * AmazonLinux2016.03
+//
+//    * AmazonLinux2016.09
+//
+//    * AmazonLinux2017.03
+//
+//    * AmazonLinux2017.09
+//
+// Supported key:CLASSIFICATION
+//
+// Supported values:
+//
+//    * Security
+//
+//    * Bugfix
+//
+//    * Enhancement
+//
+//    * Recommended
+//
+//    * Newpackage
+//
+// Supported key:SEVERITY
+//
+// Supported values:
+//
+//    * Critical
+//
+//    * Important
+//
+//    * Medium
+//
+//    * Low
+//
+// RedHat Enterprise Linux (RHEL) Operating Systems
+//
+// The supported keys for RedHat Enterprise Linux operating systems are PRODUCT,
+// CLASSIFICATION, and SEVERITY. See the following lists for valid values for
+// each of these keys.
+//
+// Supported key:PRODUCT
+//
+// Supported values:
+//
+//    * RedhatEnterpriseLinux6.5
+//
+//    * RedhatEnterpriseLinux6.6
+//
+//    * RedhatEnterpriseLinux6.7
+//
+//    * RedhatEnterpriseLinux6.8
+//
+//    * RedhatEnterpriseLinux6.9
+//
+//    * RedhatEnterpriseLinux7.0
+//
+//    * RedhatEnterpriseLinux7.1
+//
+//    * RedhatEnterpriseLinux7.2
+//
+//    * RedhatEnterpriseLinux7.3
+//
+//    * RedhatEnterpriseLinux7.4
+//
+// Supported key:CLASSIFICATION
+//
+// Supported values:
+//
+//    * Security
+//
+//    * Bugfix
+//
+//    * Enhancement
+//
+//    * Recommended
+//
+//    * Newpackage
+//
+// Supported key:SEVERITY
+//
+// Supported values:
+//
+//    * Critical
+//
+//    * Important
+//
+//    * Medium
+//
+//    * Low
+//
+// SUSE Linux Enterprise Server (SUSE) Operating Systems
+//
+// The supported keys for SUSE operating systems are PRODUCT, CLASSIFICATION,
+// and SEVERITY. See the following lists for valid values for each of these
+// keys.
+//
+// Supported key:PRODUCT
+//
+// Supported values:
+//
+//    * Suse12.0
+//
+//    * Suse12.1
+//
+//    * Suse12.2
+//
+//    * Suse12.3
+//
+//    * Suse12.4
+//
+//    * Suse12.5
+//
+//    * Suse12.6
+//
+//    * Suse12.7
+//
+//    * Suse12.8
+//
+//    * Suse12.9
+//
+// Supported key:CLASSIFICATION
+//
+// Supported values:
+//
+//    * Security
+//
+//    * Recommended
+//
+//    * Optional
+//
+//    * Feature
+//
+//    * Document
+//
+//    * Yast
+//
+// Supported key:SEVERITY
+//
+// Supported values:
+//
+//    * Critical
+//
+//    * Important
+//
+//    * Moderate
+//
+//    * Low
 type PatchFilter struct {
 	_ struct{} `type:"structure"`
 
-	// The key for the filter (PRODUCT, CLASSIFICATION, MSRC_SEVERITY, PATCH_ID)
+	// The key for the filter.
+	//
+	// See PatchFilter for lists of valid keys for each operating system type.
 	//
 	// Key is a required field
 	Key *string `type:"string" required:"true" enum:"PatchFilterKey"`
 
 	// The value for the filter key.
+	//
+	// See PatchFilter for lists of valid values for each key based on operating
+	// system type.
 	//
 	// Values is a required field
 	Values []*string `min:"1" type:"list" required:"true"`
@@ -24042,7 +24298,6 @@ func (s *PatchFilter) SetValues(v []*string) *PatchFilter {
 }
 
 // A set of patch filters, typically used for approval rules.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PatchFilterGroup
 type PatchFilterGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -24093,7 +24348,6 @@ func (s *PatchFilterGroup) SetPatchFilters(v []*PatchFilter) *PatchFilterGroup {
 
 // The mapping between a patch group and the patch baseline the patch group
 // is registered with.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PatchGroupPatchBaselineMapping
 type PatchGroupPatchBaselineMapping struct {
 	_ struct{} `type:"structure"`
 
@@ -24127,7 +24381,6 @@ func (s *PatchGroupPatchBaselineMapping) SetPatchGroup(v string) *PatchGroupPatc
 }
 
 // Defines a filter used in Patch Manager APIs.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PatchOrchestratorFilter
 type PatchOrchestratorFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -24174,7 +24427,6 @@ func (s *PatchOrchestratorFilter) SetValues(v []*string) *PatchOrchestratorFilte
 }
 
 // Defines an approval rule for a patch baseline.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PatchRule
 type PatchRule struct {
 	_ struct{} `type:"structure"`
 
@@ -24188,6 +24440,11 @@ type PatchRule struct {
 	// Valid compliance severity levels include the following: Unspecified, Critical,
 	// High, Medium, Low, and Informational.
 	ComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
+
+	// For instances identified by the approval rule filters, enables a patch baseline
+	// to apply non-security updates available in the specified repository. The
+	// default value is 'false'. Applies to Linux instances only.
+	EnableNonSecurity *bool `type:"boolean"`
 
 	// The patch filter group that defines the criteria for the rule.
 	//
@@ -24238,6 +24495,12 @@ func (s *PatchRule) SetComplianceLevel(v string) *PatchRule {
 	return s
 }
 
+// SetEnableNonSecurity sets the EnableNonSecurity field's value.
+func (s *PatchRule) SetEnableNonSecurity(v bool) *PatchRule {
+	s.EnableNonSecurity = &v
+	return s
+}
+
 // SetPatchFilterGroup sets the PatchFilterGroup field's value.
 func (s *PatchRule) SetPatchFilterGroup(v *PatchFilterGroup) *PatchRule {
 	s.PatchFilterGroup = v
@@ -24245,7 +24508,6 @@ func (s *PatchRule) SetPatchFilterGroup(v *PatchFilterGroup) *PatchRule {
 }
 
 // A set of rules defining the approval rules for a patch baseline.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PatchRuleGroup
 type PatchRuleGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -24294,8 +24556,91 @@ func (s *PatchRuleGroup) SetPatchRules(v []*PatchRule) *PatchRuleGroup {
 	return s
 }
 
+// Information about the patches to use to update the instances, including target
+// operating systems and source repository. Applies to Linux instances only.
+type PatchSource struct {
+	_ struct{} `type:"structure"`
+
+	// The value of the yum repo configuration. For example:
+	//
+	// cachedir=/var/cache/yum/$basesearch
+	//
+	// $releasever
+	//
+	// keepcache=0
+	//
+	// debualevel=2
+	//
+	// Configuration is a required field
+	Configuration *string `min:"1" type:"string" required:"true"`
+
+	// The name specified to identify the patch source.
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true"`
+
+	// The specific operating system versions a patch repository applies to, such
+	// as "Ubuntu16.04", "AmazonLinux2016.09", "RedhatEnterpriseLinux7.2" or "Suse12.7".
+	// For lists of supported product values, see PatchFilter.
+	//
+	// Products is a required field
+	Products []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s PatchSource) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PatchSource) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PatchSource) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PatchSource"}
+	if s.Configuration == nil {
+		invalidParams.Add(request.NewErrParamRequired("Configuration"))
+	}
+	if s.Configuration != nil && len(*s.Configuration) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Configuration", 1))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Products == nil {
+		invalidParams.Add(request.NewErrParamRequired("Products"))
+	}
+	if s.Products != nil && len(s.Products) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Products", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfiguration sets the Configuration field's value.
+func (s *PatchSource) SetConfiguration(v string) *PatchSource {
+	s.Configuration = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *PatchSource) SetName(v string) *PatchSource {
+	s.Name = &v
+	return s
+}
+
+// SetProducts sets the Products field's value.
+func (s *PatchSource) SetProducts(v []*string) *PatchSource {
+	s.Products = v
+	return s
+}
+
 // Information about the approval status of a patch.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PatchStatus
 type PatchStatus struct {
 	_ struct{} `type:"structure"`
 
@@ -24338,7 +24683,6 @@ func (s *PatchStatus) SetDeploymentStatus(v string) *PatchStatus {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutComplianceItemsRequest
 type PutComplianceItemsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -24475,7 +24819,6 @@ func (s *PutComplianceItemsInput) SetResourceType(v string) *PutComplianceItemsI
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutComplianceItemsResult
 type PutComplianceItemsOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -24490,7 +24833,6 @@ func (s PutComplianceItemsOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutInventoryRequest
 type PutInventoryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -24556,7 +24898,6 @@ func (s *PutInventoryInput) SetItems(v []*InventoryItem) *PutInventoryInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutInventoryResult
 type PutInventoryOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -24571,7 +24912,6 @@ func (s PutInventoryOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutParameterRequest
 type PutParameterInput struct {
 	_ struct{} `type:"structure"`
 
@@ -24591,6 +24931,10 @@ type PutParameterInput struct {
 	// The fully qualified name of the parameter that you want to add to the system.
 	// The fully qualified name includes the complete hierarchy of the parameter
 	// path and name. For example: /Dev/DBServer/MySQL/db-string13
+	//
+	// For information about parameter name requirements and restrictions, see About
+	// Creating Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-su-create.html#sysman-paramstore-su-create-about)
+	// in the AWS Systems Manager User Guide.
 	//
 	// The maximum length constraint listed below includes capacity for additional
 	// system attributes that are not part of the name. The maximum length for the
@@ -24693,7 +25037,6 @@ func (s *PutParameterInput) SetValue(v string) *PutParameterInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutParameterResult
 type PutParameterOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -24722,7 +25065,6 @@ func (s *PutParameterOutput) SetVersion(v int64) *PutParameterOutput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterDefaultPatchBaselineRequest
 type RegisterDefaultPatchBaselineInput struct {
 	_ struct{} `type:"structure"`
 
@@ -24764,7 +25106,6 @@ func (s *RegisterDefaultPatchBaselineInput) SetBaselineId(v string) *RegisterDef
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterDefaultPatchBaselineResult
 type RegisterDefaultPatchBaselineOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -24788,7 +25129,6 @@ func (s *RegisterDefaultPatchBaselineOutput) SetBaselineId(v string) *RegisterDe
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterPatchBaselineForPatchGroupRequest
 type RegisterPatchBaselineForPatchGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -24847,7 +25187,6 @@ func (s *RegisterPatchBaselineForPatchGroupInput) SetPatchGroup(v string) *Regis
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterPatchBaselineForPatchGroupResult
 type RegisterPatchBaselineForPatchGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -24880,7 +25219,6 @@ func (s *RegisterPatchBaselineForPatchGroupOutput) SetPatchGroup(v string) *Regi
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTargetWithMaintenanceWindowRequest
 type RegisterTargetWithMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
@@ -25010,7 +25348,6 @@ func (s *RegisterTargetWithMaintenanceWindowInput) SetWindowId(v string) *Regist
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTargetWithMaintenanceWindowResult
 type RegisterTargetWithMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -25034,7 +25371,6 @@ func (s *RegisterTargetWithMaintenanceWindowOutput) SetWindowTargetId(v string) 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTaskWithMaintenanceWindowRequest
 type RegisterTaskWithMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
@@ -25266,7 +25602,6 @@ func (s *RegisterTaskWithMaintenanceWindowInput) SetWindowId(v string) *Register
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTaskWithMaintenanceWindowResult
 type RegisterTaskWithMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -25290,7 +25625,6 @@ func (s *RegisterTaskWithMaintenanceWindowOutput) SetWindowTaskId(v string) *Reg
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RemoveTagsFromResourceRequest
 type RemoveTagsFromResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -25357,7 +25691,6 @@ func (s *RemoveTagsFromResourceInput) SetTagKeys(v []*string) *RemoveTagsFromRes
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RemoveTagsFromResourceResult
 type RemoveTagsFromResourceOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -25373,7 +25706,6 @@ func (s RemoveTagsFromResourceOutput) GoString() string {
 }
 
 // Information about targets that resolved during the Automation execution.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResolvedTargets
 type ResolvedTargets struct {
 	_ struct{} `type:"structure"`
 
@@ -25408,7 +25740,6 @@ func (s *ResolvedTargets) SetTruncated(v bool) *ResolvedTargets {
 }
 
 // Compliance summary information for a specific resource.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResourceComplianceSummaryItem
 type ResourceComplianceSummaryItem struct {
 	_ struct{} `type:"structure"`
 
@@ -25498,7 +25829,6 @@ func (s *ResourceComplianceSummaryItem) SetStatus(v string) *ResourceComplianceS
 
 // Information about a Resource Data Sync configuration, including its current
 // status and last successful sync.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResourceDataSyncItem
 type ResourceDataSyncItem struct {
 	_ struct{} `type:"structure"`
 
@@ -25507,6 +25837,9 @@ type ResourceDataSyncItem struct {
 
 	// The last time the sync operations returned a status of SUCCESSFUL (UTC).
 	LastSuccessfulSyncTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The status message details reported by the last sync.
+	LastSyncStatusMessage *string `type:"string"`
 
 	// The last time the configuration attempted to sync (UTC).
 	LastSyncTime *time.Time `type:"timestamp" timestampFormat:"unix"`
@@ -25543,6 +25876,12 @@ func (s *ResourceDataSyncItem) SetLastSuccessfulSyncTime(v time.Time) *ResourceD
 	return s
 }
 
+// SetLastSyncStatusMessage sets the LastSyncStatusMessage field's value.
+func (s *ResourceDataSyncItem) SetLastSyncStatusMessage(v string) *ResourceDataSyncItem {
+	s.LastSyncStatusMessage = &v
+	return s
+}
+
 // SetLastSyncTime sets the LastSyncTime field's value.
 func (s *ResourceDataSyncItem) SetLastSyncTime(v time.Time) *ResourceDataSyncItem {
 	s.LastSyncTime = &v
@@ -25568,7 +25907,6 @@ func (s *ResourceDataSyncItem) SetSyncName(v string) *ResourceDataSyncItem {
 }
 
 // Information about the target Amazon S3 bucket for the Resource Data Sync.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResourceDataSyncS3Destination
 type ResourceDataSyncS3Destination struct {
 	_ struct{} `type:"structure"`
 
@@ -25667,7 +26005,6 @@ func (s *ResourceDataSyncS3Destination) SetSyncFormat(v string) *ResourceDataSyn
 }
 
 // The inventory item result attribute.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResultAttribute
 type ResultAttribute struct {
 	_ struct{} `type:"structure"`
 
@@ -25711,7 +26048,6 @@ func (s *ResultAttribute) SetTypeName(v string) *ResultAttribute {
 }
 
 // An Amazon S3 bucket where you want to store the results of this request.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/S3OutputLocation
 type S3OutputLocation struct {
 	_ struct{} `type:"structure"`
 
@@ -25773,7 +26109,6 @@ func (s *S3OutputLocation) SetOutputS3Region(v string) *S3OutputLocation {
 
 // A URL for the Amazon S3 bucket where you want to store the results of this
 // request.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/S3OutputUrl
 type S3OutputUrl struct {
 	_ struct{} `type:"structure"`
 
@@ -25798,7 +26133,6 @@ func (s *S3OutputUrl) SetOutputUrl(v string) *S3OutputUrl {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendAutomationSignalRequest
 type SendAutomationSignalInput struct {
 	_ struct{} `type:"structure"`
 
@@ -25869,7 +26203,6 @@ func (s *SendAutomationSignalInput) SetSignalType(v string) *SendAutomationSigna
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendAutomationSignalResult
 type SendAutomationSignalOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -25884,7 +26217,6 @@ func (s SendAutomationSignalOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendCommandRequest
 type SendCommandInput struct {
 	_ struct{} `type:"structure"`
 
@@ -25924,7 +26256,7 @@ type SendCommandInput struct {
 	// The maximum number of errors allowed without the command failing. When the
 	// command fails one more time beyond the value of MaxErrors, the systems stops
 	// sending the command to additional targets. You can specify a number like
-	// 10 or a percentage like 10%. The default value is 50. For more information
+	// 10 or a percentage like 10%. The default value is 0. For more information
 	// about how to use MaxErrors, see Using Error Controls (http://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-maxerrors.html).
 	MaxErrors *string `min:"1" type:"string"`
 
@@ -26098,7 +26430,6 @@ func (s *SendCommandInput) SetTimeoutSeconds(v int64) *SendCommandInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendCommandResult
 type SendCommandOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -26125,7 +26456,6 @@ func (s *SendCommandOutput) SetCommand(v *Command) *SendCommandOutput {
 
 // The number of managed instances found for each patch severity level defined
 // in the request filter.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SeveritySummary
 type SeveritySummary struct {
 	_ struct{} `type:"structure"`
 
@@ -26206,7 +26536,6 @@ func (s *SeveritySummary) SetUnspecifiedCount(v int64) *SeveritySummary {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartAutomationExecutionRequest
 type StartAutomationExecutionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -26361,7 +26690,6 @@ func (s *StartAutomationExecutionInput) SetTargets(v []*Target) *StartAutomation
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartAutomationExecutionResult
 type StartAutomationExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -26386,7 +26714,6 @@ func (s *StartAutomationExecutionOutput) SetAutomationExecutionId(v string) *Sta
 }
 
 // Detailed information about an the execution state of an Automation step.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StepExecution
 type StepExecution struct {
 	_ struct{} `type:"structure"`
 
@@ -26552,7 +26879,6 @@ func (s *StepExecution) SetTimeoutSeconds(v int64) *StepExecution {
 
 // A filter to limit the amount of step execution information returned by the
 // call.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StepExecutionFilter
 type StepExecutionFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -26610,7 +26936,6 @@ func (s *StepExecutionFilter) SetValues(v []*string) *StepExecutionFilter {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StopAutomationExecutionRequest
 type StopAutomationExecutionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -26662,7 +26987,6 @@ func (s *StopAutomationExecutionInput) SetType(v string) *StopAutomationExecutio
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StopAutomationExecutionResult
 type StopAutomationExecutionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -26681,7 +27005,6 @@ func (s StopAutomationExecutionOutput) GoString() string {
 // your resources in different ways, for example, by purpose, owner, or environment.
 // In Systems Manager, you can apply tags to documents, managed instances, Maintenance
 // Windows, Parameter Store parameters, and patch baselines.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/Tag
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -26743,7 +27066,6 @@ func (s *Tag) SetValue(v string) *Tag {
 // An array of search criteria that targets instances using a Key,Value combination
 // that you specify. Targets is required if you don't provide one or more instance
 // IDs in the call.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/Target
 type Target struct {
 	_ struct{} `type:"structure"`
 
@@ -26796,7 +27118,6 @@ func (s *Target) SetValues(v []*string) *Target {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociationRequest
 type UpdateAssociationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -26928,7 +27249,6 @@ func (s *UpdateAssociationInput) SetTargets(v []*Target) *UpdateAssociationInput
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociationResult
 type UpdateAssociationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -26952,7 +27272,6 @@ func (s *UpdateAssociationOutput) SetAssociationDescription(v *AssociationDescri
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociationStatusRequest
 type UpdateAssociationStatusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -27024,7 +27343,6 @@ func (s *UpdateAssociationStatusInput) SetName(v string) *UpdateAssociationStatu
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociationStatusResult
 type UpdateAssociationStatusOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -27048,7 +27366,6 @@ func (s *UpdateAssociationStatusOutput) SetAssociationDescription(v *Association
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocumentDefaultVersionRequest
 type UpdateDocumentDefaultVersionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -27101,7 +27418,6 @@ func (s *UpdateDocumentDefaultVersionInput) SetName(v string) *UpdateDocumentDef
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocumentDefaultVersionResult
 type UpdateDocumentDefaultVersionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -27126,7 +27442,6 @@ func (s *UpdateDocumentDefaultVersionOutput) SetDescription(v *DocumentDefaultVe
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocumentRequest
 type UpdateDocumentInput struct {
 	_ struct{} `type:"structure"`
 
@@ -27210,7 +27525,6 @@ func (s *UpdateDocumentInput) SetTargetType(v string) *UpdateDocumentInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocumentResult
 type UpdateDocumentOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -27234,7 +27548,6 @@ func (s *UpdateDocumentOutput) SetDocumentDescription(v *DocumentDescription) *U
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowRequest
 type UpdateMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
@@ -27364,7 +27677,6 @@ func (s *UpdateMaintenanceWindowInput) SetWindowId(v string) *UpdateMaintenanceW
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowResult
 type UpdateMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -27453,7 +27765,6 @@ func (s *UpdateMaintenanceWindowOutput) SetWindowId(v string) *UpdateMaintenance
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTargetRequest
 type UpdateMaintenanceWindowTargetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -27579,7 +27890,6 @@ func (s *UpdateMaintenanceWindowTargetInput) SetWindowTargetId(v string) *Update
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTargetResult
 type UpdateMaintenanceWindowTargetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -27648,7 +27958,6 @@ func (s *UpdateMaintenanceWindowTargetOutput) SetWindowTargetId(v string) *Updat
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTaskRequest
 type UpdateMaintenanceWindowTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -27863,7 +28172,6 @@ func (s *UpdateMaintenanceWindowTaskInput) SetWindowTaskId(v string) *UpdateMain
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTaskResult
 type UpdateMaintenanceWindowTaskOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -27995,7 +28303,6 @@ func (s *UpdateMaintenanceWindowTaskOutput) SetWindowTaskId(v string) *UpdateMai
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateManagedInstanceRoleRequest
 type UpdateManagedInstanceRoleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -28048,7 +28355,6 @@ func (s *UpdateManagedInstanceRoleInput) SetInstanceId(v string) *UpdateManagedI
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateManagedInstanceRoleResult
 type UpdateManagedInstanceRoleOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -28063,7 +28369,6 @@ func (s UpdateManagedInstanceRoleOutput) GoString() string {
 	return s.String()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdatePatchBaselineRequest
 type UpdatePatchBaselineInput struct {
 	_ struct{} `type:"structure"`
 
@@ -28075,6 +28380,11 @@ type UpdatePatchBaselineInput struct {
 
 	// Assigns a new compliance severity level to an existing patch baseline.
 	ApprovedPatchesComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
+
+	// Indicates whether the list of approved patches includes non-security updates
+	// that should be applied to the instances. The default value is 'false'. Applies
+	// to Linux instances only.
+	ApprovedPatchesEnableNonSecurity *bool `type:"boolean"`
 
 	// The ID of the patch baseline to update.
 	//
@@ -28092,6 +28402,15 @@ type UpdatePatchBaselineInput struct {
 
 	// A list of explicitly rejected patches for the baseline.
 	RejectedPatches []*string `type:"list"`
+
+	// If True, then all fields that are required by the CreatePatchBaseline action
+	// are also required for this API request. Optional fields that are not specified
+	// are set to null.
+	Replace *bool `type:"boolean"`
+
+	// Information about the patches to use to update the instances, including target
+	// operating systems and source repositories. Applies to Linux instances only.
+	Sources []*PatchSource `type:"list"`
 }
 
 // String returns the string representation
@@ -28129,6 +28448,16 @@ func (s *UpdatePatchBaselineInput) Validate() error {
 			invalidParams.AddNested("GlobalFilters", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Sources != nil {
+		for i, v := range s.Sources {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Sources", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -28151,6 +28480,12 @@ func (s *UpdatePatchBaselineInput) SetApprovedPatches(v []*string) *UpdatePatchB
 // SetApprovedPatchesComplianceLevel sets the ApprovedPatchesComplianceLevel field's value.
 func (s *UpdatePatchBaselineInput) SetApprovedPatchesComplianceLevel(v string) *UpdatePatchBaselineInput {
 	s.ApprovedPatchesComplianceLevel = &v
+	return s
+}
+
+// SetApprovedPatchesEnableNonSecurity sets the ApprovedPatchesEnableNonSecurity field's value.
+func (s *UpdatePatchBaselineInput) SetApprovedPatchesEnableNonSecurity(v bool) *UpdatePatchBaselineInput {
+	s.ApprovedPatchesEnableNonSecurity = &v
 	return s
 }
 
@@ -28184,7 +28519,18 @@ func (s *UpdatePatchBaselineInput) SetRejectedPatches(v []*string) *UpdatePatchB
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdatePatchBaselineResult
+// SetReplace sets the Replace field's value.
+func (s *UpdatePatchBaselineInput) SetReplace(v bool) *UpdatePatchBaselineInput {
+	s.Replace = &v
+	return s
+}
+
+// SetSources sets the Sources field's value.
+func (s *UpdatePatchBaselineInput) SetSources(v []*PatchSource) *UpdatePatchBaselineInput {
+	s.Sources = v
+	return s
+}
+
 type UpdatePatchBaselineOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -28197,6 +28543,11 @@ type UpdatePatchBaselineOutput struct {
 	// The compliance severity level assigned to the patch baseline after the update
 	// completed.
 	ApprovedPatchesComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
+
+	// Indicates whether the list of approved patches includes non-security updates
+	// that should be applied to the instances. The default value is 'false'. Applies
+	// to Linux instances only.
+	ApprovedPatchesEnableNonSecurity *bool `type:"boolean"`
 
 	// The ID of the deleted patch baseline.
 	BaselineId *string `min:"20" type:"string"`
@@ -28221,6 +28572,10 @@ type UpdatePatchBaselineOutput struct {
 
 	// A list of explicitly rejected patches for the baseline.
 	RejectedPatches []*string `type:"list"`
+
+	// Information about the patches to use to update the instances, including target
+	// operating systems and source repositories. Applies to Linux instances only.
+	Sources []*PatchSource `type:"list"`
 }
 
 // String returns the string representation
@@ -28248,6 +28603,12 @@ func (s *UpdatePatchBaselineOutput) SetApprovedPatches(v []*string) *UpdatePatch
 // SetApprovedPatchesComplianceLevel sets the ApprovedPatchesComplianceLevel field's value.
 func (s *UpdatePatchBaselineOutput) SetApprovedPatchesComplianceLevel(v string) *UpdatePatchBaselineOutput {
 	s.ApprovedPatchesComplianceLevel = &v
+	return s
+}
+
+// SetApprovedPatchesEnableNonSecurity sets the ApprovedPatchesEnableNonSecurity field's value.
+func (s *UpdatePatchBaselineOutput) SetApprovedPatchesEnableNonSecurity(v bool) *UpdatePatchBaselineOutput {
+	s.ApprovedPatchesEnableNonSecurity = &v
 	return s
 }
 
@@ -28296,6 +28657,12 @@ func (s *UpdatePatchBaselineOutput) SetOperatingSystem(v string) *UpdatePatchBas
 // SetRejectedPatches sets the RejectedPatches field's value.
 func (s *UpdatePatchBaselineOutput) SetRejectedPatches(v []*string) *UpdatePatchBaselineOutput {
 	s.RejectedPatches = v
+	return s
+}
+
+// SetSources sets the Sources field's value.
+func (s *UpdatePatchBaselineOutput) SetSources(v []*PatchSource) *UpdatePatchBaselineOutput {
+	s.Sources = v
 	return s
 }
 
@@ -28766,6 +29133,12 @@ const (
 
 	// OperatingSystemRedhatEnterpriseLinux is a OperatingSystem enum value
 	OperatingSystemRedhatEnterpriseLinux = "REDHAT_ENTERPRISE_LINUX"
+
+	// OperatingSystemSuse is a OperatingSystem enum value
+	OperatingSystemSuse = "SUSE"
+
+	// OperatingSystemCentos is a OperatingSystem enum value
+	OperatingSystemCentos = "CENTOS"
 )
 
 const (

@@ -8,11 +8,13 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsDbInstance() *schema.Resource {
@@ -350,6 +352,20 @@ func resourceAwsDbInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"enabled_cloudwatch_logs_exports": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						"audit",
+						"error",
+						"general",
+						"slowquery",
+					}, false),
+				},
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -407,6 +423,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		}
+
 		if attr, ok := d.GetOk("kms_key_id"); ok {
 			opts.KmsKeyId = aws.String(attr.(string))
 			if arnParts := strings.Split(v.(string), ":"); len(arnParts) >= 4 {
@@ -459,6 +479,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
 			opts.DBSubnetGroupName = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
 		}
 
 		if attr, ok := d.GetOk("engine"); ok {
@@ -525,10 +549,9 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 				"[INFO] Waiting for DB Instance to be available")
 
 			stateConf := &resource.StateChangeConf{
-				Pending: []string{"creating", "backing-up", "modifying", "resetting-master-credentials",
-					"maintenance", "renaming", "rebooting", "upgrading"},
-				Target:     []string{"available"},
-				Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
+				Pending:    resourceAwsDbInstanceCreatePendingStates,
+				Target:     []string{"available", "storage-optimization"},
+				Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 				Timeout:    d.Timeout(schema.TimeoutCreate),
 				MinTimeout: 10 * time.Second,
 				Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -628,6 +651,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		}
+
 		if attr, ok := d.GetOk("iops"); ok {
 			opts.Iops = aws.Int64(int64(attr.(int)))
 		}
@@ -687,10 +714,9 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		"[INFO] Waiting for DB Instance to be available")
 
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"creating", "backing-up", "modifying", "resetting-master-credentials",
-			"maintenance", "renaming", "rebooting", "upgrading", "configuring-enhanced-monitoring"},
-		Target:     []string{"available"},
-		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
+		Pending:    resourceAwsDbInstanceCreatePendingStates,
+		Target:     []string{"available", "storage-optimization"},
+		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -706,7 +732,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	v, err := resourceAwsDbInstanceRetrieve(d, meta)
+	v, err := resourceAwsDbInstanceRetrieve(d.Id(), meta.(*AWSClient).rdsconn)
 
 	if err != nil {
 		return err
@@ -776,32 +802,35 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 	}
 
+	if err := d.Set("enabled_cloudwatch_logs_exports", flattenStringList(v.EnabledCloudwatchLogsExports)); err != nil {
+		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
+	}
+
 	// list tags for resource
 	// set tags
 	conn := meta.(*AWSClient).rdsconn
-	arn, err := buildRDSARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "rds",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("db:%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+	resp, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
+		ResourceName: aws.String(arn),
+	})
+
 	if err != nil {
-		name := "<empty>"
-		if v.DBName != nil && *v.DBName != "" {
-			name = *v.DBName
-		}
-		log.Printf("[DEBUG] Error building ARN for DB Instance, not setting Tags for DB %s", name)
-	} else {
-		d.Set("arn", arn)
-		resp, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
-			ResourceName: aws.String(arn),
-		})
-
-		if err != nil {
-			log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
-		}
-
-		var dt []*rds.Tag
-		if len(resp.TagList) > 0 {
-			dt = resp.TagList
-		}
-		d.Set("tags", tagsToMapRDS(dt))
+		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
 	}
+
+	var dt []*rds.Tag
+	if len(resp.TagList) > 0 {
+		dt = resp.TagList
+	}
+	d.Set("tags", tagsToMapRDS(dt))
 
 	// Create an empty schema.Set to hold all vpc security group ids
 	ids := &schema.Set{
@@ -860,22 +889,21 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	log.Println(
-		"[INFO] Waiting for DB Instance to be destroyed")
+	log.Println("[INFO] Waiting for DB Instance to be destroyed")
+	return waitUntilAwsDbInstanceIsDeleted(d.Id(), conn, d.Timeout(schema.TimeoutDelete))
+}
+
+func waitUntilAwsDbInstanceIsDeleted(id string, conn *rds.RDS, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"creating", "backing-up",
-			"modifying", "deleting", "available"},
+		Pending:    resourceAwsDbInstanceDeletePendingStates,
 		Target:     []string{},
-		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Refresh:    resourceAwsDbInstanceStateRefreshFunc(id, conn),
+		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return err
-	}
-
-	return nil
+	_, err := stateConf.WaitForState()
+	return err
 }
 
 func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -1023,6 +1051,12 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
+	if d.HasChange("enabled_cloudwatch_logs_exports") && !d.IsNewResource() {
+		d.SetPartial("enabled_cloudwatch_logs_exports")
+		req.CloudwatchLogsExportConfiguration = buildCloudwatchLogsExportConfiguration(d)
+		requestUpdate = true
+	}
+
 	if d.HasChange("iam_database_authentication_enabled") {
 		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		requestUpdate = true
@@ -1039,10 +1073,9 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		log.Println("[INFO] Waiting for DB Instance to be available")
 
 		stateConf := &resource.StateChangeConf{
-			Pending: []string{"creating", "backing-up", "modifying", "resetting-master-credentials",
-				"maintenance", "renaming", "rebooting", "upgrading", "configuring-enhanced-monitoring", "moving-to-vpc"},
-			Target:     []string{"available"},
-			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d, meta),
+			Pending:    resourceAwsDbInstanceUpdatePendingStates,
+			Target:     []string{"available", "storage-optimization"},
+			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -1077,13 +1110,19 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if arn, err := buildRDSARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region); err == nil {
-		if err := setTagsRDS(conn, d, arn); err != nil {
-			return err
-		} else {
-			d.SetPartial("tags")
-		}
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "rds",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("db:%s", d.Id()),
+	}.String()
+	if err := setTagsRDS(conn, d, arn); err != nil {
+		return err
+	} else {
+		d.SetPartial("tags")
 	}
+
 	d.Partial(false)
 
 	return resourceAwsDbInstanceRead(d, meta)
@@ -1093,12 +1132,9 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 // API. It returns an error if there is a communication problem or unexpected
 // error with AWS. When the DBInstance is not found, it returns no error and a
 // nil pointer.
-func resourceAwsDbInstanceRetrieve(
-	d *schema.ResourceData, meta interface{}) (*rds.DBInstance, error) {
-	conn := meta.(*AWSClient).rdsconn
-
+func resourceAwsDbInstanceRetrieve(id string, conn *rds.RDS) (*rds.DBInstance, error) {
 	opts := rds.DescribeDBInstancesInput{
-		DBInstanceIdentifier: aws.String(d.Id()),
+		DBInstanceIdentifier: aws.String(id),
 	}
 
 	log.Printf("[DEBUG] DB Instance describe configuration: %#v", opts)
@@ -1113,7 +1149,7 @@ func resourceAwsDbInstanceRetrieve(
 	}
 
 	if len(resp.DBInstances) != 1 ||
-		*resp.DBInstances[0].DBInstanceIdentifier != d.Id() {
+		*resp.DBInstances[0].DBInstanceIdentifier != id {
 		if err != nil {
 			return nil, nil
 		}
@@ -1131,10 +1167,9 @@ func resourceAwsDbInstanceImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsDbInstanceStateRefreshFunc(
-	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
+func resourceAwsDbInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := resourceAwsDbInstanceRetrieve(d, meta)
+		v, err := resourceAwsDbInstanceRetrieve(id, conn)
 
 		if err != nil {
 			log.Printf("Error on retrieving DB Instance when waiting: %s", err)
@@ -1146,20 +1181,90 @@ func resourceAwsDbInstanceStateRefreshFunc(
 		}
 
 		if v.DBInstanceStatus != nil {
-			log.Printf("[DEBUG] DB Instance status for instance %s: %s", d.Id(), *v.DBInstanceStatus)
+			log.Printf("[DEBUG] DB Instance status for instance %s: %s", id, *v.DBInstanceStatus)
 		}
 
 		return v, *v.DBInstanceStatus, nil
 	}
 }
 
-func buildRDSARN(identifier, partition, accountid, region string) (string, error) {
-	if partition == "" {
-		return "", fmt.Errorf("Unable to construct RDS ARN because of missing AWS partition")
+func buildCloudwatchLogsExportConfiguration(d *schema.ResourceData) *rds.CloudwatchLogsExportConfiguration {
+
+	oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
+	o := oraw.([]interface{})
+	n := nraw.([]interface{})
+
+	create, disable := diffCloudwatchLogsExportConfiguration(o, n)
+
+	return &rds.CloudwatchLogsExportConfiguration{
+		EnableLogTypes:  expandStringList(create),
+		DisableLogTypes: expandStringList(disable),
 	}
-	if accountid == "" {
-		return "", fmt.Errorf("Unable to construct RDS ARN because of missing AWS Account ID")
+}
+
+func diffCloudwatchLogsExportConfiguration(old, new []interface{}) ([]interface{}, []interface{}) {
+	create := make([]interface{}, 0)
+	disable := make([]interface{}, 0)
+
+	for _, n := range new {
+		if _, contains := sliceContainsString(old, n.(string)); !contains {
+			create = append(create, n)
+		}
 	}
-	arn := fmt.Sprintf("arn:%s:rds:%s:%s:db:%s", partition, region, accountid, identifier)
-	return arn, nil
+
+	for _, o := range old {
+		if _, contains := sliceContainsString(new, o.(string)); !contains {
+			disable = append(disable, o)
+		}
+	}
+
+	return create, disable
+}
+
+// Database instance status: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Status.html
+var resourceAwsDbInstanceCreatePendingStates = []string{
+	"backing-up",
+	"configuring-enhanced-monitoring",
+	"configuring-log-exports",
+	"creating",
+	"maintenance",
+	"modifying",
+	"rebooting",
+	"renaming",
+	"resetting-master-credentials",
+	"starting",
+	"stopping",
+	"upgrading",
+}
+
+var resourceAwsDbInstanceDeletePendingStates = []string{
+	"available",
+	"backing-up",
+	"configuring-enhanced-monitoring",
+	"configuring-log-exports",
+	"creating",
+	"deleting",
+	"incompatible-parameters",
+	"modifying",
+	"starting",
+	"stopping",
+	"storage-full",
+	"storage-optimization",
+}
+
+var resourceAwsDbInstanceUpdatePendingStates = []string{
+	"backing-up",
+	"configuring-enhanced-monitoring",
+	"configuring-log-exports",
+	"creating",
+	"maintenance",
+	"modifying",
+	"moving-to-vpc",
+	"rebooting",
+	"renaming",
+	"resetting-master-credentials",
+	"starting",
+	"stopping",
+	"storage-full",
+	"upgrading",
 }

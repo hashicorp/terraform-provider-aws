@@ -46,6 +46,26 @@ const (
 	// You can enable or disable email sending for a configuration set using UpdateConfigurationSetSendingEnabled.
 	ErrCodeConfigurationSetSendingPausedException = "ConfigurationSetSendingPausedException"
 
+	// ErrCodeCustomVerificationEmailInvalidContentException for service response error code
+	// "CustomVerificationEmailInvalidContent".
+	//
+	// Indicates that custom verification email template provided content is invalid.
+	ErrCodeCustomVerificationEmailInvalidContentException = "CustomVerificationEmailInvalidContent"
+
+	// ErrCodeCustomVerificationEmailTemplateAlreadyExistsException for service response error code
+	// "CustomVerificationEmailTemplateAlreadyExists".
+	//
+	// Indicates that a custom verification email template with the name you specified
+	// already exists.
+	ErrCodeCustomVerificationEmailTemplateAlreadyExistsException = "CustomVerificationEmailTemplateAlreadyExists"
+
+	// ErrCodeCustomVerificationEmailTemplateDoesNotExistException for service response error code
+	// "CustomVerificationEmailTemplateDoesNotExist".
+	//
+	// Indicates that a custom verification email template with the name you specified
+	// does not exist.
+	ErrCodeCustomVerificationEmailTemplateDoesNotExistException = "CustomVerificationEmailTemplateDoesNotExist"
+
 	// ErrCodeEventDestinationAlreadyExistsException for service response error code
 	// "EventDestinationAlreadyExists".
 	//
@@ -58,6 +78,14 @@ const (
 	//
 	// Indicates that the event destination does not exist.
 	ErrCodeEventDestinationDoesNotExistException = "EventDestinationDoesNotExist"
+
+	// ErrCodeFromEmailAddressNotVerifiedException for service response error code
+	// "FromEmailAddressNotVerified".
+	//
+	// Indicates that the sender address specified for a custom verification email
+	// is not verified, and is therefore not eligible to send the custom verification
+	// email.
+	ErrCodeFromEmailAddressNotVerifiedException = "FromEmailAddressNotVerified"
 
 	// ErrCodeInvalidCloudWatchDestinationException for service response error code
 	// "InvalidCloudWatchDestination".
@@ -175,6 +203,12 @@ const (
 	// was not specified. Ensure that the TemplateData object contains references
 	// to all of the replacement tags in the specified template.
 	ErrCodeMissingRenderingAttributeException = "MissingRenderingAttribute"
+
+	// ErrCodeProductionAccessNotGrantedException for service response error code
+	// "ProductionAccessNotGranted".
+	//
+	// Indicates that the account has not been granted production access.
+	ErrCodeProductionAccessNotGrantedException = "ProductionAccessNotGranted"
 
 	// ErrCodeRuleDoesNotExistException for service response error code
 	// "RuleDoesNotExist".

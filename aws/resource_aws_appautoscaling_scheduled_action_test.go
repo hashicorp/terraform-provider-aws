@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsAppautoscalingScheduledAction_dynamo(t *testing.T) {
+func TestAccAWSAppautoscalingScheduledAction_dynamo(t *testing.T) {
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -29,7 +29,7 @@ func TestAccAwsAppautoscalingScheduledAction_dynamo(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppautoscalingScheduledAction_ECS(t *testing.T) {
+func TestAccAWSAppautoscalingScheduledAction_ECS(t *testing.T) {
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -46,7 +46,7 @@ func TestAccAwsAppautoscalingScheduledAction_ECS(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppautoscalingScheduledAction_EMR(t *testing.T) {
+func TestAccAWSAppautoscalingScheduledAction_EMR(t *testing.T) {
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -63,7 +63,7 @@ func TestAccAwsAppautoscalingScheduledAction_EMR(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppautoscalingScheduledAction_SpotFleet(t *testing.T) {
+func TestAccAWSAppautoscalingScheduledAction_SpotFleet(t *testing.T) {
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -127,53 +127,12 @@ resource "aws_dynamodb_table" "hoge" {
   }
 }
 
-resource "aws_iam_role" "hoge" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "application-autoscaling.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "hoge" {
-  role = "${aws_iam_role.hoge.name}"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:DescribeTable",
-        "dynamodb:UpdateTable",
-        "cloudwatch:PutMetricAlarm",
-        "cloudwatch:DescribeAlarms",
-        "cloudwatch:DeleteAlarms"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
-}
-
 resource "aws_appautoscaling_target" "read" {
   service_namespace = "dynamodb"
   resource_id = "table/${aws_dynamodb_table.hoge.name}"
   scalable_dimension = "dynamodb:table:ReadCapacityUnits"
-  role_arn = "${aws_iam_role.hoge.arn}"
   min_capacity = 1
   max_capacity = 10
-  depends_on = ["aws_iam_role_policy.hoge"]
 }
 
 resource "aws_appautoscaling_scheduled_action" "hoge" {
@@ -193,45 +152,6 @@ resource "aws_appautoscaling_scheduled_action" "hoge" {
 
 func testAccAppautoscalingScheduledActionConfig_ECS(rName, ts string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "hoge" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "application-autoscaling.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "hoge" {
-  role = "${aws_iam_role.hoge.id}"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ecs:DescribeServices",
-        "ecs:UpdateService",
-        "cloudwatch:DescribeAlarms"
-      ],
-      "Resource": [
-        "*"
-      ]
-    }
-  ]
-}
-EOF
-}
-
 resource "aws_ecs_cluster" "hoge" {
   name = "tf-ecs-cluster-%s"
 }
@@ -265,7 +185,6 @@ resource "aws_appautoscaling_target" "hoge" {
   service_namespace = "ecs"
   resource_id = "service/${aws_ecs_cluster.hoge.name}/${aws_ecs_service.hoge.name}"
   scalable_dimension = "ecs:service:DesiredCount"
-  role_arn = "${aws_iam_role.hoge.arn}"
   min_capacity = 1
   max_capacity = 3
 }
@@ -299,8 +218,8 @@ resource "aws_emr_cluster" "hoge" {
     instance_profile                  = "${aws_iam_instance_profile.instance_profile.arn}"
   }
 
-  master_instance_type = "m4.large"
-  core_instance_type   = "m4.large"
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
   core_instance_count  = 2
 
   tags {
@@ -329,7 +248,7 @@ resource "aws_emr_cluster" "hoge" {
 resource "aws_emr_instance_group" "hoge" {
   cluster_id     = "${aws_emr_cluster.hoge.id}"
   instance_count = 1
-  instance_type  = "m4.large"
+  instance_type  = "c4.large"
 }
 
 resource "aws_security_group" "hoge" {
@@ -361,11 +280,17 @@ resource "aws_security_group" "hoge" {
 resource "aws_vpc" "hoge" {
   cidr_block           = "168.31.0.0/16"
   enable_dns_hostnames = true
+  tags {
+    Name = "terraform-testacc-appautoscaling-scheduled-action-emr"
+  }
 }
 
 resource "aws_subnet" "hoge" {
   vpc_id     = "${aws_vpc.hoge.id}"
   cidr_block = "168.31.0.0/20"
+  tags {
+    Name = "tf-acc-appautoscaling-scheduled-action"
+  }
 }
 
 resource "aws_internet_gateway" "hoge" {
@@ -627,38 +552,10 @@ resource "aws_spot_fleet_request" "hoge" {
   }
 }
 
-resource "aws_iam_role" "autoscale_role" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "application-autoscaling.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "autoscale_role_policy_a" {
-  role = "${aws_iam_role.autoscale_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
-}
-
-resource "aws_iam_role_policy_attachment" "autoscale_role_policy_b" {
-  role = "${aws_iam_role.autoscale_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetAutoscaleRole"
-}
-
 resource "aws_appautoscaling_target" "hoge" {
   service_namespace = "ec2"
   resource_id = "spot-fleet-request/${aws_spot_fleet_request.hoge.id}"
   scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
-  role_arn = "${aws_iam_role.autoscale_role.arn}"
   min_capacity = 1
   max_capacity = 3
 }

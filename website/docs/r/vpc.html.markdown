@@ -6,7 +6,7 @@ description: |-
   Provides an VPC resource.
 ---
 
-# aws\_vpc
+# aws_vpc
 
 Provides an VPC resource.
 

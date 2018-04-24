@@ -6,7 +6,7 @@ description: |-
   Creates a Lambda function permission.
 ---
 
-# aws\_lambda\_permission
+# aws_lambda_permission
 
 Creates a Lambda permission to allow external sources invoking the Lambda function
 (e.g. CloudWatch Event Rule, SNS or S3).
@@ -19,7 +19,6 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
   action         = "lambda:InvokeFunction"
   function_name  = "${aws_lambda_function.test_lambda.function_name}"
   principal      = "events.amazonaws.com"
-  source_account = "111122223333"
   source_arn     = "arn:aws:events:eu-west-1:111122223333:rule/RunDaily"
   qualifier      = "${aws_lambda_alias.test_alias.name}"
 }
@@ -121,7 +120,7 @@ EOF
  * `qualifier` - (Optional) Query parameter to specify function version or alias name.
  	The permission will then apply to the specific qualified ARN.
  	e.g. `arn:aws:lambda:aws-region:acct-id:function:function-name:2`
- * `source_account` - (Optional) The AWS account ID (without a hyphen) of the source owner.
+ * `source_account` - (Optional) This parameter is used for S3 and SES. The AWS account ID (without a hyphen) of the source owner.
  * `source_arn` - (Optional) When granting Amazon S3 or CloudWatch Events permission to
  	invoke your function, you should specify this field with the Amazon Resource Name (ARN)
  	for the S3 Bucket or CloudWatch Events Rule as its value.  This ensures that only events

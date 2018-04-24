@@ -6,7 +6,7 @@ description: |-
   Provides a CodeDeploy deployment group.
 ---
 
-# aws\_codedeploy\_deployment\_group
+# aws_codedeploy_deployment_group
 
 Provides a CodeDeploy Deployment Group for a CodeDeploy Application
 
@@ -193,7 +193,7 @@ You can configure a deployment to stop when a **CloudWatch** alarm detects that 
 _Only one `alarm_configuration` is allowed_.
 
 ### Deployment Style
-You can configure the type of deployment, either in-place` or blue/green, you want to run and whether to route deployment traffic behind a load balancer. `deployment_style` supports the following:
+You can configure the type of deployment, either in-place or blue/green, you want to run and whether to route deployment traffic behind a load balancer. `deployment_style` supports the following:
 
 * `deployment_option` - (Optional) Indicates whether to route deployment traffic behind a load balancer. Valid Values are `WITH_TRAFFIC_CONTROL` or `WITHOUT_TRAFFIC_CONTROL`.
 

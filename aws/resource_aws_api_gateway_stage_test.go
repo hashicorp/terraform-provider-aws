@@ -7,12 +7,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 	var conf apigateway.Stage
+	rName := acctest.RandString(5)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -20,29 +22,36 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSAPIGatewayStageConfig_basic(),
+				Config: testAccAWSAPIGatewayStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayStageExists("aws_api_gateway_stage.test", &conf),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "stage_name", "prod"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_enabled", "true"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_size", "0.5"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.%", "1"),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_stage.test", "execution_arn"),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_stage.test", "invoke_url"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccAWSAPIGatewayStageConfig_updated(),
+				Config: testAccAWSAPIGatewayStageConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayStageExists("aws_api_gateway_stage.test", &conf),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "stage_name", "prod"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_enabled", "false"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.%", "2"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccAWSAPIGatewayStageConfig_basic(),
+				Config: testAccAWSAPIGatewayStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayStageExists("aws_api_gateway_stage.test", &conf),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "stage_name", "prod"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_enabled", "true"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_size", "0.5"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.%", "1"),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_stage.test", "execution_arn"),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_stage.test", "invoke_url"),
 				),
 			},
 		},
@@ -108,9 +117,10 @@ func testAccCheckAWSAPIGatewayStageDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccAWSAPIGatewayStageConfig_base = `
+func testAccAWSAPIGatewayStageConfig_base(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "tf-acc-test"
+  name = "tf-acc-test-%s"
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -161,10 +171,11 @@ resource "aws_api_gateway_deployment" "dev" {
     "a" = "2"
   }
 }
-`
+`, rName)
+}
 
-func testAccAWSAPIGatewayStageConfig_basic() string {
-	return testAccAWSAPIGatewayStageConfig_base + `
+func testAccAWSAPIGatewayStageConfig_basic(rName string) string {
+	return testAccAWSAPIGatewayStageConfig_base(rName) + `
 resource "aws_api_gateway_stage" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name = "prod"
@@ -175,12 +186,15 @@ resource "aws_api_gateway_stage" "test" {
     one = "1"
     two = "2"
   }
+  tags {
+    Name = "tf-test"
+  }
 }
 `
 }
 
-func testAccAWSAPIGatewayStageConfig_updated() string {
-	return testAccAWSAPIGatewayStageConfig_base + `
+func testAccAWSAPIGatewayStageConfig_updated(rName string) string {
+	return testAccAWSAPIGatewayStageConfig_base(rName) + `
 resource "aws_api_gateway_stage" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name = "prod"
@@ -190,6 +204,10 @@ resource "aws_api_gateway_stage" "test" {
   variables {
     one = "1"
     three = "3"
+  }
+  tags {
+    Name = "tf-test"
+    ExtraName = "tf-test"
   }
 }
 `

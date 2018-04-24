@@ -6,7 +6,7 @@ description: |-
   Provides a Model for a API Gateway.
 ---
 
-# aws\_api\_gateway\_model
+# aws_api_gateway_model
 
 Provides a Model for a API Gateway.
 

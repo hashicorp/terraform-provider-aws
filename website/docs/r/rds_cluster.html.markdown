@@ -31,6 +31,23 @@ for more information.
 
 ## Example Usage
 
+### Aurora MySQL 2.x (MySQL 5.7)
+
+```hcl
+resource "aws_rds_cluster" "default" {
+  cluster_identifier      = "aurora-cluster-demo"
+  engine                  = "aurora-mysql"
+  availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name           = "mydb"
+  master_username         = "foo"
+  master_password         = "bar"
+  backup_retention_period = 5
+  preferred_backup_window = "07:00-09:00"
+}
+```
+
+### Aurora MySQL 1.x (MySQL 5.6)
+
 ```hcl
 resource "aws_rds_cluster" "default" {
   cluster_identifier      = "aurora-cluster-demo"
@@ -43,13 +60,25 @@ resource "aws_rds_cluster" "default" {
 }
 ```
 
-~> **NOTE:** RDS Clusters resources that are created without any matching
-RDS Cluster Instances do not currently display in the AWS Console.
+### Aurora with PostgreSQL engine
+
+```hcl
+resource "aws_rds_cluster" "postgresql" {
+  cluster_identifier      = "aurora-cluster-demo"
+  engine                  = "aurora-postgresql"
+  availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name           = "mydb"
+  master_username         = "foo"
+  master_password         = "bar"
+  backup_retention_period = 5
+  preferred_backup_window = "07:00-09:00"
+}
+```
 
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/AmazonRDS/latest/CommandLineReference/CLIReference-cmd-ModifyDBInstance.html).
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html).
 
 The following arguments are supported:
 
@@ -57,8 +86,8 @@ The following arguments are supported:
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifer`.
 * `database_name` - (Optional) Name for an automatically created database on cluster creation. There are different naming restrictions per database engine: [RDS Naming Constraints][5]
 * `master_password` - (Required unless a `snapshot_identifier` is provided) Password for the master DB user. Note that this may
-    show up in logs, and it will be stored in the state file
-* `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user
+    show up in logs, and it will be stored in the state file. Please refer to the [RDS Naming Constraints][5]
+* `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user. Please refer to the [RDS Naming Constraints][5]
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
     when this DB cluster is deleted. If omitted, no final snapshot will be
     made.
@@ -73,8 +102,9 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `port` - (Optional) The port on which the DB accepts connections
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate
   with the Cluster
-* `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. This correlates to the snapshot ID you'd find in the RDS console, e.g: rds:production-2015-06-26-06-05.
+* `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot.
 * `storage_encrypted` - (Optional) Specifies whether the DB cluster is encrypted. The default is `false` if not specified.
+* `replication_source_identifier` - (Optional) ARN of a source DB cluster or DB instance if this DB cluster is to be created as a Read Replica.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications
      are applied immediately, or during the next maintenance window. Default is
      `false`. See [Amazon RDS Documentation for more information.](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html)
@@ -83,9 +113,9 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `storage_encrypted` needs to be set to true.
 * `iam_roles` - (Optional) A List of ARNs for the IAM roles to associate to the RDS Cluster.
 * `iam_database_authentication_enabled` - (Optional) Specifies whether or mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
-* `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `aurora`.
+* `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `aurora`. Valid Values: aurora,aurora-mysql,aurora-postgresql
 * `engine_version` - (Optional) The database engine version.
-
+* `source_region` - (Optional) The source region for an encrypted replica DB cluster.
 
 ## Attributes Reference
 
@@ -94,11 +124,11 @@ The following attributes are exported:
 * `id` - The RDS Cluster Identifier
 * `cluster_identifier` - The RDS Cluster Identifier
 * `cluster_resource_id` - The RDS Cluster Resource ID
-* `cluster_members` – List of RDS Instances that are a part of this cluster
+* `cluster_members` – List of RDS Instances that are a part of this cluster
 * `allocated_storage` - The amount of allocated storage
 * `availability_zones` - The availability zone of the instance
 * `backup_retention_period` - The backup retention period
-* `preferred_backup_window` - The backup window
+* `preferred_backup_window` - The daily time range during which the backups happen
 * `preferred_maintenance_window` - The maintenance window
 * `endpoint` - The DNS address of the RDS instance
 * `reader_endpoint` - A read-only endpoint for the Aurora cluster, automatically
@@ -111,8 +141,8 @@ load-balanced across replicas
 * `status` - The RDS instance status
 * `master_username` - The master username for the database
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted
-* `preferred_backup_window` - The daily time range during which the backups happen
-* `replication_source_identifier` - ARN  of the source DB cluster if this DB cluster is created as a Read Replica.
+* `replication_source_identifier` - ARN of the source DB cluster or DB instance if this DB cluster is created as a Read Replica.
+* `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
 [2]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Aurora.html
