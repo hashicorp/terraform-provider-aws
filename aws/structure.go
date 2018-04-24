@@ -3539,6 +3539,36 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 	return l
 }
 
+func flattenResourceLifecycleConfig(rlc *elasticbeanstalk.ApplicationResourceLifecycleConfig) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, 1)
+
+	anything_enabled := false
+	appversion_lifecycle := make(map[string]interface{})
+
+	if rlc.ServiceRole != nil {
+		appversion_lifecycle["service_role"] = *rlc.ServiceRole
+	}
+
+	if vlc := rlc.VersionLifecycleConfig; vlc != nil {
+		if mar := vlc.MaxAgeRule; mar != nil && *mar.Enabled {
+			anything_enabled = true
+			appversion_lifecycle["max_age_in_days"] = *mar.MaxAgeInDays
+			appversion_lifecycle["delete_source_from_s3"] = *mar.DeleteSourceFromS3
+		}
+		if mcr := vlc.MaxCountRule; mcr != nil && *mcr.Enabled {
+			anything_enabled = true
+			appversion_lifecycle["max_count"] = *mcr.MaxCount
+			appversion_lifecycle["delete_source_from_s3"] = *mcr.DeleteSourceFromS3
+		}
+	}
+
+	if anything_enabled {
+		result = append(result, appversion_lifecycle)
+	}
+
+	return result
+}
+
 func diffDynamoDbGSI(oldGsi, newGsi []interface{}) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
 	// Transform slices into maps
 	oldGsis := make(map[string]interface{})
