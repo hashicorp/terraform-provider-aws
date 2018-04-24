@@ -60,7 +60,10 @@ DOC
 
 resource "aws_ssm_association" "foo" {
   name        = "test_document_association-%s"
-  instance_id = "${aws_instance.foo.id}"
+  targets {
+    key    = "InstanceIds"
+    values = "${aws_instance.foo.id}"
+  }
 }
 ```
 
@@ -71,7 +74,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the SSM document to apply.
 * `association_name` - (Optional) The descriptive name for the association.
 * `document_version` - (Optional) The document version you want to associate with the target(s). Can be a specific version or the default version.
-* `instance_id` - (Optional) The instance ID to apply an SSM document to.
+* `instance_id` - (Optional) The instance ID to apply an SSM document to. Use `targets` with key `InstanceIds` for document schema versions 2.0 and above.
 * `output_location` - (Optional) An output location block. Output Location is documented below.
 * `parameters` - (Optional) A block of arbitrary string parameters to pass to the SSM document.
 * `schedule_expression` - (Optional) A cron expression when the association will be applied to the target(s).
