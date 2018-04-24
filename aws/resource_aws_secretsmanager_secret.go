@@ -67,10 +67,7 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 					},
 				},
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-			},
+			"tags": tagsSchema(),
 		},
 	}
 }
