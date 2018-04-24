@@ -702,11 +702,6 @@ resource "aws_cloudwatch_event_target" "test" {
   kinesis_target {
     partition_key_path = "$.detail"
   }
-
-  depends_on = [
-    "aws_kinesis_stream.kinesis_stream",
-    "aws_iam_role.iam_role",
-  ]
 }
 
 resource "aws_iam_role" "iam_role" {
@@ -729,6 +724,7 @@ EOF
 
 resource "aws_kinesis_stream" "kinesis_stream" {
   name = "%[1]s"
+  shard_count = 1
 }
 `, rName)
 }
@@ -744,34 +740,10 @@ resource "aws_cloudwatch_event_rule" "cloudwatch_event_rule" {
 resource "aws_cloudwatch_event_target" "test" {
   arn = "${aws_sqs_queue.sqs_queue.arn}"
   rule = "${aws_cloudwatch_event_rule.cloudwatch_event_rule.id}"
-  role_arn = "${aws_iam_role.iam_role.arn}"
 
   sqs_target {
     message_group_id = "event_group"
   }
-
-  depends_on = [
-    "aws_sqs_queue.sqs_queue",
-    "aws_iam_role.iam_role",
-  ]
-}
-
-resource "aws_iam_role" "iam_role" {
-  name = "event_%[1]s"
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "events.amazonaws.com"
-      }
-    }
-  ]
-}
-EOF
 }
 
 resource "aws_sqs_queue" "sqs_queue" {
