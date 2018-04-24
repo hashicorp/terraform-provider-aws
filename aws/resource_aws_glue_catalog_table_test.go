@@ -15,6 +15,7 @@ import (
 func TestAccAWSGlueCatalogTable_full(t *testing.T) {
 	rInt := acctest.RandInt()
 	description := "A test table from terraform"
+	tableName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -32,7 +33,7 @@ func TestAccAWSGlueCatalogTable_full(t *testing.T) {
 						fmt.Sprintf("my_test_catalog_table_%d", rInt),
 					),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_table.test",
+						tableName,
 						"database_name",
 						fmt.Sprintf("my_test_catalog_database_%d", rInt),
 					),
@@ -42,17 +43,44 @@ func TestAccAWSGlueCatalogTable_full(t *testing.T) {
 				Config:  testAccGlueCatalogTable_full(rInt, description),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueCatalogTableExists("aws_glue_catalog_table.test"),
-					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_table.test",
-						"name",
-						fmt.Sprintf("my_test_catalog_table_%d", rInt),
-					),
-					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_table.test",
-						"database_name",
-						fmt.Sprintf("my_test_catalog_database_%d", rInt),
-					),
+					testAccCheckGlueCatalogTableExists(tableName),
+					resource.TestCheckResourceAttr(tableName, "name", fmt.Sprintf("my_test_catalog_table_%d", rInt)),
+					resource.TestCheckResourceAttr(tableName, "database_name", fmt.Sprintf("my_test_catalog_database_%d", rInt)),
+					resource.TestCheckResourceAttr(tableName, "description", description),
+					resource.TestCheckResourceAttr(tableName, "owner", "my_owner"),
+					resource.TestCheckResourceAttr(tableName, "retention", "1"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.columns.0.name", "my_column_1"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.columns.0.type", "int"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.columns.0.comment", "my_column1_comment"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.columns.1.name", "my_column_2"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.columns.1.type", "string"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.columns.1.comment", "my_column2_comment"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.location", "my_location"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.input_format", "SequenceFileInputFormat"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.output_format", "SequenceFileInputFormat"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.compressed", "false"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.number_of_buckets", "1"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.ser_de_info.0.name", "ser_de_name"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.ser_de_info.0.parameters.param1", "param_val_1"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.ser_de_info.0.serialization_library", "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.bucket_columns.0", "bucket_column_1"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.sort_columns.0.column", "my_column_1"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.sort_columns.0.sort_order", "1"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.parameters.param1", "param1_val"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.skewed_info.0.skewed_column_names.0", "my_column_1"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.skewed_info.0.skewed_column_value_location_maps.my_column_1", "my_column_1_val_loc_map"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.skewed_info.0.skewed_column_values.0", "skewed_val_1"),
+					resource.TestCheckResourceAttr(tableName, "storage_descriptor.0.stored_as_sub_directories", "false"),
+					resource.TestCheckResourceAttr(tableName, "partition_keys.0.name", "my_column_1"),
+					resource.TestCheckResourceAttr(tableName, "partition_keys.0.type", "int"),
+					resource.TestCheckResourceAttr(tableName, "partition_keys.0.comment", "my_column_1_comment"),
+					resource.TestCheckResourceAttr(tableName, "partition_keys.1.name", "my_column_2"),
+					resource.TestCheckResourceAttr(tableName, "partition_keys.1.type", "string"),
+					resource.TestCheckResourceAttr(tableName, "partition_keys.1.comment", "my_column_2_comment"),
+					resource.TestCheckResourceAttr(tableName, "view_original_text", "view_original_text_1"),
+					resource.TestCheckResourceAttr(tableName, "view_expanded_text", "view_expanded_text_1"),
+					resource.TestCheckResourceAttr(tableName, "table_type", "VIRTUAL_VIEW"),
+					resource.TestCheckResourceAttr(tableName, "parameters.param1", "param1_val"),
 				),
 			},
 		},
@@ -79,49 +107,47 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_catalog_table" "test" {
-  name = "my_test_table_%d"
+  name = "my_test_catalog_table_%d"
   database_name = "${aws_glue_catalog_database.test.name}"
   description = "%s"
   owner = "my_owner"
   retention = 1
   storage_descriptor {
-    /* columns = [
-      {
-        name = "my_column_1"
-        type = "int"
-        comment = "my_column1_comment"
-      },
-      {
-        name = "my_column_2"
-        type = "string"
-        comment = "my_column2_comment"
-      }
-    ] */
+    columns = [
+     {
+       name = "my_column_1"
+       type = "int"
+       comment = "my_column1_comment"
+     },
+     {
+       name = "my_column_2"
+       type = "string"
+       comment = "my_column2_comment"
+     }
+    ]
 	location = "my_location"
 	input_format = "SequenceFileInputFormat"
 	output_format = "SequenceFileInputFormat"
 	compressed = false
 	number_of_buckets = 1
-	/* ser_de_info {
+	ser_de_info {
       name = "ser_de_name"
       parameters {
         param1 = "param_val_1"
       }
       serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"
-	} */
-	bucket_columns = [
-      "bucket_column_1",
-	]
-	/* sort_columns = [
+	}
+	bucket_columns = ["bucket_column_1"]
+	sort_columns = [
       {
         column = "my_column_1"
         sort_order = 1
       }
-	] */
+	]
 	parameters {
       param1 = "param1_val"
 	}
-	/* skewed_info {
+	skewed_info {
       skewed_column_names = [
         "my_column_1"
       ]
@@ -131,19 +157,19 @@ resource "aws_glue_catalog_table" "test" {
       skewed_column_values = [
         "skewed_val_1"
       ]
-	} */
+	}
 	stored_as_sub_directories = false
   }
   partition_keys = [
     {
       name = "my_column_1"
       type = "int"
-      comment = "my_column1_comment"
+      comment = "my_column_1_comment"
     },
     {
       name = "my_column_2"
       type = "string"
-      comment = "my_column2_comment"
+      comment = "my_column_2_comment"
     }
   ]
   view_original_text = "view_original_text_1"
