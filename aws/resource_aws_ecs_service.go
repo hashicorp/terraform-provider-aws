@@ -51,6 +51,7 @@ func resourceAwsEcsService() *schema.Resource {
 			"desired_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 
 			"health_check_grace_period_seconds": {
