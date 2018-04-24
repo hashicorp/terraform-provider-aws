@@ -10,8 +10,6 @@ description: |-
 
 Provides an EC2 launch template resource. Can be used to create instances or auto scaling groups.
 
--> **Note:** All arguments are optional except for either `name`, or `name_prefix`.
-
 ## Example Usage
 
 ```hcl
@@ -19,7 +17,17 @@ resource "aws_launch_template" "foo" {
   name = "foo"
 
   block_device_mappings {
-    device_name = "test"
+    # to change the type or size of the root volume, override the ami's root device name
+    # you can figure this out based on the ami id by running:
+    # aws ec2 describe-images --region us-west-2 --image-id ami-4e79ed36
+    device_name = "/dev/sda1"
+    ebs {
+      volume_size = 20
+    }
+  }
+
+  block_device_mappings {
+    device_name = "/dev/xvdb"
   }
 
   credit_specification {
