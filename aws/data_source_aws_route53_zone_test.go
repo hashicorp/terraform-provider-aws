@@ -17,8 +17,9 @@ func TestAccDataSourceAwsRoute53Zone(t *testing.T) {
 	privateDomain := fmt.Sprintf("test.acc-%d.", rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRoute53ZoneConfig(rInt),
