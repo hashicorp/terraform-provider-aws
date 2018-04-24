@@ -315,8 +315,9 @@ func TestAccAWSDBInstance_snapshot(t *testing.T) {
 
 func TestAccAWSDBInstance_s3(t *testing.T) {
 	var snap rds.DBInstance
-	bucket := acctest.RandString(5)
-	prefix := acctest.RandString(5)
+    bucket := "s3://cfx-public-buckets/xtrabackup/sample.tar.gz"
+    //bucket := acctest.RandString(5)
+	prefix := "xtrabackup"
 	role := acctest.RandString(5)
 
 	resource.Test(t, resource.TestCase{
@@ -985,6 +986,58 @@ resource "aws_db_instance" "snapshot" {
 
 func testAccSnapshotInstanceConfigWithS3Import(name string, prefix string, role string) string {
 	return fmt.Sprintf(`
+
+resource "aws_iam_role" "rds_s3_access_role" {
+    name = "%s"
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+}
+
+resource "aws_iam_policy_attachment" "test-attach" {
+    name = "s3_access_attachment"
+    roles = [
+        "${aws_iam_role.rds_s3_access_role.name}",
+    ]
+
+    policy_arn = "${aws_iam_policy.test.arn}"
+}
+
+resource "aws_iam_policy" "test" {
+  name   = "tf-enhanced-monitoring-policy-%s"
+  policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "EnableAccessToS3Object",
+            "Effect": "Allow",
+            "Action": [
+              "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::cfx-public-buckets:xtrabackup/*"
+            ]
+        }
+    ]
+}
+POLICY
+}
+
+
 resource "aws_db_instance" "s3" {
 	identifier = "test-db-instance-from-s3-import"
 
@@ -1008,7 +1061,7 @@ resource "aws_db_instance" "s3" {
 		ingestion_role = "%s"
 	}
 }
-`, name, prefix, role)
+`, role, name, prefix, role)
 }
 
 func testAccSnapshotInstanceConfigWithSnapshot(rInt int) string {
