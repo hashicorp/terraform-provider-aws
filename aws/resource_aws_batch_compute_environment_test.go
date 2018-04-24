@@ -2,8 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
@@ -11,6 +14,62 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_batch_compute_environment", &resource.Sweeper{
+		Name: "aws_batch_compute_environment",
+		Dependencies: []string{
+			"aws_batch_job_queue",
+		},
+		F: testSweepBatchComputeEnvironments,
+	})
+}
+
+func testSweepBatchComputeEnvironments(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).batchconn
+
+	prefixes := []string{
+		"tf_acc",
+	}
+
+	out, err := conn.DescribeComputeEnvironments(&batch.DescribeComputeEnvironmentsInput{})
+	if err != nil {
+		return fmt.Errorf("Error retrieving Batch Compute Environments: %s", err)
+	}
+	for _, computeEnvironment := range out.ComputeEnvironments {
+		name := computeEnvironment.ComputeEnvironmentName
+		skip := true
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(*name, prefix) {
+				skip = false
+				break
+			}
+		}
+		if skip {
+			log.Printf("[INFO] Skipping Batch Compute Environment: %s", *name)
+			continue
+		}
+
+		log.Printf("[INFO] Disabling Batch Compute Environment: %s", *name)
+		err := disableBatchComputeEnvironment(*name, 20*time.Minute, conn)
+		if err != nil {
+			log.Printf("[ERROR] Failed to disable Batch Compute Environment %s: %s", *name, err)
+			continue
+		}
+
+		log.Printf("[INFO] Deleting Batch Compute Environment: %s", *name)
+		err = deleteBatchComputeEnvironment(*name, 20*time.Minute, conn)
+		if err != nil {
+			log.Printf("[ERROR] Failed to delete Batch Compute Environment %s: %s", *name, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 	rInt := acctest.RandInt()

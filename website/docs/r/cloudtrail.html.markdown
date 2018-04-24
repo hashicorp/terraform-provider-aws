@@ -18,15 +18,6 @@ Enable CloudTrail to capture all compatible management events in region.
 For capturing events from services like IAM, `include_global_service_events` must be enabled.
 
 ```hcl
-resource "aws_cloudtrail" "example" {
-  name                          = "basic-example"
-  include_global_service_events = false
-}
-```
-
-### Logging to S3
-
-```hcl
 resource "aws_cloudtrail" "foobar" {
   name                          = "tf-trail-foobar"
   s3_bucket_name                = "${aws_s3_bucket.foo.id}"
@@ -127,7 +118,9 @@ resource "aws_cloudtrail" "example" {
 
     data_resource {
       type   = "AWS::S3::Object"
-      values = ["${data.aws_s3_bucket.important-bucket.arn}"]
+      # Make sure to append a trailing '/' to your ARN if you want
+      # to monitor all objects in a bucket.
+      values = ["${data.aws_s3_bucket.important-bucket.arn}/"]
     }
   }
 }

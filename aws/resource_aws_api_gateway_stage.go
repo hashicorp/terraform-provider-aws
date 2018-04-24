@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -44,6 +45,14 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"execution_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"invoke_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"rest_api_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -58,6 +67,7 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -94,6 +104,13 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 			variables[k] = v.(string)
 		}
 		input.Variables = aws.StringMap(variables)
+	}
+	if vars, ok := d.GetOk("tags"); ok {
+		newMap := make(map[string]string, len(vars.(map[string]interface{})))
+		for k, v := range vars.(map[string]interface{}) {
+			newMap[k] = v.(string)
+		}
+		input.Tags = aws.StringMap(newMap)
 	}
 
 	out, err := conn.CreateStage(&input)
@@ -143,9 +160,11 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*AWSClient).apigateway
 
 	log.Printf("[DEBUG] Reading API Gateway Stage %s", d.Id())
+	restApiId := d.Get("rest_api_id").(string)
+	stageName := d.Get("stage_name").(string)
 	input := apigateway.GetStageInput{
-		RestApiId: aws.String(d.Get("rest_api_id").(string)),
-		StageName: aws.String(d.Get("stage_name").(string)),
+		RestApiId: aws.String(restApiId),
+		StageName: aws.String(stageName),
 	}
 	stage, err := conn.GetStage(&input)
 	if err != nil {
@@ -172,6 +191,19 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("description", stage.Description)
 	d.Set("documentation_version", stage.DocumentationVersion)
 	d.Set("variables", aws.StringValueMap(stage.Variables))
+	d.Set("tags", aws.StringValueMap(stage.Tags))
+
+	region := meta.(*AWSClient).region
+	d.Set("invoke_url", buildApiGatewayInvokeURL(restApiId, region, stageName))
+
+	executionArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "execute-api",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("%s/%s", restApiId, stageName),
+	}.String()
+	d.Set("execution_arn", executionArn)
 
 	return nil
 }
@@ -180,6 +212,18 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).apigateway
 
 	d.Partial(true)
+
+	stageArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "apigateway",
+		Resource:  fmt.Sprintf("/restapis/%s/stages/%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)),
+	}.String()
+	if tagErr := setTagsAPIGatewayStage(conn, d, stageArn); tagErr != nil {
+		return tagErr
+	}
+	d.SetPartial("tags")
+
 	operations := make([]*apigateway.PatchOperation, 0)
 	waitForCache := false
 	if d.HasChange("cache_cluster_enabled") {

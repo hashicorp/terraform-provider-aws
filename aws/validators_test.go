@@ -2521,3 +2521,45 @@ func TestValidateAmazonSideAsn(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateLaunchTemplateName(t *testing.T) {
+	validNames := []string{
+		"fooBAR123",
+		"(./_)",
+	}
+	for _, v := range validNames {
+		_, errors := validateLaunchTemplateName(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Launch Template name: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"tf",
+		strings.Repeat("W", 126), // > 125
+		"invalid-",
+		"invalid*",
+		"invalid\name",
+		"inavalid&",
+		"invalid+",
+		"invalid!",
+		"invalid:",
+		"invalid;",
+	}
+	for _, v := range invalidNames {
+		_, errors := validateLaunchTemplateName(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Launch Template name: %q", v, errors)
+		}
+	}
+
+	invalidNamePrefixes := []string{
+		strings.Repeat("W", 100), // > 99
+	}
+	for _, v := range invalidNamePrefixes {
+		_, errors := validateLaunchTemplateName(v, "name_prefix")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Launch Template name prefix: %q", v, errors)
+		}
+	}
+}

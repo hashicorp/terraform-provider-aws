@@ -127,6 +127,36 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayRestApi_policy(t *testing.T) {
+	expectedPolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*"}]}`
+	expectedUpdatePolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Deny","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*"}]}`
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigWithPolicy,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", expectedPolicyText),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigUpdatePolicy,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", expectedUpdatePolicyText),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 	var conf apigateway.RestApi
 
@@ -295,6 +325,50 @@ const testAccAWSAPIGatewayRestAPIConfig = `
 resource "aws_api_gateway_rest_api" "test" {
   name = "bar"
   minimum_compression_size = 0
+}
+`
+
+const testAccAWSAPIGatewayRestAPIConfigWithPolicy = `
+resource "aws_api_gateway_rest_api" "test" {
+  name = "bar"
+  minimum_compression_size = 0
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": "execute-api:Invoke",
+            "Resource": "*"
+        }
+    ]
+}
+EOF
+}
+`
+
+const testAccAWSAPIGatewayRestAPIConfigUpdatePolicy = `
+resource "aws_api_gateway_rest_api" "test" {
+  name = "bar"
+  minimum_compression_size = 0
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Deny",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": "execute-api:Invoke",
+            "Resource": "*"
+        }
+    ]
+}
+EOF
 }
 `
 
