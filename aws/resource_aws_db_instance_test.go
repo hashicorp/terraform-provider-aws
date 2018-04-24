@@ -318,8 +318,8 @@ func TestAccAWSDBInstance_snapshot(t *testing.T) {
 
 func TestAccAWSDBInstance_s3(t *testing.T) {
 	var snap rds.DBInstance
-    bucket := "s3://cfx-public-buckets/xtrabackup/sample.tar.gz"
-    //bucket := acctest.RandString(5)
+	bucket := acctest.RandString(5)
+	//bucket := acctest.RandString(5)
 	prefix := "xtrabackup"
 	role := acctest.RandString(5)
 
@@ -1070,11 +1070,24 @@ resource "aws_db_instance" "snapshot" {
 }`, acctest.RandInt())
 }
 
-func testAccSnapshotInstanceConfigWithS3Import(name string, prefix string, role string) string {
+func testAccSnapshotInstanceConfigWithS3Import(bucketName string, prefix string, role string) string {
 	return fmt.Sprintf(`
 
+resource "aws_s3_bucket" "xtrabackup" {
+  bucket = "%s"
+}
+
+resource "aws_s3_bucket_object" "xtrabackup_db" {
+  bucket = "${aws_s3_bucket.xtrabackup.id}"
+  key    = "%s/sample.tar.gz"
+  source = "../files/2018-02-26_19-31-02.tar.gz"
+  etag   = "${md5(file("../files/2018-02-26_19-31-02.tar.gz"))}"
+}
+
+
+
 resource "aws_iam_role" "rds_s3_access_role" {
-    name = "%s"
+    name = "aws-rds-import-%s"
     assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1090,32 +1103,22 @@ resource "aws_iam_role" "rds_s3_access_role" {
   ]
 }
 EOF
-
-}
-
-resource "aws_iam_policy_attachment" "test-attach" {
-    name = "s3_access_attachment"
-    roles = [
-        "${aws_iam_role.rds_s3_access_role.name}",
-    ]
-
-    policy_arn = "${aws_iam_policy.test.arn}"
 }
 
 resource "aws_iam_policy" "test" {
-  name   = "tf-enhanced-monitoring-policy-%s"
+  name   = "tf-s3-rds-access-policy"
   policy = <<POLICY
 {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "EnableAccessToS3Object",
             "Effect": "Allow",
             "Action": [
-              "s3:GetObject"
+                "s3:*"
             ],
             "Resource": [
-                "arn:aws:s3:::cfx-public-buckets:xtrabackup/*"
+                "${aws_s3_bucket.xtrabackup.arn}",
+                "${aws_s3_bucket.xtrabackup.arn}/*"
             ]
         }
     ]
@@ -1123,31 +1126,77 @@ resource "aws_iam_policy" "test" {
 POLICY
 }
 
+resource "aws_iam_policy_attachment" "test-attach" {
+    name = "s3_access_attachment"
+    roles = [
+        "${aws_iam_role.rds_s3_access_role.name}"
+    ]
+
+    policy_arn = "${aws_iam_policy.test.arn}"
+}
+
+
+//  Make sure EVERYTHING required is here...
+resource "aws_vpc" "foo" {
+	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-db-instance-with-subnet-group"
+	}
+}
+
+resource "aws_subnet" "foo" {
+	cidr_block = "10.1.1.0/24"
+	availability_zone = "us-west-2a"
+	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-db-instance-with-subnet-group-1"
+	}
+}
+
+resource "aws_subnet" "bar" {
+	cidr_block = "10.1.2.0/24"
+	availability_zone = "us-west-2b"
+	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-db-instance-with-subnet-group-2"
+	}
+}
+
+resource "aws_db_subnet_group" "foo" {
+	name = "foo"
+	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+	tags {
+		Name = "tf-dbsubnet-group-test"
+	}
+}
+
 
 resource "aws_db_instance" "s3" {
-	identifier = "test-db-instance-from-s3-import"
+	identifier = "test-db-instance-from-s3-import-%s"
 
 	allocated_storage = 5
 	engine = "mysql"
-	engine_version = "5.6.35"
-	instance_class = "db.t2.micro"
+	engine_version = "5.6"
+    auto_minor_version_upgrade = true
+	instance_class = "db.t2.small"
 	name = "baz"
 	password = "barbarbarbar"
-	publicly_accessible = true
+	publicly_accessible = false
 	username = "foo"
-	backup_retention_period = 1
+	backup_retention_period = 0
 
 	parameter_group_name = "default.mysql5.6"
+    skip_final_snapshot = true
+    multi_az = false
+    db_subnet_group_name = "${aws_db_subnet_group.foo.id}"
 
-	copy_tags_to_snapshot = true
-	final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot"
 	s3_import {
-		bucket_name = "%s"
+		bucket_name = "${aws_s3_bucket.xtrabackup.bucket}"
 		bucket_prefix = "%s"
-		ingestion_role = "%s"
+		ingestion_role = "${aws_iam_role.rds_s3_access_role.arn}"
 	}
 }
-`, role, name, prefix, role)
+`, bucketName, prefix, role, prefix, bucketName)
 }
 
 func testAccSnapshotInstanceConfigWithSnapshot(rInt int) string {

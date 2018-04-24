@@ -625,6 +625,12 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 					if awsErr.Code() == "InvalidParameterValue" && strings.Contains(awsErr.Message(), "ENHANCED_MONITORING") {
 						return resource.RetryableError(awsErr)
 					}
+					if awsErr.Code() == "InvalidParameterValue" && strings.Contains(awsErr.Message(), "S3_SNAPSHOT_INGESTION") {
+						return resource.RetryableError(err)
+					}
+					if awsErr.Code() == "InvalidParameterValue" && strings.Contains(awsErr.Message(), "S3 bucket cannot be found") {
+						return resource.RetryableError(err)
+					}
 				}
 				return resource.NonRetryableError(err)
 			}
