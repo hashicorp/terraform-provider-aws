@@ -41,39 +41,30 @@ func TestAccAWSCognitoUserPoolClient_importBasic(t *testing.T) {
 
 	resourceName := "aws_cognito_user_pool_client.client"
 
-	getStateId := func(*terraform.State) (string, error) {
-		var userPoolId string
-		var clientId string
+	getStateId := func(s *terraform.State) (string, error) {
+
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return "", errors.New("No Cognito User Pool Client ID set")
+		}
 
 		conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
-		// do we need pagination-like logic here in case too many existing user pools?
-		pools, err := conn.ListUserPools(&cognitoidentityprovider.ListUserPoolsInput{MaxResults: aws.Int64(60)})
-		if err != nil {
-			return "", fmt.Errorf("failed to list cognito user pools: %s", err)
-		}
-		for _, pool := range pools.UserPools {
-			if aws.StringValue(pool.Name) == userPoolName {
-				userPoolId = aws.StringValue(pool.Id)
-			}
-		}
-		if len(userPoolId) == 0 {
-			return "", fmt.Errorf("cognito user pool %s not found", userPoolName)
+		userPoolId := rs.Primary.Attributes["user_pool_id"]
+		clientId := rs.Primary.ID
+
+		params := &cognitoidentityprovider.DescribeUserPoolClientInput{
+			UserPoolId: aws.String(userPoolId),
+			ClientId:   aws.String(clientId),
 		}
 
-		clients, err := conn.ListUserPoolClients(&cognitoidentityprovider.ListUserPoolClientsInput{
-			UserPoolId: aws.String(userPoolId),
-			MaxResults: aws.Int64(10),
-		})
+		_, err := conn.DescribeUserPoolClient(params)
+
 		if err != nil {
-			return "", fmt.Errorf("failed to list clients in user pool %s: %s", userPoolName, err)
-		}
-		for _, client := range clients.UserPoolClients {
-			if aws.StringValue(client.ClientName) == clientName {
-				clientId = aws.StringValue(client.ClientId)
-			}
-		}
-		if len(clientId) == 0 {
-			return "", fmt.Errorf("client %s not found in cognito user pool %s", clientName, userPoolName)
+			return "", err
 		}
 
 		return fmt.Sprintf("%s/%s", userPoolId, clientId), nil
