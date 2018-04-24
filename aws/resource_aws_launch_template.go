@@ -597,7 +597,7 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 				ebs["snapshot_id"] = aws.StringValue(v.Ebs.SnapshotId)
 			}
 
-			mapping["ebs"] = ebs
+			mapping["ebs"] = []interface{}{ebs}
 		}
 		s = append(s, mapping)
 	}
@@ -882,16 +882,16 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) *ec2.LaunchTemplateBlockDeviceMappingRequest {
 	blockDeviceMapping := &ec2.LaunchTemplateBlockDeviceMappingRequest{}
 
-	if v := bdm["device_name"]; v != nil {
-		blockDeviceMapping.DeviceName = aws.String(v.(string))
+	if v := bdm["device_name"].(string); v != "" {
+		blockDeviceMapping.DeviceName = aws.String(v)
 	}
 
-	if v := bdm["no_device"]; v != nil {
-		blockDeviceMapping.NoDevice = aws.String(v.(string))
+	if v := bdm["no_device"].(string); v != "" {
+		blockDeviceMapping.NoDevice = aws.String(v)
 	}
 
-	if v := bdm["virtual_name"]; v != nil {
-		blockDeviceMapping.VirtualName = aws.String(v.(string))
+	if v := bdm["virtual_name"].(string); v != "" {
+		blockDeviceMapping.VirtualName = aws.String(v)
 	}
 
 	if v := bdm["ebs"]; len(v.([]interface{})) > 0 {
@@ -920,20 +920,20 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplat
 		ebsDevice.Iops = aws.Int64(int64(v.(int)))
 	}
 
-	if v := ebs["kms_key_id"]; v != nil {
-		ebsDevice.KmsKeyId = aws.String(v.(string))
+	if v := ebs["kms_key_id"].(string); v != "" {
+		ebsDevice.KmsKeyId = aws.String(v)
 	}
 
-	if v := ebs["snapshot_id"]; v != nil {
-		ebsDevice.SnapshotId = aws.String(v.(string))
+	if v := ebs["snapshot_id"].(string); v != "" {
+		ebsDevice.SnapshotId = aws.String(v)
 	}
 
 	if v := ebs["volume_size"]; v != nil {
 		ebsDevice.VolumeSize = aws.Int64(int64(v.(int)))
 	}
 
-	if v := ebs["volume_type"]; v != nil {
-		ebsDevice.VolumeType = aws.String(v.(string))
+	if v := ebs["volume_type"].(string); v != "" {
+		ebsDevice.VolumeType = aws.String(v)
 	}
 
 	return ebsDevice

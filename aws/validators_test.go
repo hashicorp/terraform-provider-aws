@@ -2537,7 +2537,6 @@ func TestValidateLaunchTemplateName(t *testing.T) {
 	invalidNames := []string{
 		"tf",
 		strings.Repeat("W", 126), // > 125
-		"invalid-",
 		"invalid*",
 		"invalid\name",
 		"inavalid&",
