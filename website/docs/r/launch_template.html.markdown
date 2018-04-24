@@ -17,17 +17,10 @@ resource "aws_launch_template" "foo" {
   name = "foo"
 
   block_device_mappings {
-    # to change the type or size of the root volume, override the ami's root device name
-    # you can figure this out based on the ami id by running:
-    # aws ec2 describe-images --region us-west-2 --image-id ami-4e79ed36
     device_name = "/dev/sda1"
     ebs {
       volume_size = 20
     }
-  }
-
-  block_device_mappings {
-    device_name = "/dev/xvdb"
   }
 
   credit_specification {
@@ -127,6 +120,8 @@ The following arguments are supported:
 Configure additional volumes of the instance besides specified by the AMI. It's a good idea to familiarize yourself with
   [AWS's Block Device Mapping docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html)
   to understand the implications of using these attributes.
+
+To find out more information for an existing AMI to override the configuration, such as `device_name`, you can use the [AWS CLI ec2 describe-images command](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html).
 
 Each `block_device_mappings` supports the following:
 
