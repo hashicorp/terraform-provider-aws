@@ -13,56 +13,12 @@ Associates an SSM Document to an instance or EC2 tag.
 ## Example Usage
 
 ```hcl
-resource "aws_security_group" "tf_test_foo" {
-  name        = "tf_test_foo"
-  description = "foo"
+resource "aws_ssm_association" "example" {
+  name = "${aws_ssm_document.example.name}"
 
-  ingress {
-    protocol    = "icmp"
-    from_port   = -1
-    to_port     = -1
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_instance" "foo" {
-  # eu-west-1
-  ami               = "ami-f77ac884"
-  availability_zone = "eu-west-1a"
-  instance_type     = "t2.small"
-  security_groups   = ["${aws_security_group.tf_test_foo.name}"]
-}
-
-resource "aws_ssm_document" "foo_document" {
-  name          = "test_document_association-%s"
-  document_type = "Command"
-
-  content = <<DOC
-  {
-    "schemaVersion": "1.2",
-    "description": "Check ip configuration of a Linux instance.",
-    "parameters": {
-
-    },
-    "runtimeConfig": {
-      "aws:runShellScript": {
-        "properties": [
-          {
-            "id": "0.aws:runShellScript",
-            "runCommand": ["ifconfig"]
-          }
-        ]
-      }
-    }
-  }
-DOC
-}
-
-resource "aws_ssm_association" "foo" {
-  name        = "test_document_association-%s"
   targets {
     key    = "InstanceIds"
-    values = "${aws_instance.foo.id}"
+    values = "${aws_instance.example.id}"
   }
 }
 ```
