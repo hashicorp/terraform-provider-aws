@@ -1879,7 +1879,7 @@ func buildAwsInstanceOpts(
 					spotOptions.SpotInstanceType = aws.String(so["spot_instance_type"].(string))
 
 					if so["valid_until"] != "" {
-						t, err := time.Parse(awsSpotInstanceTimeLayout, so["valid_until"].(string))
+						t, err := time.Parse(time.RFC3339, so["valid_until"].(string))
 						if err != nil {
 							return nil, fmt.Errorf("Error Parsing Launch Template Spot Options valid until: %s", err.Error())
 						}
@@ -2022,7 +2022,7 @@ func readSpotRequestFromInstance(instance *ec2.Instance, conn *ec2.EC2) ([]inter
 			spotRequest["instance_interruption_behavior"] = *sr.InstanceInterruptionBehavior
 			spotRequest["max_price"] = *sr.SpotPrice
 			spotRequest["spot_instance_type"] = *sr.Type
-			spotRequest["valid_until"] = aws.TimeValue(sr.ValidUntil).Format(awsSpotInstanceTimeLayout)
+			spotRequest["valid_until"] = aws.TimeValue(sr.ValidUntil).Format(time.RFC3339)
 			spotRequests = append(spotRequests, spotRequest)
 		}
 	}
