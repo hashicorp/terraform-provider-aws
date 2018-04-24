@@ -182,21 +182,26 @@ Replicate database managed by Terraform will promote the database to a fully
 standalone database.
 
 ### S3 Import Options
+
 Full details on the core parameters and impacts are in the API Docs: [RestoreDBInstanceFromS3](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromS3.html).  Sample 
+
 ```hcl
 resource "aws_db_instance" "db" {
   s3_import {
+    source_engine = "mysql"
+    source_engine_version = "5.6"
     bucket_name = "mybucket"
     bucket_prefix = "backups"
     ingestion_role = "arn:aws:iam::1234567890:role/role-xtrabackup-rds-restore"
   }
 }
 ```
+
 * `bucket_name` - (Required) The bucket name where your backup is stored
 * `bucket_prefix` - (Optional) Can be blank, but is the path to your backup
 * `ingestion_role` - (Required) Role applied to load the data.
-* `source_engine` - (Defaults to 'mysql') Source engine for the backup
-* `source_engine_version` - (Defaults to '5.6') Version of the source engine used to make the backup
+* `source_engine` - (Required, as of Feb 2018 only 'mysql' supported) Source engine for the backup
+* `source_engine_version` - (Required, as of Feb 2018 only '5.6' supported) Version of the source engine used to make the backup
 
 This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database
 

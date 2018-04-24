@@ -221,7 +221,7 @@ func resourceAwsDbInstance() *schema.Resource {
 			},
 
 			"s3_import": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				ConflictsWith: []string{
@@ -233,31 +233,28 @@ func resourceAwsDbInstance() *schema.Resource {
 						"bucket_name": {
 							Type:     schema.TypeString,
 							Required: true,
-							Optional: false,
 							ForceNew: true,
 						},
 						"bucket_prefix": {
 							Type:     schema.TypeString,
 							Required: false,
 							Optional: true,
-							Default:  "",
+							ForceNew: true,
 						},
 						"ingestion_role": {
 							Type:     schema.TypeString,
 							Required: true,
-							Optional: false,
+							ForceNew: true,
 						},
 						"source_engine": {
 							Type:     schema.TypeString,
-							Required: false,
-							Optional: true,
-							Default:  "mysql",
+							Required: true,
+							ForceNew: true,
 						},
 						"source_engine_version": {
 							Type:     schema.TypeString,
-							Required: false,
-							Optional: true,
-							Default:  "5.6",
+							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -509,7 +506,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "username": required field is not set`, d.Get("name").(string))
 		}
 
-		record := v.(*schema.Set).List()[0].(map[string]interface{})
+		s3_bucket := v.([]interface{})[0].(map[string]interface{})
 		opts := rds.RestoreDBInstanceFromS3Input{
 			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
@@ -519,15 +516,15 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
 			Engine:                  aws.String(d.Get("engine").(string)),
 			EngineVersion:           aws.String(d.Get("engine_version").(string)),
-			S3BucketName:            aws.String(record["bucket_name"].(string)),
-			S3Prefix:                aws.String(record["bucket_prefix"].(string)),
-			S3IngestionRoleArn:      aws.String(record["ingestion_role"].(string)),
+			S3BucketName:            aws.String(s3_bucket["bucket_name"].(string)),
+			S3Prefix:                aws.String(s3_bucket["bucket_prefix"].(string)),
+			S3IngestionRoleArn:      aws.String(s3_bucket["ingestion_role"].(string)),
 			MasterUsername:          aws.String(d.Get("username").(string)),
 			MasterUserPassword:      aws.String(d.Get("password").(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
-			SourceEngine:            aws.String(record["source_engine"].(string)),
-			SourceEngineVersion:     aws.String(record["source_engine_version"].(string)),
+			SourceEngine:            aws.String(s3_bucket["source_engine"].(string)),
+			SourceEngineVersion:     aws.String(s3_bucket["source_engine_version"].(string)),
 			Tags:                    tags,
 		}
 
@@ -621,16 +618,14 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 			_, err = conn.RestoreDBInstanceFromS3(&opts)
 			if err != nil {
-				if awsErr, ok := err.(awserr.Error); ok {
-					if awsErr.Code() == "InvalidParameterValue" && strings.Contains(awsErr.Message(), "ENHANCED_MONITORING") {
-						return resource.RetryableError(awsErr)
-					}
-					if awsErr.Code() == "InvalidParameterValue" && strings.Contains(awsErr.Message(), "S3_SNAPSHOT_INGESTION") {
-						return resource.RetryableError(err)
-					}
-					if awsErr.Code() == "InvalidParameterValue" && strings.Contains(awsErr.Message(), "S3 bucket cannot be found") {
-						return resource.RetryableError(err)
-					}
+				if isAWSErr(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, "InvalidParameterValue", "S3_SNAPSHOT_INGESTION") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, "InvalidParameterValue", "S3 bucket cannot be found") {
+					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}

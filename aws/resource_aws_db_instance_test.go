@@ -318,20 +318,17 @@ func TestAccAWSDBInstance_snapshot(t *testing.T) {
 
 func TestAccAWSDBInstance_s3(t *testing.T) {
 	var snap rds.DBInstance
-	bucket := acctest.RandString(5)
-	//bucket := acctest.RandString(5)
-	prefix := "xtrabackup"
-	role := acctest.RandString(5)
+	bucket := acctest.RandomWithPrefix("tf-acc-test")
+	uniqueId := acctest.RandomWithPrefix("tf-acc-s3-import-test")
+	bucketPrefix := acctest.RandString(5)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		// testAccCheckAWSDBInstanceSnapshot verifies a database snapshot is
-		// created, and subequently deletes it
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBInstanceNoSnapshot,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotInstanceConfigWithS3Import(bucket, prefix, role),
+				Config: testAccSnapshotInstanceConfigWithS3Import(bucket, bucketPrefix, uniqueId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.s3", &snap),
 				),
@@ -1070,7 +1067,7 @@ resource "aws_db_instance" "snapshot" {
 }`, acctest.RandInt())
 }
 
-func testAccSnapshotInstanceConfigWithS3Import(bucketName string, prefix string, role string) string {
+func testAccSnapshotInstanceConfigWithS3Import(bucketName string, bucketPrefix string, uniqueId string) string {
 	return fmt.Sprintf(`
 
 resource "aws_s3_bucket" "xtrabackup" {
@@ -1079,15 +1076,15 @@ resource "aws_s3_bucket" "xtrabackup" {
 
 resource "aws_s3_bucket_object" "xtrabackup_db" {
   bucket = "${aws_s3_bucket.xtrabackup.id}"
-  key    = "%s/sample.tar.gz"
-  source = "../files/2018-02-26_19-31-02.tar.gz"
-  etag   = "${md5(file("../files/2018-02-26_19-31-02.tar.gz"))}"
+  key    = "%s/mysql-5-6-xtrabackup.tar.gz"
+  source = "../files/mysql-5-6-xtrabackup.tar.gz"
+  etag   = "${md5(file("../files/mysql-5-6-xtrabackup.tar.gz"))}"
 }
 
 
 
 resource "aws_iam_role" "rds_s3_access_role" {
-    name = "aws-rds-import-%s"
+    name = "%s-role"
     assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1106,7 +1103,7 @@ EOF
 }
 
 resource "aws_iam_policy" "test" {
-  name   = "tf-s3-rds-access-policy"
+  name   = "%s-policy"
   policy = <<POLICY
 {
     "Version": "2012-10-17",
@@ -1127,7 +1124,7 @@ POLICY
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
-    name = "s3_access_attachment"
+    name = "%s-policy-attachment"
     roles = [
         "${aws_iam_role.rds_s3_access_role.name}"
     ]
@@ -1163,7 +1160,7 @@ resource "aws_subnet" "bar" {
 }
 
 resource "aws_db_subnet_group" "foo" {
-	name = "foo"
+	name = "%s-subnet-group"
 	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
 	tags {
 		Name = "tf-dbsubnet-group-test"
@@ -1172,7 +1169,7 @@ resource "aws_db_subnet_group" "foo" {
 
 
 resource "aws_db_instance" "s3" {
-	identifier = "test-db-instance-from-s3-import-%s"
+	identifier = "%s-db"
 
 	allocated_storage = 5
 	engine = "mysql"
@@ -1191,12 +1188,15 @@ resource "aws_db_instance" "s3" {
     db_subnet_group_name = "${aws_db_subnet_group.foo.id}"
 
 	s3_import {
+        source_engine = "mysql"
+        source_engine_version = "5.6"
+
 		bucket_name = "${aws_s3_bucket.xtrabackup.bucket}"
 		bucket_prefix = "%s"
 		ingestion_role = "${aws_iam_role.rds_s3_access_role.arn}"
 	}
 }
-`, bucketName, prefix, role, prefix, bucketName)
+`, bucketName, bucketPrefix, uniqueId, uniqueId, uniqueId, uniqueId, uniqueId, bucketPrefix)
 }
 
 func testAccSnapshotInstanceConfigWithSnapshot(rInt int) string {
