@@ -41,4 +41,4 @@ N/A
 
 ## Attributes Reference
 
-* `endpoint_address` - The endpoint. The format of the endpoint is as follows: identifier .iot.*region* .amazonaws.com.
+* `endpoint_address` - The endpoint. The format of the endpoint is as follows: `IDENTIFIER.iot.REGION.amazonaws.com`.
