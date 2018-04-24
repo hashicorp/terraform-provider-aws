@@ -6,10 +6,14 @@ FEATURES:
 * **New Data Source:** `aws_batch_job_queue` [GH-4288]
 * **New Data Source:** `aws_iot_endpoint` [GH-4303]
 * **New Data Source:** `aws_lambda_function` [GH-2984]
+* **New Data Source:** `aws_secretsmanager_secret` [GH-4272]
+* **New Data Source:** `aws_secretsmanager_secret_version` [GH-4272]
 * **New Resource:** `aws_dax_parameter_group` [GH-4299]
 * **New Resource:** `aws_dax_subnet_group` [GH-4302]
 * **New Resource:** `aws_organizations_policy` [GH-4249]
 * **New Resource:** `aws_organizations_policy_attachment` [GH-4253]
+* **New Resource:** `aws_secretsmanager_secret` [GH-4272]
+* **New Resource:** `aws_secretsmanager_secret_version` [GH-4272]
 
 ENHANCEMENTS:
 
