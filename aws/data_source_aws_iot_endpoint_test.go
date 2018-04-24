@@ -14,7 +14,6 @@ func TestAccAWSIotEndpointDataSource(t *testing.T) {
 			resource.TestStep{
 				Config: testAccAWSIotEndpointConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_iot_endpoint.example", "id"),
 					resource.TestCheckResourceAttrSet("data.aws_iot_endpoint.example", "endpoint_address"),
 				),
 			},
