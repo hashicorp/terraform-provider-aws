@@ -18,7 +18,7 @@ func testACCAwsGuardDutyInvite_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t)},
 		Providers:    testAccProviders,
-		CheckDestroy: testACCAwsGuardDutyInviteDestroy,
+		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep {
 			{
 				Config: testAccGuardDutyInviteConfig_basic(accountID, email, message),
@@ -35,45 +35,6 @@ func testACCAwsGuardDutyInvite_basic(t *testing.T) {
 	return
 }
 
-func testACCAwsGuardDutyInviteDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_guardduty_invite" {
-			continue
-		}
-
-
-		//FIX ME
-		accountID, detectorID, message, err := decodeGuardDutyInviteID(rs.Primary.ID)
-		if err != nil {
-			return nil
-		}
-
-		input := &guardduty.InviteMembersInput{
-			DetectorId: aws.String(detectorID),
-			AccountIds: []*string{aws.String(accountID)},
-			Message: aws.String(message),
-		}
-
-		imo, err := conn.InviteMembers(input)
-		if err != nil {
-			if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
-				return nil
-			}
-			return err
-		}
-
-		// Fix me
-		if len(imo.UnprocessedAccounts) > 0 {
-			continue
-		}
-
-		return fmt.Errorf("Expected GuardDuty Detector to be destroyed, %s found", rs.Primary.ID)
-	}
-
-	return nil
-}
 
 func testAccCheckAwsGuardDutyInviteExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {

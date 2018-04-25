@@ -11,6 +11,8 @@ import (
 func resourceAwsGuardDutyInvite() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsGuardDutyInviteCreate,
+		Read: resourceAwsGuardDutyInviteRead,
+		Delete: resourceAwsGuardDutyInviteDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -37,34 +39,45 @@ func resourceAwsGuardDutyInvite() *schema.Resource {
 
 func resourceAwsGuardDutyInviteCreate(d* schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
-	detectorID := d.Get("detector_id").(string)
-	accountIDs := d.Get("account_ids").([]string)
 
-	input := guardduty.InviteMembersInput{
-		DetectorId: aws.String(detectorID),
-		AccountIds: aws.StringSlice(accountIDs),
+	params := &guardduty.InviteMembersInput{
+		DetectorId: aws.String(d.Get("detector_id").(string)),
 		Message: aws.String(d.Get("message").(string)),
 	}
 
-	log.Printf("[DEBUG] Inviting GuardDuty Member: %s", input)
-	imo, err := conn.InviteMembers(&input)
+	accountIds := d.Get("account_ids").([]string)
+	params.AccountIds = aws.StringSlice(accountIds)
+
+	log.Printf("[DEBUG] GuardDuty Invite Members: %#v", params)
+	resp, err := conn.InviteMembers(params)
+
 	if err != nil {
-		return fmt.Errorf("Inviting GuardDuty Member failed: %s", err.Error())
+		return fmt.Errorf("Inviting GuardDuty Member failed: %s", err)
 	}
 
-	if imo.UnprocessedAccounts != nil || len(imo.UnprocessedAccounts) > 0 {
-		for _, unprocessedAccount := range imo.UnprocessedAccounts {
-			log.Printf("[WARN] GuardDuty Members %q not processed: %s", unprocessedAccount.AccountId, unprocessedAccount.Result)
+	for _, accountID := range accountIds {
+		for _, unprocessedAccount := range resp.UnprocessedAccounts {
+			if accountID == *unprocessedAccount.AccountId {
+				d.Set("unprocessed_reason", unprocessedAccount.Result)
+			}
 		}
-	}
 
-	for _, accountID := range accountIDs {
-		d.SetId(fmt.Sprintf("%s:%s", detectorID, accountID))
 		err := resourceAwsGuardDutyMemberRead(d, meta)
+
 		if err != nil {
 			return err
 		}
 	}
+	d.SetId()
 
+	return nil
+}
+
+func resourceAwsGuardDutyInviteRead(d *schema.ResourceData, meta interface{}) error {
+	return nil
+}
+
+func resourceAwsGuardDutyInviteDelete(d* schema.ResourceData, meta interface{}) error {
+	d.SetId("")
 	return nil
 }
