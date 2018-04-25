@@ -8,8 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform/helper/schema"
-
-	"github.com/fatih/structs"
 )
 
 func resourceAwsGlueCatalogTable() *schema.Resource {
@@ -243,24 +241,6 @@ func resourceAwsGlueCatalogTableCreate(t *schema.ResourceData, meta interface{})
 	return resourceAwsGlueCatalogTableRead(t, meta)
 }
 
-func resourceAwsGlueCatalogTableUpdate(t *schema.ResourceData, meta interface{}) error {
-	glueconn := meta.(*AWSClient).glueconn
-
-	catalogID, dbName, _ := readAwsGlueTableID(t.Id())
-
-	updateTableInput := &glue.UpdateTableInput{
-		CatalogId:    aws.String(catalogID),
-		DatabaseName: aws.String(dbName),
-		TableInput:   expandGlueTableInput(t),
-	}
-
-	if _, err := glueconn.UpdateTable(updateTableInput); err != nil {
-		return fmt.Errorf("Error updating Glue Catalog Table: %s", err)
-	}
-
-	return resourceAwsGlueCatalogTableRead(t, meta)
-}
-
 func resourceAwsGlueCatalogTableRead(t *schema.ResourceData, meta interface{}) error {
 	glueconn := meta.(*AWSClient).glueconn
 
@@ -289,18 +269,32 @@ func resourceAwsGlueCatalogTableRead(t *schema.ResourceData, meta interface{}) e
 	t.Set("description", out.Table.Description)
 	t.Set("owner", out.Table.Owner)
 	t.Set("retention", out.Table.Retention)
-
-	if out.Table.StorageDescriptor != nil {
-		t.Set("storage_descriptor", flattenStorageDescriptor(out.Table.StorageDescriptor))
-	}
-
-	t.Set("partition_keys", out.Table.PartitionKeys)
+	t.Set("storage_descriptor", flattenStorageDescriptor(out.Table.StorageDescriptor))
+	t.Set("partition_keys", flattenGlueColumns(out.Table.PartitionKeys))
 	t.Set("view_original_text", out.Table.ViewOriginalText)
 	t.Set("view_expanded_text", out.Table.ViewExpandedText)
 	t.Set("table_type", out.Table.TableType)
-	t.Set("parameters", out.Table.Parameters)
+	t.Set("parameters", flattenStringParameters(out.Table.Parameters))
 
 	return nil
+}
+
+func resourceAwsGlueCatalogTableUpdate(t *schema.ResourceData, meta interface{}) error {
+	glueconn := meta.(*AWSClient).glueconn
+
+	catalogID, dbName, _ := readAwsGlueTableID(t.Id())
+
+	updateTableInput := &glue.UpdateTableInput{
+		CatalogId:    aws.String(catalogID),
+		DatabaseName: aws.String(dbName),
+		TableInput:   expandGlueTableInput(t),
+	}
+
+	if _, err := glueconn.UpdateTable(updateTableInput); err != nil {
+		return fmt.Errorf("Error updating Glue Catalog Table: %s", err)
+	}
+
+	return resourceAwsGlueCatalogTableRead(t, meta)
 }
 
 func resourceAwsGlueCatalogTableDelete(t *schema.ResourceData, meta interface{}) error {
@@ -412,7 +406,7 @@ func expandGlueStorageDescriptor(s map[string]interface{}) *glue.StorageDescript
 		storageDescriptor.BucketColumns = aws.StringSlice(bucketColumns)
 	}
 
-	if v, ok := s["sort_colums"]; ok {
+	if v, ok := s["sort_columns"]; ok {
 		storageDescriptor.SortColumns = expandSortColumns(v.([]interface{}))
 	}
 
@@ -483,8 +477,9 @@ func expandSerDeInfo(s map[string]interface{}) *glue.SerDeInfo {
 }
 
 func expandSortColumns(columns []interface{}) []*glue.Order {
-	orderSlice := []*glue.Order{}
-	for _, element := range columns {
+	orderSlice := make([]*glue.Order, len(columns))
+
+	for i, element := range columns {
 		elementMap := element.(map[string]interface{})
 
 		order := &glue.Order{
@@ -495,7 +490,7 @@ func expandSortColumns(columns []interface{}) []*glue.Order {
 			order.SortOrder = aws.Int64(int64(v.(int)))
 		}
 
-		orderSlice = append(orderSlice, order)
+		orderSlice[i] = order
 	}
 
 	return orderSlice
@@ -532,7 +527,115 @@ func expandSkewedInfo(s map[string]interface{}) *glue.SkewedInfo {
 }
 
 func flattenStorageDescriptor(s *glue.StorageDescriptor) []map[string]interface{} {
+	if s == nil {
+		storageDescriptors := make([]map[string]interface{}, 0)
+		return storageDescriptors
+	}
+
 	storageDescriptors := make([]map[string]interface{}, 1)
-	storageDescriptors[0] = structs.Map(s)
+
+	storageDescriptor := make(map[string]interface{})
+
+	storageDescriptor["columns"] = flattenGlueColumns(s.Columns)
+	storageDescriptor["location"] = *s.Location
+	storageDescriptor["input_format"] = *s.InputFormat
+	storageDescriptor["output_format"] = *s.OutputFormat
+	storageDescriptor["compressed"] = *s.Compressed
+	storageDescriptor["number_of_buckets"] = *s.NumberOfBuckets
+	storageDescriptor["ser_de_info"] = flattenSerDeInfo(s.SerdeInfo)
+	storageDescriptor["bucket_columns"] = flattenStringList(s.BucketColumns)
+	storageDescriptor["sort_columns"] = flattenOrders(s.SortColumns)
+	storageDescriptor["parameters"] = flattenStringParameters(s.Parameters)
+	storageDescriptor["skewed_info"] = flattenSkewedInfo(s.SkewedInfo)
+	storageDescriptor["stored_as_sub_directories"] = *s.StoredAsSubDirectories
+
+	storageDescriptors[0] = storageDescriptor
+
 	return storageDescriptors
+}
+
+func flattenGlueColumns(cs []*glue.Column) []map[string]string {
+	columnsSlice := make([]map[string]string, len(cs))
+	if len(cs) > 0 {
+		for i, v := range cs {
+			columnsSlice[i] = flattenGlueColumn(v)
+		}
+	}
+
+	return columnsSlice
+}
+
+func flattenGlueColumn(c *glue.Column) map[string]string {
+	column := make(map[string]string)
+
+	if v := *c.Name; v != "" {
+		column["name"] = v
+	}
+
+	if v := *c.Type; v != "" {
+		column["type"] = v
+	}
+
+	if v := *c.Comment; v != "" {
+		column["comment"] = v
+	}
+
+	return column
+}
+
+func flattenStringParameters(p map[string]*string) map[string]string {
+	tParams := make(map[string]string)
+	if len(p) > 0 {
+		for key, value := range p {
+			tParams[key] = *value
+		}
+	}
+
+	return tParams
+}
+
+func flattenSerDeInfo(s *glue.SerDeInfo) []map[string]interface{} {
+	if s == nil {
+		serDeInfos := make([]map[string]interface{}, 0)
+		return serDeInfos
+	}
+
+	serDeInfos := make([]map[string]interface{}, 1)
+	serDeInfo := make(map[string]interface{})
+
+	serDeInfo["name"] = *s.Name
+	serDeInfo["parameters"] = flattenStringParameters(s.Parameters)
+	serDeInfo["serialization_library"] = *s.SerializationLibrary
+
+	serDeInfos[0] = serDeInfo
+	return serDeInfos
+}
+
+func flattenOrders(os []*glue.Order) []map[string]interface{} {
+	orders := make([]map[string]interface{}, len(os))
+	for i, v := range os {
+		order := make(map[string]interface{})
+		order["column"] = *v.Column
+		order["sort_order"] = *v.SortOrder
+		orders[i] = order
+	}
+
+	return orders
+}
+
+func flattenSkewedInfo(s *glue.SkewedInfo) []map[string]interface{} {
+	if s == nil {
+		skewedInfoSlice := make([]map[string]interface{}, 0)
+		return skewedInfoSlice
+	}
+
+	skewedInfoSlice := make([]map[string]interface{}, 1)
+
+	skewedInfo := make(map[string]interface{})
+	skewedInfo["skewed_column_names"] = flattenStringList(s.SkewedColumnNames)
+	skewedInfo["skewed_column_value_location_maps"] = flattenStringParameters(s.SkewedColumnValueLocationMaps)
+	skewedInfo["skewed_column_values"] = flattenStringList(s.SkewedColumnValues)
+	skewedInfoSlice[0] = skewedInfo
+
+	return skewedInfoSlice
 }
