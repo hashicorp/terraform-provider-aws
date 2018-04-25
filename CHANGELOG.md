@@ -1,54 +1,54 @@
-## 1.16.0 (Unreleased)
+## 1.16.0 (April 25, 2018)
 
 FEATURES:
 
-* **New Data Source:** `aws_batch_compute_environment` [GH-4270]
-* **New Data Source:** `aws_batch_job_queue` [GH-4288]
-* **New Data Source:** `aws_iot_endpoint` [GH-4303]
-* **New Data Source:** `aws_lambda_function` [GH-2984]
-* **New Data Source:** `aws_redshift_cluster` [GH-2603]
-* **New Data Source:** `aws_secretsmanager_secret` [GH-4272]
-* **New Data Source:** `aws_secretsmanager_secret_version` [GH-4272]
-* **New Resource:** `aws_dax_parameter_group` [GH-4299]
-* **New Resource:** `aws_dax_subnet_group` [GH-4302]
-* **New Resource:** `aws_organizations_policy` [GH-4249]
-* **New Resource:** `aws_organizations_policy_attachment` [GH-4253]
-* **New Resource:** `aws_secretsmanager_secret` [GH-4272]
-* **New Resource:** `aws_secretsmanager_secret_version` [GH-4272]
+* **New Data Source:** `aws_batch_compute_environment` ([#4270](https://github.com/terraform-providers/terraform-provider-aws/issues/4270))
+* **New Data Source:** `aws_batch_job_queue` ([#4288](https://github.com/terraform-providers/terraform-provider-aws/issues/4288))
+* **New Data Source:** `aws_iot_endpoint` ([#4303](https://github.com/terraform-providers/terraform-provider-aws/issues/4303))
+* **New Data Source:** `aws_lambda_function` ([#2984](https://github.com/terraform-providers/terraform-provider-aws/issues/2984))
+* **New Data Source:** `aws_redshift_cluster` ([#2603](https://github.com/terraform-providers/terraform-provider-aws/issues/2603))
+* **New Data Source:** `aws_secretsmanager_secret` ([#4272](https://github.com/terraform-providers/terraform-provider-aws/issues/4272))
+* **New Data Source:** `aws_secretsmanager_secret_version` ([#4272](https://github.com/terraform-providers/terraform-provider-aws/issues/4272))
+* **New Resource:** `aws_dax_parameter_group` ([#4299](https://github.com/terraform-providers/terraform-provider-aws/issues/4299))
+* **New Resource:** `aws_dax_subnet_group` ([#4302](https://github.com/terraform-providers/terraform-provider-aws/issues/4302))
+* **New Resource:** `aws_organizations_policy` ([#4249](https://github.com/terraform-providers/terraform-provider-aws/issues/4249))
+* **New Resource:** `aws_organizations_policy_attachment` ([#4253](https://github.com/terraform-providers/terraform-provider-aws/issues/4253))
+* **New Resource:** `aws_secretsmanager_secret` ([#4272](https://github.com/terraform-providers/terraform-provider-aws/issues/4272))
+* **New Resource:** `aws_secretsmanager_secret_version` ([#4272](https://github.com/terraform-providers/terraform-provider-aws/issues/4272))
 
 ENHANCEMENTS:
 
-* data-source/aws_cognito_user_pools: Add `arns` attribute [GH-4256]
-* data-source/aws_ecs_cluster Return error on multiple clusters [GH-4286]
-* data-source/aws_iam_instance_profile: Add `role_arn` and `role_name` attributes [GH-4300]
-* data-source/aws_instance: Add `disable_api_termination` attribute [GH-4314]
-* resource/aws_api_gateway_rest_api: Add `policy` argument [GH-4211]
-* resource/aws_api_gateway_stage: Add `tags` argument [GH-2858]
-* resource/aws_api_gateway_stage: Add `execution_arn` and `invoke_url` attributes [GH-3469]
-* resource/aws_api_gateway_vpc_link: Support import [GH-4306]
-* resource/aws_cloudwatch_event_target: Add `batch_target` argument [GH-4312]
-* resource/aws_cloudwatch_event_target: Add `kinesis_target` and `sqs_target` arguments [GH-4323]
-* resource/aws_cognito_user_pool: Support `user_migration` in `lambda_config` [GH-4301]
-* resource/aws_db_instance: Add `s3_import` argument [GH-2728]
-* resource/aws_elastic_beanstalk_application: Add `appversion_lifecycle` argument [GH-1907]
-* resource/aws_instance: Add `credit_specification` argument (e.g. t2.unlimited support) [GH-2619]
-* resource/aws_kinesis_firehose_delivery_stream: Support Redshift `processing_configuration` [GH-4251]
-* resource/aws_launch_configuration: Add `user_data_base64` argument [GH-4257]
-* resource/aws_s3_bucket: Add support for `ONEZONE_IA` storage class [GH-4287]
-* resource/aws_s3_bucket_object: Add support for `ONEZONE_IA` storage class [GH-4287]
-* resource/aws_spot_instance_request: Add `valid_from` and `valid_until` arguments [GH-4018]
-* resource/aws_ssm_patch_baseline: Support `CENTOS` `operating_system` argument [GH-4268]
+* data-source/aws_cognito_user_pools: Add `arns` attribute ([#4256](https://github.com/terraform-providers/terraform-provider-aws/issues/4256))
+* data-source/aws_ecs_cluster Return error on multiple clusters ([#4286](https://github.com/terraform-providers/terraform-provider-aws/issues/4286))
+* data-source/aws_iam_instance_profile: Add `role_arn` and `role_name` attributes ([#4300](https://github.com/terraform-providers/terraform-provider-aws/issues/4300))
+* data-source/aws_instance: Add `disable_api_termination` attribute ([#4314](https://github.com/terraform-providers/terraform-provider-aws/issues/4314))
+* resource/aws_api_gateway_rest_api: Add `policy` argument ([#4211](https://github.com/terraform-providers/terraform-provider-aws/issues/4211))
+* resource/aws_api_gateway_stage: Add `tags` argument ([#2858](https://github.com/terraform-providers/terraform-provider-aws/issues/2858))
+* resource/aws_api_gateway_stage: Add `execution_arn` and `invoke_url` attributes ([#3469](https://github.com/terraform-providers/terraform-provider-aws/issues/3469))
+* resource/aws_api_gateway_vpc_link: Support import ([#4306](https://github.com/terraform-providers/terraform-provider-aws/issues/4306))
+* resource/aws_cloudwatch_event_target: Add `batch_target` argument ([#4312](https://github.com/terraform-providers/terraform-provider-aws/issues/4312))
+* resource/aws_cloudwatch_event_target: Add `kinesis_target` and `sqs_target` arguments ([#4323](https://github.com/terraform-providers/terraform-provider-aws/issues/4323))
+* resource/aws_cognito_user_pool: Support `user_migration` in `lambda_config` ([#4301](https://github.com/terraform-providers/terraform-provider-aws/issues/4301))
+* resource/aws_db_instance: Add `s3_import` argument ([#2728](https://github.com/terraform-providers/terraform-provider-aws/issues/2728))
+* resource/aws_elastic_beanstalk_application: Add `appversion_lifecycle` argument ([#1907](https://github.com/terraform-providers/terraform-provider-aws/issues/1907))
+* resource/aws_instance: Add `credit_specification` argument (e.g. t2.unlimited support) ([#2619](https://github.com/terraform-providers/terraform-provider-aws/issues/2619))
+* resource/aws_kinesis_firehose_delivery_stream: Support Redshift `processing_configuration` ([#4251](https://github.com/terraform-providers/terraform-provider-aws/issues/4251))
+* resource/aws_launch_configuration: Add `user_data_base64` argument ([#4257](https://github.com/terraform-providers/terraform-provider-aws/issues/4257))
+* resource/aws_s3_bucket: Add support for `ONEZONE_IA` storage class ([#4287](https://github.com/terraform-providers/terraform-provider-aws/issues/4287))
+* resource/aws_s3_bucket_object: Add support for `ONEZONE_IA` storage class ([#4287](https://github.com/terraform-providers/terraform-provider-aws/issues/4287))
+* resource/aws_spot_instance_request: Add `valid_from` and `valid_until` arguments ([#4018](https://github.com/terraform-providers/terraform-provider-aws/issues/4018))
+* resource/aws_ssm_patch_baseline: Support `CENTOS` `operating_system` argument ([#4268](https://github.com/terraform-providers/terraform-provider-aws/issues/4268))
 
 BUG FIXES:
 
-* data-source/aws_iam_policy_document: Prevent crash with multiple value principal identifiers [GH-4277]
-* data-source/aws_lb_listener: Ensure attributes are properly set when not used as arguments [GH-4317]
-* resource/aws_codebuild_project: Mark auth resource attribute as sensitive [GH-4284]
-* resource/aws_cognito_user_pool_client: Fix import to include user pool ID [GH-3762]
-* resource/aws_launch_template: Allow dashes in `name` and `name_prefix` arguments [GH-4321]
-* resource/aws_launch_template: Properly set `block_device_mappings` EBS information into Terraform state [GH-4321]
-* resource/aws_launch_template: Properly pass `block_device_mappings` information to EC2 API [GH-4321]
-* resource/aws_s3_bucket: Prevent panic on lifecycle rule reading errors [GH-4282]
+* data-source/aws_iam_policy_document: Prevent crash with multiple value principal identifiers ([#4277](https://github.com/terraform-providers/terraform-provider-aws/issues/4277))
+* data-source/aws_lb_listener: Ensure attributes are properly set when not used as arguments ([#4317](https://github.com/terraform-providers/terraform-provider-aws/issues/4317))
+* resource/aws_codebuild_project: Mark auth resource attribute as sensitive ([#4284](https://github.com/terraform-providers/terraform-provider-aws/issues/4284))
+* resource/aws_cognito_user_pool_client: Fix import to include user pool ID ([#3762](https://github.com/terraform-providers/terraform-provider-aws/issues/3762))
+* resource/aws_launch_template: Allow dashes in `name` and `name_prefix` arguments ([#4321](https://github.com/terraform-providers/terraform-provider-aws/issues/4321))
+* resource/aws_launch_template: Properly set `block_device_mappings` EBS information into Terraform state ([#4321](https://github.com/terraform-providers/terraform-provider-aws/issues/4321))
+* resource/aws_launch_template: Properly pass `block_device_mappings` information to EC2 API ([#4321](https://github.com/terraform-providers/terraform-provider-aws/issues/4321))
+* resource/aws_s3_bucket: Prevent panic on lifecycle rule reading errors ([#4282](https://github.com/terraform-providers/terraform-provider-aws/issues/4282))
 
 ## 1.15.0 (April 18, 2018)
 
