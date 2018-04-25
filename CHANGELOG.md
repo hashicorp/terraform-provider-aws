@@ -1,4 +1,9 @@
 ## 1.17.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_route53_zone: Add domain name to CallerReference to prevent creation issues with count greater than one #4341
+
 ## 1.16.0 (April 25, 2018)
 
 FEATURES:
