@@ -93,8 +93,9 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 										Optional: true,
 									},
 									"kms_key_id": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateArn,
 									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
@@ -103,10 +104,12 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									"volume_size": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										Computed: true,
 									},
 									"volume_type": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -159,8 +162,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"iam_instance_profile.0.name"},
+							ValidateFunc:  validateArn,
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -363,9 +368,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"security_group_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"vpc_security_group_ids"},
 			},
 
 			"vpc_security_group_ids": {
