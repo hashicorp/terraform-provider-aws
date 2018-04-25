@@ -316,6 +316,27 @@ func TestAccAWSDBInstance_snapshot(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_s3(t *testing.T) {
+	var snap rds.DBInstance
+	bucket := acctest.RandomWithPrefix("tf-acc-test")
+	uniqueId := acctest.RandomWithPrefix("tf-acc-s3-import-test")
+	bucketPrefix := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceNoSnapshot,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnapshotInstanceConfigWithS3Import(bucket, bucketPrefix, uniqueId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.s3", &snap),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_enhancedMonitoring(t *testing.T) {
 	var dbInstance rds.DBInstance
 	rName := acctest.RandString(5)
@@ -1044,6 +1065,138 @@ resource "aws_db_instance" "snapshot" {
 	skip_final_snapshot = true
 	final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-1"
 }`, acctest.RandInt())
+}
+
+func testAccSnapshotInstanceConfigWithS3Import(bucketName string, bucketPrefix string, uniqueId string) string {
+	return fmt.Sprintf(`
+
+resource "aws_s3_bucket" "xtrabackup" {
+  bucket = "%s"
+}
+
+resource "aws_s3_bucket_object" "xtrabackup_db" {
+  bucket = "${aws_s3_bucket.xtrabackup.id}"
+  key    = "%s/mysql-5-6-xtrabackup.tar.gz"
+  source = "../files/mysql-5-6-xtrabackup.tar.gz"
+  etag   = "${md5(file("../files/mysql-5-6-xtrabackup.tar.gz"))}"
+}
+
+
+
+resource "aws_iam_role" "rds_s3_access_role" {
+    name = "%s-role"
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "test" {
+  name   = "%s-policy"
+  policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:*"
+            ],
+            "Resource": [
+                "${aws_s3_bucket.xtrabackup.arn}",
+                "${aws_s3_bucket.xtrabackup.arn}/*"
+            ]
+        }
+    ]
+}
+POLICY
+}
+
+resource "aws_iam_policy_attachment" "test-attach" {
+    name = "%s-policy-attachment"
+    roles = [
+        "${aws_iam_role.rds_s3_access_role.name}"
+    ]
+
+    policy_arn = "${aws_iam_policy.test.arn}"
+}
+
+
+//  Make sure EVERYTHING required is here...
+resource "aws_vpc" "foo" {
+	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-db-instance-with-subnet-group"
+	}
+}
+
+resource "aws_subnet" "foo" {
+	cidr_block = "10.1.1.0/24"
+	availability_zone = "us-west-2a"
+	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-db-instance-with-subnet-group-1"
+	}
+}
+
+resource "aws_subnet" "bar" {
+	cidr_block = "10.1.2.0/24"
+	availability_zone = "us-west-2b"
+	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-db-instance-with-subnet-group-2"
+	}
+}
+
+resource "aws_db_subnet_group" "foo" {
+	name = "%s-subnet-group"
+	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+	tags {
+		Name = "tf-dbsubnet-group-test"
+	}
+}
+
+
+resource "aws_db_instance" "s3" {
+	identifier = "%s-db"
+
+	allocated_storage = 5
+	engine = "mysql"
+	engine_version = "5.6"
+    auto_minor_version_upgrade = true
+	instance_class = "db.t2.small"
+	name = "baz"
+	password = "barbarbarbar"
+	publicly_accessible = false
+	username = "foo"
+	backup_retention_period = 0
+
+	parameter_group_name = "default.mysql5.6"
+    skip_final_snapshot = true
+    multi_az = false
+    db_subnet_group_name = "${aws_db_subnet_group.foo.id}"
+
+	s3_import {
+        source_engine = "mysql"
+        source_engine_version = "5.6"
+
+		bucket_name = "${aws_s3_bucket.xtrabackup.bucket}"
+		bucket_prefix = "%s"
+		ingestion_role = "${aws_iam_role.rds_s3_access_role.arn}"
+	}
+}
+`, bucketName, bucketPrefix, uniqueId, uniqueId, uniqueId, uniqueId, uniqueId, bucketPrefix)
 }
 
 func testAccSnapshotInstanceConfigWithSnapshot(rInt int) string {
