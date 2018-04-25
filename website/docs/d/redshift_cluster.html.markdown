@@ -6,11 +6,9 @@ description: |-
     Provides details about a specific redshift cluster
 ---
 
-# aws\_redshift\_cluster
+# Data Source: aws_redshift_cluster
 
 Provides details about a specific redshift cluster.
-
-This resource may prove useful when setting up a firehose delivery stream with a redshift destination
 
 ## Example Usage
 
