@@ -6,6 +6,7 @@ FEATURES:
 * **New Data Source:** `aws_batch_job_queue` [GH-4288]
 * **New Data Source:** `aws_iot_endpoint` [GH-4303]
 * **New Data Source:** `aws_lambda_function` [GH-2984]
+* **New Data Source:** `aws_redshift_cluster` [GH-2603]
 * **New Data Source:** `aws_secretsmanager_secret` [GH-4272]
 * **New Data Source:** `aws_secretsmanager_secret_version` [GH-4272]
 * **New Resource:** `aws_dax_parameter_group` [GH-4299]
