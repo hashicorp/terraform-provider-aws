@@ -64,6 +64,29 @@ func TestAccAWSRDSCluster_namePrefix(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSCluster_s3Restore(t *testing.T) {
+	var v rds.DBCluster
+	resourceName := "aws_rds_cluster.test"
+	bucket := acctest.RandomWithPrefix("tf-acc-test")
+	uniqueId := acctest.RandomWithPrefix("tf-acc-s3-import-test")
+	bucketPrefix := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfig_s3Restore(bucket, bucketPrefix, uniqueId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists("aws_rds_cluster.test", &v),
+					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRDSCluster_generatedName(t *testing.T) {
 	var v rds.DBCluster
 
@@ -552,6 +575,120 @@ resource "aws_db_subnet_group" "test" {
   subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
 }
 `, n)
+}
+
+func testAccAWSClusterConfig_s3Restore(bucketName string, bucketPrefix string, uniqueId string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "xtrabackup" {
+  bucket = "%s"
+}
+
+resource "aws_s3_bucket_object" "xtrabackup_db" {
+  bucket = "${aws_s3_bucket.xtrabackup.id}"
+  key    = "%s/mysql-5-6-xtrabackup.tar.gz"
+  source = "../files/mysql-5-6-xtrabackup.tar.gz"
+  etag   = "${md5(file("../files/mysql-5-6-xtrabackup.tar.gz"))}"
+}
+
+
+
+resource "aws_iam_role" "rds_s3_access_role" {
+    name = "%s-role"
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "test" {
+  name   = "%s-policy"
+  policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:*"
+            ],
+            "Resource": [
+                "${aws_s3_bucket.xtrabackup.arn}",
+                "${aws_s3_bucket.xtrabackup.arn}/*"
+            ]
+        }
+    ]
+}
+POLICY
+}
+
+resource "aws_iam_policy_attachment" "test-attach" {
+    name = "%s-policy-attachment"
+    roles = [
+        "${aws_iam_role.rds_s3_access_role.name}"
+    ]
+
+    policy_arn = "${aws_iam_policy.test.arn}"
+}
+
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier_prefix = "tf-test-"
+  master_username = "root"
+  master_password = "password"
+  db_subnet_group_name = "${aws_db_subnet_group.test.name}"
+  skip_final_snapshot = true
+  s3_import {
+      source_engine = "mysql"
+      source_engine_version = "5.6"
+
+      bucket_name = "${aws_s3_bucket.xtrabackup.bucket}"
+      bucket_prefix = "%s"
+      ingestion_role = "${aws_iam_role.rds_s3_access_role.arn}"
+  }
+
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+	tags {
+		Name = "%s-vpc"
+	}
+}
+
+resource "aws_subnet" "a" {
+  vpc_id = "${aws_vpc.test.id}"
+  cidr_block = "10.0.0.0/24"
+  availability_zone = "us-west-2a"
+  tags {
+    Name = "%s-subnet-a"
+  }
+}
+
+resource "aws_subnet" "b" {
+  vpc_id = "${aws_vpc.test.id}"
+  cidr_block = "10.0.1.0/24"
+  availability_zone = "us-west-2b"
+  tags {
+    Name = "%s-subnet-b"
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name = "%s-db-subnet-group"
+  subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
+}
+`, bucketName, bucketPrefix, uniqueId, uniqueId, uniqueId, bucketPrefix, uniqueId, uniqueId, uniqueId, uniqueId)
 }
 
 func testAccAWSClusterConfig_generatedName(n int) string {
