@@ -1148,7 +1148,7 @@ resource "aws_elasticache_cluster" "bar" {
     cluster_id = "tf-%s"
     engine = "memcached"
     node_type = "cache.m1.small"
-    num_cache_nodes = 2
+    num_cache_nodes = 3
     port = 11211
     subnet_group_name = "${aws_elasticache_subnet_group.bar.name}"
     security_group_ids = ["${aws_security_group.bar.id}"]
@@ -1156,7 +1156,8 @@ resource "aws_elasticache_cluster" "bar" {
     az_mode = "cross-az"
     availability_zones = [
         "us-west-2a",
-        "us-west-2b"
+        "us-west-2b",
+        "us-west-2a"
     ]
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
