@@ -89,6 +89,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									},
 									"iops": {
 										Type:     schema.TypeInt,
+										Computed: true,
 										Optional: true,
 									},
 									"kms_key_id": {
@@ -916,8 +917,8 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplat
 		ebsDevice.Encrypted = aws.Bool(v.(bool))
 	}
 
-	if v := ebs["iops"]; v != nil {
-		ebsDevice.Iops = aws.Int64(int64(v.(int)))
+	if v := ebs["iops"].(int); v > 0 {
+		ebsDevice.Iops = aws.Int64(int64(v))
 	}
 
 	if v := ebs["kms_key_id"].(string); v != "" {
