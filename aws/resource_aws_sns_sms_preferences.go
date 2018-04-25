@@ -8,7 +8,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
+
+func validateMonthlySpend(v interface{}, k string) (ws []string, errors []error) {
+	vInt, _ := strconv.Atoi(v.(string))
+	if vInt < 0 {
+		errors = append(errors, fmt.Errorf("Error setting SMS preferences: monthly spend limit value [%d] must be >= 0!", vInt))
+	}
+	return
+}
+
+func validateDeliverySamplingRate(v interface{}, k string) (ws []string, errors []error) {
+	vInt, _ := strconv.Atoi(v.(string))
+	if vInt < 0 || vInt > 100 {
+		errors = append(errors, fmt.Errorf("Error setting SMS preferences: default percentage of success to sample value [%d] must be between 0 and 100!", vInt))
+	}
+	return
+}
 
 func resourceAwsSnsSmsPreferences() *schema.Resource {
 	return &schema.Resource{
@@ -19,8 +36,9 @@ func resourceAwsSnsSmsPreferences() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"monthly_spend_limit": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateMonthlySpend,
 			},
 
 			"delivery_status_iam_role_arn": {
@@ -29,8 +47,9 @@ func resourceAwsSnsSmsPreferences() *schema.Resource {
 			},
 
 			"delivery_status_success_sampling_rate": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateDeliverySamplingRate,
 			},
 
 			"default_sender_id": {
@@ -39,8 +58,9 @@ func resourceAwsSnsSmsPreferences() *schema.Resource {
 			},
 
 			"default_sms_type": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"Promotional", "Transactional"}, false),
 			},
 
 			"usage_report_s3_bucket": {
@@ -77,24 +97,11 @@ func resourceAwsSnsSmsPreferencesSet(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] SNS Set SMS preferences")
 
 	monthlySpendLimit := d.Get("monthly_spend_limit").(string)
-	monthlySpendLimitInt, _ := strconv.Atoi(monthlySpendLimit)
 	deliveryStatusIamRoleArn := d.Get("delivery_status_iam_role_arn").(string)
 	deliveryStatusSuccessSamplingRate := d.Get("delivery_status_success_sampling_rate").(string)
-	deliveryStatusSuccessSamplingRateInt, _ := strconv.Atoi(deliveryStatusSuccessSamplingRate)
 	defaultSenderId := d.Get("default_sender_id").(string)
 	defaultSmsType := d.Get("default_sms_type").(string)
 	usageReportS3Bucket := d.Get("usage_report_s3_bucket").(string)
-
-	// Validation
-	if monthlySpendLimitInt < 0 {
-		return fmt.Errorf("Error setting SMS preferences: monthly spend limit value [%d] must be >= 0!", monthlySpendLimitInt)
-	}
-	if deliveryStatusSuccessSamplingRateInt < 0 || deliveryStatusSuccessSamplingRateInt > 100 {
-		return fmt.Errorf("Error setting SMS preferences: default percentage of success to sample value [%d] must be between 0 and 100!", deliveryStatusSuccessSamplingRateInt)
-	}
-	if defaultSmsType != "" && defaultSmsType != "Promotional" && defaultSmsType != "Transactional" {
-		return fmt.Errorf("Error setting SMS preferences: default SMS type value [%s] is invalid!", defaultSmsType)
-	}
 
 	// Set preferences
 	params := &sns.SetSMSAttributesInput{
