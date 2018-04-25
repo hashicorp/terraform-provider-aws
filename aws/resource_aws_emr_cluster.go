@@ -254,7 +254,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 				},
 			},
 			"bootstrap_action": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
@@ -507,7 +507,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("bootstrap_action"); ok {
-		bootstrapActions := v.(*schema.Set).List()
+		bootstrapActions := v.([]interface{})
 		params.BootstrapActions = expandBootstrapActions(bootstrapActions)
 	}
 	if v, ok := d.GetOk("step"); ok {
